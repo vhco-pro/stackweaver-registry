@@ -3,7 +3,7 @@ status: draft
 status_description: "Catalogue drafted; tiering is settled in principle, the family boundaries need a review pass against real client behaviour."
 description: "The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat."
 author: michielvha
-goal: "Make breadth tractable by showing that ~30 named ecosystems collapse into ~15 distinct protocols, and by fixing the order in which they get built."
+goal: "Fix the breadth target at 33 ecosystems, record which protocol families multiply client reach, and set the order and the gate that decide whether breadth is affordable."
 priority: "critical"
 issue: 11
 created: 2026-09-22
@@ -32,23 +32,32 @@ JFrog and Sonatype have breadth and charge for SSO. The unoccupied position is
 **breadth × upstream caching × free SSO**, and it is unoccupied because for a human team it is
 unaffordable.
 
-## The insight that makes breadth cheap
+## Where breadth multiplies, and where it does not
 
-The naive count is intimidating and wrong. **Roughly 30 named ecosystems collapse into roughly 15
-distinct wire protocols**, because whole language communities share a repository format:
+A caution first, because the temptation to inflate here is strong and this document is the place
+that has to resist it: **the 33 ecosystems below are roughly 31 distinct protocol
+implementations.** Shared-format families do not meaningfully shrink that number, because each
+family already appears as a single row.
 
-| Family | Serves | One handler covers |
+What families *do* multiply is the **client and distribution surface** reached per handler:
+
+| One handler | Reaches | Multiplier |
 |---|---|---|
-| **Maven layout** | Java, Kotlin, Scala, Clojure, Groovy | Maven, Gradle, SBT, Ivy, Leiningen, Clojars |
-| **OCI distribution** | Containers and, increasingly, everything else | Docker/Podman images, Helm OCI, WASM, arbitrary OCI artifacts |
-| **Simple index (PEP 503-alike)** | Python | pip, uv, Poetry, pdm all speak the same index |
-| **Git-backed** | Go, Swift, Crystal | Module proxy and package registries that resolve to VCS refs |
-| **Debian archive** | Debian, Ubuntu, and derivatives | `apt` for every downstream distro |
-| **RPM/yum repodata** | RHEL, Fedora, SUSE, Rocky, Alma | `dnf`/`yum`/`zypper` |
+| **Maven layout** | Maven, Gradle, SBT, Ivy, Leiningen, Clojars - so Java, Kotlin, Scala, Clojure, Groovy | 6 build tools, 5 languages |
+| **Debian archive** | Debian, Ubuntu, Mint, Pop!_OS, every apt derivative | the whole apt world |
+| **RPM repodata** | RHEL, Fedora, SUSE, Rocky, Alma | 5 distributions |
+| **Simple index** | pip, uv, Poetry, pdm | 4 Python tools |
+| **OCI distribution** | Docker, Podman, ORAS, Helm-as-OCI, WASM artifacts | containers plus a growing set |
+| **Git-backed** | Go modules, Swift packages, Julia General | 3 ecosystems, one resolution model |
 
-So the engineering unit is the **family**, not the ecosystem, and the marketing unit is the
-ecosystem. That asymmetry is the moat: the catalogue below advertises ~30 supported ecosystems
-off ~15 implementations.
+So **33 ecosystems and ~31 implementations reach well over 50 distinct client tools and
+distributions.** That is the honest version of the claim, and it is still the strongest position
+available: nobody free offers this breadth *with* upstream caching.
+
+The moat is not arithmetic. It is that the conformance harness makes each of those ~31
+implementations cheap enough to build and, crucially, cheap enough to *keep working* as each
+ecosystem changes its protocol on its own schedule. Competitors are not blocked by the count;
+they are blocked by the treadmill.
 
 Family boundaries are asserted here and **must be proven by conformance**, not assumed. Where a
 family member diverges (Gradle's module metadata alongside Maven POMs, `uv` versus `pip` on index
@@ -116,8 +125,13 @@ supported".
 | Open VSX (editor extensions) | Open VSX |
 | Arch (pacman) | Arch |
 
-**Headline count at full delivery: ~31 ecosystems across ~15 protocol implementations.** For
-comparison, Gitea covers 24 with no proxying, and Harbor covers 1 with proxying.
+**Headline count at full delivery: 33 ecosystems, ~31 protocol implementations, 50+ client tools
+and distributions reached.** For comparison, Gitea covers 24 ecosystems with no proxying at all,
+and Harbor covers 1 with excellent proxying.
+
+Tier totals: 2 + 8 + 10 + 13 = 33. Keep this line updated when a row is added or removed; it is
+the arithmetic check on every number quoted above, and an earlier draft of this document claimed
+"~30 ecosystems across ~15 protocols" purely because nobody had added the rows up.
 
 ## Two formats deserve specific comment
 

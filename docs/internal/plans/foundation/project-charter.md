@@ -39,10 +39,11 @@ multi-format registry is plausible.
   collection strategy is an open question in that spec, not settled here).
 - A format handler interface, with each handler serving both a **hosted** path and a
   **proxied/cached** path.
-- **Breadth: roughly 31 ecosystems across roughly 15 protocol implementations**, tiered and
-  grouped by shared wire protocol in `docs/internal/plans/formats/catalogue.md`. Breadth is the
-  moat, and it is affordable only because whole language communities share a repository format
-  (one Maven-layout handler serves Java, Kotlin, Scala and Clojure).
+- **Breadth: 33 ecosystems across roughly 31 protocol implementations**, reaching 50+ client
+  tools and distributions, tiered in `docs/internal/plans/formats/catalogue.md`. Breadth is the
+  moat, and what makes it affordable is the conformance harness rather than any collapsing of the
+  count - families multiply *client reach* (one Maven-layout handler serves Maven, Gradle, SBT,
+  Ivy and Leiningen), not the number of protocols to implement.
 - A web UI, after the formats work.
 - Upstream proxy/caching with TTLs, negative caching and an offline mode. This is the
   differentiator and is designed in from format two, never retrofitted.

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**Stackweaver Registry.** An open artifact repository: a package registry targeting **~31
+**Stackweaver Registry.** An open artifact repository: a package registry targeting **33
 language and OS ecosystems** with **upstream caching, SSO and RBAC included**, not paywalled.
 Licensed Apache 2.0. Part of the Stackweaver family; a separate platform under the same owned
 brand.
@@ -21,10 +21,11 @@ already served: Gitea has 24 formats and cannot proxy, Harbor proxies and speaks
 format that only hosts is a format Gitea already does for free, so design every handler with its
 proxy path from the start; it changes the storage model and cannot be bolted on later.
 
-Breadth is affordable because ~31 ecosystems collapse into ~15 wire protocols - whole language
-communities share a repository format. The engineering unit is the **protocol family**, the
-marketing unit is the **ecosystem**, and that asymmetry is the moat. Target list, tiers and family
-mapping: `docs/internal/plans/formats/catalogue.md`.
+The target is 33 ecosystems across ~31 protocol implementations, reaching 50+ client tools and
+distributions. **Do not inflate that**: families multiply client reach, not the ecosystem count,
+and the conformance matrix reports per ecosystem so the advertised number can never exceed the
+tested one. Target list, tiers and the family mapping:
+`docs/internal/plans/formats/catalogue.md`.
 
 **Stack:** Go 1.26. TypeScript/React frontend (later; there is no `web/` yet). Content-addressable
 blob storage over S3-compatible object storage. PostgreSQL for metadata.

@@ -1,6 +1,6 @@
 # Stackweaver Registry
 
-An open artifact repository: a package registry for **~31 language and OS ecosystems**, with
+An open artifact repository: a package registry for **33 language and OS ecosystems**, with
 **upstream caching, SSO and RBAC included**, not paywalled.
 
 Part of the Stackweaver family; a separate platform, same brand.
@@ -18,10 +18,14 @@ Pulp has the plumbing and no UI. Gitea has the UI and 24 formats and **cannot ca
 Harbor caches beautifully and speaks **only OCI**. JFrog and Sonatype have all of it and fence SSO,
 HA and quotas behind a licence.
 
-Breadth is the moat, and it is affordable here because roughly 31 ecosystems collapse into roughly
-15 wire protocols: one Maven-layout handler serves Java, Kotlin, Scala and Clojure; one Debian
-archive handler serves every apt-based distro. The full mapping is public
+Breadth is the moat. 33 ecosystems across ~31 protocol implementations, reaching 50+ client tools
+and distributions - one Maven-layout handler serves Maven, Gradle, SBT, Ivy and Leiningen; one
+Debian archive handler serves every apt-based distro. The full mapping is public
 (`docs/internal/plans/formats/catalogue.md`) rather than hidden behind a marketing number.
+
+What makes it affordable is not arithmetic, it is the conformance harness: it makes each protocol
+cheap to build and, crucially, cheap to *keep working* as each ecosystem changes on its own
+schedule. Competitors are not blocked by the count, they are blocked by the treadmill.
 
 The free field is fragmented mostly because of **maintenance cost**: every ecosystem changes its
 protocol on its own schedule, and that grind is what kills volunteer projects. This one is built
