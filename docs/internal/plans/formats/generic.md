@@ -73,6 +73,12 @@ just moves the structure into filenames.
 **Why this is yours:** deep paths make listing, retention scoping and the future UI meaningfully
 more complex, for a convenience only you can weigh.
 
+**Security note either way:** blobs are content-addressed and keyed by digest, so an artifact
+path is metadata and never becomes a filesystem path. If that ever stops being true - if any
+path answer here leads to untrusted input reaching a real path - then path traversal from a
+package name becomes live, and `.claude/skills/README.md` records the skill
+(`spf13/fileflow-pathologize`) deliberately left unvendored for exactly that eventuality.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |

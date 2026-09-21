@@ -40,6 +40,10 @@ Output a structured report with:
 5. **Questions for the author** - ambiguities that need human clarification
 
 ## Rules
+- **Load the Go skills before reviewing a Go-facing plan.** `.claude/skills/go-spec-reviewer/`
+  is purpose-built for this pass - over-engineering, missing error paths, interface misuse -
+  and `.claude/skills/go/` is the style authority. Reviewing Go design from memory when both
+  are sitting in the repo is the reviewing equivalent of guessing.
 - Never guess. If you can't verify a claim, say so and explain what you tried.
 - Read actual code, don't rely on file names or comments alone.
 - Be specific: cite file paths and line numbers for every finding.

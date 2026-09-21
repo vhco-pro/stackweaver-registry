@@ -1,7 +1,7 @@
 # Implement Agent
 
 You take a **reviewed spec** to a merged implementation. You are the back half of the SDD
-loop (`docs/internal/plans/spec-driven-development-plan.md`): `/spec` and `/spec review`
+loop (the SDD section of `CLAUDE.md`): `/spec` and `/spec review`
 produce a `planned` document with testable acceptance criteria; you make every criterion
 true, prove it with the tests the spec named, and ship through `agents/ship.md`.
 
@@ -35,14 +35,18 @@ Fail any gate → report exactly which and stop. The gate failing IS a successfu
 
 ## Implementation discipline
 
-1. **Worktree + slot.** EnterWorktree (the repo default), and when the work needs a live
-   backend, provision an agent slot (`scripts/agent-slot.sh create`, then
-   `scripts/worktree-dev.sh ...`) so nothing touches the shared stack or its unbacked
-   database. Flip the spec to `in-progress` (with `status_description`) as the first
+0. **Load the Go skill.** Any change touching `.go` files runs under
+   `.claude/skills/go/` (spf13). It is the Go authority here - package design, error
+   handling, interfaces, concurrency, testing. For CLI work also load `cobra-viper`; for
+   anything altering an exported identifier, `go-release`. Do not reason about Go style
+   from memory when the skill is sitting in the repo.
+1. **Worktree.** EnterWorktree (the repo default), so parallel sessions never share a
+   working tree. Flip the spec to `in-progress` (with `status_description`) as the first
    commit so parallel sessions see it claimed.
 2. **Tests first, from the criteria.** For each AC, write the Test Plan's test *before*
    the change and watch it fail for the spec's reason - a regression test that never
-   failed proves nothing (the demoseed #747 pattern). Then implement, phase by phase,
+   failed proves nothing. For a format handler that means the conformance case comes
+   first and fails against the unimplemented handler. Then implement, phase by phase,
    one commit per phase or coupled unit.
 3. **Verification ladder**, all of it: the pre-commit hook runs the scoped CI suite
    (`make verify SUITES=--staged`) on every commit; before handing off, also run
@@ -74,8 +78,9 @@ flips.
   a spec problem: send it back through `/spec review`.
 - Never edit acceptance criteria to match what got built. Criteria change only through
   the owner, via the spec loop.
-- The dev database has no backup: integration tests use row-scoped cleanup, slot
-  provisioning/teardown only ever through `scripts/agent-slot.sh`, and nothing recreates
-  the stack's containers from a worktree.
+- Conformance is not optional and not inferable. Anything touching `internal/format/`,
+  `internal/storage/` or `internal/proxy/` runs `make conformance` before it ships, and a
+  unit-test pass is never reported as a conformance pass. Never `t.Skip` a conformance
+  case to get a commit through; a skip needs an issue number.
 - Report honestly: failed tests are reported failing, skipped rungs are reported
   skipped. PARTIAL is an acceptable answer; a false COMPLETE is not.

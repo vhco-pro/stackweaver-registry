@@ -28,4 +28,5 @@ copy of the reasoning.
 | [guidelines/](./guidelines/) |  |
 | [plans/](./plans/) | Specs, one per feature. The spec IS the plan: acceptance criteria, test plan, open questions and a review log that gates implementation. |
 | [research/](./research/) | Prior-art surveys, ecosystem comparisons and protocol research that inform the specs. |
+| [status/](./status/) | Dated point-in-time reports: issue triage passes and other snapshots of where the backlog stood on a given day. |
 | [tasks/](./tasks/) | Working notes that persist across sessions: the lessons ledger and the autonomy experiment log. |

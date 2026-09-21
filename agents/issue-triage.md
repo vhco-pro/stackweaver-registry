@@ -117,7 +117,7 @@ Each subagent must return evidence at one of these tiers, and must name the tier
 
 - **`resolved`** - the described behavior now exists and is reachable. Evidence = file:line of the
   implementation **plus** one of: the merged PR that added it, a passing test that covers it, or
-  the registered route in `backend/internal/api/v2/routes/routes.go`. For UI issues, the component
+  the registered route and the handler in `internal/format/`. For UI issues, the component
   file **and** its wiring into a page - a component that exists but is never rendered is *not*
   resolved.
 - **`partial`** - some phases landed. Evidence = what exists (file:line) and a specific,
@@ -258,8 +258,7 @@ only support is a `status: complete` field, it is `needs-decision`.
 ---
 
 Related: `agents/ship.md` (issue creation, `Refs #N` vs `Closes #N`, no self-credit),
-`agents/maintenance.md` (the dependency backlog - #332/#334 are its, not yours),
-`agents/codebase-audit.md` (the AUD-xxx ledger), `agents/docs-impact.md` (doc updates when
+`agents/docs-impact.md` (doc updates when
 scope changes), [[feedback-plans-and-issues-workflow]] (plans live in `docs/internal/` with
 frontmatter and get a GitHub issue), [[feedback-ground-plans-before-handoff]] (adversarial
 verification of file:line claims), and `CLAUDE.md` (conventional commits, `[skip ci]` eligibility).

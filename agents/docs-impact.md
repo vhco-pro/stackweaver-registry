@@ -61,7 +61,7 @@ following repo doc conventions:
 - Never paste code blocks into docs; reference source files with line numbers.
 - Keep the `covers:` frontmatter correct - if your change moved/renamed a code area
   a doc describes, update its `covers` globs (code paths only: `backend/`, `core/`,
-  `frontend/src/`, `deploy/`, `scripts/`, `.github/` - never `docs/` paths).
+  `conformance/`, `deploy/`, `scripts/`, `.github/` - never `docs/` paths).
 - Do **not** hand-edit auto-generated README "Contents" tables. If frontmatter
   (title/description/`covers`) changed, rebuild: `cd scripts && node build-docs-index.js`.
 

@@ -219,10 +219,28 @@ replace this step.
 
 ### Go Rules
 
-- Wrap errors with context: `fmt.Errorf("failed to X: %w", err)`
+**The Go authority in this repository is the vendored `go` skill** (`.claude/skills/go/`), from
+[spf13/go-skills](https://github.com/spf13/go-skills) by Steve Francia - former Go team lead at
+Google, author of Cobra, Viper, Hugo and Afero. It is loaded whenever Go is written, reviewed,
+debugged or refactored, and it governs package design, interfaces, concurrency, testing,
+generics and the modern stdlib. Do not re-derive Go style here or argue it from memory; read it.
+
+Three more are vendored and apply in their domains: `go-spec-reviewer` (run it during
+`/spec review` on any Go-facing spec, *before* implementation), `cobra-viper` (`cmd/artifactory`
+is a Cobra CLI), and `go-release` (this module is published, so semver promises and
+breaking-change detection are binding). Provenance, the exclusions, and the house-rule conflicts
+are in `.claude/skills/README.md`.
+
+Project-specific rules the skill does not cover:
+
+- **Wrap errors with a gerund phrase and no prefix**: `fmt.Errorf("serving blob %s: %w", dgst, err)`.
+  Not `"failed to serve blob"` - wrapping concatenates, and a prefix at every level yields
+  `failed to serve blob: failed to read manifest: failed to open: ...`, which is one useful word
+  per frame and the rest noise. This supersedes the rule inherited from Stackweaver.
 - Pass `context.Context` through function calls.
 - Format handlers implement a common interface and must not reach into each other. Cross-format
-  behavior belongs in the storage, proxy, or auth layer, never in a handler.
+  behavior belongs in the storage, proxy, or auth layer, never in a handler. Enforced by
+  architecture tests, not by review.
 - Blob storage is content-addressable. Never key a blob by anything but its digest.
 
 ### Commit Messages
