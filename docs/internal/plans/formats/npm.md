@@ -5,7 +5,7 @@ description: "Spec for the npm registry format, where the caching proxy of the p
 author: michielvha
 goal: "Deliver the most-wanted upstream cache in real deployments, and be the first format where the proxy path is the point."
 priority: "medium"
-issue: ""
+issue: 8
 created: 2026-09-21
 covers:
   - "internal/format/npm/**"

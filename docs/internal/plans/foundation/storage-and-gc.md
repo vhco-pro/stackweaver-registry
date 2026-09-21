@@ -1,11 +1,11 @@
 ---
 status: draft
 status_description: "Drafted from the founding discussion; the concurrency model is the main open question and needs an owner decision."
-description: "Spec for the content-addressable blob store and reference-counted garbage collection, including the fault-injection testing that conformance cannot provide."
+description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
 priority: "critical"
-issue: ""
+issue: 3
 created: 2026-09-21
 covers:
   - "internal/storage/**"

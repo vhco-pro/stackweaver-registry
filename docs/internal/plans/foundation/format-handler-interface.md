@@ -5,7 +5,7 @@ description: "Spec for the common format handler interface, defining the hosted 
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
 priority: "high"
-issue: ""
+issue: 4
 created: 2026-09-21
 covers:
   - "internal/format/**"

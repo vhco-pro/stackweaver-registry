@@ -5,7 +5,7 @@ description: "Spec for the Ansible Galaxy v3 collection format - the single form
 author: michielvha
 goal: "Serve the one ecosystem whose only free self-hosted options are heavy enough that practitioners abandon them."
 priority: "medium"
-issue: ""
+issue: 10
 created: 2026-09-21
 covers:
   - "internal/format/ansible/**"

@@ -45,6 +45,7 @@
     "description": "Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist.",
     "internal": true,
     "status": "draft",
+    "issue": "10",
     "covers": [
       "internal/format/ansible/**"
     ]
@@ -54,6 +55,7 @@
     "description": "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end.",
     "internal": true,
     "status": "draft",
+    "issue": "6",
     "covers": [
       "internal/format/generic/**"
     ]
@@ -63,6 +65,7 @@
     "description": "Spec for the npm registry format, where the caching proxy of the public registry is the primary use case rather than private publishing.",
     "internal": true,
     "status": "draft",
+    "issue": "8",
     "covers": [
       "internal/format/npm/**"
     ]
@@ -72,6 +75,7 @@
     "description": "Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor.",
     "internal": true,
     "status": "draft",
+    "issue": "7",
     "covers": [
       "internal/format/oci/**"
     ]
@@ -81,6 +85,7 @@
     "description": "Spec for the PyPI format, scheduled as the experiment's generalisation test - does format N+1 cost less than format N?",
     "internal": true,
     "status": "draft",
+    "issue": "9",
     "covers": [
       "internal/format/pypi/**"
     ]
@@ -90,6 +95,7 @@
     "description": "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus.",
     "internal": true,
     "status": "draft",
+    "issue": "2",
     "covers": [
       "conformance/**"
     ]
@@ -99,6 +105,7 @@
     "description": "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross.",
     "internal": true,
     "status": "draft",
+    "issue": "4",
     "covers": [
       "internal/format/**"
     ]
@@ -108,6 +115,7 @@
     "description": "The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work.",
     "internal": true,
     "status": "draft",
+    "issue": "1",
     "covers": []
   },
   {
@@ -115,15 +123,17 @@
     "description": "Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials.",
     "internal": true,
     "status": "draft",
+    "issue": "5",
     "covers": [
       "internal/proxy/**"
     ]
   },
   {
     "path": "docs/internal/plans/foundation/storage-and-gc.md",
-    "description": "Spec for the content-addressable blob store and reference-counted garbage collection, including the fault-injection testing that conformance cannot provide.",
+    "description": "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide.",
     "internal": true,
     "status": "draft",
+    "issue": "3",
     "covers": [
       "internal/storage/**"
     ]

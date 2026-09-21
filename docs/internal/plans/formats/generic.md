@@ -5,7 +5,7 @@ description: "Spec for the generic/raw artifact format - the trivial protocol us
 author: michielvha
 goal: "Exercise every shared layer with a protocol simple enough that any failure is unambiguously a harness or infrastructure failure, not a protocol misreading."
 priority: "high"
-issue: ""
+issue: 6
 created: 2026-09-21
 covers:
   - "internal/format/generic/**"

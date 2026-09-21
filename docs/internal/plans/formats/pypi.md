@@ -5,7 +5,7 @@ description: "Spec for the PyPI format, scheduled as the experiment's generalisa
 author: michielvha
 goal: "Measure whether the harness and the format interface generalise, by building PyPI immediately after npm and comparing the cost."
 priority: "medium"
-issue: ""
+issue: 9
 created: 2026-09-21
 covers:
   - "internal/format/pypi/**"

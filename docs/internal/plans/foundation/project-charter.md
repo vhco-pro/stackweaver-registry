@@ -5,7 +5,7 @@ description: "The project charter: what this builds, what it deliberately does n
 author: michielvha
 goal: "Establish scope, positioning, the build order and the experiment's success metrics, so every downstream spec inherits a settled frame."
 priority: "critical"
-issue: ""
+issue: 1
 created: 2026-09-21
 covers: []
 ---
@@ -35,7 +35,8 @@ multi-format registry is plausible.
 
 **In scope**
 
-- A content-addressable blob store over S3-compatible object storage, with reference-counted GC.
+- A content-addressable blob store over S3-compatible object storage, with safe blob GC (the
+  collection strategy is an open question in that spec, not settled here).
 - A format handler interface, with each handler serving both a **hosted** path and a
   **proxied/cached** path.
 - Formats, in build order: generic, OCI, npm, PyPI, Ansible collections.

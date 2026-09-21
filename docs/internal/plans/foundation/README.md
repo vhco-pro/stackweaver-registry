@@ -14,4 +14,4 @@ Foundation specs: the harness, storage, the format interface and the proxy layer
 | [format-handler-interface.md](./format-handler-interface.md) | Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross. |
 | [project-charter.md](./project-charter.md) | The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work. |
 | [proxy-cache.md](./proxy-cache.md) | Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials. |
-| [storage-and-gc.md](./storage-and-gc.md) | Spec for the content-addressable blob store and reference-counted garbage collection, including the fault-injection testing that conformance cannot provide. |
+| [storage-and-gc.md](./storage-and-gc.md) | Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide. |

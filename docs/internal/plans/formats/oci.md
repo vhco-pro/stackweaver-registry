@@ -5,7 +5,7 @@ description: "Spec for the OCI distribution format - the hardest protocol with t
 author: michielvha
 goal: "Pass the official OCI distribution-spec conformance suite with zero skips, proving the harness and the shared layers against a standards-body gate."
 priority: "high"
-issue: ""
+issue: 7
 created: 2026-09-21
 covers:
   - "internal/format/oci/**"

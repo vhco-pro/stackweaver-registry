@@ -5,7 +5,7 @@ description: "Spec for the conformance harness that drives real package clients 
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
 priority: "critical"
-issue: ""
+issue: 2
 created: 2026-09-21
 covers:
   - "conformance/**"

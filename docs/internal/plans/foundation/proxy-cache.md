@@ -5,7 +5,7 @@ description: "Spec for the upstream proxy and cache layer - the project's actual
 author: michielvha
 goal: "Deliver the one capability no free multi-format registry has, so the project is not a slower Gitea with fewer formats."
 priority: "high"
-issue: ""
+issue: 5
 created: 2026-09-21
 covers:
   - "internal/proxy/**"
