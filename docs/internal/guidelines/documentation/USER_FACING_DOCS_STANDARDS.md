@@ -1,286 +1,108 @@
 ---
-description: "Standards for user-facing documentation in StackWeaver, defining scope, writing style, and the distinction from internal-only documents."
+description: "Standards for user-facing documentation: what belongs in docs/ versus docs/internal/, the prose style, and the structural rules every published page follows."
+covers: []
 ---
 
 # User-Facing Documentation Standards
 
-This document defines the standards for user-facing documentation in StackWeaver. User-facing documentation is displayed in the public documentation viewer and must be written for end users, operators, and contributors - not internal implementation details.
+> **There are no user-facing docs yet.** This project is pre-alpha and everything currently lives
+> under `docs/internal/`. These standards are ported and adapted ahead of need so the first
+> published page is not also the page that invents the conventions.
 
-## What is User-Facing Documentation?
+## What is user-facing documentation?
 
-User-facing documentation includes:
-- **Setup guides** - How to install and configure the platform
-- **API references** - How to use the APIs
-- **Feature documentation** - How to use platform features
-- **Architecture overviews** - High-level system design (for operators and contributors)
-- **Authentication guides** - How authentication works for users/operators
-- **Ansible/OpenTofu guides** - How to use platform features for these tools
+Anything written for someone **using or operating** the registry rather than building it:
+installation and deployment, configuring a repository or an upstream proxy, pointing a package
+client at the server, authentication and access control setup, API reference, and
+troubleshooting.
 
-## What is NOT User-Facing Documentation?
+It lives directly under `docs/`.
 
-The following are internal documentation and should NOT appear in the docs viewer:
-- Implementation plans (`*-plan.md`, `*_PLAN.md`)
-- Analysis documents (`*-analysis.md`, `*_ANALYSIS.md`)
-- Research documents (`*-research.md`, `*_RESEARCH.md`)
-- Status reports (`*-status.md`, `*_SITREP.md`)
-- Checklists (`*-checklist.md`)
-- Audits (`*-audit.md`)
-- Implementation details (`*implementation*.md`)
-- Internal TODOs and notes
+## What is not
 
-These internal documents remain in the repository but are automatically excluded from the docs viewer by the build script.
+Implementation plans and specs, research and prior-art surveys, root-cause analyses, bug reports,
+audit ledgers, conformance results, and anything whose audience is a contributor rather than a
+user. These live under `docs/internal/` and are excluded from publication.
 
-## Writing Style for User-Facing Documentation
+The test is the audience, not the subject. "How the blob GC works" can be either: a user needs to
+know retention behaviour and how to configure it, a contributor needs the invariant and the race
+conditions. Write them as two documents rather than one that serves neither.
 
-### 1. Use Full Sentences
+## Writing style
 
-**❌ BAD - Bullet Points Only:**
+### Full sentences, not bullet fragments
+
+User-facing prose explains. Bullet lists are for genuinely enumerable things (a list of supported
+formats, a set of required permissions), not for chopping an explanation into fragments the
+reader has to reassemble.
+
+Numbered steps are the exception and are correct where the reader really does follow them in
+order.
+
+### Explain the why, not only the what
+
+"Set the metadata TTL" is a fact. "Set the metadata TTL to control how quickly newly published
+upstream versions become visible; shorter values cost more upstream requests" is documentation.
+A user who understands the trade-off can choose; a user who only knows the knob exists will file
+an issue.
+
+### Write for the reader in front of you
+
+An operator deploying the server and a developer pointing `npm` at it need different pages. Say
+which one a page is for, at the top, rather than writing one page that half-serves both.
+
+### Descriptive headings
+
+`## Configuring an upstream proxy`, not `## Config`. Headings are the navigation and the search
+surface; a one-word heading is neither.
+
+## Never copy code into docs
+
+Reference the source file and the **symbol name** instead:
+
 ```markdown
-## Setup
-- Install Docker
-- Configure environment
-- Run make up
+See the `BlobStore` interface in `internal/storage/cas.go`.
 ```
 
-**✅ GOOD - Full Sentences with Context:**
-```markdown
-## Setup
+Copied code goes stale silently and no tooling catches it. Symbol names stay greppable across
+refactors in a way line numbers do not - see [DOCUMENTATION_STANDARDS.md](./DOCUMENTATION_STANDARDS.md)
+for the evidence behind that rule.
 
-StackWeaver can be installed using Docker Compose for local development. First, ensure Docker and Docker Compose are installed on your system. Then configure your environment variables and run the setup commands.
-
-### Prerequisites
-
-Before you begin, make sure you have Docker and Docker Compose installed. StackWeaver requires Docker version 20.10 or later.
-
-### Installation Steps
-
-1. **Install Docker**: Follow the [Docker installation guide](https://docs.docker.com/get-docker/) for your operating system.
-
-2. **Configure Environment**: Copy the example environment file and set your configuration values.
-
-3. **Start Services**: Run `make up` to start all StackWeaver services.
-```
-
-### 2. Provide Context and Explanation
-
-**❌ BAD - No Context:**
-```markdown
-## Configuration
-- Set `DATABASE_URL`
-- Configure `ZITADEL_URL`
-```
-
-**✅ GOOD - With Context:**
-```markdown
-## Configuration
-
-StackWeaver requires several environment variables to be configured before it can run. These settings control database connections, authentication, and other core services.
-
-### Database Configuration
-
-The `DATABASE_URL` environment variable specifies the PostgreSQL database connection string. This is required for StackWeaver to store metadata about organizations, workspaces, and runs. The connection string should follow the PostgreSQL URI format: `postgresql://user:password@host:port/database`.
-```
-
-### 3. Write for Your Audience
-
-- **End Users**: Focus on "how to use" rather than "how it's implemented"
-- **Operators**: Include configuration details and operational considerations
-- **Contributors**: Provide enough architecture context to understand the system
-
-### 4. Use Clear, Descriptive Headings
-
-**❌ BAD:**
-```markdown
-## Setup
-## Config
-## API
-```
-
-**✅ GOOD:**
-```markdown
-## Installation and Setup
-## Configuration Options
-## API Reference
-```
-
-### 5. Include Examples
-
-Always include practical examples when documenting features:
-
-```markdown
-### Creating a Workspace
-
-You can create a new OpenTofu workspace through the API or the web interface.
-
-#### Example API Request
+The exception is **commands and configuration the user actually types**. Those are not
+implementation, they are the interface, and they belong in the page in full:
 
 ```bash
-curl -X POST https://stackweaver.example.com/api/v2/organizations/my-org/workspaces \
-  -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "data": {
-      "type": "workspaces",
-      "attributes": {
-        "name": "production-infrastructure",
-        "description": "Production infrastructure workspace"
-      }
-    }
-  }'
-```
+npm config set registry https://registry.example.com/npm/my-repo/
 ```
 
-### 6. Use Proper Markdown Formatting
+## Structure
 
-- Use proper heading hierarchy (h1 for page title, h2 for major sections, h3 for subsections)
-- Use code blocks with language identifiers for syntax highlighting
-- Use lists for sequences of steps or related items
-- Use tables for structured data
-- Use callout boxes for important notes (see below)
+Every published page opens with a sentence saying what it covers and who it is for, then the
+content, then links to the logical next pages. Avoid a page that ends without telling the reader
+where to go.
 
-### 7. Callout Boxes for Important Information
-
-Use callout boxes to highlight important information:
-
-```markdown
-> [!NOTE]
-> This feature requires authentication. Make sure you have a valid API token before proceeding.
-
-> [!WARNING]
-> Deleting a workspace will permanently remove all associated state data. This action cannot be undone.
-
-> [!TIP]
-> You can use environment variables to store sensitive configuration values instead of hardcoding them.
-```
-
-Available callout types:
-- `[!NOTE]` - Informational notes
-- `[!TIP]` - Helpful tips
-- `[!IMPORTANT]` - Critical information
-- `[!WARNING]` - Warnings about potential issues
-- `[!CAUTION]` - Safety-related cautions
-
-### 8. Link to Related Documentation
-
-Always link to related documentation sections:
-
-```markdown
-For more information about authentication, see [Authentication Documentation](../../overviews/authentication.md) or [Architecture Overview](../../../architecture/README.md).
-
-For API endpoint details, refer to the [API Reference](../../api-reference/backend-api-reference.md).
-```
-
-## Structure Guidelines
-
-### Page Structure
-
-Each documentation page should follow this structure:
-
-1. **Title** (h1) - Clear, descriptive page title
-2. **Introduction** - Brief overview of what this page covers
-3. **Sections** (h2) - Major topics covered
-4. **Subsections** (h3-h6) - Detailed information
-5. **Examples** - Practical examples where relevant
-6. **Related Links** - Links to related documentation
-
-### Organization
-
-The published tree under `docs/` is:
-
-- **Setup and install guides** go in `get-started/` (including `get-started/self-hosting/`)
-- **Task-oriented guides** go in `user-guides/`
-- **Feature documentation** goes in `features/`, split by engine - `features/ansible/` and
-  `features/opentofu/` (exclude implementation/plan/research docs)
-- **Architecture docs** go in `architecture/` (high-level only, exclude analysis/research/status)
-- **Security docs** go in `security/`
-- Everything under `internal/` is excluded from the viewer
+Group by task, not by subsystem. A user looking for "how do I cache npm" should not have to know
+whether that is the proxy layer or the npm handler.
 
 ## Frontmatter
 
-Every document - user-facing and internal alike - carries a `description` and a `covers` list:
+Every page needs at minimum a `description`, which is what the parent index shows. Pages that
+describe code also carry `covers` globs naming the code areas they document, using
+directory-level globs (`internal/proxy/**`) so they survive file moves.
 
-```markdown
----
-description: "One line summarising what this page covers."
-covers:
-  - "backend/internal/api/v2/handlers/**"
----
-```
+`covers` is what makes `scripts/check-doc-coverage.js` able to tell you that your change may have
+invalidated a page. A published page with no `covers` will drift and nothing will warn you.
 
-`covers` lists the **code** globs the document describes, never `docs/` paths, and prefers
-directory-level globs (`deploy/helm/**`) so it survives file moves. It drives
-`scripts/check-doc-coverage.js`, which maps a diff to the docs that may have gone stale, and the
-generated `docs-coverage.json`. A page that genuinely describes no code area uses `covers: []`.
+## Review checklist
 
-## Review Checklist
+- Would this help someone trying to use or operate the registry, rather than modify it?
+- Is it prose where it should be prose, and steps where it should be steps?
+- Does it explain the trade-off behind every setting it introduces?
+- Are code references symbol names rather than copied blocks or line numbers?
+- Does the frontmatter carry a `description`, and `covers` if it describes code?
+- Does it link onward?
 
-Before adding documentation to the user-facing docs:
+## File naming
 
-- [ ] Is this document intended for end users, operators, or contributors?
-- [ ] Does it use full sentences and provide context?
-- [ ] Does it explain "how to use" rather than "how it's implemented"?
-- [ ] Are there practical examples included?
-- [ ] Is the markdown properly formatted with clear headings?
-- [ ] Are important notes highlighted with callout boxes?
-- [ ] Are related documents linked?
-- [ ] Does it follow the structure guidelines above?
-- [ ] Would this be helpful for someone trying to use or operate StackWeaver?
-
-## File Naming Conventions
-
-User-facing documentation files should have descriptive names:
-- `setup-guide.md` ✅
-- `authentication.md` ✅
-- `opentofu-workspaces.md` ✅
-- `ansible-inventories.md` ✅
-
-Avoid patterns that indicate internal docs:
-- `*-plan.md` ❌
-- `*-analysis.md` ❌
-- `*-research.md` ❌
-- `*-implementation.md` ❌
-
-The build script automatically excludes files matching internal documentation patterns from the docs viewer.
-
-## Images
-
-The docs viewer supports embedded images using standard markdown syntax. Images are co-located with their markdown files inside `docs/` and are automatically copied and losslessly optimised during the documentation build.
-
-### Placing Images
-
-Place image files in the same directory as the markdown file that references them. Reference them with an explicit relative prefix:
-
-```markdown
-![Workspace run list](./workspace-run-list.png)
-```
-
-Use descriptive filenames - `workspace-run-list.png`, not `screenshot1.png`. Prefer `.png` for UI screenshots and `.svg` for diagrams.
-
-### Captions
-
-Add a caption using the `title` attribute (the third element of the image syntax). The viewer renders it as a centred caption below the image:
-
-```markdown
-![Architecture overview](./arch.png "Figure 1: High-level architecture")
-```
-
-### Dark-Mode Variants
-
-To supply a dark-mode version of an image, place a file with `-dark` before the extension in the same directory: `screenshot.png` → `screenshot-dark.png`. The viewer picks the right file automatically based on the active theme. If no dark variant is present, the light image is used in both modes. Dark variants are optional - most screenshots do not need one unless the UI looks significantly different in dark mode.
-
-### Shared Images
-
-Images shared across multiple pages can go in `docs/images/`. Reference them with a relative path: `../../images/logo.png` or the absolute path `/docs/images/logo.png`.
-
-### What Gets Published
-
-Images under `docs/internal/` are never published to the docs viewer, matching the same rules as markdown files.
-
-## Questions?
-
-If you're unsure whether a document should be user-facing:
-1. Ask: "Would an end user, operator, or contributor benefit from this?"
-2. Check: Does it explain how to *use* something rather than how it's *implemented*?
-3. Verify: Does it use full sentences and provide context?
-
-Internal implementation details, plans, and analysis should remain in the repository but are automatically excluded from the public documentation viewer.
+Lowercase with hyphens: `configuring-upstream-proxies.md`. The filename appears in the URL and
+outlives the page title.

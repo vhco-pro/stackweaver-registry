@@ -56,9 +56,10 @@ document by path, the verdict or phase checklist, and - when the answer is "not 
 concrete prerequisites that would change it. Everything else, particularly the evidence
 tables and the file-level citations, belongs in the document.
 
-`docs/internal/plans/infrastructure/dev-stack/parallel-agent-isolation-plan.md` and its
-issue are the reference pair for this shape: the issue summarizes the contended resources
-and the phases, and names the plan as the source of truth.
+`docs/internal/plans/foundation/conformance-harness.md` and its issue are the reference pair
+for this shape: the issue summarizes what the harness does and why it comes first, and names
+the spec as the source of truth. The reasoning - the recording proxy, the normalisation
+hazard, the open questions - lives only in the spec.
 
 Once the issue exists, write its URL back into the document's `issue:` frontmatter field so
 the link resolves in both directions.

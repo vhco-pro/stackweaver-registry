@@ -22,36 +22,45 @@ overwritten on the next build. To change what a table says, change the source fi
 frontmatter and regenerate:
 
 ```bash
-cd scripts && node build-docs-index.js
+make docs
 ```
 
-README index files in plan directories do not themselves need frontmatter.
+The pre-commit hook runs this automatically whenever a commit touches `docs/`, and CI fails if
+the committed index is stale, so a hand-edited table cannot survive a commit anyway.
+
+README index files still need a `description` of their own - it is what the *parent* directory's
+table shows for them.
 
 ## Plan files
 
-Plans additionally require `status`, `status_description`, and `author`, which render as a
-colored badge, the text beside it, and the credit line at the foot of the page. Always include
-`goal` as well: it is the one-line summary shown in the metadata table.
+Plans additionally require `status`, `status_description`, `author` and `goal`. These are
+**enforced**: `scripts/build-docs-index.js` fails the build on a plan missing any of them, and
+the pre-commit hook and CI both run it.
 
-| Field | Purpose |
-|---|---|
-| `status` | Colored status badge |
-| `status_description` | Short summary shown beside the badge |
-| `author` | Credit line at the bottom of the page |
-| `goal` | One-line objective, shown in the metadata table |
-| `priority` | `high`, `medium`, or `low`, rendered red/amber/blue |
-| `created` / `updated` | `YYYY-MM-DD`, shown in the metadata table |
-| `issue` | Full GitHub issue URL, auto-formatted as `org/repo#NNN` |
-| `title` / `description` | Sidebar label and hover tooltip |
+| Field | Required | Purpose |
+|---|---|---|
+| `status` | yes | Lifecycle state, from the vocabulary below |
+| `status_description` | yes | One line on where the work actually stands |
+| `author` | yes | Who owns the document |
+| `goal` | yes | One-line objective |
+| `priority` | no | `critical`, `high`, `medium`, or `low` |
+| `created` / `updated` | no | `YYYY-MM-DD` |
+| `issue` | no | The tracking issue number, backfilled after filing |
+| `covers` | yes for docs describing code | Code-area globs, never `docs/` paths |
 
-Valid `status` values are `planned` (blue, defined but not started), `in-progress` (amber,
-partially implemented), `complete` (green), `archived` (slate, superseded or abandoned), and
-`draft` (purple, speculative with no implementation).
+Valid `status` values, and nothing else - the builder rejects anything outside this list:
+
+`draft` (being written or reviewed) · `planned` (review gate passed, not started) ·
+`in-progress` · `complete` · `blocked` · `parked`
+
+There is no docs viewer in this repository yet, so none of these fields render anywhere today;
+they exist for the tooling and for the reader of the raw file. When a viewer lands, this table
+gains a rendering column rather than changing meaning.
 
 ## New plans follow the spec template
 
-A new plan is a **spec** - the spec and the plan are one document, per the SDD loop
-(`docs/internal/plans/spec-driven-development-plan.md`). Start from
+A new plan is a **spec** - the spec and the plan are one document, per the SDD loop described
+in `CLAUDE.md`. Start from
 [`plan-template.md`](./plan-template.md): `## Acceptance Criteria` (free-form checkboxes,
 each independently testable, stating an observable outcome), a `## Test Plan` row per
 criterion, `## Open Questions` for decisions the owner must make, and a `## Review Log`
@@ -63,8 +72,12 @@ retroactively rewritten.
 
 When a code change lands that a plan tracks, update that plan in the same pass: tick the phase
 checkboxes, update the status tables, and revise `status_description`. Do not leave it for
-later. An RBAC docs audit found six files carrying inaccurate information purely because the
-code moved and the plans did not, which cost a full re-audit to discover.
+later. A spec whose phase boxes lag the code is worse than no spec: it reads as authoritative
+and is not, and the cost of discovering that is a full re-audit.
+
+For this project the sharpest instance is the conformance matrix. It is generated, and CI gates
+its staleness, precisely because a hand-maintained support table drifts into claiming coverage
+that does not exist.
 
 ## Flow diagrams over numbered lists
 
@@ -72,8 +85,8 @@ When documenting a conceptual flow (authentication, a data pipeline, a release c
 Mermaid diagram followed by a `<details>` block with
 `<summary><strong>Flow Steps (Legend)</strong></summary>` holding the numbered steps. The
 diagram carries the shape at a glance and the legend keeps the detail without cluttering the
-page. `docs/architecture/README.md` and `docs/user-guides/sso/README.md` are the established
-examples.
+page. Good candidates here: the blob upload lifecycle, the proxy cache decision path, and the
+OCI token auth exchange.
 
 This applies to "how it works" explanations, not to setup instructions where the reader
 genuinely follows numbered steps in order.

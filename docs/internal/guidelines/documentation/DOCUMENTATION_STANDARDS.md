@@ -37,16 +37,16 @@ description: "Internal documentation standards covering when to include or exclu
 ### Reference Format
 
 Prefer **symbol references over line numbers**. Line numbers are the single most drift-prone thing
-a doc can carry: a 2026-08-28 verification pass found that all 68 line references in
-`docs/internal/api-reference/backend-api-reference.md` and every one in `frontend-api-reference.md`
-pointed at the wrong place, while the symbol names beside them were still correct and greppable.
+a doc can carry. An upstream verification pass found that all 68 line references in one API
+reference document pointed at the wrong place, while the symbol names beside them were still
+correct and greppable - the names survived a year of edits that every line number did not.
 Cite a line range only when the thing being referenced has no name (a config block, a specific
 branch inside a long function), and expect to re-verify it.
 
 When referencing implemented code:
 
 ```markdown
-**Implementation**: See `Team` model in `core/models/team.go`
+**Implementation**: See the `BlobStore` interface in `internal/storage/cas.go`
 ```
 
 For specific functions:
@@ -58,10 +58,10 @@ For specific functions:
 For multiple related files:
 
 ```markdown
-**Team Models**: 
-- `Team` - `core/models/team.go`
-- `TeamMember` - `core/models/team_member.go`
-- `TeamOrganizationAccess` - `core/models/team_organization_access.go`
+**Storage types**:
+- `BlobStore` - `internal/storage/cas.go`
+- `UploadSession` - `internal/storage/upload.go`
+- `Collector` - `internal/storage/gc.go`
 ```
 
 ### Example: Before and After
@@ -83,9 +83,9 @@ type Team struct {
 #### ✅ Good (After Implementation)
 
 ```markdown
-### Team Model
+### Blob store
 
-**Implementation**: See the `Team` struct in `core/models/team.go`
+**Implementation**: See the `BlobStore` interface in `internal/storage/cas.go`
 
 **Fields**:
 - `ID` - UUID primary key

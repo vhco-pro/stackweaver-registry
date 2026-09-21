@@ -13,7 +13,7 @@ format, and `/implement` **hard-gates** on it: it refuses to start while `## Ope
 Questions` has entries, while any acceptance criterion lacks a `## Test Plan` row, or
 while the last `## Review Log` entry is stale relative to `main`.
 
-Statuses use the canonical vocabulary (`scripts/docs-audit.js` enforces it): a spec is
+Statuses use the canonical vocabulary (`scripts/build-docs-index.js` enforces it): a spec is
 `draft` while being written and reviewed, `planned` once the review gate passes,
 `in-progress` during implementation, then `complete`. `blocked` and `parked` mean what
 they say.

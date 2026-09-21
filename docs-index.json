@@ -36,7 +36,7 @@
   },
   {
     "path": "docs/internal/guidelines/documentation/USER_FACING_DOCS_STANDARDS.md",
-    "description": "Standards for user-facing documentation in StackWeaver, defining scope, writing style, and the distinction from internal-only documents.",
+    "description": "Standards for user-facing documentation: what belongs in docs/ versus docs/internal/, the prose style, and the structural rules every published page follows.",
     "internal": true,
     "covers": []
   },
