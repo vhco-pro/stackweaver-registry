@@ -51,6 +51,16 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/catalogue.md",
+    "description": "The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat.",
+    "internal": true,
+    "status": "draft",
+    "issue": "11",
+    "covers": [
+      "internal/format/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/generic.md",
     "description": "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end.",
     "internal": true,

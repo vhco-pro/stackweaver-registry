@@ -2,7 +2,7 @@
 /bin/
 *.exe
 # `go build ./...` drops binaries in the working directory
-/artifactory
+/stackweaver-registry
 
 # Test and coverage output
 *.test

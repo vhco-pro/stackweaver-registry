@@ -1,4 +1,4 @@
-// Command artifactory is the registry server.
+// Command stackweaver-registry is the registry server.
 //
 // Nothing is implemented yet. The build order and the reasoning behind it are in
 // docs/internal/plans/foundation/project-charter.md; the conformance harness is built before
@@ -11,6 +11,6 @@ import (
 )
 
 func main() {
-	fmt.Fprintln(os.Stderr, "artifactory: not implemented yet - see docs/internal/plans/foundation/")
+	fmt.Fprintln(os.Stderr, "stackweaver-registry: not implemented yet - see docs/internal/plans/foundation/")
 	os.Exit(1)
 }

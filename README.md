@@ -1,7 +1,9 @@
-# artifactory
+# Stackweaver Registry
 
-An open artifact repository: a multi-format package registry with **upstream caching, SSO and
-RBAC included**, not paywalled.
+An open artifact repository: a package registry for **~31 language and OS ecosystems**, with
+**upstream caching, SSO and RBAC included**, not paywalled.
+
+Part of the Stackweaver family; a separate platform, same brand.
 
 > **Status: pre-alpha.** Nothing here runs yet. The repository currently holds the working
 > harness, the project charter and the specs. Code follows the specs, not the other way round.
@@ -10,12 +12,16 @@ RBAC included**, not paywalled.
 
 For containers, free is solved (Harbor, Quay, Zot). For multi-format hosting, free is solved
 (Gitea and Forgejo cover about 24 formats). What nobody ships for free is the combination:
-multi-format, **plus** caching proxies of upstream registries, **plus** virtual aggregation,
-**plus** a usable UI, **plus** single sign-on.
+**breadth, plus caching proxies of upstream registries, plus single sign-on.**
 
-Pulp has the plumbing and no UI. Gitea has the UI and the formats but cannot cache an upstream.
-Harbor has all three and speaks only OCI. JFrog and Sonatype have all of it and fence SSO, HA
-and quotas behind a licence.
+Pulp has the plumbing and no UI. Gitea has the UI and 24 formats and **cannot cache an upstream**.
+Harbor caches beautifully and speaks **only OCI**. JFrog and Sonatype have all of it and fence SSO,
+HA and quotas behind a licence.
+
+Breadth is the moat, and it is affordable here because roughly 31 ecosystems collapse into roughly
+15 wire protocols: one Maven-layout handler serves Java, Kotlin, Scala and Clojure; one Debian
+archive handler serves every apt-based distro. The full mapping is public
+(`docs/internal/plans/formats/catalogue.md`) rather than hidden behind a marketing number.
 
 The free field is fragmented mostly because of **maintenance cost**: every ecosystem changes its
 protocol on its own schedule, and that grind is what kills volunteer projects. This one is built

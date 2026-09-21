@@ -25,7 +25,7 @@ build:
 
 ## run: run the server locally
 run:
-	$(GO) run ./cmd/artifactory serve
+	$(GO) run ./cmd/stackweaver-registry serve
 
 ## test: run Go unit tests
 test:

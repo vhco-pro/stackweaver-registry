@@ -1,3 +1,3 @@
-module github.com/vhco-pro/artifactory
+module github.com/vhco-pro/stackweaver-registry
 
 go 1.26

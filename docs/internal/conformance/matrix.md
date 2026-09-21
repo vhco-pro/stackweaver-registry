@@ -17,9 +17,14 @@ results behind it, and a skipped case shows as a skip with its issue number, nev
 No formats implemented yet. The harness is specced
 (`docs/internal/plans/foundation/conformance-harness.md`) and not built.
 
-| Format | Client | Version | Hosted | Proxied | Cases | Skipped |
-|---|---|---|---|---|---|---|
-| _none yet_ | | | | | | |
+| Ecosystem | Family | Client | Version | Hosted | Proxied | Cases | Skipped |
+|---|---|---|---|---|---|---|---|
+| _none yet_ | | | | | | | |
+
+Target is ~31 ecosystems across ~15 protocol families
+(`docs/internal/plans/formats/catalogue.md`). **Rows are per ecosystem, never per family**, so the
+advertised number can never exceed the tested number - one Maven-layout handler earns its Gradle
+row only when a real Gradle client passes against it.
 
 ## Reading this table
 

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Charter drafted from the founding discussion; open questions await the owner before any foundation spec moves to planned."
+status_description: "Naming settled (Stackweaver Registry); scope widened to the full format catalogue. Two open questions remain for the owner."
 description: "The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work."
 author: michielvha
 goal: "Establish scope, positioning, the build order and the experiment's success metrics, so every downstream spec inherits a settled frame."
@@ -39,24 +39,38 @@ multi-format registry is plausible.
   collection strategy is an open question in that spec, not settled here).
 - A format handler interface, with each handler serving both a **hosted** path and a
   **proxied/cached** path.
-- Formats, in build order: generic, OCI, npm, PyPI, Ansible collections.
+- **Breadth: roughly 31 ecosystems across roughly 15 protocol implementations**, tiered and
+  grouped by shared wire protocol in `docs/internal/plans/formats/catalogue.md`. Breadth is the
+  moat, and it is affordable only because whole language communities share a repository format
+  (one Maven-layout handler serves Java, Kotlin, Scala and Clojure).
+- A web UI, after the formats work.
 - Upstream proxy/caching with TTLs, negative caching and an offline mode. This is the
   differentiator and is designed in from format two, never retrofitted.
 - OIDC SSO and RBAC, free, in the core product.
 - A conformance harness driving real package clients in containers.
-- A web UI, after the formats work.
 
 **Out of scope, explicitly**
 
-- Being an Artifactory clone. Fifteen formats is a protocol war against incumbents who are
-  already free. Breadth is not the differentiator; the proxy layer is.
-- Maven, Debian, RPM, Cargo, NuGet, RubyGems, Go module proxy in the first year. Each is
-  tractable and none is on the critical path to proving the thesis.
-- Vulnerability scanning and signing enforcement. Harbor does these well; integrate later, do
-  not reimplement.
-- Replacing Harbor for OCI hosting. OCI is implemented here because it has an official
-  conformance suite and is therefore the best proving ground for the harness, not because the
-  world needs another OCI registry.
+- Vulnerability scanning and signing enforcement as original work. Harbor does these well;
+  integrate later, do not reimplement.
+- Any ecosystem advertised before both its hosted and proxied paths pass conformance. The
+  catalogue is a target list, not a marketing claim.
+
+### Note on the reversal
+
+An earlier revision of this charter explicitly refused breadth, on the grounds that a
+fifteen-front protocol war against incumbents who are already free is how a focused project dies.
+**That reasoning assumed human-cost economics.** It is superseded deliberately, not forgotten.
+
+The thesis of this project is that a conformance harness converts protocol work from judgment
+into volume, and volume is what an agent fleet is for. If the harness generalises, each format
+costs a fraction of the first and breadth becomes the one moat competitors cannot follow: Gitea
+has 24 formats and cannot proxy, Harbor proxies and speaks only OCI, JFrog and Sonatype have both
+and charge for SSO. **Breadth × upstream caching × free SSO is unoccupied precisely because it is
+unaffordable to a human team.**
+
+The bet is explicit and it has a real gate: Phase 3 re-reads the experiment log, and if per-format
+cost is flat rather than falling, the catalogue shrinks to what is already delivered.
 
 ## Design
 
@@ -71,7 +85,8 @@ multi-format registry is plausible.
 | 5 | **Proxy/cache** | The differentiator. Introduced with npm rather than retrofitted, because it changes the storage model. |
 | 6 | **npm** | Most-wanted proxy cache in real life. First format where the proxy path matters more than the hosted path. |
 | 7 | **PyPI** | The generalisation test. If npm-to-PyPI is cheaper than generic-to-npm, the experiment has its headline finding. |
-| 8 | **Ansible collections** | The one format where free hosting alone is genuinely differentiating. |
+| 8 | **Tier 1 remainder** | Maven (unlocks the whole JVM in one handler), Go modules, NuGet, Debian and RPM (first formats needing GPG-signed indexes), Helm. |
+| 9 | **Re-evaluate, then Tiers 2 and 3** | The breadth gate. Continue only if per-format cost is falling. `docs/internal/plans/formats/catalogue.md`. |
 
 ### Language
 
@@ -146,6 +161,16 @@ licence collapses that claim on contact with Harbor (Apache 2.0) and Gitea (MIT)
 
 ## Open Questions
 
+### Resolved: naming (was Q2)
+
+**Settled 2026-09-22: `Stackweaver Registry`, at `vhco-pro/stackweaver-registry`.** The owner
+holds the Stackweaver trademark, so this both removes the JFrog trademark exposure the previous
+name carried and puts the project under an owned brand. Same brand, separate platform, which is
+the intended marketing position.
+
+The module path is `github.com/vhco-pro/stackweaver-registry` and was set before any code existed
+that could depend on it.
+
 ### Q1: Does the repository go public now, or at the first working format?
 
 **Recommendation:** at the first working format - a public repo with no running code invites
@@ -157,22 +182,6 @@ drive-by judgement and no contributors.
 | **B. Public at first working format** | A first impression that runs | The early spec history lands as one large push rather than as visible progress |
 
 **Why this is yours:** it is a positioning and reputation call, not a technical one.
-
-### Q2: The repository is named `artifactory`, which is a JFrog trademark.
-
-**Recommendation:** rename before going public. Renaming a private repo is free; renaming after
-stars, forks, import paths and package names exist is not, and the Go module path bakes it in.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Rename now** | No trademark exposure, clean module path from the start | Have to pick a name now |
-| **B. Keep `artifactory`** | No decision needed today | A registered trademark, on a product that directly competes with its owner. Rename cost compounds with every day of adoption |
-
-Candidate names, all unclaimed in this space as far as a quick check goes: **Hangar**,
-**Quarry**, **Silo**, **Artifex**.
-
-**Why this is yours:** naming is taste plus risk appetite, and only you can weigh how much the
-JFrog-adjacent recognition is worth against the exposure.
 
 ### Q3: Is the first milestone "prove the thesis" or "usable by someone"?
 

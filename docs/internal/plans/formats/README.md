@@ -11,6 +11,7 @@ One spec per package format, each owning its own protocol surface and conformanc
 | Name | Description |
 |------|-------------|
 | [ansible-collections.md](./ansible-collections.md) | Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist. |
+| [catalogue.md](./catalogue.md) | The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat. |
 | [generic.md](./generic.md) | Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end. |
 | [npm.md](./npm.md) | Spec for the npm registry format, where the caching proxy of the public registry is the primary use case rather than private publishing. |
 | [oci.md](./oci.md) | Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor. |

@@ -4,6 +4,7 @@
     "docs/internal/plans/foundation/conformance-harness.md"
   ],
   "internal/format/**": [
+    "docs/internal/plans/formats/catalogue.md",
     "docs/internal/plans/foundation/format-handler-interface.md"
   ],
   "internal/format/ansible/**": [

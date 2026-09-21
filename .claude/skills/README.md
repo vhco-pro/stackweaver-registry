@@ -21,7 +21,7 @@ network or marketplace state.
 |---|---|
 | `go` | The core. Idiomatic Go through 1.25: package design, error handling, interfaces, concurrency, testing, generics, and the modern stdlib packages. Applies to every `.go` file in this repo. |
 | `go-spec-reviewer` | Plugs straight into this project's SDD loop. `/spec review` on a Go-facing spec should run it: it catches over-engineering, missing error paths and interface misuse *before* implementation, which is precisely where this project's spec gate is meant to bite. |
-| `cobra-viper` | `cmd/artifactory` is a Cobra CLI and the server takes 12-factor configuration. Written by the author of both libraries. |
+| `cobra-viper` | `cmd/stackweaver-registry` is a Cobra CLI and the server takes 12-factor configuration. Written by the author of both libraries. |
 | `go-release` | This repository publishes a public Apache-2.0 Go module. Semantic-versioning promises, mechanical breaking-change detection, `Deprecated` conventions and `go.mod` hygiene all become binding the moment someone imports it. |
 
 ## What is deliberately not vendored

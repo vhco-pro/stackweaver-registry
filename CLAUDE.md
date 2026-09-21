@@ -4,8 +4,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-An open artifact repository: a multi-format package registry with **upstream caching, SSO and
-RBAC included**, not paywalled. Licensed Apache 2.0.
+**Stackweaver Registry.** An open artifact repository: a package registry targeting **~31
+language and OS ecosystems** with **upstream caching, SSO and RBAC included**, not paywalled.
+Licensed Apache 2.0. Part of the Stackweaver family; a separate platform under the same owned
+brand.
 
 The gap this fills is specific. For OCI, free is solved (Harbor, Quay, Zot). For multi-format
 hosting, free is solved (Gitea and Forgejo cover ~24 formats; GitLab CE covers most). What
@@ -14,9 +16,15 @@ upstreams, plus virtual aggregation, plus a usable UI, plus SSO**. Pulp has the 
 UI. Gitea has the UI and formats but cannot cache an upstream. Harbor has all three but speaks
 only OCI. JFrog and Sonatype have all of it and fence SSO, HA and quotas behind a licence.
 
-So the differentiator is the **proxy/cache layer**, not the hosting. A format that only hosts is
-a format Gitea already does for free. Design every format handler with its proxy path from the
-start; it changes the storage model and cannot be bolted on later.
+So the differentiators are **breadth** and the **proxy/cache layer**, together. Either alone is
+already served: Gitea has 24 formats and cannot proxy, Harbor proxies and speaks only OCI. A
+format that only hosts is a format Gitea already does for free, so design every handler with its
+proxy path from the start; it changes the storage model and cannot be bolted on later.
+
+Breadth is affordable because ~31 ecosystems collapse into ~15 wire protocols - whole language
+communities share a repository format. The engineering unit is the **protocol family**, the
+marketing unit is the **ecosystem**, and that asymmetry is the moat. Target list, tiers and family
+mapping: `docs/internal/plans/formats/catalogue.md`.
 
 **Stack:** Go 1.26. TypeScript/React frontend (later; there is no `web/` yet). Content-addressable
 blob storage over S3-compatible object storage. PostgreSQL for metadata.
@@ -226,7 +234,7 @@ debugged or refactored, and it governs package design, interfaces, concurrency, 
 generics and the modern stdlib. Do not re-derive Go style here or argue it from memory; read it.
 
 Three more are vendored and apply in their domains: `go-spec-reviewer` (run it during
-`/spec review` on any Go-facing spec, *before* implementation), `cobra-viper` (`cmd/artifactory`
+`/spec review` on any Go-facing spec, *before* implementation), `cobra-viper` (`cmd/stackweaver-registry`
 is a Cobra CLI), and `go-release` (this module is published, so semver promises and
 breaking-change detection are binding). Provenance, the exclusions, and the house-rule conflicts
 are in `.claude/skills/README.md`.
