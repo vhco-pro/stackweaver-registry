@@ -1,0 +1,149 @@
+[
+  {
+    "path": "docs/internal/conformance/matrix.md",
+    "description": "The per-format, per-client conformance support matrix. Generated from conformance run results - do not hand-edit.",
+    "internal": true,
+    "covers": [
+      "conformance/**"
+    ]
+  },
+  {
+    "path": "docs/internal/guidelines/documentation/DOCUMENTATION_STANDARDS.md",
+    "description": "Internal documentation standards covering when to include or exclude code examples and the expected reference format for post-implementation docs.",
+    "internal": true,
+    "covers": []
+  },
+  {
+    "path": "docs/internal/guidelines/documentation/FINDINGS_AND_ISSUES.md",
+    "description": "Where investigation findings live: the internal doc is the source of truth and the GitHub issue is a summary that points at it, never the other way round.",
+    "internal": true,
+    "covers": []
+  },
+  {
+    "path": "docs/internal/guidelines/documentation/PLAN_AND_DOC_FRONTMATTER.md",
+    "description": "Required frontmatter for internal docs and plans, the valid status values and how each renders, why README Contents tables must never be hand-edited, and the flow-diagram preference.",
+    "internal": true,
+    "covers": [
+      "scripts/build-docs-index.js",
+      "scripts/**"
+    ]
+  },
+  {
+    "path": "docs/internal/guidelines/documentation/plan-template.md",
+    "description": "The spec/plan template for the SDD loop: one document that is both the spec and the plan, with acceptance criteria, a test-plan mapping, open questions, and a review log that gates implementation.",
+    "internal": true,
+    "covers": []
+  },
+  {
+    "path": "docs/internal/guidelines/documentation/USER_FACING_DOCS_STANDARDS.md",
+    "description": "Standards for user-facing documentation in StackWeaver, defining scope, writing style, and the distinction from internal-only documents.",
+    "internal": true,
+    "covers": []
+  },
+  {
+    "path": "docs/internal/plans/formats/ansible-collections.md",
+    "description": "Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/ansible/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/formats/generic.md",
+    "description": "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/generic/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/formats/npm.md",
+    "description": "Spec for the npm registry format, where the caching proxy of the public registry is the primary use case rather than private publishing.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/npm/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/formats/oci.md",
+    "description": "Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/oci/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/formats/pypi.md",
+    "description": "Spec for the PyPI format, scheduled as the experiment's generalisation test - does format N+1 cost less than format N?",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/pypi/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/foundation/conformance-harness.md",
+    "description": "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "conformance/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/foundation/format-handler-interface.md",
+    "description": "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/foundation/project-charter.md",
+    "description": "The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work.",
+    "internal": true,
+    "status": "draft",
+    "covers": []
+  },
+  {
+    "path": "docs/internal/plans/foundation/proxy-cache.md",
+    "description": "Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/proxy/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/foundation/storage-and-gc.md",
+    "description": "Spec for the content-addressable blob store and reference-counted garbage collection, including the fault-injection testing that conformance cannot provide.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/storage/**"
+    ]
+  },
+  {
+    "path": "docs/internal/research/prior-art-artifact-repositories.md",
+    "description": "Survey of existing artifact repository managers, establishing that the unserved gap is multi-format plus upstream caching plus SSO, and that hosting alone is already solved for free.",
+    "internal": true,
+    "covers": []
+  },
+  {
+    "path": "docs/internal/tasks/experiment-log.md",
+    "description": "The autonomy experiment's measurement ledger: per-format intervention counts, token cost, and defect escape rate, kept to answer whether format N+1 costs less than format N.",
+    "internal": true,
+    "covers": []
+  },
+  {
+    "path": "docs/internal/tasks/lessons.md",
+    "description": "The portable memory of this repository: mistakes, their root causes, and the conventions they produced. Newest first.",
+    "internal": true,
+    "covers": []
+  }
+]

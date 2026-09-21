@@ -1,0 +1,33 @@
+# Build artifacts
+/bin/
+*.exe
+# `go build ./...` drops binaries in the working directory
+/artifactory
+
+# Test and coverage output
+*.test
+coverage.out
+coverage.html
+
+# Generated docs index (committed deliberately - see scripts/build-docs-index.js)
+# docs-coverage.json and docs-index.json ARE tracked; check-doc-coverage.js needs them.
+
+# Local env and secrets
+.env
+*.local.env
+/.secrets/
+
+# Conformance scratch space
+/conformance/.tmp/
+/conformance/testdata/cache/
+
+# Editors and OS
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Claude local settings (personal, not shared)
+.claude/settings.local.json
+.claude/projects/
+.claude/worktrees/

@@ -1,0 +1,31 @@
+#!/bin/bash
+# commit-msg hook: hard gate against AI / self-attribution in commit messages.
+#
+# Project policy (CLAUDE.md, no-self-credit): commits NEVER carry
+# "Co-Authored-By: Claude/Anthropic", "Generated with Claude Code", a 🤖 footer,
+# or any other self-credit. This hook makes that rule impossible to forget - it
+# rejects the commit before it is written, regardless of who (or what) authored
+# the message.
+#
+# Installed via: git config core.hooksPath .githooks  (scripts/setup-git-hooks.sh)
+
+set -e
+
+MSG_FILE="$1"
+RED='\033[0;31m'
+NC='\033[0m'
+
+# Case-insensitive patterns covering both default footer forms.
+PATTERN='(co-authored-by:[[:space:]]*.*(claude|anthropic))|noreply@anthropic\.com|generated with[[:space:]]*\[?claude|claude\.com/claude-code'
+
+if grep -qiE "$PATTERN" "$MSG_FILE"; then
+    echo -e "${RED}✖ commit-msg blocked: self-credit / AI attribution is not allowed.${NC}"
+    echo "  Offending lines:"
+    grep -inE "$PATTERN" "$MSG_FILE" | sed 's/^/    /'
+    echo ""
+    echo "  Remove any 'Co-Authored-By: Claude/Anthropic', 'Generated with Claude Code',"
+    echo "  or 🤖 footer line, then commit again. (Project policy - see CLAUDE.md.)"
+    exit 1
+fi
+
+exit 0

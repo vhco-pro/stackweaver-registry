@@ -1,0 +1,36 @@
+{
+  "conformance/**": [
+    "docs/internal/conformance/matrix.md",
+    "docs/internal/plans/foundation/conformance-harness.md"
+  ],
+  "internal/format/**": [
+    "docs/internal/plans/foundation/format-handler-interface.md"
+  ],
+  "internal/format/ansible/**": [
+    "docs/internal/plans/formats/ansible-collections.md"
+  ],
+  "internal/format/generic/**": [
+    "docs/internal/plans/formats/generic.md"
+  ],
+  "internal/format/npm/**": [
+    "docs/internal/plans/formats/npm.md"
+  ],
+  "internal/format/oci/**": [
+    "docs/internal/plans/formats/oci.md"
+  ],
+  "internal/format/pypi/**": [
+    "docs/internal/plans/formats/pypi.md"
+  ],
+  "internal/proxy/**": [
+    "docs/internal/plans/foundation/proxy-cache.md"
+  ],
+  "internal/storage/**": [
+    "docs/internal/plans/foundation/storage-and-gc.md"
+  ],
+  "scripts/**": [
+    "docs/internal/guidelines/documentation/PLAN_AND_DOC_FRONTMATTER.md"
+  ],
+  "scripts/build-docs-index.js": [
+    "docs/internal/guidelines/documentation/PLAN_AND_DOC_FRONTMATTER.md"
+  ]
+}

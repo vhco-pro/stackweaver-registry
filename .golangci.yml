@@ -1,0 +1,35 @@
+# Copyright (c) 2025 VH & Co BV. Licensed under the Business Source License 1.1. See LICENSE for details.
+
+# Reference: https://golangci-lint.run/usage/configuration/
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - gocritic
+    - gosec
+    # Additional production essentials:
+    - ineffassign      # Detects ineffectual assignments
+    - unconvert        # Removes unnecessary type conversions
+    - bodyclose        # Ensures HTTP response bodies are closed
+    - noctx            # Finds HTTP requests without context
+    - sqlclosecheck    # Ensures SQL rows/statements are closed
+    - rowserrcheck     # Checks sql.Rows.Err is checked
+    - contextcheck     # Ensures contexts are used correctly
+    - errchkjson       # Checks json.Marshal error returns
+    - exhaustive       # Checks switch statements are exhaustive
+    - nilnil           # Checks functions don't return (nil, nil)
+    - misspell         # Catches spelling errors
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+    - gci
+    - gofmt

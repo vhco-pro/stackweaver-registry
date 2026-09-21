@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**/*.md', 'docs/**']
+  pull_request:
+    paths-ignore: ['**/*.md', 'docs/**']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  GO_VERSION: '1.26'
+  # Keep in sync with scripts/verify-local.sh, which warns on local drift.
+  GOLANGCI_VERSION: v2.13.2
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.filter.outputs.go }}
+      conformance: ${{ steps.filter.outputs.conformance }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            go:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+            conformance:
+              - 'internal/format/**'
+              - 'internal/storage/**'
+              - 'internal/proxy/**'
+              - 'conformance/**'
+
+  lint:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      # gofumpt runs directly, not only via golangci-lint: only recent golangci releases
+      # enforce the gofumpt formatter, so the direct call is what makes this version-proof.
+      - name: gofumpt
+        run: |
+          go install mvdan.cc/gofumpt@latest
+          out=$(gofumpt -l .)
+          if [ -n "$out" ]; then echo "Unformatted files:"; echo "$out"; exit 1; fi
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: ${{ env.GOLANGCI_VERSION }}
+
+  test:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - run: go build ./...
+      - run: go test -race ./...
+
+  # The conformance suite drives REAL package clients against a real server. It is the only
+  # check that proves a format works, so unlike upstream's integration suite it runs on pull
+  # requests too - a green PR with a broken format is exactly the failure mode to avoid.
+  conformance:
+    needs: changes
+    if: needs.changes.outputs.conformance == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Run conformance suite
+        run: make conformance
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+      - name: Validate docs frontmatter and index
+        run: node scripts/build-docs-index.js --check
+      - name: Fail if the committed index is stale
+        run: |
+          node scripts/build-docs-index.js
+          if ! git diff --quiet -- docs-coverage.json docs-index.json docs/; then
+            echo "::error::Docs index is stale. Run 'make docs' and commit the result."
+            git diff --stat -- docs-coverage.json docs-index.json docs/
+            exit 1
+          fi
