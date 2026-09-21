@@ -1,11 +1,14 @@
 name: CI
 
+# No `paths-ignore` for docs here, deliberately. The `docs` job below validates frontmatter and
+# index staleness, so ignoring `docs/**` at the trigger would mean the one job that exists to
+# check documentation could never run on a documentation change. Cost is controlled instead by
+# the `changes` filter (Go work is skipped on docs-only pushes) and by the `[skip ci]` convention
+# on `docs/internal/**` commits.
 on:
   push:
     branches: [main]
-    paths-ignore: ['**/*.md', 'docs/**']
   pull_request:
-    paths-ignore: ['**/*.md', 'docs/**']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
