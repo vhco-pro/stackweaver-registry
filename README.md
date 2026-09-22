@@ -11,10 +11,10 @@ Part of the Stackweaver family; a separate platform, same brand.
 ## Why
 
 For containers, free is solved (Harbor, Quay, Zot). For multi-format hosting, free is solved
-(Gitea and Forgejo cover about 24 formats). What nobody ships for free is the combination:
+(Gitea and Forgejo cover 23 formats). What nobody ships for free is the combination:
 **breadth, plus caching proxies of upstream registries, plus single sign-on.**
 
-Pulp has the plumbing and no UI. Gitea has the UI and 24 formats and **cannot cache an upstream**.
+Pulp has the plumbing and no UI. Gitea has the UI and 23 formats and **cannot cache an upstream**.
 Harbor caches beautifully and speaks **only OCI**. JFrog and Sonatype have all of it and fence SSO,
 HA and quotas behind a licence.
 

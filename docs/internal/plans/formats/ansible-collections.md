@@ -18,7 +18,7 @@ covers:
 This format inverts the charter's general rule. Everywhere else, hosting alone is not
 differentiating because Gitea does it for free. Ansible is the exception:
 
-- Gitea's 24 package types do **not** include Ansible, and Forgejo's support is an unmerged
+- Gitea's 23 package types do **not** include Ansible, and Forgejo's support is an unmerged
   community proposal.
 - The only free options are Galaxy NG and pulp_ansible, both built on Pulp with Django,
   PostgreSQL, Redis and workers. Practitioners describe running them as heavy to the point of

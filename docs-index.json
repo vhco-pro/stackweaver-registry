@@ -67,7 +67,8 @@
     "status": "draft",
     "issue": "6",
     "covers": [
-      "internal/format/generic/**"
+      "internal/format/generic/**",
+      "conformance/generic/**"
     ]
   },
   {
@@ -87,7 +88,8 @@
     "status": "draft",
     "issue": "7",
     "covers": [
-      "internal/format/oci/**"
+      "internal/format/oci/**",
+      "conformance/oci/**"
     ]
   },
   {
@@ -118,7 +120,8 @@
     "issue": "12",
     "covers": [
       "internal/model/**",
-      "internal/storage/**"
+      "internal/storage/**",
+      "internal/proxy/**"
     ]
   },
   {

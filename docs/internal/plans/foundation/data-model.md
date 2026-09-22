@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
+status_description: "First review pass (2026-09-22) raised six open questions (Q4-Q9) on snapshot write granularity, snapshot GC liveness, content-set representation, the missing Upstream entity, package/repository-scope metadata, and the OCI reference graph; stays draft until the owner answers."
 description: "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies."
 author: michielvha
 goal: "Make breadth affordable by giving all 33 ecosystems one metadata schema, so a format is parsing plus routes rather than a bespoke database design."
@@ -10,6 +10,7 @@ created: 2026-09-22
 covers:
   - "internal/model/**"
   - "internal/storage/**"
+  - "internal/proxy/**"
 ---
 
 # Plan: Shared data model
@@ -25,7 +26,7 @@ ecosystems that reproduces 31 bespoke schemas, 31 sets of migrations, and 31 dif
 depends on.
 
 The prior art is unambiguous
-(`docs/internal/research/registry-architecture-prior-art.md`). **Gitea serves all 22 of its
+(`docs/internal/research/registry-architecture-prior-art.md`). **Gitea serves all 23 of its
 formats from one four-table model:**
 
 ```
@@ -94,8 +95,9 @@ statement about how the blob arrived, not about where it lives.
 Consequences worth stating explicitly, because they are where the bugs will be:
 
 - A blob can be referenced by a published artifact **and** a cached one simultaneously. GC
-  liveness therefore has two reference classes, which is the complication
-  `storage-and-gc.md` Q1 has to price in.
+  liveness therefore has two reference classes, which the resolved collection strategy in
+  `storage-and-gc.md` now prices in: the sweep marks from both roots. Whether snapshots add a
+  third root is Q5 below.
 - When several upstreams offer the same content, there is **one** `Package`/`Version` and
   **several** `RemoteFile` rows, tried in turn. This falls out of the model rather than needing
   failover logic in each handler.
@@ -112,7 +114,8 @@ Consequences worth stating explicitly, because they are where the bugs will be:
 
 ### Snapshots: schema now, features later
 
-Every write creates a `Snapshot`; serving always resolves through a `Pointer`. In v1 there is
+Every write creates a `Snapshot` (what counts as a write is open - Q4); serving always
+resolves through a `Pointer`. In v1 there is
 exactly one pointer per repository and it always advances to the newest snapshot, so the
 behaviour is indistinguishable from a mutable repository. Nothing in the API exposes snapshots.
 
@@ -145,6 +148,11 @@ this, because a single handler that reads "latest" directly silently reintroduce
       GC against a repository whose content arrived entirely by `on_demand`.
 - [ ] AC8: Adding a format requires zero schema migrations, demonstrated across the Tier 0 and
       Tier 1 formats.
+- [ ] AC9: A content-changing write produces a new `Snapshot` and advances the repository's
+      pointer, and a read served after repointing to an older snapshot returns that snapshot's
+      content, proving serving really resolves through the pointer.
+- [ ] AC10: No handler package resolves repository content except through the pointer or
+      snapshot it is given, enforced by the architecture test named in Design.
 
 ## Test Plan
 
@@ -157,7 +165,9 @@ this, because a single handler that reads "latest" directly silently reintroduce
 | AC5 | integration | `internal/proxy/streamed_test.go` |
 | AC6 | integration | `internal/proxy/failover_test.go` |
 | AC7 | property | `internal/storage/gc_property_test.go` |
-| AC8 | manual | verified per format at spec review |
+| AC8 | manual | procedure: each format's spec review confirms the format PR contains no schema migration, recorded per format in `docs/internal/tasks/experiment-log.md` |
+| AC9 | integration | `internal/model/snapshot_test.go` |
+| AC10 | architecture test | `internal/model/arch_test.go` |
 
 ## Implementation Phases
 
@@ -170,13 +180,122 @@ Repository, Package, Version, File, Blob, with the opaque metadata document.
 ### Phase 3: GC integration
 The second reference class, and the property tests that police it.
 
+## Tasks
+
+Populated by `/tasks` once this spec reaches `planned`.
+
 ## Open Questions
 
-None. Every question this spec raised has been answered by the owner and folded into
-Design and Scope above, with each decision's accepted cost recorded beside it.
+The first review pass (2026-09-22, adversarial lens) raised the questions below. Each is a
+place where two implementors would build different systems, or where a promised feature has no
+home in the schema as written. Implementation cannot start while they stand.
 
-Resolved decisions are kept rather than deleted, so the reasoning survives the next time
-someone asks why it was done this way.
+Resolved decisions are kept at the end rather than deleted, so the reasoning survives the next
+time someone asks why it was done this way.
+
+### Q4: What counts as a "write" for snapshot creation?
+
+**Recommendation:** A - a snapshot per logical content-set change committed by the handler
+(publish completed, version deleted, upstream sync batch), with blob uploads and `on_demand`
+materialisations of already-known files explicitly not counting. An OCI push is a dozen blob
+uploads plus one manifest PUT, a Maven deploy is ten to twenty separate PUTs with no
+client-visible transaction boundary, and a busy CI fleet drives thousands of cache fills an
+hour; per-request snapshots make none of those a consistent state and put every cache fill in
+contention on the repository's monotonic snapshot sequence.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Per logical publish** | O(publishes) snapshots, each a consistent state; cache fills of already-known files stay lock-free because they change no content set | Handlers must declare commit points, and each multi-file format needs an explicit grouping rule |
+| **B. Per write request** | Trivial uniformity; no per-format grouping rules | Snapshot bloat; every write serialises on the repository's snapshot sequence, including the hot proxy path; a publish smears across many snapshots, so a rollback can land between a jar and its pom |
+
+**Why this is yours:** it fixes the unit of rollback users will see and trades schema
+simplicity against hot-path throughput, and no measurement can make that trade for you.
+
+### Q5: Is a blob whose only reference sits in a non-current snapshot live, and what prunes snapshots?
+
+**Recommendation:** A - retained snapshots are GC roots, retention is bounded per repository by
+count or age, and deleting content means pruning the snapshots that still contain it. Whichever
+way this lands, `storage-and-gc.md` must carry it: its resolved collection strategy marks from
+exactly two roots (published and cached), and a sweep blind to snapshot references would delete
+rollback targets, while treating every snapshot as a root forever means nothing is ever
+collected.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Retained snapshots pin content** | Rollback and frozen mirrors actually work: repointing can never dangle | Storage grows with retention; "delete" only reclaims space once the containing snapshots prune, which needs explaining to users |
+| **B. Only pointer-targeted snapshots pin** | Bounded storage; deletion reclaims promptly | Rollback is only safe to snapshots a pointer already holds, which guts the instant-rollback promise the schema is paying for |
+
+**Why this is yours:** it prices the rollback promise in storage, decides what "delete" means
+to a user, and obligates a change in the most dangerous component's spec.
+
+### Q6: What does a Snapshot concretely capture, and how is its content set stored?
+
+**Recommendation:** A - membership only, encoded Pulp-style as added-in/removed-in snapshot
+numbers on the membership row, so a write costs O(changes) rather than O(repository). Design
+should then state plainly that metadata documents are not frozen, so v1 rollback restores which
+versions exist but not what a mutable document said at the time.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Membership ranges, documents mutable** | O(delta) writes; the proven shape (Pulp's `RepositoryVersion`) | Rollback and frozen mirrors freeze membership, not metadata; the feature promise must be worded honestly |
+| **B. Membership plus copy-on-write documents** | Full-fidelity rollback and truly frozen mirrors | Every metadata edit copies a document, and GC gains document versions as another thing to collect |
+| **C. Materialised set per snapshot** | Trivial queries | O(repository) rows per write; unaffordable for a cache repository with hundreds of thousands of versions |
+
+**Why this is yours:** it decides what promotion, rollback and frozen mirrors can honestly
+promise, which is a product commitment rather than a technical preference.
+
+### Q7: Where do upstream URL, credentials and download policy live - does the model need an `Upstream` entity?
+
+**Recommendation:** Add one. The entity table hangs "upstream config" off `Repository` and URL
+plus credentials off every `RemoteFile`, which leaves failover ordering, per-upstream download
+policy and the adapter type (`format-handler-interface.md` settled upstream adapters as a
+separate axis) with no home, and makes credential rotation a mass `RemoteFile` update. An
+ordered `Upstream` list per repository, with `RemoteFile` holding an upstream reference plus a
+path, matches both Pulp's `Remote` and Harbor's adapter axis.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. An `Upstream` entity** | Rotation is one row; policy, adapter type and failover order each have a home; `RemoteFile` shrinks to upstream ref plus path | One more core table |
+| **B. As written** | Fewer tables | Credentials denormalised across `RemoteFile` rows; download policy and adapter type homeless; failover order implicit in row order |
+
+**Why this is yours:** it adds a core table, and this spec reserves exactly that decision to
+itself.
+
+### Q8: Where does package-level and repository-level mutable metadata live?
+
+**Recommendation:** Mirror the opaque document at `Package` scope, and store repository-level
+generated indexes (Debian `Release` and `Packages`, RPM `repomd.xml`) as blobs keyed by
+snapshot, owned by the signed-index shared service and named as a GC root. As written the
+opaque document exists only on `Version`, so npm dist-tags and deprecations and Maven's
+`latest`/`release` pointers - all package-level, all mutable, and dist-tags are in the npm
+spec's v1 scope - have no home, and handlers will smuggle them into a fake version, which is
+the bespoke-schema failure in miniature.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Documents at Version and Package scope, snapshot-keyed index blobs** | dist-tags, Maven metadata and signed indexes each get a first-class home; apt's index-versus-content consistency races die because index and packages resolve through the same snapshot | Two more places snapshots and GC must account for |
+| **B. Version-only, as written** | Smallest schema | Three Tier 0/1 formats (npm, Maven, Debian) cannot store required state without abusing the model |
+
+**Why this is yours:** it is the difference between the model claiming npm, Maven and Debian
+support and actually holding their state, and it widens the schema this spec exists to keep
+narrow.
+
+### Q9: How do OCI manifest lists and the referrers API map onto the model?
+
+**Recommendation:** For v1 the OCI handler flattens transitive blob references into `File`
+rows so GC stays sound and keeps the manifest graph inside the opaque document, and the
+referrers API is deferred until a generic version-to-version reference edge is added - raised
+then as the spec change this spec's own escalation rule demands. The collision exists today:
+`oci.md` lists the referrers API in scope, and "list artifacts whose subject is X" is a query
+the core cannot serve over a document it never parses.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Flatten now, reference edge later** | No schema addition today; GC stays correct via `File` rows | Referrers deferred, so `oci.md`'s scope must say so; removing one platform manifest from an index has no first-class representation |
+| **B. Add a version-to-version `Reference` edge now** | Referrers and index-child deletion fall out queryably | A core table and edge semantics thirty-plus other formats never use |
+
+**Why this is yours:** either answer forces an edit to `oci.md`'s scope or to this schema, and
+choosing which spec bends is an architecture call.
 
 ### Resolved: remote modelling (was Q1)
 
@@ -195,7 +314,7 @@ it touches every table and every handler - so a small structural cost now conver
 migration into a feature flag. See the Snapshots section in Design for the binding constraint on
 handlers.
 
-### Resolved: metadata typing (was Q1)
+### Resolved: metadata typing (was Q3, briefly renumbered Q1)
 
 **Settled 2026-09-22: opaque to the core, typed inside the handler.** The core stores and
 returns a JSON document it never interprets.
@@ -209,3 +328,4 @@ back toward the 31 bespoke schemas this model exists to prevent.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-22 | afbb4e4 | adversarial + constitution + sibling consistency (code-claim verification vacuous: pre-implementation, no tree to check) | Breadth claim stressed against Maven, OCI, Debian and npm; six open questions raised (Q4-Q9), snapshot ACs added (AC9, AC10), stale sibling references corrected; stays draft |

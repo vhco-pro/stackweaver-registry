@@ -10,14 +10,14 @@ Licensed Apache 2.0. Part of the Stackweaver family; a separate platform under t
 brand.
 
 The gap this fills is specific. For OCI, free is solved (Harbor, Quay, Zot). For multi-format
-hosting, free is solved (Gitea and Forgejo cover ~24 formats; GitLab CE covers most). What
+hosting, free is solved (Gitea and Forgejo cover 23 formats; GitLab CE covers most). What
 nobody ships for free is the combination: **multi-format, plus remote proxy/caching of
 upstreams, plus virtual aggregation, plus a usable UI, plus SSO**. Pulp has the plumbing and no
 UI. Gitea has the UI and formats but cannot cache an upstream. Harbor has all three but speaks
 only OCI. JFrog and Sonatype have all of it and fence SSO, HA and quotas behind a licence.
 
 So the differentiators are **breadth** and the **proxy/cache layer**, together. Either alone is
-already served: Gitea has 24 formats and cannot proxy, Harbor proxies and speaks only OCI. A
+already served: Gitea has 23 formats and cannot proxy, Harbor proxies and speaks only OCI. A
 format that only hosts is a format Gitea already does for free, so design every handler with its
 proxy path from the start; it changes the storage model and cannot be bolted on later.
 
@@ -262,6 +262,15 @@ Project-specific rules the skill does not cover:
 - Format handlers implement a common interface and must not reach into each other. Cross-format
   behavior belongs in the storage, proxy, or auth layer, never in a handler. Enforced by
   architecture tests, not by review.
+- **All formats share one data model. No handler owns a table.** A handler reads and writes an
+  opaque metadata document through the shared schema and never issues its own DDL. A format that
+  appears to need its own table is evidence the shared model is wrong, raised as a spec change -
+  never a licence to add one. This is what makes breadth affordable rather than 31 bespoke
+  schemas (`docs/internal/plans/foundation/data-model.md`).
+- **Every shared concern needs a named mechanical enforcer.** Handlers receive raw `*http.Request`,
+  so the compiler holds nothing: each boundary (storage access, network egress, auth, snapshot
+  resolution) must be held by a specific architecture test or lint rule, named in the spec that
+  introduces it. A boundary enforced only by review is not enforced.
 - Blob storage is content-addressable. Never key a blob by anything but its digest.
 
 ### Commit Messages

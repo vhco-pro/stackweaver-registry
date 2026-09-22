@@ -8,7 +8,7 @@ covers: []
 Grounded survey of how the projects that already solved multi-format support actually structure
 it, gathered to make the plugin-architecture decisions on evidence rather than taste.
 
-## Gitea: 22 formats, no plugin runtime at all
+## Gitea: 23 formats, no plugin runtime at all
 
 The single most instructive data point, because it is the largest free multi-format registry in
 existence and it is written in Go.
@@ -19,12 +19,12 @@ across three layers:
 | Layer | Responsibility | Verified contents |
 |---|---|---|
 | `modules/packages/<type>` | Parse and validate the uploaded artifact, extract metadata | 22 dirs: alpine, arch, cargo, chef, composer, conan, conda, container, cran, debian, goproxy, helm, maven, npm, nuget, pub, pypi, rpm, rubygems, swift, terraform, vagrant |
-| `routers/api/packages/<type>` | The ecosystem's HTTP endpoints | 23 dirs, the above plus `generic` and a shared `helper` |
+| `routers/api/packages/<type>` | The ecosystem's HTTP endpoints | 23 format dirs, the above plus `generic`, next to a shared `helper` |
 | `services/packages/` | Shared storage and model logic; per-type code only where needed | shared files plus only 7 type dirs: alpine, arch, cargo, container, debian, rpm, terraform |
 
 Two findings matter.
 
-**1. One shared data model serves all 22 formats:**
+**1. One shared data model serves all 23 formats:**
 
 ```
 Package 1--* PackageVersion 1--* PackageFile *--1 PackageBlob
@@ -33,7 +33,7 @@ Package 1--* PackageVersion 1--* PackageFile *--1 PackageBlob
 Breadth is affordable because the *model* is generic, not because the *runtime* is pluggable.
 Each format is metadata parsing plus routes on top of four shared tables.
 
-**2. Only 7 of 22 formats need service-layer code**, and the list is diagnostic: alpine, arch,
+**2. Only 7 of 23 formats need service-layer code**, and the list is diagnostic: alpine, arch,
 cargo, container, debian, rpm, terraform. Those are exactly the formats with **generated or
 signed repository indexes** (apk indexes, pacman databases, the Cargo index, OCI manifests, apt
 `Release`, `repomd.xml`, the Terraform registry protocol). Everything else is a thin per-format
@@ -103,13 +103,13 @@ not dynamic, but binary size and attack surface shrink when a feature is off.
 
 | Option | Who does it | Gets you | Costs |
 |---|---|---|---|
-| **A. Compile-time Go interfaces** | Gitea (22 formats), Harbor | Simplest by far; one binary; no IPC; refactors are type-checked across all formats | Third parties cannot add a format without forking; every format ships in every binary |
+| **A. Compile-time Go interfaces** | Gitea (23 formats), Harbor | Simplest by far; one binary; no IPC; refactors are type-checked across all formats | Third parties cannot add a format without forking; every format ships in every binary |
 | **B. Build-tag gated** | zot | A-plus-slimmer binaries and smaller attack surface | Combinatorial build matrix; a format can break only in a configuration nobody built |
 | **C. Out-of-process gRPC** | HashiCorp `go-plugin`: Terraform, Vault, Nomad, Packer | Third-party formats without forking; a crashing plugin cannot take down the host; plugins ship on their own schedule | Performance cost on every call, explicitly acknowledged upstream; local-network only by design; protocol versioning becomes a permanent compatibility surface |
 | **D. WASM** | No registry precedent found | Sandboxed, language-agnostic | Streaming multi-gigabyte blobs across a WASM boundary is the wrong shape; immature |
 
 **The evidence leans hard toward A.** The largest free multi-format registry in existence ships
-22 formats with no plugin runtime, and the cost it pays is one it does not appear to feel.
+23 formats with no plugin runtime, and the cost it pays is one it does not appear to feel.
 Option C's benefit is third-party extensibility, which matters only once there is a third party
 who wants it.
 

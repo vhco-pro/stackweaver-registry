@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
+status_description: "Reviewed 2026-09-22 at afbb4e4; stays draft: two open questions (CI trigger policy for the conformance job, corpus refresh policy) await the owner."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -69,7 +69,9 @@ never in a recollection of how a client behaves.
 The harness core knows nothing about any format. Per case it:
 
 1. Starts a server instance with a per-case isolated storage prefix and database schema, so
-   cases run concurrently without sharing state.
+   cases run concurrently without sharing state. Per the client-orchestration resolution below,
+   an instance may be reused across cases where their declared isolation needs permit, but the
+   default is full per-case isolation and a case must never observe another case's state.
 2. Provisions whatever the case declares it needs: a repository, a token, an upstream.
 3. Runs the client container with the case's script, the server URL and credentials injected.
 4. Captures exit code, stdout, stderr and the full HTTP transcript through an inspecting proxy.
@@ -78,13 +80,31 @@ The harness core knows nothing about any format. Per case it:
 Client containers are pinned by digest, never by tag. A case that passes because the tag moved
 is a case that will fail silently later.
 
+Two constraints on the capture path, named here because they shape every case:
+
+- **Assertions observe the server only through the protocol.** Digests and other server-side
+  outcomes in `expect` are asserted from protocol-visible data (the transcript, response
+  headers, listings), never by reaching into the server's storage or database, which would
+  break AC1's format-agnostic claim. Outcomes the protocol cannot observe (storage
+  deduplication, GC behaviour) are integration or property tests in the owning layer, not
+  conformance cases; `generic.md` AC3 and `storage-and-gc.md` already follow this split.
+- **Transcript capture means TLS interception.** Several clients refuse plain HTTP (docker
+  without an insecure-registry flag, and any recording session against a public registry over
+  HTTPS), so both the inspecting proxy and the recording proxy must terminate TLS with a
+  harness CA injected into the client container's trust store. Trust-store injection is
+  per-client (docker's `certs.d`, npm's `cafile`, pip's `REQUESTS_CA_BUNDLE`) and is therefore
+  part of each format's case setup, not of the harness core.
+
 ### Case definition
 
 Cases are declarative, so a new case is data and an agent can add one without touching harness
 code. Roughly:
 
 - `format`, `name`, and the `client` image + digest + version label
-- `mode`: `hosted` or `proxied` - **every format must have cases in both**
+- `mode`: `hosted` or `proxied` - **every format must have cases in both**, unless the
+  format's spec declares a mode unsupported; `generic` is the single current exemption
+  (`format-handler-interface.md`, the proxy-path resolution), and the runner requires the
+  declaration rather than inferring the gap from an absent case set
 - `setup`: repositories, tokens and upstreams to provision
 - `script`: the client command sequence
 - `expect`: exit code, required and forbidden output patterns, resulting digests, and optionally
@@ -109,8 +129,25 @@ The corpus is a self-generating specification. It captures the undocumented quir
 otherwise cost months, and it is the mechanism by which a format handler can be built by an
 agent without a human ever reading the protocol documentation.
 
+Replay is harder than response normalisation, and this spec names that now rather than
+discovering it mid-implementation. Recorded requests embed session-scoped values: an OCI
+chunked upload PATCHes a `Location` URL containing the reference server's upload ID, and auth
+headers carry tokens minted by the reference. Replay-match therefore needs **request-side
+correlation** - rewriting recorded requests so that server-generated values (upload session
+URLs, token endpoints, redirect targets) refer to our server's equivalents from earlier in the
+same recorded flow - not only response-side normalisation. A corpus format that cannot express
+"this request value came from that earlier response" cannot replay any stateful flow.
+
+Corpora and transcripts are also a leak surface. Recording against the public registry can
+capture real credentials (auth headers, tokens, cookies), and the drift job attaches failing
+transcripts to issues. Recording redacts credential material at capture time, and the runner
+refuses a corpus that matches known credential patterns (AC13).
+
 Normalisation rules are per-format and are themselves reviewed: an over-eager normaliser hides
-real differences, and that failure is invisible because everything goes green.
+real differences, and that failure is invisible because everything goes green. The same review
+obligation covers the per-format recording script, because the corpus closes the
+unknown-cases gap only for flows the recording session actually drove: a thin script yields a
+thin specification that is green everywhere it looks.
 
 ### Upstream client drift
 
@@ -141,12 +178,21 @@ volunteer registries becomes a cron job that files a ticket.
 - [ ] AC9: `make conformance` exits non-zero if any case fails or is improperly skipped.
 - [ ] AC10: `docs/internal/conformance/matrix.md` is generated from run results, and CI fails if
       the committed copy is stale.
+- [ ] AC11: The runner fails a format whose case set does not cover both modes, unless the
+      format's spec declares a mode unsupported; the declared exemption is honoured, and only
+      `generic` holds one.
+- [ ] AC12: The scheduled drift job runs the suite against the latest release of every client
+      and opens an issue carrying the failing transcript when a case fails, demonstrated by a
+      manual dispatch against a deliberately failing fixture.
+- [ ] AC13: A recorded corpus and an attached transcript contain no credential material:
+      recording redacts auth headers and tokens at capture time, and the runner rejects a
+      corpus matching known credential patterns.
 
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
-| AC1 | unit | `conformance/core/runner_test.go` |
+| AC1 | architecture test | `conformance/core/arch_test.go` (the core package imports no format package) |
 | AC2 | integration | `conformance/core/runner_test.go` (broken-handler fixture) |
 | AC3 | integration | `conformance/core/isolation_test.go` |
 | AC4 | unit | `conformance/core/case_validate_test.go` |
@@ -156,6 +202,9 @@ volunteer registries becomes a cron job that files a ticket.
 | AC8 | conformance | `conformance/oci/official_test.go` |
 | AC9 | ci | `.github/workflows/ci.yml` conformance job |
 | AC10 | ci | `.github/workflows/ci.yml` docs job |
+| AC11 | unit | `conformance/core/case_validate_test.go` |
+| AC12 | ci | scheduled drift workflow, proven by a written manual-dispatch procedure |
+| AC13 | unit | `conformance/record/redact_test.go` |
 
 ## Implementation Phases
 
@@ -178,11 +227,42 @@ volunteer registries becomes a cron job that files a ticket.
 
 ## Open Questions
 
-None. Every question this spec raised has been answered by the owner and folded into
-Design and Scope above, with each decision's accepted cost recorded beside it.
+Two questions raised by the 2026-09-22 review pass await the owner. The questions the spec
+originally raised were answered and folded in; those resolutions are kept below rather than
+deleted, so the reasoning survives the next time someone asks why it was done this way.
 
-Resolved decisions are kept rather than deleted, so the reasoning survives the next time
-someone asks why it was done this way.
+### Q1: When does CI actually run the conformance suite?
+
+**Recommendation:** B - a path-filtered job on pushes to `main`, plus the scheduled drift job;
+PRs never run it.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Every push to `main`** | The staleness gate (AC10) is always enforced against reality | Minutes of container time on every push, including pushes that cannot change a conformance result |
+| **B. Path-filtered on `main`** (`internal/**`, `conformance/**`, workflows) | The gate runs exactly when a result could change | A filter that misses an indirect dependency lets a stale matrix land until the next filtered push or scheduled run |
+| **C. Scheduled only (nightly plus the drift job)** | Near-zero per-push cost | `main` can be broken for up to a day, and AC9/AC10 stop being push gates at all |
+
+**Why this is yours:** this is a budget allocation. CLAUDE.md says a commit to `main` is the
+only CI spend taken for granted, but the conformance job is the most expensive thing CI will
+ever run here, and only the owner can price how much gate strength the minutes budget buys.
+AC9 and AC10 presuppose an answer; the spec currently never states one.
+
+### Q2: What triggers re-recording a committed corpus against the public registry?
+
+**Recommendation:** C - manual re-record on evidence of drift (a drift-job failure or a
+protocol-facing bug report), with every corpus carrying its recorded-on date and the client
+version that produced it.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Scheduled re-record and diff** | Corpus rot is detected on a clock, not by an incident | Recurring network dependence and rate-limit exposure, the exact costs the in-repo decision (was Q2) avoided, plus noisy diffs from benign upstream changes |
+| **B. Frozen at first recording** | Zero recurring cost, fully reproducible | Our server converges on a snapshot of the upstream as of the recording date; replay failures against a stale corpus misdiagnose our bugs as regressions and vice versa |
+| **C. Manual, on evidence of drift** | Cost only when there is a symptom | Detection is reactive: the corpus can be quietly wrong for as long as no client version happens to expose it |
+
+**Why this is yours:** the corpus is the specification, so choosing its refresh cadence is
+choosing how stale the specification is allowed to be, priced against upstream rate limits and
+re-record effort. It sits on top of two decisions you already made (in-repo corpora, the public
+registry as authority), and only you can weigh it consistently with them.
 
 ### Resolved: client orchestration (was Q1)
 
@@ -221,3 +301,4 @@ question in `formats/npm.md`.**
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous: pre-implementation tree, stub `main.go` only) | Added mode-coverage, drift-job and credential-redaction ACs (AC11-AC13); named TLS interception and stateful-replay request correlation as design constraints; raised Q1 (CI trigger policy) and Q2 (corpus refresh policy); stays draft. |

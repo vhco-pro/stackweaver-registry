@@ -18,8 +18,14 @@ wrong determines what this project should and should not build.
 | Tool | Licence | Covers | Limit |
 |---|---|---|---|
 | **Harbor** (CNCF graduated) | Apache 2.0 | OCI: images, Helm-as-OCI, arbitrary OCI artifacts. Replication, Trivy scanning, Cosign/Notation signing, proxy cache | OCI only |
-| **Gitea package registry** | MIT | 24 formats: Alpine, Arch, Cargo, Chef, Composer, Conan, Conda, Container, CRAN, Debian, Generic, Go, Helm, Maven, npm, NuGet, Pub, PyPI, RPM, RubyGems, Swift, Terraform, Vagrant | **No upstream proxy/caching** |
+| **Gitea package registry** | MIT | 23 formats: Alpine, Arch, Cargo, Chef, Composer, Conan, Conda, Container, CRAN, Debian, Generic, Go, Helm, Maven, npm, NuGet, Pub, PyPI, RPM, RubyGems, Swift, Terraform, Vagrant | **No upstream proxy/caching** |
 | **Forgejo package registry** | GPL | Same family as Gitea | Same limit |
+
+The Gitea figure is **counted from source**, not taken from its documentation: `routers/api/packages`
+on `go-gitea/gitea@main` holds 23 format packages plus a shared `helper`, and `modules/packages`
+holds 22 metadata parsers (`generic` needs none, having no metadata to extract). Gitea's own
+overview page says 24. Where a documented number and a counted one disagree, this project cites
+the counted one and says so.
 | **GitLab CE** | MIT core | Most formats, plus a dependency proxy | Heavy; you inherit all of GitLab |
 | **Pulp 3** | GPLv2 | rpm, deb, container, python, ansible, maven, npm, gem, file, ostree, with real sync/promote/publish | Headless API, weak UI story |
 | **Project Quay** | Apache 2.0 | OCI | OCI only |
