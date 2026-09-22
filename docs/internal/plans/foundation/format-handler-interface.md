@@ -130,22 +130,23 @@ A format is complete when, and only when:
 
 ### Q1: Does the interface expose HTTP directly, or an abstracted request/response?
 
-**This is not a style question.** Per the prior-art survey, it decides whether an out-of-process
-boundary is ever possible: an interface that passes `*http.Request` around can never be served
-over gRPC, so answering "HTTP directly" forecloses Q3 option B permanently, today.
+**The stakes on this dropped** once the extension boundary was settled as compile-time (see
+Resolved below). It previously decided whether an out-of-process boundary stayed possible;
+with that explicitly not being preserved, this is now a narrower question about how much the
+core can enforce versus how much a handler can reach around it.
 
-**Recommendation:** a narrow abstracted request/response that is explicitly stream-shaped and
-serialisable, carrying method, path, query, the headers that matter, and a body reader. Enough
-fidelity for `Range`, `Location` and conditional requests; no `*http.Request`.
+**Recommendation:** HTTP directly, with shared concerns (auth, storage, cache policy) enforced by
+architecture tests rather than by the type system. The abstraction's remaining benefit does not
+justify anticipating 33 ecosystems' protocol quirks up front.
 
 | Option | You get | It costs |
 |---|---|---|
-| **A. HTTP directly** | Full protocol fidelity; nothing to work around | Locks the boundary in-process forever; shared concerns enforceable only by lint |
-| **B. Narrow serialisable abstraction** | Keeps the out-of-process door open; shared concerns structurally unbypassable | Every protocol quirk must be anticipated in the abstraction, and the misses are discovered one format at a time |
-| **C. Full abstraction (no HTTP concepts)** | Maximum safety | Leaks immediately on OCI's chunked upload semantics |
+| **A. HTTP directly** | Full protocol fidelity; nothing to work around; simplest handlers | Shared concerns enforceable only by lint and architecture tests, never by the compiler |
+| **B. Narrow serialisable abstraction** | Shared concerns structurally unbypassable; out-of-process stays reachable if that is ever wanted after all | Every protocol quirk must be anticipated, and the misses surface one format at a time |
 
-**Why this is yours:** it trades protocol fidelity today against optionality later, in the one
-interface all 33 ecosystems inherit.
+**Why this is yours:** it is the last call on how much the core polices handlers, and reversing it
+after several formats exist is expensive. **Not answered here on purpose** - this spec's own rule
+is that open questions belong to the owner.
 
 ### Q2: Is the proxy path opt-in per format, or mandatory from day one?
 
@@ -157,26 +158,16 @@ format only, with that exception named in its spec.
 
 **Why this is yours:** it decides whether the first milestone slips to protect the principle.
 
-### Q3: Where is the extension boundary - compile-time modules, or a real plugin runtime?
+### Resolved: extension boundary (was Q3)
 
-The word "plugin" implies a dynamic runtime. The evidence says one is not required for
-modularity: **Gitea ships 22 formats as compile-time Go packages with no plugin runtime at all**,
-and Harbor does the same for its 15 upstream adapters. What they have instead is a uniform
-interface plus a shared data model, which is what "every ecosystem slots in the same way"
-actually means.
+**Settled 2026-09-22: compile-time Go modules.** Each format is a package implementing the shared
+interface, compiled into one binary. This is what Gitea does for 22 formats and Harbor for 15
+upstream adapters; **no dynamic plugin runtime is required for modularity**, which comes from a
+uniform interface plus a shared data model instead.
 
-**Recommendation:** compile-time modules (A), with the interface *shaped* per Q1 so option B
-stays reachable if a third party ever wants to ship a format out of tree.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Compile-time Go modules** (Gitea, Harbor) | Simplest; one binary; refactors type-checked across all 33 formats; no IPC | A third party cannot add a format without forking; every format ships in every binary |
-| **B. Out-of-process gRPC** (`go-plugin`: Terraform, Vault, Nomad) | Third-party formats without forking; a crashing handler cannot take the server down; independent release cadence | Per-call performance cost acknowledged upstream; local-only by design; plugin protocol versioning becomes a permanent compatibility surface |
-| **C. Build-tag gated** (zot) | A, plus smaller binaries and attack surface | Combinatorial build matrix; a format can break in a configuration nobody builds |
-
-**Why this is yours:** option B's entire benefit is third-party extensibility, which is worth
-paying for only if you expect third parties. That is a product-strategy judgement, not a
-measurement.
+Accepted cost: a third party cannot add a format without forking, and every format ships in every
+binary. Out-of-process gRPC (`go-plugin`, as Terraform and Vault use) buys third-party
+extensibility, and that is worth paying for only once a third party wants it.
 
 ### Q4: Are upstream adapters a separate axis from format handlers?
 

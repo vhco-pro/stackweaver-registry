@@ -130,19 +130,15 @@ of reference. **That spec must land first**; this one depends on how its open qu
 
 ## Open Questions
 
-### Q1: Is the cache a distinct store, or the same CAS with a different reference class?
+### Resolved: cache location (was Q1)
 
-**Recommendation:** the same CAS. A blob that arrives from an upstream and a blob that arrives
-from a publish are byte-identical and should be stored once, which is a real win for teams that
-mirror what they also fork.
+**Settled 2026-09-22: the same store, per the shared data model (#12).** A file either has a
+local blob or a `RemoteFile` row pointing upstream; "cached" describes how the blob arrived. This
+is Pulp's `RemoteArtifact` model, and it brings the `immediate`/`on_demand`/`streamed` policies
+and multi-upstream failover with it.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Same CAS, second reference class** | Deduplication across hosted and cached; one durability story | GC gets a second liveness rule, which is the component least able to afford complexity |
-| **B. Separate cache store** | GC stays simple; eviction is independent | Duplicate storage, two durability stories, and a wasteful mirror-and-fork case |
-
-**Why this is yours:** it adds complexity to the component the charter already names as the
-most dangerous, in exchange for storage efficiency.
+Consequence carried by `storage-and-gc.md`: GC marks from two reference roots, published and
+cached.
 
 ### Q2: What is the default metadata TTL?
 

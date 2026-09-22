@@ -142,22 +142,20 @@ accepts one as evidence has missed the point of the spec.
 
 ## Open Questions
 
-### Q1: Reference counting, or mark-and-sweep with a grace period?
+### Resolved: collection strategy (was Q1)
 
-This is the load-bearing decision in the spec and everything else follows from it.
+**Settled 2026-09-22: mark-and-sweep with a grace period.** What `distribution` converged on
+after reference counting proved hard to keep correct across crashes. The grace period is what
+neutralises the commit-to-reference window without distributed locking, which is the specific
+race AC5 exists to police.
 
-**Recommendation:** mark-and-sweep with a grace period. It is what `distribution` converged on
-after refcounting proved hard to keep correct across crashes, and the grace period neutralises
-the commit-to-reference window without distributed locking.
+Accepted costs, recorded so they are not rediscovered as surprises: reclamation is delayed by the
+grace period, and a full sweep is O(all blobs) and will need attention at scale. Revisit only
+with a measured sweep-duration problem, not on principle.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Mark-and-sweep + grace period** | Simple invariant, crash-tolerant, no distributed lock; the upload window is covered by the grace period | Deletion is delayed; a full sweep is O(all blobs) and gets slow at scale |
-| **B. Reference counting** | Immediate reclamation, cheap per operation | Counts drift on crash and are painful to repair; correctness depends on every write path being perfect forever |
-| **C. Refcount + periodic reconciling sweep** | Fast common case with a correctness backstop | Both implementations, and two ways to be wrong |
-
-**Why this is yours:** it trades operational simplicity against reclamation latency and scaling,
-and it is effectively irreversible once formats depend on it.
+Two reference classes, not one: per the shared data model (#12), a blob may be referenced by a
+published file **or** by a cached file that arrived on demand. The sweep marks from both roots.
+A sweep that marks only published references will delete live cache content.
 
 ### Q2: Does GC require a read-only or write-paused window?
 

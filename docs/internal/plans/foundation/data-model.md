@@ -56,11 +56,14 @@ remote modelling together.
 - The liveness rules GC must honour, given a blob can now be referenced by a cached artifact as
   well as by a published one.
 
+- **The snapshot dimension**: every write produces an immutable repository snapshot, and serving
+  resolves through a pointer to one. The schema carries this from day one; the promotion and
+  rollback *features* do not ship in v1.
+
 **Out of scope**
 
-- Repository versioning and immutable snapshots (Pulp's `RepositoryVersion` / `Publication`).
-  Powerful, and a large amount of machinery for a promotion workflow nobody has asked for yet.
-  Deliberately deferred, not rejected: see Open Questions.
+- The promotion API, environment pointers and rollback UX. The schema makes them a later feature
+  rather than a migration; building them now would delay the first working format.
 - Per-format index generation. That belongs to handlers and to the signed-index shared service.
 
 ## Design
@@ -75,6 +78,8 @@ remote modelling together.
 | `File` | filename, relative path, digest | Links a version to blobs; multiple files per version is the norm (wheel plus sdist, jar plus pom plus sources) |
 | `Blob` | digest, size | Content-addressed. Deduplicated across every format and repository |
 | `RemoteFile` | upstream URL, credentials ref, last-checked | A file known to exist upstream with no local blob yet |
+| `Snapshot` | monotonic number, repository, content set | Immutable. Every write creates one |
+| `Pointer` | name, target snapshot | What a serving URL resolves through. v1 ships exactly one per repository, always tracking the newest snapshot |
 
 The core owns every table. A handler reads and writes the metadata document and never issues its
 own DDL. **If a format appears to need its own table, that is a signal the shared model is wrong,
@@ -104,6 +109,22 @@ Consequences worth stating explicitly, because they are where the bugs will be:
 | `streamed` | record metadata only | fetch upstream, serve | no |
 
 `on_demand` is the default and is what "caching proxy" means in this product.
+
+### Snapshots: schema now, features later
+
+Every write creates a `Snapshot`; serving always resolves through a `Pointer`. In v1 there is
+exactly one pointer per repository and it always advances to the newest snapshot, so the
+behaviour is indistinguishable from a mutable repository. Nothing in the API exposes snapshots.
+
+The reason to pay this cost now is that it is **not additive later**. Retrofitting a version
+dimension means touching every table and every handler, because "what is in this repository"
+becomes "what is in this repository at snapshot N". Paying a small structural cost up front turns
+promotion (`dev` -> `staging` -> `prod` pointers at one snapshot), instant rollback (repoint, do
+not delete) and frozen upstream mirrors into **features you switch on**, not a migration.
+
+**Binding constraint on handlers:** a handler resolves content through the pointer it is given
+and must never assume a repository has exactly one current state. An architecture test enforces
+this, because a single handler that reads "latest" directly silently reintroduces the retrofit.
 
 ## Acceptance Criteria
 
@@ -151,39 +172,24 @@ The second reference class, and the property tests that police it.
 
 ## Open Questions
 
-### Q1: Adopt Pulp's `RemoteArtifact` model, or keep the cache as a separate subsystem?
+### Resolved: remote modelling (was Q1)
 
-This is the load-bearing decision in the spec.
+**Settled 2026-09-22: adopt Pulp's `RemoteArtifact` model.** One store; a file either has a local
+blob or a remote row saying where to fetch it, and "cached" describes how a blob arrived rather
+than where it lives. This also resolves `proxy-cache.md` Q1.
 
-**Recommendation:** adopt it. It is proven at scale, it makes pull-through caching a property of
-the model rather than a subsystem, and multi-upstream failover falls out for free.
+Accepted cost: GC gains a second reference class, in the component the charter already names as
+the most dangerous. `storage-and-gc.md` carries that consequence explicitly.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Adopt (same store, remote rows)** | Caching, mirroring and pass-through from one schema; dedup across hosted and cached; free failover | GC gains a second reference class, in the component the charter already calls the most dangerous |
-| **B. Separate cache subsystem** | GC stays single-purpose; eviction independent of publishing | Duplicate storage for mirror-and-fork; two durability stories; every format handler learns about caching separately |
+### Resolved: snapshots (was Q2)
 
-**Why this is yours:** it trades complexity in the most dangerous component against complexity
-everywhere else.
+**Settled 2026-09-22: the schema carries the snapshot dimension from day one; promotion and
+rollback ship as later features.** The reasoning is that versioning is not additive - retrofitting
+it touches every table and every handler - so a small structural cost now converts an expensive
+migration into a feature flag. See the Snapshots section in Design for the binding constraint on
+handlers.
 
-### Q2: Do we need immutable repository versions and publications now?
-
-Pulp models every change as a new immutable `RepositoryVersion`, with `Publication` and
-`Distribution` on top. That is what enables promotion workflows (dev to staging to prod) and
-point-in-time rollback, which is a genuine enterprise selling point against Gitea.
-
-**Recommendation:** defer, but keep the door open by never assuming a repository has exactly one
-current state in the handler interface.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Defer** | A far smaller v1; the model stays legible | Retrofitting versioning later touches every table and every handler |
-| **B. Build it now** | Promotion and rollback, a real differentiator over Gitea | Substantial machinery before a single format works, on a feature no user has asked for yet |
-
-**Why this is yours:** it is a product-scope call about whether this competes with Artifactory's
-promotion story or with Gitea's hosting story first.
-
-### Q3: Is format-specific metadata an opaque JSON document, or typed per format?
+### Q1: Is format-specific metadata an opaque JSON document, or typed per format?
 
 **Recommendation:** opaque to the core, typed inside the handler. The core gaining knowledge of
 any format's metadata shape is the first step back toward 31 bespoke schemas.
