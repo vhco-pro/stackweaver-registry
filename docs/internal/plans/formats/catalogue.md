@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Catalogue drafted; tiering is settled in principle, the family boundaries need a review pass against real client behaviour."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat."
 author: michielvha
 goal: "Fix the breadth target at 33 ecosystems, record which protocol families multiply client reach, and set the order and the gate that decide whether breadth is affordable."
@@ -186,28 +186,30 @@ Fan out, one spec and one handler per ecosystem.
 
 ## Open Questions
 
-### Q1: Does an unproven family get one handler or several?
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
 
-The catalogue asserts that Gradle and Maven, or `pip` and `uv`, are the same protocol. If they
-turn out to diverge materially, the choice is one handler with conditionals or separate handlers
-sharing a library.
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
 
-**Recommendation:** separate handlers over a shared library. Conditionals accumulate silently and
-turn one handler into the union of every member's quirks, which is precisely the maintenance trap
-this project exists to avoid.
+### Resolved: family divergence (was Q1)
 
-**Why this is yours:** it trades duplication against coupling in the component the whole breadth
-bet rests on.
+**Settled 2026-09-22: separate handlers over a shared library.** When a family member diverges
+materially, it gets its own handler and the genuinely shared behaviour moves into a library.
 
-### Q2: Is the advertised number ecosystems or protocols?
+Accepted cost: real duplication between close relatives. The alternative is worse: conditionals
+accumulate silently until the handler is the union of every member's edge cases and nobody can
+change it safely, which is the maintenance trap this project exists to avoid.
 
-Claiming "31 formats" off 15 implementations is accurate but invites the accusation of padding,
-especially from maintainers of the projects being compared.
+### Resolved: advertised count (was Q2)
 
-**Recommendation:** advertise ecosystems, publish the family mapping openly, and let the
-conformance matrix be the proof. Transparency converts a padding accusation into a design story.
+**Settled 2026-09-22: advertise ecosystems (33), publish the family mapping openly, and let
+the conformance matrix be the proof.** Transparency converts a padding accusation into a design
+story.
 
-**Why this is yours:** it is a positioning and credibility call.
+Accepted cost: the number still has to be defended in comparison threads. The defence is that the
+mapping is public and the matrix reports per ecosystem, so the advertised count can never exceed
+the tested count.
 
 ## Review Log
 

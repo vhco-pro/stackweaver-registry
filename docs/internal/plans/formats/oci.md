@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Scheduled after the harness and CAS; the official conformance suite is the gate."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor."
 author: michielvha
 goal: "Pass the official OCI distribution-spec conformance suite with zero skips, proving the harness and the shared layers against a standards-body gate."
@@ -73,18 +73,22 @@ SSO and must be specced as one, not assumed to fall out of existing token handli
 
 ## Open Questions
 
-### Q1: Implement the distribution spec directly, or embed `distribution/distribution` as a library?
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
 
-**Recommendation:** implement directly. Embedding would pass AC1 on day one and prove nothing
-about the harness, which is the actual point of this format.
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Implement directly** | A real test of the harness and the shared layers; full control of the storage model | Months of protocol work on a format that is already solved elsewhere |
-| **B. Embed `distribution`** | A conforming OCI registry almost immediately | Its storage model, not our CAS; the experiment learns nothing; the proxy path still has to be built around it |
+### Resolved: build approach (was Q1)
 
-**Why this is yours:** it is the clearest instance of the charter's product-versus-experiment
-fork, on the format where the cost is highest.
+**Settled 2026-09-22: implement the distribution spec directly.** Embedding
+`distribution/distribution` would pass the official conformance suite on day one and prove
+nothing about our harness, which is the entire reason OCI is on the list at all. It would also
+impose its storage model in place of our CAS and snapshot model.
+
+Accepted cost: months of protocol work on a format Harbor already solves well. That cost is the
+point - OCI is the hardest protocol with the strongest oracle, so it is where the harness earns
+its credibility.
 
 ## Review Log
 

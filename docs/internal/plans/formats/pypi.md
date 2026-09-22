@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Scheduled after npm specifically as the generalisation measurement; not started."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "Spec for the PyPI format, scheduled as the experiment's generalisation test - does format N+1 cost less than format N?"
 author: michielvha
 goal: "Measure whether the harness and the format interface generalise, by building PyPI immediately after npm and comparing the cost."

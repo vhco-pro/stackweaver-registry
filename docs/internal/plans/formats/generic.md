@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Scheduled first, as the conformance harness's proving ground rather than as a user-facing feature."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end."
 author: michielvha
 goal: "Exercise every shared layer with a protocol simple enough that any failure is unambiguously a harness or infrastructure failure, not a protocol misreading."
@@ -65,19 +65,20 @@ imply a gap that does not exist.
 
 ## Open Questions
 
-### Q1: Are generic paths namespaced per repository only, or arbitrarily deep?
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
 
-**Recommendation:** arbitrarily deep. Teams will mirror a directory layout, and forbidding it
-just moves the structure into filenames.
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
 
-**Why this is yours:** deep paths make listing, retention scoping and the future UI meaningfully
-more complex, for a convenience only you can weigh.
+### Resolved: path depth (was Q1)
 
-**Security note either way:** blobs are content-addressed and keyed by digest, so an artifact
-path is metadata and never becomes a filesystem path. If that ever stops being true - if any
-path answer here leads to untrusted input reaching a real path - then path traversal from a
-package name becomes live, and `.claude/skills/README.md` records the skill
-(`spf13/fileflow-pathologize`) deliberately left unvendored for exactly that eventuality.
+**Settled 2026-09-22: arbitrarily deep paths.** Teams mirror directory layouts regardless, and
+forbidding it only pushes the hierarchy into filenames.
+
+Accepted cost: listing, retention scoping and the future UI all become meaningfully more complex.
+Security position is unchanged either way: blobs stay digest-keyed, so an artifact path is
+metadata and never becomes a filesystem path.
 
 ## Review Log
 

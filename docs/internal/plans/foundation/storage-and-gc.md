@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Drafted from the founding discussion; the concurrency model is the main open question and needs an owner decision."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
@@ -142,6 +142,12 @@ accepts one as evidence has missed the point of the spec.
 
 ## Open Questions
 
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
+
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
+
 ### Resolved: collection strategy (was Q1)
 
 **Settled 2026-09-22: mark-and-sweep with a grace period.** What `distribution` converged on
@@ -157,20 +163,26 @@ Two reference classes, not one: per the shared data model (#12), a blob may be r
 published file **or** by a cached file that arrived on demand. The sweep marks from both roots.
 A sweep that marks only published references will delete live cache content.
 
-### Q2: Does GC require a read-only or write-paused window?
+### Resolved: GC pausing (was Q2)
 
-**Recommendation:** no pause. A registry that stops accepting pushes to collect garbage is a
-registry people route around, and the grace period exists precisely to avoid needing one.
+**Settled 2026-09-22: no pause.** A registry that stops accepting pushes to collect garbage is
+one that teams route around, and it forecloses the CI-critical-cache use case that motivates the
+whole proxy layer. The grace period chosen for the collection strategy exists precisely so a
+pause is not needed.
 
-**Why this is yours:** it is an operability-versus-implementation-simplicity call.
+Accepted cost: the mark phase must be correct under concurrent writes. This is exactly what AC4
+and AC5 police, and it is why those criteria demand property and fault-injection tests rather
+than a client-level run.
 
-### Q3: Is PostgreSQL the metadata store, or is the object store self-describing?
+### Resolved: metadata store (was Q3)
 
-**Recommendation:** PostgreSQL. Listing and consistency over an object store alone means
-implementing an index anyway, badly.
+**Settled 2026-09-22: PostgreSQL.** Listing, transactional consistency and the snapshot
+dimension over an object store alone would mean building an index anyway, badly, over eventually
+consistent storage.
 
-**Why this is yours:** it sets the deployment floor. PostgreSQL means self-hosters run a
-database, which is a real adoption cost for a project competing partly on being easy to run.
+Accepted cost: self-hosters must run a database, which is a real adoption tax for a project
+competing partly on being easy to run. Mitigate with a genuinely good single-command deployment,
+not by weakening the storage model.
 
 ## Review Log
 

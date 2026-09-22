@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Drafted from the founding discussion; the hosted/proxied split is settled, the interface shape needs a review pass."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross."
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
@@ -128,35 +128,32 @@ A format is complete when, and only when:
 
 ## Open Questions
 
-### Q1: Does the interface expose HTTP directly, or an abstracted request/response?
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
 
-**The stakes on this dropped** once the extension boundary was settled as compile-time (see
-Resolved below). It previously decided whether an out-of-process boundary stayed possible;
-with that explicitly not being preserved, this is now a narrower question about how much the
-core can enforce versus how much a handler can reach around it.
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
 
-**Recommendation:** HTTP directly, with shared concerns (auth, storage, cache policy) enforced by
-architecture tests rather than by the type system. The abstraction's remaining benefit does not
-justify anticipating 33 ecosystems' protocol quirks up front.
+### Resolved: handler API shape (was Q1)
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. HTTP directly** | Full protocol fidelity; nothing to work around; simplest handlers | Shared concerns enforceable only by lint and architecture tests, never by the compiler |
-| **B. Narrow serialisable abstraction** | Shared concerns structurally unbypassable; out-of-process stays reachable if that is ever wanted after all | Every protocol quirk must be anticipated, and the misses surface one format at a time |
+**Settled 2026-09-22: HTTP directly.** Handlers receive the real request and response. These
+are HTTP protocols with header and status semantics - OCI's `Range` and `Location`, npm's
+conditional requests - and an abstraction hiding them would be fought by every format in turn.
 
-**Why this is yours:** it is the last call on how much the core polices handlers, and reversing it
-after several formats exist is expensive. **Not answered here on purpose** - this spec's own rule
-is that open questions belong to the owner.
+Accepted cost: shared concerns (auth, storage access, cache policy) are enforceable only by
+architecture tests and lint, never by the compiler. Those tests are therefore not optional
+niceties; they are the only thing holding the boundary. This also confirms the extension boundary
+stays in-process: an interface carrying `*http.Request` cannot be served over gRPC.
 
-### Q2: Is the proxy path opt-in per format, or mandatory from day one?
+### Resolved: proxy path obligation (was Q2)
 
-The charter says mandatory. That is correct as positioning and expensive for the first two
-formats, where it doubles the work before the differentiator is even reachable.
+**Settled 2026-09-22: mandatory, with `generic` the single permitted exception.** The proxy
+path is the differentiator; making it optional is how it becomes permanently second-class and the
+product quietly becomes a slower Gitea.
 
-**Recommendation:** mandatory in the interface, permitted to be `unsupported` for the generic
-format only, with that exception named in its spec.
-
-**Why this is yours:** it decides whether the first milestone slips to protect the principle.
+`generic` may declare proxy support `unsupported` because it has no ecosystem to proxy, and that
+exception is named in its own spec so the conformance matrix does not imply a gap that does not
+exist. No other format may use it without a spec change.
 
 ### Resolved: extension boundary (was Q3)
 
@@ -169,17 +166,15 @@ Accepted cost: a third party cannot add a format without forking, and every form
 binary. Out-of-process gRPC (`go-plugin`, as Terraform and Vault use) buys third-party
 extensibility, and that is worth paying for only once a third party wants it.
 
-### Q4: Are upstream adapters a separate axis from format handlers?
+### Resolved: upstream adapter axis (was Q4)
 
-Harbor ships **15 adapters for upstream registries** (`dockerhub`, `awsecr`, `googlegcr`,
-`azurecr`, `quay`, `gitlab`, `jfrog`, `native`, and more) behind **one** OCI format. They differ
-in authentication and quirks, not in wire format.
+**Settled 2026-09-22: yes, a separate axis.** One format handler, many upstream adapters, as
+Harbor does with 15 adapters behind one OCI format. Upstreams differ in authentication and
+quirks, not in wire format.
 
-**Recommendation:** yes, separate. One format handler, many upstream adapters. Conflating them
-hard-codes Docker Hub's auth into the OCI handler and needs surgery for ECR.
-
-**Why this is yours:** it adds a second extension axis, and therefore a second interface to
-maintain, before either has a second implementation.
+Accepted cost: a second interface to design and maintain before it has a second implementation.
+The alternative hard-codes Docker Hub's auth into the OCI handler and needs surgery for ECR,
+which is the union-of-quirks trap avoided elsewhere in this spec.
 
 ## Review Log
 

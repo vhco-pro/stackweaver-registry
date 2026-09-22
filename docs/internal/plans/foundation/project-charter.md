@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Naming settled (Stackweaver Registry); scope widened to the full format catalogue. Two open questions remain for the owner."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work."
 author: michielvha
 goal: "Establish scope, positioning, the build order and the experiment's success metrics, so every downstream spec inherits a settled frame."
@@ -162,6 +162,12 @@ licence collapses that claim on contact with Harbor (Apache 2.0) and Gitea (MIT)
 
 ## Open Questions
 
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
+
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
+
 ### Resolved: naming (was Q2)
 
 **Settled 2026-09-22: `Stackweaver Registry`, at `vhco-pro/stackweaver-registry`.** The owner
@@ -172,30 +178,23 @@ the intended marketing position.
 The module path is `github.com/vhco-pro/stackweaver-registry` and was set before any code existed
 that could depend on it.
 
-### Q1: Does the repository go public now, or at the first working format?
+### Resolved: going public (was Q1)
 
-**Recommendation:** at the first working format - a public repo with no running code invites
-drive-by judgement and no contributors.
+**Settled 2026-09-22: at the first working format.** A public repository holding only specs
+invites drive-by judgement and attracts no contributors; a first impression that actually runs is
+worth the wait.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Public now** | Builds in the open from day one; the experiment is auditable end to end | A months-long window where the repo is specs and scaffolding, which reads as abandoned |
-| **B. Public at first working format** | A first impression that runs | The early spec history lands as one large push rather than as visible progress |
+Accepted cost: the spec history lands as one large push rather than as visible incremental
+progress. The repository stays private until then.
 
-**Why this is yours:** it is a positioning and reputation call, not a technical one.
+### Resolved: first milestone (was Q3)
 
-### Q3: Is the first milestone "prove the thesis" or "usable by someone"?
+**Settled 2026-09-22: prove the thesis.** Optimise for the generalisation measurement - does
+format N+1 cost less than format N - because that is the transferable finding and it decays the
+moment this becomes a product schedule.
 
-**Recommendation:** prove the thesis. The experiment's value decays if it becomes a product
-schedule.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Prove the thesis** | A clean answer on whether format N+1 gets cheaper, which is the transferable finding | Nothing shippable for months |
-| **B. Usable first** | An npm proxy cache that real teams would run | Optimises for the format rather than the harness, which is the thing being tested |
-
-**Why this is yours:** it decides whether this is research with a product outcome or a product
-with research flavour, and those are different commitments.
+Accepted cost: nothing shippable for months. The experiment log is therefore a first-class
+deliverable, not a side note.
 
 ## Review Log
 

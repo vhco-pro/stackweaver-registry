@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Scheduled with the proxy layer; the proxied path matters more here than the hosted path."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "Spec for the npm registry format, where the caching proxy of the public registry is the primary use case rather than private publishing."
 author: michielvha
 goal: "Deliver the most-wanted upstream cache in real deployments, and be the first format where the proxy path is the point."
@@ -65,12 +65,18 @@ organisation/team semantics mirroring npm's own. Each is a follow-on with its ow
 
 ## Open Questions
 
-### Q1: Which reference implementation records the golden corpus - Verdaccio, or the public registry?
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
 
-They do not behave identically, and neither matches the documentation. This is the npm-specific
-instance of `conformance-harness.md` Q3, and answering it here may settle the general rule.
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
 
-**Why this is yours:** it determines what "correct npm behaviour" means for this project.
+### Resolved: corpus source (was Q1)
+
+**Settled 2026-09-22: the public npm registry is authoritative**, per the general rule in
+`foundation/conformance-harness.md`. Verdaccio is for offline iteration only. Any place where we
+knowingly diverge from public-registry behaviour goes on the recorded exception list, with a
+reason.
 
 ## Review Log
 

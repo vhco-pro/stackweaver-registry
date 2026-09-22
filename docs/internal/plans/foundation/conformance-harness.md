@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Drafted from the founding discussion; needs a /spec review pass and owner answers before implementation."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -178,41 +178,44 @@ volunteer registries becomes a cron job that files a ticket.
 
 ## Open Questions
 
-### Q1: How are client containers orchestrated - testcontainers-go, or raw Docker via the API?
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
 
-**Recommendation:** testcontainers-go - lifecycle, port mapping and cleanup are exactly its job,
-and hand-rolling them is a week of yak-shaving plus a leak on every panic.
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. testcontainers-go** | Battle-tested lifecycle, automatic cleanup, wait strategies | A significant dependency; slower startup per case |
-| **B. Raw Docker API** | Full control, minimal dependency, faster | You reimplement cleanup, and a leaked container per failed case is a CI-wedging bug |
+### Resolved: client orchestration (was Q1)
 
-**Why this is yours:** it is a long-lived dependency choice in the load-bearing component.
+**Settled 2026-09-22: testcontainers-go.** Container lifecycle, port mapping, wait strategies
+and cleanup are exactly its job, and hand-rolling them is a week of work plus a leaked container
+on every panic - which wedges CI rather than failing a test.
 
-### Q2: Where does the golden corpus live, given it will be large and binary-ish?
+Accepted cost: a significant dependency in the load-bearing component, and slower per-case
+startup. Mitigate by reusing a server instance across cases where isolation permits, never by
+dropping isolation.
 
-**Recommendation:** in-repo, compressed, with blob bodies replaced by digests. The corpus is
-worthless if it is not versioned alongside the handler it constrains.
+### Resolved: corpus location (was Q2)
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. In-repo, bodies elided** | Reviewable in a PR, versioned with the code, works from a clean checkout | Repo growth; large-body cases lose fidelity |
-| **B. In-repo, full bodies, Git LFS** | Full fidelity | LFS in CI, and a clone that hurts |
-| **C. Object storage, fetched by CI** | No repo growth | A clean checkout cannot run the suite offline, and the corpus can drift from the code that asserts against it |
+**Settled 2026-09-22: in-repo, compressed, blob bodies replaced by digests.** The corpus is
+worthless if it is not versioned alongside the handler it constrains, and it must work from a
+clean checkout with no network.
 
-**Why this is yours:** it trades repo ergonomics against fidelity, and you live with the clone.
+Accepted cost: repo growth, and large-body cases lose body fidelity. Where a case genuinely needs
+a real body, it carries a small fixture rather than a recorded multi-megabyte blob.
 
-### Q3: Which reference implementation is authoritative per format when they disagree?
+### Resolved: authoritative reference (was Q3)
 
-Verdaccio and the public npm registry do not behave identically, and neither matches the
-documentation. When the corpus from one contradicts the other, something has to be the tiebreak.
+**Settled 2026-09-22: the public canonical registry is authoritative**, with a recorded
+exception list. Local reference servers (Verdaccio, a local Gitea, Harbor) are for offline
+iteration only and never settle a disagreement.
 
-**Recommendation:** the public/canonical registry is authoritative, with a recorded exception
-list; local reference servers are for offline iteration only.
+The reasoning is that a real user points a real client at us, and that client's expectations were
+formed against the public registry. Conforming faithfully to Verdaccio's quirks would be
+conforming to the wrong thing.
 
-**Why this is yours:** it determines what "correct" means for the whole project, and it is a
-judgment call no measurement settles.
+Accepted cost: recording needs network access and is subject to upstream rate limits, so recorded
+corpora are committed (see Q2) rather than re-recorded on every run. **This also settles the same
+question in `formats/npm.md`.**
 
 ## Review Log
 

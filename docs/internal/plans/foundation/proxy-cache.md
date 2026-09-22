@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Drafted from the founding discussion; scheduled after OCI, needs a review pass once the CAS design settles."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials."
 author: michielvha
 goal: "Deliver the one capability no free multi-format registry has, so the project is not a slower Gitea with fewer formats."
@@ -130,6 +130,12 @@ of reference. **That spec must land first**; this one depends on how its open qu
 
 ## Open Questions
 
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
+
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
+
 ### Resolved: cache location (was Q1)
 
 **Settled 2026-09-22: the same store, per the shared data model (#12).** A file either has a
@@ -140,24 +146,24 @@ and multi-upstream failover with it.
 Consequence carried by `storage-and-gc.md`: GC marks from two reference roots, published and
 cached.
 
-### Q2: What is the default metadata TTL?
+### Resolved: default metadata TTL (was Q2)
 
-Too short hammers upstreams and wastes the cache; too long makes newly published versions
-invisible and generates "your registry is broken" reports that are really TTL reports.
+**Settled 2026-09-22: a conservative default in the low minutes**, with a per-repository
+override and an explicit "refresh now" action in both UI and API, so the default never has to be
+the answer to an urgent problem.
 
-**Recommendation:** a conservative default in the low minutes, per-repository override, and an
-explicit "refresh now" action in the UI and API, so the default never has to be the answer to an
-urgent problem.
+Accepted cost: more upstream traffic than a longer TTL would generate. The judgement is that a
+developer who just published and cannot see their package files a bug report, while slightly
+higher upstream traffic is invisible.
 
-**Why this is yours:** it is a user-experience judgment about which failure mode is more
-tolerable to your users.
+### Resolved: preconfigured upstreams (was Q3)
 
-### Q3: Which upstreams ship pre-configured?
+**Settled 2026-09-22: npm, PyPI and Docker Hub ship preconfigured and enabled.** "Works in
+thirty seconds" is the entire pitch for a caching proxy, and a blank first-run page wastes it.
 
-Shipping npm, PyPI and Docker Hub as ready-made defaults is a large usability win and a
-commitment: their rate limits, auth behaviour and protocol quirks become our support surface.
-
-**Why this is yours:** it is a scope-versus-adoption call.
+Accepted cost: their rate limits, authentication changes and protocol quirks become our support
+surface. Each preconfigured upstream therefore needs conformance cases in proxied mode against
+the real service, not only against a local stand-in.
 
 ## Review Log
 

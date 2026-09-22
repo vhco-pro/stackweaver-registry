@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Drafted from the prior-art survey; the RemoteArtifact adoption is the load-bearing decision and needs an owner answer."
+status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
 description: "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies."
 author: michielvha
 goal: "Make breadth affordable by giving all 33 ecosystems one metadata schema, so a format is parsing plus routes rather than a bespoke database design."
@@ -172,6 +172,12 @@ The second reference class, and the property tests that police it.
 
 ## Open Questions
 
+None. Every question this spec raised has been answered by the owner and folded into
+Design and Scope above, with each decision's accepted cost recorded beside it.
+
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
+
 ### Resolved: remote modelling (was Q1)
 
 **Settled 2026-09-22: adopt Pulp's `RemoteArtifact` model.** One store; a file either has a local
@@ -189,13 +195,15 @@ it touches every table and every handler - so a small structural cost now conver
 migration into a feature flag. See the Snapshots section in Design for the binding constraint on
 handlers.
 
-### Q1: Is format-specific metadata an opaque JSON document, or typed per format?
+### Resolved: metadata typing (was Q1)
 
-**Recommendation:** opaque to the core, typed inside the handler. The core gaining knowledge of
-any format's metadata shape is the first step back toward 31 bespoke schemas.
+**Settled 2026-09-22: opaque to the core, typed inside the handler.** The core stores and
+returns a JSON document it never interprets.
 
-**Why this is yours:** opaque metadata means the core cannot query across formats (for example,
-"every artifact with this licence"), which forecloses some cross-cutting features.
+Accepted cost: the core cannot query across formats, so features like "every artifact under this
+licence" need a separate index built later rather than falling out of the schema. That is the
+right trade: the core gaining knowledge of any single format's metadata shape is the first step
+back toward the 31 bespoke schemas this model exists to prevent.
 
 ## Review Log
 
