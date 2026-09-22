@@ -133,36 +133,36 @@ Q2 through Q8 were raised by the 2026-09-22 review and await the owner. The reso
 that follows them is kept rather than deleted, so the reasoning survives the next time someone
 asks why it was done this way.
 
-### Q2: How does a pathed artifact map onto the shared Package/Version/File model?
+### Resolved: mapping onto the shared model (was Q2)
 
-**Recommendation:** B - directory prefix as the `Package` name, final segment as the `File`,
-one synthetic `Version`; it gives listing, retention and the future UI a natural grouping unit
-without inventing version semantics the protocol does not have.
+**Settled 2026-09-23: the GitLab hybrid.** Package name and version are mandatory path
+segments; the filename may itself contain a relative path, so directory structure is preserved
+*inside* a version:
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. One `Package` per full path, one implicit `Version`** | Trivial mapping, no path parsing | Every artifact is its own package, so count-based retention and grouped listing have no unit to work with |
-| **B. Directory prefix = `Package`, final segment = `File`, one synthetic `Version`** | A grouping unit for listing, retention and the UI for free | The mapping is derived from the path, so it must stay consistent with whatever grammar Q3 settles, and root-level files need a convention |
-| **C. `Package` = the repository; every file hangs off one synthetic version** | Simplest write path | `Package` and `Version` become dead weight for this format, and listing and retention re-implement grouping over raw paths |
+```
+PUT /generic/{repository}/{package}/{version}/{path/to/file.tar.gz}
+```
 
-**Why this is yours:** all three satisfy every AC as written; the choice fixes what the shared
-model's rows mean for this format permanently, and `data-model.md` AC8 (zero schema migrations
-per format) makes it expensive to revisit once later formats exist.
+Grounded in what the field actually does. JFrog Artifactory Generic and Nexus Raw are
+filesystem-style, with the path as the whole identity and no version semantics. Gitea is strictly
+`{package}/{version}/{filename}` and its documentation is explicit that arbitrary nested paths
+are **not** accepted. GitLab requires package and version but permits a relative path inside the
+filename. The hybrid keeps retention-by-version-count meaningful and listing well-scoped while
+still letting teams mirror a build layout.
 
-### Q3: What is the path grammar, and can a file and a directory prefix share a name?
+Accepted cost: this **narrows the earlier arbitrary-depth resolution**. Depth still exists, but
+beneath a package and a version rather than being the identity itself. That earlier decision has
+been amended to match rather than left to contradict this one.
 
-**Recommendation:** A - strict grammar with collisions rejected. Normalisation surprises in a
-storage product surface as data-loss reports, and rejecting early is the only choice that can
-be loosened later.
+### Resolved: path grammar (was Q3)
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Strict: reject `.` and `..` segments, empty segments and trailing slashes; a path may not be both a file and a prefix of another file** | Unambiguous listings, retention scoping and UI trees; no aliasing where two spellings name one artifact | An explicit validation layer, a conflict status to define, and some pre-existing client layouts rejected |
-| **B. Opaque keys: any string, collisions allowed, no normalisation** | Nothing to design now; maximum permissiveness | `a/b` existing as both a file and a directory breaks tree listing and prefix-scoped retention, and encoding aliasing makes "the same artifact" permanently ambiguous |
+**Settled 2026-09-23: a strict grammar, with file-versus-prefix collisions rejected.** A
+defined character set, no empty or dot segments, normalisation on write, and storing `a/b` when
+`a/b/c` already exists is an error.
 
-**Why this is yours:** permissiveness is a one-way door - artifacts accepted under a loose
-grammar block a later tightening - and the path-depth resolution explicitly deferred this
-pricing.
+This closes a whole class of listing and retention ambiguity at the cost of rejecting some
+uploads that look legitimate. Since the permissive alternative is genuinely irreversible once
+users depend on it, the rejection message must say exactly which rule was broken and why.
 
 ### Q4: What shape does listing take over arbitrarily deep paths?
 
@@ -220,26 +220,25 @@ agrees with itself.
 `format-handler-interface.md` item 2 is unsatisfiable for this format, which would block its
 completion forever.
 
-### Q8: Which credential does the generic conformance client present, given that no auth foundation spec exists yet?
+### Resolved: conformance credential (was Q8)
 
-**Recommendation:** B - write a minimal auth foundation spec (token issuance, verification,
-repository-level authorization) before generic implementation starts. This format's stated job
-is to prove auth end to end, and proving a harness-only stub proves nothing.
+**Settled 2026-09-23 by `auth.md` rather than independently.** The generic conformance client
+presents a registry token scoped to its repository, as `Authorization: Bearer`. Generic is our own
+protocol, so there is no external client convention to match and no trade-off to weigh.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Harness-provisioned static bearer tokens now, the real auth spec later** | Generic starts sooner | AC2 goes green against a stub; the first real auth layer reopens every auth conformance case, and the experiment's "auth is proven" data point was false |
-| **B. A minimal auth foundation spec first; generic consumes it** | AC2 evidences the real subsystem, and OCI's token flow gets a base to build on | One more spec on the critical path before the first format |
-
-**Why this is yours:** it sequences the foundation work and defines what "proves auth" means
-for the experiment's first data point. Nothing under `docs/internal/plans/foundation/`
-currently specs authentication; the charter names OIDC SSO and RBAC as in scope, but no
-document owns them, and AC2's "private repository" presumes a visibility model no spec defines.
+Repositories are private by default, so the unauthenticated and unauthorized cases required of
+every format (`format-handler-interface.md` AC7) are meaningful here from the first commit.
 
 ### Resolved: path depth (was Q1)
 
-**Settled 2026-09-22: arbitrarily deep paths.** Teams mirror directory layouts regardless, and
-forbidding it only pushes the hierarchy into filenames.
+**Settled 2026-09-22, narrowed 2026-09-23: deep paths, beneath a package and version.** Teams
+mirror directory layouts regardless, and forbidding it only pushes the hierarchy into filenames.
+
+The original wording said "arbitrarily deep", which on its own selected the Artifactory Generic
+model where the path is the whole identity. The mapping decision below adopted the GitLab hybrid
+instead, so depth now lives inside the filename segment under a mandatory package and version.
+Amended here rather than left standing, because two resolutions contradicting each other in one
+spec is exactly the drift these records exist to prevent.
 
 Accepted cost: listing, retention scoping and the future UI all become meaningfully more complex.
 Security position is unchanged either way: blobs stay digest-keyed, so an artifact path is

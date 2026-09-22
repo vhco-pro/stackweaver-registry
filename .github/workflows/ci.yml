@@ -74,12 +74,21 @@ jobs:
       - run: go build ./...
       - run: go test -race ./...
 
-  # The conformance suite drives REAL package clients against a real server. It is the only
-  # check that proves a format works, so unlike upstream's integration suite it runs on pull
-  # requests too - a green PR with a broken format is exactly the failure mode to avoid.
+  # The conformance suite drives REAL package clients against a real server: minutes, containers,
+  # and the only check that proves a format actually works.
+  #
+  # It runs on pushes to main ONLY, not on pull requests. That is a deliberate, costed decision
+  # (conformance-harness.md, resolved CI trigger) and it reintroduces a known hazard: a PR can be
+  # green while conformance is broken, which is the same shape as the main-gated integration suite
+  # that broke Stackweaver's main twice in one day.
+  #
+  # The compensating control is NOT optional: CLAUDE.md requires `make conformance` locally before
+  # pushing anything under internal/format, internal/storage, internal/proxy or conformance, and
+  # the pre-commit hook warns when those paths are staged. If breakage still reaches main, the fix
+  # is to move this job onto pull requests, not to relax the rule.
   conformance:
     needs: changes
-    if: needs.changes.outputs.conformance == 'true'
+    if: needs.changes.outputs.conformance == 'true' && github.event_name == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:

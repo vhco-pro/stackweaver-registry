@@ -187,42 +187,35 @@ Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-### Q1: Does the local admin account survive after OIDC is configured?
+### Resolved: break-glass account (was Q1)
 
-**Recommendation:** disabled by default once OIDC is configured, with an explicit opt-in flag to
-keep it as a break-glass account.
+**Settled 2026-09-23: disabled once OIDC is configured, with an explicit opt-in flag to keep it.**
+The common deployment then has exactly one identity source, and no forgotten local password sits
+behind an SSO front door.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Disabled once OIDC is on, opt-in to keep** | The common deployment has exactly one identity source; no forgotten local password sitting behind an SSO front door | An IdP outage locks everyone out unless the operator opted in beforehand |
-| **B. Always retained** | A guaranteed break-glass path | A standing credential outside the IdP, which is precisely what SSO adoption is meant to eliminate, and it will be weak somewhere |
+Accepted cost: an identity-provider outage locks everyone out unless the operator opted in
+beforehand. The opt-in flag and its consequence must therefore be documented at the point of
+configuring OIDC, not buried in a reference page.
 
-**Why this is yours:** it trades lockout risk against a permanent credential outside your identity
-provider, and the right answer depends on how you intend to operate the managed service.
+### Resolved: token scope unit (was Q2)
 
-### Q2: What is the scope unit for a registry token?
+**Settled 2026-09-23: repository plus action.** This matches OCI's own scope grammar, so the
+OCI token flow needs no translation layer, and it keeps a leaked token's blast radius to one
+repository.
 
-**Recommendation:** repository plus action, matching OCI's own scope grammar, so the OCI flow
-needs no translation layer.
+Accepted cost: a CI job touching ten repositories carries ten scopes or one deliberately broad
+token. If that becomes painful in practice it is an argument for a token that carries several
+repository scopes, never for widening the scope unit itself.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Repository + action** | Matches OCI natively; simple to reason about and to display | A CI job needing ten repositories carries ten scopes or one broad token |
-| **B. Organisation-wide + action** | One token covers a team's whole estate | A leaked token exposes everything, and it cannot express the common read-one-write-another case |
-| **C. Both, token declares its level** | Flexible | Two enforcement paths to get right, in the component where a mistake is a breach |
+### Resolved: anonymous access (was Q3)
 
-**Why this is yours:** it sets the blast radius of a leaked token, which is a risk-appetite call.
+**Settled 2026-09-23: private by default, anonymous read enabled per repository by explicit
+action.** A misconfiguration requires someone to actively make it, rather than being the default
+state.
 
-### Q3: Do anonymous pulls work, and is that per-repository?
-
-Public read is how a registry becomes useful to people who have not signed up, and it is how
-Docker Hub, PyPI and npm all behave. It is also the single easiest way to leak private artifacts
-by misconfiguration.
-
-**Recommendation:** private by default, anonymous read enabled per repository by explicit action.
-
-**Why this is yours:** the default here decides what a misconfiguration costs, and it is a
-product-posture decision rather than a technical one.
+Accepted cost: publishing something genuinely public takes one deliberate extra step. That is the
+right trade for a failure mode that is silent - nobody notices a private artifact was
+world-readable until it matters.
 
 ## Review Log
 

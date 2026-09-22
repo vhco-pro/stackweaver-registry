@@ -78,11 +78,25 @@ remote modelling together.
 | `Version` | version string, format-specific metadata document | Metadata is a JSON document the handler reads and writes; the core never interprets it |
 | `File` | filename, relative path, digest | Links a version to blobs; multiple files per version is the norm (wheel plus sdist, jar plus pom plus sources) |
 | `Blob` | digest, size | Content-addressed. Deduplicated across every format and repository |
-| `RemoteFile` | upstream URL, credentials ref, last-checked | A file known to exist upstream with no local blob yet |
+| `Upstream` | URL, credential ref, download policy, adapter type, failover order | One row per configured upstream. Rotating a credential touches one row |
+| `RemoteFile` | `Upstream` ref, upstream path, last-checked | A file known to exist upstream with no local blob yet |
 | `Snapshot` | monotonic number, repository, content set | Immutable. Every write creates one |
 | `Pointer` | name, target snapshot | What a serving URL resolves through. v1 ships exactly one per repository, always tracking the newest snapshot |
 
-The core owns every table. A handler reads and writes the metadata document and never issues its
+**Opaque metadata hangs at all three levels.** `Repository`, `Package` and `Version` each carry a
+metadata document the core never parses, so a handler stores state at whichever level the
+ecosystem actually keeps it:
+
+| Level | Example state |
+|---|---|
+| `Repository` | Debian's signed `Release` index, repository-wide settings a format needs |
+| `Package` | npm dist-tags, Maven's `latest` and `release` |
+| `Version` | the per-release metadata document |
+
+Without the upper two levels, npm, Maven and Debian have nowhere to put required state, which the
+review found as three concrete holes in Tier 1.
+
+The core owns every table. A handler reads and writes the metadata documents and never issues its
 own DDL. **If a format appears to need its own table, that is a signal the shared model is wrong,
 not a licence to add one** - raise it as a spec change.
 
@@ -244,41 +258,29 @@ versions exist but not what a mutable document said at the time.
 **Why this is yours:** it decides what promotion, rollback and frozen mirrors can honestly
 promise, which is a product commitment rather than a technical preference.
 
-### Q7: Where do upstream URL, credentials and download policy live - does the model need an `Upstream` entity?
+### Resolved: upstream entity (was Q7)
 
-**Recommendation:** Add one. The entity table hangs "upstream config" off `Repository` and URL
-plus credentials off every `RemoteFile`, which leaves failover ordering, per-upstream download
-policy and the adapter type (`format-handler-interface.md` settled upstream adapters as a
-separate axis) with no home, and makes credential rotation a mass `RemoteFile` update. An
-ordered `Upstream` list per repository, with `RemoteFile` holding an upstream reference plus a
-path, matches both Pulp's `Remote` and Harbor's adapter axis.
+**Settled 2026-09-23: add an explicit `Upstream` entity.** One row per configured upstream
+holding its URL, credential reference, download policy, adapter type and failover order.
+`RemoteFile` references it rather than carrying copies.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. An `Upstream` entity** | Rotation is one row; policy, adapter type and failover order each have a home; `RemoteFile` shrinks to upstream ref plus path | One more core table |
-| **B. As written** | Fewer tables | Credentials denormalised across `RemoteFile` rows; download policy and adapter type homeless; failover order implicit in row order |
+This also gives the upstream-adapter axis settled in `format-handler-interface.md` an actual home
+in the schema, which it previously lacked. Accepted cost: one more entity. The alternative was
+rewriting every remote row on a credential rotation, with failover ordering left implicit.
 
-**Why this is yours:** it adds a core table, and this spec reserves exactly that decision to
-itself.
+### Resolved: metadata levels (was Q8)
 
-### Q8: Where does package-level and repository-level mutable metadata live?
+**Settled 2026-09-23: an opaque metadata document at all three levels - `Repository`, `Package`
+and `Version`.** Symmetric with the existing version-level document, introduces no new concept,
+and the core remains ignorant of every format's contents.
 
-**Recommendation:** Mirror the opaque document at `Package` scope, and store repository-level
-generated indexes (Debian `Release` and `Packages`, RPM `repomd.xml`) as blobs keyed by
-snapshot, owned by the signed-index shared service and named as a GC root. As written the
-opaque document exists only on `Version`, so npm dist-tags and deprecations and Maven's
-`latest`/`release` pointers - all package-level, all mutable, and dist-tags are in the npm
-spec's v1 scope - have no home, and handlers will smuggle them into a fake version, which is
-the bespoke-schema failure in miniature.
+This gives npm dist-tags and Maven's `latest`/`release` a package-level home and Debian's signed
+`Release` index a repository-level one, closing the three Tier 1 gaps the review found.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Documents at Version and Package scope, snapshot-keyed index blobs** | dist-tags, Maven metadata and signed indexes each get a first-class home; apt's index-versus-content consistency races die because index and packages resolve through the same snapshot | Two more places snapshots and GC must account for |
-| **B. Version-only, as written** | Smallest schema | Three Tier 0/1 formats (npm, Maven, Debian) cannot store required state without abusing the model |
-
-**Why this is yours:** it is the difference between the model claiming npm, Maven and Debian
-support and actually holding their state, and it widens the schema this spec exists to keep
-narrow.
+Accepted cost: handlers must know which level their state belongs at, and there are three places
+to look when debugging. The alternative - dedicated typed tables - would have given the core
+knowledge of specific formats and started the slide back toward the bespoke schemas this model
+exists to prevent.
 
 ### Q9: How do OCI manifest lists and the referrers API map onto the model?
 

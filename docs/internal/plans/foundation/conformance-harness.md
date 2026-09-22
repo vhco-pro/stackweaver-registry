@@ -231,21 +231,19 @@ Two questions raised by the 2026-09-22 review pass await the owner. The question
 originally raised were answered and folded in; those resolutions are kept below rather than
 deleted, so the reasoning survives the next time someone asks why it was done this way.
 
-### Q1: When does CI actually run the conformance suite?
+### Resolved: CI trigger (was Q1)
 
-**Recommendation:** B - a path-filtered job on pushes to `main`, plus the scheduled drift job;
-PRs never run it.
+**Settled 2026-09-23: path-filtered, on pushes to `main` only.** The suite runs when
+`internal/format/**`, `internal/storage/**`, `internal/proxy/**` or `conformance/**` change, and
+not on pull requests.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Every push to `main`** | The staleness gate (AC10) is always enforced against reality | Minutes of container time on every push, including pushes that cannot change a conformance result |
-| **B. Path-filtered on `main`** (`internal/**`, `conformance/**`, workflows) | The gate runs exactly when a result could change | A filter that misses an indirect dependency lets a stale matrix land until the next filtered push or scheduled run |
-| **C. Scheduled only (nightly plus the drift job)** | Near-zero per-push cost | `main` can be broken for up to a day, and AC9/AC10 stop being push gates at all |
-
-**Why this is yours:** this is a budget allocation. CLAUDE.md says a commit to `main` is the
-only CI spend taken for granted, but the conformance job is the most expensive thing CI will
-ever run here, and only the owner can price how much gate strength the minutes budget buys.
-AC9 and AC10 presuppose an answer; the spec currently never states one.
+Accepted cost, stated plainly because it is significant: **a pull request can be green while
+conformance is broken.** This is the same shape as the main-gated integration suite that broke
+Stackweaver's `main` twice in one day, and it is accepted here only because a compensating control
+exists and is enforced: `CLAUDE.md` requires `make conformance` to be run locally before pushing
+anything touching those paths, and the pre-commit hook warns when they are staged. If that control
+proves insufficient in practice, the answer is to move conformance onto pull requests, not to
+weaken the rule.
 
 ### Q2: What triggers re-recording a committed corpus against the public registry?
 

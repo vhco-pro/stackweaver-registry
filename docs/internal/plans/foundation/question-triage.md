@@ -1,6 +1,6 @@
 ---
 status: in-progress
-status_description: "Live triage of the 44 open spec questions into the order they must be answered. Updated as questions are answered and as new reviews raise more."
+status_description: "Tier A cleared 2026-09-23 (11 answered, 44 to 33 open). Tier B is next and gates the foundation components."
 description: "Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once."
 author: michielvha
 goal: "Prevent the mistake of answering 44 questions before the interactions between them are understood, by naming which ones actually gate the next commit."
@@ -11,6 +11,9 @@ covers: []
 ---
 
 # Plan: Open question triage
+
+> **Tier A cleared 2026-09-23.** Eleven answered, 44 open questions down to 33. The harness
+> core and the generic format are unblocked. Tier B is next.
 
 Forty-four questions across thirteen specs. Answering them all now would repeat the mistake the
 adversarial review just exposed: the first eighteen were answered before anyone traced how they
@@ -30,9 +33,33 @@ batch's consequences visible.
 A question's tier is about **dependency, not importance**. Several Tier C questions are more
 consequential than any Tier A one; they simply cannot be answered usefully yet.
 
-## Tier A: answer now (11)
+## Tier A: CLEARED 2026-09-23 (11)
 
-These gate the conformance harness and the generic format, which are Phase 1 and Phase 2.
+All answered. Kept here as the record of what gated Phase 1 and Phase 2, and of one decision that
+changed an earlier one.
+
+Answers: token scope is repository plus action; repositories are private by default with
+anonymous read opt-in per repository; the local admin is disabled once OIDC is configured unless
+explicitly kept; the handler interface pins a minimal method set now and re-opens after OCI;
+URLs are format-first with OCI carved out at `/v2/`; generic paths use a strict grammar rejecting
+file-versus-prefix collisions; generic adopts the GitLab hybrid mapping; conformance runs in CI on
+`main` pushes only; the model gains an `Upstream` entity; and opaque metadata hangs at repository,
+package and version level.
+
+**One answer narrowed an earlier one.** The generic mapping question was answered by looking at
+what the field does rather than by preference: Artifactory Generic and Nexus Raw are
+filesystem-style with the path as the whole identity, Gitea mandates `{package}/{version}/{file}`
+and rejects nesting outright, and GitLab requires package and version while permitting a relative
+path inside the filename. The GitLab hybrid was chosen, which means the earlier "arbitrarily deep
+paths" resolution no longer holds as written. It has been amended in place rather than left to
+contradict.
+
+**One answer knowingly reintroduced a hazard.** Conformance now runs on `main` pushes only, so a
+pull request can be green while conformance is broken - the same shape as the main-gated
+integration suite that broke Stackweaver's `main` twice in one day. Accepted because the local
+`make conformance` run is now a mandatory rule in `CLAUDE.md` rather than a suggestion, and the
+workflow comment records that the fix, if it fails, is to move the job onto pull requests rather
+than to weaken the rule.
 
 | Spec | Question | Why it blocks |
 |---|---|---|

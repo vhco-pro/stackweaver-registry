@@ -159,25 +159,20 @@ The 2026-09-22 review raised the five questions below. Previously resolved decis
 them and are kept rather than deleted, so the reasoning survives the next time someone asks
 why it was done this way.
 
-### Q1: Does this spec pin the interface's method set now, or stay at responsibility level until Phase 2 discovers it?
+### Resolved: interface method set (was Q1)
 
-The Design section describes handler responsibilities in prose but defines no method set, no
-signatures, and no types; two implementors would build materially different Phase 1 interfaces.
-The vendored Go skill says interfaces are discovered from concrete use, not designed upfront,
-and Phase 2 ("proven by two") is exactly that discovery - but the SDD loop's premise is that
-`/implement` should not need to re-derive design.
+**Settled 2026-09-23: pin a minimal method set now, and explicitly re-open it after OCI ships.**
+The smallest set that generic and OCI both need, defined before either is built, so work can
+proceed in parallel rather than strictly sequentially.
 
-**Recommendation:** B - stay at responsibility level, declare the Phase 1 interface explicitly
-provisional, and fold the discovered shape back into this spec (with re-review) when Phase 2
-lands, before any Tier 1 format starts.
+This is a deliberate, recorded departure from the `go` skill's discover-don't-design guidance.
+The justification is that the alternative serialises Phase 1 and Phase 2 onto one worker, and the
+mitigation is the scheduled re-open: after OCI passes its conformance suite, the interface is
+revisited with two real implementations in hand.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Pin signatures now** | An unambiguous target for `/tasks` and `/implement`; two implementors build the same thing | Upfront interface design against the Go skill's discover-don't-design rule, with the two hardest format classes (signed-index, async-import) not yet examined |
-| **B. Responsibility level, folded back after Phase 2** | The interface is discovered from generic and OCI, the Go-idiomatic path | Phase 1 starts with judgment left in it, and the spec must be revised and re-reviewed after Phase 2 before Tier 1 begins |
-
-**Why this is yours:** it is a process trade between the SDD loop's "the spec removes judgment"
-premise and Go's "interfaces are discovered" rule; only the owner decides which one bends here.
+Accepted cost: the first cut will be wrong about something, and revising it mid-Tier-1 would
+contaminate the format-cost measurement that is the experiment's headline metric. The re-open is
+therefore scheduled **before** npm starts, not whenever it becomes convenient.
 
 ### Q2: On a proxied-path miss, who calls whom: does the proxy layer wrap the handler, or does the handler call the proxy?
 
@@ -198,25 +193,15 @@ translation and belongs in the handler.
 **Why this is yours:** it fixes the control flow both this spec and `proxy-cache.md` build on,
 and the wrong choice recreates the union-of-quirks trap in a new place.
 
-### Q3: How do repository names appear in URLs, and how does OCI's root-anchored `/v2/` fit prefix registration?
+### Resolved: URL shape (was Q3)
 
-The registration mechanism is in scope but undesigned. The OCI distribution spec anchors its API
-at `/v2/` on the host root and docker cannot be pointed at a path-prefixed base URL, so "maps a
-URL prefix to a handler" meets its counterexample at format number two. Separately, repositories
-are the unit of RBAC and proxy configuration (`data-model.md`), so the URL scheme must encode
-the repository, and the spec does not say how.
+**Settled 2026-09-23: format-first, `/{format}/{repository}/...`**, with OCI carved out at the
+root-anchored `/v2/` the distribution spec requires, carrying the repository inside the OCI name
+path. This is how Harbor and Gitea both resolve the same conflict.
 
-**Recommendation:** per-repository path prefixes (`/<format>/<repository>/...`) with OCI
-special-cased at `/v2/` and the repository encoded in the image name, which is what Harbor does
-and what JFrog/Nexus users already expect.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. `/<format>/<repo>/` prefixes, OCI at `/v2/`** | One host and port; matches the conventions existing registry clients and users know | OCI is a named special case in the registration mechanism from day one |
-| **B. Strictly uniform prefixes, OCI on its own listener or host** | Registration stays uniform with no special case | A second port or hostname to operate, document, and TLS-terminate |
-
-**Why this is yours:** the URL layout is a permanent, user-visible contract across all 33
-ecosystems; it cannot be discovered later without breaking clients.
+Routing is then unambiguous and a format owns its entire subtree. Accepted cost: one format is
+permanently special-cased in the routing layer, and that carve-out must be explicit and commented
+rather than looking like an accident to the next reader.
 
 ### Q4: Do write-triggered shared services (signed index generation, async import tasks) enter this interface now, or wait for their formats?
 

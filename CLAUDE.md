@@ -112,11 +112,17 @@ go test -v ./internal/format/oci -run TestSpecificName
 
 ### Conformance Is The Gate (CRITICAL)
 
-- **`make verify` does not run conformance.** It is minutes long and needs containers, so it is
-  deliberately out of the pre-commit path. That means **you** must run `make conformance` before
-  pushing anything under `internal/format/`, `internal/storage/`, or `internal/proxy/`. A unit
-  test agreeing with your reading of the spec proves nothing; the whole point of the harness is
-  that the real client disagrees.
+- **`make verify` does not run conformance, and neither does CI on a pull request.** The suite is
+  minutes long and needs containers, so it is out of the pre-commit path and gated to pushes on
+  `main`. That means **you are the only gate before merge**: run `make conformance` before pushing
+  anything under `internal/format/`, `internal/storage/`, `internal/proxy/` or `conformance/`. A
+  unit test agreeing with your reading of the spec proves nothing; the whole point of the harness
+  is that the real client disagrees.
+- **This is a known, accepted hazard, not an oversight.** A green pull request can hide broken
+  conformance - the same shape as the main-gated integration suite that broke Stackweaver's `main`
+  twice in one day. It is accepted only because the local run is treated as mandatory. If
+  breakage reaches `main` anyway, the fix is to move the conformance job onto pull requests, not
+  to relax this rule.
 - **Never infer a conformance pass from a unit-test pass.** Say what you actually ran.
 - **A skipped conformance case is a silent regression.** If a case must be disabled, the skip
   reason carries an issue number and the format's spec gets a line saying so. Never `t.Skip` to
