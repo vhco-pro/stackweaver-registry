@@ -240,21 +240,14 @@ their first consumers (Debian, Ansible collections).
 **Why this is yours:** it prices where the interface is allowed to change against the
 experiment's own cost curve, which is the project's headline metric.
 
-### Q5: Should CLAUDE.md's "Both paths, always" rule be amended to name the generic exception?
+### Resolved: the generic proxy exemption in the constitution (was Q5)
 
-The resolved proxy-path decision grants `generic` a proxy exemption, but the constitution states
-the rule without exceptions, and this project's process forbids silent exceptions: a spec that
-contradicts a standing rule is a request to change `CLAUDE.md`, raised as an open question.
+**Closed 2026-09-22 as a documentation correction, not an owner decision.** The owner
+had already settled that `generic` is exempt from the proxied-path obligation; `CLAUDE.md`
+simply had not been updated to record it, so the rule read as absolute. The constitution
+now names the exemption and states that no other format may use it without a spec change.
 
-**Recommendation:** yes - add one clause to the "Both paths, always" rule naming `generic` as
-the sole spec-recorded exemption.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Amend CLAUDE.md** | Constitution and spec agree; reviewers stop re-flagging a sanctioned exception | A one-line constitution edit |
-| **B. Leave as is** | No edit | Every future review of `generic` must rediscover that the contradiction is sanctioned |
-
-**Why this is yours:** only the owner amends the constitution.
+Raised independently by two reviewers, from this spec and from the other one.
 
 ### Resolved: handler API shape (was Q1)
 

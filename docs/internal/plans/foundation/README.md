@@ -10,9 +10,11 @@ Foundation specs: the harness, storage, the format interface and the proxy layer
 
 | Name | Description |
 |------|-------------|
+| [auth.md](./auth.md) | Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present. |
 | [conformance-harness.md](./conformance-harness.md) | Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus. |
 | [data-model.md](./data-model.md) | Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies. |
 | [format-handler-interface.md](./format-handler-interface.md) | Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross. |
 | [project-charter.md](./project-charter.md) | The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work. |
 | [proxy-cache.md](./proxy-cache.md) | Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials. |
+| [question-triage.md](./question-triage.md) | Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once. |
 | [storage-and-gc.md](./storage-and-gc.md) | Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide. |

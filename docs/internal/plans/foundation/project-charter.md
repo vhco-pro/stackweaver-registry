@@ -270,23 +270,14 @@ the ambiguous "format two" phrasing in all three documents.
 **Why this is yours:** it decides what "complete" means for the experiment's second data
 point, which shapes the cost curve the breadth gate reads.
 
-### Q5: Should CLAUDE.md's "Both paths, always" rule be amended to name the generic exception?
+### Resolved: the generic proxy exemption in the constitution (was Q5)
 
-The constitution states "Every format has a hosted path and a proxied/cached path" with no
-exception. `format-handler-interface.md` (resolved Q2) settles `generic` as the single
-permitted exception, and `generic.md` scopes the proxied path out. Per CLAUDE.md's own rule, a
-spec that needs to contradict it is a request to change it, raised as an open question: this
-is that request.
+**Closed 2026-09-22 as a documentation correction, not an owner decision.** The owner
+had already settled that `generic` is exempt from the proxied-path obligation; `CLAUDE.md`
+simply had not been updated to record it, so the rule read as absolute. The constitution
+now names the exemption and states that no other format may use it without a spec change.
 
-**Recommendation:** A - amend the "Both paths, always" bullet with one clause naming `generic`
-and pointing at the spec that grants the exception.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Amend CLAUDE.md** | Constitution and specs agree; reviews stop re-finding this | The rule gains its first exception clause, and exceptions attract company |
-| **B. Leave CLAUDE.md absolute** | The rule reads stronger | A standing, settled contradiction between the constitution and two specs |
-
-**Why this is yours:** only the owner amends the constitution.
+Raised independently by two reviewers, from this spec and from the other one.
 
 ### Q6: Does the charter need an acceptance criterion for the web UI?
 

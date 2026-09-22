@@ -123,7 +123,10 @@ go test -v ./internal/format/oci -run TestSpecificName
   get a commit through.
 - **Both paths, always.** Every format has a hosted path and a proxied/cached path. A claim
   verified against only one is not verified. This is this project's standing duplicated-path
-  trap, and it is where the subtle bugs will live.
+  trap, and it is where the subtle bugs will live. **One exception, `generic`**, which has no
+  ecosystem to proxy and may declare proxy support `unsupported`; the exemption is named in its
+  own spec and the conformance runner honours declared exemptions rather than assuming coverage.
+  No other format may use it without a spec change.
 
 ### CI Economy (CRITICAL)
 

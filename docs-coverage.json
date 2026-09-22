@@ -9,6 +9,9 @@
   "conformance/oci/**": [
     "docs/internal/plans/formats/oci.md"
   ],
+  "internal/auth/**": [
+    "docs/internal/plans/foundation/auth.md"
+  ],
   "internal/format/**": [
     "docs/internal/plans/formats/catalogue.md",
     "docs/internal/plans/foundation/format-handler-interface.md"

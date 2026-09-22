@@ -103,6 +103,16 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/auth.md",
+    "description": "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present.",
+    "internal": true,
+    "status": "draft",
+    "issue": "13",
+    "covers": [
+      "internal/auth/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/conformance-harness.md",
     "description": "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus.",
     "internal": true,
@@ -151,6 +161,13 @@
     "covers": [
       "internal/proxy/**"
     ]
+  },
+  {
+    "path": "docs/internal/plans/foundation/question-triage.md",
+    "description": "Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once.",
+    "internal": true,
+    "status": "in-progress",
+    "covers": []
   },
   {
     "path": "docs/internal/plans/foundation/storage-and-gc.md",
