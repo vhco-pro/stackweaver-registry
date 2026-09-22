@@ -26,7 +26,11 @@ all → stop and say so: the fix is `/spec`, not improvising one here.
    prevent.
 3. **Every acceptance criterion has a `## Test Plan` row**, and UX-affecting criteria
    have an E2E/Playwright row (the owner does not manually test).
-4. **The latest `## Review Log` sha is still current enough.** If `main` has moved since:
+4. **`## Tasks` is populated** and its unchecked tail covers the work you are about to do.
+   An empty or absent section means `/tasks` has not run - stop and say so. The task list
+   is what makes an interrupted run resumable, so starting without one forfeits exactly
+   the property autonomous implementation depends on.
+5. **The latest `## Review Log` sha is still current enough.** If `main` has moved since:
    `git diff --name-only <sha>..main` - if anything under the spec's `covers` globs (or
    the areas Design names) changed, the review is stale → stop and ask for
    `/spec review` first. Docs-only or unrelated drift: proceed, noting it.

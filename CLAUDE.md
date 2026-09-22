@@ -180,9 +180,21 @@ One issue per spec. Full rules: `docs/internal/guidelines/documentation/FINDINGS
 
 **One document per feature**, in `docs/internal/plans/<category>/`, from
 `docs/internal/guidelines/documentation/plan-template.md`. The spec IS the plan; there is no
-second document. `/spec` authors and reviews it, `/implement` consumes it and **hard-gates**: it
-refuses to start while `## Open Questions` has entries, while any acceptance criterion lacks a
-`## Test Plan` row, or while the last `## Review Log` entry is stale relative to `main`.
+second document.
+
+The loop is `/spec` -> `/spec review` -> `/tasks` -> `/implement` -> `/ship`. `/tasks`
+decomposes a `planned` spec into one-commit-sized, dependency-ordered items in the spec's own
+`## Tasks` section; it exists because implementation phases are too coarse to resume against, and
+resumability is what autonomous runs depend on.
+
+`/implement` **hard-gates**: it refuses to start while `## Open Questions` has entries, while any
+acceptance criterion lacks a `## Test Plan` row, while `## Tasks` is unpopulated, or while the
+last `## Review Log` entry is stale relative to `main`.
+
+**This file is the constitution.** `/spec review` checks every spec against it as an explicit
+lens, and there is deliberately no second principles document to drift from it. A spec that needs
+to contradict a rule here is a request to change this file, raised as an Open Question, never
+taken as a silent exception.
 
 This is what makes the loop economical: `/spec` produces a grounded document with testable
 acceptance criteria precisely so implementation need not re-derive the design. If an

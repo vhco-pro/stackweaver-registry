@@ -86,6 +86,13 @@ written procedure; UX-affecting criteria include a Playwright/E2E row.
 ### Phase 1: <Name>
 - Task
 
+## Tasks
+
+<Left empty by `/spec`. Populated by `/tasks` once the spec reaches `planned`, as
+one-commit-sized, dependency-ordered items that each name a file and a test-shaped done
+condition. `/implement` gates on this being populated and ticks it as work lands - it is
+what makes an interrupted run resumable.>
+
 ## Open Questions
 
 <Unresolved decisions the OWNER must answer. Implementation cannot start while this
