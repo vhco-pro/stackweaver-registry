@@ -91,6 +91,19 @@ of exercised code, not a greenfield design.
 provider, provider returns identity, we map it to a local principal and issue a session. If no
 provider is configured, the local admin account authenticates instead.
 
+**Zitadel is the intended provider for the managed service**, pointed at the same instance the
+managed Stackweaver uses, so a customer has one login across both products. That is a
+configuration choice and not a coupling: no Zitadel-specific code exists on the path, and a
+self-hoster pointing at Keycloak, Authentik, Entra or Okta gets identical behaviour. AC1 exists
+to keep it that way by requiring two different providers to pass.
+
+**Shared login is not shared authorization.** Pointing both products at one provider means the
+same human arrives with the same identity, and nothing more. Registry permissions are granted in
+the registry: a Stackweaver administrator is not implicitly a registry administrator, and a new
+identity arriving from the provider gets whatever the registry's own default-role policy says,
+which is a separate decision from authentication. Conflating the two is how an SSO integration
+quietly becomes a privilege-escalation path.
+
 **Machine**: a token presented as Bearer or as Basic, depending on what the client sends.
 Verification resolves the token to a principal plus its scopes. The Basic-auth path exists
 because pip and Maven have no alternative, not because it is preferred.
