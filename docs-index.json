@@ -111,6 +111,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/data-model.md",
+    "description": "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies.",
+    "internal": true,
+    "status": "draft",
+    "issue": "12",
+    "covers": [
+      "internal/model/**",
+      "internal/storage/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/format-handler-interface.md",
     "description": "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross.",
     "internal": true,
@@ -151,6 +162,12 @@
   {
     "path": "docs/internal/research/prior-art-artifact-repositories.md",
     "description": "Survey of existing artifact repository managers, establishing that the unserved gap is multi-format plus upstream caching plus SSO, and that hosting alone is already solved for free.",
+    "internal": true,
+    "covers": []
+  },
+  {
+    "path": "docs/internal/research/registry-architecture-prior-art.md",
+    "description": "How existing open-source registries structure multi-format support: Gitea's shared four-table model, Pulp's Content/Artifact abstractions and download policies, Harbor's upstream adapters, and the plugin-boundary options with their evidence.",
     "internal": true,
     "covers": []
   },

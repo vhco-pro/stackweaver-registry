@@ -24,6 +24,11 @@ indexes, Galaxy import tasks) and barely at all underneath: they all resolve a n
 to blobs, list what exists, accept uploads, and optionally fetch from an upstream and cache the
 result.
 
+The metadata schema is **not** this spec's concern: it belongs to
+`docs/internal/plans/foundation/data-model.md`, which exists because leaving storage to each
+handler would reproduce 31 bespoke schemas. A handler is protocol translation over a shared
+model, and that split is what makes "add a format" a bounded unit of work.
+
 Two constraints from the charter shape this:
 
 - **Every format serves both a hosted path and a proxied path.** A format that only hosts is a
@@ -125,17 +130,22 @@ A format is complete when, and only when:
 
 ### Q1: Does the interface expose HTTP directly, or an abstracted request/response?
 
-**Recommendation:** expose HTTP. These are HTTP protocols with header-level and status-level
-semantics (OCI's `Range` and `Location` handling, npm's conditional requests), and an
-abstraction that hides them will be fought.
+**This is not a style question.** Per the prior-art survey, it decides whether an out-of-process
+boundary is ever possible: an interface that passes `*http.Request` around can never be served
+over gRPC, so answering "HTTP directly" forecloses Q3 option B permanently, today.
+
+**Recommendation:** a narrow abstracted request/response that is explicitly stream-shaped and
+serialisable, carrying method, path, query, the headers that matter, and a body reader. Enough
+fidelity for `Range`, `Location` and conditional requests; no `*http.Request`.
 
 | Option | You get | It costs |
 |---|---|---|
-| **A. HTTP directly** | Full protocol fidelity; nothing to work around | Handlers can misuse the framework, and shared concerns must be enforced by lint rather than by the type system |
-| **B. Abstracted** | Shared concerns are structurally impossible to bypass | Every protocol quirk becomes an abstraction leak, and the leaks accumulate per format |
+| **A. HTTP directly** | Full protocol fidelity; nothing to work around | Locks the boundary in-process forever; shared concerns enforceable only by lint |
+| **B. Narrow serialisable abstraction** | Keeps the out-of-process door open; shared concerns structurally unbypassable | Every protocol quirk must be anticipated in the abstraction, and the misses are discovered one format at a time |
+| **C. Full abstraction (no HTTP concepts)** | Maximum safety | Leaks immediately on OCI's chunked upload semantics |
 
-**Why this is yours:** it trades protocol fidelity against structural safety in the interface
-that every future format inherits.
+**Why this is yours:** it trades protocol fidelity today against optionality later, in the one
+interface all 33 ecosystems inherit.
 
 ### Q2: Is the proxy path opt-in per format, or mandatory from day one?
 
@@ -146,6 +156,39 @@ formats, where it doubles the work before the differentiator is even reachable.
 format only, with that exception named in its spec.
 
 **Why this is yours:** it decides whether the first milestone slips to protect the principle.
+
+### Q3: Where is the extension boundary - compile-time modules, or a real plugin runtime?
+
+The word "plugin" implies a dynamic runtime. The evidence says one is not required for
+modularity: **Gitea ships 22 formats as compile-time Go packages with no plugin runtime at all**,
+and Harbor does the same for its 15 upstream adapters. What they have instead is a uniform
+interface plus a shared data model, which is what "every ecosystem slots in the same way"
+actually means.
+
+**Recommendation:** compile-time modules (A), with the interface *shaped* per Q1 so option B
+stays reachable if a third party ever wants to ship a format out of tree.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Compile-time Go modules** (Gitea, Harbor) | Simplest; one binary; refactors type-checked across all 33 formats; no IPC | A third party cannot add a format without forking; every format ships in every binary |
+| **B. Out-of-process gRPC** (`go-plugin`: Terraform, Vault, Nomad) | Third-party formats without forking; a crashing handler cannot take the server down; independent release cadence | Per-call performance cost acknowledged upstream; local-only by design; plugin protocol versioning becomes a permanent compatibility surface |
+| **C. Build-tag gated** (zot) | A, plus smaller binaries and attack surface | Combinatorial build matrix; a format can break in a configuration nobody builds |
+
+**Why this is yours:** option B's entire benefit is third-party extensibility, which is worth
+paying for only if you expect third parties. That is a product-strategy judgement, not a
+measurement.
+
+### Q4: Are upstream adapters a separate axis from format handlers?
+
+Harbor ships **15 adapters for upstream registries** (`dockerhub`, `awsecr`, `googlegcr`,
+`azurecr`, `quay`, `gitlab`, `jfrog`, `native`, and more) behind **one** OCI format. They differ
+in authentication and quirks, not in wire format.
+
+**Recommendation:** yes, separate. One format handler, many upstream adapters. Conflating them
+hard-codes Docker Hub's auth into the OCI handler and needs surgery for ECR.
+
+**Why this is yours:** it adds a second extension axis, and therefore a second interface to
+maintain, before either has a second implementation.
 
 ## Review Log
 

@@ -22,10 +22,14 @@
   "internal/format/pypi/**": [
     "docs/internal/plans/formats/pypi.md"
   ],
+  "internal/model/**": [
+    "docs/internal/plans/foundation/data-model.md"
+  ],
   "internal/proxy/**": [
     "docs/internal/plans/foundation/proxy-cache.md"
   ],
   "internal/storage/**": [
+    "docs/internal/plans/foundation/data-model.md",
     "docs/internal/plans/foundation/storage-and-gc.md"
   ],
   "scripts/**": [
