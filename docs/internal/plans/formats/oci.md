@@ -55,8 +55,9 @@ check (`format-handler-interface.md`, and the standing rule in `CLAUDE.md`), so 
 and validation are a shared auth-layer service. The OCI handler owns rendering the
 `WWW-Authenticate` challenge and the scope grammar (`repository:<name>:<actions>`), which are
 wire format. What credential a non-interactive `docker login` presents against that endpoint,
-and where it comes from, is Q3 - and it depends on the auth foundation gap recorded in
-`formats/generic.md` Q8.
+and where it comes from, is Q3. The auth foundation it rests on is no longer a gap:
+`foundation/auth.md` settles repository-plus-action scopes, the OCI token flow's signing and
+expiry obligations, and the bounded revocation window an already-issued token carries.
 
 ### The official suite, pinned, and what zero skips actually buys
 
@@ -193,8 +194,9 @@ perform a browser flow.
 | **B. Static per-user passwords on the SSO account** | No new surface | Encourages long-lived primary credentials in CI secrets, and collides with an SSO-first identity model where users may have no password at all |
 
 **Why this is yours:** it creates the platform's first credential-management product surface,
-whose shape outlives OCI, and it depends on the unspecced auth foundation
-(`formats/generic.md` Q8).
+whose shape outlives OCI. `foundation/auth.md` settles how a credential is verified and scoped;
+what remains open here is how a non-interactive `docker login` obtains one in the first place,
+which is a product decision rather than a security-mechanism one.
 
 ### Q4: What is the recourse when a conformance case cannot pass for a reason outside our control?
 

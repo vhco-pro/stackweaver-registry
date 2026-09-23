@@ -30,6 +30,7 @@ const targets = args.filter((a) => !a.startsWith('--'));
 
 let hardFailures = 0;
 let advisories = 0;
+const crossRefs = [];
 
 const red = (s) => `\x1b[31m${s}\x1b[0m`;
 const yellow = (s) => `\x1b[33m${s}\x1b[0m`;
@@ -169,6 +170,12 @@ function checkSpec(absPath) {
     }
   }
 
+  // ── cross-spec references ──────────────────────────────────────────────────
+  // Every finding in the 2026-09-23 consistency pass was the same shape: a spec citing a
+  // sibling's AC<n> or Q<n> that had since been renumbered, resolved, or never existed. That
+  // is checkable, so it should not cost a review pass.
+  crossRefs.push({ rel, body });
+
   // ── criteria that measure the problem instead of removing it ───────────────
   // Heuristic, advisory: a criterion whose subject is a report/count/warning is satisfiable
   // while the problem it describes remains entirely intact.
@@ -189,6 +196,44 @@ function checkSpec(absPath) {
 }
 
 const specs = collect().map(checkSpec).filter(Boolean);
+
+// ── cross-spec reference integrity ───────────────────────────────────────────
+// Build an index of what every spec actually offers, then verify each citation against it.
+const offered = new Map(); // basename -> { acs:Set, openQs:Set, resolvedQs:Set }
+for (const f of collect()) {
+  const raw = fs.readFileSync(f, 'utf-8');
+  const fmEnd = raw.indexOf('\n---', 3);
+  const b = fmEnd === -1 ? raw : raw.slice(fmEnd + 4);
+  const oq = section(b, 'Open Questions') || '';
+  offered.set(path.basename(f), {
+    acs: new Set([...b.matchAll(/^- \[[ x]\] (AC\d+):/gm)].map((m) => m[1])),
+    openQs: new Set([...oq.matchAll(/^### (Q\d+):/gm)].map((m) => m[1])),
+    resolvedQs: new Set([...b.matchAll(/^### Resolved:.*?\(was (Q\d+)/gm)].map((m) => m[1])),
+  });
+}
+
+for (const { rel, body } of crossRefs) {
+  const self = path.basename(rel);
+  // "`conformance-harness.md` AC11", "formats/generic.md Q7", "`oci.md`'s AC1"
+  const HISTORICAL = /\b(resolved|resolves|settled|settles|was its|was|answer to|answered|per)\b/i;
+  for (const m of body.matchAll(/([a-z0-9-]+\.md)`?(?:'s)?([^.\n]{0,40}?)\b(AC\d+|Q\d+)\b/gi)) {
+    const [, file, between, ref] = m;
+    if (file === self) continue;
+    // Citing a question by its historical number is legitimate - that is how Resolved
+    // sections are labelled ("was Q2"). Only flag citations presenting it as still open.
+    // The qualifier can sit either side of the filename, so both windows are checked.
+    const before = body.slice(Math.max(0, m.index - 40), m.index);
+    if (HISTORICAL.test(between) || HISTORICAL.test(before)) continue;
+    const target = offered.get(file);
+    if (!target) { warn(rel, `cites ${file}, which is not a spec in this repository`); continue; }
+    if (ref.startsWith('AC')) {
+      if (!target.acs.has(ref)) fail(rel, `cites ${file} ${ref}, which does not exist there`);
+    } else if (!target.openQs.has(ref)) {
+      const why = target.resolvedQs.has(ref) ? 'resolved there' : 'absent there';
+      fail(rel, `cites ${file} ${ref} as open, but it is ${why}`);
+    }
+  }
+}
 
 console.log('\n' + 'SPEC'.padEnd(46) + 'STATUS'.padEnd(12) + 'ACs'.padEnd(6) + 'OPEN'.padEnd(6) + 'RESOLVED');
 console.log('-'.repeat(84));
