@@ -173,7 +173,7 @@
     "path": "docs/internal/plans/foundation/storage-and-gc.md",
     "description": "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "3",
     "covers": [
       "internal/storage/**"

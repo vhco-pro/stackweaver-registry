@@ -98,7 +98,7 @@ constraint `data-model.md` places on every handler and backs with an architectur
 Per the resolved interface method set decision below, the interface is pinned now, minimal,
 and re-opened after OCI ships. This is the pin. The interface lives in `internal/format`,
 implemented by `internal/format/<name>` subpackages and consumed by the server core and the
-conformance runner. It is four methods - the set generic and OCI both need, and nothing
+conformance runner. It is five methods - the set generic and OCI both need, and nothing
 either merely might:
 
 | Method | Shape | Why both Tier 0 formats need it |
@@ -106,6 +106,7 @@ either merely might:
 | `Name()` | `string` | The catalogue key (`generic`, `oci`): the default mount prefix, the conformance matrix row, the log field |
 | `Mounts()` | `[]Mount`, a `Mount` being a URL prefix plus a root-anchored flag | Generic returns the default format-first mount; OCI claims the root-anchored `/v2/` (Routing and registration, below) |
 | `Capabilities()` | `Capabilities`, carrying proxy support: `supported` or `unsupported` | The machine-readable home of the declaration AC4's runner honours; generic declares `unsupported`, closing the "neither sibling spec currently says how" gap recorded in `formats/generic.md` |
+| `Scope(r)` | `(Scope, error)`, a `Scope` being a repository plus one of `pull`/`push`/`delete` | The route-to-scope mapping the central authorizer evaluates (`auth.md`). Needed from the **first** format, not at the re-open: AC7's unauthenticated and unauthorized cases apply from day one, and without this the shared layer cannot know what it is authorizing |
 | `ServeHTTP(w, r)` | embedded `http.Handler` | The resolved HTTP-direct decision: the handler receives the real request and response |
 
 Construction is by injection: each format package exposes `New(deps Deps) Handler`, and
@@ -123,6 +124,16 @@ serves over HTTP, which the HTTP-direct decision makes redundant as interface me
 any per-request classification hook, because classification travels as an argument to the
 fetch-and-cache call per the proxied-miss decision. Additions ride the scheduled re-open,
 argued from two real implementations and the Debian prototype rather than from anticipation.
+
+`Scope(r)` entered the pin from a sibling decision rather than from this spec: `auth.md`
+settled that each handler declares a route-to-scope mapping which the shared layer evaluates,
+so that per-format URL grammar - including OCI's slash-bearing names under `/v2/` - never
+reaches security-critical shared code. The dependency is recorded here as well as there,
+because a contract enforced on one side only is enforced nowhere.
+
+Its failure mode is stated for the same reason: a handler whose mapping omits a route
+under-protects itself silently. That is what `auth.md` AC18 and AC7's per-format cases catch,
+which is why both are runner-enforced rather than advisory.
 
 This pin knowingly departs from the `go` skill's discover-don't-design guidance; the
 departure, its justification and its mitigation are recorded in the resolved method set
@@ -176,7 +187,9 @@ A format is complete when, and only when:
 1. Conformance cases pass in **both** modes, against at least two client versions - or the
    format's spec records a declared unsupported mode matching its `Capabilities()`
    declaration (`generic` is the single permitted case).
-2. Replay-match passes against a recorded corpus from a reference implementation.
+2. Replay-match passes against a recorded corpus from a reference implementation. (Whether
+   `generic`, which has no reference implementation to record from, holds a named exemption
+   from this item is `formats/generic.md` Q7, owner-pending; its answer amends this line.)
 3. No case is skipped without an issue number.
 4. Its spec under `docs/internal/plans/formats/` records which parts of the ecosystem protocol
    are deliberately unimplemented, so the matrix does not imply coverage that does not exist.
@@ -274,9 +287,12 @@ Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-One question from the 2026-09-23 review awaits the owner. Resolved decisions follow it and
-are kept rather than deleted, so the reasoning survives the next time someone asks why it
-was done this way.
+None are open in this spec: every question raised here has been answered by the owner and
+folded into the body. Two owner-pending questions in sibling specs target this spec's
+contracts and are cross-referenced where they bite (`auth.md` Q6 on the pinned method set,
+`formats/generic.md` Q7 on the definition of done); they belong to those specs and are
+answered there, not here. Resolved decisions are kept rather than deleted, so the reasoning
+survives the next time someone asks why it was done this way.
 
 ### Resolved: the egress import allowlist (was Q6)
 

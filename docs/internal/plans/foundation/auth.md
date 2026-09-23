@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "First review pass 2026-09-23 at 3e3ae0a: security-lens hardening applied (visibility ACs, identity mapping, token generation, TLS, token-service duties) and Q4-Q12 raised for the owner; stays draft until they are answered. AC10's external security review of the implementation remains a separate, mandatory gate."
+status_description: "All nine review questions answered 2026-09-23 and folded through Design, the ACs and the Test Plan. Zero open questions; awaiting a gate review. AC10 still requires external review of the implementation regardless of spec status."
 description: "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present."
 author: michielvha
 goal: "Give every format one auth model that real package clients can use, while keeping user passwords, MFA, account recovery and federation outside our code."
@@ -91,8 +91,12 @@ preference:
 - Registry tokens are generated from `crypto/rand`, at least 256 bits, encoded with a
   non-secret prefix used only for lookup and display. The token string carries no structure
   beyond that prefix: no embedded claims, no identifiers, nothing parseable.
-- Tokens are stored one-way (which one-way function is Q4), as Stackweaver's `apikey` service
-  already does with bcrypt.
+- Tokens are stored one-way as **SHA-256 with a constant-time comparison**, not bcrypt. Bcrypt's
+  cost is a defence low-entropy passwords need against offline cracking; a 256-bit random token
+  has no entropy problem, so the slowness buys nothing and is paid on every one of the hundreds
+  of requests in a single `npm install` or `docker pull`. This is what GitHub and most registries
+  do for API tokens. **This is a deliberate divergence from the Stackweaver port**, which uses
+  bcrypt for the same reason it also authenticates lower-entropy material.
 - JWT signing via a maintained library, with keys from the configured signing key.
 - **No custom cryptographic scheme anywhere.** A design that invents one is a defect, not a
   trade-off, and reviewers should treat it as such.
@@ -100,8 +104,9 @@ preference:
 Stackweaver has shipped the machine half already: bcrypt-hashed keys with a prefix for fast
 lookup, a scope model, and HMAC-signed scoped capability tokens, with fuzz targets over prefix
 handling and key verification (`backend/internal/services/apikey/` in that repo, verified
-2026-09-23). This is a port of exercised code, not a greenfield design - though "exercised"
-holds for the code, not for its cost profile on a registry request path (Q4).
+2026-09-23). This is a port of exercised code, not a greenfield design - with one deliberate
+change: the hash function becomes SHA-256, because bcrypt's cost profile does not survive a
+registry request path.
 
 ### The two surfaces
 
@@ -157,10 +162,43 @@ The token service is where an implementer is most tempted to invent, so its obli
 stated: the JWT's signing algorithm is fixed by configuration and **never read from the token's
 own header** (algorithm-confusion is the classic JWT break); verification checks signature,
 expiry, issuer and audience, and grants exactly the scopes issued, nothing wider; expiry is
-short enough to be measured in minutes, because that lifetime is also the revocation window
-(Q5); and the signing key is dedicated to this service and rotatable without failing in-flight
-pulls (`kid` selection is the standard mechanism). The concrete claim set, the key's provenance
+short enough to be measured in minutes, because that lifetime is also the revocation window; and the signing key is dedicated to this service and rotatable without failing in-flight
+pulls (`kid` selection is the standard mechanism). **The token lifetime is the revocation
+window, accepted deliberately**: revocation is not checked per JWT use, because a database
+lookup on every layer pull deletes the reason the self-contained token flow exists. Minutes-scale
+expiry bounds the exposure, and AC5 names the window rather than promising it away. The concrete claim set, the key's provenance
 and its storage are implementation decisions AC10's external review must cover explicitly.
+
+### Bootstrap, first administrator, and what a new identity gets
+
+**The local admin credential** is generated from `crypto/rand` at first start and emitted to the
+server log exactly once; only its hash is stored. There is no default password to forget
+changing. AC7 forbids credentials in logs, so that single deliberate emission is an explicit,
+narrow carve-out rather than an exception discovered later.
+
+**Configuring OIDC requires naming at least one admin identity** by `(issuer, subject)` before
+the local admin is disabled. This makes the locked-out state **unrepresentable**: the only way in
+cannot be turned off without designating a replacement. The alternatives were a first-login-wins
+race, which on a reachable registry is a real window for the wrong person to become your
+administrator, and keeping the local account indefinitely, which is how a temporary standing
+credential becomes permanent.
+
+Accepted cost: one more required configuration field, and the operator must know their own
+subject claim, which IdP consoles do not always make obvious.
+
+**A brand-new identity from the provider receives nothing.** Authentication succeeds and
+authorization is empty until granted. Repositories are private by default, and nothing-by-default
+for principals is the same posture applied to people. Onboarding therefore has an explicit grant
+step, deliberately.
+
+### Token expiry
+
+Registry tokens **expire by default**, with a non-expiring token available only by deliberate
+opt-in - the same shape as the anonymous-access decision, where the risky state requires someone
+to choose it.
+
+Accepted cost: a CI token that silently expires breaks a pipeline at an inconvenient moment.
+Expiry warnings must therefore be visible well before the event, not delivered as a 401.
 
 ### Visibility and the anonymous principal
 
@@ -177,7 +215,10 @@ true under failure, and they are design, not implementation niceties:
   repositories, and becomes a free probing identity against private ones. Anonymous applies
   only when no credential is presented at all.
 
-What an unauthorized caller may learn about a private repository's existence is Q11.
+**Missing and forbidden are indistinguishable to a caller without read access**: both return
+404. Private repository names are frequently guessable, and a distinct 403 confirms which guesses
+are right, enumerating the private namespace. The accepted cost is a confusing support case where
+a legitimate user with a typo is told "not found" when the real problem is permission.
 
 ### Authorization is central, never per-handler
 
@@ -186,10 +227,29 @@ receive raw `*http.Request`, the compiler cannot hold this boundary, so it is he
 every format's conformance case set must include unauthenticated and unauthorized cases, runner
 enforced (`format-handler-interface.md` AC7).
 
+**How the shared layer learns what it is authorizing:** each handler declares a route-to-scope
+mapping, from its own routes to a `(repository, action)` pair, and the shared layer evaluates
+that mapping and enforces the result. Format knowledge stays in the format - including OCI's
+slash-bearing repository names under `/v2/`, which would otherwise put per-format URL grammar
+into security-critical shared code.
+
+The accepted cost is that a handler declaring its mapping wrongly under-protects itself. That is
+exactly what AC7's unauthenticated and unauthorized cases catch, which is why they are
+runner-enforced rather than advisory.
+
+### Scope vocabulary
+
+A scope is `(repository, action)` where action is one of **`pull`, `push`, `delete`** - OCI's own
+vocabulary, used for every format. The scope unit was chosen because it needs no translation from
+OCI's grammar, and inventing a second vocabulary would reintroduce exactly that translation layer
+at the token-service boundary.
+
+Accepted cost: the words read as container-flavoured to a Maven or PyPI user, and `pull` is an
+odd verb for a package download. That is a documentation problem rather than a security one.
+
 ### Tokens are never stored recoverable
 
-Only a one-way hash plus a lookup prefix is persisted (which one-way function is Q4; either
-answer keeps this section true). A token is displayed once at creation and is unrecoverable
+Only a SHA-256 hash plus a lookup prefix is persisted. A token is displayed once at creation and is unrecoverable
 afterwards. This is deliberately inconvenient.
 
 ## Acceptance Criteria
@@ -202,18 +262,36 @@ afterwards. This is deliberately inconvenient.
       repository **cannot** read another, asserted by a conformance case that expects denial.
 - [ ] AC4: `npm`, `pip` and `mvn` each authenticate using the credential form that client
       natively sends, proven by conformance cases running the real clients.
-- [ ] AC5: A revoked token is rejected on the next request, with no cached-grant window. (How
-      this criterion applies to OCI tokens already issued against a revoked credential is Q5;
-      its answer amends this wording.)
-- [ ] AC6: Tokens are stored only as a one-way hash plus a lookup prefix (the hash function is
-      Q4); a database dump yields no usable credential, asserted by a test that reads the row
+- [ ] AC5: A revoked credential is rejected on the next request on every path except an
+      already-issued OCI token, which remains valid until its expiry. That window is bounded by
+      the configured token lifetime, is measured in minutes, and is asserted by a test that
+      revokes a credential and shows the OCI token failing once expired and no later.
+- [ ] AC6: Tokens are stored only as a SHA-256 hash plus a lookup prefix, compared in constant
+      time; a database dump yields no usable credential, asserted by a test that reads the row
       and fails to authenticate with it.
 - [ ] AC7: A token or password never appears in logs, error responses or metrics, asserted by an
       integration test that exercises a real failed authentication and scans the emitted output.
+      The single exception is the first-start local admin credential (AC15), emitted once by
+      design; the test asserts that exactly one such emission occurs and that nothing else leaks.
 - [ ] AC8: Every format's conformance case set contains an unauthenticated and an unauthorized
       case, runner-enforced, and a format missing either fails the suite.
 - [ ] AC9: No package under `internal/auth/**` implements a cryptographic primitive; verified by
       an architecture test asserting the allowed library set.
+- [ ] AC13: Configuring OIDC without naming at least one admin identity is rejected, and after
+      a successful OIDC configuration that named identity can administer the registry while the
+      local admin no longer authenticates.
+- [ ] AC14: A brand-new identity from the provider authenticates successfully and can perform no
+      action on any repository until explicitly granted.
+- [ ] AC15: The local admin credential is generated from `crypto/rand` at first start, appears in
+      the log exactly once, and is stored only as a hash; a second start does not re-emit it.
+- [ ] AC16: A token created without an explicit non-expiring opt-in has an expiry, and is
+      rejected after it passes; a non-expiring token requires the deliberate flag.
+- [ ] AC17: A request for a private repository from a caller without read access is
+      indistinguishable from a request for a repository that does not exist, including status
+      code, body and timing-insensitive headers.
+- [ ] AC18: A handler's declared route-to-scope mapping is what the shared layer enforces; a
+      handler whose mapping omits a route fails its unauthenticated and unauthorized conformance
+      cases.
 - [ ] AC10: An external security review of the implementation is recorded as complete before any
       auth code reaches `main`.
 - [ ] AC11: A newly created repository rejects unauthenticated reads; after anonymous read is
@@ -239,6 +317,12 @@ afterwards. This is deliberately inconvenient.
 | AC10 | manual | recorded in this spec's Review Log; procedure below |
 | AC11 | integration | `internal/auth/visibility_test.go` |
 | AC12 | integration | `internal/auth/visibility_test.go` |
+| AC13 | integration | `internal/auth/bootstrap_test.go` |
+| AC14 | integration | `internal/auth/default_grant_test.go` |
+| AC15 | integration | `internal/auth/local_admin_test.go` |
+| AC16 | integration | `internal/auth/expiry_test.go` |
+| AC17 | conformance | `conformance/core/existence_oracle_test.go` |
+| AC18 | unit + conformance | `internal/auth/scope_map_test.go`; per-format cases via `format-handler-interface.md` AC7 |
 
 **AC10 procedure**: before the first auth code merges, a security review is performed by a party
 other than the implementing agent, covering token lifecycle, scope enforcement, the OIDC
@@ -270,142 +354,101 @@ Q4 through Q12 were raised by the 2026-09-23 security review and await the owner
 decisions that follow them are kept rather than deleted, so the reasoning survives the next
 time someone asks why it was done this way.
 
-### Q4: How is a presented token verified on every request: bcrypt, or a fast hash suited to high-entropy secrets?
+### Resolved: token hash function (was Q4)
 
-**Recommendation:** B - a 256-bit random token does not need a slow hash; bcrypt's cost is a
-defense low-entropy passwords need, and a registry pays that cost on every one of the hundreds
-of requests a single `npm install` or `docker pull` makes.
+**Settled 2026-09-23: SHA-256 with constant-time comparison, not bcrypt.** Bcrypt's cost is a
+defence that low-entropy passwords need against offline cracking; a 256-bit random token has no
+entropy problem, so the slowness buys nothing and is paid on every one of the hundreds of
+requests in a single `npm install` or `docker pull`. This is what GitHub and most registries do
+for API tokens.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. bcrypt compare per request (the port as-is)** | Stackweaver's exercised code unchanged; safety margin if a weak token ever exists | Tens of milliseconds of CPU per request, multiplied across every request a client operation makes; the obvious fix is a verification cache, which AC5 forbids |
-| **B. SHA-256 (or HMAC) of the token, constant-time compare** | Microsecond verification, so AC5 holds with no cache; a dump still yields nothing, because reversing a 256-bit random preimage is infeasible | Diverges from the ported code, and loses bcrypt's margin should the generation rule ever be violated |
-| **C. bcrypt plus a short in-memory grant cache invalidated on revocation** | Keeps bcrypt and acceptable latency | Exactly the cached-grant window AC5 rules out, plus cross-instance invalidation the moment there is a second server |
+Accepted cost: a deliberate divergence from the Stackweaver `apikey` port, which uses bcrypt
+because it also authenticates lower-entropy material. The port is no longer a copy on this point.
 
-**Why this is yours:** it rewrites AC6 and constrains AC5, and it trades an exercised port
-against request-path performance - which the charter names as invisible to conformance, so no
-gate will catch the wrong choice.
+### Resolved: revocation window for issued OCI tokens (was Q5)
 
-### Q5: When a credential is revoked, do OCI tokens already issued against it survive until expiry?
+**Settled 2026-09-23: an already-issued OCI token remains valid until expiry; AC5 now names
+that window instead of promising it away.** Revocation is not checked per JWT use, because a
+database lookup on every layer pull deletes the reason the self-contained token flow exists.
 
-**Recommendation:** A - accept the token lifetime as the bounded revocation window and amend
-AC5 to name it, because checking revocation on every JWT use deletes the reason the OCI flow
-exists.
+Accepted cost: a revoked credential keeps working for minutes on the OCI path. It is bounded by
+the configured token lifetime and must be documented as a property rather than discovered as a
+surprise. This corrects a criterion that the spec's own third auth path made false.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Bounded survival: the JWT's short expiry is the revocation window, named in AC5** | Stateless verification; the flow the distribution spec describes | A revoked credential keeps its granted access for up to one token lifetime |
-| **B. Check the issuing credential's revocation on every JWT-bearing request** | AC5 stays literally true | Every OCI request pays a database lookup; the JWT degenerates into a session pointer |
-| **C. A `jti` denylist consulted at verification** | Fast propagation, stateless in the common case | A denylist to populate, replicate and expire, added to the most security-sensitive code in the product |
+### Resolved: how central authorization learns its subject (was Q6)
 
-**Why this is yours:** AC5 as written is false for the OCI path as designed, and only the owner
-decides whether the criterion or the flow gives way.
+**Settled 2026-09-23: each handler declares a route-to-scope mapping, and the shared layer
+evaluates and enforces it.** Format knowledge stays in the format, so per-format URL grammar -
+including OCI's slash-bearing repository names under `/v2/` - never reaches security-critical
+shared code.
 
-### Q6: How does central authorization learn which repository and action a request is for?
+This adds `Scope(r)` to the pinned method set in `format-handler-interface.md`, needed from the
+first format rather than at the scheduled re-open.
 
-**Recommendation:** A - the handler declares a route-to-scope mapping the shared layer
-evaluates, because the alternative moves per-format URL grammar into security-critical shared
-code.
+Accepted cost: a handler declaring its mapping wrongly under-protects itself, silently. AC18 and
+AC7's per-format unauthenticated and unauthorized cases are the mechanical catch.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Handler declares a per-route (repository, action) mapping; the shared auth layer evaluates it** | Format knowledge stays in the handler, evaluation stays central; OCI's `/v2/` name grammar is parsed where it is understood | The pinned interface gains a method, and a wrong mapping is now an authorization bug a handler can cause - AC8's unauthorized cases become the mechanical check on it |
-| **B. Central middleware parses `/{format}/{repository}/...` generically, OCI special-cased** | No interface change | The auth layer accretes per-format URL knowledge, against the interface spec's spirit, and every future carve-out lands in shared security code |
+### Resolved: the first administrator (was Q7)
 
-**Why this is yours:** it amends the interface method set that `format-handler-interface.md`
-settled with a scheduled re-open, and it decides where authorization bugs can originate.
+**Settled 2026-09-23: configuring OIDC requires naming at least one admin identity by
+`(issuer, subject)` before the local admin is disabled.** This makes the locked-out state
+unrepresentable: the only way in cannot be switched off without designating a replacement.
 
-### Q7: Once OIDC is configured and the local admin is disabled, how does the first registry administrator exist?
+Rejected alternatives and why: first-login-wins is a race, and on a reachable registry that is a
+real window for the wrong person to become the administrator; keeping the local account until
+someone is promoted leaves a standing credential outside the identity provider for an
+indeterminate period, which is how temporary states become permanent.
 
-**Recommendation:** A - configuring OIDC requires naming at least one admin identity before
-the local admin is disabled, making the locked-out state unrepresentable without trusting
-provider claims.
+Accepted cost: one more required configuration field, and the operator must know their own
+subject claim, which IdP consoles do not always surface clearly.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. OIDC configuration requires naming an admin principal; the switch refuses otherwise** | No brickable transition, no trust in provider group data | One more required configuration field; a mistyped identifier still locks out (the keep flag is the recovery) |
-| **B. First OIDC login after configuration becomes admin** | Zero configuration | A race that anyone able to authenticate can win; on a provider with open registration that is privilege escalation by timing |
-| **C. Map a provider group or claim to registry admin** | Enterprise-native, survives personnel change | Trusts provider-controlled claims for the highest privilege, leaks per-provider claim shapes into configuration, and quietly turns shared login into shared authorization - the exact conflation Design warns against |
+### Resolved: default authorization for a new identity (was Q8)
 
-**Why this is yours:** it is the recovery story for AC2's disable decision, and each option
-places trust differently between the operator and the provider.
+**Settled 2026-09-23: nothing.** Authentication succeeds and authorization is empty until
+granted. Repositories are private by default, and nothing-by-default for principals is that same
+posture applied to people.
 
-### Q8: What does a brand-new identity arriving from the provider receive by default?
+Accepted cost: every new team member needs an explicit grant, so onboarding carries a manual
+step. That is deliberate: the alternative defaults are the ones where a misconfiguration silently
+gives everyone in the identity provider access to everything.
 
-**Recommendation:** A - nothing: authentication succeeds, authorization is empty until
-granted; private-by-default for repositories implies nothing-by-default for principals.
+### Resolved: local admin credential lifecycle (was Q9)
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. No permissions until granted** | SSO cannot silently widen access; consistent with the anonymous-access resolution | Every onboarding needs an explicit grant, which small teams will feel |
-| **B. A configurable default role, defaulting to none** | Per-deployment flexibility | A configuration axis that can make every SSO-capable user a reader of everything - the misconfiguration the visibility resolution exists to prevent, reintroduced one level up |
+**Settled 2026-09-23: generated from `crypto/rand` at first start, emitted to the server log
+exactly once, stored only as a hash.** There is no default password to forget changing.
 
-**Why this is yours:** Design explicitly names default-role policy as a decision separate from
-authentication, and no spec has made it; it is the difference between SSO as a door and SSO as
-a grant.
+Accepted cost: one deliberate cleartext emission, which is why AC7's no-credentials-in-logs rule
+now carries an explicit, narrow carve-out for it rather than being quietly violated. AC15 asserts
+the emission happens exactly once and not on subsequent starts.
 
-### Q9: How is the local admin credential created and delivered to the operator?
+### Resolved: token expiry (was Q10)
 
-**Recommendation:** A - generated from `crypto/rand` at first start and shown exactly once,
-with AC7 amended to carve out that single, deliberate emission.
+**Settled 2026-09-23: tokens expire by default; a non-expiring token exists only by deliberate
+opt-in.** The same shape as the anonymous-access resolution, where the risky state requires
+someone to choose it.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Generated at first start, shown once on the console** | High entropy guaranteed; no operator ritual; brute force is moot even though Scope declines a lockout policy | The one place a credential deliberately meets process output - AC7 needs a named carve-out or its leak test forbids the mechanism |
-| **B. Operator-supplied via environment or config file** | Never appears in output | Operators pick weak passwords, and with no lockout policy in scope a guessable admin password on an internet-facing registry has no brute-force brake |
-| **C. Generated to a file with restrictive permissions** | Off the console and out of logs | Container and Kubernetes deployments must mount and retrieve it; the first-run path grows moving parts |
+Accepted cost: a CI token that expires silently breaks a pipeline at an inconvenient moment.
+Expiry warnings must be visible well before the event rather than delivered as a 401.
 
-**Why this is yours:** it is the first credential the product ever creates, the spec currently
-says nothing about it, and the options trade first-run ergonomics against AC7's absolutism and
-the deliberately absent lockout policy. Whatever the delivery, the stored form is a password
-hash - bcrypt is right here regardless of Q4, because an operator-facing password cannot be
-assumed high-entropy.
+### Resolved: the existence oracle (was Q11)
 
-### Q10: Do registry tokens expire?
+**Settled 2026-09-23: missing and forbidden are indistinguishable to a caller without read
+access. Both return 404.** Private repository names are frequently guessable, and a distinct 403
+confirms which guesses are correct, enumerating the private namespace.
 
-**Recommendation:** C - default expiry with an explicit non-expiring opt-in, the same shape as
-the anonymous-access resolution: the risky state exists only by deliberate action.
+Accepted cost: a legitimate user with a typo is told "not found" when the real problem is
+permission, which is a genuinely confusing support case. AC17 requires the responses to be
+indistinguishable in status, body and headers, so the diagnostic gap is real rather than
+cosmetic.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Mandatory maximum lifetime** | Every leak has a bounded blast radius | Breaks the set-and-forget CI norm every incumbent registry honours; rotation tooling becomes a prerequisite for adoption |
-| **B. Optional expiry, non-expiring by default** | Matches npm and PyPI expectations; no rotation treadmill | A leaked non-expiring token is valid until someone notices; revocation is the only brake |
-| **C. Default expiry, explicit non-expiring opt-in** | A secure default; the escape hatch is a recorded decision | One more choice at token creation, and the CI documentation must teach it |
+### Resolved: scope action vocabulary (was Q12)
 
-**Why this is yours:** it is a product promise CI pipelines get built against, and changing it
-later invalidates users' automation rather than our code.
+**Settled 2026-09-23: OCI's `pull`, `push` and `delete`, for every format.** The scope unit was
+chosen because it needs no translation from OCI's grammar; a second vocabulary would reintroduce
+exactly that translation layer at the token-service boundary.
 
-### Q11: What does an unauthorized caller learn about a private repository's existence?
-
-**Recommendation:** A - missing and forbidden are indistinguishable to a caller without read
-access, because private repository names are often guessable and a distinct 403 enumerates
-them.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Indistinguishable: the same not-found or challenge response for missing and forbidden** | No existence oracle across tenants; aligns with the direction of `oci.md` Q5 on mounts | Worse debuggability - "missing or forbidden" requires server logs to answer |
-| **B. Honest 403 for exists-but-forbidden** | Operators and users see the true failure | Any authenticated user can enumerate private inventory by guessing names |
-
-**Why this is yours:** the sibling `oci.md` Q5 covers only the cross-repository mount path and
-is still open; this is the same trade for every read path in every format, and it constrains
-what status codes AC8's unauthorized cases assert.
-
-### Q12: What is the action vocabulary of a scope?
-
-**Recommendation:** A - OCI's `pull`, `push` and `delete` for every format, because the scope-
-unit resolution was justified by needing no translation from OCI's grammar, and a second
-vocabulary would reintroduce exactly that layer.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. OCI's verbs everywhere; each format maps its operations onto them** | One grammar; the OCI flow needs no mapping, so the resolution's rationale holds | Non-OCI operations without a clean verb (retention configuration, repository settings) must be shoehorned or declared out of token reach |
-| **B. Generic verbs (read, write, delete, admin), mapped to OCI's at the token endpoint** | Natural fit for the other 32 formats and for admin surfaces | The translation layer the scope-unit resolution was chosen to avoid, now living in the token service |
-
-**Why this is yours:** every format's conformance auth cases assert against these exact
-strings, and changing the vocabulary after two formats ship re-opens their case sets. The
-scope-unit resolution also mentions "one deliberately broad token" without defining what
-breadth exists; the answer here should say whether anything wider than a repository list (an
-all-repositories or admin scope) is expressible at all.
+Accepted cost: the words read as container-flavoured to a Maven or PyPI user, and `pull` is an
+odd verb for a package download. That is a documentation problem, not a security one.
 
 ### Resolved: break-glass account (was Q1)
 

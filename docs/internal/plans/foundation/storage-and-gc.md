@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Third pass 2026-09-23: Q7 to Q9 answered and folded through Design, Scope, the ACs and the Test Plan. Zero open questions; awaiting a review pass to earn planned."
+status: planned
+status_description: "Planned: cleared by the 2026-09-23 gate review at a2d5219 - zero open questions, all fifteen ACs mapped. The mark-root set and eviction mechanics track sibling open questions (data-model.md Q11/Q13, proxy-cache.md Q11); a resolution amending them is a revision requiring re-review."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
@@ -40,7 +40,8 @@ upload record that was never written.
 
 - Content-addressable blob storage over S3-compatible object storage, keyed by digest.
 - Chunked/resumable upload support, since OCI requires it and large artifacts need it.
-- Mark-and-sweep GC, fully settled: a touch-refreshed grace period defaulting to hours, a
+- Mark-and-sweep GC, fully settled: a repository-scoped, touch-refreshed grace period
+  defaulting to hours, a
   deletion-intent table as the write barrier, and three mark roots - published references,
   cached references, and snapshots inside the retention window. The decisions and their
   accepted costs are recorded under Open Questions.
@@ -111,9 +112,9 @@ Two constraints the grace period does not remove:
   is written to PostgreSQL before any object-store upload (multipart initiate) begins. The
   known bug class named in Context - cleanup keyed off a completion record that was never
   written - is closed only by write-ahead ordering; an interrupted upload with no record is
-  invisible to every cleanup pass except a raw store scan. With grace now session-scoped, the
-  orphan scan honours a session's refreshed grace wherever a session record exists; raw object
-  age governs only objects with no record. Because grace is repository-scoped, the orphan scan
+  invisible to every cleanup pass except a raw store scan. The orphan scan honours the
+  repository-scoped grace wherever a session record names the repository; raw object age
+  governs only objects with no record. Because grace is repository-scoped, the orphan scan
   evaluates it per repository, not per session - a repository with recent write activity has
   none of its unreferenced blobs collected, which is the accepted cost of this scope.
 
@@ -145,6 +146,9 @@ merely narrow it:
   of the mark alone reopens the race the table exists to close. The delete pass re-verifies,
   after the intent is visible, that the digest is still unreferenced. References created after
   that re-check see the intent and cancel it; references created before it are seen by it.
+  The row delete itself is transactional with the intent's removal and proceeds only while
+  the intent still stands, so a cancellation and a deletion serialise in PostgreSQL rather
+  than racing - anything else makes AC9's survival guarantee unimplementable.
 - **The intent check is unconditional and transactional.** Reference insert plus intent cancel
   happen in one PostgreSQL transaction, and the check runs on every reference write at all
   times, not only while a sweep runs, because a crashed sweep's intents may stand for
@@ -190,6 +194,14 @@ exercise:
   **The intent therefore acts as an exclusive commit gate on its digest for the whole delete
   phase**: the uploader waits or fails retryably until the object delete completes, so the store
   never sees a PutObject and a DeleteObject in flight on one key (AC13).
+- **The sweep's delete pass and the orphan scan are the only object deleters.** The commit
+  gate's guarantee that the store never sees a PutObject and a DeleteObject in flight on one
+  key holds only while every object delete flows through the intent machinery, so this is a
+  boundary needing a named mechanical enforcer: an architecture test asserts no other code
+  path deletes from the blob store (AC15). `proxy-cache.md`'s open eviction-mechanics
+  question (its Q11) decides whether cache eviction ends only the reference and inherits
+  this single path, or becomes a second deleter; the latter is a revision of this
+  constraint, never a silent exception.
 - **Clocks and listings are not trustworthy inputs.** Grace comparisons mix object-store
   timestamps with PostgreSQL time; skew must be assumed and dwarfed by the grace period. The
   orphan scan (store listing versus rows) runs against "S3-compatible" stores whose LIST
@@ -203,18 +215,25 @@ exercise:
   cached one (`proxy-cache.md`, resolved cache-eviction question), and pruning at the
   retention boundary ends a snapshot - and hosted deletes reclaim space only through that
   pruning, on the schedule the retention default sets: **30 days, configurable per repository.**
+  Pruning obeys the reconstructibility constraint `data-model.md` places on the delta
+  representation: a checkpoint or delta is dropped only while no retained snapshot depends on
+  it, because a mark root whose content set can no longer be computed makes the sweep unsound.
+  The root classes themselves are the shared data model's to enumerate: `data-model.md`'s open
+  questions on proxied-repository snapshots and on CAS-backed metadata documents (its Q11 and
+  Q13) can each extend this set, and a resolution that does so amends this spec's mark roots
+  as a revision requiring re-review, never silently.
 
 ### Testing what conformance cannot see
 
 This is the part of the spec that exists because the harness is blind here. Required:
 
-- **Property tests** (the operation set must include a commit of a digest under an active
-  deletion intent, or the intent gate is never exercised): for randomised interleavings of push, pull, delete, eviction, pruning
+- **Property tests**: for randomised interleavings of push, pull, delete, eviction, pruning
   and GC, the invariant above holds. The operation set must include re-push of already-stored
-  content (a dedup hit, the new-reference-to-old-blob case), cache arrival via `on_demand`
-  (the second reference class), snapshot-creating writes, cache eviction under the
-  per-repository quota, snapshot pruning at the retention boundary, and session grace refresh
-  and abandonment. A generator limited to fresh-content pushes cannot reach the deadliest
+  content (a dedup hit, the new-reference-to-old-blob case), a commit of a digest under an
+  active deletion intent (without which the intent gate is never exercised), cache arrival via
+  `on_demand` (the second reference class), snapshot-creating writes, cache eviction under the
+  per-repository quota, snapshot pruning at the retention boundary, repository grace refresh,
+  and session abandonment. A generator limited to fresh-content pushes cannot reach the deadliest
   race, and one that can create references but never end them - no eviction, no pruning, no
   expiry - can never race a reference's death against another's birth; both pass vacuously.
   The sweep's internal phases (mark, intent record, re-check, row delete, object delete) must
@@ -237,7 +256,8 @@ accepts one as evidence has missed the point of the spec.
       one stored object.
 - [ ] AC3: A chunked upload interrupted at any stage boundary leaves no blob that GC will later
       treat as live, and every orphan it leaves (including one whose session record write was
-      itself interrupted) is collected within one full cleanup cycle after session expiry.
+      itself interrupted) is collected within one full cleanup cycle once the session has
+      expired and the repository-scoped grace has lapsed.
 - [ ] AC4: GC never deletes a referenced blob, under randomised concurrent
       push/pull/delete/eviction/pruning/GC interleavings, proven by a property test.
 - [ ] AC5: GC never deletes a blob belonging to an upload in progress, proven by a fault-injection
@@ -262,11 +282,6 @@ accepts one as evidence has missed the point of the spec.
 - [ ] AC10: Every reference write goes through the shared reference-creation call that
       performs the intent check; an architecture test fails on any code path writing a
       reference row by another route.
-- [ ] AC13: A commit of a digest whose deletion intent is in its delete phase waits or fails
-      retryably until the object delete completes, and the re-uploaded content is then
-      retrievable; no interleaving of commit and sweep loses the new copy.
-- [ ] AC14: The snapshot retention window defaults to 30 days, is overridable per repository,
-      and a snapshot older than the effective window is pruned and stops protecting its blobs.
 - [ ] AC11: A blob whose only reference is a snapshot inside the retention window survives the
       sweep; once that snapshot is pruned, the blob is collected within one cycle; and the API
       reports how far back rollback actually reaches, rather than leaving the limit to be
@@ -275,6 +290,14 @@ accepts one as evidence has missed the point of the spec.
       with an explicit, retryable, self-explanatory error and writes no reference row; a
       client that exceeded the touch-refreshed grace gets that error at reference time, never
       a silently missing blob at pull time.
+- [ ] AC13: A commit of a digest whose deletion intent is in its delete phase waits or fails
+      retryably until the object delete completes, and the re-uploaded content is then
+      retrievable; no interleaving of commit and sweep loses the new copy.
+- [ ] AC14: The snapshot retention window defaults to 30 days, is overridable per repository,
+      and a snapshot older than the effective window is pruned and stops protecting its blobs.
+- [ ] AC15: No code path outside the sweep's delete pass and the orphan scan deletes an
+      object from the blob store, enforced by an architecture test that fails on any other
+      deletion call site.
 
 ## Test Plan
 
@@ -294,6 +317,7 @@ accepts one as evidence has missed the point of the spec.
 | AC12 | fault injection | `internal/storage/gc_race_test.go` |
 | AC13 | fault injection | `internal/storage/intent_gate_test.go` (commit interleaved with delete pass) |
 | AC14 | integration | `internal/storage/retention_test.go` |
+| AC15 | architecture test | `internal/storage/arch_test.go` |
 
 ## Implementation Phases
 
@@ -315,9 +339,10 @@ accepts one as evidence has missed the point of the spec.
 
 ## Open Questions
 
-Three open (Q7, Q8, Q9), raised by the 2026-09-23 review. All six earlier questions were
-answered by the owner and are folded into Design, Scope and the acceptance criteria above,
-with each decision's accepted cost recorded beside it under the Resolved headings.
+None open. All nine questions this spec has carried were answered by the owner and are
+folded into Design, Scope, the acceptance criteria and the Test Plan above, with each
+decision's accepted cost recorded beside it under the Resolved headings, kept rather than
+deleted so the reasoning survives the next time someone asks why it was done this way.
 
 ### Resolved: the post-row-delete object race (was Q7)
 
@@ -363,9 +388,9 @@ and may not collect until the repository goes quiet.
 **Settled 2026-09-23, boundary corrected the same day: touch-refreshed grace, defaulting to
 hours, scoped to the repository.** The original wording said "each blob upload within a push
 session refreshes the grace on the whole session", which assumed a wire-level push session OCI
-does not have. See the resolved grace-period boundary below; the mechanism is unchanged, only
-what it attaches to. A client actively pushing never expires; a
-session abandoned mid-push eventually collects.
+does not have. See the resolved grace-period boundary above; the mechanism is unchanged, only
+what it attaches to. A client actively pushing never expires; an
+abandoned push collects once its repository goes quiet.
 
 Accepted cost: a very slow client uploading one enormous blob could still exceed it. That case
 must fail as an explicit, self-explanatory error telling the client to re-push, never as a
@@ -442,3 +467,4 @@ not by weakening the storage model.
 |------|----------|---------------|---------|
 | 2026-09-22 | afbb4e4 | adversarial + constitution + cross-spec (claim verification vacuous: no `internal/storage/` code exists yet) | Stays draft: Q4-Q6 raised (grace-window exceed path, snapshot roots and retention, sweep write barrier); invariant gained a third clause; sweep-mechanics constraints and canonical-digest rule added; AC3/AC6/AC7 tightened, AC8 added; stale pre-resolution text and the handler-owns-metadata contradiction with `data-model.md` fixed |
 | 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code) | The six resolutions were recorded but only half-applied: frontmatter, Scope, the grace text, the barrier text and the mark-roots bullet still described the old shape and cited Q4/Q5/Q6 as open; folded throughout, intent ordering/lifecycle and grace-versus-intent constraints added, property op set extended to reference-ending operations and sweep-phase interleavings, AC9-AC12 added; Q7 (post-row-delete object window), Q8 (retention default), Q9 (push-session boundary) raised; stays draft |
+| 2026-09-23 | a2d5219 | gate review: folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code; siblings re-read at this sha) | Q7-Q9 verified as genuinely folded; four stale session-scoped remnants fixed (orphan-scan text, AC3's collection timing, the property op set, the was-Q4 record) plus the stale three-open intro; delete-conditional-on-standing-intent made explicit, single-deleter boundary given its named enforcer (AC15), pruning reconstructibility and the sibling-owned root-set dependency recorded; zero open questions, all ACs mapped; draft -> planned |
