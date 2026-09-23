@@ -77,6 +77,12 @@ Galaxy API has both a Galaxy NG routing style and a plainer v3 style in the wild
 | AC5 | conformance | `conformance/ansible/auth_test.go` |
 | AC6 | conformance | `conformance/ansible/proxied_test.go` |
 
+## Open Questions
+
+None. This spec is an early draft for a format scheduled after the
+harness exists, and its design will be revisited before implementation - so an empty
+section here means "not yet interrogated", not "fully settled".
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |

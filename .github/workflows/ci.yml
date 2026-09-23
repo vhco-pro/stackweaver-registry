@@ -108,6 +108,8 @@ jobs:
           node-version: '22'
       - name: Validate docs frontmatter and index
         run: node scripts/build-docs-index.js --check
+      - name: Mechanical spec gate checks
+        run: node scripts/check-spec.js
       - name: Fail if the committed index is stale
         run: |
           node scripts/build-docs-index.js

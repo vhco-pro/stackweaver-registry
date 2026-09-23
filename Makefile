@@ -57,6 +57,15 @@ conformance-format:
 docs:
 	@node scripts/build-docs-index.js
 
+## check-spec: mechanical spec gate checks (AC mapping, stale refs, review freshness)
+check-spec:
+	@node scripts/check-spec.js
+
+## gate: is one spec mechanically ready for `planned`? e.g. SPEC=docs/internal/plans/foundation/auth.md
+gate:
+	@test -n "$(SPEC)" || (echo "usage: make gate SPEC=<path-to-spec>" && exit 1)
+	@node scripts/check-spec.js --gate $(SPEC)
+
 ## docs-check: validate docs frontmatter without writing (what CI runs)
 docs-check:
 	@node scripts/build-docs-index.js --check

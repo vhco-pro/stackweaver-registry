@@ -41,6 +41,12 @@
     "covers": []
   },
   {
+    "path": "docs/internal/HANDOFF.md",
+    "description": "Handoff for continuing this project in a different agent harness: current state, what is portable, how to run the review loop cheaply, and the next concrete actions.",
+    "internal": true,
+    "covers": []
+  },
+  {
     "path": "docs/internal/plans/formats/ansible-collections.md",
     "description": "Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist.",
     "internal": true,

@@ -26,6 +26,7 @@ copy of the reasoning.
 | [bug-reports/](./bug-reports/) | Reproducible bug reports with evidence, filed before the fix. |
 | [conformance/](./conformance/) | Generated conformance results and the per-format support matrix. |
 | [guidelines/](./guidelines/) |  |
+| [HANDOFF.md](./HANDOFF.md) | Handoff for continuing this project in a different agent harness: current state, what is portable, how to run the review loop cheaply, and the next concrete actions. |
 | [plans/](./plans/) | Specs, one per feature. The spec IS the plan: acceptance criteria, test plan, open questions and a review log that gates implementation. |
 | [research/](./research/) | Prior-art surveys, ecosystem comparisons and protocol research that inform the specs. |
 | [status/](./status/) | Dated point-in-time reports: issue triage passes and other snapshots of where the backlog stood on a given day. |

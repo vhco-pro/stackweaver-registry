@@ -95,6 +95,7 @@ fi
 if [[ " $SUITES " == *" docs "* ]]; then
     if command -v node >/dev/null 2>&1; then
         run "docs frontmatter + index" node scripts/build-docs-index.js --check
+        run "spec gate checks" node scripts/check-spec.js
     else
         skip "docs index" "node not installed"
     fi

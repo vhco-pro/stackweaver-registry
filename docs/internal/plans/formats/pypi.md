@@ -59,6 +59,12 @@ semantics beyond what the index requires.
 | AC5 | conformance | `conformance/pypi/replay_test.go` |
 | AC6 | manual | `docs/internal/tasks/experiment-log.md` |
 
+## Open Questions
+
+None. This spec is an early draft for a format scheduled after the
+harness exists, and its design will be revisited before implementation - so an empty
+section here means "not yet interrogated", not "fully settled".
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |

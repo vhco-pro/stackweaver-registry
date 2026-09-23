@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reviewed 2026-09-22 at afbb4e4: the pass added a Design section, HEAD and DELETE criteria and the two-client-version alignment, and raised Q2-Q8 for the owner; stays draft until they are answered."
+status_description: "Q2 and Q3 answered 2026-09-23 and folded through the body; Q4 to Q8 still await the owner, so this stays draft."
 description: "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end."
 author: michielvha
 goal: "Exercise every shared layer with a protocol simple enough that any failure is unambiguously a harness or infrastructure failure, not a protocol misreading."
@@ -78,10 +78,11 @@ format first needs each mechanism (OCI and npm on current sequencing) and are st
 
 Settled (below): paths are arbitrarily deep. A path is metadata resolved through the shared
 model and never becomes a filesystem or object-store path; blobs stay keyed by digest alone.
-The consequences that resolution priced in outline but not in detail are owner decisions: how
-a path maps onto the shared `Package`/`Version`/`File` model (Q2), the path grammar,
-normalisation and prefix/file collision rules (Q3), listing shape (Q4), overwrite semantics
-(Q5), and retention scoping (Q6).
+Two of the consequences that resolution priced in outline are now settled: the path maps onto
+the shared model via the GitLab hybrid, and the path grammar is strict with file-versus-prefix
+collisions rejected (both resolved below). The remainder are still owner decisions: listing
+shape (Q4), overwrite semantics (Q5), retention scoping (Q6) and the replay-match exemption
+(Q7). The conformance credential was settled by `auth.md` rather than here.
 
 ## Acceptance Criteria
 
@@ -129,9 +130,9 @@ Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-Q2 through Q8 were raised by the 2026-09-22 review and await the owner. The resolved decision
-that follows them is kept rather than deleted, so the reasoning survives the next time someone
-asks why it was done this way.
+Q4 through Q8 await the owner; Q2 and Q3 were answered on 2026-09-23. Resolved decisions are
+kept rather than deleted, so the reasoning survives the next time someone asks why it was done
+this way.
 
 ### Resolved: mapping onto the shared model (was Q2)
 
@@ -194,7 +195,7 @@ snapshot model (`data-model.md`) supports all three equally, so nothing technica
 ### Q6: What is the scoping unit of a retention policy?
 
 **Recommendation:** A - policies attach to the repository, each with an optional path-prefix
-filter; it composes with any answer to Q2 and needs no new entity.
+filter; it composes with the settled package-and-version mapping and needs no new entity.
 
 | Option | You get | It costs |
 |---|---|---|
