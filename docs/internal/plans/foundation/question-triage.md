@@ -1,6 +1,6 @@
 ---
 status: in-progress
-status_description: "Tier A cleared 2026-09-23 (11 answered, 44 to 33 open). Tier B is next and gates the foundation components."
+status_description: "Tiers A and B cleared 2026-09-23 (25 answered, 44 to 18 open). Only Tier C remains, all of it belonging to work not yet started."
 description: "Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once."
 author: michielvha
 goal: "Prevent the mistake of answering 44 questions before the interactions between them are understood, by naming which ones actually gate the next commit."
@@ -12,8 +12,9 @@ covers: []
 
 # Plan: Open question triage
 
-> **Tier A cleared 2026-09-23.** Eleven answered, 44 open questions down to 33. The harness
-> core and the generic format are unblocked. Tier B is next.
+> **Tiers A and B cleared 2026-09-23.** Twenty-five answered, 44 open questions down to 18.
+> The harness, generic, the shared model, GC and the proxy layer are all unblocked. Everything
+> remaining is Tier C: it belongs to work that has not started.
 
 Forty-four questions across thirteen specs. Answering them all now would repeat the mistake the
 adversarial review just exposed: the first eighteen were answered before anyone traced how they
@@ -75,9 +76,32 @@ than to weaken the rule.
 | `data-model` | Q7: does the model need an `Upstream` entity? | Schema shape; cheaper now than after tables exist |
 | `data-model` | Q8: where does package-level and repository-level mutable metadata live? | Schema shape, and three Tier 1 formats have nowhere to store state without it |
 
-## Tier B: before the component ships (13)
+## Tier B: CLEARED 2026-09-23 (13)
 
-Correctness of the foundation. None blocks the harness, all block their own component.
+All answered. The headline is that the GC correctness hole the review found is closed: a
+**deletion-intent table** is the write barrier, because a grace period keyed on time since upload
+cannot cover a dedup hit, a cross-repo mount or an `on_demand` arrival - none of which involve an
+upload. The sweep now marks from **three** roots: published references, cached references, and
+snapshots inside the retention window.
+
+Other answers: touch-refreshed grace defaulting to hours; snapshots are deltas with periodic
+checkpoints, capturing metadata as well as membership so a rollback is not a partial restore;
+one snapshot per logical publish with cache fills excluded, keeping the snapshot sequence off the
+hot proxy path; serve-stale-bounded-and-marked on revalidation failure; LRU eviction under a
+per-repository quota, which also gives GC its cached-reference lifetime; single-flight coalescing
+of concurrent misses; stream-and-verify with commit only on a digest match; the handler calling a
+fetch-and-cache API on a proxied miss; write-triggered services deferred but prototyped against
+Debian before the interface re-opens; and real-upstream conformance on a nightly schedule.
+
+**One answer overrode a recommendation, correctly.** On upstream removal the owner rejected
+keep-and-flag on security grounds. The refinement that followed distinguishes the cases: an
+explicit security signal purges and alerts, while an author unpublish or a PyPI yank keeps
+serving and records divergence - because yank means "not for new resolutions, existing pins keep
+working", so purging would contradict the ecosystem's own semantics.
+
+**One answer changed the build order.** The proxy layer moves from step 5 to step 4, built with
+OCI rather than after it, resolving a four-way contradiction in which OCI's proxied path was
+literally the retrofit the charter forbids.
 
 **Storage and GC** - the component the charter names as how this project eats data:
 

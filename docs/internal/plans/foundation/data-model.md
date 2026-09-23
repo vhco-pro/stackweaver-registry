@@ -207,56 +207,38 @@ home in the schema as written. Implementation cannot start while they stand.
 Resolved decisions are kept at the end rather than deleted, so the reasoning survives the next
 time someone asks why it was done this way.
 
-### Q4: What counts as a "write" for snapshot creation?
+### Resolved: what counts as a write (was Q4)
 
-**Recommendation:** A - a snapshot per logical content-set change committed by the handler
-(publish completed, version deleted, upstream sync batch), with blob uploads and `on_demand`
-materialisations of already-known files explicitly not counting. An OCI push is a dozen blob
-uploads plus one manifest PUT, a Maven deploy is ten to twenty separate PUTs with no
-client-visible transaction boundary, and a busy CI fleet drives thousands of cache fills an
-hour; per-request snapshots make none of those a consistent state and put every cache fill in
-contention on the repository's monotonic snapshot sequence.
+**Settled 2026-09-23: one snapshot per completed logical publish.** `on_demand` cache
+materialisation of files already known to the model does **not** create a snapshot.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Per logical publish** | O(publishes) snapshots, each a consistent state; cache fills of already-known files stay lock-free because they change no content set | Handlers must declare commit points, and each multi-file format needs an explicit grouping rule |
-| **B. Per write request** | Trivial uniformity; no per-format grouping rules | Snapshot bloat; every write serialises on the repository's snapshot sequence, including the hot proxy path; a publish smears across many snapshots, so a rollback can land between a jar and its pom |
+Both halves matter. Publish-scoped snapshots are consistent states, so a rollback never lands
+inside half a Maven deploy. Excluding cache fills keeps the snapshot sequence off the hot proxy
+path, which would otherwise be serialised per repository - directly harming the differentiator.
 
-**Why this is yours:** it fixes the unit of rollback users will see and trades schema
-simplicity against hot-path throughput, and no measurement can make that trade for you.
+Accepted cost: each handler declares where its publish boundary is, and declaring it wrongly
+produces snapshots that are not consistent states. That declaration belongs in the format's spec
+and is a review item, not an implementation detail.
 
-### Q5: Is a blob whose only reference sits in a non-current snapshot live, and what prunes snapshots?
+### Resolved: snapshot liveness (was Q5)
 
-**Recommendation:** A - retained snapshots are GC roots, retention is bounded per repository by
-count or age, and deleting content means pruning the snapshots that still contain it. Whichever
-way this lands, `storage-and-gc.md` must carry it: its resolved collection strategy marks from
-exactly two roots (published and cached), and a sweep blind to snapshot references would delete
-rollback targets, while treating every snapshot as a root forever means nothing is ever
-collected.
+**Settled 2026-09-23 by `storage-and-gc.md`.** A blob referenced only from a snapshot inside
+the retention window is live; once that snapshot is pruned, the reference no longer protects it.
+Retained snapshots are the third GC mark root alongside published and cached references.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Retained snapshots pin content** | Rollback and frozen mirrors actually work: repointing can never dangle | Storage grows with retention; "delete" only reclaims space once the containing snapshots prune, which needs explaining to users |
-| **B. Only pointer-targeted snapshots pin** | Bounded storage; deletion reclaims promptly | Rollback is only safe to snapshots a pointer already holds, which guts the instant-rollback promise the schema is paying for |
+### Resolved: snapshot representation (was Q6)
 
-**Why this is yours:** it prices the rollback promise in storage, decides what "delete" means
-to a user, and obligates a change in the most dangerous component's spec.
+**Settled 2026-09-23: deltas from the previous snapshot, with periodic full checkpoints.**
+Write cost is O(change) rather than O(repository), so a repository with 100k packages does not
+rewrite its whole membership on every publish.
 
-### Q6: What does a Snapshot concretely capture, and how is its content set stored?
+Checkpoints are not optional: without them, reading "what was in snapshot 41" degrades linearly
+with history length. The checkpoint interval is a tuning parameter, and the read path must never
+walk an unbounded chain.
 
-**Recommendation:** A - membership only, encoded Pulp-style as added-in/removed-in snapshot
-numbers on the membership row, so a write costs O(changes) rather than O(repository). Design
-should then state plainly that metadata documents are not frozen, so v1 rollback restores which
-versions exist but not what a mutable document said at the time.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Membership ranges, documents mutable** | O(delta) writes; the proven shape (Pulp's `RepositoryVersion`) | Rollback and frozen mirrors freeze membership, not metadata; the feature promise must be worded honestly |
-| **B. Membership plus copy-on-write documents** | Full-fidelity rollback and truly frozen mirrors | Every metadata edit copies a document, and GC gains document versions as another thing to collect |
-| **C. Materialised set per snapshot** | Trivial queries | O(repository) rows per write; unaffordable for a cache repository with hundreds of thousands of versions |
-
-**Why this is yours:** it decides what promotion, rollback and frozen mirrors can honestly
-promise, which is a product commitment rather than a technical preference.
+A delta records both membership **and** the metadata documents at all three levels, so a rollback
+restores dist-tags and indexes rather than only which versions existed. A membership-only delta
+would produce a partial restore that looks complete, which is worse than no rollback at all.
 
 ### Resolved: upstream entity (was Q7)
 

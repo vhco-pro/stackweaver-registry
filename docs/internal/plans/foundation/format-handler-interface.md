@@ -174,24 +174,15 @@ Accepted cost: the first cut will be wrong about something, and revising it mid-
 contaminate the format-cost measurement that is the experiment's headline metric. The re-open is
 therefore scheduled **before** npm starts, not whenever it becomes convenient.
 
-### Q2: On a proxied-path miss, who calls whom: does the proxy layer wrap the handler, or does the handler call the proxy?
+### Resolved: proxied-miss control flow (was Q2)
 
-Upstream responses are routinely not servable verbatim: an npm packument's tarball URLs must be
-rewritten to point at us before caching or serving, and PyPI simple indexes likewise. So the
-proxied path needs a stated control flow, and the spec currently only says the handler declares
-"how the response is derived".
+**Settled 2026-09-23: the handler owns the request and calls a fetch-and-cache API on a miss.**
+Format-specific transforms, such as rewriting npm packument URLs to point at this registry, then
+live where the format knowledge already is rather than leaking into the shared proxy layer.
 
-**Recommendation:** handler calls the proxy - the handler asks a shared fetch-and-cache API for
-upstream content and derives its own response, because response rewriting is protocol
-translation and belongs in the handler.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Proxy wraps handler (transparent middleware)** | The shared layer sees every miss; cache policy is enforced in exactly one place | Every format whose upstream response needs rewriting fights the wrapper, and per-format transformation logic leaks into the proxy layer |
-| **B. Handler calls proxy (fetch-and-cache API)** | Rewriting stays inside the handler; the proxy layer stays format-agnostic | The proxy invariants (TTL honoured, negative caching, offline mode) now depend on every handler calling correctly, held by conformance cases rather than by structure |
-
-**Why this is yours:** it fixes the control flow both this spec and `proxy-cache.md` build on,
-and the wrong choice recreates the union-of-quirks trap in a new place.
+Accepted cost: every handler must remember to route through that API, and nothing in the type
+system forces it. This is precisely why the network-egress lint rule over `internal/format/**`
+exists: it is the mechanical enforcer for this decision, not a general hygiene rule.
 
 ### Resolved: URL shape (was Q3)
 
@@ -203,27 +194,18 @@ Routing is then unambiguous and a format owns its entire subtree. Accepted cost:
 permanently special-cased in the routing layer, and that carve-out must be explicit and commented
 rather than looking like an accident to the next reader.
 
-### Q4: Do write-triggered shared services (signed index generation, async import tasks) enter this interface now, or wait for their formats?
+### Resolved: write-triggered shared services (was Q4)
 
-The request-in/response-out shape has no home for work a write triggers: Debian and RPM clients
-hard-refuse unsigned indexes that must be regenerated atomically on publish, and Galaxy v3
-imports are asynchronous tasks the client polls. The prior art is direct: Gitea's 7-of-22
-service-layer formats are exactly the generated/signed-index class
-(`registry-architecture-prior-art.md`), and Phase 2 (generic plus OCI) exercises neither
-mechanism, so "proven by two" proves nothing about the class the evidence says is expensive.
-The shared-concerns list currently omits both.
+**Settled 2026-09-23: not added to the interface now, but prototyped against Debian before the
+interface re-opens after OCI.**
 
-**Recommendation:** name the two axes now (a shared signing/index service and a shared task
-service) as consumed-not-implemented concerns in this spec, and spec their internals alongside
-their first consumers (Debian, Ansible collections).
+The reasoning is that generic and OCI exercise neither signed-index generation nor async import
+tasks, and prior art identifies signed-index formats as the expensive class. Re-opening the
+interface with only those two implementations in hand would be re-opening it blind.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Name the axes now** | The interface will not need surgery mid-Tier-1, and the "proven by two" claim is honest about what it does not prove | Two shared surfaces named before any consumer exists |
-| **B. Defer wholly to the format specs** | Nothing speculative in the foundation spec | The first signed-index format lands as an interface revision, re-opening this spec mid-Tier-1 and contaminating the format N+1 cost measurement |
-
-**Why this is yours:** it prices where the interface is allowed to change against the
-experiment's own cost curve, which is the project's headline metric.
+Accepted cost: the Debian spike costs time on a Tier 1 format out of order, and some rework
+remains when these services properly land. That is cheaper than discovering mid-Tier-1 that the
+interface cannot express them, which would contaminate the format-cost measurement.
 
 ### Resolved: the generic proxy exemption in the constitution (was Q5)
 

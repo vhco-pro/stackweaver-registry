@@ -53,7 +53,8 @@ multi-format registry is plausible.
   Ivy and Leiningen), not the number of protocols to implement.
 - A web UI, after the formats work.
 - Upstream proxy/caching with TTLs, negative caching and an offline mode. This is the
-  differentiator and is designed in from format two, never retrofitted.
+  differentiator, and it is built alongside OCI at step 4 rather than after it, so the first
+  proxyable format never has to retrofit one.
 - OIDC SSO and RBAC, free, in the core product.
 - A conformance harness driving real package clients in containers.
 
@@ -94,12 +95,11 @@ what is already delivered.
 | 1 | **Conformance harness** | The harness is the product; the server is what satisfies it. Built before any handler, against a deliberately trivial format. |
 | 2 | **Generic format** | Trivial protocol. Its job is to prove the harness, the CAS, auth and the CI wiring end to end with nothing else in the way. |
 | 3 | **Shared data model, CAS + GC** | The schema all 33 ecosystems store against (`data-model.md`, what makes breadth affordable), plus the blob store and GC, which is where data loss lives. |
-| 4 | **OCI** | The official conformance suite is a pass/fail gate written by the standards body. Hardest protocol, strongest oracle. |
-| 5 | **Proxy/cache** | The differentiator. Introduced with npm rather than retrofitted, because it changes the storage model. |
-| 6 | **npm** | Most-wanted proxy cache in real life. First format where the proxy path matters more than the hosted path. |
-| 7 | **PyPI** | The generalisation test. If npm-to-PyPI is cheaper than generic-to-npm, the experiment has its headline finding. |
-| 8 | **Tier 1 remainder** | Maven (unlocks the whole JVM in one handler), Go modules, NuGet, Debian and RPM (first formats needing GPG-signed indexes), Helm. |
-| 9 | **Re-evaluate, then Tiers 2 and 3** | The breadth gate. Continue only if per-format cost is falling. `docs/internal/plans/formats/catalogue.md`. |
+| 4 | **OCI plus the proxy/cache layer** | The official conformance suite is a pass/fail gate written by the standards body: hardest protocol, strongest oracle. The proxy layer is built here rather than after, because OCI is the first format that can be proxied and retrofitting it is what this charter forbids. |
+| 5 | **npm** | Most-wanted proxy cache in real life, and the first test of whether the proxy layer built for OCI generalises. |
+| 6 | **PyPI** | The generalisation test. If npm-to-PyPI is cheaper than generic-to-npm, the experiment has its headline finding. |
+| 7 | **Tier 1 remainder** | Maven (unlocks the whole JVM in one handler), Go modules, NuGet, Debian and RPM (first formats needing GPG-signed indexes), Helm. A Debian signed-index spike lands before the handler interface re-opens. |
+| 8 | **Re-evaluate, then Tiers 2 and 3** | The breadth gate. Continue only if per-format cost is falling. `docs/internal/plans/formats/catalogue.md`. |
 
 ### Language
 
@@ -166,10 +166,10 @@ licence collapses that claim on contact with Harbor (Apache 2.0) and Gitea (MIT)
 
 ### Phase 2: The hard oracle
 - OCI handler against the official conformance suite
+- The proxy/cache layer, built with it rather than after it
 
 ### Phase 3: The differentiator
-- Proxy/cache layer
-- npm, hosted and proxied
+- npm, hosted and proxied, testing whether the proxy layer built for OCI generalises
 
 ### Phase 4: The generalisation test
 - PyPI, measuring cost against npm
@@ -249,26 +249,24 @@ tagging rule written into the log's "How to record".
 **Why this is yours:** the attribution rule defines what the experiment is allowed to claim,
 and it must be committed before the data exist.
 
-### Q4: When does the proxy-path obligation attach, given the proxy layer is built after OCI?
+### Resolved: when the proxy obligation attaches (was Q4)
 
-Scope says the proxy is "designed in from format two, never retrofitted"; the build order
-introduces it "with npm" at step 5, after OCI at step 4; `proxy-cache.md` says "mandatory from
-the second format"; and `oci.md` AC6 requires a proxied pull. If OCI lands before the proxy
-layer exists, its proxied path is precisely a retrofit, and OCI cannot meet the definition of
-done (both modes pass, per `format-handler-interface.md`) until steps 5-6 land.
+**Settled 2026-09-23: the proxy layer is built with OCI, not after it.** It moves from build-order
+step 5 into step 4, developed alongside the OCI handler.
 
-**Recommendation:** A - OCI is written against the proxy-aware handler interface from day one,
-so nothing structural is retrofitted, but is not declared complete (and gets no experiment-log
-row) until its proxied cases pass after step 5. Then say that in the build order and retire
-the ambiguous "format two" phrasing in all three documents.
+This resolves a four-way contradiction the review found: this charter said the proxy layer is
+"designed in from format two, never retrofitted" while scheduling it after OCI; `proxy-cache.md`
+said mandatory from the second format; and `oci.md` AC6 requires a proxied pull. As previously
+ordered, OCI's proxied path was precisely the retrofit this document forbids, on the very first
+format that could have had one.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Interface-ready at step 4, complete after step 5** | The strongest oracle still proves the harness early; one clear completeness rule | OCI sits officially incomplete across two steps, and its experiment-log row lands late |
-| **B. Build proxy/cache before OCI** | Every format completes within its own step | Delays the standards-body gate that the whole build order exists to reach early |
+OCI is also the first format that *can* be proxied, since `generic` is exempt, so the two are
+natural co-development rather than an arbitrary pairing. Pull-through caching of Docker Hub is a
+wanted feature in its own right.
 
-**Why this is yours:** it decides what "complete" means for the experiment's second data
-point, which shapes the cost curve the breadth gate reads.
+Accepted cost: step 4 becomes a larger single step, and the proxy layer is shaped by one format
+before npm tests whether it generalises. The npm step must therefore treat "did the proxy layer
+generalise" as an explicit finding for the experiment log, not an assumption.
 
 ### Resolved: the generic proxy exemption in the constitution (was Q5)
 

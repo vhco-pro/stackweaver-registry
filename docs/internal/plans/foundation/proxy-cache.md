@@ -181,94 +181,77 @@ questions were answered by the owner and folded into Design and Scope above. Res
 are kept rather than deleted, so the reasoning survives the next time someone asks why it was
 done this way.
 
-### Q4: When many clients miss the same key at once, does the proxy coalesce them onto one upstream fetch?
+### Resolved: concurrent miss coalescing (was Q4)
 
-**Recommendation:** A - coalesce per key, with each waiter still subject to its own request
-timeout. A CI fleet cold-starting against the cache is this product's core scenario, and N
-duplicate fetches of the same Docker layer burns rate limit and egress at the worst moment.
+**Settled 2026-09-23: coalesce, single flight.** Concurrent misses on the same key wait on one
+upstream fetch. A two-hundred-pod cold start pulls once rather than two hundred times, which is
+what keeps the preconfigured Docker Hub upstream inside its rate limit.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Coalesce per key (singleflight)** | One upstream fetch per miss storm; rate limits and egress protected in exactly the cold-cache scenario the product is sold on | All waiters share one connection's fate: a slow or failing fetch stalls everyone behind it, and failure handling must decide whether waiters retry or all fail together |
-| **B. Let concurrent misses race, dedup at CAS commit** | Simpler; no shared-fate coupling; the CAS already makes duplicate commits harmless | N-1 wasted upstream fetches per storm; a 100-agent fleet cold-starting on Docker Hub can burn the anonymous rate limit in a single build |
+Accepted cost: one slow upstream fetch now blocks every waiting client. A timeout is mandatory,
+and it must fail the waiters cleanly with a real error rather than leaving them hanging.
 
-**Why this is yours:** both are correct; the choice prices upstream rate-limit exposure against
-failure-coupling complexity, and it decides what the flagship "cache in front of Docker Hub"
-deployment does under its very first load spike.
+### Resolved: revalidation failure (was Q5)
 
-### Q5: When revalidating expired metadata fails because the upstream is slow or down, and offline mode is not enabled, does the proxy serve the stale copy or fail?
+**Settled 2026-09-23: serve stale, bounded, and marked.** When cached metadata has expired and
+the upstream is slow or unreachable, serve it up to a stale-if-error limit, with a response header
+recording that the content is stale and how stale.
 
-**Recommendation:** A - serve stale on revalidation failure, behind a bounded upstream timeout so
-"slow" degrades to "stale" in seconds rather than hanging. Build reliability is the pitch, and a
-proxy that fails builds whenever npm has a bad day is worse than no proxy.
+This is the decision the product's pitch rests on: a build fleet keeps working through an npm
+outage, which is the single most common reason to run a caching proxy.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Serve stale on error, bounded timeout** | Builds keep working through upstream incidents with no one flipping a switch; a slow upstream costs one timeout, not a hang | Clients can see arbitrarily old metadata during a long outage with no explicit signal; AC3's "TTL honoured" quietly becomes "TTL honoured while the upstream is healthy" |
-| **B. Fail once the TTL has expired and the upstream is unreachable** | The freshness guarantee is absolute; stale reads never happen silently | An upstream outage fails every build that needs a revalidation, which is precisely the event buyers install a cache against; offline mode does not save them because it is a manual, whole-instance switch |
+Accepted cost: a newly published upstream version stays invisible for longer than the TTL implies
+during an outage. The staleness header exists so that is diagnosable in seconds rather than
+debugged for an hour.
 
-**Why this is yours:** this is the availability-versus-freshness call for the product's headline
-scenario, and answering it also fixes the upstream timeout budget, which no spec currently
-states anywhere.
+### Resolved: integrity verification and streaming (was Q6)
 
-### Q6: Does a client wait for integrity verification of an upstream fetch, or receive bytes while the fetch streams?
+**Settled 2026-09-23: stream to the client while hashing, and commit to the CAS only if the
+digest matches.** No added latency on large artifacts, and a corrupt body never enters the store.
 
-**Recommendation:** A - stream to the client while fetching and abort on mismatch. The major
-clients (docker, npm, pip) verify integrity themselves, and verify-then-serve doubles
-time-to-first-byte on multi-gigabyte artifacts.
+Accepted cost: a client can receive bytes before we know the body is corrupt. The connection is
+then aborted mid-stream, which the client reports as a network error rather than an integrity
+failure, so the server must log the real reason and surface it to the operator. Never commit and
+verify afterwards: a corrupt blob in the CAS poisons dedup-by-digest, which the entire data model
+rests on.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Stream and tee; abort and never commit on mismatch or truncation** | Time-to-first-byte equals the upstream's; large OCI layers are not staged twice | A client can receive bad bytes before the abort, which is safe only because clients self-verify - that assumption must then hold for every format allowed to stream; client disconnect mid-tee also needs a rule (finish caching, or abort the fetch) |
-| **B. Verify fully, then serve** | The proxy never emits unverified bytes; client-side verification is not load-bearing | First-miss latency roughly doubles for large artifacts and the full artifact needs staging; the cold-cache CI fleet feels it most |
+### Resolved: upstream removal or replacement (was Q7)
 
-**Why this is yours:** it decides whether client self-verification is a load-bearing assumption
-of the product, format by format, and no measurement settles that.
+**Settled 2026-09-23: purge on an explicit security signal, keep and flag otherwise.**
 
-### Q7: When an upstream removes or replaces an "immutable" artifact (npm unpublish or a security-holding replacement, PyPI file deletion), does the cache keep serving the original?
+The owner's position is that a security removal must not keep being served, and that is correct.
+The refinement is that upstream removals are not one event:
 
-**Recommendation:** A - keep serving by default, with a first-class per-artifact purge and
-exclusion action. left-pad immunity is a selling point, but the malware case means an operator
-must be able to evict deliberately and quickly.
+| Upstream event | Response |
+|---|---|
+| Explicit security signal (npm security-holding replacement, a malware advisory) | **Purge immediately and alert the operator** |
+| Author unpublish with no security signal | Keep serving, record as diverged |
+| PyPI yank | Keep serving. Yank explicitly means "not for new resolutions, existing pins keep working", so purging would contradict the ecosystem's own semantics |
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Keep forever; manual purge and exclusion** | left-pad immunity and reproducible builds; the build-reliability pitch stays intact | A package the upstream pulled for malware keeps flowing into every downstream build until a human acts; the "supply-chain control" argument in Context partly inverts, with real liability attached (malware redistribution, DMCA) |
-| **B. Periodically revalidate existence; drop on upstream 404/410** | Upstream security removals propagate on their own | Contradicts "immutable artifacts cached forever"; a deliberate unpublish breaks builds again, which caching existed to prevent; an upstream outage must be distinguishable from a removal or the cache empties itself during downtime |
+Accepted cost: this depends on each ecosystem's security signal being detectable, and a security
+removal that arrives with no clear signal falls through to keep-and-flag. The divergence flag is
+therefore an operator-facing alert, not a quiet field, since it is the backstop for exactly that
+case.
 
-**Why this is yours:** it is a policy on whose deletions you trust, trading legal and
-supply-chain exposure against the core reliability promise, and it caps how literally AC2's
-"cached indefinitely" may be read.
+### Resolved: cache eviction (was Q8)
 
-### Q8: What makes a cached-only blob evictable - what is the eviction policy that Scope promises and Design never defines?
+**Settled 2026-09-23: least-recently-used under a per-repository storage quota.** Cached blobs
+evict when the repository exceeds its budget, least-recently-accessed first. This also gives
+`storage-and-gc.md` the cached-reference lifetime its third mark root needs.
 
-**Recommendation:** A - a per-repository size quota with LRU eviction of cached-only content,
-plus manual purge; content a published file references is never auto-evicted.
+Accepted cost: access times must be tracked on the read path, and a quota set too low causes cache
+thrash that presents as the proxy being slow rather than as a configuration problem. Quota
+utilisation therefore has to be observable, and thrash should be detectable from metrics rather
+than inferred.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Per-repository quota + LRU** | Bounded storage; operators reason per upstream; GC's second reference class gets a crisp definition of when a cached reference dies | Last-access bookkeeping on the hot serving path; a quota set too small thrashes the cache silently |
-| **B. No automatic eviction; manual purge only** | The simplest correct thing; nothing a build depends on ever silently disappears | Unbounded growth is the default behaviour of the flagship feature; `on_demand` plus a busy CI fleet fills the object store until someone notices the bill |
+### Resolved: real-upstream conformance runs (was Q9)
 
-**Why this is yours:** eviction is the only place the cache deletes data, so the wrong default
-either eats disk or eats cache hits, and which failure is worse is a product judgment. The
-answer also feeds `storage-and-gc.md`, because "this cached reference is dead" is an input to
-its sweep.
+**Settled 2026-09-23: a separate nightly scheduled job.** The main conformance suite runs
+against local stand-ins; a nightly job exercises the real npm, PyPI and Docker Hub, pairing
+naturally with the client-drift job this project already specs.
 
-### Q9: Where do the real-service proxied conformance runs against npm, PyPI and Docker Hub actually run, given CI economy and those upstreams' own rate limits?
-
-**Recommendation:** A - scheduled plus release-gated real-service runs, with per-merge
-conformance against local stand-ins only. A merge gate that depends on Docker Hub availability
-and anonymous-pull limits will flake, and flaky gates get skipped.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Scheduled + release-gated real-service runs; stand-ins per merge** | A deterministic merge gate; real-service drift caught on a cadence; CI minutes and rate-limit exposure bounded | A real-service regression can land and sit until the next scheduled run; someone must own triaging scheduled failures or they rot |
-| **B. Real services inside the per-merge conformance gate** | Drift caught at the earliest possible moment | The gate inherits Docker Hub's throttling and outages; CI egress IPs are exactly the ones anonymous limits punish; contributors cannot reproduce the gate locally without burning the same limits |
-
-**Why this is yours:** the resolved preconfigured-upstreams decision (was Q3) accepted this cost
-without placing it; pricing detection latency against gate determinism and the CI budget is a
-constitutional trade only the owner can make.
+Accepted cost: a break against a real upstream is found up to a day late, and nightly jobs are
+easy to start ignoring once they go red. A red nightly must therefore open an issue rather than
+only colouring a dashboard.
 
 ### Resolved: cache location (was Q1)
 

@@ -221,44 +221,44 @@ Three open, raised by the 2026-09-22 review. The three original questions were a
 owner and folded into Design and Scope above, with each decision's accepted cost recorded
 beside it under the Resolved headings.
 
-### Q4: When a client exceeds the grace period between blob commit and reference, what happens?
+### Resolved: exceeding the grace period (was Q4)
 
-**Recommendation:** B - measure grace from last touch rather than from commit, with a generous default (hours, not minutes), and make every reference-recording write verify blob existence and fail retryably; normal client flows then refresh liveness for free and the exceed path stays clean.
+**Settled 2026-09-23: touch-refreshed grace, defaulting to hours.** Each blob upload within a
+push session refreshes the grace on the whole session. A client actively pushing never expires; a
+session abandoned mid-push eventually collects.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Fixed grace from commit; on exceed, the reference write fails retryably and the client re-uploads** | Simplest correct behaviour, no reliance on client quirks | A slow or paused client sees a failed push once grace elapses; every reference write pays an existence check |
-| **B. Touch-refreshed grace: existence probes and dedup hits reset the clock** | Real client flows (OCI HEAD-before-manifest) keep in-flight blobs alive while active | Liveness depends on incidental client behaviour; each probe writes a timestamp |
-| **C. Explicit lease held from blob commit until the reference lands** | Exact coverage of the window, no timing guess | No protocol ties an OCI blob session to the future manifest push, so leases need heuristics or a nonstandard API surface |
+Accepted cost: a very slow client uploading one enormous blob could still exceed it. That case
+must fail as an explicit, self-explanatory error telling the client to re-push, never as a
+silently missing blob discovered later.
 
-**Why this is yours:** the grace value, and which failure the slow client experiences, are product judgments about client behaviour in the wild; nothing measurable pre-implementation says how long a real CI fleet pauses between blob and manifest. The answer must also add an acceptance criterion for the exceed path (the reference write fails cleanly and no reference to a missing blob is ever recorded) - AC5 as written proves only the covered window.
+### Resolved: snapshot mark roots and pruning (was Q5)
 
-### Q5: Which snapshots are GC mark roots, and what prunes snapshots?
+**Settled 2026-09-23: every snapshot within the retention window is a mark root; older
+snapshots are pruned and stop protecting their blobs.**
 
-**Recommendation:** A - mark from every retained snapshot and give v1 an explicit retention policy, because roots and retention are one decision: whatever set of snapshots is retained defines liveness.
+This makes the sweep mark from three roots, not two: published references, cached references, and
+retained snapshots. A sweep marking fewer will delete live content.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Roots are all retained snapshots, plus a v1 retention policy (for example: current snapshot only, until promotion ships)** | Rollback-safe the day promotion arrives; space actually reclaimed in v1 | The retention policy must be specced now, and `data-model.md` must carry it too |
-| **B. Roots are the current pointer targets only** | Simplest mark phase | Silently breaks `data-model.md`'s promise that rollback is a feature you switch on: repointing to an old snapshot resurrects references to swept blobs |
-| **C. Retain every snapshot forever in v1** | Trivially safe marking | A hosted delete never reclaims space; GC only ever collects upload orphans and evicted cache blobs, and quotas are foreclosed |
+Accepted cost: a retention default must be chosen, and **rollback beyond the window silently
+stops being possible.** The API must therefore report how far back rollback actually reaches
+rather than letting an operator discover the limit during an incident. The same question was
+raised independently in `data-model.md`; this resolution settles both.
 
-**Why this is yours:** this prices v1 storage economics against the promotion and rollback promise in `data-model.md`, and the two specs currently answer it differently by omission; only the owner can decide what the product keeps.
+### Resolved: the write barrier (was Q6)
 
-### Q6: What mechanism implements the write barrier between reference creation and sweep deletion?
+**Settled 2026-09-23: a deletion-intent table.** The sweep records the digests it intends to
+delete, then deletes in a second pass. Any path that creates a reference checks that table and
+cancels the intent.
 
-**Recommendation:** A - a deletion-intent table: the sweep records candidates transactionally, waits out the grace period, and deletes only candidates still present, while any reference-creating write clears intent rows for the digests it references inside its own transaction; keep the intent row until after the object delete so a re-upload of a just-swept digest waits or retries instead of racing PutObject against DeleteObject.
+This is what closes the hole the review found: a grace period keyed on time since upload cannot
+cover a dedup hit, a cross-repo mount or an `on_demand` arrival, because none of those involve an
+upload. An intent table covers them all, because it keys on the deletion rather than on the
+reference.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Deletion-intent rows in PostgreSQL, cleared transactionally by reference-creating writes** | The barrier is a plain transaction; durable across crashes; covers the object-delete window if intent clears only after the object delete | A new core table (a schema change in `data-model.md` territory) and an intent check on every reference write |
-| **B. Serializable recheck at delete time, with reference writes locking the blob row** | No new table | Lock traffic on hot blobs; the recheck-to-object-delete gap still needs its own answer; harder to reason about under crash |
-| **C. Never reuse an object key (generation suffix or object versioning), so the PutObject race disappears** | Removes the key-reuse hazard mechanically | Bends "keyed by digest and nothing else"; versioning support is uneven across "S3-compatible" stores |
-
-**Why this is yours:** A adds a table to the shared schema the core owns, B trades that for locking on the hot write path, and C touches a standing CLAUDE.md rule (a blob is keyed only by its digest); each option moves a boundary an implementer must not move alone.
-
-Resolved decisions are kept rather than deleted, so the reasoning survives the next time
-someone asks why it was done this way.
+Accepted cost: a new core table, and **every reference-creating path must check it.** That is
+easy to forget in a new handler, so it is not left to discipline: the check belongs inside the
+shared reference-creation call, and an architecture test asserts no handler writes a reference by
+any other route.
 
 ### Resolved: collection strategy (was Q1)
 
