@@ -26,6 +26,19 @@ It is also the first format with a genuinely mutable metadata document. The pack
 every time anyone publishes, which makes it the proving ground for TTLs, conditional
 revalidation and negative caching.
 
+## Blocking precondition
+
+**The handler interface re-open must complete before npm implementation starts.**
+`format-handler-interface.md` pins a minimal method set before either implementation exists, on
+the explicit understanding that it will be wrong about something and is re-opened once OCI passes
+its conformance suite. That re-open gate blocks all Tier 1 handler work, and npm is the first of
+it.
+
+The gate is recorded here as well as there deliberately: a contract enforced on only one side is
+enforced nowhere, and npm is also the measurement baseline for the experiment's headline metric.
+An interface revision landing mid-npm would contaminate exactly the number the whole project
+exists to produce.
+
 ## Scope
 
 **In scope:** packument assembly, tarball serving, scoped packages, dist-tags, publish, and the

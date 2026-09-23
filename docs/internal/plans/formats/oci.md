@@ -161,6 +161,11 @@ asks why it was done this way.
 
 ### Q2: How is the OCI manifest reference graph represented in the shared data model?
 
+> **Answer this together with `foundation/data-model.md` Q9.** Both questions cover the same
+> decision - how OCI's reference graph maps onto the shared model - and the second review round
+> found them carrying **opposite recommendations**. One answer settles both; answering them
+> independently is how the two specs end up describing different systems.
+
 **Recommendation:** A - add a format-agnostic version-to-version reference edge (with the
 referrers `subject` recorded queryably) to `data-model.md`, because GC marking and the
 referrers lookup both need references the core can traverse, and the core is forbidden from

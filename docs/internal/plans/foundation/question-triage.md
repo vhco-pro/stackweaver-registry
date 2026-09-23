@@ -1,6 +1,6 @@
 ---
 status: in-progress
-status_description: "Tiers A and B cleared 2026-09-23 (25 answered, 44 to 18 open). Only Tier C remains, all of it belonging to work not yet started."
+status_description: "Second review round 2026-09-23 raised 22 new questions (18 to 40). Tiers A and B were answered against spec bodies that had not been updated, which the round exposed."
 description: "Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once."
 author: michielvha
 goal: "Prevent the mistake of answering 44 questions before the interactions between them are understood, by naming which ones actually gate the next commit."
@@ -12,6 +12,17 @@ covers: []
 
 # Plan: Open question triage
 
+> **Second review round, 2026-09-23.** Five foundation specs re-reviewed after Tiers A and B
+> were answered. **All five carried the same defect: the twenty-five decisions had been recorded
+> as `Resolved:` sections and never propagated into Scope, Design, the acceptance criteria or the
+> Test Plan.** Every reviewer found its own version of the half-applied pattern, which means the
+> folding process was at fault rather than any single spec. Open questions went from 18 to 40 as
+> the specs were brought into line with their own decisions and the interactions between them
+> surfaced.
+>
+> The lesson is recorded in `docs/internal/tasks/lessons.md`: folding an answer means editing the
+> spec body, and a `Resolved:` section is the record of a decision, not its application.
+>
 > **Tiers A and B cleared 2026-09-23.** Twenty-five answered, 44 open questions down to 18.
 > The harness, generic, the shared model, GC and the proxy layer are all unblocked. Everything
 > remaining is Tier C: it belongs to work that has not started.

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reviewed 2026-09-22 at afbb4e4; stays draft: Q4 (grace-window exceed path), Q5 (snapshot GC roots and retention), Q6 (sweep write barrier) need the owner."
+status_description: "Second pass 2026-09-23 at 3e3ae0a folded the six settled decisions through Design, Scope and the ACs; stays draft: Q7 (post-row-delete object race), Q8 (snapshot retention default) and Q9 (push-session boundary) need the owner."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
@@ -40,8 +40,12 @@ upload record that was never written.
 
 - Content-addressable blob storage over S3-compatible object storage, keyed by digest.
 - Chunked/resumable upload support, since OCI requires it and large artifacts need it.
-- Mark-and-sweep GC with a grace period (settled; the decision and its accepted costs are
-  recorded under Open Questions).
+- Mark-and-sweep GC, fully settled: a touch-refreshed grace period defaulting to hours, a
+  deletion-intent table as the write barrier, and three mark roots - published references,
+  cached references, and snapshots inside the retention window. The decisions and their
+  accepted costs are recorded under Open Questions.
+- Snapshot pruning at the retention boundary, and reporting how far back rollback reaches,
+  since pruning is what bounds the third mark root.
 - Orphan cleanup for interrupted uploads.
 - Fault injection and property tests covering the races above.
 - Throughput benchmarks wired to a CI regression gate.
@@ -79,24 +83,32 @@ committed, reference recorded. The dangerous window is between *blob committed* 
 recorded*, because during it the blob is unreferenced and GC-eligible while being entirely
 legitimate.
 
-The design must make that window non-lethal. The settled mechanism is the mark-and-sweep
-grace period (see the resolved collection-strategy question): a sweep never deletes a blob
-younger than the grace period, so a freshly committed blob survives the gap before its
-reference lands.
+The design must make that window non-lethal. The settled mechanism is the touch-refreshed
+grace period (see the resolved grace decision): a sweep never deletes a blob whose push
+session is inside its grace window, each blob upload within the session refreshes the grace on
+the whole session, and the default is hours. A client actively pushing never expires; a
+session abandoned mid-push eventually collects, and a freshly committed blob survives the gap
+before its reference lands. What bounds a "push session" at the wire level, where OCI has no
+such concept, is Q9.
 
 Two constraints the grace period does not remove:
 
-- **The window is client-controlled and unbounded.** In OCI, every blob uploads and commits in
-  its own session, and the manifest that references those blobs arrives whenever the client
-  sends it - minutes later, or never. A fixed grace period therefore has an exceed path, and
-  what happens on it is an open decision (Q4). Whatever the answer, recording a reference to a
-  digest must verify the blob still exists and fail retryably if it does not - a reference row
-  pointing at a swept object is data loss discovered at pull time.
+- **The window is client-controlled and unbounded, and touch-refresh narrows the exceed path
+  without removing it.** In OCI, every blob uploads and commits in its own session, and the
+  manifest that references those blobs arrives whenever the client sends it - minutes later,
+  or never. A session idle past the grace window - the resolved decision's accepted cost names
+  a very slow client inside one enormous blob - still expires, and that case must fail as an
+  explicit, self-explanatory error telling the client to re-push, never as a silently missing
+  blob (AC12). Recording a reference to a digest must therefore verify the blob still exists
+  and fail retryably if it does not - a reference row pointing at a swept object is data loss
+  discovered at pull time.
 - **Orphan cleanup must be enumerable from a record written first.** The upload session record
   is written to PostgreSQL before any object-store upload (multipart initiate) begins. The
   known bug class named in Context - cleanup keyed off a completion record that was never
   written - is closed only by write-ahead ordering; an interrupted upload with no record is
-  invisible to every cleanup pass except a raw store scan.
+  invisible to every cleanup pass except a raw store scan. With grace now session-scoped, the
+  orphan scan honours a session's refreshed grace wherever a session record exists; raw object
+  age governs only objects with no record.
 
 ### Garbage collection
 
@@ -115,15 +127,38 @@ OCI cross-repository mount, as cached content arriving on demand (`data-model.md
 `RemoteFile` path), and as a snapshot created mid-sweep referencing pre-existing blobs.
 Concretely: repo A drops the last reference to blob B, the sweep marks, repo C dedup-hits B
 during the sweep, the sweep deletes B because it was unreferenced at mark time and too old for
-grace. Repo C now references nothing. The mechanism that closes this - a write barrier between
-reference creation and sweep deletion - is Q6.
+grace. Repo C now references nothing. The mechanism that closes this is the settled write barrier:
+a **deletion-intent table**. The sweep records the digests it intends to delete, then deletes
+in a second pass; every path that creates a reference checks the table and cancels any
+standing intent for its digest. Three constraints make the table close the race rather than
+merely narrow it:
+
+- **Intent recording precedes a final reference re-check.** A reference created after the mark
+  read but before the intent row lands sees no intent to cancel, so deleting on the strength
+  of the mark alone reopens the race the table exists to close. The delete pass re-verifies,
+  after the intent is visible, that the digest is still unreferenced. References created after
+  that re-check see the intent and cancel it; references created before it are seen by it.
+- **The intent check is unconditional and transactional.** Reference insert plus intent cancel
+  happen in one PostgreSQL transaction, and the check runs on every reference write at all
+  times, not only while a sweep runs, because a crashed sweep's intents may stand for
+  arbitrary time. The check lives inside the shared reference-creation call, and an
+  architecture test asserts no reference is written by any other route (AC10).
+- **Intents are cleaned up, and a rerun discards them.** A cancelled or completed intent row
+  is removed, and a sweep rerun after a crash discards standing intents and re-derives them
+  from a fresh mark. That is safe because a half-finished deletion (row deleted, object still
+  present) is completed by the orphan scan, never by replaying old intents.
+
+Touch-refreshed grace must also defeat a standing intent: a session refreshed after the sweep
+marked one of its blobs would otherwise have that blob deleted while its client is actively
+pushing, breaking the settled promise of the grace decision. The delete pass therefore
+re-verifies grace, against the refreshed value, at delete time.
 
 Sweep mechanics carry these fixed constraints, each of which the fault-injection suite must
 exercise:
 
 - **At most one sweep runs at a time**, enforced (a PostgreSQL advisory lock suffices), and a
-  sweep interrupted by a crash must be safe to rerun immediately from the start: mark state is
-  disposable, deletion state is not.
+  sweep interrupted by a crash must be safe to rerun immediately from the start: mark state
+  and standing intents are disposable, performed deletion is not.
 - **Delete the metadata row before the object, never the reverse.** A crash after object-delete
   but before row-delete leaves a dangling row the dedup check trusts: the next upload of that
   content is skipped as already stored, and the pull 404s later. Row first, a crash leaves an
@@ -131,29 +166,42 @@ exercise:
 - **Re-upload of a just-swept digest races the object delete.** Rows delete transactionally and
   the object-store delete follows; an upload of the same content committing between the two can
   have its PutObject overtaken by the sweep's DeleteObject on the same key, losing the new copy
-  while its row survives. The barrier mechanism (Q6) must cover this window too, not only the
-  mark race.
+  while its row survives. Intent cancellation as settled covers the mark race, but by this
+  point the metadata row is gone and the race has moved into the object store, which has no
+  transactions; how the intent table gates this window is Q7.
 - **Clocks and listings are not trustworthy inputs.** Grace comparisons mix object-store
   timestamps with PostgreSQL time; skew must be assumed and dwarfed by the grace period. The
   orphan scan (store listing versus rows) runs against "S3-compatible" stores whose LIST
   consistency varies, so it too applies the grace period to object age before touching
   anything.
-- **Mark roots come from the shared data model**: published `File` references and cached
-  (`RemoteFile`-originated) references, per the resolved collection-strategy question. Whether
-  superseded snapshots are also roots is Q5, and that answer decides whether hosted deletes
-  reclaim space at all.
+- **Mark roots come from the shared data model, and there are three**: published `File`
+  references, cached (`RemoteFile`-originated) references, and snapshots inside the retention
+  window, per the resolved collection-strategy and snapshot decisions. A sweep marking from
+  fewer than all three deletes live content. Each root class has a defined end of life - a
+  delete removes a published reference, LRU eviction under the per-repository quota ends a
+  cached one (`proxy-cache.md`, resolved cache-eviction question), and pruning at the
+  retention boundary ends a snapshot - and hosted deletes reclaim space only through that
+  pruning, on the schedule Q8's retention default sets.
 
 ### Testing what conformance cannot see
 
 This is the part of the spec that exists because the harness is blind here. Required:
 
-- **Property tests**: for randomised interleavings of push, pull, delete and GC, the invariant
-  above holds. The operation set must include re-push of already-stored content (a dedup hit,
-  the new-reference-to-old-blob case), cache arrival via `on_demand` (the second reference
-  class), and snapshot-creating writes - a generator limited to fresh-content pushes cannot
-  reach the deadliest race and passes vacuously.
+- **Property tests**: for randomised interleavings of push, pull, delete, eviction, pruning
+  and GC, the invariant above holds. The operation set must include re-push of already-stored
+  content (a dedup hit, the new-reference-to-old-blob case), cache arrival via `on_demand`
+  (the second reference class), snapshot-creating writes, cache eviction under the
+  per-repository quota, snapshot pruning at the retention boundary, and session grace refresh
+  and abandonment. A generator limited to fresh-content pushes cannot reach the deadliest
+  race, and one that can create references but never end them - no eviction, no pruning, no
+  expiry - can never race a reference's death against another's birth; both pass vacuously.
+  The sweep's internal phases (mark, intent record, re-check, row delete, object delete) must
+  be schedulable as first-class interleaving points, or the intent-window races stay
+  unreachable.
 - **Fault injection**: kill the server mid-upload, mid-commit and mid-GC, at each stage
-  boundary; on restart the system is consistent and no referenced blob is missing.
+  boundary - for GC that includes after mark, between intent recording and the delete pass,
+  and between a row delete and its object delete; on restart the system is consistent and no
+  referenced blob is missing.
 - **Concurrency**: N concurrent pushes of overlapping blob sets, with GC running throughout.
 
 A client-level conformance run is **not** evidence for any of these criteria, and a review that
@@ -168,21 +216,38 @@ accepts one as evidence has missed the point of the spec.
 - [ ] AC3: A chunked upload interrupted at any stage boundary leaves no blob that GC will later
       treat as live, and every orphan it leaves (including one whose session record write was
       itself interrupted) is collected within one full cleanup cycle after session expiry.
-- [ ] AC4: GC never deletes a referenced blob, under randomised concurrent push/pull/delete/GC
-      interleavings, proven by a property test.
+- [ ] AC4: GC never deletes a referenced blob, under randomised concurrent
+      push/pull/delete/eviction/pruning/GC interleavings, proven by a property test.
 - [ ] AC5: GC never deletes a blob belonging to an upload in progress, proven by a fault-injection
       test that runs GC during the commit-to-reference window specifically.
-- [ ] AC6: Killing the process at any stage boundary (including between a sweep's row delete
-      and its object delete) leaves a store in which no referenced digest is missing from the
+- [ ] AC6: Killing the process at any stage boundary (including between intent recording and
+      the delete pass, and between a sweep's row delete and its object delete) leaves a store in which no referenced digest is missing from the
       object store and all partial state is collected or completed by the next cleanup cycle;
       consistency is asserted by a checker comparing references, blob rows and objects, not by
       the absence of errors.
 - [ ] AC7: Blob upload and download throughput are benchmarked, and CI fails on a regression
       beyond a threshold recorded in the CI config and referenced from this spec.
 - [ ] AC8: GC treats a blob referenced only by cached content (arrived `on_demand`, no
-      published reference) as live, proven in the same property suite as AC4. This is the
-      second reference class from `data-model.md`; it is asserted here as well so this spec's
-      own gate covers the failure mode its resolved collection-strategy question names.
+      published reference) as live, and treats it as collectable once LRU eviction under the
+      per-repository quota removes that last cached reference, proven in the same property
+      suite as AC4. This is the second reference class from `data-model.md`; it is asserted
+      here as well so this spec's own gate covers the failure mode its resolved
+      collection-strategy question names.
+- [ ] AC9: A reference created for a digest after the sweep has recorded a deletion intent for
+      it cancels that intent and the blob survives, proven in the property suite by
+      interleavings that place a dedup hit, a cache arrival and a snapshot write between
+      intent recording and the delete pass.
+- [ ] AC10: Every reference write goes through the shared reference-creation call that
+      performs the intent check; an architecture test fails on any code path writing a
+      reference row by another route.
+- [ ] AC11: A blob whose only reference is a snapshot inside the retention window survives the
+      sweep; once that snapshot is pruned, the blob is collected within one cycle; and the API
+      reports how far back rollback actually reaches, rather than leaving the limit to be
+      discovered during an incident.
+- [ ] AC12: Recording a reference to a digest whose blob is gone from the object store fails
+      with an explicit, retryable, self-explanatory error and writes no reference row; a
+      client that exceeded the touch-refreshed grace gets that error at reference time, never
+      a silently missing blob at pull time.
 
 ## Test Plan
 
@@ -196,6 +261,10 @@ accepts one as evidence has missed the point of the spec.
 | AC6 | fault injection | `internal/storage/crash_recovery_test.go` |
 | AC7 | benchmark | `internal/storage/bench_test.go` + CI gate |
 | AC8 | property | `internal/storage/gc_property_test.go` |
+| AC9 | property | `internal/storage/gc_property_test.go` |
+| AC10 | architecture test | `internal/model/arch_test.go` |
+| AC11 | property + integration | `internal/storage/gc_property_test.go`; reporting: `internal/model/snapshot_test.go` |
+| AC12 | fault injection | `internal/storage/gc_race_test.go` |
 
 ## Implementation Phases
 
@@ -217,9 +286,59 @@ accepts one as evidence has missed the point of the spec.
 
 ## Open Questions
 
-Three open, raised by the 2026-09-22 review. The three original questions were answered by the
-owner and folded into Design and Scope above, with each decision's accepted cost recorded
-beside it under the Resolved headings.
+Three open (Q7, Q8, Q9), raised by the 2026-09-23 review. All six earlier questions were
+answered by the owner and are folded into Design, Scope and the acceptance criteria above,
+with each decision's accepted cost recorded beside it under the Resolved headings.
+
+### Q7: How does the deletion-intent barrier cover the window between a sweep's row delete and its object delete?
+
+**Recommendation:** A - treat a standing intent in its delete phase as an exclusive gate on
+the digest: a commit of that digest waits for, or fails retryably until, the object delete
+completes, then uploads the bytes fresh. It is the only option that closes the window without
+violating digest-only keying.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Intent as a per-digest commit gate** | The PutObject/DeleteObject race cannot happen: the store never sees both in flight on one key | A rare stall or retry on re-upload of just-swept content, and the commit path gains a wait-or-retry state |
+| **B. Sweep re-checks for a new blob row before each object delete** | No upload-side change | Shrinks the window without closing it: a commit landing between the re-check and DeleteObject still loses the new copy |
+| **C. Generation-suffixed object keys** | No coordination at all | Forbidden: violates "never key a blob by anything but its digest" and breaks deduplication |
+
+**Why this is yours:** cancellation can only protect a digest while its metadata row exists;
+once the row is gone the race moves into the object store, which has no transactions, so some
+path must yield - and choosing which one (the uploader or the sweep) trades availability
+against sweep complexity in the component that eats data when it is wrong.
+
+### Q8: What is the default snapshot retention window?
+
+**Recommendation:** 30 days, configurable per repository - long enough that a bad publish
+discovered after a sprint is still recoverable, short enough that hosted deletes reclaim space
+on a horizon operators can predict.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Days (for example 30)** | Rollback covers realistic incident-discovery latency | Deleted content occupies storage for a month by default |
+| **B. Hours to a week** | Space from hosted deletes reclaims quickly | Rollback quietly stops working for anything discovered late, the exact incident the resolved snapshot decision warns about |
+
+**Why this is yours:** the resolved snapshot decision records "a retention default must be
+chosen" as its accepted cost and nothing has chosen it; the value bounds both rollback reach
+and storage growth, which is a product-posture call no measurement can derive before launch.
+
+### Q9: What does "push session" mean at the wire level, so touch-refresh has a boundary to attach to?
+
+**Recommendation:** B - repository-scoped refresh: any write activity in a repository
+refreshes the grace of its unreferenced blobs, because it is the only reading under which the
+settled promise (a client actively pushing never expires) holds for OCI, where each blob
+commits in its own independent session and no push-session identifier exists on the wire.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Grace attaches to each upload session (per blob in OCI); chunk arrivals refresh it** | A precise per-client boundary that abandoned sessions cannot inherit from neighbours | An OCI client actively pushing layer 9 does not keep layer 1 alive, so a long multi-layer push can lose early layers and hit the AC12 error mid-push, weakening the settled promise |
+| **B. Repository-scoped refresh: any write in the repository refreshes all its unreferenced blobs** | The settled promise holds for multi-blob pushes across independent wire sessions | A busy repository's genuinely abandoned blobs are refreshed by unrelated activity and may not collect until the repository goes quiet |
+
+**Why this is yours:** the resolved grace decision is stated in terms of a push session that
+several protocols, OCI first among them, do not have on the wire; choosing the boundary trades
+the strength of the never-expires promise against orphan collection in busy repositories,
+which is the same promise-versus-leak judgment the original decision was.
 
 ### Resolved: exceeding the grace period (was Q4)
 
@@ -301,3 +420,4 @@ not by weakening the storage model.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-22 | afbb4e4 | adversarial + constitution + cross-spec (claim verification vacuous: no `internal/storage/` code exists yet) | Stays draft: Q4-Q6 raised (grace-window exceed path, snapshot roots and retention, sweep write barrier); invariant gained a third clause; sweep-mechanics constraints and canonical-digest rule added; AC3/AC6/AC7 tightened, AC8 added; stale pre-resolution text and the handler-owns-metadata contradiction with `data-model.md` fixed |
+| 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code) | The six resolutions were recorded but only half-applied: frontmatter, Scope, the grace text, the barrier text and the mark-roots bullet still described the old shape and cited Q4/Q5/Q6 as open; folded throughout, intent ordering/lifecycle and grace-versus-intent constraints added, property op set extended to reference-ending operations and sweep-phase interleavings, AC9-AC12 added; Q7 (post-row-delete object window), Q8 (retention default), Q9 (push-session boundary) raised; stays draft |
