@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reviewed 2026-09-22 at afbb4e4; stays draft: two open questions (CI trigger policy for the conformance job, corpus refresh policy) await the owner."
+status_description: "All questions answered as of 2026-09-23; corpus re-recording is manual on evidence of drift. Zero open questions; awaiting a gate review."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -256,22 +256,19 @@ anything touching those paths, and the pre-commit hook warns when they are stage
 proves insufficient in practice, the answer is to move conformance onto pull requests, not to
 weaken the rule.
 
-### Q2: What triggers re-recording a committed corpus against the public registry?
+### Resolved: corpus re-recording (was Q2)
 
-**Recommendation:** C - manual re-record on evidence of drift (a drift-job failure or a
-protocol-facing bug report), with every corpus carrying its recorded-on date and the client
-version that produced it.
+**Settled 2026-09-23: manual, on evidence of drift.** A corpus is re-recorded when the
+client-drift job fails or a protocol-facing bug is reported, and every corpus carries the date it
+was recorded and the client version that produced it.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Scheduled re-record and diff** | Corpus rot is detected on a clock, not by an incident | Recurring network dependence and rate-limit exposure, the exact costs the in-repo decision (was Q2) avoided, plus noisy diffs from benign upstream changes |
-| **B. Frozen at first recording** | Zero recurring cost, fully reproducible | Our server converges on a snapshot of the upstream as of the recording date; replay failures against a stale corpus misdiagnose our bugs as regressions and vice versa |
-| **C. Manual, on evidence of drift** | Cost only when there is a symptom | Detection is reactive: the corpus can be quietly wrong for as long as no client version happens to expose it |
+Accepted cost, and it is the real one: **detection is reactive.** A corpus can be quietly wrong
+for as long as no client version happens to expose it, and during that window a replay failure is
+ambiguous between our bug and an obsolete corpus. The recorded date and client version exist
+precisely so that ambiguity can be resolved in minutes rather than debugged.
 
-**Why this is yours:** the corpus is the specification, so choosing its refresh cadence is
-choosing how stale the specification is allowed to be, priced against upstream rate limits and
-re-record effort. It sits on top of two decisions you already made (in-repo corpora, the public
-registry as authority), and only you can weigh it consistently with them.
+A scheduled re-record would catch rot on a clock, at the price of recurring network dependence
+and rate-limit exposure - the costs the in-repo corpus decision was taken to avoid.
 
 ### Resolved: client orchestration (was Q1)
 

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Gate review 2026-09-23 found two design gaps (Q7, Q8) and did not flip: the Scope(r) failure mode is undefined, and AC5 contradicts the charter build order. Mechanically clear; blocked on those two owner answers."
+status_description: "Q7 and Q8 answered 2026-09-23 and folded through the method set, AC5 and a new AC10. Zero open questions; awaiting an independent review pass to earn planned."
 description: "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross."
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
@@ -106,7 +106,7 @@ either merely might:
 | `Name()` | `string` | The catalogue key (`generic`, `oci`): the default mount prefix, the conformance matrix row, the log field |
 | `Mounts()` | `[]Mount`, a `Mount` being a URL prefix plus a root-anchored flag | Generic returns the default format-first mount; OCI claims the root-anchored `/v2/` (Routing and registration, below) |
 | `Capabilities()` | `Capabilities`, carrying proxy support: `supported` or `unsupported` | The machine-readable home of the declaration AC4's runner honours; generic declares `unsupported`, closing the "neither sibling spec currently says how" gap recorded in `formats/generic.md` |
-| `Scope(r)` | `(Scope, error)`, a `Scope` being a repository plus one of `pull`/`push`/`delete` | The route-to-scope mapping the central authorizer evaluates (`auth.md`). Needed from the **first** format, not at the re-open: AC7's unauthenticated and unauthorized cases apply from day one, and without this the shared layer cannot know what it is authorizing |
+| `Scope(r)` | `(Scope, error)`, a `Scope` being a repository plus one of `pull`/`push`/`delete`. **An error denies the request**, with the same response an unauthorized caller receives | The route-to-scope mapping the central authorizer evaluates (`auth.md`). Needed from the **first** format, not at the re-open: AC7's unauthenticated and unauthorized cases apply from day one, and without this the shared layer cannot know what it is authorizing |
 | `ServeHTTP(w, r)` | embedded `http.Handler` | The resolved HTTP-direct decision: the handler receives the real request and response |
 
 Construction is by injection: each format package exposes `New(deps Deps) Handler`, and
@@ -230,7 +230,12 @@ AC8 makes this a criterion of this spec rather than an intention.
       `unsupported`, which the runner honours rather than passing a silent gap - and only where
       the format's own spec records the exemption (`generic` is the single permitted case).
 - [ ] AC5: Adding a format requires touching only its own package plus route registration,
-      demonstrated by the generic and OCI handlers landing without shared-layer edits.
+      demonstrated by the **npm** handler landing without shared-layer edits. The witness is npm
+      rather than OCI because the proxy layer is built with OCI at step 4, so OCI necessarily
+      lands alongside shared-layer work and cannot evidence this property.
+- [ ] AC10: A request whose `Scope(r)` returns an error is denied with the response an
+      unauthorized caller receives, never served and never distinguishable from a forbidden or
+      missing resource, while the server log records the real cause.
 - [ ] AC6: No handler performs its own network egress: inside `internal/format/**`, any call
       that moves bytes upstream - `net/http`'s package-level request helpers, `Client.Do`,
       `Transport.RoundTrip`, and the `net.Dial`/`net.Dialer` variants - fails `make verify`
@@ -264,6 +269,7 @@ AC8 makes this a criterion of this spec rather than an intention.
 | AC7 | unit | `conformance/core/case_validate_test.go` |
 | AC8 | manual | the re-open `/spec review` pass, recorded in this spec's Review Log before npm work starts |
 | AC9 | lint + unit | depguard allowlist in `.golangci.yml`; third-party-client fixture behind the `lintfixture` build tag, asserted by the same runner test as AC6 |
+| AC10 | unit + conformance | `internal/format/scope_test.go`; a deliberately unmapped route in `conformance/core/` asserting denial and log content |
 
 AC5's manual procedure: for each landing format, inspect the PR diff and record in the
 experiment log that it touches only `internal/format/<name>/`, its conformance cases, and the
@@ -287,53 +293,33 @@ Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-### Q7: What does the server do when a handler's `Scope(r)` returns an error?
+### Resolved: the Scope() failure mode (was Q7)
 
-`auth.md` settles that each handler declares a route-to-scope mapping the shared layer
-evaluates, and that a handler whose mapping omits a route fails its conformance cases. Neither
-spec says what happens **at runtime** when the mapping cannot resolve a request: the failure mode
-of the security boundary itself is undefined.
+**Settled 2026-09-23: deny, with the same response an unauthorized caller receives.** A request
+the authorizer cannot classify is treated exactly as one it classifies and refuses.
 
-**Recommendation:** deny, with the same response a caller without read access receives. `auth.md`
-already establishes fail-closed for a missing visibility record, and a request the authorizer
-cannot classify is exactly the case where guessing is worst.
+Fail-closed is consistent with the rest of the boundary: `auth.md` already treats a missing
+visibility record as private, and returns 404 rather than 403 so that forbidden and missing are
+indistinguishable. An unmapped route therefore becomes unreachable rather than unguarded, and it
+does not become an oracle either.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Deny, as an unauthorized caller** | Fail-closed, consistent with the visibility rule; an unmapped route is unreachable rather than unguarded | A handler bug presents as a permissions problem, which is a confusing thing to debug |
-| **B. 500 Internal Server Error** | The bug is loud and obviously a server fault, so it gets fixed | A 500 distinguishes unmapped routes from forbidden ones, which is an oracle of exactly the kind AC17 in `auth.md` exists to remove |
-| **C. Treat as unauthenticated and continue** | Anonymous-readable content still serves through an unmapped route | Fail-open on the security boundary. Listed only to be rejected explicitly, because it is the tempting shortcut |
+Accepted cost: a handler bug presents as a permissions problem, which is a confusing thing to
+debug. The mitigation is that the server logs the real cause even though the response does not
+reveal it.
 
-**Why this is yours:** it defines the failure mode of the authorization boundary, and the
-tempting option is the unsafe one.
+### Resolved: AC5's witness (was Q8)
 
-### Q8: AC5 cannot be demonstrated as written, because OCI ships with the proxy layer. How should it be re-scoped?
+**Settled 2026-09-23: the demonstration moves to npm**, the first format landing after the
+shared layers are complete. AC5's property is unchanged; only its witness was wrong.
 
-AC5 requires that adding a format touches only its own package plus route registration,
-"demonstrated by the generic and OCI handlers landing without shared-layer edits". The charter's
-build order now puts **the proxy/cache layer at step 4, built with OCI** - so OCI cannot land
-without shared-layer work, and the criterion is falsifiable by construction. The contradiction
-was introduced by the build-order change, not by this spec.
+The criterion previously named generic and OCI, but the build order puts the proxy/cache layer at
+step 4 **with** OCI, so OCI cannot land without shared-layer work and the criterion was
+falsifiable by construction. The contradiction arrived with the build-order change rather than
+from this spec, and it survived a fold and two reviews because each pass read only one side of it.
 
-**Recommendation:** B - demonstrate on the first format that lands *after* the shared layers are
-complete, and say so. The property AC5 asserts is real and worth keeping; only its witness is
-wrong.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Carve out foundation-phase work** | AC5 stands, with shared-layer work during Phases 1-2 explicitly not counted | "Foundation phase" becomes a thing needing a definition, and the carve-out is exactly where a real violation would hide |
-| **B. Move the demonstration to the first post-foundation format** | An honest witness: the claim is tested when it can actually be true | The property goes unmeasured until npm, which is also the format-cost baseline |
-| **C. Drop the demonstration clause** | The criterion states the property without naming a witness | An acceptance criterion with no witness is not testable, which the template forbids |
-
-**Why this is yours:** it trades when the interface's central promise gets tested against how
-honestly it is stated, and option A's carve-out is the kind of exception that quietly grows.
-
-None of the other questions are open in this spec: every question raised here has been answered by the owner and
-folded into the body. Two owner-pending questions in sibling specs target this spec's
-contracts and are cross-referenced where they bite (`auth.md` Q6 on the pinned method set,
-`formats/generic.md` Q7 on the definition of done); they belong to those specs and are
-answered there, not here. Resolved decisions are kept rather than deleted, so the reasoning
-survives the next time someone asks why it was done this way.
+Accepted cost: the interface's central promise goes unmeasured until npm, which is also the
+format-cost baseline. That is tolerable because the scheduled re-open sits between OCI and npm,
+so the interface is revisited with two implementations in hand before the claim is first tested.
 
 ### Resolved: the egress import allowlist (was Q6)
 
