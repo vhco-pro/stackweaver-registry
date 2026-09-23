@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Third pass 2026-09-23: the egress allowlist question answered and folded through AC6, AC9 and the re-open. Zero open questions; awaiting a review pass to earn planned."
+status_description: "Gate review 2026-09-23 found two design gaps (Q7, Q8) and did not flip: the Scope(r) failure mode is undefined, and AC5 contradicts the charter build order. Mechanically clear; blocked on those two owner answers."
 description: "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross."
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
@@ -287,7 +287,48 @@ Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None are open in this spec: every question raised here has been answered by the owner and
+### Q7: What does the server do when a handler's `Scope(r)` returns an error?
+
+`auth.md` settles that each handler declares a route-to-scope mapping the shared layer
+evaluates, and that a handler whose mapping omits a route fails its conformance cases. Neither
+spec says what happens **at runtime** when the mapping cannot resolve a request: the failure mode
+of the security boundary itself is undefined.
+
+**Recommendation:** deny, with the same response a caller without read access receives. `auth.md`
+already establishes fail-closed for a missing visibility record, and a request the authorizer
+cannot classify is exactly the case where guessing is worst.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Deny, as an unauthorized caller** | Fail-closed, consistent with the visibility rule; an unmapped route is unreachable rather than unguarded | A handler bug presents as a permissions problem, which is a confusing thing to debug |
+| **B. 500 Internal Server Error** | The bug is loud and obviously a server fault, so it gets fixed | A 500 distinguishes unmapped routes from forbidden ones, which is an oracle of exactly the kind AC17 in `auth.md` exists to remove |
+| **C. Treat as unauthenticated and continue** | Anonymous-readable content still serves through an unmapped route | Fail-open on the security boundary. Listed only to be rejected explicitly, because it is the tempting shortcut |
+
+**Why this is yours:** it defines the failure mode of the authorization boundary, and the
+tempting option is the unsafe one.
+
+### Q8: AC5 cannot be demonstrated as written, because OCI ships with the proxy layer. How should it be re-scoped?
+
+AC5 requires that adding a format touches only its own package plus route registration,
+"demonstrated by the generic and OCI handlers landing without shared-layer edits". The charter's
+build order now puts **the proxy/cache layer at step 4, built with OCI** - so OCI cannot land
+without shared-layer work, and the criterion is falsifiable by construction. The contradiction
+was introduced by the build-order change, not by this spec.
+
+**Recommendation:** B - demonstrate on the first format that lands *after* the shared layers are
+complete, and say so. The property AC5 asserts is real and worth keeping; only its witness is
+wrong.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Carve out foundation-phase work** | AC5 stands, with shared-layer work during Phases 1-2 explicitly not counted | "Foundation phase" becomes a thing needing a definition, and the carve-out is exactly where a real violation would hide |
+| **B. Move the demonstration to the first post-foundation format** | An honest witness: the claim is tested when it can actually be true | The property goes unmeasured until npm, which is also the format-cost baseline |
+| **C. Drop the demonstration clause** | The criterion states the property without naming a witness | An acceptance criterion with no witness is not testable, which the template forbids |
+
+**Why this is yours:** it trades when the interface's central promise gets tested against how
+honestly it is stated, and option A's carve-out is the kind of exception that quietly grows.
+
+None of the other questions are open in this spec: every question raised here has been answered by the owner and
 folded into the body. Two owner-pending questions in sibling specs target this spec's
 contracts and are cross-referenced where they bite (`auth.md` Q6 on the pinned method set,
 `formats/generic.md` Q7 on the definition of done); they belong to those specs and are
@@ -422,5 +463,6 @@ which is the union-of-quirks trap avoided elsewhere in this spec.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-23 | 77b52ad | design + cross-spec consistency, **not independent**: this pass was run by the author of the `Scope(r)` addition, so its adversarial value on that method is limited and a later independent pass should re-check it | Mechanical gate clear (9 ACs, all mapped, no stale references). Two findings raised as Q7 and Q8: the runtime failure mode of `Scope(r)` is undefined on the authorization boundary, and AC5 is falsifiable by construction now that the proxy layer ships with OCI. Stays draft. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous pre-code; cross-spec citations checked instead) | Fixed internal contradictions (metadata ownership vs `data-model.md`, AC4 vs the generic exemption, a citation to a harness AC that does not exist); added AC6/AC7 because import-based architecture tests cannot hold the proxy and auth boundaries; raised Q1-Q5; stays `draft` |
 | 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (tree claim verification vacuous pre-code: the tree holds a stub `cmd/stackweaver-registry/main.go` only; cross-spec, catalogue and protocol claims checked instead) | All four folded decisions were recorded but unapplied to the body: pinned the method set into Design (the central artifact was still absent), rewrote the pre-decision declarative proxied-path prose to the handler-calls-fetch-and-cache flow, added Routing and registration with the Terraform root-anchor grounding, moved write-triggered services into Scope and Phase 3, added AC8 plus the re-open trigger and gate; corrected the stale claim that the harness spec lacks a mode-coverage AC (its AC11 is that AC); tightened AC6 to type-aware call-site enforcement with a fixture test; added the missing `## Tasks` section; raised Q6 (egress import allowlist); stays `draft` on Q6 |
