@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Second review pass (2026-09-23) applied the five folded 2026-09-23 decisions throughout Design, Scope, the entity table and the ACs, and raised Q10-Q14 (upstream scoping, proxied-repository snapshots, metadata concurrency, metadata document storage, mid-publish visibility); Q9 (OCI reference graph) still open; stays draft until the owner answers."
+status_description: "Six questions answered 2026-09-23 and folded through Scope, Design, the entity model and six new criteria. Virtual repositories entered scope with the three-type repository model. Zero open questions; awaiting a gate review."
 description: "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies."
 author: michielvha
 goal: "Make breadth affordable by giving all 33 ecosystems one metadata schema, so a format is parsing plus routes rather than a bespoke database design."
@@ -49,13 +49,18 @@ remote modelling together.
 
 **In scope**
 
+- **Three repository types**, the model Artifactory and Nexus established and users arrive
+  expecting: `local` (hosted content), `remote` (proxies exactly one upstream, carrying that
+  upstream's URL and credentials), and `virtual` (aggregates local and remote repositories and
+  **defines resolution order**).
 - The shared entity model: repository, package, version, file, blob.
 - Per-format metadata as typed-but-opaque documents at all three levels - repository, package
   and version - so formats do not each get tables.
 - `RemoteArtifact`-equivalent: a known artifact with an upstream location, retained as
       provenance after a local blob is cached.
-- An explicit `Upstream` entity holding each configured upstream's URL, credential reference,
-  download policy, adapter type and failover order.
+- Upstream configuration bound one-to-one to a `remote` repository, so rotating a credential
+  touches one row. Multi-upstream failover is not a field: it is the ordering of several remote
+  repositories inside a virtual one.
 - Download policies: `immediate`, `on_demand`, `streamed`.
 - The liveness rules GC must honour, given a blob can now be referenced by a cached artifact as
   well as by a published one.
@@ -77,12 +82,14 @@ remote modelling together.
 
 | Entity | Owns | Notes |
 |---|---|---|
-| `Repository` | name, format, visibility, metadata document | The unit of RBAC and of proxy configuration; how it references its `Upstream` rows is Q10 |
+| `Repository` | name, format, **type** (`local` / `remote` / `virtual`), visibility, metadata document | The unit of RBAC. A `remote` carries exactly one upstream; a `virtual` carries an ordered member list |
 | `Package` | name, format, metadata document | One per package name per repository |
 | `Version` | version string, format-specific metadata document | Metadata is a JSON document the handler reads and writes; the core never interprets it |
 | `File` | filename, relative path, digest | Links a version to blobs; multiple files per version is the norm (wheel plus sdist, jar plus pom plus sources) |
 | `Blob` | digest, size | Content-addressed. Deduplicated across every format and repository |
-| `Upstream` | URL, credential ref, download policy, adapter type, failover order | One row per configured upstream. Rotating a credential touches one row |
+| `Upstream` | URL, credential ref, download policy, adapter type | Bound one-to-one to a `remote` repository. Rotating a credential touches one row |
+| `VirtualMember` | virtual repository ref, member repository ref, position | The ordered aggregation. Position **is** the resolution order; there is no separate failover field anywhere |
+| `Reference` | from version, to version, relation (for example OCI's `subject`) | A format-agnostic edge the core can traverse without parsing handler metadata. GC marks through it; the OCI referrers API is one indexed query over it |
 | `RemoteFile` | `Upstream` ref, upstream path, last-checked | An upstream source for a file, retained when the file gains a local blob so revalidation and failover keep their provenance |
 | `Snapshot` | monotonic number, repository, delta (membership plus all three metadata levels), checkpoint marker | Immutable. Exactly one per completed logical publish; cache materialisation never creates one |
 | `Pointer` | name, target snapshot | What a serving URL resolves through. v1 ships exactly one per repository, always tracking the newest snapshot |
@@ -104,6 +111,28 @@ The core owns every table. A handler reads and writes the metadata documents and
 own DDL. **If a format appears to need its own table, that is a signal the shared model is wrong,
 not a licence to add one** - raise it as a spec change.
 
+### Repository types and resolution order
+
+Three types, following the model Artifactory established and Nexus copied, because users arrive
+already knowing it:
+
+| Type | Holds | Notes |
+|---|---|---|
+| `local` | Published content | What a publish targets |
+| `remote` | Exactly one upstream | Carries that upstream's URL and credentials. Its cached content is served from the shared CAS like any other content |
+| `virtual` | An ordered list of local and remote members | Clients point at these. The member order **is** the resolution order |
+
+Resolution walks a virtual repository's members in order: local content first, then remote
+caches, then remote upstreams. That ordering is the whole of failover - **there is no failover
+field on any entity**, which is why the earlier `Upstream.failover_order` idea is gone. Several
+upstreams offering the same content become several remote repositories aggregated in one virtual
+repository, and their precedence is their position in it.
+
+This is a deliberate scope addition: `project-charter.md` previously deferred virtual
+repositories. They return to v1 because the alternative is an ad-hoc ordering field that
+reimplements them badly, and because the aggregation is what makes one client URL able to see
+both private and proxied content.
+
 ### Cached and hosted are the same store
 
 Adopting Pulp's answer to `proxy-cache.md` Q1: there is no separate cache store. A `File` may
@@ -124,6 +153,37 @@ Consequences worth stating explicitly, because they are where the bugs will be:
   **several** `RemoteFile` rows, tried in turn. This falls out of the model rather than needing
   failover logic in each handler.
 
+### Graph-shaped content
+
+Some formats are graphs, not trees. An OCI index points at manifests, manifests point at blobs,
+and a referrers artifact points back at a `subject`. The core is forbidden from parsing a
+handler's metadata document, so a graph recorded only inside that document is a graph GC cannot
+traverse and the referrers API cannot query.
+
+The model therefore carries a format-agnostic `Reference` edge between versions, with the
+relation recorded and queryable. GC marks through it, the referrers API becomes one indexed
+lookup, and the next graph-shaped format reuses it rather than re-litigating this.
+
+The cost is honest: the shared model gains an entity on one format's account, so "four tables
+serve everyone" is now five plus the edge. That is cheaper than either flattening the graph into
+`File` rows, which loses the referrers query, or teaching the core to parse OCI manifests, which
+is the coupling this whole model exists to prevent.
+
+### Reads from in-flight publish state
+
+An OCI client `HEAD`s blobs it has just uploaded, **before** it sends the manifest - so there is
+legitimately visible content belonging to no snapshot yet. A strict pointer-only model cannot
+serve that, and OCI push does not work without it.
+
+The rule: **digest-addressed reads may additionally resolve against the repository's own
+in-flight upload records** - immutable CAS content, plus a session-scoped membership check so one
+client cannot probe another's uploads. **Every name-addressed read still resolves through the
+snapshot pointer**, with no exception.
+
+That split keeps the pointer authoritative where authority matters. A digest read asks "do you
+have exactly these bytes", which no snapshot can answer differently; a name read asks "what is
+`latest`", which is exactly what snapshots exist to answer.
+
 ### Download policies
 
 | Policy | On sync | On client request | Stores? |
@@ -134,13 +194,34 @@ Consequences worth stating explicitly, because they are where the bugs will be:
 
 `on_demand` is the default and is what "caching proxy" means in this product.
 
+**A proxied repository creates no snapshots.** On-demand metadata arrival is treated as cache
+materialisation, and cached content stays out of snapshot content sets entirely. Eviction
+therefore never fights the snapshot mark root, and the hot proxy path never touches the snapshot
+sequence. The accepted cost is that a `remote` repository has no rollback story, because it has
+no snapshots to roll back to.
+
+### Writing and storing metadata documents
+
+**Concurrency.** Every metadata document carries an optimistic revision token. A write against a
+stale revision is rejected and the handler retries. The core cannot merge a document it refuses
+to parse, and npm dist-tags are read-modify-write, so last-write-wins would silently lose a
+dist-tag move - which ecosystems treat as a supply-chain event rather than a lost update.
+Handlers must therefore implement retry with backoff; a hot document under contention livelocks
+without it.
+
+**Storage.** Documents are stored inline below a size threshold and as digest-referenced CAS
+blobs above it. Hot small documents (dist-tags, a few hundred bytes) never pay a blob fetch per
+read, and index-sized documents (Debian's signed `Release`, multiple megabytes) never bloat a
+snapshot delta back into O(repository), which would undo the delta decision entirely. The
+threshold is a tuning knob and will be wrong for somebody; it is configurable for that reason.
+
 ### Snapshots: schema now, features later
 
 A completed logical publish creates exactly one `Snapshot`; `on_demand` cache materialisation
 of files already known to the model never does (the resolved write-granularity question below).
 Each handler's spec declares where its ecosystem's publish boundary falls, and that declaration
-is a review item. What a publish means for a *proxied* repository, where content arrives by
-sync and on demand rather than by publishing, is Q11. Serving always resolves through a
+is a review item. A **proxied repository creates no snapshots at all**: content arriving by sync
+or on demand is cache materialisation, not a publish. Serving always resolves through a
 `Pointer`. In v1 there is exactly one pointer per repository and it always advances to the
 newest snapshot, so the behaviour is indistinguishable from a mutable repository. Nothing in
 the API exposes snapshots.
@@ -160,11 +241,15 @@ becomes "what is in this repository at snapshot N". Paying a small structural co
 promotion (`dev` -> `staging` -> `prod` pointers at one snapshot), instant rollback (repoint, do
 not delete) and frozen upstream mirrors into **features you switch on**, not a migration.
 
-**Binding constraint on handlers:** a handler resolves content through the pointer it is given
-and must never assume a repository has exactly one current state. An architecture test enforces
-this, because a single handler that reads "latest" directly silently reintroduces the retrofit.
-What, if anything, a handler may serve from in-flight pre-snapshot publish state is Q14; until
-that is answered, this constraint reads as absolute.
+**Binding constraint on handlers:** a handler resolves **name-addressed** content through the
+pointer it is given, and must never assume a repository has exactly one current state. An
+architecture test enforces this, because a single handler reading "latest" directly silently
+reintroduces the retrofit.
+
+The one carve-out is digest-addressed reads, which may additionally resolve against the
+repository's own in-flight upload records (see "Reads from in-flight publish state" above).
+It is narrow on purpose: a digest read asks whether exactly these bytes exist, which no snapshot
+answers differently.
 
 ## Acceptance Criteria
 
@@ -180,8 +265,25 @@ that is answered, this constraint reads as absolute.
       so a second request is served locally with no upstream call and later revalidation still
       has its upstream provenance (asserted at the network layer).
 - [ ] AC5: Under `streamed`, a second request does contact the upstream and no blob is persisted.
-- [ ] AC6: Two upstreams offering identical content produce one `Version` and two `RemoteFile`
-      rows, and serving succeeds when the first upstream is unreachable.
+- [ ] AC6: A virtual repository aggregating two remote repositories that offer identical content
+      resolves in member order, and serving succeeds when the first member's upstream is
+      unreachable. No entity carries a failover field; order comes from `VirtualMember.position`.
+- [ ] AC16: A virtual repository resolves local members before remote caches and remote caches
+      before upstream fetches, asserted at the network layer; a `remote` repository has exactly
+      one upstream, and rotating its credential touches one row.
+- [ ] AC17: GC marks through a `Reference` edge: an OCI index whose child manifests are untagged
+      keeps those children live, and the referrers API answers from an indexed query over the
+      edge without the core parsing any handler metadata.
+- [ ] AC18: A digest-addressed read resolves against the repository's own in-flight upload
+      records, a name-addressed read never does, and one client cannot read another's in-flight
+      uploads.
+- [ ] AC19: A proxied repository creates no snapshot on cache materialisation, including
+      on-demand metadata arrival.
+- [ ] AC20: Two concurrent writes to one metadata document do not silently lose one: the stale
+      write is rejected on its revision token and the handler's retry succeeds.
+- [ ] AC21: A metadata document above the size threshold is stored as a CAS blob and a document
+      below it inline, and a snapshot delta containing a large document does not grow with
+      repository size.
 - [ ] AC7: GC treats a blob referenced only by a cached file as live, proven by a test that runs
       GC against a repository whose content arrived entirely by `on_demand`.
 - [ ] AC8: Adding a format requires zero schema migrations, demonstrated across the Tier 0 and
@@ -225,6 +327,12 @@ that is answered, this constraint reads as absolute.
 | AC13 | integration | `internal/model/snapshot_test.go` |
 | AC14 | integration | `internal/model/upstream_test.go` |
 | AC15 | unit | `internal/model/snapshot_test.go` |
+| AC16 | integration | `internal/model/virtual_resolution_test.go` (network-level assertion) |
+| AC17 | integration | `internal/model/reference_edge_test.go`; `conformance/oci/referrers_test.go` |
+| AC18 | integration | `internal/model/inflight_read_test.go` |
+| AC19 | integration | `internal/proxy/no_snapshot_test.go` |
+| AC20 | integration | `internal/model/metadata_concurrency_test.go` |
+| AC21 | integration | `internal/model/metadata_storage_test.go` |
 
 ## Implementation Phases
 
@@ -312,152 +420,74 @@ to look when debugging. The alternative - dedicated typed tables - would have gi
 knowledge of specific formats and started the slide back toward the bespoke schemas this model
 exists to prevent.
 
-### Q9: How do OCI manifest lists and the referrers API map onto the model?
+### Resolved: graph-shaped content (was Q9)
 
-> **Answer this together with `formats/oci.md` Q2.** Both questions cover the same
-> decision - how OCI's reference graph maps onto the shared model - and the second review round
-> found them carrying **opposite recommendations**. One answer settles both; answering them
-> independently is how the two specs end up describing different systems.
+**Settled 2026-09-23: a format-agnostic `Reference` edge between versions, with the relation
+(OCI's `subject`) recorded and queryable.** GC marks through it and the referrers API is one
+indexed lookup. Settles `formats/oci.md` Q2, which carried the opposite recommendation.
 
-**Recommendation:** For v1 the OCI handler flattens transitive blob references into `File`
-rows so GC stays sound and keeps the manifest graph inside the opaque document, and the
-referrers API is deferred until a generic version-to-version reference edge is added - raised
-then as the spec change this spec's own escalation rule demands. The collision exists today:
-`oci.md` lists the referrers API in scope, and "list artifacts whose subject is X" is a query
-the core cannot serve over a document it never parses.
+Accepted cost: the shared model gains an entity on one format's account. That is cheaper than
+flattening the graph into `File` rows, which loses the referrers query that OCI conformance
+tests, or teaching the core to parse manifests, which is the coupling this model exists to
+prevent. The next graph-shaped format reuses the edge rather than re-opening this.
 
-Two facts have moved since this was written, without answering it. First, the three-level
-metadata decision gives the handler a package-level document in which it could maintain its own
-reverse referrers map, so option A no longer strictly forces deferring the referrers API; it
-makes referrers correctness the handler's problem, subject to the metadata concurrency question
-(Q12). The GC half of the collision is unchanged: references recorded only inside opaque
-documents are invisible to the mark phase, so flattening into `File` rows (or an edge the core
-owns) remains mandatory either way. Second, `oci.md` Q2 asks this same question and its
-recommendation is the opposite of this one (add the edge now); one owner decision should settle
-both, and whichever spec's recommendation loses must be edited in the same pass.
+### Resolved: upstream and repository structure (was Q10)
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Flatten now, reference edge later** | No schema addition today; GC stays correct via `File` rows | Referrers deferred, so `oci.md`'s scope must say so; removing one platform manifest from an index has no first-class representation |
-| **B. Add a version-to-version `Reference` edge now** | Referrers and index-child deletion fall out queryably | A core table and edge semantics thirty-plus other formats never use, and the edge set must be captured per snapshot like the rest of membership |
+**Settled 2026-09-23: the three-type model Artifactory established** - `local`, `remote`,
+`virtual` - with upstream configuration bound one-to-one to a remote repository and resolution
+order carried by a virtual repository's member list.
 
-**Why this is yours:** either answer forces an edit to `oci.md`'s scope or to this schema, and
-choosing which spec bends is an architecture call.
+This replaced the recommendation originally offered here (a shared `Upstream` plus a
+per-repository attachment carrying failover position). Checking what Artifactory actually does
+showed the industry model is different and better: a remote repository *is* the upstream
+binding, and multi-upstream failover is not a field at all but the ordering of several remote
+repositories inside a virtual one.
 
-### Q10: Is an `Upstream` scoped to one repository, or shared across repositories?
+Accepted cost, and it is real: **virtual repositories move into v1**, which
+`project-charter.md` had explicitly deferred. They return because the alternative is an ad-hoc
+ordering field that reimplements aggregation badly, and because aggregation is what lets one
+client URL see private and proxied content together.
 
-**Recommendation:** B - a shared `Upstream` definition plus a per-repository attachment
-carrying the failover position, because the settled entity's own rationale (rotating a
-credential touches one row) only holds when repositories share the row, and the preconfigured
-npm, PyPI and Docker Hub upstreams (`proxy-cache.md`) are shared by nature.
+### Resolved: snapshots in proxied repositories (was Q11)
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Per-repository `Upstream` rows** | The settled field list works as written; failover order sits naturally on the row | Rotating a credential for an upstream fifty repositories use touches fifty rows, defeating the entity's stated rationale |
-| **B. Shared `Upstream`, per-repository attachment holding the failover position** | Credential rotation touches one row; each preconfigured upstream is one definition | One more join entity, and failover order moves off the `Upstream` row the resolution described |
+**Settled 2026-09-23: a proxied repository creates no snapshots.** On-demand metadata arrival
+is treated as cache materialisation, and cached content stays out of snapshot content sets.
 
-**Why this is yours:** the 2026-09-23 resolution fixed the entity's fields but not its
-cardinality, and two halves of that field list (a shared credential, a per-repository failover
-order) pull in opposite directions; either reading is a faithful implementation of the decision
-as written.
+This keeps eviction from fighting the snapshot mark root and keeps the snapshot sequence off the
+hot proxy path. Accepted cost: a `remote` repository has no rollback story, because it has no
+snapshots. Pinning a build to "npm as of Monday" is therefore not a v1 capability.
 
-### Q11: What creates a snapshot in a proxied repository?
+### Resolved: concurrent metadata writes (was Q12)
 
-One snapshot per logical publish is well defined for hosted repositories. A proxied repository
-has no publishes: metadata for a never-before-seen package arrives on demand (new `Package`,
-`Version` and `RemoteFile` rows - a content-changing write that is not a "cache materialisation
-of files already known to the model"), and blobs arrive as cache fills. The answer must also
-say whether cached content appears in snapshot content sets at all, because if it does, a blob
-referenced by a retained snapshot is a GC mark root (`storage-and-gc.md`) while the same blob
-is LRU-evictable under the per-repository quota (`proxy-cache.md`), and one of those rules has
-to win.
+**Settled 2026-09-23: an optimistic revision token on every metadata document**, with the
+handler retrying on conflict.
 
-**Recommendation:** A - on-demand metadata arrival is treated like cache materialisation and
-creates no snapshot; cached content stays out of snapshot content sets, so eviction never
-fights the snapshot mark root; proxied repositories gain snapshots only from a future explicit
-freeze operation, which is the frozen-mirror feature this spec advertises anyway.
+The core cannot merge a document it refuses to parse, and npm dist-tags are read-modify-write, so
+last-write-wins silently loses a dist-tag move - which ecosystems treat as a supply-chain event
+rather than a lost update. Accepted cost: handlers implement retry, and a hot document under
+contention livelocks without backoff, so backoff is not optional.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. No snapshots from proxy traffic; explicit freeze later** | The hot miss path stays free of snapshot serialisation, and LRU eviction never conflicts with a mark root | Proxied repositories have no rollback history until the freeze feature ships |
-| **B. Every new-to-the-model arrival is a snapshot** | Proxied repositories get history for free | The snapshot sequence lands on the hot miss path, serialised per repository - the exact cost the cache-fill exclusion was accepted to avoid - and evicting a snapshot-referenced blob becomes contradictory |
+### Resolved: metadata document storage (was Q13)
 
-**Why this is yours:** it decides what the promised frozen-upstream-mirror feature is built
-from, and it arbitrates between two settled decisions (snapshot mark roots and LRU eviction)
-whose combination is currently contradictory for cached content.
+**Settled 2026-09-23: inline below a size threshold, digest-referenced CAS blobs above it.**
 
-### Q12: How are concurrent writes to one opaque metadata document handled?
+Hot small documents never pay a blob fetch per read; index-sized documents never bloat a snapshot
+delta back into O(repository), which would undo the delta decision. Accepted cost: two storage
+paths for one concept, and a threshold that will be wrong for somebody - so it is configurable.
 
-npm dist-tags and Maven `latest`/`release` make the package-level document a read-modify-write
-target: two concurrent publishes both read it, both update it, and the last write silently
-discards the other's tag movement. The core cannot merge a document it never parses, so the
-mechanism has to live in the shared write API's contract.
+### Resolved: reads from in-flight publish state (was Q14)
 
-**Recommendation:** A - an optimistic revision token on every metadata document, with the
-handler retrying on conflict, because a silently lost dist-tag move is metadata corruption an
-ecosystem treats as supply-chain-relevant, and a revision check is the smallest mechanism that
-keeps the core format-ignorant.
+**Settled 2026-09-23: digest-addressed reads may resolve against the repository's own in-flight
+upload records; name-addressed reads never may.**
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Compare-and-swap revision on each document; handler retries on conflict** | No lost updates; the core stays ignorant of content | Every handler metadata write needs a retry loop, and the shared write API must expose the revision |
-| **B. Last write wins** | Nothing to build | Concurrent publishes silently lose dist-tag and `latest` updates; the bug is invisible until an install resolves wrongly |
-| **C. A per-entity lock held across the publish** | Serial simplicity | Locks held across multi-request publish boundaries (a Maven deploy) with client-controlled duration, a deadlock and starvation surface |
+This closes the structural incompatibility the reviews found: an OCI client `HEAD`s blobs it has
+just uploaded, before any manifest exists, so a strict pointer-only model cannot serve OCI push
+at all. A session-scoped membership check keeps one client from probing another's uploads.
 
-**Why this is yours:** it sets the contract of the shared metadata write API before the first
-handler is written against it, and the options trade correctness, hot-path cost and API
-complexity in a way no measurement yet exists to settle.
-
-### Q13: Are metadata documents stored inline, or as CAS blobs referenced by digest?
-
-Debian makes this concrete: its repository-level document carries `Packages` indexes and a
-signed `Release`, which reach tens of megabytes and change on every publish. Snapshot deltas
-capture metadata, so inline storage makes every Debian publish's delta O(index size), which
-reintroduces the O(repository) write cost the delta representation was chosen to avoid.
-CAS-backed documents make the delta a digest and deduplicate unchanged levels, but they add a
-fourth GC reference class: metadata-document blobs referenced from live rows and retained
-snapshots.
-
-**Recommendation:** C - inline below a size threshold, digest-referenced CAS blobs above it,
-because hot small documents (dist-tags) should not pay a blob fetch per read while index-sized
-documents must not be copied into every delta; the GC mark phase then treats metadata-document
-references as roots wherever they occur.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Inline always** | One representation; no new GC reference class | Index-sized documents copied into every snapshot delta: O(repository) writes for exactly the formats snapshots were meant to serve |
-| **B. CAS-backed always** | Uniform dedup; deltas are digests | A blob fetch on every metadata read, including the hottest packument paths, plus the fourth GC reference class |
-| **C. Threshold hybrid** | Small documents stay hot, large ones dedup | Two representations to test, a threshold to choose, and the fourth GC reference class still exists for the large ones |
-
-**Why this is yours:** it trades read latency on the hottest path against snapshot storage
-growth and a new GC obligation in the component the charter names as the most dangerous, and
-the threshold is a product judgment about which formats matter early.
-
-### Q14: What may a handler serve from pre-snapshot, in-flight publish state?
-
-The settled publish granularity and AC10 currently contradict each other for multi-request
-publishes. A Maven deploy or an OCI push writes blobs and files before its snapshot exists;
-AC10 says a handler resolves content only through the pointer or snapshot it is given, so
-strictly none of that is visible until the publish completes. But OCI clients HEAD
-just-uploaded blobs before pushing the manifest that references them, and the official
-conformance suite exercises push flows that read back mid-publish. Some carve-out is required,
-and its wording decides how strong the pointer discipline actually is.
-
-**Recommendation:** A - digest-addressed reads may additionally resolve against the
-repository's own in-flight upload records (immutable CAS content plus a session-scoped
-membership check), while every name-based resolution stays strictly through the snapshot
-pointer; the carve-out is written into AC10's architecture test as an explicit named exemption
-rather than discovered later as a violation.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Digest reads see in-flight uploads; name resolution stays snapshot-only** | OCI push flows work; the mutable surface (names, tags, listings) keeps full snapshot discipline | The architecture test needs a precisely scoped exemption, which becomes a loophole if worded loosely |
-| **B. A session view: the publishing client resolves through snapshot plus its own session** | Read-your-writes for the publisher across the whole surface | Session identity threaded through every read path, for behaviour only pushing clients need |
-| **C. No carve-out; a format needing read-back declares finer publish boundaries** | AC10 stays absolute | For OCI that makes each blob upload a publish, which dissolves "one snapshot per logical publish" for exactly the format that stresses it |
-
-**Why this is yours:** it is the boundary between two of your settled decisions (publish-scoped
-snapshots and pointer-only resolution), and where the exemption is drawn defines what the
-architecture test - the named mechanical enforcer - actually enforces.
+The split holds because a digest read asks "do you have exactly these bytes", which no snapshot
+can answer differently, while a name read asks "what is `latest`", which is precisely what
+snapshots exist to answer. Accepted cost: two resolution paths, and the session-scoped check is
+security-relevant rather than incidental.
 
 ### Resolved: remote modelling (was Q1)
 

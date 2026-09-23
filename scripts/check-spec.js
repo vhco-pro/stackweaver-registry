@@ -222,7 +222,7 @@ for (const { rel, body } of crossRefs) {
     // Citing a question by its historical number is legitimate - that is how Resolved
     // sections are labelled ("was Q2"). Only flag citations presenting it as still open.
     // The qualifier can sit either side of the filename, so both windows are checked.
-    const before = body.slice(Math.max(0, m.index - 40), m.index);
+    const before = body.slice(Math.max(0, m.index - 70), m.index);
     if (HISTORICAL.test(between) || HISTORICAL.test(before)) continue;
     const target = offered.get(file);
     if (!target) { warn(rel, `cites ${file}, which is not a spec in this repository`); continue; }

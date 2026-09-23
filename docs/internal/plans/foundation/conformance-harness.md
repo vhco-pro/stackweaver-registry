@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Gate review 2026-09-23 added AC14 (stateful replay was untested) and tightened AC3 to cover instance reuse; Q3 raised on redaction failing open. Stays draft on that one question."
+status_description: "Redaction settled as an allowlist 2026-09-23 and folded into Design and AC13. Zero open questions; awaiting a gate review."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -140,8 +140,14 @@ same recorded flow - not only response-side normalisation. A corpus format that 
 
 Corpora and transcripts are also a leak surface. Recording against the public registry can
 capture real credentials (auth headers, tokens, cookies), and the drift job attaches failing
-transcripts to issues. Recording redacts credential material at capture time, and the runner
-refuses a corpus that matches known credential patterns (AC13).
+transcripts to issues.
+
+Redaction is an **allowlist, not a denylist**: a header or field survives into a corpus only if
+explicitly permitted, and anything unrecognised is redacted at capture time. The failure
+directions are asymmetric and that is the whole reason for the choice - an over-redacted corpus
+fails loudly as a replay mismatch you fix in minutes, while an under-redacted one leaks silently
+into a repository intended to go public. The permitted list is per format and is a review item
+alongside the normalisation rules (AC13).
 
 Normalisation rules are per-format and are themselves reviewed: an over-eager normaliser hides
 real differences, and that failure is invisible because everything goes green. The same review
@@ -203,8 +209,10 @@ an acceptance criterion rather than a design note.
       and opens an issue carrying the failing transcript when a case fails, demonstrated by a
       manual dispatch against a deliberately failing fixture.
 - [ ] AC13: A recorded corpus and an attached transcript contain no credential material:
-      recording redacts auth headers and tokens at capture time, and the runner rejects a
-      corpus matching known credential patterns.
+      redaction is allowlist-based, so a header or field the format's permitted list does not
+      name is redacted at capture time, and the runner rejects a corpus containing any
+      non-permitted field. Proven by a recording session carrying a credential in a header the
+      list does not name, which must arrive redacted.
 
 ## Test Plan
 
@@ -247,30 +255,18 @@ an acceptance criterion rather than a design note.
 
 ## Open Questions
 
-### Q3: Is credential redaction a denylist of known patterns, or an allowlist of permitted fields?
+### Resolved: redaction direction (was Q3)
 
-AC13 currently redacts "known credential patterns" and rejects a corpus "matching known
-credential patterns". That is a denylist, and a denylist **fails open**: a credential shape
-nobody anticipated passes both the redactor and the gate. This is the control standing between a
-recorded corpus and a public repository, so its failure direction matters more than its
-convenience.
+**Settled 2026-09-23: an allowlist.** A header or field survives into a corpus only if explicitly
+permitted; anything unrecognised is redacted.
 
-**Recommendation:** allowlist. Headers and fields survive into a corpus only if explicitly
-permitted, and anything unrecognised is redacted. An over-redacted corpus produces a visible
-replay failure; an under-redacted one produces a silent leak.
+The choice is about failure direction, not convenience. A denylist fails open - a credential in a
+header nobody anticipated reaches a public repository and nothing surfaces it. An allowlist fails
+closed, and its failure is a loud replay mismatch.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Allowlist of permitted fields** | Fails closed: an unanticipated credential shape is redacted by default, and the failure mode is a loud replay mismatch | The list must be maintained per format, and every genuinely new header needs a deliberate addition before its corpus replays |
-| **B. Denylist of known patterns** | Nothing to maintain up front; corpora record faithfully by default | Fails open on exactly the case that matters - a token in a header nobody thought of reaches a public repository, and nothing surfaces it |
-| **C. Denylist plus entropy heuristics** | Catches unknown-but-random-looking values as well as known names | Heuristics on a leak control give false confidence, and a high-entropy value that is not a credential (a digest, a nonce) gets redacted, breaking replay unpredictably |
-
-**Why this is yours:** it sets the failure direction of the only control between recorded traffic
-and a public repository, and it trades corpus-maintenance friction against a silent leak.
-
-Two questions raised by the 2026-09-22 review pass await the owner. The questions the spec
-originally raised were answered and folded in; those resolutions are kept below rather than
-deleted, so the reasoning survives the next time someone asks why it was done this way.
+Accepted cost: the permitted list is maintained per format, and a genuinely new header needs a
+deliberate addition before its corpus replays. That maintenance is a review item alongside the
+normalisation rules, which carry the same over-eager-hides-real-differences risk.
 
 ### Resolved: CI trigger (was Q1)
 

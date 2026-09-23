@@ -87,9 +87,11 @@ blobs, and a referrers listing is a reverse lookup over manifests' `subject` fie
 model (`data-model.md`) provides `Version -> File -> Blob` and deliberately never parses the
 format-specific metadata document - which means GC cannot mark through references recorded only
 inside that document, and the referrers API cannot be served from it either. Untagged child
-manifests must nonetheless be pullable by digest and counted live by GC. How the graph is
-represented without a handler-owned table is Q2, and its answer is a `data-model.md` spec
-change, not a local workaround.
+manifests must nonetheless be pullable by digest and counted live by GC. The shared model
+therefore carries a format-agnostic `Reference` edge between versions, with OCI's `subject`
+recorded queryably: GC marks through it, and the referrers API is one indexed lookup rather than
+something the core would have to parse manifests to answer. That was a `data-model.md` spec
+change rather than a local workaround, settled there and here together.
 
 ### Chunked upload and the durability split
 
@@ -160,27 +162,19 @@ Q2 through Q6 were raised by the 2026-09-22 review and await the owner. The reso
 that follows them is kept rather than deleted, so the reasoning survives the next time someone
 asks why it was done this way.
 
-### Q2: How is the OCI manifest reference graph represented in the shared data model?
+### Resolved: the manifest reference graph (was Q2)
 
-> **Answer this together with `foundation/data-model.md` Q9.** Both questions cover the same
-> decision - how OCI's reference graph maps onto the shared model - and the second review round
-> found them carrying **opposite recommendations**. One answer settles both; answering them
-> independently is how the two specs end up describing different systems.
+**Settled 2026-09-23 together with `foundation/data-model.md` Q9: a format-agnostic `Reference`
+edge between versions**, with the relation - OCI's `subject` - recorded and queryable.
 
-**Recommendation:** A - add a format-agnostic version-to-version reference edge (with the
-referrers `subject` recorded queryably) to `data-model.md`, because GC marking and the
-referrers lookup both need references the core can traverse, and the core is forbidden from
-parsing handler metadata.
+GC marks through the edge, so an index's untagged child manifests stay live. The referrers API
+becomes one indexed query rather than something the core would have to parse manifests to
+answer. Both specs previously carried opposite recommendations for this one decision; this
+settles both.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. A shared reference edge between versions, plus a queryable `subject` field** | GC marks correctly through indexes and referrers; the referrers API is one indexed query; other graph-shaped formats reuse it | A `data-model.md` spec change before OCI starts, and one more entity every format sees but few use |
-| **B. Flatten: an index's Version lists every transitive blob as its own File rows** | No model change | Child manifests stop being first-class content although they must stay pullable by digest; referrers needs a parallel lookup structure anyway; deleting a shared child becomes ambiguous |
-| **C. A handler-owned reference table** | Locally simple | Forbidden: no handler owns a table, and `data-model.md` names this exact signal as "the shared model is wrong - raise it as a spec change" |
-
-**Why this is yours:** it amends a critical-priority sibling spec, and it decides whether the
-shared model can express graph-shaped formats at all - the first real test of the
-no-bespoke-schema bet.
+Accepted cost: the shared model gains an entity on OCI's account. The alternative was flattening
+the graph into `File` rows, which keeps GC sound but loses the referrers query that OCI
+conformance tests - putting the zero-skips goal at risk.
 
 ### Q3: What credential does a non-interactive docker login present, and where does it come from?
 

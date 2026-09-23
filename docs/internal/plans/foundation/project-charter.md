@@ -56,6 +56,11 @@ multi-format registry is plausible.
   differentiator, and it is built alongside OCI at step 4 rather than after it, so the first
   proxyable format never has to retrofit one.
 - OIDC SSO and RBAC, free, in the core product.
+- **Three repository types**: `local`, `remote` and `virtual`, the model Artifactory established
+  and users arrive expecting. Virtual repositories aggregate local and remote members and their
+  member order **is** the resolution order. This was previously deferred and returned to v1 on
+  2026-09-23, because the alternative is an ad-hoc failover-ordering field that reimplements
+  aggregation badly (`data-model.md`, resolved upstream and repository structure).
 - A conformance harness driving real package clients in containers.
 
 **Out of scope, explicitly**

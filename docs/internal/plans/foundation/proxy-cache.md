@@ -41,7 +41,11 @@ build reliability, egress cost and supply-chain control.
 - Cache policy: TTLs for mutable metadata, indefinite retention for immutable artifacts.
 - **Negative caching** of upstream 404s, with a short TTL.
 - **Offline mode**: serve everything cached, never contact the upstream, fail closed on a miss.
-- Upstream credentials, stored encrypted, for authenticated upstreams.
+- Upstream credentials, stored encrypted, bound to the `remote` repository they belong to -
+  one upstream per remote repository, so rotating a credential touches one row.
+- Resolution across several upstreams by aggregating their remote repositories in a `virtual`
+  repository, whose member order is the resolution order. **Failover is not a field on any
+  entity** (`data-model.md`, resolved upstream and repository structure).
 - Preconfigured upstreams: npm, PyPI and Docker Hub ship configured and enabled (the resolved
   preconfigured-upstreams decision below).
 - Cache eviction: least-recently-used under a per-repository storage quota, coordinated with
