@@ -158,6 +158,17 @@ failing transcript attached.
 This is the thesis of the whole project made operational: the protocol treadmill that kills
 volunteer registries becomes a cron job that files a ticket.
 
+### Blocking precondition on recording
+
+**No golden corpus is committed until credential redaction is implemented and tested.** This is
+an ordering rule, not a preference: corpora are committed in-repo, this repository is intended to
+go public (`project-charter.md`), and the drift job attaches failing transcripts to issues. A
+corpus recorded against a real registry before redaction exists is a credential leak waiting for
+the repository to become public.
+
+The first recording run is therefore gated on AC13 passing, and that gate is the reason AC13 is
+an acceptance criterion rather than a design note.
+
 ## Acceptance Criteria
 
 - [ ] AC1: The harness core contains no format-specific logic; adding a format adds case data

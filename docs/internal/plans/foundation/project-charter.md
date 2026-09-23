@@ -310,12 +310,31 @@ that could depend on it.
 
 ### Resolved: going public (was Q1)
 
-**Settled 2026-09-22: at the first working format.** A public repository holding only specs
-invites drive-by judgement and attracts no contributors; a first impression that actually runs is
-worth the wait.
+**Settled 2026-09-22: at the first working format. Reaffirmed 2026-09-23 with a new reason and a
+blocking precondition.**
 
-Accepted cost: the spec history lands as one large push rather than as visible incremental
-progress. The repository stays private until then.
+A public repository holding only specs invites drive-by judgement and attracts no contributors; a
+first impression that actually runs is worth the wait. The repository stays private until then.
+
+**The stronger argument is now economic, not positional.** Public repositories get free unlimited
+standard GitHub Actions minutes; private ones consume quota. Since CI economy is a CRITICAL rule
+in `CLAUDE.md` and the conformance suite is minutes-long by design, going public removes the
+budget constraint that shapes several decisions in these specs - including the one gating
+conformance to `main` pushes only. **Revisit that CI decision when the repository goes public**,
+because its accepted cost (a green pull request can hide broken conformance) was priced against a
+budget that will no longer exist.
+
+### Blocking precondition: corpus redaction
+
+**The repository must not go public after any golden corpus has been committed without redaction
+shipping first.** Four separately reasonable decisions combine into a credential leak: the
+recording proxy captures traffic against the real public registry, corpora are committed in-repo,
+this repository eventually goes public, and the drift job attaches failing transcripts to issues.
+
+It is safe today only because no corpus exists yet. The ordering rule is therefore absolute:
+**redaction (`conformance-harness.md` AC13) ships before the first corpus is committed**, whether
+or not the repository is public by then. Going public is not what creates the hazard; recording
+without redaction is.
 
 ### Resolved: first milestone (was Q3)
 
