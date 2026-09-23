@@ -55,8 +55,7 @@ Two constraints from the charter shape this:
 **Out of scope**
 
 - Any individual format. Those are separate specs under `docs/internal/plans/formats/`.
-- Virtual/aggregate repositories that merge several backing repositories. A later spec, though
-  the interface should not preclude it.
+
 - Write-triggered shared services (signed-index generation, async import pipelines). Deferred
   by the resolved write-triggered services decision below: absent from the pinned method set,
   and prototyped against Debian before the scheduled re-open so the re-open is not blind to

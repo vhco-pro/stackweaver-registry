@@ -1,6 +1,6 @@
 ---
-status: planned
-status_description: "Planned: cleared by the 2026-09-23 gate review at a2d5219 - zero open questions, all fifteen ACs mapped. The mark-root set and eviction mechanics track sibling open questions (data-model.md Q11/Q13, proxy-cache.md Q11); a resolution amending them is a revision requiring re-review."
+status: draft
+status_description: "Reverted to draft 2026-09-23: a Scope bullet changed when replication came into scope and got its own spec, so the gate review at a2d5219 no longer covers the content. Needs a short re-review; nothing else changed."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
@@ -54,7 +54,9 @@ upload record that was never written.
 
 **Out of scope**
 
-- Replication between instances. Later, and it depends on decisions made here.
+- Replication between instances, which now has its own spec (`replication.md`). The decisions
+  it waited on - content addressing, the deletion-intent barrier, bounded snapshot retention -
+  are settled here, and that spec builds on them.
 - Encryption at rest beyond what the object store provides.
 - Per-format metadata storage. That lives in PostgreSQL through the shared data model
   (`data-model.md`, issue #12); no handler owns a table. GC marks over that model's tables,

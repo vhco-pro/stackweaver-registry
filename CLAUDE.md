@@ -43,6 +43,10 @@ That framing has consequences for how you work here, and they are binding:
 - **The conformance harness is the product; the server is what satisfies it.** Build and extend
   the harness before the handler it tests, always. A weak harness cannot be rescued by more
   agent horsepower.
+- **Scope is not a constraint.** No human will work on this codebase, so build effort is never a
+  reason to defer a feature, and a spec review must not recommend scoping back to protect a
+  schedule. Correctness risk and evidence sequencing remain valid reasons to wait; effort does
+  not. See the charter's standing scope decision.
 - **Track the experiment's own metrics**, in `docs/internal/tasks/experiment-log.md`: human
   interventions per format, defect escape rate (found by users vs. found by the harness), and
   above all **whether format N+1 costs less than format N**. Generalisation is the finding; if

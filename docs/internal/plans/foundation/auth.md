@@ -68,7 +68,14 @@ Design).
 - **Machine identity**: scoped, revocable registry tokens that the clients above can present.
 - **The OCI token service**: the `WWW-Authenticate` challenge, the token endpoint, and
   short-lived scoped bearer tokens per the distribution spec.
-- **Authorization**: repository-scoped permissions, evaluated centrally, never in a handler.
+- **Authorization**: permissions evaluated centrally, never in a handler. Repository-scoped is
+  the base unit, with **path and tag patterns** layered on it, brought into scope 2026-09-23 so a
+  CI credential can be scoped to `prod/*` or to one tag rather than a whole repository.
+
+  This one carries a correctness cost as well as a scope one, and it is not waived by the
+  scope decision: every pattern rule is another way to grant more than intended. Pattern
+  matching must therefore be deny-by-default, have no implicit wildcards, and be covered by
+  conformance cases asserting that a narrowly scoped token is refused outside its pattern.
 
 **Out of scope**
 
@@ -77,7 +84,7 @@ Design).
 - Making Stackweaver an identity provider for this registry. Pointing both products at the same
   IdP already delivers one central login without coupling their release cycles. Deferred, not
   rejected.
-- Fine-grained policy (per-path, per-tag rules). Repository-scoped is the v1 unit.
+
 
 ## Design
 
@@ -292,6 +299,9 @@ afterwards. This is deliberately inconvenient.
 - [ ] AC18: A handler's declared route-to-scope mapping is what the shared layer enforces; a
       handler whose mapping omits a route fails its unauthenticated and unauthorized conformance
       cases.
+- [ ] AC19: A token scoped to a path or tag pattern is accepted inside the pattern and refused
+      outside it, with no implicit wildcard: a token scoped to `prod/*` is refused for
+      `prod-staging/x`, and a token scoped to one tag is refused for every other tag.
 - [ ] AC10: An external security review of the implementation is recorded as complete before any
       auth code reaches `main`.
 - [ ] AC11: A newly created repository rejects unauthenticated reads; after anonymous read is
@@ -323,6 +333,7 @@ afterwards. This is deliberately inconvenient.
 | AC16 | integration | `internal/auth/expiry_test.go` |
 | AC17 | conformance | `conformance/core/existence_oracle_test.go` |
 | AC18 | unit + conformance | `internal/auth/scope_map_test.go`; per-format cases via `format-handler-interface.md` AC7 |
+| AC19 | unit + conformance | `internal/auth/pattern_test.go`; per-format cases asserting refusal outside the pattern |
 
 **AC10 procedure**: before the first auth code merges, a security review is performed by a party
 other than the implementing agent, covering token lifecycle, scope enforcement, the OIDC

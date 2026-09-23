@@ -62,16 +62,37 @@ multi-format registry is plausible.
   2026-09-23, because the alternative is an ad-hoc failover-ordering field that reimplements
   aggregation badly (`data-model.md`, resolved upstream and repository structure).
 - A conformance harness driving real package clients in containers.
+- **Supply-chain policy and scanning** (`supply-chain-policy.md`), brought in 2026-09-23. The
+  registry is the only place every artifact already passes, hosted and proxied alike, and a
+  caching proxy that cannot refuse a known-malicious package is a faster way to fetch one.
+- **Replication between instances** (`replication.md`), brought in 2026-09-23. Content addressing
+  and immutable snapshots make transfer idempotent and resumable, so the dependency that
+  deferred it is discharged. Covers geo-distribution, disaster recovery and air-gapped export.
 
 **Out of scope, explicitly**
 
-- Vulnerability scanning and signing enforcement as original work. Harbor does these well;
-  integrate later, do not reimplement.
+
 - Any ecosystem advertised before both its hosted and proxied paths pass conformance. The
   catalogue is a target list, not a marketing claim.
-- Virtual/aggregate repositories, for now. They are part of the unserved combination this
-  charter cites, so they are deferred rather than refused: a follow-on to the proxy layer,
-  kept out of `proxy-cache.md` v1 so that spec stays shippable.
+
+### Scope is not a constraint here
+
+**Settled 2026-09-23, standing.** No human will work on this codebase. Build effort is therefore
+not a reason to defer anything, and "this is a lot to build before v1 works" is not an argument
+against a feature. The point of the project is to find the limits of what an agent fleet can
+deliver, and scoping back to protect a schedule defeats it.
+
+Two things this does **not** license, because they are not about effort:
+
+- **Correctness risk is still a cost.** More moving parts in blob GC means more ways to lose
+  data, whoever writes them. A decision that adds complexity to the component the charter names
+  as most dangerous still has to earn it.
+- **Evidence sequencing is still a reason to wait.** The handler-interface re-open waits for two
+  real implementations because a guess made now is worse than a decision made from evidence
+  later. That is not deferral for effort; it is deferral for information.
+
+Anything previously deferred with a reason that reduces to "too much for v1" should be pulled
+back in. Anything deferred for risk or evidence stays deferred, and says which.
 
 ### Note on the reversal
 

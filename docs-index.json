@@ -176,13 +176,31 @@
     "covers": []
   },
   {
+    "path": "docs/internal/plans/foundation/replication.md",
+    "description": "Spec for replicating content between registry instances - geo-distribution, disaster recovery and air-gapped mirroring - built on the content-addressed store and immutable snapshots.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/replication/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/storage-and-gc.md",
     "description": "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide.",
     "internal": true,
-    "status": "planned",
+    "status": "draft",
     "issue": "3",
     "covers": [
       "internal/storage/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/foundation/supply-chain-policy.md",
+    "description": "Spec for scanning artifacts and enforcing supply-chain policy at the registry boundary - blocking by vulnerability, licence or signature state, on both hosted and proxied content.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/policy/**"
     ]
   },
   {

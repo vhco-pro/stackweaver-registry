@@ -55,8 +55,6 @@ build reliability, egress cost and supply-chain control.
 
 **Out of scope**
 
-- Virtual/aggregate repositories that merge several backing repositories into one endpoint. A
-  natural follow-on, kept separate so this spec stays shippable.
 - Supply-chain policy (blocking packages by CVE or licence). Later, and it needs this first.
 - Write-through proxying (publishing upstream through us). Not a use case anyone asked for.
 

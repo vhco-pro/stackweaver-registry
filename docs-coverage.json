@@ -34,9 +34,15 @@
   "internal/model/**": [
     "docs/internal/plans/foundation/data-model.md"
   ],
+  "internal/policy/**": [
+    "docs/internal/plans/foundation/supply-chain-policy.md"
+  ],
   "internal/proxy/**": [
     "docs/internal/plans/foundation/data-model.md",
     "docs/internal/plans/foundation/proxy-cache.md"
+  ],
+  "internal/replication/**": [
+    "docs/internal/plans/foundation/replication.md"
   ],
   "internal/storage/**": [
     "docs/internal/plans/foundation/data-model.md",

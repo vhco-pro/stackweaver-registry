@@ -17,4 +17,6 @@ Foundation specs: the harness, storage, the format interface and the proxy layer
 | [project-charter.md](./project-charter.md) | The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work. |
 | [proxy-cache.md](./proxy-cache.md) | Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials. |
 | [question-triage.md](./question-triage.md) | Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once. |
+| [replication.md](./replication.md) | Spec for replicating content between registry instances - geo-distribution, disaster recovery and air-gapped mirroring - built on the content-addressed store and immutable snapshots. |
 | [storage-and-gc.md](./storage-and-gc.md) | Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide. |
+| [supply-chain-policy.md](./supply-chain-policy.md) | Spec for scanning artifacts and enforcing supply-chain policy at the registry boundary - blocking by vulnerability, licence or signature state, on both hosted and proxied content. |

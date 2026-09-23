@@ -143,6 +143,12 @@ function checkSpec(absPath) {
 
   if (status === 'planned') {
     if (openQs.length) fail(rel, `status is planned but ${openQs.length} question(s) are open`);
+    // Uncommitted edits are invisible to a commit-range diff, so check the working tree too.
+    // Without this, editing a planned spec and running the checker before committing passes.
+    try {
+      const dirty = execSync(`git -C ${ROOT} status --porcelain -- "${rel}"`, { encoding: 'utf-8' }).trim();
+      if (dirty) fail(rel, 'status is planned but the spec has uncommitted changes; re-review required');
+    } catch { /* not a git tree */ }
     if (!lastSha) fail(rel, 'status is planned with no Review Log entry');
     else {
       // A review verifies against sha X, then writes its own edits, which land in a later

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Six questions answered 2026-09-23 and folded through Scope, Design, the entity model and six new criteria. Virtual repositories entered scope with the three-type repository model. Zero open questions; awaiting a gate review."
+status_description: "Promotion and rollback brought into scope 2026-09-23. Zero open questions, 23 criteria; awaiting a gate review."
 description: "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies."
 author: michielvha
 goal: "Make breadth affordable by giving all 33 ecosystems one metadata schema, so a format is parsing plus routes rather than a bespoke database design."
@@ -62,6 +62,11 @@ remote modelling together.
   touches one row. Multi-upstream failover is not a field: it is the ordering of several remote
   repositories inside a virtual one.
 - Download policies: `immediate`, `on_demand`, `streamed`.
+- **Promotion, environment pointers and rollback**, brought into scope 2026-09-23 when build
+  effort stopped being a reason to defer. Several named pointers per repository, each targeting
+  a snapshot: promotion repoints an environment at a snapshot already tested elsewhere, and
+  rollback repoints it back. Content is bit-identical across environments because it is the same
+  snapshot, not a re-publish.
 - The liveness rules GC must honour, given a blob can now be referenced by a cached artifact as
   well as by a published one.
 
@@ -72,8 +77,7 @@ remote modelling together.
 
 **Out of scope**
 
-- The promotion API, environment pointers and rollback UX. The schema makes them a later feature
-  rather than a migration; building them now would delay the first working format.
+
 - Per-format index generation. That belongs to handlers and to the signed-index shared service.
 
 ## Design
@@ -92,7 +96,7 @@ remote modelling together.
 | `Reference` | from version, to version, relation (for example OCI's `subject`) | A format-agnostic edge the core can traverse without parsing handler metadata. GC marks through it; the OCI referrers API is one indexed query over it |
 | `RemoteFile` | `Upstream` ref, upstream path, last-checked | An upstream source for a file, retained when the file gains a local blob so revalidation and failover keep their provenance |
 | `Snapshot` | monotonic number, repository, delta (membership plus all three metadata levels), checkpoint marker | Immutable. Exactly one per completed logical publish; cache materialisation never creates one |
-| `Pointer` | name, target snapshot | What a serving URL resolves through. v1 ships exactly one per repository, always tracking the newest snapshot |
+| `Pointer` | name, target snapshot | What a serving URL resolves through. Several per repository: one tracks the newest snapshot, others are environments repointed by promotion and rollback |
 
 **Opaque metadata hangs at all three levels.** `Repository`, `Package` and `Version` each carry a
 metadata document the core never parses, so a handler stores state at whichever level the
@@ -268,6 +272,12 @@ answers differently.
 - [ ] AC6: A virtual repository aggregating two remote repositories that offer identical content
       resolves in member order, and serving succeeds when the first member's upstream is
       unreachable. No entity carries a failover field; order comes from `VirtualMember.position`.
+- [ ] AC22: A repository carries several named pointers; promoting an environment repoints it at
+      a snapshot already served elsewhere, and the content served is bit-identical to what that
+      other environment served, with no re-upload.
+- [ ] AC23: Rollback repoints an environment at an earlier retained snapshot and the previously
+      served content returns, including metadata at all three levels; a snapshot outside the
+      retention window is refused with the reach the API reports.
 - [ ] AC16: A virtual repository resolves local members before remote caches and remote caches
       before upstream fetches, asserted at the network layer; a `remote` repository has exactly
       one upstream, and rotating its credential touches one row.
@@ -333,6 +343,8 @@ answers differently.
 | AC19 | integration | `internal/proxy/no_snapshot_test.go` |
 | AC20 | integration | `internal/model/metadata_concurrency_test.go` |
 | AC21 | integration | `internal/model/metadata_storage_test.go` |
+| AC22 | integration | `internal/model/promotion_test.go` |
+| AC23 | integration | `internal/model/rollback_test.go` |
 
 ## Implementation Phases
 
