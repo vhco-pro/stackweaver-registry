@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "All questions answered as of 2026-09-23; corpus re-recording is manual on evidence of drift. Zero open questions; awaiting a gate review."
+status_description: "Gate review 2026-09-23 added AC14 (stateful replay was untested) and tightened AC3 to cover instance reuse; Q3 raised on redaction failing open. Stays draft on that one question."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -176,7 +176,9 @@ an acceptance criterion rather than a design note.
 - [ ] AC2: A case runs a real client container against a live server and fails when the client
       fails, demonstrated by a deliberately broken handler fixture.
 - [ ] AC3: Cases run concurrently without cross-contamination, proven by a case that would fail
-      if two cases shared storage or database state.
+      if two cases shared storage or database state - asserted **under instance reuse**, not only
+      under full per-case isolation, since reuse is the path where the guarantee can actually
+      break.
 - [ ] AC4: Client containers are pinned by digest; a case referencing a mutable tag fails
       validation before it runs.
 - [ ] AC5: The runner rejects any `skip` that does not carry an issue number.
@@ -184,6 +186,11 @@ an acceptance criterion rather than a design note.
       replayable corpus.
 - [ ] AC7: Replay-match fails when our response differs from the corpus in a non-normalised
       field, proven by a fixture that alters one such field.
+- [ ] AC14: A **stateful** recorded flow replays against our server: a corpus containing an OCI
+      chunked upload, whose later requests carry a `Location` URL and an auth token minted by
+      the reference server, replays with those values correlated to our server's equivalents.
+      A corpus format that cannot express "this request value came from that earlier response"
+      fails this criterion.
 - [ ] AC8: The official `opencontainers/distribution-spec` conformance suite runs as a case
       source and its individual results appear in the matrix.
 - [ ] AC9: `make conformance` exits non-zero if any case fails or is improperly skipped.
@@ -216,6 +223,7 @@ an acceptance criterion rather than a design note.
 | AC11 | unit | `conformance/core/case_validate_test.go` |
 | AC12 | ci | scheduled drift workflow, proven by a written manual-dispatch procedure |
 | AC13 | unit | `conformance/record/redact_test.go` |
+| AC14 | integration | `conformance/record/stateful_replay_test.go` (OCI chunked-upload corpus) |
 
 ## Implementation Phases
 
@@ -238,6 +246,27 @@ an acceptance criterion rather than a design note.
 - Scheduled latest-client drift job
 
 ## Open Questions
+
+### Q3: Is credential redaction a denylist of known patterns, or an allowlist of permitted fields?
+
+AC13 currently redacts "known credential patterns" and rejects a corpus "matching known
+credential patterns". That is a denylist, and a denylist **fails open**: a credential shape
+nobody anticipated passes both the redactor and the gate. This is the control standing between a
+recorded corpus and a public repository, so its failure direction matters more than its
+convenience.
+
+**Recommendation:** allowlist. Headers and fields survive into a corpus only if explicitly
+permitted, and anything unrecognised is redacted. An over-redacted corpus produces a visible
+replay failure; an under-redacted one produces a silent leak.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Allowlist of permitted fields** | Fails closed: an unanticipated credential shape is redacted by default, and the failure mode is a loud replay mismatch | The list must be maintained per format, and every genuinely new header needs a deliberate addition before its corpus replays |
+| **B. Denylist of known patterns** | Nothing to maintain up front; corpora record faithfully by default | Fails open on exactly the case that matters - a token in a header nobody thought of reaches a public repository, and nothing surfaces it |
+| **C. Denylist plus entropy heuristics** | Catches unknown-but-random-looking values as well as known names | Heuristics on a leak control give false confidence, and a high-entropy value that is not a credential (a digest, a nonce) gets redacted, breaking replay unpredictably |
+
+**Why this is yours:** it sets the failure direction of the only control between recorded traffic
+and a public repository, and it trades corpus-maintenance friction against a silent leak.
 
 Two questions raised by the 2026-09-22 review pass await the owner. The questions the spec
 originally raised were answered and folded in; those resolutions are kept below rather than
@@ -308,5 +337,6 @@ question in `formats/npm.md`.**
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-23 | 5c40011 | gate review: design adversarial + constitution + cross-spec (claim verification vacuous: no `conformance/` tree yet). Independence: the reviewer authored this spec's CI-trigger and recording-precondition sections, so its adversarial value on those two is limited | Mechanically clear. Two corrections applied: stateful replay, which Design names as the hardest constraint, had no criterion and AC6/AC7 could both pass on stateless GETs alone (AC14 added); AC3 now asserts isolation under instance reuse, the path where it can actually break. Q3 raised on redaction being a denylist that fails open. Stays draft. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous: pre-implementation tree, stub `main.go` only) | Added mode-coverage, drift-job and credential-redaction ACs (AC11-AC13); named TLS interception and stateful-replay request correlation as design constraints; raised Q1 (CI trigger policy) and Q2 (corpus refresh policy); stays draft. |
 | 2026-09-23 | 9c971d4 | cross-spec consistency (generic proxy exemption) | Corrected Phase 2 to use generic's hosted cases and explicitly test its unsupported proxy declaration, matching AC11 and the format spec; status remains draft pending its existing gate review. |
