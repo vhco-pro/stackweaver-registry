@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Second pass 2026-09-23: the four owner decisions were recorded but unapplied; folded through Design, Scope, ACs and the Test Plan, and the minimal method set is now pinned in Design. One new open question (Q6, egress enforcer strength) awaits the owner; stays draft."
+status_description: "Third pass 2026-09-23: the egress allowlist question answered and folded through AC6, AC9 and the re-open. Zero open questions; awaiting a review pass to earn planned."
 description: "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross."
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
@@ -194,6 +194,11 @@ from evidence, not a better guess now. Concretely:
   prototype (the resolved write-triggered services decision below).
 - **Form:** a `/spec review` pass over this spec, its outcome recorded in the Review Log and
   reflected in "The pinned method set"; the owner adjudicates any change.
+- **Also delivered at the re-open:** the egress import allowlist (AC9). The forbid rule covers
+  every stdlib egress path from day one, but a handler importing a third-party HTTP client
+  bypasses it. That hole is held by review until the re-open, which is the first moment two
+  real handlers' import lists exist to seed an allowlist from rather than guessing one and
+  failing lint on every legitimate new dependency.
 
 AC8 makes this a criterion of this spec rather than an intention.
 
@@ -220,11 +225,14 @@ AC8 makes this a criterion of this spec rather than an intention.
       `net/http` and `net` symbols rather than to spellings), and a committed violation
       fixture proves the rule fires. (Import-based architecture tests cannot catch this,
       because every handler legitimately imports `net/http` for its request and response
-      types; enforcement therefore binds to egress call sites. Whether an import allowlist
-      also backs this rule is Q6.)
+      types; enforcement therefore binds to egress call sites.)
 - [ ] AC7: Every format's conformance case set includes unauthenticated and unauthorized request
       cases in both modes, and the runner rejects a case set without them, so a handler that
       skips the shared auth check fails conformance rather than review.
+- [ ] AC9: At the scheduled re-open, a depguard import allowlist for `internal/format/**` is in
+      place, seeded from the generic and OCI handlers' actual import lists, and a fixture
+      importing a third-party HTTP client fails `make verify`. Until then the residual bypass
+      is accepted and named in the re-open's inputs.
 - [ ] AC8: Before any Tier 1 handler work begins, the scheduled re-open has run: this spec's
       Review Log carries the post-OCI re-open entry, and "The pinned method set" reflects its
       outcome, re-affirmed or revised, with the generic and OCI implementations and the
@@ -242,6 +250,7 @@ AC8 makes this a criterion of this spec rather than an intention.
 | AC6 | lint + unit | forbid rule in `.golangci.yml`; violation fixture behind a `lintfixture` build tag, with a Go test invoking the pinned golangci-lint against it and failing unless the rule fires |
 | AC7 | unit | `conformance/core/case_validate_test.go` |
 | AC8 | manual | the re-open `/spec review` pass, recorded in this spec's Review Log before npm work starts |
+| AC9 | lint + unit | depguard allowlist in `.golangci.yml`; third-party-client fixture behind the `lintfixture` build tag, asserted by the same runner test as AC6 |
 
 AC5's manual procedure: for each landing format, inspect the PR diff and record in the
 experiment log that it touches only `internal/format/<name>/`, its conformance cases, and the
@@ -269,22 +278,18 @@ One question from the 2026-09-23 review awaits the owner. Resolved decisions fol
 are kept rather than deleted, so the reasoning survives the next time someone asks why it
 was done this way.
 
-### Q6: Does the egress boundary need an import allowlist behind the forbid rule?
+### Resolved: the egress import allowlist (was Q6)
 
-**Recommendation:** B, the forbid rule now with the allowlist added at the re-open - the rule
-covers every stdlib egress path today, the residual hole (a handler importing a third-party
-HTTP client) is loud in any PR diff, and the re-open will have two real handlers' import
-lists to seed an allowlist from rather than a guess.
+**Settled 2026-09-23: the type-aware forbid rule ships now; the import allowlist lands at the
+scheduled re-open.** The rule covers every stdlib egress path from day one. The residual hole is
+a handler importing a third-party HTTP client, which is loud in a pull-request diff and which the
+re-open can close from evidence, seeded from the generic and OCI handlers' real import lists.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Type-aware forbid rule only (AC6 as written)** | One rule, near-zero friction on legitimate handler code | A handler importing resty or a gRPC client egresses invisibly to the linter; the boundary's last line becomes PR review, which the constitution says is not enforcement |
-| **B. Forbid rule now, import allowlist at the re-open** | The hole closes without guessing the allowlist; Tier 0 friction stays zero | A window until the re-open in which the third-party bypass exists, held only by review |
-| **C. Forbid rule plus a depguard import allowlist for `internal/format/**` now** | The hole closes immediately; every new handler import is a deliberate, linted decision | Every legitimate new import (a tar parser, a semver library) fails lint until the allowlist grows, and the list must be guessed before any handler has an import list |
-
-**Why this is yours:** it prices lint friction on Tier 0 development against a bypass class
-on the project's single most safety-critical boundary, which the constitution says must not
-be held by review alone.
+Accepted cost, stated because the constitution is explicit that review is not enforcement: for
+the window between now and the re-open, **this bypass class is held only by review** - on the
+boundary that decides whether the proxy cache can be silently skipped. Guessing the allowlist now
+is the alternative, and it fails lint on every legitimate new dependency before any handler exists
+to justify one.
 
 ### Resolved: interface method set (was Q1)
 
