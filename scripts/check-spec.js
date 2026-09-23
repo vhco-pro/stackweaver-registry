@@ -206,7 +206,17 @@ const specs = collect().map(checkSpec).filter(Boolean);
 // ── cross-spec reference integrity ───────────────────────────────────────────
 // Build an index of what every spec actually offers, then verify each citation against it.
 const offered = new Map(); // basename -> { acs:Set, openQs:Set, resolvedQs:Set }
-for (const f of collect()) {
+// Always index every spec, not just the targets: running against one file must still be able
+// to verify its citations of siblings, or a single-file run reports every sibling as missing.
+const allSpecFiles = [];
+(function walkAll(dir) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, e.name);
+    if (e.isDirectory()) walkAll(full);
+    else if (e.name.endsWith('.md') && e.name.toLowerCase() !== 'readme.md') allSpecFiles.push(full);
+  }
+})(PLANS);
+for (const f of allSpecFiles) {
   const raw = fs.readFileSync(f, 'utf-8');
   const fmEnd = raw.indexOf('\n---', 3);
   const b = fmEnd === -1 ? raw : raw.slice(fmEnd + 4);

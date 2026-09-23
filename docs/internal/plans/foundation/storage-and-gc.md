@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reverted to draft 2026-09-23: a Scope bullet changed when replication came into scope and got its own spec, so the gate review at a2d5219 no longer covers the content. Needs a short re-review; nothing else changed."
+status_description: "Re-review 2026-09-23 found this spec's own sibling tripwire had fired: data-model Q13 made metadata documents CAS blobs, adding a fourth mark root. Added with AC15. Zero open questions; awaiting the re-gate."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
@@ -209,10 +209,16 @@ exercise:
   orphan scan (store listing versus rows) runs against "S3-compatible" stores whose LIST
   consistency varies, so it too applies the grace period to object age before touching
   anything.
-- **Mark roots come from the shared data model, and there are three**: published `File`
-  references, cached (`RemoteFile`-originated) references, and snapshots inside the retention
-  window, per the resolved collection-strategy and snapshot decisions. A sweep marking from
-  fewer than all three deletes live content. Each root class has a defined end of life - a
+- **Mark roots come from the shared data model, and there are four**: published `File`
+  references, cached (`RemoteFile`-originated) references, snapshots inside the retention
+  window, and **CAS-backed metadata documents**. A sweep marking from fewer than all four
+  deletes live content.
+
+  The fourth arrived when `data-model.md` settled that metadata documents are stored inline
+  below a size threshold and as digest-referenced CAS blobs above it. A Debian signed `Release`
+  index is therefore a blob that **no `File` row references**, and a sweep marking only from the
+  first three roots would collect it while it is being served. The root persists while any
+  repository, package or version document at any retained snapshot still references that digest. Each root class has a defined end of life - a
   delete removes a published reference, LRU eviction under the per-repository quota ends a
   cached one (`proxy-cache.md`, resolved cache-eviction question), and pruning at the
   retention boundary ends a snapshot - and hosted deletes reclaim space only through that
@@ -220,10 +226,14 @@ exercise:
   Pruning obeys the reconstructibility constraint `data-model.md` places on the delta
   representation: a checkpoint or delta is dropped only while no retained snapshot depends on
   it, because a mark root whose content set can no longer be computed makes the sweep unsound.
-  The root classes themselves are the shared data model's to enumerate: `data-model.md`'s open
-  questions on proxied-repository snapshots and on CAS-backed metadata documents (its Q11 and
-  Q13) can each extend this set, and a resolution that does so amends this spec's mark roots
-  as a revision requiring re-review, never silently.
+  The root classes are the shared data model's to enumerate, and that list is live:
+  `data-model.md`'s resolution on CAS-backed metadata documents added the fourth root above,
+  while its resolution that proxied repositories create no snapshots bounded the third rather
+  than adding one. `proxy-cache.md` Q11 is still open and bears on the second, since whether
+  eviction deletes a cached blob directly or only ends its reference decides whether eviction is
+  a second deletion path that must independently honour the intent barrier. **Any resolution
+  changing this set amends these mark roots as a revision requiring re-review, never silently** -
+  which is the mechanism that caught the fourth root.
 
 ### Testing what conformance cannot see
 
@@ -233,7 +243,9 @@ This is the part of the spec that exists because the harness is blind here. Requ
   and GC, the invariant above holds. The operation set must include re-push of already-stored
   content (a dedup hit, the new-reference-to-old-blob case), a commit of a digest under an
   active deletion intent (without which the intent gate is never exercised), cache arrival via
-  `on_demand` (the second reference class), snapshot-creating writes, cache eviction under the
+  `on_demand` (the second reference class), a metadata document crossing the inline/CAS size
+  threshold (without which the fourth mark root is never exercised), snapshot-creating writes,
+  cache eviction under the
   per-repository quota, snapshot pruning at the retention boundary, repository grace refresh,
   and session abandonment. A generator limited to fresh-content pushes cannot reach the deadliest
   race, and one that can create references but never end them - no eviction, no pruning, no
@@ -292,6 +304,10 @@ accepts one as evidence has missed the point of the spec.
       with an explicit, retryable, self-explanatory error and writes no reference row; a
       client that exceeded the touch-refreshed grace gets that error at reference time, never
       a silently missing blob at pull time.
+- [ ] AC16: A blob holding a CAS-backed metadata document survives GC while any retained
+      snapshot's repository, package or version document still references its digest, and is
+      collected once none does - proven with a document above the size threshold, such as a
+      Debian-scale index, that no `File` row references.
 - [ ] AC13: A commit of a digest whose deletion intent is in its delete phase waits or fails
       retryably until the object delete completes, and the re-uploaded content is then
       retrievable; no interleaving of commit and sweep loses the new copy.
@@ -319,6 +335,7 @@ accepts one as evidence has missed the point of the spec.
 | AC12 | fault injection | `internal/storage/gc_race_test.go` |
 | AC13 | fault injection | `internal/storage/intent_gate_test.go` (commit interleaved with delete pass) |
 | AC14 | integration | `internal/storage/retention_test.go` |
+| AC16 | property + integration | `internal/storage/gc_property_test.go` (metadata-document root); `internal/storage/metadata_blob_gc_test.go` |
 | AC15 | architecture test | `internal/storage/arch_test.go` |
 
 ## Implementation Phases
@@ -467,6 +484,7 @@ not by weakening the storage model.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-23 | 525c9f8 | re-review triggered by this spec's own sibling tripwire: the a2d5219 status note said a resolution of data-model Q11/Q13 or proxy-cache Q11 amends the mark roots | The tripwire had fired. data-model Q13 settled metadata documents as CAS blobs above a size threshold, so a Debian-scale index is a blob no `File` row references and the three-root sweep would have collected it while it was being served. Fourth mark root added with AC16, and the property-test operation set extended to cross the size threshold or the new root is never exercised. data-model Q11 bounded the third root rather than adding one; proxy-cache Q11 remains open and bears on the second. Stays draft pending the re-gate. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + cross-spec (claim verification vacuous: no `internal/storage/` code exists yet) | Stays draft: Q4-Q6 raised (grace-window exceed path, snapshot roots and retention, sweep write barrier); invariant gained a third clause; sweep-mechanics constraints and canonical-digest rule added; AC3/AC6/AC7 tightened, AC8 added; stale pre-resolution text and the handler-owns-metadata contradiction with `data-model.md` fixed |
 | 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code) | The six resolutions were recorded but only half-applied: frontmatter, Scope, the grace text, the barrier text and the mark-roots bullet still described the old shape and cited Q4/Q5/Q6 as open; folded throughout, intent ordering/lifecycle and grace-versus-intent constraints added, property op set extended to reference-ending operations and sweep-phase interleavings, AC9-AC12 added; Q7 (post-row-delete object window), Q8 (retention default), Q9 (push-session boundary) raised; stays draft |
 | 2026-09-23 | a2d5219 | gate review: folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code; siblings re-read at this sha) | Q7-Q9 verified as genuinely folded; four stale session-scoped remnants fixed (orphan-scan text, AC3's collection timing, the property op set, the was-Q4 record) plus the stale three-open intro; delete-conditional-on-standing-intent made explicit, single-deleter boundary given its named enforcer (AC15), pruning reconstructibility and the sibling-owned root-set dependency recorded; zero open questions, all ACs mapped; draft -> planned |
