@@ -52,7 +52,8 @@ remote modelling together.
 - The shared entity model: repository, package, version, file, blob.
 - Per-format metadata as typed-but-opaque documents at all three levels - repository, package
   and version - so formats do not each get tables.
-- `RemoteArtifact`-equivalent: a known artifact with an upstream location and no local blob.
+- `RemoteArtifact`-equivalent: a known artifact with an upstream location, retained as
+      provenance after a local blob is cached.
 - An explicit `Upstream` entity holding each configured upstream's URL, credential reference,
   download policy, adapter type and failover order.
 - Download policies: `immediate`, `on_demand`, `streamed`.
@@ -82,7 +83,7 @@ remote modelling together.
 | `File` | filename, relative path, digest | Links a version to blobs; multiple files per version is the norm (wheel plus sdist, jar plus pom plus sources) |
 | `Blob` | digest, size | Content-addressed. Deduplicated across every format and repository |
 | `Upstream` | URL, credential ref, download policy, adapter type, failover order | One row per configured upstream. Rotating a credential touches one row |
-| `RemoteFile` | `Upstream` ref, upstream path, last-checked | A file known to exist upstream with no local blob yet |
+| `RemoteFile` | `Upstream` ref, upstream path, last-checked | An upstream source for a file, retained when the file gains a local blob so revalidation and failover keep their provenance |
 | `Snapshot` | monotonic number, repository, delta (membership plus all three metadata levels), checkpoint marker | Immutable. Exactly one per completed logical publish; cache materialisation never creates one |
 | `Pointer` | name, target snapshot | What a serving URL resolves through. v1 ships exactly one per repository, always tracking the newest snapshot |
 
@@ -105,9 +106,11 @@ not a licence to add one** - raise it as a spec change.
 
 ### Cached and hosted are the same store
 
-Adopting Pulp's answer to `proxy-cache.md` Q1: there is no separate cache store. A `File` either
-has a local `Blob` or has a `RemoteFile` telling the system where to get one, and "cached" is a
-statement about how the blob arrived, not about where it lives.
+Adopting Pulp's answer to `proxy-cache.md` Q1: there is no separate cache store. A `File` may
+have a local `Blob`, one or more `RemoteFile` rows telling the system where it came from, or both.
+An uncached remote file has only remote provenance; an `on_demand` fetch adds the local blob while
+retaining that provenance for revalidation and failover. "Cached" is a statement about how the
+blob arrived, not about where it lives.
 
 Consequences worth stating explicitly, because they are where the bugs will be:
 
@@ -173,8 +176,9 @@ that is answered, this constraint reads as absolute.
 - [ ] AC3: A `Version` round-trips a format-specific metadata document that the core never parses,
       demonstrated by two formats with incompatible metadata shapes coexisting.
 - [ ] AC4: A `File` with a `RemoteFile` and no local `Blob` serves a client request by fetching
-      upstream, and under `on_demand` a second request is served locally with no upstream call
-      (asserted at the network layer).
+      upstream, and under `on_demand` retains the `RemoteFile` after attaching the local `Blob`,
+      so a second request is served locally with no upstream call and later revalidation still
+      has its upstream provenance (asserted at the network layer).
 - [ ] AC5: Under `streamed`, a second request does contact the upstream and no blob is persisted.
 - [ ] AC6: Two upstreams offering identical content produce one `Version` and two `RemoteFile`
       rows, and serving succeeds when the first upstream is unreachable.
@@ -457,9 +461,10 @@ architecture test - the named mechanical enforcer - actually enforces.
 
 ### Resolved: remote modelling (was Q1)
 
-**Settled 2026-09-22: adopt Pulp's `RemoteArtifact` model.** One store; a file either has a local
-blob or a remote row saying where to fetch it, and "cached" describes how a blob arrived rather
-than where it lives. This also resolves `proxy-cache.md` Q1.
+**Settled 2026-09-22: adopt Pulp's `RemoteArtifact` model.** One store; a file may have a local
+blob, remote rows saying where it came from, or both, and "cached" describes how a blob arrived
+rather than where it lives. Remote rows survive cache materialisation because revalidation and
+failover still need that provenance. This also resolves `proxy-cache.md` Q1.
 
 Accepted cost: GC gains a second reference class, in the component the charter already names as
 the most dangerous. `storage-and-gc.md` carries that consequence explicitly.
@@ -488,3 +493,4 @@ back toward the 31 bespoke schemas this model exists to prevent.
 |------|----------|---------------|---------|
 | 2026-09-22 | afbb4e4 | adversarial + constitution + sibling consistency (code-claim verification vacuous: pre-implementation, no tree to check) | Breadth claim stressed against Maven, OCI, Debian and npm; six open questions raised (Q4-Q9), snapshot ACs added (AC9, AC10), stale sibling references corrected; stays draft |
 | 2026-09-23 | 3e3ae0a | second pass: folded-decision application + adversarial + go-spec-reviewer (code-claim verification still vacuous: pre-implementation) | The five 2026-09-23 decisions were recorded under Resolved headings but only partly applied; Scope, the entity table, the GC consequences and the Snapshots section synced to them, AC9 reworded, AC11-AC15 added (Upstream and the upper metadata levels were previously unasserted, the cache-fill exclusion and delta bounds untested, and rollback could pass membership-only); Q9's premises updated; Q10-Q14 raised; stays draft |
+| 2026-09-23 | 9c971d4 | cross-spec consistency (proxy cache lifecycle) | Corrected the exclusive local-or-remote wording: cached files retain `RemoteFile` provenance alongside the local blob for revalidation and failover, with AC4 updated; existing open questions still keep the spec draft. |

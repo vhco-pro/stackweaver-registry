@@ -225,7 +225,8 @@ an acceptance criterion rather than a design note.
 - Client container execution and capture
 
 ### Phase 2: First subject
-- The generic format's cases, hosted and proxied, as the runner's proving ground
+- The generic format's hosted cases as the runner's proving ground, plus validation that its
+      declared unsupported proxy capability exempts it from proxied-mode coverage
 
 ### Phase 3: Recording and replay
 - Recording proxy, corpus format, per-format normalisation rules
@@ -308,3 +309,4 @@ question in `formats/npm.md`.**
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous: pre-implementation tree, stub `main.go` only) | Added mode-coverage, drift-job and credential-redaction ACs (AC11-AC13); named TLS interception and stateful-replay request correlation as design constraints; raised Q1 (CI trigger policy) and Q2 (corpus refresh policy); stays draft. |
+| 2026-09-23 | 9c971d4 | cross-spec consistency (generic proxy exemption) | Corrected Phase 2 to use generic's hosted cases and explicitly test its unsupported proxy declaration, matching AC11 and the format spec; status remains draft pending its existing gate review. |

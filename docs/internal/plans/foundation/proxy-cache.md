@@ -225,15 +225,18 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       messages.
 - [ ] AC7: Cache eviction never deletes a blob that hosted content also references, proven by a
       test where the same digest arrives from both a publish and an upstream fetch.
-- [ ] AC8: Every implemented format has conformance cases in proxied mode.
+- [ ] AC8: Every implemented format whose `Capabilities()` declares proxy support has
+      conformance cases in proxied mode; a declared unsupported capability is the only
+      exemption, and `generic` is the only format that currently holds one.
 - [ ] AC9: An upstream rate-limit or server error (429, 5xx) is never negatively cached and never
       surfaces to the client as not-found; the same request succeeds as soon as the upstream
       recovers, with no negative-TTL wait.
 - [ ] AC10: A fetch whose bytes fail integrity verification against the coordinate's declared
       digest, or that ends before the upstream completes the body, commits nothing to the CAS
-      and creates no `File` row; a mismatch detected mid-stream aborts the client connection and
-      the server records the real failure reason observably to the operator, not only as a
-      client-side network error.
+      and attaches no local `Blob` or cached-reference state to the `File`; any pre-existing
+      `File` and `RemoteFile` metadata remains available for a later retry. A mismatch detected
+      mid-stream aborts the client connection and the server records the real failure reason
+      observably to the operator, not only as a client-side network error.
 - [ ] AC11: N concurrent requests for the same uncached artifact produce exactly one upstream
       fetch (asserted at the network layer), and when that fetch exceeds its timeout every
       coalesced waiter receives an error promptly rather than hanging.
@@ -433,13 +436,14 @@ only colouring a dashboard.
 
 ### Resolved: cache location (was Q1)
 
-**Settled 2026-09-22: the same store, per the shared data model (#12).** A file either has a
-local blob or a `RemoteFile` row pointing upstream; "cached" describes how the blob arrived. This
-is Pulp's `RemoteArtifact` model, and it brings the `immediate`/`on_demand`/`streamed` policies
-and multi-upstream failover with it.
+**Settled 2026-09-22: the same store, per the shared data model (#12).** A file may have a local
+blob, one or more `RemoteFile` rows pointing upstream, or both; "cached" describes how the blob
+arrived. Remote rows survive cache materialisation so revalidation and failover retain their
+provenance. This is Pulp's `RemoteArtifact` model, and it brings the
+`immediate`/`on_demand`/`streamed` policies and multi-upstream failover with it.
 
-Consequence carried by `storage-and-gc.md`: GC marks from two reference roots, published and
-cached.
+Consequence carried by `storage-and-gc.md`: GC marks from three reference roots, published,
+cached and retained snapshots.
 
 ### Resolved: default metadata TTL (was Q2)
 
@@ -466,3 +470,4 @@ the real service, not only against a local stand-in.
 |------|----------|---------------|---------|
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim check largely vacuous pre-code; siblings and prior art verified by reading) | Corrections applied (fetched-content integrity, negative-cache classification, offline staleness, adapter-axis alignment, GC sibling sync, AC3/AC5/AC6 tightened, AC9/AC10 added); Q4-Q9 raised; stays draft. |
 | 2026-09-23 | 3e3ae0a | folded-decision application + decision-interaction adversarial + constitution + go-spec-reviewer (claim verification against code vacuous pre-implementation; siblings re-read at this sha) | The six 09-23 decisions were recorded but not applied: stale Q6/Q7/Q8 references and the two-root GC claim in Design fixed, Design gained coalescing/serve-stale/removal/eviction/nightly sections, Scope, Context and Phases updated for build-with-OCI, AC3/AC10 tightened, AC11-AC15 added with Test Plan rows; Q10-Q13 raised on interactions between the settled decisions; stays draft. |
+| 2026-09-23 | 9c971d4 | cross-spec consistency (data model, generic exemption, GC roots) | AC8 now applies to proxy-capable formats, AC10 preserves pre-existing remote metadata on a failed fetch, the resolved cache-location text names all three GC roots, and cached files retain remote provenance; existing open questions still keep the spec draft. |

@@ -82,7 +82,7 @@ and charge for SSO. **Breadth × upstream caching × free SSO is unoccupied prec
 unaffordable to a human team.**
 
 The bet is explicit and it has a real gate: the re-evaluation step in the build order below
-(step 9, which is Phase 3 of `docs/internal/plans/formats/catalogue.md`) re-reads the
+(step 8, which is Phase 3 of `docs/internal/plans/formats/catalogue.md`) re-reads the
 experiment log, and if per-format cost is flat rather than falling, the catalogue shrinks to
 what is already delivered.
 
@@ -95,10 +95,10 @@ what is already delivered.
 | 1 | **Conformance harness** | The harness is the product; the server is what satisfies it. Built before any handler, against a deliberately trivial format. |
 | 2 | **Generic format** | Trivial protocol. Its job is to prove the harness, the CAS, auth and the CI wiring end to end with nothing else in the way. |
 | 3 | **Shared data model, CAS + GC** | The schema all 33 ecosystems store against (`data-model.md`, what makes breadth affordable), plus the blob store and GC, which is where data loss lives. |
-| 4 | **OCI plus the proxy/cache layer** | The official conformance suite is a pass/fail gate written by the standards body: hardest protocol, strongest oracle. The proxy layer is built here rather than after, because OCI is the first format that can be proxied and retrofitting it is what this charter forbids. |
+| 4 | **OCI plus the proxy/cache layer** | The official conformance suite is a pass/fail gate written by the standards body: hardest protocol, strongest oracle. The proxy layer is built here rather than after, because OCI is the first format that can be proxied and retrofitting it is what this charter forbids. After OCI passes, the Debian signed-index prototype and scheduled handler-interface re-open complete before step 5. |
 | 5 | **npm** | Most-wanted proxy cache in real life, and the first test of whether the proxy layer built for OCI generalises. |
 | 6 | **PyPI** | The generalisation test. If npm-to-PyPI is cheaper than generic-to-npm, the experiment has its headline finding. |
-| 7 | **Tier 1 remainder** | Maven (unlocks the whole JVM in one handler), Go modules, NuGet, Debian and RPM (first formats needing GPG-signed indexes), Helm. A Debian signed-index spike lands before the handler interface re-opens. |
+| 7 | **Tier 1 remainder** | Maven (unlocks the whole JVM in one handler), Go modules, NuGet, the full Debian and RPM handlers (the signed-index prototype already informed the pre-npm interface re-open), Helm. |
 | 8 | **Re-evaluate, then Tiers 2 and 3** | The breadth gate. Continue only if per-format cost is falling. `docs/internal/plans/formats/catalogue.md`. |
 
 ### Language
@@ -167,6 +167,7 @@ licence collapses that claim on contact with Harbor (Apache 2.0) and Gitea (MIT)
 ### Phase 2: The hard oracle
 - OCI handler against the official conformance suite
 - The proxy/cache layer, built with it rather than after it
+- Debian signed-index prototype, then the scheduled handler-interface re-open
 
 ### Phase 3: The differentiator
 - npm, hosted and proxied, testing whether the proxy layer built for OCI generalises
@@ -186,8 +187,8 @@ follow them, kept so the reasoning survives.
 ### Q1: How should the Implementation Phases be extended past PyPI, now that the charter bets on breadth?
 
 Phases 1-5 still describe the pre-reversal five-format plan: they end at PyPI, Ansible
-collections and the UI, with no phase for the Tier 1 remainder (build-order step 8), the
-breadth gate (step 9), or the Tier 2/3 fan-out. The moat the charter now bets on is never
+collections and the UI, with no phase for the Tier 1 remainder (build-order step 7), the
+breadth gate, or the Tier 2/3 fan-out. The moat the charter now bets on is never
 reached by its own phase plan. Ansible collections (Tier 3) is also built in Phase 4, before
 the gate that decides whether Tier 3 happens at all, against the catalogue's tier order and
 its AC5.
@@ -199,7 +200,7 @@ phases.
 
 | Option | You get | It costs |
 |---|---|---|
-| **A. Append tier phases, keep the early exceptions** | Phases 6-8 mirror build-order steps 8-9; Ansible collections and the UI stay early, with Ansible recorded as a named exception to tier order in the catalogue | The catalogue's "Tier 1 before Tier 2" rule gains an exception clause, and the tier table stops being the sole source of order |
+| **A. Append tier phases, keep the early exceptions** | Phases 6-8 add the Tier 1 remainder, breadth gate and Tier 2/3 fan-out; Ansible collections and the UI stay early, with Ansible recorded as a named exception to tier order in the catalogue | The catalogue's "Tier 1 before Tier 2" rule gains an exception clause, and the tier table stops being the sole source of order |
 | **B. Strict tier order** | One source of truth: phases mirror the catalogue exactly | Ansible leaves Phase 4 and the log's first five rows; the one hosting-differentiating format waits behind eight Tier 1 formats |
 
 **Why this is yours:** whether Ansible's unique market position outranks tier discipline is a
@@ -350,3 +351,4 @@ deliverable, not a side note.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-22 | afbb4e4 | adversarial + constitution + cross-spec consistency (claim verification vacuous pre-code) | Half-applied breadth reversal found (phases still end at the old five-format plan); fixes applied (data model into scope and build order, stale GC note, generic exception in AC4, gate reference, AC9); six open questions raised. Stays draft. |
+| 2026-09-23 | 9c971d4 | cross-spec consistency (build sequencing) | Scheduled the Debian signed-index prototype and handler-interface re-open after OCI and before npm, distinguished the later full Debian handler, and corrected stale step numbers; existing open questions still keep the charter draft. |

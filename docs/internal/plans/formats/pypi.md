@@ -32,8 +32,9 @@ counts and token cost, rather than reconstructing it afterwards from impressions
 **In scope:** the PEP 503 simple index, PEP 691 JSON index, wheel and sdist serving, upload, and
 the proxied path against the public index.
 
-**Out of scope for v1:** PEP 658 metadata files, attestation verification, and yanked-release
-semantics beyond what the index requires.
+**Out of scope for v1:** PEP 658 metadata files and attestation verification. Yank handling is
+limited to the proxy contract: preserve cached files for existing pins, exclude the release from
+new resolution as the upstream index requires, and record an operator-visible divergence.
 
 ## Acceptance Criteria
 
@@ -47,6 +48,9 @@ semantics beyond what the index requires.
 - [ ] AC5: Replay-match passes against a recorded corpus.
 - [ ] AC6: The experiment log records intervention count and token cost for this format
       alongside npm's, in comparable units.
+- [ ] AC7: When the upstream index marks a release yanked, new resolution excludes it while an
+      existing pinned artifact remains available from cache, and the repository records an
+      operator-visible divergence as required by `proxy-cache.md` AC13.
 
 ## Test Plan
 
@@ -58,6 +62,7 @@ semantics beyond what the index requires.
 | AC4 | conformance | `conformance/pypi/proxied_test.go` |
 | AC5 | conformance | `conformance/pypi/replay_test.go` |
 | AC6 | manual | `docs/internal/tasks/experiment-log.md` |
+| AC7 | integration | `internal/proxy/upstream_removal_test.go` plus `conformance/pypi/proxied_test.go` |
 
 ## Open Questions
 
@@ -69,3 +74,4 @@ section here means "not yet interrogated", not "fully settled".
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-23 | 9c971d4 | cross-spec consistency (proxy removal policy) | Folded the shared PyPI yank decision into Scope and added AC7 with integration and proxied conformance coverage; status remains draft pending a full gate review. |

@@ -41,8 +41,9 @@ policies by age and by count.
 to proxy, because there is no ecosystem. That exception is named here so the conformance matrix
 does not imply a gap that does not exist. It also obliges the runner's mode-coverage validation
 (`format-handler-interface.md` AC4, the harness case schema) to recognise a declared
-`unsupported` capability rather than fail this format for covering one mode; neither sibling
-spec currently says how, which is recorded as a cross-spec finding in the review log.
+`unsupported` capability rather than fail this format for covering one mode. The handler's
+`Capabilities()` declaration and `conformance-harness.md` AC11 are the two sides of that
+contract.
 
 ## Design
 
@@ -250,3 +251,4 @@ metadata and never becomes a filesystem path.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous pre-code) | Added Design, HEAD/DELETE criteria (AC7/AC8) and two-client-version alignment; raised Q2-Q8 (model mapping, path grammar, listing, overwrite, retention scoping, replay exemption, auth gap); flagged cross-spec gaps (runner mode-check vs `unsupported`, harness Phase 2 claims generic proxied cases); stays draft. |
+| 2026-09-23 | 9c971d4 | cross-spec consistency (proxy exemption propagation) | Replaced the stale unresolved sibling claim with the settled `Capabilities()` and harness AC11 contract; the format's existing open questions still keep it draft. |
