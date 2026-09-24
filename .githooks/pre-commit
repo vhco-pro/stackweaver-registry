@@ -36,11 +36,23 @@ fi
 
 # Regenerate the docs index so `## Contents` tables and docs-coverage.json never drift, and
 # re-stage the result. Hand-editing those tables is banned precisely because this runs.
+#
+# Re-stage only what the generator itself rewrote. A blanket `git add docs` here silently swept
+# every unstaged docs edit into the commit, which in a docs-only repository means every partial
+# commit becomes a whole-tree commit under a message describing a fraction of it.
 if echo "$STAGED_FILES" | grep -q '^docs/' && command -v node >/dev/null 2>&1; then
     echo -e "${GREEN}Rebuilding docs index...${NC}"
+    DIRTY_BEFORE=$(git diff --name-only -- docs)
     if node scripts/build-docs-index.js >/dev/null; then
         git add docs-coverage.json docs-index.json 2>/dev/null || true
-        git add "$(git rev-parse --show-toplevel)/docs" 2>/dev/null || true
+        # Re-stage only what the generator rewrote: files dirty now but not before it ran,
+        # plus already-staged files it rewrote on top of.
+        DIRTY_AFTER=$(git diff --name-only -- docs)
+        GENERATED=$(comm -13 <(echo "$DIRTY_BEFORE" | sort) <(echo "$DIRTY_AFTER" | sort))
+        RESTAGE=$(echo "$STAGED_FILES" | grep '^docs/' | sort | comm -12 - <(echo "$DIRTY_AFTER" | sort))
+        for f in $GENERATED $RESTAGE; do
+            [ -n "$f" ] && git add "$f" 2>/dev/null || true
+        done
     else
         echo -e "${RED}✖ Docs frontmatter is invalid - see above.${NC}"
         exit 1
