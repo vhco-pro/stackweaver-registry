@@ -449,8 +449,9 @@ arrived. Remote rows survive cache materialisation so revalidation and failover 
 provenance. This is Pulp's `RemoteArtifact` model, and it brings the
 `immediate`/`on_demand`/`streamed` policies and multi-upstream failover with it.
 
-Consequence carried by `storage-and-gc.md`: GC marks from three reference roots, published,
-cached and retained snapshots.
+Consequence carried by `storage-and-gc.md`: GC marks from the four roots enumerated there -
+published references, cached references, retained snapshots, and CAS-backed metadata documents
+(the fourth arrived later, on `data-model.md`'s document-storage resolution).
 
 ### Resolved: default metadata TTL (was Q2)
 
@@ -476,6 +477,7 @@ the real service, not only against a local stand-in.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-24 | d078c46 | cross-spec consistency (storage-and-gc's fourth mark root) | Not a review. The GC-interaction section still described a three-root sweep and credited cached references as the third root rather than the second. Corrected to the canonical four, and the fourth root's motivating case recorded here where it originates: a proxied repository's current index document is a CAS blob no `File` row references, and it produces no snapshots, so the current-document half of that root is all that protects it. Q11 remains open and still bears on the cached-reference root. |
+| 2026-09-24 | 1701a48 | cross-spec sync during data-model's gate review | Not a review. One three-root remnant survived the sync above, in the resolved cache-location record; corrected to the canonical four roots. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim check largely vacuous pre-code; siblings and prior art verified by reading) | Corrections applied (fetched-content integrity, negative-cache classification, offline staleness, adapter-axis alignment, GC sibling sync, AC3/AC5/AC6 tightened, AC9/AC10 added); Q4-Q9 raised; stays draft. |
 | 2026-09-23 | 3e3ae0a | folded-decision application + decision-interaction adversarial + constitution + go-spec-reviewer (claim verification against code vacuous pre-implementation; siblings re-read at this sha) | The six 09-23 decisions were recorded but not applied: stale Q6/Q7/Q8 references and the two-root GC claim in Design fixed, Design gained coalescing/serve-stale/removal/eviction/nightly sections, Scope, Context and Phases updated for build-with-OCI, AC3/AC10 tightened, AC11-AC15 added with Test Plan rows; Q10-Q13 raised on interactions between the settled decisions; stays draft. |
 | 2026-09-23 | 9c971d4 | cross-spec consistency (data model, generic exemption, GC roots) | AC8 now applies to proxy-capable formats, AC10 preserves pre-existing remote metadata on a failed fetch, the resolved cache-location text names all three GC roots, and cached files retain remote provenance; existing open questions still keep the spec draft. |
