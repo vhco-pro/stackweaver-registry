@@ -57,7 +57,7 @@ remote modelling together.
 - Per-format metadata as typed-but-opaque documents at all three levels - repository, package
   and version - so formats do not each get tables.
 - `RemoteArtifact`-equivalent: a known artifact with an upstream location, retained as
-      provenance after a local blob is cached.
+  provenance after a local blob is cached.
 - Upstream configuration bound one-to-one to a `remote` repository, so rotating a credential
   touches one row. Multi-upstream failover is not a field: it is the ordering of several remote
   repositories inside a virtual one.
@@ -67,16 +67,16 @@ remote modelling together.
   a snapshot: promotion repoints an environment at a snapshot already tested elsewhere, and
   rollback repoints it back. Content is bit-identical across environments because it is the same
   snapshot, not a re-publish.
-- The liveness rules GC must honour, given a blob can now be referenced by a cached artifact as
-  well as by a published one.
+- The liveness rules GC must honour: a blob can be referenced by a published artifact, a cached
+  one, a retained snapshot, or a CAS-backed metadata document, and `storage-and-gc.md` marks
+  from exactly those four roots.
 
 - **The snapshot dimension**: every completed logical publish produces an immutable repository
   snapshot, stored as a delta with periodic full checkpoints, and serving resolves through a
-  pointer to one. The schema carries this from day one; the promotion and
-  rollback *features* do not ship in v1.
+  pointer to one. The schema carries this from day one, and the promotion and rollback features
+  above build directly on it.
 
 **Out of scope**
-
 
 - Per-format index generation. That belongs to handlers and to the signed-index shared service.
 
@@ -368,12 +368,11 @@ Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-The open questions below were raised by the review passes (Q9 on 2026-09-22, Q10-Q14 on
-2026-09-23). Each is a place where two implementors would build different systems, or where a
-settled decision left a boundary undefined. Implementation cannot start while they stand.
+No questions are open. Q9 through Q14 were answered on 2026-09-23 and folded through Scope,
+the entity table, the Snapshots section and the acceptance criteria.
 
-Resolved decisions are kept at the end rather than deleted, so the reasoning survives the next
-time someone asks why it was done this way.
+Resolved decisions are kept below rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
 
 ### Resolved: what counts as a write (was Q4)
 
@@ -533,6 +532,7 @@ back toward the 31 bespoke schemas this model exists to prevent.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-24 | d078c46 | partial: a gate reviewer terminated on a spend limit mid-pass. Its review does not count and this spec still awaits one | Kept only what is independently verifiable against the siblings at this sha: the liveness bullet resynced to `storage-and-gc.md`'s four mark roots, the snapshot bullet's stale "promotion and rollback do not ship in v1" corrected against the reversal already committed at 525c9f8, and the Open Questions intro corrected - it still announced open questions and blocked implementation while the file records none. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + sibling consistency (code-claim verification vacuous: pre-implementation, no tree to check) | Breadth claim stressed against Maven, OCI, Debian and npm; six open questions raised (Q4-Q9), snapshot ACs added (AC9, AC10), stale sibling references corrected; stays draft |
 | 2026-09-23 | 3e3ae0a | second pass: folded-decision application + adversarial + go-spec-reviewer (code-claim verification still vacuous: pre-implementation) | The five 2026-09-23 decisions were recorded under Resolved headings but only partly applied; Scope, the entity table, the GC consequences and the Snapshots section synced to them, AC9 reworded, AC11-AC15 added (Upstream and the upper metadata levels were previously unasserted, the cache-fill exclusion and delta bounds untested, and rollback could pass membership-only); Q9's premises updated; Q10-Q14 raised; stays draft |
 | 2026-09-23 | 9c971d4 | cross-spec consistency (proxy cache lifecycle) | Corrected the exclusive local-or-remote wording: cached files retain `RemoteFile` provenance alongside the local blob for revalidation and failover, with AC4 updated; existing open questions still keep the spec draft. |

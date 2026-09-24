@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Redaction settled as an allowlist 2026-09-23 and folded into Design and AC13. Zero open questions; awaiting a gate review."
+status_description: "Gate review 2026-09-23 at d078c46 added declared replay starting state (AC15) and multi-instance case topology (AC16), and repointed mode-coverage enforcement at Capabilities(). Q4 open: whether the case setup vocabulary is closed. The reviewer terminated on a spend limit before logging; see the Review Log note."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -71,7 +71,12 @@ The harness core knows nothing about any format. Per case it:
 1. Starts a server instance with a per-case isolated storage prefix and database schema, so
    cases run concurrently without sharing state. Per the client-orchestration resolution below,
    an instance may be reused across cases where their declared isolation needs permit, but the
-   default is full per-case isolation and a case must never observe another case's state.
+   default is full per-case isolation and a case must never observe another case's state. The
+   need is declared in the case itself (the `isolation` field below), never guessed by the
+   runner. A case may also declare **more than one** instance (the `instances` field below):
+   every instance in a case gets the same isolation guarantees, and the script receives each
+   instance's URL and credentials - the capability `replication.md`'s leader-and-follower
+   scenarios consume.
 2. Provisions whatever the case declares it needs: a repository, a token, an upstream.
 3. Runs the client container with the case's script, the server URL and credentials injected.
 4. Captures exit code, stdout, stderr and the full HTTP transcript through an inspecting proxy.
@@ -104,13 +109,46 @@ code. Roughly:
 - `mode`: `hosted` or `proxied` - **every format must have cases in both**, unless the
   format's spec declares a mode unsupported; `generic` is the single current exemption
   (`format-handler-interface.md`, the proxy-path resolution), and the runner requires the
-  declaration rather than inferring the gap from an absent case set
-- `setup`: repositories, tokens and upstreams to provision
+  declaration rather than inferring the gap from an absent case set. The declaration's
+  machine-readable home is the handler's `Capabilities()` (`format-handler-interface.md`, the
+  pinned method set); the runner honours that, never a second hand-maintained list that could
+  drift from it
+- `isolation`: whether the case tolerates sharing a server instance with other cases or
+  requires an exclusive one; the runner may reuse an instance only across cases that tolerate
+  it, and AC3 asserts its guarantee under exactly that reuse
+- `instances`: optional; a case defaults to one server instance and may instead declare
+  several named ones (and, once `replication.md` lands, the replication links between them),
+  so a flow can publish to one instance and pull from another
+- `setup`: what to provision before the client runs - repositories, tokens, upstreams (a
+  local stand-in or a real external service, interchangeably), and repository or server
+  configuration a case depends on, such as visibility, a supply-chain policy rule and the
+  advisory fixture that triggers it (how this vocabulary grows is Q4)
 - `script`: the client command sequence
 - `expect`: exit code, required and forbidden output patterns, resulting digests, and optionally
   a required HTTP transcript shape
 - `skip`: when present, **must** carry an issue number. A bare skip is a silent regression and
   the runner rejects it.
+
+### What sibling specs already require of this schema
+
+Recorded here because a cross-spec dependency that exists in one direction only is how an
+implementation discovers it has no counterparty:
+
+- **Per-format auth cases are a validator rule, not only a sibling's criterion.** `auth.md` AC8
+  and `format-handler-interface.md` AC7 both require every format's case set to contain
+  unauthenticated and unauthorized cases in both modes, and both map that enforcement to this
+  harness's case-set validation (`conformance/core/case_validate_test.go`). The schema expresses
+  such a case as a `setup` that provisions no credential, or a wrongly-scoped one, plus an
+  `expect` of denial.
+- **Supply-chain policy refusals are conformance cases on both paths.** `supply-chain-policy.md`
+  AC1 and AC2 assert a policy refusal against a real client, hosted and proxied alike, which is
+  why `setup` must be able to provision a policy rule and its advisory fixture.
+- **Replication scenarios need more than one instance.** `replication.md`'s follower scenarios
+  cannot be expressed in a single-server case; the `instances` declaration and AC16 exist for
+  them, and replication-link provisioning joins the `setup` vocabulary when that subsystem lands.
+- **The nightly real-upstream job reuses these suites.** `proxy-cache.md` AC15 runs the proxied
+  suites against the real preconfigured upstreams, so an upstream in `setup` must be swappable
+  between a local stand-in and the real service without the case body changing.
 
 ### The recording proxy, and why it is the real leverage
 
@@ -137,6 +175,15 @@ correlation** - rewriting recorded requests so that server-generated values (upl
 URLs, token endpoints, redirect targets) refer to our server's equivalents from earlier in the
 same recorded flow - not only response-side normalisation. A corpus format that cannot express
 "this request value came from that earlier response" cannot replay any stateful flow.
+
+Request-side correlation is not the only state problem. Replay also needs a **declared starting
+state**: a pull-shaped recording (an `npm install` of a package that already exists on the
+reference) asserts responses about content the replaying server must already hold, and the
+corpus-location decision requires replay to work from a clean checkout with no network - so that
+state can be seeded only from the corpus itself and the small fixtures it carries. A corpus that
+does not declare the state its requests depend on can replay nothing but cold-start flows, and
+the failure would surface as a baffling 404 mismatch rather than a named gap, which is why AC15
+makes the declaration mandatory and makes its absence a loud error.
 
 Corpora and transcripts are also a leak surface. Recording against the public registry can
 capture real credentials (auth headers, tokens, cookies), and the drift job attaches failing
@@ -185,6 +232,10 @@ an acceptance criterion rather than a design note.
       if two cases shared storage or database state - asserted **under instance reuse**, not only
       under full per-case isolation, since reuse is the path where the guarantee can actually
       break.
+- [ ] AC16: A case declaring several server instances gets each provisioned with the same
+      per-case isolation guarantees, and the script reaches every instance the case names,
+      demonstrated by a two-instance case whose write to one instance is not observable on the
+      other.
 - [ ] AC4: Client containers are pinned by digest; a case referencing a mutable tag fails
       validation before it runs.
 - [ ] AC5: The runner rejects any `skip` that does not carry an issue number.
@@ -197,14 +248,19 @@ an acceptance criterion rather than a design note.
       the reference server, replays with those values correlated to our server's equivalents.
       A corpus format that cannot express "this request value came from that earlier response"
       fails this criterion.
+- [ ] AC15: A corpus declares the server state its requests depend on, and a pull-shaped
+      recorded flow replays against a server seeded solely from that declaration and the
+      corpus's carried fixtures, with no network access; replaying a corpus that omits a needed
+      declaration fails with an error naming the missing state, not with a response mismatch.
 - [ ] AC8: The official `opencontainers/distribution-spec` conformance suite runs as a case
       source and its individual results appear in the matrix.
 - [ ] AC9: `make conformance` exits non-zero if any case fails or is improperly skipped.
 - [ ] AC10: `docs/internal/conformance/matrix.md` is generated from run results, and CI fails if
       the committed copy is stale.
 - [ ] AC11: The runner fails a format whose case set does not cover both modes, unless the
-      format's spec declares a mode unsupported; the declared exemption is honoured, and only
-      `generic` holds one.
+      format declares the mode unsupported - in its spec and machine-readably via
+      `Capabilities()` (`format-handler-interface.md`), which is what the runner reads; the
+      declared exemption is honoured, and only `generic` holds one.
 - [ ] AC12: The scheduled drift job runs the suite against the latest release of every client
       and opens an issue carrying the failing transcript when a case fails, demonstrated by a
       manual dispatch against a deliberately failing fixture.
@@ -218,7 +274,7 @@ an acceptance criterion rather than a design note.
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
-| AC1 | architecture test | `conformance/core/arch_test.go` (the core package imports no format package) |
+| AC1 | architecture test + manual | `conformance/core/arch_test.go` (the core package imports no format package); the adds-only-data half is checked per landing format by the experiment-log procedure in `format-handler-interface.md` (its AC5) |
 | AC2 | integration | `conformance/core/runner_test.go` (broken-handler fixture) |
 | AC3 | integration | `conformance/core/isolation_test.go` |
 | AC4 | unit | `conformance/core/case_validate_test.go` |
@@ -230,13 +286,16 @@ an acceptance criterion rather than a design note.
 | AC10 | ci | `.github/workflows/ci.yml` docs job |
 | AC11 | unit | `conformance/core/case_validate_test.go` |
 | AC12 | ci | scheduled drift workflow, proven by a written manual-dispatch procedure |
-| AC13 | unit | `conformance/record/redact_test.go` |
-| AC14 | integration | `conformance/record/stateful_replay_test.go` (OCI chunked-upload corpus) |
+| AC13 | unit + integration | `conformance/record/redact_test.go` (allowlist, corpus rejection), plus a recording session in `conformance/record/proxy_test.go` carrying a credential in a non-permitted header, per the criterion's own proof |
+| AC14 | integration | `conformance/record/stateful_replay_test.go` (OCI chunked-upload corpus; a minimal chunked-upload fixture server stands in until the OCI handler exists, as AC2's broken-handler fixture already does) |
+| AC15 | integration | `conformance/record/seeded_replay_test.go` (pull-flow corpus; missing-declaration fixture) |
+| AC16 | integration | `conformance/core/topology_test.go` |
 
 ## Implementation Phases
 
 ### Phase 1: Core runner
-- Case schema, validation, digest pinning, skip-requires-issue
+- Case schema (including the isolation declaration and multi-instance topology), validation,
+  digest pinning, skip-requires-issue
 - Server lifecycle with per-case isolation
 - Client container execution and capture
 
@@ -246,14 +305,52 @@ an acceptance criterion rather than a design note.
 
 ### Phase 3: Recording and replay
 - Recording proxy, corpus format, per-format normalisation rules
-- Replay-match assertions
+- Replay-match assertions, request-side correlation for stateful flows, and declared
+  starting-state seeding
 
 ### Phase 4: Official suites and reporting
 - OCI distribution-spec suite as a case source
 - Matrix generation, CI staleness gate
 - Scheduled latest-client drift job
 
+The `setup` vocabulary is expected to grow after these phases as sibling subsystems land
+(policy provisioning with `supply-chain-policy.md`, replication links with `replication.md`);
+Q4 decides the mechanism by which it grows.
+
+## Tasks
+
+Populated by `/tasks` once this spec reaches `planned`.
+
 ## Open Questions
+
+Q4 was raised by the 2026-09-23 gate review and awaits the owner. The resolved decisions that
+follow it are kept rather than deleted, so the reasoning survives the next time someone asks why
+it was done this way.
+
+### Q4: How does the case `setup` vocabulary grow as sibling subsystems land?
+
+`setup` today provisions repositories, tokens and upstreams. Three siblings already need more
+from it: `supply-chain-policy.md` AC2 needs a policy rule and a controlled advisory fixture,
+`replication.md` needs replication links between named instances, and `proxy-cache.md` AC15
+needs an upstream that swaps between a local stand-in and a real service without the case body
+changing. Each of those is a shared-schema change arriving from a spec that does not own this
+schema, which is exactly the shape the constitution's no-handler-owns-a-table rule exists to
+govern - and the harness core is additionally forbidden from importing any format package
+(AC1), so the vocabulary cannot simply grow wherever a consumer happens to need it.
+
+**Recommendation:** B, a closed vocabulary this spec owns and amends by revision, because the
+harness is the oracle every other spec is verified against, and an oracle whose input language
+any consumer can extend is an oracle nobody can reason about.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Open vocabulary: a case declares setup as free-form data a provisioner plugin interprets** | Siblings add what they need without touching this spec; no cross-spec sequencing | The schema stops being checkable: a typo in a case's setup key is indistinguishable from a provisioner that has not landed yet, and the runner cannot validate a case before running it, which AC4 and AC5 depend on it doing |
+| **B. Closed vocabulary owned here, amended by revising this spec** | Every case validates statically; one place records what the harness can provision; a sibling's need becomes a visible, reviewed amendment | Each new subsystem's conformance coverage waits on an amendment to this spec and its re-review, so the harness is on the critical path of every sibling that needs new setup |
+| **C. Closed core vocabulary plus a registered-extension mechanism: subsystems register named provisioners at build time, the runner validates against the registered set** | Static validation survives; subsystems land their own provisioning without editing this spec's schema | A second registry to keep honest, and the AC1 import rule has to be restated for it (a format package must not be able to register one), so the boundary this spec is proudest of gains a second place it can be breached |
+
+**Why this is yours:** it decides whether the test oracle's input language is closed, and that
+ranks the harness's checkability against every sibling's delivery independence - a constitution-
+level trade, not a measurable one.
 
 ### Resolved: redaction direction (was Q3)
 
@@ -333,6 +430,7 @@ question in `formats/npm.md`.**
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-23 | d078c46 | gate review: design adversarial + constitution + cross-spec (auth AC8, format-handler-interface AC7, supply-chain-policy AC1/AC2, replication's follower scenarios, proxy-cache AC15); claim verification vacuous pre-code (no `conformance/` tree). The reviewer terminated on a spend limit before writing this row: its substantive edits are recorded below from the diff, and Q4 was written afterwards from the two dangling references the reviewer left in the body, so Q4's framing is not the reviewer's own | Replay's second state problem named and given AC15: a pull-shaped corpus asserts responses about content the replaying server must already hold, and the settled corpus-location decision forbids fetching it, so a corpus must declare its starting state and a missing declaration must fail loudly rather than as a 404 mismatch. Multi-instance topology added (`instances`, AC16) after `replication.md`'s follower scenarios proved inexpressible in a single-server case, and the isolation tolerance a case declares was made explicit rather than guessed by the runner. Mode-coverage enforcement repointed at `Capabilities()` so the runner reads one machine-readable declaration instead of a second hand-maintained list. What four siblings already require of this schema recorded in the body, since a cross-spec dependency that exists in one direction only is how an implementation discovers it has no counterparty. AC1's adds-only-data half and AC13's redaction proof given honest test-plan homes. Stays draft on Q4. |
 | 2026-09-23 | 5c40011 | gate review: design adversarial + constitution + cross-spec (claim verification vacuous: no `conformance/` tree yet). Independence: the reviewer authored this spec's CI-trigger and recording-precondition sections, so its adversarial value on those two is limited | Mechanically clear. Two corrections applied: stateful replay, which Design names as the hardest constraint, had no criterion and AC6/AC7 could both pass on stateless GETs alone (AC14 added); AC3 now asserts isolation under instance reuse, the path where it can actually break. Q3 raised on redaction being a denylist that fails open. Stays draft. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous: pre-implementation tree, stub `main.go` only) | Added mode-coverage, drift-job and credential-redaction ACs (AC11-AC13); named TLS interception and stateful-replay request correlation as design constraints; raised Q1 (CI trigger policy) and Q2 (corpus refresh policy); stays draft. |
 | 2026-09-23 | 9c971d4 | cross-spec consistency (generic proxy exemption) | Corrected Phase 2 to use generic's hosted cases and explicitly test its unsupported proxy declaration, matching AC11 and the format spec; status remains draft pending its existing gate review. |

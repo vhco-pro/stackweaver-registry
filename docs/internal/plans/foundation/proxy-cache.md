@@ -175,8 +175,13 @@ on what is live. A cached blob's liveness is governed by cache policy rather tha
 publishing reference, which means the GC invariant in `storage-and-gc.md` needs a second class
 of reference. **That spec must land first.** Its open questions have since resolved
 (mark-and-sweep with a grace period, a deletion-intent table as the write barrier, and marking
-from three roots: published references, cached references, and snapshots inside the retention
-window), and that is the shape this spec now depends on.
+from four roots: published references, cached references, snapshots inside the retention
+window, and CAS-backed metadata documents), and that is the shape this spec now depends on.
+The fourth root exists because of this spec: a proxied repository's current index document - a
+Debian-scale `Release` file above the inline size threshold - is a CAS blob that no `File` row
+references, and a three-root sweep would have collected it while it was being served. A proxied
+repository produces no snapshots, so that document is protected by the current-document half of
+the root and by nothing else.
 
 What ends a cached reference's life is settled (the resolved cache-eviction decision): cached
 content evicts least-recently-used when its repository exceeds a per-repository storage quota.
@@ -419,7 +424,7 @@ case.
 
 **Settled 2026-09-23: least-recently-used under a per-repository storage quota.** Cached blobs
 evict when the repository exceeds its budget, least-recently-accessed first. This also gives
-`storage-and-gc.md` the cached-reference lifetime its third mark root needs.
+`storage-and-gc.md` the cached-reference lifetime its second mark root needs.
 
 Accepted cost: access times must be tracked on the read path, and a quota set too low causes cache
 thrash that presents as the proxy being slow rather than as a configuration problem. Quota
@@ -470,6 +475,7 @@ the real service, not only against a local stand-in.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-24 | d078c46 | cross-spec consistency (storage-and-gc's fourth mark root) | Not a review. The GC-interaction section still described a three-root sweep and credited cached references as the third root rather than the second. Corrected to the canonical four, and the fourth root's motivating case recorded here where it originates: a proxied repository's current index document is a CAS blob no `File` row references, and it produces no snapshots, so the current-document half of that root is all that protects it. Q11 remains open and still bears on the cached-reference root. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim check largely vacuous pre-code; siblings and prior art verified by reading) | Corrections applied (fetched-content integrity, negative-cache classification, offline staleness, adapter-axis alignment, GC sibling sync, AC3/AC5/AC6 tightened, AC9/AC10 added); Q4-Q9 raised; stays draft. |
 | 2026-09-23 | 3e3ae0a | folded-decision application + decision-interaction adversarial + constitution + go-spec-reviewer (claim verification against code vacuous pre-implementation; siblings re-read at this sha) | The six 09-23 decisions were recorded but not applied: stale Q6/Q7/Q8 references and the two-root GC claim in Design fixed, Design gained coalescing/serve-stale/removal/eviction/nightly sections, Scope, Context and Phases updated for build-with-OCI, AC3/AC10 tightened, AC11-AC15 added with Test Plan rows; Q10-Q13 raised on interactions between the settled decisions; stays draft. |
 | 2026-09-23 | 9c971d4 | cross-spec consistency (data model, generic exemption, GC roots) | AC8 now applies to proxy-capable formats, AC10 preserves pre-existing remote metadata on a failed fetch, the resolved cache-location text names all three GC roots, and cached files retain remote provenance; existing open questions still keep the spec draft. |

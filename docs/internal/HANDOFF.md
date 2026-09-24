@@ -8,17 +8,17 @@ covers: []
 Written so this project can continue in any agent harness, not only the one it started in.
 Everything binding lives in the repository; nothing important is in a chat log.
 
-**Status as of 2026-09-23:** pre-alpha, no implementation code. Thirteen specs, one at
-`planned`, 27 open questions. The repository is private.
+**Status as of 2026-09-24:** pre-alpha, no implementation code. Fifteen specs, none at
+`planned`, 34 open questions. The repository is private.
 
 ## What state the project is in
 
 | | |
 |---|---|
-| Specs | 13, plus a tracking document |
-| `planned` | `storage-and-gc` (the only one to clear the gate) |
-| Zero open questions, awaiting a gate review | `auth`, `format-handler-interface` |
-| Largest question blocks | `data-model` 6, `oci` 5, `project-charter` 4, `proxy-cache` 4, `generic` 4 |
+| Specs | 15, plus a tracking document |
+| `planned` | none. `storage-and-gc` reached it and went back to `draft` when a re-review found its fourth mark root half-applied and a fifth missing |
+| Zero open questions, awaiting a gate review | `auth`, `data-model`, `format-handler-interface`, `npm`, `pypi`, `ansible-collections` |
+| Largest question blocks | `replication` 7, `supply-chain-policy` 6, `oci` 4, `proxy-cache` 4, `project-charter` 4, `generic` 4 |
 | Issues | vhco-pro/stackweaver-registry#1 to #13 |
 | Code | a stub `cmd/stackweaver-registry/main.go` and nothing else, deliberately |
 
@@ -99,6 +99,10 @@ Other economies worth knowing:
 
 ## Next actions, in order
 
+0. **Answer `storage-and-gc` Q10 and `proxy-cache` Q11 together.** They are the only thing
+   standing between this project and its first `planned` spec, they interlock (both decide what
+   ends a blob's life), and Q10 is a live-serving break that needs no user action to trigger.
+   `question-triage.md` has the full argument.
 1. **Gate reviews for `auth` and `format-handler-interface`.** Both are at zero open questions
    with every criterion mapped. Run `make gate SPEC=...` first; if it passes, the review only has
    to judge the design. These are the cheapest path to more `planned` specs.
