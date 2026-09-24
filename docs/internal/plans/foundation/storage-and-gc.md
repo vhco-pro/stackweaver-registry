@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Re-review 2026-09-23 found this spec's own sibling tripwire had fired: data-model Q13 made metadata documents CAS blobs, adding a fourth mark root. Added with AC15. Zero open questions; awaiting the re-gate."
+status_description: "Gate review 2026-09-23 at d078c46: the fourth root (AC16, not AC15 as previously recorded here) was only half-applied - Scope still said three roots and the root missed proxied repositories' current documents entirely; both fixed, the intent lifecycle contradiction with AC13 fixed, and Q10 (pointer targets versus the retention window) raised. Stays draft until the owner answers Q10."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
@@ -42,12 +42,14 @@ upload record that was never written.
 - Chunked/resumable upload support, since OCI requires it and large artifacts need it.
 - Mark-and-sweep GC, fully settled: a repository-scoped, touch-refreshed grace period
   defaulting to hours, a
-  deletion-intent table as the write barrier, and three mark roots - published references,
-  cached references, and snapshots inside the retention window. The decisions and their
+  deletion-intent table as the write barrier, and four mark roots - published references,
+  cached references, snapshots inside the retention window, and CAS-backed metadata
+  documents (current and snapshot-held). The decisions and their
   accepted costs are recorded under Open Questions.
 - Snapshot pruning at the retention boundary (default 30 days, per-repository override), and
   reporting how far back rollback reaches,
-  since pruning is what bounds the third mark root.
+  since pruning is what bounds the snapshot root and the snapshot-held half of the
+  metadata-document root.
 - Orphan cleanup for interrupted uploads.
 - Fault injection and property tests covering the races above.
 - Throughput benchmarks wired to a CI regression gate.
@@ -148,9 +150,15 @@ merely narrow it:
   of the mark alone reopens the race the table exists to close. The delete pass re-verifies,
   after the intent is visible, that the digest is still unreferenced. References created after
   that re-check see the intent and cancel it; references created before it are seen by it.
-  The row delete itself is transactional with the intent's removal and proceeds only while
-  the intent still stands, so a cancellation and a deletion serialise in PostgreSQL rather
-  than racing - anything else makes AC9's survival guarantee unimplementable.
+  The row delete is transactional with the intent's transition into its delete phase and
+  proceeds only while the intent still stands uncancelled, so a cancellation and a deletion
+  serialise in PostgreSQL rather than racing - anything else makes AC9's survival guarantee
+  unimplementable. The intent row itself is removed only after the object delete completes,
+  never with the metadata row: the commit gate below keys on the intent, and an intent
+  removed at row-delete time would leave the gate nothing to hold during exactly the
+  row-delete-to-object-delete window it exists to close (AC13). Cancellation is possible
+  only before the delete-phase transition; after it, a commit takes the gate's wait-or-retry
+  path.
 - **The intent check is unconditional and transactional.** Reference insert plus intent cancel
   happen in one PostgreSQL transaction, and the check runs on every reference write at all
   times, not only while a sweep runs, because a crashed sweep's intents may stand for
@@ -217,11 +225,22 @@ exercise:
   The fourth arrived when `data-model.md` settled that metadata documents are stored inline
   below a size threshold and as digest-referenced CAS blobs above it. A Debian signed `Release`
   index is therefore a blob that **no `File` row references**, and a sweep marking only from the
-  first three roots would collect it while it is being served. The root persists while any
-  repository, package or version document at any retained snapshot still references that digest. Each root class has a defined end of life - a
+  first three roots would collect it while it is being served. The root persists while the
+  **current** repository, package or version document row of any repository references that
+  digest, or while any such document at a retained snapshot does. The current-document half
+  cannot be dropped in favour of the snapshot-held half: a proxied repository creates no
+  snapshots at all (`data-model.md`, resolved snapshots-in-proxied-repositories question), so
+  its cached upstream index above the threshold - the motivating Debian case exactly - is
+  protected by nothing else. For the write barrier this means a document write that stores a
+  CAS digest is a reference creation like any other: it goes through the shared
+  reference-creation call (AC10), cancels standing intents, and the delete pass's re-check
+  counts document digests, current and snapshot-held, in what it treats as referenced. Each
+  root class has a defined end of life - a
   delete removes a published reference, LRU eviction under the per-repository quota ends a
-  cached one (`proxy-cache.md`, resolved cache-eviction question), and pruning at the
-  retention boundary ends a snapshot - and hosted deletes reclaim space only through that
+  cached one (`proxy-cache.md`, resolved cache-eviction question), pruning at the
+  retention boundary ends a snapshot, and a metadata-document root ends when a newer revision
+  supersedes the digest (or the document shrinks back below the threshold) and no retained
+  snapshot still holds it - and hosted deletes reclaim space only through that
   pruning, on the schedule the retention default sets: **30 days, configurable per repository.**
   Pruning obeys the reconstructibility constraint `data-model.md` places on the delta
   representation: a checkpoint or delta is dropped only while no retained snapshot depends on
@@ -231,7 +250,18 @@ exercise:
   while its resolution that proxied repositories create no snapshots bounded the third rather
   than adding one. `proxy-cache.md` Q11 is still open and bears on the second, since whether
   eviction deletes a cached blob directly or only ends its reference decides whether eviction is
-  a second deletion path that must independently honour the intent barrier. **Any resolution
+  a second deletion path that must independently honour the intent barrier. `replication.md`
+  bears on the set twice: on a follower, replicated snapshots and their transferred blobs are
+  consumers of the existing machinery - transfer commits and snapshot-range references flow
+  through the shared reference-creation call and the intent gate like any other, which its AC7
+  asserts against this spec's property suite - and on a leader, its open Q1 (does a leader track
+  follower positions before pruning) would, under its leader-tracking options, add a
+  follower-position pin to pruning that this root set would have to name. `supply-chain-policy.md`
+  adds no root, and that is deliberate rather than an omission: scan results and policy
+  decisions reference digests as audit provenance that must **outlive** the artifact (a refusal
+  stays explainable after the blob is gone), so they never mark a blob live and the sweep
+  tolerates them dangling - a policy record that pinned its blob would make refused malware
+  uncollectable forever. **Any resolution
   changing this set amends these mark roots as a revision requiring re-review, never silently** -
   which is the mechanism that caught the fourth root.
 
@@ -244,12 +274,22 @@ This is the part of the spec that exists because the harness is blind here. Requ
   content (a dedup hit, the new-reference-to-old-blob case), a commit of a digest under an
   active deletion intent (without which the intent gate is never exercised), cache arrival via
   `on_demand` (the second reference class), a metadata document crossing the inline/CAS size
-  threshold (without which the fourth mark root is never exercised), snapshot-creating writes,
+  threshold **in both directions** plus supersession of a CAS-backed document by a new revision
+  (without the upward crossing the fourth mark root is never exercised, and without
+  supersession and the downward crossing that root's death - a reference ending with no delete,
+  eviction or pruning involved - is never raced), snapshot-creating writes,
   cache eviction under the
   per-repository quota, snapshot pruning at the retention boundary, repository grace refresh,
   and session abandonment. A generator limited to fresh-content pushes cannot reach the deadliest
   race, and one that can create references but never end them - no eviction, no pruning, no
   expiry - can never race a reference's death against another's birth; both pass vacuously.
+  Two more reachability conditions, for the same reason: the generator must operate over **at
+  least two repositories with overlapping content and independently controllable activity**,
+  because repository-scoped grace means a single always-active repository can never expire
+  anything and the cross-repository dedup race (repo A goes quiet and expires, repo C
+  dedup-hits mid-sweep) needs both a quiet and an active repository to exist; and the suite
+  runs on an **injected clock**, because grace defaults to hours and retention to days, so
+  wall-clock time can never schedule a grace lapse or a retention-boundary prune inside a test.
   The sweep's internal phases (mark, intent record, re-check, row delete, object delete) must
   be schedulable as first-class interleaving points, or the intent-window races stay
   unreachable.
@@ -291,7 +331,8 @@ accepts one as evidence has missed the point of the spec.
       collection-strategy question names.
 - [ ] AC9: A reference created for a digest after the sweep has recorded a deletion intent for
       it cancels that intent and the blob survives, proven in the property suite by
-      interleavings that place a dedup hit, a cache arrival and a snapshot write between
+      interleavings that place a dedup hit, a cache arrival, a snapshot write and a
+      metadata-document write storing a CAS digest between
       intent recording and the delete pass.
 - [ ] AC10: Every reference write goes through the shared reference-creation call that
       performs the intent check; an architecture test fails on any code path writing a
@@ -304,10 +345,12 @@ accepts one as evidence has missed the point of the spec.
       with an explicit, retryable, self-explanatory error and writes no reference row; a
       client that exceeded the touch-refreshed grace gets that error at reference time, never
       a silently missing blob at pull time.
-- [ ] AC16: A blob holding a CAS-backed metadata document survives GC while any retained
-      snapshot's repository, package or version document still references its digest, and is
+- [ ] AC16: A blob holding a CAS-backed metadata document survives GC while any current
+      repository, package or version document row, or any retained snapshot's copy of one,
+      still references its digest, and is
       collected once none does - proven with a document above the size threshold, such as a
-      Debian-scale index, that no `File` row references.
+      Debian-scale index, that no `File` row references, including one in a proxied
+      repository, which has no snapshots to protect it.
 - [ ] AC13: A commit of a digest whose deletion intent is in its delete phase waits or fails
       retryably until the object delete completes, and the re-uploaded content is then
       retrievable; no interleaving of commit and sweep loses the new copy.
@@ -358,10 +401,42 @@ accepts one as evidence has missed the point of the spec.
 
 ## Open Questions
 
-None open. All nine questions this spec has carried were answered by the owner and are
+One question is open (Q10, raised by the 2026-09-23 gate review). The nine earlier questions
+were answered by the owner and are
 folded into Design, Scope, the acceptance criteria and the Test Plan above, with each
 decision's accepted cost recorded beside it under the Resolved headings, kept rather than
 deleted so the reasoning survives the next time someone asks why it was done this way.
+
+### Q10: Is a snapshot targeted by a `Pointer` exempt from retention pruning - a fifth mark root?
+
+`data-model.md` brought promotion and rollback into scope: several named pointers per
+repository, each targeting a snapshot, and **every** name-addressed read resolves through a
+pointer. A pointer can therefore sit on one snapshot indefinitely - a `prod` environment
+promoted once and untouched for a quarter, or the always-newest pointer of a repository that
+simply stops publishing for 31 days. As this spec stands, that snapshot ages past the
+retention window and is pruned: its blobs lose their only protection (for content since
+deleted from the head state) and its delta chain becomes droppable, so the pointer resolves
+to a snapshot whose content set can no longer be computed - live serving breaks with no
+delete, no rollback and no operator action anywhere in sight. `data-model.md` AC23 refuses
+*repointing to* an out-of-window snapshot, which guards the transition but not aging in
+place. A follower's replication pointer (`replication.md`) has the same shape.
+
+**Recommendation:** A - pointer-targeted snapshots (and the checkpoint-plus-delta chain that
+reconstructs them) are unprunable while targeted: a fifth mark root. It is the only option
+that keeps promotion's bit-identical-serving promise and never breaks an idle repository;
+the pinned storage is visible and attributable to a named pointer, where the alternatives
+fail silently or halt reclamation.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Pointer targets are unprunable roots** | An environment serves exactly what was promoted, forever; idle repositories never break; the failure mode becomes visible pinned storage per named pointer | Retention no longer strictly bounds storage: a forgotten environment pointer retains its snapshot, its delta chain back to a checkpoint, and every blob they reference, indefinitely |
+| **B. Prune anyway; aged-out pointers auto-advance to the oldest retained snapshot, with an alert** | The retention window strictly bounds storage and pruning never stalls | What `prod` serves changes with no deploy and no repoint - a timer silently breaks the bit-identical promise promotion exists to make |
+| **C. Pruning skips (or halts for) a repository while any pointer targets an out-of-window snapshot, alerting the operator** | Nothing is deleted and nothing silently changes | One stale environment pointer holds the whole repository's reclamation hostage - the same shape `replication.md` Q1 rejects for follower tracking |
+
+**Why this is yours:** it trades bounded storage against the serving guarantee promotion is
+sold on, and the answer amends this spec's mark-root set, `data-model.md`'s retention and
+AC23 semantics, and what a replication follower may rely on - a cross-spec architecture
+call, not something a test fleet can measure its way to.
 
 ### Resolved: the post-row-delete object race (was Q7)
 
@@ -488,3 +563,4 @@ not by weakening the storage model.
 | 2026-09-22 | afbb4e4 | adversarial + constitution + cross-spec (claim verification vacuous: no `internal/storage/` code exists yet) | Stays draft: Q4-Q6 raised (grace-window exceed path, snapshot roots and retention, sweep write barrier); invariant gained a third clause; sweep-mechanics constraints and canonical-digest rule added; AC3/AC6/AC7 tightened, AC8 added; stale pre-resolution text and the handler-owns-metadata contradiction with `data-model.md` fixed |
 | 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code) | The six resolutions were recorded but only half-applied: frontmatter, Scope, the grace text, the barrier text and the mark-roots bullet still described the old shape and cited Q4/Q5/Q6 as open; folded throughout, intent ordering/lifecycle and grace-versus-intent constraints added, property op set extended to reference-ending operations and sweep-phase interleavings, AC9-AC12 added; Q7 (post-row-delete object window), Q8 (retention default), Q9 (push-session boundary) raised; stays draft |
 | 2026-09-23 | a2d5219 | gate review: folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code; siblings re-read at this sha) | Q7-Q9 verified as genuinely folded; four stale session-scoped remnants fixed (orphan-scan text, AC3's collection timing, the property op set, the was-Q4 record) plus the stale three-open intro; delete-conditional-on-standing-intent made explicit, single-deleter boundary given its named enforcer (AC15), pruning reconstructibility and the sibling-owned root-set dependency recorded; zero open questions, all ACs mapped; draft -> planned |
+| 2026-09-23 | d078c46 | gate re-review of the fourth root: application check + fifth-root hunt across all siblings + barrier and generator reachability + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code) | Fourth root was stated but half-applied: Scope still said three roots, the frontmatter cited the wrong AC, and the root's definition covered only snapshot-held documents, leaving proxied repositories' current documents (the motivating Debian case) unprotected - all fixed, with the document write bound to the barrier (AC9/AC10) and its death ops (supersession, downward threshold crossing) plus multi-repository and injected-clock reachability added to the property suite; intent-lifecycle contradiction fixed (intent now outlives the row delete so AC13's gate holds); replication and supply-chain placed against the root set; a genuine fifth-root gap found and raised as Q10 (pointer-targeted snapshots versus the retention window); stays draft on Q10 |
