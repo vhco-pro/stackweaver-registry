@@ -8,8 +8,9 @@ covers: []
 Written so this project can continue in any agent harness, not only the one it started in.
 Everything binding lives in the repository; nothing important is in a chat log.
 
-**Status as of 2026-09-24:** pre-alpha, no implementation code. Fifteen specs, none at
-`planned`, 34 open questions. The repository is private.
+**Status as of 2026-09-25:** pre-alpha, no implementation code. Fifteen specs, none at
+`planned`, 51 open questions. Every spec has now had at least one review. The repository is
+private.
 
 ## What state the project is in
 
@@ -17,9 +18,8 @@ Everything binding lives in the repository; nothing important is in a chat log.
 |---|---|
 | Specs | 15, plus a tracking document |
 | `planned` | none. `storage-and-gc` reached it and went back to `draft` when a re-review found its fourth mark root half-applied and a fifth missing |
-| Awaiting a gate review, having been interrogated | `npm` |
-| **Never interrogated** (zero open questions because nobody has asked any) | `pypi`, `ansible-collections` - `make check-spec` now says so, and the gate refuses them |
-| Largest question blocks | `replication` 7, `supply-chain-policy` 6, `oci` 4, `proxy-cache` 4, `project-charter` 4, `generic` 4 |
+| Awaiting a gate review, having been interrogated | none. Every spec now carries open questions |
+| Largest question blocks | `replication` 7, `supply-chain-policy` 6, `auth` 5, `ansible-collections` 5, `oci` 4, `proxy-cache` 4, `project-charter` 4, `generic` 4 |
 | Issues | vhco-pro/stackweaver-registry#1 to #13 |
 | Code | a stub `cmd/stackweaver-registry/main.go` and nothing else, deliberately |
 
@@ -106,23 +106,29 @@ each review found something real. The bottleneck is no longer review coverage: i
 decisions. `question-triage.md` is the live backlog and organises the 41 open questions into four
 clusters that have to be answered together.
 
-1. **Answer Cluster 2: `storage-and-gc` Q10 with `proxy-cache` Q11.** Still the shortest route to
+1. **Answer Cluster 5 if you only answer one thing.** It is not the cheapest, it is the one that
+   gets worse by waiting. Four questions across three format specs show that the project's
+   central gate, the real client as test oracle, has nothing to say about management operations
+   no client performs: `pip` does not yank, `ansible-galaxy` does not delete. Each format will
+   answer it locally and differently unless it is decided once, and every management surface is
+   also a deletion path `storage-and-gc` must know about and a grant `auth` must have.
+2. **Answer Cluster 2: `storage-and-gc` Q10 with `proxy-cache` Q11.** Still the shortest route to
    this project's first `planned` spec, and it got shorter: `data-model`'s gate review measured
    the blast radius, so Q10 option A is a known three-place edit there and Q11 is
    presupposition-free. Q10 is a live-serving break that needs no user action to trigger.
    `supply-chain-policy` Q5 belongs to the same cluster and may add a mark root.
-2. **Answer Cluster 1, `auth` Q13 first.** Three specs now need one thing the pinned handler
+3. **Answer Cluster 1, `auth` Q13 first.** Three specs now need one thing the pinned handler
    interface does not provide: a request mapped to the package coordinate being acted on.
    `auth` Q13 leads, `supply-chain-policy` Q4 and `format-handler-interface` Q9 follow, because
    whether an out-of-cycle amendment to the pin is tolerated depends on Q13's answer. None of
    the scheduled re-open's three named inputs would have surfaced this.
-3. **Answer `conformance-harness` Q4.** The only Tier A question blocking step-1 code rather than
+4. **Answer `conformance-harness` Q4.** The only Tier A question blocking step-1 code rather than
    step-2 code, and its answer constrains how every later subsystem gets conformance coverage.
    Its answer must bring an acceptance criterion with it: `setup` is named five times in Design
    and asserted nowhere, and no criterion can be written before the answer without presupposing
    it.
-4. **Answer `generic`'s four**, which unblock build step 2.
-5. **Then `/tasks` and the first code**, starting with the conformance harness. The harness is
+5. **Answer `generic`'s four**, which unblock build step 2.
+6. **Then `/tasks` and the first code**, starting with the conformance harness. The harness is
    built before any format handler, deliberately.
 
 Standing note on `auth`: AC10 requires an external security review **of the implementation**, by

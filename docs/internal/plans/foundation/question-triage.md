@@ -1,6 +1,6 @@
 ---
 status: in-progress
-status_description: "Fourth round 2026-09-25 after gate reviews of auth, data-model and the interrupted-review reconciliation. 40 open across 11 specs. The organising unit is now the cluster rather than the tier: four groups of questions cannot be answered independently of each other, and one of them was found by two specs hitting the same wall from opposite directions."
+status_description: "Fifth round 2026-09-25 after first reviews of all three remaining format specs. 51 open across 14 specs. Two new clusters, and Cluster 5 is the most consequential finding in this document: four questions across three formats show that conformance-as-oracle has no answer for operations no real client performs, which is a hole in the project's central gate rather than in any one spec."
 description: "Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once."
 author: michielvha
 goal: "Prevent the mistake of answering 44 questions before the interactions between them are understood, by naming which ones actually gate the next commit."
@@ -146,7 +146,7 @@ answer settles both.
 - `format-handler-interface` Q2: on a proxied miss, does the proxy wrap the handler or the handler call fetch-and-cache?
 - `format-handler-interface` Q4: do write-triggered shared services enter the interface now?
 
-## Round four: the live backlog (41)
+## Round five: the live backlog (51)
 
 Rounds one to three sorted questions by **what they block**, which is still how the tiers below
 work. Round four adds a second axis, because three gate reviews in a row produced questions that
@@ -177,6 +177,13 @@ code exists.** Both need an HTTP request mapped to the package coordinate being 
 Answer these together, or the second answer will contradict the first. The interface owner has
 taken no position beyond raising Q9, which is correct: whether an out-of-cycle amendment to the
 pin is tolerated depends on how auth Q13 is answered, so Q13 leads and Q9 follows.
+
+A near neighbour, deliberately not folded in: `ansible-collections` Q1 asks where an import-task
+record lives, because a Galaxy publish is **asynchronous** (publish, receive a task id, poll) and
+the shared model has no entity for an asynchronous operation. That is a data-model gap rather
+than an interface one, so it is a different question. It belongs beside this cluster because it
+is more evidence for the same verdict: the pin and the model were both fixed before the formats
+that would stress them existed, and the re-open's named inputs would not have surfaced either.
 
 ### Cluster 2: what ends a blob's life (storage-and-gc Q10, proxy-cache Q11, supply-chain-policy Q5)
 
@@ -223,6 +230,51 @@ several repositories (Q17, where two passages of the spec currently read opposit
 `replication` Q6 (how a follower authenticates to a leader) is the same vocabulary extended to
 instance identity, which `auth.md` does not define at all.
 
+### Cluster 5: operations no real client drives (pypi Q1 and Q3, npm Q3, ansible-collections Q5)
+
+**This is the most consequential finding in this document, and it is about the project's central
+gate rather than about any one spec.** Three format reviews independently arrived at the same
+shape of question, and it is one the conformance harness cannot answer by construction.
+
+- `pypi` Q1: does v1 expose a hosted yank surface, given **no ecosystem client drives one**?
+- `pypi` Q3: may a deleted filename be re-uploaded on the hosted path?
+- `npm` Q3: does hosted unpublish enforce the public registry's restrictions, or only ours?
+- `ansible-collections` Q5: is version deletion served at all, and through what surface?
+
+The project's thesis is that **the real client CLI is the test oracle**: correctness is an exit
+code rather than a judgment call, which is what makes autonomous development safe here. That
+works for everything a client does. It has nothing to say about management operations a client
+never performs. `pip` does not yank. `npm unpublish` exists but our own review found the client
+exits 0 on unrouted routes, so it is a weak oracle even where it exists. `ansible-galaxy` does
+not delete.
+
+So these four questions are really one: **what governs a surface the oracle cannot see?** Each
+format spec will otherwise answer it locally and differently, and the answers compound, because
+every management surface is also a deletion path that `storage-and-gc.md` must know about
+(Cluster 2) and an authorization surface `auth.md` must have a grant for (Cluster 4).
+
+The honest options are a cross-format management API specced once, per-format endpoints mirroring
+each ecosystem's own conventions, or declining the surface in v1 and saying so. That decision is
+not a format decision, which is why it is recorded here rather than in any of the four specs.
+
+### Cluster 6: signature verification has consumers and no producer (supply-chain-policy Q6, ansible-collections Q3, pypi Q2)
+
+`supply-chain-policy.md` names signature and attestation state as a policy input while explicitly
+disclaiming ownership of verification, and no sibling owns it: `auth.md` authenticates clients,
+not artifacts. That dangling dependency now has three consumers rather than one, each with a real
+ecosystem mechanism behind it:
+
+- `supply-chain-policy` Q6: who owns verification at all.
+- `ansible-collections` Q3: what v1 does about collection signatures, where serving them has a
+  client oracle and attaching them does not.
+- `pypi` Q2: what the registry answers to an upload carrying PEP 740 attestations, where the PEP
+  specifies verify-before-accept and we have nothing that verifies.
+
+Q6 leads: the other two are applications of its answer. Note that each ecosystem's mechanism is
+different (Galaxy signatures, PEP 740 attestations, Cosign in OCI referrers, npm provenance),
+which is the argument `supply-chain-policy` Q6 already makes for a sibling spec rather than
+growing verification inside the policy engine.
+
 ## Tiers: what each question blocks
 
 ### Tier A: blocks the next code (5)
@@ -241,7 +293,7 @@ Build steps 1 and 2 are the conformance harness core and the generic format.
 step-1 code rather than the step-2 code, and its answer constrains how every later subsystem gets
 conformance coverage at all.
 
-### Tier B: blocks foundation correctness (18)
+### Tier B: blocks foundation correctness (22)
 
 Build steps 3 and 4: the shared model, CAS and GC, then OCI with the proxy layer.
 
@@ -253,6 +305,13 @@ Promoted from where an enforcement-topology question would normally sit, because
 whether the pinned interface changes, and the interface is step-3 and step-4 work.
 
 **Cluster 3 in full** (`data-model` Q15, `oci` Q6).
+
+**Cluster 5 in full** (`pypi` Q1 and Q3, `npm` Q3, `ansible-collections` Q5), promoted here
+despite living in format specs scheduled at steps 5 and beyond. The questions are per format; the
+decision is not. Whether management surfaces exist at all, and whether they are one cross-format
+API or per-format endpoints, determines a deletion path `storage-and-gc.md` must know about and a
+grant `auth.md` must have, both of which are step-3 work. Deciding it per format as each one
+lands is how four specs end up with four different answers to one question.
 
 **Remaining proxy behaviour:** `proxy-cache` Q10 (what coalesced waiters receive while the single
 in-flight fetch is unverified) and Q13 (is offline mode instance-wide or scoped per upstream).
@@ -268,7 +327,7 @@ rather than documentation alone, the spec's only risky state guarded by docs), Q
 promised expiry-warning criterion lands, given no token-management surface is specced and
 `oci` Q3 owns that surface), and Q16 and Q17 from Cluster 4.
 
-### Tier C: belongs to work not yet started (18)
+### Tier C: belongs to work not yet started (24)
 
 **Replication** (7) and **supply-chain policy** (4 remaining, after Q4 and Q5 are promoted to
 Tier B) are both fully specced, first-reviewed, and **absent from the charter's build order**.
@@ -286,6 +345,23 @@ The rest: `replication` Q1-Q7 (retention-gap recovery, follower writability, vir
 repositories, air-gapped proxied content, DR promotion and fencing, instance-to-instance auth,
 archive trust root), and `supply-chain-policy` Q1 and Q2 (advisory feed authority,
 retroactivity).
+
+**The format specs' remainder** (6), all from the first reviews of 2026-09-25:
+
+- `ansible-collections` Q1: where an import-task record lives, given the shared model has no
+  entity for an asynchronous operation. Sits beside Cluster 1 and is evidence for the same
+  verdict; see the note there.
+- `ansible-collections` Q2: are namespaces a name prefix or first-class objects with ownership?
+  Touches `auth` Q13 and Q16, so Cluster 4's answer constrains it.
+- `ansible-collections` Q4: does galaxy.ansible.com join the preconfigured upstreams and the
+  nightly real-upstream job? Amends a settled `proxy-cache` decision.
+- `ansible-collections` Q3 and `pypi` Q2 belong to Cluster 6.
+- `npm` Q2: what the registry answers to the audit requests `npm` sends during every default
+  install. Worth reading even though it is Tier C, because every option is wrong in a different
+  way: a 404 is merely odd, an empty stub is **our server making a false no-vulnerabilities
+  claim**, and forwarding upstream **leaks private package names**. It is also the only question
+  in the corpus where the default behaviour of a client we do not control puts words in our
+  mouth.
 
 **Catalogue** (before Tier 2 begins): Q3 is "Git-backed" one family or three, Q4 does the Tier 1
 gate bind Tier 3, Q5 what proves a single-ecosystem family's client-reach claim.
