@@ -1,6 +1,6 @@
 ---
 status: in-progress
-status_description: "Third round 2026-09-24 retiered against the charter build order after two new specs (replication, supply-chain-policy) arrived carrying 13 questions between them and no build-order step. 34 open across 8 specs; 5 are Tier A or B and block the next code."
+status_description: "Fourth round 2026-09-25 after gate reviews of auth, data-model and the interrupted-review reconciliation. 40 open across 11 specs. The organising unit is now the cluster rather than the tier: four groups of questions cannot be answered independently of each other, and one of them was found by two specs hitting the same wall from opposite directions."
 description: "Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once."
 author: michielvha
 goal: "Prevent the mistake of answering 44 questions before the interactions between them are understood, by naming which ones actually gate the next commit."
@@ -146,91 +146,154 @@ answer settles both.
 - `format-handler-interface` Q2: on a proxied miss, does the proxy wrap the handler or the handler call fetch-and-cache?
 - `format-handler-interface` Q4: do write-triggered shared services enter the interface now?
 
-## Round three: the live backlog (34)
+## Round four: the live backlog (40)
 
-Retiered 2026-09-24 against the charter's build order. Tiers A and B from the earlier rounds
-are cleared and kept above as the record; these are what stand now.
+Rounds one to three sorted questions by **what they block**, which is still how the tiers below
+work. Round four adds a second axis, because three gate reviews in a row produced questions that
+are not independent: answering one alone either wastes the answer or forces it to be revisited.
+Those are recorded as **clusters** first, since the cluster is the unit the owner should actually
+sit down with.
+
+### Cluster 1: the request-to-coordinate gap (auth Q13, supply-chain-policy Q4)
+
+**Two specs hit the same wall from opposite directions, in separate reviews, before a line of
+code exists.** Both need an HTTP request mapped to the package coordinate being acted on, and
+`format-handler-interface.md`'s pinned five methods do not provide it.
+
+- `auth` Q13: the settled path-and-tag pattern scoping is recorded in Scope and AC19 and is
+  **unimplementable as written**, because the pinned `Scope(r)` hands the central authorizer only
+  a repository and an action. It can never see the path or tag a pattern must match.
+- `supply-chain-policy` Q4: central policy evaluation needs the same mapping, and that spec's
+  own recommendation is to sidestep the interface entirely by enforcing inside the shared
+  resolution calls.
+
+Answer these together, or the second answer will contradict the first. The cluster also bears on
+whether the scheduled post-OCI interface re-open is the right remedy or arrives too late: two
+independent consumers needing the same missing capability is the evidence that re-open was
+supposed to wait for, and it has arrived early.
+
+### Cluster 2: what ends a blob's life (storage-and-gc Q10, proxy-cache Q11, supply-chain-policy Q5)
+
+Three specs each own a way content can stop being served, and the three answers compose into one
+rule or into a contradiction.
+
+- `storage-and-gc` Q10: is a pointer-targeted snapshot exempt from retention pruning, a fifth
+  mark root? Without an exemption, promoting to `prod` or leaving a repository idle past the
+  retention default prunes the snapshot, its blobs lose their only root, and live serving breaks
+  with no user action.
+- `proxy-cache` Q11: does eviction delete the blob, or only end its reference? If it deletes,
+  eviction is a **second deletion path** and needs its own deletion-intent barrier.
+- `supply-chain-policy` Q5: what happens to a condemned artifact? The quarantine option adds a
+  mark root, and this question already reconciles two settled specs that currently disagree about
+  the same real event.
+
+`data-model.md` owns the mark-root set, and its gate review measured the blast radius: under Q10
+option A exactly three places in that spec widen, and under B or C it stands as written. Q11 it
+presupposes nothing about. That makes this cluster a bounded edit rather than an open risk, and
+it is **the cheapest path to this project's first `planned` spec**, since `storage-and-gc` is
+otherwise one answer away.
+
+### Cluster 3: OCI has no session on the wire (data-model Q15, oci Q6)
+
+The settled push-session scoping keeps colliding with the fact that OCI's wire protocol has no
+session. It forced the grace period to be re-scoped once already, and it has now hit twice more:
+
+- `data-model` Q15: the in-flight digest-read membership check is scoped to a push session, but
+  the blob's upload session is closed before the client's `HEAD` arrives, so the scoping has
+  nothing to key on.
+- `oci` Q6: how long an idle resumable upload session lives, which is the same boundary seen from
+  the protocol side.
+
+A third occurrence of one root cause is a sign the underlying model is wrong rather than its
+applications, so these deserve one answer about what a session **is** here, not two local
+patches.
+
+### Cluster 4: the identity and scope vocabulary (auth Q13, Q16, Q17)
+
+`auth` has three questions that together define what a grant can say, and each answer constrains
+the others: what a pattern scope may range over (Q13, also in Cluster 1), what human grants exist
+between "nothing" and "administer the registry" (Q16), and whether one token may carry scopes on
+several repositories (Q17, where two passages of the spec currently read opposite ways).
+`replication` Q6 (how a follower authenticates to a leader) is the same vocabulary extended to
+instance identity, which `auth.md` does not define at all.
+
+## Tiers: what each question blocks
 
 ### Tier A: blocks the next code (5)
 
-Build steps 1 and 2 are the conformance harness core and the generic format. Nothing can be
-written against either while these stand.
+Build steps 1 and 2 are the conformance harness core and the generic format.
 
 | Spec | Question | Why it blocks |
 |---|---|---|
-| `conformance-harness` | Q4: is the case `setup` vocabulary closed, and how does it grow? | It **is** the Phase 1 case schema. Three siblings already need setup keys the schema does not have, and whether a consumer may add one decides whether the runner can validate a case before running it - which AC4 and AC5 assume it can |
+| `conformance-harness` | Q4: is the case `setup` vocabulary closed, and how does it grow? | It **is** the Phase 1 case schema. Three siblings already need setup keys it does not have, and whether a consumer may add one decides whether the runner can validate a case before running it, which AC4 and AC5 assume |
 | `generic` | Q5: what happens when a PUT targets a path that already holds an artifact? | A one-way door on the first format's write path |
 | `generic` | Q4: what shape does listing take over arbitrarily deep paths? | Generic's read surface; its conformance cases assert against it |
 | `generic` | Q6: what is the scoping unit of a retention policy? | Retention creates references, so it binds to the mark roots before GC ships |
 | `generic` | Q7: does generic get a formal exemption from the replay-match definition-of-done item? | Generic has no upstream and no real client, so the definition of done either bends here or generic cannot be declared done |
 
-`conformance-harness` Q4 is the one to answer first. It is the only Tier A question that blocks
-the step-1 code rather than the step-2 code, and its answer constrains how every later subsystem
-gets conformance coverage at all.
+`conformance-harness` Q4 is the one to answer first: it is the only Tier A question blocking the
+step-1 code rather than the step-2 code, and its answer constrains how every later subsystem gets
+conformance coverage at all.
 
-### Tier B: blocks foundation correctness (9)
+### Tier B: blocks foundation correctness (17)
 
 Build steps 3 and 4: the shared model, CAS and GC, then OCI with the proxy layer.
 
-**Storage, GC and eviction** - these three interlock and should be answered together:
+**Cluster 2 in full** (`storage-and-gc` Q10, `proxy-cache` Q11, `supply-chain-policy` Q5) plus
+`proxy-cache` Q12 (how an upstream security signal is detected for content nobody is requesting).
 
-- `storage-and-gc` Q10: is a snapshot targeted by a `Pointer` exempt from retention pruning, a fifth mark root?
-- `proxy-cache` Q11: does eviction delete the cached blob, or only end its reference?
-- `proxy-cache` Q12: how is an upstream security signal detected for content nobody is requesting?
+**Cluster 1 in full** (`auth` Q13, `supply-chain-policy` Q4). Promoted from where an
+enforcement-topology question would normally sit, because it decides whether the pinned interface
+changes, and the interface is step-3 and step-4 work.
 
-Q10 and Q11 are the load-bearing pair. Q10 is a live-serving break with no user action: a `prod`
-pointer set by promotion, or any repository idle past the retention default, has its snapshot
-pruned and its blobs lose their only root. Q11 decides whether eviction is a **second deletion
-path**, which would need its own deletion-intent barrier - and `storage-and-gc.md` is otherwise
-one answered question away from `planned`, so this is the cheapest remaining path to the
-project's first gated spec.
+**Cluster 3 in full** (`data-model` Q15, `oci` Q6).
 
-**Proxy behaviour under load and outage:**
+**Remaining proxy behaviour:** `proxy-cache` Q10 (what coalesced waiters receive while the single
+in-flight fetch is unverified) and Q13 (is offline mode instance-wide or scoped per upstream).
 
-- `proxy-cache` Q10: what do coalesced waiters receive while the single in-flight fetch is unverified?
-- `proxy-cache` Q13: is offline mode instance-wide, or scoped per upstream or per repository?
+**Remaining OCI:** Q5 (may a cross-repository blob mount reveal that a blob exists in a repository
+the client cannot read, a security question wearing a protocol question's clothes), Q3 (what
+credential a non-interactive `docker login` presents), Q4 (the recourse when a conformance case
+cannot pass for reasons outside our control, which is a governance answer better made before it
+is needed under pressure).
 
-**OCI**, the step-4 format with the strongest oracle:
+**Auth's remainder:** Q14 (whether plaintext credential acceptance needs an explicit opt-in flag
+rather than documentation alone, the spec's only risky state guarded by docs), Q15 (where the
+promised expiry-warning criterion lands, given no token-management surface is specced and
+`oci` Q3 owns that surface), and Q16 and Q17 from Cluster 4.
 
-- `oci` Q5: may a cross-repository blob mount reveal that a blob exists in a repository the client cannot read?
-- `oci` Q3: what credential does a non-interactive `docker login` present, and where does it come from?
-- `oci` Q6: how long does an idle resumable upload session live before it expires?
-- `oci` Q4: what is the recourse when a conformance case cannot pass for a reason outside our control?
+### Tier C: belongs to work not yet started (18)
 
-`oci` Q5 is a security question wearing a protocol question's clothes, and Q4 decides what the
-project does the first time its own gate says no - which is a governance answer, not a technical
-one, and better made before it is needed under pressure.
+**Replication** (7) and **supply-chain policy** (4 remaining, after Q4 and Q5 are promoted to
+Tier B) are both fully specced, first-reviewed, and **absent from the charter's build order**.
+Cluster membership is a second axis rather than a retier, so `replication` Q6 appears in Cluster 4
+and stays here: it cannot be usefully answered until replication has a place in the build order. That is still this tier's notable fact, and it is what `charter` Q1 asks.
+Two of the remainder are architectural rather than incremental and cost more the later they land:
 
-### Tier C: belongs to work not yet started (20)
-
-**Replication** (7) and **supply-chain policy** (6) are both fully specced, first-reviewed, and
-**absent from the charter's build order**. That is the notable fact about this tier: thirteen
-questions cannot be usefully tiered because nothing says when their subsystems get built. Three
-of them are architectural rather than incremental and will cost more the later they are answered:
-
-- `supply-chain-policy` Q3: where does scanning get its component inventory? It decides whether the pinned handler interface bends, or whether format knowledge gets a second home outside the handlers.
-- `supply-chain-policy` Q4: where does central policy evaluation intercept a request only the handler can decode? It fixes the enforcement topology every format inherits.
-- `supply-chain-policy` Q5: what is a condemned artifact's disposition? It reconciles two already-settled specs that currently disagree about the same real event, and may add a GC mark root.
+- `supply-chain-policy` Q3: where scanning gets its component inventory. It decides whether the
+  pinned handler interface bends, or whether format knowledge gets a second home outside the
+  handlers, so it is Cluster 1 adjacent and may be pulled forward by that cluster's answer.
+- `supply-chain-policy` Q6: who owns signature and attestation verification, which this spec
+  consumes and no spec produces.
 
 The rest: `replication` Q1-Q7 (retention-gap recovery, follower writability, virtual
 repositories, air-gapped proxied content, DR promotion and fencing, instance-to-instance auth,
-archive trust root), `supply-chain-policy` Q1, Q2 and Q6 (advisory feed authority, retroactivity,
-signature verification ownership).
+archive trust root), and `supply-chain-policy` Q1 and Q2 (advisory feed authority,
+retroactivity).
 
 **Catalogue** (before Tier 2 begins): Q3 is "Git-backed" one family or three, Q4 does the Tier 1
 gate bind Tier 3, Q5 what proves a single-ecosystem family's client-reach claim.
 
-`catalogue` Q3 is still the most consequential question in this tier: it is the only family
+`catalogue` Q3 remains the most consequential question in this tier: it is the only family
 collapsing anything, so splitting it changes the headline figure from 33 ecosystems across ~31
 protocols to 33 across 33, and with it the "families make breadth cheap" framing in five files.
 
 **Charter and strategy**: Q1 extend the implementation phases past PyPI, Q2 what triggers the
-breadth gate's shrink outcome, Q3 how per-format cost is measured, Q6 does the charter need a
-web UI criterion.
+breadth gate's shrink outcome, Q3 how per-format cost is measured, Q6 does the charter need a web
+UI criterion.
 
-`charter` Q1 has been promoted in importance by round three without changing tier: two whole
-subsystems now exist with no place in the build order, so "extend the phases past PyPI" is no
-longer a forward-looking question but a description of an existing gap.
+`charter` Q1 keeps the promotion round three gave it: two whole subsystems exist with no place in
+the build order, so it describes an existing gap rather than a future one.
 
 `charter` Q3 remains the highest-value question in the document and is deliberately not Tier A,
 because the measurement cannot be designed until there is one format's cost to measure. It keeps
