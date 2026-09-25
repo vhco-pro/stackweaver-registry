@@ -101,25 +101,35 @@ Other economies worth knowing:
 
 ## Next actions, in order
 
-0. **Answer `storage-and-gc` Q10 and `proxy-cache` Q11 together.** They are the only thing
-   standing between this project and its first `planned` spec, they interlock (both decide what
-   ends a blob's life), and Q10 is a live-serving break that needs no user action to trigger.
-   `question-triage.md` has the full argument.
-1. **Gate reviews for `auth` and `format-handler-interface`.** Both are at zero open questions
-   with every criterion mapped. Run `make gate SPEC=...` first; if it passes, the review only has
-   to judge the design. These are the cheapest path to more `planned` specs.
-   - For `auth` specifically: AC10 requires an external security review **of the implementation**,
-     by someone other than the implementing agent, before any auth code reaches `main`. That is
-     not satisfied by any number of spec reviews, and the owner has said explicitly they do not
-     want an LLM's approval to be the last word there.
-2. **`conformance-harness` has one open question** and is the spec everything else is built
-   against. Answer it and gate-review it.
-3. **`data-model`'s six**, which include the one genuinely structural problem outstanding: the
-   snapshot and pointer model is incompatible with OCI's push flow, which serves blobs before any
-   manifest exists. Its Q9 must be answered together with `oci.md` Q2; they currently carry
-   opposite recommendations for the same decision.
-4. **Then `/tasks` and the first code**, starting with the conformance harness. The harness is
+Every foundation spec has now had at least one gate review, and none reached `planned`, because
+each review found something real. The bottleneck is no longer review coverage: it is owner
+decisions. `question-triage.md` is the live backlog and organises the 41 open questions into four
+clusters that have to be answered together.
+
+1. **Answer Cluster 2: `storage-and-gc` Q10 with `proxy-cache` Q11.** Still the shortest route to
+   this project's first `planned` spec, and it got shorter: `data-model`'s gate review measured
+   the blast radius, so Q10 option A is a known three-place edit there and Q11 is
+   presupposition-free. Q10 is a live-serving break that needs no user action to trigger.
+   `supply-chain-policy` Q5 belongs to the same cluster and may add a mark root.
+2. **Answer Cluster 1, `auth` Q13 first.** Three specs now need one thing the pinned handler
+   interface does not provide: a request mapped to the package coordinate being acted on.
+   `auth` Q13 leads, `supply-chain-policy` Q4 and `format-handler-interface` Q9 follow, because
+   whether an out-of-cycle amendment to the pin is tolerated depends on Q13's answer. None of
+   the scheduled re-open's three named inputs would have surfaced this.
+3. **Answer `conformance-harness` Q4.** The only Tier A question blocking step-1 code rather than
+   step-2 code, and its answer constrains how every later subsystem gets conformance coverage.
+   Its answer must bring an acceptance criterion with it: `setup` is named five times in Design
+   and asserted nowhere, and no criterion can be written before the answer without presupposing
+   it.
+4. **Answer `generic`'s four**, which unblock build step 2.
+5. **Then `/tasks` and the first code**, starting with the conformance harness. The harness is
    built before any format handler, deliberately.
+
+Standing note on `auth`: AC10 requires an external security review **of the implementation**, by
+someone other than the implementing agent, before any auth code reaches `main`. No number of spec
+reviews satisfies it, and the owner has said explicitly they do not want an LLM's approval to be
+the last word there. Its own gate review left that criterion untouched and recorded that it did
+not satisfy it.
 
 ## Open commitments that are easy to lose
 
