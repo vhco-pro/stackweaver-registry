@@ -8,6 +8,32 @@ covers: []
 Newest first. Each entry records a mistake, its root cause, and the convention it produced.
 Anything learned that would otherwise live only in a chat session belongs here.
 
+## 2026-09-25 - Zero open questions is not the same as settled
+
+**What happened:** `pypi.md` and `ansible-collections.md` both carried the frontmatter claim
+"All open questions answered by the owner and folded in; awaiting a /spec review pass to earn
+planned", while the body of each said the opposite in plain words: "an empty section here means
+not yet interrogated, not fully settled". Neither had ever been reviewed. `make gate` called both
+**mechanically clear**, because zero open questions is the gate's main signal and a spec nobody
+has questioned scores identically to one that survived four review rounds. `HANDOFF.md` listed
+them among the cheapest paths to a `planned` spec.
+
+**Root cause:** the count of open questions measures what was asked, and was being read as a
+measure of what was settled. Those are the same number only for a spec that has actually been
+interrogated. The frontmatter had drifted from the body in the direction that looked like
+progress, which is the direction drift always takes.
+
+**Convention:** a spec with no open questions, no resolved decisions and no review is reported as
+**never interrogated**, and `--gate` refuses it outright rather than calling it clear. Only real
+reviews count toward that: the repository already labels a cross-spec sync or a terminated
+partial pass in its Review Log lens, and such a row leaves the design exactly as uninterrogated
+as no row at all. `pypi` had one row and it said "status remains draft pending a full gate
+review" in its own text.
+
+The general form is worth keeping in mind whenever a gate is defined: **check that a signal can
+distinguish "passed" from "never ran".** An absence and a success look the same to any counter
+that only counts problems found.
+
 ## 2026-09-25 - The gap five reviews found by hand is now a script
 
 **What happened:** five consecutive gate reviews each found the same defect, in a different spec:

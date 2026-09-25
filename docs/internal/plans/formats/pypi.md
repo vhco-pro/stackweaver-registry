@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "All open questions answered by the owner and folded in; awaiting a /spec review pass to earn planned."
+status_description: "Early draft, never interrogated. The empty Open Questions section means not yet examined, not settled, and the frontmatter previously claimed the opposite. A first review is the prerequisite for being a gate candidate at all."
 description: "Spec for the PyPI format, scheduled as the experiment's generalisation test - does format N+1 cost less than format N?"
 author: michielvha
 goal: "Measure whether the harness and the format interface generalise, by building PyPI immediately after npm and comparing the cost."

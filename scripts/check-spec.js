@@ -232,7 +232,26 @@ function checkSpec(absPath) {
     .filter(([, l]) => /[—–]/.test(l));
   for (const [n] of dashLines) fail(rel, `em-dash or en-dash on line ${n} (house rule)`);
 
-  return { rel, status, acs: acs.length, open: openQs.length, resolved: resolved.length, lastSha };
+  // A spec with no questions, no resolved decisions and no review has not been settled: it has
+  // never been interrogated. Zero-open is the gate's main signal, so without this the two states
+  // are indistinguishable and an unexamined spec scores like one that survived four rounds.
+  // Only actual reviews count. The repository already labels the others: a cross-spec sync or a
+  // terminated partial pass says so in its lens or opens its outcome with "Not a review", and
+  // such a row leaves the design just as uninterrogated as no row at all.
+  const reviewRows = (section(body, 'Review Log') || '').split('\n')
+    .filter((l) => /^\| \d{4}-\d{2}-\d{2} \|/.test(l))
+    .filter((l) => {
+      const cells = l.split('|').map((c) => c.trim());
+      const lens = cells[3] || '';
+      const outcome = cells[4] || '';
+      return !/^(cross-spec|partial)\b/i.test(lens) && !/^not a review\b/i.test(outcome);
+    }).length;
+  const unexamined = openQs.length === 0 && resolved.length === 0 && reviewRows === 0;
+  if (unexamined) {
+    warn(rel, 'never interrogated: no open questions, no resolved decisions, no review. Zero open is not the same as settled.');
+  }
+
+  return { rel, status, acs: acs.length, open: openQs.length, resolved: resolved.length, lastSha, unexamined };
 }
 
 // Every spec's assertions, so a term this spec names but a sibling polices is not reported as a
@@ -323,6 +342,7 @@ if (gateMode) {
   if (!t) { console.error('gate mode needs exactly one spec path'); process.exit(2); }
   const blockers = [];
   if (t.open > 0) blockers.push(`${t.open} open question(s)`);
+  if (t.unexamined) blockers.push('never interrogated (no questions, no decisions, no review)');
   if (hardFailures > 0) blockers.push(`${hardFailures} mechanical failure(s)`);
   console.log('');
   if (blockers.length) {

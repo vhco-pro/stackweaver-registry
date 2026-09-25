@@ -17,7 +17,8 @@ Everything binding lives in the repository; nothing important is in a chat log.
 |---|---|
 | Specs | 15, plus a tracking document |
 | `planned` | none. `storage-and-gc` reached it and went back to `draft` when a re-review found its fourth mark root half-applied and a fifth missing |
-| Zero open questions, awaiting a gate review | `auth`, `data-model`, `format-handler-interface`, `npm`, `pypi`, `ansible-collections` |
+| Awaiting a gate review, having been interrogated | `npm` |
+| **Never interrogated** (zero open questions because nobody has asked any) | `pypi`, `ansible-collections` - `make check-spec` now says so, and the gate refuses them |
 | Largest question blocks | `replication` 7, `supply-chain-policy` 6, `oci` 4, `proxy-cache` 4, `project-charter` 4, `generic` 4 |
 | Issues | vhco-pro/stackweaver-registry#1 to #13 |
 | Code | a stub `cmd/stackweaver-registry/main.go` and nothing else, deliberately |
