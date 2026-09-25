@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Gate review 2026-09-23 at d078c46: the fourth root (AC16, not AC15 as previously recorded here) was only half-applied - Scope still said three roots and the root missed proxied repositories' current documents entirely; both fixed, the intent lifecycle contradiction with AC13 fixed, and Q10 (pointer targets versus the retention window) raised. Stays draft until the owner answers Q10."
+status_description: "Q10 was answered by the owner on 2026-09-26 (a pointer-targeted snapshot, plus the checkpoint-and-delta chain that reconstructs it, is a fifth mark root exempt from retention pruning) and folded through Scope, the invariant, Design, the property-test operation set and AC14/AC17/AC18, with the accepted cost recorded: retention no longer strictly bounds storage. Zero questions are now open, which makes this a gate candidate - it stays draft until a gate review judges the design."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
@@ -42,14 +42,17 @@ upload record that was never written.
 - Chunked/resumable upload support, since OCI requires it and large artifacts need it.
 - Mark-and-sweep GC, fully settled: a repository-scoped, touch-refreshed grace period
   defaulting to hours, a
-  deletion-intent table as the write barrier, and four mark roots - published references,
-  cached references, snapshots inside the retention window, and CAS-backed metadata
-  documents (current and snapshot-held). The decisions and their
+  deletion-intent table as the write barrier, and five mark roots - published references,
+  cached references, snapshots inside the retention window, CAS-backed metadata
+  documents (current and snapshot-held), and snapshots targeted by a `Pointer`, together
+  with the checkpoint-and-delta chain that reconstructs them. The decisions and their
   accepted costs are recorded under Open Questions.
 - Snapshot pruning at the retention boundary (default 30 days, per-repository override), and
   reporting how far back rollback reaches,
   since pruning is what bounds the snapshot root and the snapshot-held half of the
-  metadata-document root.
+  metadata-document root. It does **not** bound the fifth root: a pointer-targeted snapshot
+  is exempt while targeted, so retention bounds storage only for snapshots nothing points
+  at (the resolved pointer-target question below carries that accepted cost).
 - Orphan cleanup for interrupted uploads.
 - Fault injection and property tests covering the races above.
 - Throughput benchmarks wired to a CI regression gate.
@@ -130,6 +133,11 @@ absolute:
 > **GC never deletes a blob that is referenced, that is about to be referenced by an upload
 > in progress, or that gains a reference while the sweep is running.**
 
+"Referenced" means referenced from any of the five mark roots enumerated below, so the root set
+and the invariant move together: a root the sweep does not mark is a blob the invariant does not
+protect. Pruning inherits the same absoluteness through the fifth root - a snapshot a pointer
+targets is never pruned - so a pointer's content set never becomes uncomputable.
+
 The second clause is the hard half of uploads; a GC that only checks current references is
 correct only if uploads are atomic with respect to it, and they are not. The third clause is
 the hard half of everything else, and the original two-clause invariant was incomplete against
@@ -208,19 +216,21 @@ exercise:
   gate's guarantee that the store never sees a PutObject and a DeleteObject in flight on one
   key holds only while every object delete flows through the intent machinery, so this is a
   boundary needing a named mechanical enforcer: an architecture test asserts no other code
-  path deletes from the blob store (AC15). `proxy-cache.md`'s open eviction-mechanics
-  question (its Q11) decides whether cache eviction ends only the reference and inherits
-  this single path, or becomes a second deleter; the latter is a revision of this
-  constraint, never a silent exception.
+  path deletes from the blob store (AC15). `proxy-cache.md` settled its eviction mechanics on
+  2026-09-26 in favour of this single path: eviction ends the cached reference only and
+  deletes no object, so it is **not** a second deletion path and needs no deletion safety
+  machinery of its own. AC15's architecture test is what holds cache eviction to that, and a
+  later move to direct deletion from eviction would be a revision of this constraint, never
+  a silent exception.
 - **Clocks and listings are not trustworthy inputs.** Grace comparisons mix object-store
   timestamps with PostgreSQL time; skew must be assumed and dwarfed by the grace period. The
   orphan scan (store listing versus rows) runs against "S3-compatible" stores whose LIST
   consistency varies, so it too applies the grace period to object age before touching
   anything.
-- **Mark roots come from the shared data model, and there are four**: published `File`
+- **Mark roots come from the shared data model, and there are five**: published `File`
   references, cached (`RemoteFile`-originated) references, snapshots inside the retention
-  window, and **CAS-backed metadata documents**. A sweep marking from fewer than all four
-  deletes live content.
+  window, **CAS-backed metadata documents**, and **snapshots targeted by a `Pointer`**. A
+  sweep marking from fewer than all five deletes live content.
 
   The fourth arrived when `data-model.md` settled that metadata documents are stored inline
   below a size threshold and as digest-referenced CAS blobs above it. A Debian signed `Release`
@@ -234,23 +244,48 @@ exercise:
   protected by nothing else. For the write barrier this means a document write that stores a
   CAS digest is a reference creation like any other: it goes through the shared
   reference-creation call (AC10), cancels standing intents, and the delete pass's re-check
-  counts document digests, current and snapshot-held, in what it treats as referenced. Each
-  root class has a defined end of life - a
+  counts document digests, current and snapshot-held, in what it treats as referenced.
+
+  **The fifth root is a snapshot that any `Pointer` targets**, plus the checkpoint and the
+  deltas required to reconstruct it. All of it is unprunable while the pointer targets it,
+  however far outside the retention window it has aged, and the blobs its content set
+  references are marked live from it exactly as from a snapshot inside the window. The reason
+  is that every name-addressed read resolves through a pointer (`data-model.md`): a `prod`
+  environment promoted once and untouched for a quarter, or a repository that simply stops
+  publishing for 31 days, would otherwise have the snapshot it serves pruned out from under
+  it and resolve to a content set that can no longer be computed - live serving broken with no
+  delete, no rollback and no operator action anywhere in sight. A follower's replication
+  pointer (`replication.md`) is an instance of the same root and protected by it for the same
+  reason. The root ends when the pointer stops targeting that snapshot: a promotion or
+  rollback repoints it, or the pointer itself is deleted, and the snapshot then falls back
+  under the retention window like any other - prunable immediately if it has already aged out.
+  A pointer-pinned snapshot's blobs are therefore released by a repoint rather than by a
+  delete, which is why the property suite below has to generate repoints: a root that can be
+  created and never released is storage that is unreclaimable in practice.
+
+  Each root class has a defined end of life - a
   delete removes a published reference, LRU eviction under the per-repository quota ends a
-  cached one (`proxy-cache.md`, resolved cache-eviction question), pruning at the
-  retention boundary ends a snapshot, and a metadata-document root ends when a newer revision
+  cached one (`proxy-cache.md`, resolved cache-eviction question) without deleting anything
+  itself, so that blob waits for the next sweep, pruning at the
+  retention boundary ends an untargeted snapshot, a repoint or a pointer deletion ends a
+  pointer-target root, and a metadata-document root ends when a newer revision
   supersedes the digest (or the document shrinks back below the threshold) and no retained
   snapshot still holds it - and hosted deletes reclaim space only through that
-  pruning, on the schedule the retention default sets: **30 days, configurable per repository.**
+  pruning, on the schedule the retention default sets: **30 days, configurable per repository**,
+  and only for snapshots no pointer targets.
   Pruning obeys the reconstructibility constraint `data-model.md` places on the delta
-  representation: a checkpoint or delta is dropped only while no retained snapshot depends on
+  representation: a checkpoint or delta is dropped only while no snapshot that survives
+  pruning - inside the retention window, or targeted by a pointer - depends on
   it, because a mark root whose content set can no longer be computed makes the sweep unsound.
   The root classes are the shared data model's to enumerate, and that list is live:
   `data-model.md`'s resolution on CAS-backed metadata documents added the fourth root above,
   while its resolution that proxied repositories create no snapshots bounded the third rather
-  than adding one. `proxy-cache.md` Q11 is still open and bears on the second, since whether
-  eviction deletes a cached blob directly or only ends its reference decides whether eviction is
-  a second deletion path that must independently honour the intent barrier. `replication.md`
+  than adding one, and the owner's 2026-09-26 answer on pointer targets added the fifth, whose
+  amendment of the enumeration lands in `data-model.md` because that spec owns it.
+  `proxy-cache.md`'s eviction mechanics, settled the same day, changed the set's shape rather
+  than its membership: eviction ends the cached reference only and the sweep reclaims the blob,
+  so the second root's lifetime ends at eviction while the blob itself waits for the next
+  sweep, and eviction is **not** a second deletion path. `replication.md`
   bears on the set twice: on a follower, replicated snapshots and their transferred blobs are
   consumers of the existing machinery - transfer commits and snapshot-range references flow
   through the shared reference-creation call and the intent gate like any other, which its AC7
@@ -263,7 +298,7 @@ exercise:
   tolerates them dangling - a policy record that pinned its blob would make refused malware
   uncollectable forever. **Any resolution
   changing this set amends these mark roots as a revision requiring re-review, never silently** -
-  which is the mechanism that caught the fourth root.
+  which is the mechanism that caught the fourth root, and then the fifth.
 
 ### Testing what conformance cannot see
 
@@ -278,8 +313,14 @@ This is the part of the spec that exists because the harness is blind here. Requ
   (without the upward crossing the fourth mark root is never exercised, and without
   supersession and the downward crossing that root's death - a reference ending with no delete,
   eviction or pruning involved - is never raced), snapshot-creating writes,
+  **pointer repointing in both directions** - a pointer moved onto a snapshot, which pins that
+  snapshot and its reconstruction chain as the fifth root, and a pointer moved away from one (or
+  deleted), which is the only thing that releases that root, so a generator without it exercises
+  a root that can be born and never dies and leaves pointer-pinned storage unreclaimable in
+  practice -
   cache eviction under the
-  per-repository quota, snapshot pruning at the retention boundary, repository grace refresh,
+  per-repository quota (which ends a cached reference and deletes no object), snapshot pruning at
+  the retention boundary, repository grace refresh,
   and session abandonment. A generator limited to fresh-content pushes cannot reach the deadliest
   race, and one that can create references but never end them - no eviction, no pruning, no
   expiry - can never race a reference's death against another's birth; both pass vacuously.
@@ -290,6 +331,9 @@ This is the part of the spec that exists because the harness is blind here. Requ
   dedup-hits mid-sweep) needs both a quiet and an active repository to exist; and the suite
   runs on an **injected clock**, because grace defaults to hours and retention to days, so
   wall-clock time can never schedule a grace lapse or a retention-boundary prune inside a test.
+  The clock must be able to age a *pointer-targeted* snapshot past the retention window too, or
+  the fifth root's exemption is never distinguishable from the third root's protection and both
+  ACs covering it pass vacuously.
   The sweep's internal phases (mark, intent record, re-check, row delete, object delete) must
   be schedulable as first-class interleaving points, or the intent-window races stay
   unreachable.
@@ -355,10 +399,22 @@ accepts one as evidence has missed the point of the spec.
       retryably until the object delete completes, and the re-uploaded content is then
       retrievable; no interleaving of commit and sweep loses the new copy.
 - [ ] AC14: The snapshot retention window defaults to 30 days, is overridable per repository,
-      and a snapshot older than the effective window is pruned and stops protecting its blobs.
+      and a snapshot older than the effective window that no pointer targets is pruned and
+      stops protecting its blobs.
 - [ ] AC15: No code path outside the sweep's delete pass and the orphan scan deletes an
       object from the blob store, enforced by an architecture test that fails on any other
-      deletion call site.
+      deletion call site - including cache eviction, which ends a cached reference and
+      deletes nothing.
+- [ ] AC17: A snapshot a pointer targets survives pruning however far outside the retention
+      window it has aged: the snapshot, the checkpoint and deltas that reconstruct it, and
+      every blob its content set references all survive both pruning and the sweep, and the
+      pointer still serves that snapshot's content bit-identically afterwards - proven on an
+      injected clock that ages the snapshot past the window while the pointer stays on it.
+- [ ] AC18: Repointing a pointer away from a snapshot (or deleting the pointer) releases the
+      root: a snapshot protected only by that pointer, and already outside the retention
+      window, is pruned on the next cycle, its blobs are collected, and the checkpoints and
+      deltas no surviving snapshot depends on are dropped with it; a repoint interleaved with
+      a running sweep never collects a blob the pointer's new target needs.
 
 ## Test Plan
 
@@ -380,6 +436,8 @@ accepts one as evidence has missed the point of the spec.
 | AC14 | integration | `internal/storage/retention_test.go` |
 | AC16 | property + integration | `internal/storage/gc_property_test.go` (metadata-document root); `internal/storage/metadata_blob_gc_test.go` |
 | AC15 | architecture test | `internal/storage/arch_test.go` |
+| AC17 | property + integration | `internal/storage/gc_property_test.go` (pointer-target root); `internal/storage/retention_test.go` (aged pointer target still serving) |
+| AC18 | property + integration | `internal/storage/gc_property_test.go` (repoint interleaved with the sweep); `internal/storage/retention_test.go` (release then prune) |
 
 ## Implementation Phases
 
@@ -391,6 +449,8 @@ accepts one as evidence has missed the point of the spec.
 
 ### Phase 3: GC
 - The chosen strategy, plus the property and fault-injection suites **written before it**
+- Retention pruning, including the pointer-target exemption and its release on repoint
+  (AC17, AC18)
 
 ### Phase 4: Benchmarks
 - Throughput benchmarks and the CI regression gate
@@ -401,42 +461,44 @@ accepts one as evidence has missed the point of the spec.
 
 ## Open Questions
 
-One question is open (Q10, raised by the 2026-09-23 gate review). The nine earlier questions
-were answered by the owner and are
+No questions are open. All ten raised across this spec's reviews were answered by the owner,
+the last of them on 2026-09-26 (pointer targets versus the retention window, was Q10), and each
+is
 folded into Design, Scope, the acceptance criteria and the Test Plan above, with each
 decision's accepted cost recorded beside it under the Resolved headings, kept rather than
 deleted so the reasoning survives the next time someone asks why it was done this way.
 
-### Q10: Is a snapshot targeted by a `Pointer` exempt from retention pruning - a fifth mark root?
+### Resolved: pointer-targeted snapshots versus the retention window (was Q10)
 
-`data-model.md` brought promotion and rollback into scope: several named pointers per
-repository, each targeting a snapshot, and **every** name-addressed read resolves through a
-pointer. A pointer can therefore sit on one snapshot indefinitely - a `prod` environment
-promoted once and untouched for a quarter, or the always-newest pointer of a repository that
-simply stops publishing for 31 days. As this spec stands, that snapshot ages past the
-retention window and is pruned: its blobs lose their only protection (for content since
-deleted from the head state) and its delta chain becomes droppable, so the pointer resolves
-to a snapshot whose content set can no longer be computed - live serving breaks with no
-delete, no rollback and no operator action anywhere in sight. `data-model.md` AC23 refuses
-*repointing to* an out-of-window snapshot, which guards the transition but not aging in
-place. A follower's replication pointer (`replication.md`) has the same shape.
+**Settled 2026-09-26: a snapshot targeted by a `Pointer` is exempt from retention pruning - it
+is a fifth mark root.** The snapshot, the checkpoint-and-delta chain that reconstructs it, and
+every blob its content set references are unprunable and uncollectable while any pointer
+targets it, however far outside the retention window it has aged. Folded into Scope, the
+invariant, the Design mark-roots section, the property-test operation set, and AC17 and AC18;
+AC14 now prunes only snapshots nothing points at. The amendment to the enumeration itself lands
+in `data-model.md`, which owns the root set.
 
-**Recommendation:** A - pointer-targeted snapshots (and the checkpoint-plus-delta chain that
-reconstructs them) are unprunable while targeted: a fifth mark root. It is the only option
-that keeps promotion's bit-identical-serving promise and never breaks an idle repository;
-the pinned storage is visible and attributable to a named pointer, where the alternatives
-fail silently or halt reclamation.
+It is the only option that keeps promotion's bit-identical-serving promise and never breaks an
+idle repository. Every name-addressed read resolves through a pointer, so without the exemption
+a `prod` environment promoted once and left alone for a quarter, or a repository that stops
+publishing for 31 days, loses the snapshot it is serving to a timer.
 
-| Option | You get | It costs |
-|---|---|---|
-| **A. Pointer targets are unprunable roots** | An environment serves exactly what was promoted, forever; idle repositories never break; the failure mode becomes visible pinned storage per named pointer | Retention no longer strictly bounds storage: a forgotten environment pointer retains its snapshot, its delta chain back to a checkpoint, and every blob they reference, indefinitely |
-| **B. Prune anyway; aged-out pointers auto-advance to the oldest retained snapshot, with an alert** | The retention window strictly bounds storage and pruning never stalls | What `prod` serves changes with no deploy and no repoint - a timer silently breaks the bit-identical promise promotion exists to make |
-| **C. Pruning skips (or halts for) a repository while any pointer targets an out-of-window snapshot, alerting the operator** | Nothing is deleted and nothing silently changes | One stale environment pointer holds the whole repository's reclamation hostage - the same shape `replication.md` Q1 rejects for follower tracking |
+**Accepted cost: retention no longer strictly bounds storage.** A forgotten environment pointer
+retains its snapshot, its delta chain back to a checkpoint, and every blob they reference,
+indefinitely, and no schedule reclaims it - only a repoint or a pointer deletion does. The
+mitigating property is what decided the choice: the failure mode is **visible pinned storage
+attributable to a named pointer**, where both alternatives fail worse. B (prune anyway, with an
+aged-out pointer auto-advancing to the oldest retained snapshot and an alert) changes what
+`prod` serves with no deploy and no repoint, breaking the bit-identical promise promotion exists
+to make, silently and on a timer. C (pruning skips or halts for a repository while any pointer
+targets an out-of-window snapshot) lets one stale environment pointer hold that whole
+repository's reclamation hostage, which is the shape `replication.md` Q1 weighs for follower
+tracking. A pin that is visible and attributable beats one that fails silently or stops
+reclamation altogether.
 
-**Why this is yours:** it trades bounded storage against the serving guarantee promotion is
-sold on, and the answer amends this spec's mark-root set, `data-model.md`'s retention and
-AC23 semantics, and what a replication follower may rely on - a cross-spec architecture
-call, not something a test fleet can measure its way to.
+Because the root dies only on a repoint, that release path is load-bearing rather than
+incidental: AC18 polices it and the property suite generates repoints in both directions, since
+a root that can be created and never released is storage nothing reclaims.
 
 ### Resolved: the post-row-delete object race (was Q7)
 
@@ -503,6 +565,10 @@ stops being possible.** The API must therefore report how far back rollback actu
 rather than letting an operator discover the limit during an incident. The same question was
 raised independently in `data-model.md`; this resolution settles both.
 
+Amended 2026-09-26 by the pointer-target resolution above: an out-of-window snapshot is pruned
+only while **no pointer targets it**, which makes the retention window the bound on snapshots
+nothing points at rather than on all of them.
+
 ### Resolved: the write barrier (was Q6)
 
 **Settled 2026-09-23: a deletion-intent table.** The sweep records the digests it intends to
@@ -564,3 +630,4 @@ not by weakening the storage model.
 | 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code) | The six resolutions were recorded but only half-applied: frontmatter, Scope, the grace text, the barrier text and the mark-roots bullet still described the old shape and cited Q4/Q5/Q6 as open; folded throughout, intent ordering/lifecycle and grace-versus-intent constraints added, property op set extended to reference-ending operations and sweep-phase interleavings, AC9-AC12 added; Q7 (post-row-delete object window), Q8 (retention default), Q9 (push-session boundary) raised; stays draft |
 | 2026-09-23 | a2d5219 | gate review: folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code; siblings re-read at this sha) | Q7-Q9 verified as genuinely folded; four stale session-scoped remnants fixed (orphan-scan text, AC3's collection timing, the property op set, the was-Q4 record) plus the stale three-open intro; delete-conditional-on-standing-intent made explicit, single-deleter boundary given its named enforcer (AC15), pruning reconstructibility and the sibling-owned root-set dependency recorded; zero open questions, all ACs mapped; draft -> planned |
 | 2026-09-23 | d078c46 | gate re-review of the fourth root: application check + fifth-root hunt across all siblings + barrier and generator reachability + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code) | Fourth root was stated but half-applied: Scope still said three roots, the frontmatter cited the wrong AC, and the root's definition covered only snapshot-held documents, leaving proxied repositories' current documents (the motivating Debian case) unprotected - all fixed, with the document write bound to the barrier (AC9/AC10) and its death ops (supersession, downward threshold crossing) plus multi-repository and injected-clock reachability added to the property suite; intent-lifecycle contradiction fixed (intent now outlives the row delete so AC13's gate holds); replication and supply-chain placed against the root set; a genuine fifth-root gap found and raised as Q10 (pointer-targeted snapshots versus the retention window); stays draft on Q10 |
+| 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review: application of decisions already made. Q10 answered option A, folded into the body before this record was written - Scope, the invariant, the Design mark-roots section and the root end-of-life list now carry five roots, the fifth defined as a snapshot any `Pointer` targets plus the checkpoint-and-delta chain that reconstructs it, unprunable while targeted, with the accepted cost (retention no longer strictly bounds storage, the pin visible and attributable to a named pointer) and the rejection of B and C recorded in the resolved record. Pruning reconstructibility and AC14 widened; AC17 (an aged pointer target survives pruning and still serves) and AC18 (a repoint or pointer deletion releases the root, after which the snapshot prunes and its blobs collect) added with Test Plan rows; the property-test operation set extended with repointing in both directions and an injected clock able to age a targeted snapshot, because a root that can be born and never die is untestable and its storage unreclaimable in practice. proxy-cache Q11 recorded here as the consequence it is: eviction ends the cached reference only, so it is not a second deletion path, AC15's single-deleter boundary now names it, and the second root's lifetime ends at eviction while the blob waits for the sweep. |

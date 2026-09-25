@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Gate review 2026-09-24 at 1701a48: the promotion scope-in was half-applied (Design and Phase 2 still described the single-pointer v1) and is now folded through; deletes and metadata-only mutations derived as snapshot-creating writes; AC24 (immediate policy) and AC25 (pruning reconstructibility) added; Q15 raised - the in-flight membership check's session scoping has no wire session to key on. Stays draft until the owner answers Q15."
+status_description: "Gate review 2026-09-24 at 1701a48: the promotion scope-in was half-applied (Design and Phase 2 still described the single-pointer v1) and is now folded through; deletes and metadata-only mutations derived as snapshot-creating writes; AC24 (immediate policy) and AC25 (pruning reconstructibility) added; Q15 raised - the in-flight membership check's session scoping has no wire session to key on. Stays draft until the owner answers Q15. Consequential update 2026-09-26: storage-and-gc Q10 was answered option A, so the mark-root set this spec owns is now five - the liveness bullet, the Snapshots section, the pruning-reconstructibility sentence, AC23 (its relationship to aging in place stated explicitly) and AC25 all widened for pointer-targeted snapshots."
 description: "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies."
 author: michielvha
 goal: "Make breadth affordable by giving all 33 ecosystems one metadata schema, so a format is parsing plus routes rather than a bespoke database design."
@@ -68,10 +68,11 @@ remote modelling together.
   rollback repoints it back. Content is bit-identical across environments because it is the same
   snapshot, not a re-publish.
 - The liveness rules GC must honour: a blob can be referenced by a published artifact, a cached
-  one, a retained snapshot, or a CAS-backed metadata document, and `storage-and-gc.md` marks
-  from exactly those four roots. The set is this spec's to amend and it is currently live:
-  `storage-and-gc.md` Q10, open with the owner, proposes a fifth root (a snapshot targeted by a
-  `Pointer` staying unprunable), and whichever way it is answered, the amendment lands here as a
+  one, a snapshot inside the retention window, a CAS-backed metadata document, or a snapshot a
+  `Pointer` targets, and `storage-and-gc.md` marks from exactly those five roots. The fifth was
+  added to this list on 2026-09-26, when the owner settled that a pointer-targeted snapshot -
+  plus the checkpoint-and-delta chain that reconstructs it - is exempt from retention pruning
+  while targeted. The set is this spec's to amend, so any further change lands here as a
   revision of this list, never as a sibling-side extension.
 
 - **The snapshot dimension**: every completed logical write - a publish, a hosted delete, a
@@ -151,12 +152,16 @@ blob arrived, not about where it lives.
 Consequences worth stating explicitly, because they are where the bugs will be:
 
 - A blob can be referenced by a published artifact **and** a cached one simultaneously, by a
-  retained snapshot, and by a CAS-backed metadata document. GC liveness therefore has four
+  snapshot inside the retention window, by a CAS-backed metadata document, and by a snapshot a
+  `Pointer` targets. GC liveness therefore has five
   reference classes, which the resolutions in `storage-and-gc.md` now price in: the sweep marks
-  from four roots - published references, cached references, snapshots inside the retention
-  window, and CAS-backed metadata documents (current and snapshot-held) - with a deletion-intent
+  from five roots - published references, cached references, snapshots inside the retention
+  window, CAS-backed metadata documents (current and snapshot-held), and pointer-targeted
+  snapshots together with the checkpoints and deltas that reconstruct them - with a
+  deletion-intent
   table as the write barrier between reference creation and sweep deletion. A blob referenced
-  only from a pruned snapshot is no longer protected.
+  only from a pruned snapshot is no longer protected; a snapshot a pointer targets is not pruned
+  while it is targeted, however old it is.
 - When several upstreams offer the same content, there is **one** `Package`/`Version` and
   **several** `RemoteFile` rows, tried in turn. This falls out of the model rather than needing
   failover logic in each handler.
@@ -251,14 +256,35 @@ already served elsewhere (promotion), repointing it back (rollback), and reporti
 rollback actually reaches, per the retention reporting `storage-and-gc.md` requires. Snapshots
 themselves stay an internal representation; what the API exposes is pointers and the reach.
 
+**A pointer pins what it targets.** Settled 2026-09-26: the snapshot a pointer targets, and the
+checkpoint-and-delta chain that reconstructs it, are exempt from retention pruning while the
+pointer targets it, which makes them the fifth GC mark root (`storage-and-gc.md`, resolved
+pointer-target question, AC17). An environment therefore keeps serving exactly what was promoted
+to it however long it sits there, and an idle repository never loses the snapshot its default
+pointer is on. The cost is that retention stops being a strict bound on storage: a forgotten
+environment pointer retains its snapshot and every blob that snapshot's content set references,
+indefinitely, and only a repoint or a pointer deletion releases it (`storage-and-gc.md` AC18).
+That pinned storage is attributable to a named pointer, which is why it was preferred to an
+auto-advancing pointer or a pruner that stalls.
+
+The pin and AC23 are two halves of one rule rather than a contradiction. AC23 refuses
+**repointing to** a snapshot outside the retention window; the pin protects a snapshot from
+aging out **while a pointer is already on it**. Protection attaches when a pointer targets the
+snapshot and is not retroactive, so a snapshot that aged out with nothing pointing at it may
+already have lost the deltas, checkpoints and blobs its content set needs - allowing a repoint
+onto it would be a promise the store cannot keep, which is why the refusal names the reach the
+API reports. A snapshot targeted before it aged out never leaves its own pointer's reach, so
+aging in place is safe while the transition is not.
+
 A snapshot is stored as a delta from its predecessor, with periodic full checkpoints, and the
 delta captures the metadata documents at all three levels as well as membership, so repointing
 restores dist-tags and indexes rather than only which versions existed. Two constraints follow
 from that representation. The read path must never walk an unbounded chain: resolving any
 snapshot reads one checkpoint plus at most the checkpoint interval of deltas. And pruning must
-keep every retained snapshot reconstructible: a checkpoint or delta may be dropped only while no
-snapshot inside the retention window depends on it, because retained snapshots are a GC mark
-root, and a root whose content set can no longer be computed makes the sweep unsound.
+keep every surviving snapshot reconstructible: a checkpoint or delta may be dropped only while
+no snapshot that survives pruning depends on it - one inside the retention window, or one a
+`Pointer` targets, which is exempt however old it is - because both are GC mark roots, and a
+root whose content set can no longer be computed makes the sweep unsound.
 
 The reason to pay this cost now is that it is **not additive later**. Retrofitting a version
 dimension means touching every table and every handler, because "what is in this repository"
@@ -298,7 +324,10 @@ answers differently.
       other environment served, with no re-upload.
 - [ ] AC23: Rollback repoints an environment at an earlier retained snapshot and the previously
       served content returns, including metadata at all three levels; a snapshot outside the
-      retention window is refused with the reach the API reports.
+      retention window that no pointer targets is refused with the reach the API reports, while
+      a snapshot a pointer already targets stays inside that pointer's reach however far it ages
+      and keeps serving (the fifth mark root, `storage-and-gc.md` AC17) - the refusal governs
+      the transition to an untargeted out-of-window snapshot, not aging in place.
 - [ ] AC16: A virtual repository resolves local members before remote caches and remote caches
       before upstream fetches, asserted at the network layer; a `remote` repository has exactly
       one upstream, and rotating its credential touches one row.
@@ -344,11 +373,13 @@ answers differently.
       client request, and a subsequent client request is served with no upstream call, asserted
       at the network layer - the third download policy, previously the only one no criterion
       exercised.
-- [ ] AC25: Pruning never leaves a retained snapshot unresolvable: a checkpoint or delta
-      survives while any snapshot inside the retention window depends on it, proven against a
-      history where pruning removes everything only out-of-window snapshots depend on and every
-      retained snapshot afterwards still resolves its full content set, membership and all
-      three metadata levels included.
+- [ ] AC25: Pruning never leaves a surviving snapshot unresolvable: a checkpoint or delta
+      survives while any snapshot that survives pruning depends on it - one inside the retention
+      window, or one a pointer targets - proven against a history where pruning removes
+      everything only out-of-window, untargeted snapshots depend on, and where a
+      pointer-targeted snapshot older than the window is among the survivors; every surviving
+      snapshot afterwards still resolves its full content set, membership and all three
+      metadata levels included.
 
 ## Test Plan
 
@@ -395,7 +426,8 @@ architecture test.
 `Upstream`, `RemoteFile`, download policies, upstream failover.
 
 ### Phase 4: GC integration
-The cached and retained-snapshot reference classes, and the property tests that police them.
+The cached, retained-snapshot and pointer-targeted-snapshot reference classes, and the property
+tests that police them.
 
 ## Tasks
 
@@ -461,6 +493,11 @@ AC13 already presupposed a visible dist-tag move. Folded into the Snapshots sect
 **Settled 2026-09-23 by `storage-and-gc.md`.** A blob referenced only from a snapshot inside
 the retention window is live; once that snapshot is pruned, the reference no longer protects it.
 Retained snapshots are the third GC mark root alongside published and cached references.
+
+Amended 2026-09-26 by the owner's answer on pointer targets: a snapshot a `Pointer` targets is
+exempt from pruning while targeted, so it protects its blobs however old it is. That is the fifth
+root, enumerated in this spec's Scope and Design and policed by `storage-and-gc.md` AC17 and
+AC18.
 
 ### Resolved: snapshot representation (was Q6)
 
@@ -612,6 +649,7 @@ back toward the 31 bespoke schemas this model exists to prevent.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and this spec is not the decision's home - but it owns the mark-root set, so the amendment lands here. The 1701a48 gate review's prediction of what changes under Q10 option A was checked against the file rather than trusted, and all three items were real: the Scope liveness bullet (now five roots, the fifth being a snapshot a `Pointer` targets plus its reconstruction chain), the pruning-reconstructibility sentence in the Snapshots section (a checkpoint or delta survives while any snapshot that survives pruning depends on it, targeted or in-window) and AC25's notion of retained (now surviving, with a pointer-targeted out-of-window snapshot among the survivors). Also folded: the Design consequences bullet's four reference classes, a Snapshots-section paragraph defining the pin and its accepted cost, the was-Q5 record's amendment note, and Phase 4. AC23 was checked for contradiction and is not one: it refuses repointing **to** an untargeted out-of-window snapshot while the pin protects a snapshot already targeted from aging out, so protection attaches on targeting and is not retroactive - stated in Design and in AC23 itself. Q15 is untouched and still open. |
 | 2026-09-24 | 1701a48 | gate review: application check of all 14 resolved decisions + adversarial (OCI push flow vs the pointer model) + cross-spec in both directions against storage-and-gc, proxy-cache, replication, oci and supply-chain-policy + unpoliced-design-claim hunt + constitution + go-spec-reviewer; claim verification against code vacuous (the tree holds only a stub `cmd/stackweaver-registry/main.go`, no `internal/` exists); the terminated reviewer's three kept edits re-verified rather than trusted, all three sound | 12 of 14 decisions genuinely applied; two were half-applied and are now folded: the promotion scope-in had left Design's Snapshots section claiming a single always-advancing v1 pointer and no snapshot API while Scope, the entity table and AC22/AC23 said the opposite (Phase 2 also still built the v1 pointer, and no phase built promotion), and the fourth-mark-root resync had left the Design consequences bullet claiming a three-root sweep. Derived, not decided: hosted deletes and metadata-only mutations are snapshot-creating completed writes, entailed by pointer-only name serving plus immutable snapshots plus oci.md's content-management scope, folded into the Snapshots section, the Scope bullet, the Snapshot entity row and AC9. AC24 added (`immediate` was the only download policy no criterion anywhere exercised) and AC25 added (pruning reconstructibility was named by Design as what keeps the sweep sound and policed by no AC in this spec or the sibling). Supersession notes added to the was-Q2, was-Q4, was-Q7 and was-Q14 records; `Pointer` gained its repository ref; the root-set liveness bullet now names storage-and-gc Q10 as a pending amendment to the set this spec owns; one stale three-root remnant fixed in proxy-cache's resolved cache-location record. Coherence under the open sibling questions assessed: under storage-and-gc Q10 option A the liveness bullet, the pruning-reconstructibility sentence and AC25's notion of retained must widen to pointer-targeted snapshots, under B or C this spec stands as written; proxy-cache Q11 presupposes nothing here under either answer. One genuine defect found in a settled decision's mechanism and raised as Q15: the in-flight digest-read membership check is session-scoped, but OCI has no push session on the wire and the blob's upload session is closed before the client's HEAD arrives, so the check has nothing to key on - the same wire reality that re-scoped the grace period. Stays draft on Q15. |
 | 2026-09-24 | d078c46 | partial: a gate reviewer terminated on a spend limit mid-pass. Its review does not count and this spec still awaits one | Kept only what is independently verifiable against the siblings at this sha: the liveness bullet resynced to `storage-and-gc.md`'s four mark roots, the snapshot bullet's stale "promotion and rollback do not ship in v1" corrected against the reversal already committed at 525c9f8, and the Open Questions intro corrected - it still announced open questions and blocked implementation while the file records none. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + sibling consistency (code-claim verification vacuous: pre-implementation, no tree to check) | Breadth claim stressed against Maven, OCI, Debian and npm; six open questions raised (Q4-Q9), snapshot ACs added (AC9, AC10), stale sibling references corrected; stays draft |

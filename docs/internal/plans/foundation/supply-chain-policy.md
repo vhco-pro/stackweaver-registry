@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "First review 2026-09-23 at d078c46 reconciled this spec against proxy-cache's settled decisions, placed policy records outside the GC root set, and added AC8 (condemned content never fetched). Six open questions await the owner, three of them architectural: component inventory, the evaluation hook, and condemned-artifact disposition."
+status_description: "First review 2026-09-23 at d078c46 reconciled this spec against proxy-cache's settled decisions, placed policy records outside the GC root set, and added AC8 (condemned content never fetched). Six open questions await the owner, three of them architectural: component inventory, the evaluation hook, and condemned-artifact disposition. Consequential update 2026-09-26: five enumerated mark roots after the pointer-target answer, and eviction now ends a cached reference rather than deleting bytes; Q5 is untouched and still open."
 description: "Spec for scanning artifacts and enforcing supply-chain policy at the registry boundary - blocking by vulnerability, licence or signature state, on both hosted and proxied content."
 author: michielvha
 goal: "Make the registry a policy enforcement point rather than a passive store, so a rule about what may enter a build is applied where every artifact already passes."
@@ -170,7 +170,7 @@ say which path wins when both fire.
 ### Interaction with GC and eviction
 
 Scan results and refusal records reference artifacts, and `storage-and-gc.md` marks blob
-liveness from four enumerated roots with a standing rule that the root set is the shared data
+liveness from five enumerated roots with a standing rule that the root set is the shared data
 model's to amend, never any sibling's to extend silently. This spec therefore takes a position:
 policy and scan records reference content by digest and coordinate and are **not** a liveness
 root - a refusal record must stay queryable after the blob it condemned is gone, so it cannot
@@ -179,7 +179,9 @@ forensics does pin them, and that is a mark-root amendment that goes through the
 revision-and-re-review mechanism, not a side effect of this spec.
 
 Eviction makes the digest-independence load-bearing rather than theoretical: a refused cached
-artifact is never read, so LRU eviction under the repository quota will take its bytes early.
+artifact is never read, so LRU eviction under the repository quota will drop its cached
+reference early and the GC sweep will then reclaim the bytes (`proxy-cache.md`, resolved
+eviction-mechanics question - eviction itself deletes nothing).
 AC7's refusal-without-re-ingest must survive that - the refusal binds to the coordinate and the
 recorded scan result, not to bytes still being in the cache - or eviction becomes a way to
 launder a condemned artifact back into the serve-pending-scan window on re-fetch.
@@ -339,7 +341,7 @@ neither.
 |---|---|---|
 | **A. Purge wins: policy condemnation deletes cached bytes, matching the proxy rule** | One behaviour for both channels; condemned bytes provably gone from disk | Destroys the evidence AC5 makes queryable, is irreversible when an advisory is withdrawn, and a re-fetch after withdrawal re-enters the unscanned window |
 | **B. Retain and refuse: bytes stay, nothing serves, the record explains why** | Reversible on advisory withdrawal; forensics intact; one disposition to test | Diverges from the settled proxy purge behaviour, which must then be amended in `proxy-cache.md`, and operators must accept known-bad bytes remaining on disk |
-| **C. Quarantine: bytes moved or pinned in a non-serving state with retention** | Explicit forensic story; serving path provably cannot reach them | A new GC mark root, which the `storage-and-gc.md` revision mechanism must absorb, and a third content state every path must handle |
+| **C. Quarantine: bytes moved or pinned in a non-serving state with retention** | Explicit forensic story; serving path provably cannot reach them | A new GC mark root - a sixth, after pointer targets were settled as the fifth on 2026-09-26 - which the `storage-and-gc.md` revision mechanism must absorb, and a third content state every path must handle |
 
 **Why this is yours:** it reconciles two settled specs that currently disagree, and the choice
 between destroying and retaining known-bad content is a liability and posture decision, not an
@@ -370,3 +372,4 @@ call the experiment reserves for the owner.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-23 | d078c46 | first review: adversarial + constitution + cross-spec (proxy-cache's settled stream-and-verify, single-flight, serve-stale and security-purge decisions; data-model's opaque metadata typing; format-handler-interface's pinned five methods and `Scope(r)` precedent; storage-and-gc's four mark roots and eviction; auth's client-not-artifact boundary) + go-spec-reviewer; claim verification vacuous pre-code (no `internal/policy/` exists). The reviewer terminated on a spend limit before writing this row; it is recorded here from the diff | Three of `proxy-cache.md`'s settled decisions were shown to collide with cache-then-scan and the collisions stated rather than left for implementation: refuse-until-scanned is incompatible with streaming to the initiating client, the scan lands inside the coalescing latency bound every waiter shares, and serve-stale needs the advisory feed as its independent signal. Evaluation order on a miss derived (coordinate-decidable rules refuse before any upstream request, giving AC8: condemned content is neither fetched nor cached). The auth precedent this spec invokes was shown to be unearned - central evaluation needs a request-to-coordinate mapping no pinned method provides - raising Q4. Component inventory named as the central tension (Q3): the flagship first format is the one coordinate matching cannot see into. Two settled specs shown to disagree on one real event (purge versus refuse-and-retain), raising Q5. Signature state confirmed to have no producer in any spec, raising Q6 and explaining the deliberately absent AC. Policy records placed against the GC root set as explicitly not a root, so a refusal outlives the blob it condemned (AC5, AC7) and eviction cannot launder a condemned artifact. Scan failure separated from scan result (AC6). AC1/AC3/AC7 extended across both paths. Stays draft on Q1-Q6. |
+| 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and only a consequential update: neither decision is this spec's. The GC-and-eviction section now says five enumerated roots (pointer-targeted snapshots became the fifth on 2026-09-26) and states eviction correctly under proxy-cache's answer - it drops the cached reference and the sweep reclaims the bytes, eviction itself deleting nothing - which leaves the digest-independence argument behind AC7 intact and if anything longer-lived. Q5 is left open and unanswered; only its option C wording was corrected, since the mark root quarantine would add is now a sixth rather than a fifth. This spec's position that policy records are not a root is unchanged. |

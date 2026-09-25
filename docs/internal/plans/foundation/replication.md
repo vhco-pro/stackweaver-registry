@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "First review 2026-09-23 corrected the transfer unit for the delta-plus-checkpoint snapshot representation, bound the follower's GC to all four mark roots and the shared commit machinery, and specified archive integrity; Q3-Q7 raised. Seven open questions await the owner."
+status_description: "First review 2026-09-23 corrected the transfer unit for the delta-plus-checkpoint snapshot representation, bound the follower's GC to all of storage-and-gc's mark roots (four at the time) and the shared commit machinery, and specified archive integrity; Q3-Q7 raised. Seven open questions await the owner. Consequential update 2026-09-26: the root set is five, and a follower's replication pointer is an instance of the fifth root, which is what now keeps the snapshot it serves unprunable on the follower; AC7 widened accordingly."
 description: "Spec for replicating content between registry instances - geo-distribution, disaster recovery and air-gapped mirroring - built on the content-addressed store and immutable snapshots."
 author: michielvha
 goal: "Let one logical registry span sites, so a build pulls locally and an air-gapped environment can be fed a verifiable snapshot."
@@ -19,8 +19,9 @@ One logical registry, several instances, content moving between them.
 
 Deferred in `storage-and-gc.md` as "later, and it depends on decisions made here". Those
 decisions have since been made - content addressing, mark-and-sweep GC with a deletion-intent
-barrier and four mark roots, immutable snapshots stored as deltas with periodic checkpoints
-under bounded retention - so the dependency is discharged and the remaining reason to wait was
+barrier and five mark roots, immutable snapshots stored as deltas with periodic checkpoints
+under bounded retention, and pointer-targeted snapshots exempt from pruning - so the dependency
+is discharged and the remaining reason to wait was
 build effort, which is no longer a constraint (`project-charter.md`, the standing scope
 decision).
 
@@ -108,10 +109,16 @@ on the follower, is Q3.
 A follower runs the same mark-and-sweep over its own store, and everything `storage-and-gc.md`
 settled applies unchanged:
 
-- **All four mark roots.** On a follower, replicated snapshots inside its retention window are
+- **All five mark roots.** On a follower, replicated snapshots inside its retention window are
   what keeps replicated content live, and the fourth root - CAS-backed metadata documents -
   matters here exactly as on a leader, because replicating metadata at all three levels means
-  the follower holds metadata-document blobs that no `File` row references.
+  the follower holds metadata-document blobs that no `File` row references. The fifth root
+  covers a follower's own pointer: a replication pointer targets a snapshot exactly as an
+  environment pointer does, so the snapshot it serves and the checkpoint-and-delta chain that
+  reconstructs it are exempt from the follower's pruning while targeted (`storage-and-gc.md`,
+  resolved pointer-target question). That is a statement about the follower's store only; what
+  a *leader* may prune while a follower is behind is Q1 below, which the root set does not
+  answer.
 - **Transfer commits go through the shared machinery.** Applying a snapshot range commits blobs
   and creates references, which makes replication a reference-creating writer exactly like an
   upload: it uses the shared reference-creation call, so the deletion-intent check runs and
@@ -126,7 +133,10 @@ settled applies unchanged:
   leader publish time it would be pruned on import and AC5 below would be unsatisfiable, so a
   follower's window runs from when a snapshot arrived locally. And whatever its age, the
   snapshot a follower's pointer currently serves is never pruned out from under it - a follower
-  fed rarely must keep serving what it has.
+  fed rarely must keep serving what it has. Since 2026-09-26 that is not a replication-local
+  rule but an instance of the fifth mark root: any pointer-targeted snapshot is unprunable while
+  targeted, and a follower's pointer is a pointer. It is released the same way, when replication
+  advances the pointer to a newer snapshot, which is what lets the old one age out and collect.
 
 ### Retention is a coordination problem, and it is the risk here
 
@@ -180,8 +190,10 @@ internally consistent, not that its top-level manifest is the leader's.
 - [ ] AC6: A leader cannot prune a snapshot that a known follower still needs, or the follower
       detects the gap and re-seeds rather than serving incomplete content; whichever is settled,
       the failure is never silent.
-- [ ] AC7: A follower's GC marks from all four roots over replicated content: a replicated
-      CAS-backed metadata document blob that no `File` row references survives its sweep, and a
+- [ ] AC7: A follower's GC marks from all five roots over replicated content: a replicated
+      CAS-backed metadata document blob that no `File` row references survives its sweep, the
+      snapshot the follower's pointer targets survives its pruning even when older than the
+      follower's retention window and still serves, and a
       sweep interleaved with an in-progress transfer never collects a blob the transfer has
       committed - asserted by the same property test that covers the leader's mark roots, with
       transfer-apply added to its operation set.
@@ -364,3 +376,4 @@ call.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-23 | d078c46 | first review: adversarial + constitution + cross-spec (data-model's delta/checkpoint representation and repository types, storage-and-gc's four mark roots and single-writer machinery, auth's missing instance identity) + go-spec-reviewer; claim verification vacuous pre-code (no `internal/replication/` exists) | Transfer unit corrected for the delta-plus-checkpoint representation (contiguous deltas vs checkpoint-based seed, reconstructibility on the follower), follower GC bound to all four roots and the shared reference-creation and intent machinery, remote repositories excluded as sources, follower retention clock and served-snapshot protection stated, archive contiguity/atomicity/idempotence specified; AC2 moved to fault injection and made consistent with AC3, AC5 hardened, AC7 extended to the fourth root and transfer interleavings, AC8-AC10 added; Q3-Q7 raised (virtual repositories, air-gapped proxied content, DR promotion, instance-to-instance auth, archive trust root); stays draft |
+| 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and this spec is only a consequential update: the decision's home is `storage-and-gc.md`. Context, the follower-GC bullet and AC7 carried from four mark roots to five. The fifth root does cover a follower: a replication pointer targets a snapshot exactly as an environment pointer does, so the follower's served snapshot and its reconstruction chain are exempt from the follower's own pruning while targeted, which turns the previously replication-local 'the served snapshot is never pruned' rule into an instance of the shared root, released when replication advances the pointer. Scoped explicitly to the follower's store: what a leader may prune while a follower is behind is Q1, which the root set does not answer and which stays open along with Q2-Q7. |

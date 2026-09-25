@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reviewed 2026-09-23 at 3e3ae0a: the six folded decisions (Q4-Q9) were recorded but largely unapplied; now applied through Design, Scope, ACs and the Test Plan, with four interaction questions raised (Q10-Q13). Stays draft until the owner answers them."
+status_description: "Reviewed 2026-09-23 at 3e3ae0a: the six folded decisions (Q4-Q9) were recorded but largely unapplied; now applied through Design, Scope, ACs and the Test Plan, with four interaction questions raised (Q10-Q13). Q11 (eviction mechanics) was answered on 2026-09-26 - eviction ends the cached reference only and the sweep reclaims the blob, so the quota accounts referenced bytes rather than stored bytes - and is folded through Scope, Design, AC7, AC14 and the new AC16. Stays draft until the owner answers Q10, Q12 and Q13."
 description: "Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials."
 author: michielvha
 goal: "Deliver the one capability no free multi-format registry has, so the project is not a slower Gitea with fewer formats."
@@ -48,8 +48,10 @@ build reliability, egress cost and supply-chain control.
   entity** (`data-model.md`, resolved upstream and repository structure).
 - Preconfigured upstreams: npm, PyPI and Docker Hub ship configured and enabled (the resolved
   preconfigured-upstreams decision below).
-- Cache eviction: least-recently-used under a per-repository storage quota, coordinated with
-  blob GC.
+- Cache eviction: least-recently-used under a per-repository storage quota, ending the cached
+  reference only. Eviction deletes no object; the deletion-intent sweep in `storage-and-gc.md`
+  reclaims the blob, so the quota accounts referenced bytes rather than stored bytes (the
+  resolved eviction-mechanics question below).
 - Conformance cases in proxied mode for every format, plus a nightly scheduled job against the
   real preconfigured upstreams.
 
@@ -175,8 +177,9 @@ on what is live. A cached blob's liveness is governed by cache policy rather tha
 publishing reference, which means the GC invariant in `storage-and-gc.md` needs a second class
 of reference. **That spec must land first.** Its open questions have since resolved
 (mark-and-sweep with a grace period, a deletion-intent table as the write barrier, and marking
-from four roots: published references, cached references, snapshots inside the retention
-window, and CAS-backed metadata documents), and that is the shape this spec now depends on.
+from five roots: published references, cached references, snapshots inside the retention
+window, CAS-backed metadata documents, and snapshots a `Pointer` targets), and that is the shape
+this spec now depends on.
 The fourth root exists because of this spec: a proxied repository's current index document - a
 Debian-scale `Release` file above the inline size threshold - is a CAS blob that no `File` row
 references, and a three-root sweep would have collected it while it was being served. A proxied
@@ -187,9 +190,26 @@ What ends a cached reference's life is settled (the resolved cache-eviction deci
 content evicts least-recently-used when its repository exceeds a per-repository storage quota.
 Access times are therefore tracked on the read path, quota utilisation is observable, and cache
 thrash - a quota set too low presenting as the proxy being slow - must be detectable from
-metrics rather than inferred. Eviction supplies the sweep's cached-reference lifetime; whether
-eviction removes only the reference and leaves blob reclamation to the GC sweep, or deletes the
-blob itself, is Q11, and so is its ordering against a concurrent fetch of the same content.
+metrics rather than inferred.
+
+**Eviction ends the reference and deletes nothing** (the resolved eviction-mechanics question).
+It removes the cached reference; the blob is reclaimed by the deletion-intent sweep like any
+other unreferenced blob, so eviction is not a second deletion path and needs no write barrier,
+grace period or shared-blob check of its own - `storage-and-gc.md` AC15's architecture test
+holds it to that, and this spec's AC7 falls out of the sweep's invariant rather than being
+proved twice.
+
+Two behavioural consequences follow, and they are Design-level rather than bookkeeping:
+
+- **The quota accounts referenced bytes, not stored bytes.** A repository returns to within
+  quota the moment eviction removes enough references, while the physical space frees on the
+  next sweep. Quota utilisation, and the reporting behind AC14, are therefore measured over
+  bytes the repository still references; an operator watching the object store will see it lag.
+- **A re-fetch between eviction and the sweep costs no storage.** The evicted content has no
+  local blob, so a request re-fetches upstream, but the CAS commit dedup-hits the blob that is
+  still present and cancels any standing deletion intent through the shared reference-creation
+  call. That is also the ordering answer against a concurrent fetch: the intent barrier already
+  serialises it, with no eviction-specific mechanism.
 
 ### Conformance against real upstreams
 
@@ -230,8 +250,10 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       miss fails fast.
 - [ ] AC6: Upstream credentials are stored encrypted and never appear in logs, responses or error
       messages.
-- [ ] AC7: Cache eviction never deletes a blob that hosted content also references, proven by a
-      test where the same digest arrives from both a publish and an upstream fetch.
+- [ ] AC7: Cache eviction deletes no object at all: it removes the cached reference and leaves
+      reclamation to the sweep, so a blob that hosted content also references keeps serving,
+      proven by a test where the same digest arrives from both a publish and an upstream fetch
+      and the hosted path still serves it after the evicting repository's sweep has run.
 - [ ] AC8: Every implemented format whose `Capabilities()` declares proxy support has
       conformance cases in proxied mode; a declared unsupported capability is the only
       exemption, and `generic` is the only format that currently holds one.
@@ -254,8 +276,13 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       cached content and raises an operator alert; an author unpublish without a signal, and a
       PyPI yank, keep serving and record an operator-visible divergence.
 - [ ] AC14: A repository exceeding its storage quota evicts least-recently-accessed cached
-      content until it is back within quota, an evicted artifact is transparently re-fetched on
-      the next request, and quota utilisation is observable without reading logs.
+      content until the bytes it still references are back within quota - without waiting for a
+      GC sweep, since the quota accounts referenced bytes - an evicted artifact is transparently
+      re-fetched on the next request, and quota utilisation is observable without reading logs.
+- [ ] AC16: An artifact evicted but not yet swept is re-fetched and re-referenced with no second
+      stored object and no second upload of the bytes, and the object store shows no delete
+      performed by eviction itself; the blob disappears only after the next sweep, and only if
+      nothing referenced it again in the meantime.
 - [ ] AC15: The nightly real-upstream job runs the proxied suites of the shipped preconfigured
       upstreams and opens an issue on failure, demonstrated by a manual dispatch against a
       deliberately failing fixture.
@@ -279,6 +306,7 @@ one direction only is how a Phase 4 discovers it has no counterparty.
 | AC13 | integration | `internal/proxy/upstream_removal_test.go` (test upstream presenting each event class) |
 | AC14 | integration | `internal/proxy/eviction_test.go` |
 | AC15 | ci | scheduled nightly workflow, proven by a written manual-dispatch procedure |
+| AC16 | integration | `internal/proxy/eviction_test.go` (re-fetch between eviction and sweep, object-store delete assertion) |
 
 ## Implementation Phases
 
@@ -293,9 +321,9 @@ is this layer's first proving ground, and npm at step 5 tests whether it general
 - TTLs, conditional revalidation, negative caching, serve-stale bounded and marked
 
 ### Phase 3: Operability
-- Offline mode, encrypted upstream credentials, LRU eviction under per-repository quota
-  coordinated with GC, security-signal purge and divergence flagging, the nightly
-  real-upstream job
+- Offline mode, encrypted upstream credentials, LRU eviction under per-repository quota ending
+  the cached reference only with reclamation left to the GC sweep, security-signal purge and
+  divergence flagging, the nightly real-upstream job
 
 ## Tasks
 
@@ -303,8 +331,10 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-The 2026-09-23 review pass raised Q10 through Q13 below, each an interaction between decisions
-that were settled individually; implementation is gated on them. All earlier questions (Q1-Q9)
+The 2026-09-23 review pass raised Q10 through Q13, each an interaction between decisions that
+were settled individually. Q11 (eviction mechanics) was answered by the owner on 2026-09-26 and
+is folded into Design, Scope, the acceptance criteria and the Test Plan above; Q10, Q12 and Q13
+remain open below and implementation is gated on them. All earlier questions (Q1-Q9)
 were answered by the owner and are folded into Design, Scope and the acceptance criteria above.
 Resolved decisions are kept rather than deleted, so the reasoning survives the next time someone
 asks why it was done this way.
@@ -323,21 +353,6 @@ makes the waiter path identical to a cache hit, at the cost of waiter latency.
 **Why this is yours:** it is a latency-versus-blast-radius trade on the product's hottest path
 (a CI fleet cold-starting against a preconfigured upstream), and both options honour the settled
 decisions; only you can price mass mid-stream aborts against added waiter latency.
-
-### Q11: Does eviction delete the cached reference and leave the blob to GC, or delete the blob itself?
-
-**Recommendation:** A - eviction ends the reference only, and the deletion-intent sweep in
-`storage-and-gc.md` reclaims the blob. Eviction then needs no deletion safety machinery of its
-own, and AC7 falls out of GC's existing invariant instead of being proved twice.
-
-| Option | You get | It costs |
-|---|---|---|
-| **A. Reference-only eviction; the GC sweep reclaims the blob** | One deletion path in the system: the write barrier, grace period and shared-blob safety are inherited, and a re-fetch between eviction and sweep dedup-hits the still-present blob for free | Quota relief is delayed until the next sweep, so the quota must be accounted against referenced bytes rather than stored bytes, and physical space frees eventually rather than immediately |
-| **B. Eviction deletes the blob directly** | Physical space frees immediately when the quota is hit | A second deletion path that must reimplement the intent-table check, the concurrent-fetch race and the hosted-reference check, in the component the charter names as how this project eats data |
-
-**Why this is yours:** it decides whether the quota bounds logical or physical storage and
-whether `storage-and-gc.md` gains a consumer or a competitor; that is an architecture call
-spanning two critical specs.
 
 ### Q12: How is an upstream security signal detected for content nobody is currently requesting?
 
@@ -368,6 +383,30 @@ staleness tolerance is already covered by the TTL override and the serve-stale b
 **Why this is yours:** it defines what "offline" promises an air-gapped deployment and whether
 that promise is auditable from one setting; that is a product guarantee, not something the
 fleet can measure its way to.
+
+### Resolved: cache eviction mechanics (was Q11)
+
+**Settled 2026-09-26: eviction ends the cached reference only, and the deletion-intent sweep in
+`storage-and-gc.md` reclaims the blob.** Eviction is therefore **not** a second deletion path
+and needs no deletion safety machinery of its own: the write barrier, the repository-scoped
+grace period and the shared-blob check are all inherited, AC7 falls out of the sweep's invariant
+rather than being proved twice, and `storage-and-gc.md` AC15 keeps the single-deleter boundary
+intact. The concurrent-fetch ordering the question also asked about is answered by the same
+inheritance: a re-fetch goes through the shared reference-creation call, which cancels any
+standing intent, so no eviction-specific ordering rule exists. Folded into Scope, the
+GC-interaction section of Design, AC7, AC14 and the new AC16.
+
+**Accepted cost: quota relief waits for the next sweep, so the quota accounts referenced bytes
+rather than stored bytes**, and physical space frees eventually rather than immediately. A
+repository is back within quota as soon as enough references are gone, while an operator
+watching the object store sees it lag by up to a sweep interval - which is a real behaviour to
+document, not only an internal detail.
+
+The benefit that comes with it: a re-fetch between eviction and the sweep dedup-hits the
+still-present blob, so the bytes are not stored twice and the round trip costs only the upstream
+fetch. Option B (eviction deletes the blob directly) would have freed space immediately at the
+price of a second deletion path reimplementing the intent check, the concurrent-fetch race and
+the hosted-reference check, in the component the charter names as how this project eats data.
 
 ### Resolved: concurrent miss coalescing (was Q4)
 
@@ -431,6 +470,9 @@ thrash that presents as the proxy being slow rather than as a configuration prob
 utilisation therefore has to be observable, and thrash should be detectable from metrics rather
 than inferred.
 
+Extended 2026-09-26 by the eviction-mechanics resolution above: what eviction removes is the
+cached reference, never the object, so the quota it enforces is measured in referenced bytes.
+
 ### Resolved: real-upstream conformance runs (was Q9)
 
 **Settled 2026-09-23: a separate nightly scheduled job.** The main conformance suite runs
@@ -449,9 +491,10 @@ arrived. Remote rows survive cache materialisation so revalidation and failover 
 provenance. This is Pulp's `RemoteArtifact` model, and it brings the
 `immediate`/`on_demand`/`streamed` policies and multi-upstream failover with it.
 
-Consequence carried by `storage-and-gc.md`: GC marks from the four roots enumerated there -
-published references, cached references, retained snapshots, and CAS-backed metadata documents
-(the fourth arrived later, on `data-model.md`'s document-storage resolution).
+Consequence carried by `storage-and-gc.md`: GC marks from the five roots enumerated there -
+published references, cached references, retained snapshots, CAS-backed metadata documents
+(the fourth arrived later, on `data-model.md`'s document-storage resolution) and
+pointer-targeted snapshots (the fifth, settled 2026-09-26).
 
 ### Resolved: default metadata TTL (was Q2)
 
@@ -476,6 +519,7 @@ the real service, not only against a local stand-in.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review: application of decisions already made. Q11 answered option A and folded before this record was written - the GC-interaction section now says eviction ends the reference and deletes nothing, so it is not a second deletion path and inherits `storage-and-gc.md` AC15's single-deleter boundary, and the two behavioural consequences are stated in Design rather than only in the resolved record: the quota accounts referenced bytes rather than stored bytes (so a repository is back within quota before the sweep frees the space, which AC14 now says), and a re-fetch between eviction and the sweep dedup-hits the still-present blob, which is also the ordering answer against a concurrent fetch. AC7 rewritten from 'never deletes a blob hosted content references' to 'deletes no object at all', since the old wording presumed eviction was a deleter; AC16 added for the evict-then-re-fetch window with an object-store delete assertion. Scope, Phase 3 and the was-Q8 record updated, and the four-root statements here (GC interaction, resolved cache-location) carried to five for storage-and-gc Q10. |
 | 2026-09-24 | d078c46 | cross-spec consistency (storage-and-gc's fourth mark root) | Not a review. The GC-interaction section still described a three-root sweep and credited cached references as the third root rather than the second. Corrected to the canonical four, and the fourth root's motivating case recorded here where it originates: a proxied repository's current index document is a CAS blob no `File` row references, and it produces no snapshots, so the current-document half of that root is all that protects it. Q11 remains open and still bears on the cached-reference root. |
 | 2026-09-24 | 1701a48 | cross-spec sync during data-model's gate review | Not a review. One three-root remnant survived the sync above, in the resolved cache-location record; corrected to the canonical four roots. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim check largely vacuous pre-code; siblings and prior art verified by reading) | Corrections applied (fetched-content integrity, negative-cache classification, offline staleness, adapter-axis alignment, GC sibling sync, AC3/AC5/AC6 tightened, AC9/AC10 added); Q4-Q9 raised; stays draft. |
