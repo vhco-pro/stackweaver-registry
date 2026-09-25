@@ -5,7 +5,7 @@ description: "Spec for scanning artifacts and enforcing supply-chain policy at t
 author: michielvha
 goal: "Make the registry a policy enforcement point rather than a passive store, so a rule about what may enter a build is applied where every artifact already passes."
 priority: "medium"
-issue: ""
+issue: 15
 created: 2026-09-23
 covers:
   - "internal/policy/**"

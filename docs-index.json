@@ -180,6 +180,7 @@
     "description": "Spec for replicating content between registry instances - geo-distribution, disaster recovery and air-gapped mirroring - built on the content-addressed store and immutable snapshots.",
     "internal": true,
     "status": "draft",
+    "issue": "14",
     "covers": [
       "internal/replication/**"
     ]
@@ -199,6 +200,7 @@
     "description": "Spec for scanning artifacts and enforcing supply-chain policy at the registry boundary - blocking by vulnerability, licence or signature state, on both hosted and proxied content.",
     "internal": true,
     "status": "draft",
+    "issue": "15",
     "covers": [
       "internal/policy/**"
     ]

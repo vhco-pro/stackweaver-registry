@@ -5,7 +5,7 @@ description: "Spec for replicating content between registry instances - geo-dist
 author: michielvha
 goal: "Let one logical registry span sites, so a build pulls locally and an air-gapped environment can be fed a verifiable snapshot."
 priority: "medium"
-issue: ""
+issue: 14
 created: 2026-09-23
 covers:
   - "internal/replication/**"
