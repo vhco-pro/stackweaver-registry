@@ -26,6 +26,7 @@ const VALID_STATUS = ['draft', 'planned', 'in-progress', 'complete', 'blocked', 
 
 const args = process.argv.slice(2);
 const gateMode = args.includes('--gate');
+const showSoft = args.includes('--unasserted');
 const targets = args.filter((a) => !a.startsWith('--'));
 
 let hardFailures = 0;
@@ -192,6 +193,39 @@ function checkSpec(absPath) {
     }
   }
 
+  // ── duties Design names that no criterion polices ──────────────────────────
+  // Five consecutive gate reviews found the same defect by hand: Design names a term as a duty,
+  // a mechanism or a mode, and no acceptance criterion ever mentions it, so it can be silently
+  // unimplemented. Backticked terms are the tractable signal - a spec backticks what it means
+  // technically. Reported only when NO spec in the tree asserts the term, since a term this
+  // spec names and a sibling polices is a division of labour rather than a gap. `--unasserted`
+  // also shows the weaker per-spec bucket.
+  const designText = (section(body, 'Design') || '') + (section(body, 'Scope') || '');
+  const assertions = ((section(body, 'Acceptance Criteria') || '') +
+                      (section(body, 'Test Plan') || '')).toLowerCase();
+  if (designText && assertions) {
+    // Paths, filenames and notations like `(repository, action)` are citations, not duties.
+    const NOT_A_DUTY = /[/]|^\(|\.(md|go|js|json|ya?ml|sh)$/;
+    const normTerm = (t) => t.replace(/\(\)$/, '').toLowerCase();
+    const seen = new Map();
+    for (const m of designText.matchAll(/`([^`\n]{3,40})`/g)) {
+      const term = m[1].trim();
+      if (NOT_A_DUTY.test(term)) continue;
+      const key = normTerm(term);
+      if (!seen.has(key)) seen.set(key, { term, count: 0 });
+      seen.get(key).count++;
+    }
+    for (const { term, count } of seen.values()) {
+      const key = normTerm(term);
+      if (count < 2 || assertions.includes(key)) continue;
+      if (!ALL_ASSERTIONS.includes(key)) {
+        warn(rel, `Design names \`${term}\` ${count} times and no criterion in any spec asserts it`);
+      } else if (showSoft) {
+        warn(rel, `Design names \`${term}\` ${count} times; only a sibling spec asserts it`);
+      }
+    }
+  }
+
   // ── house style ────────────────────────────────────────────────────────────
   const dashLines = body.split('\n')
     .map((l, i) => [i + 1, l])
@@ -200,6 +234,24 @@ function checkSpec(absPath) {
 
   return { rel, status, acs: acs.length, open: openQs.length, resolved: resolved.length, lastSha };
 }
+
+// Every spec's assertions, so a term this spec names but a sibling polices is not reported as a
+// defect. Built from the full tree rather than from the run's targets, or a single-file run would
+// call every sibling-asserted term unasserted.
+const ALL_ASSERTIONS = (function () {
+  const out = [];
+  (function walk(dir) {
+    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, e.name);
+      if (e.isDirectory()) walk(full);
+      else if (e.name.endsWith('.md') && e.name.toLowerCase() !== 'readme.md') {
+        const b = fs.readFileSync(full, 'utf8');
+        out.push((section(b, 'Acceptance Criteria') || '') + (section(b, 'Test Plan') || ''));
+      }
+    }
+  })(PLANS);
+  return out.join('\n').toLowerCase();
+})();
 
 const specs = collect().map(checkSpec).filter(Boolean);
 

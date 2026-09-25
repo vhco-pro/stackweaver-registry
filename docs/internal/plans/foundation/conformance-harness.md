@@ -352,6 +352,12 @@ any consumer can extend is an oracle nobody can reason about.
 ranks the harness's checkability against every sibling's delivery independence - a constitution-
 level trade, not a measurable one.
 
+**The answer must bring an acceptance criterion with it.** `setup` is named five times in Design
+and asserted by no criterion in any spec, which `check-spec.js`'s unasserted-duty check now
+reports. No criterion can be written before the answer, because one written now would presuppose
+whether the vocabulary is closed - which is the question. This note exists so the gap is closed
+when the answer lands rather than surviving it.
+
 ### Resolved: redaction direction (was Q3)
 
 **Settled 2026-09-23: an allowlist.** A header or field survives into a corpus only if explicitly

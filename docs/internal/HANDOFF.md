@@ -64,7 +64,8 @@ make gate SPEC=path/to/spec.md      # is this one mechanically ready for `planne
 `scripts/check-spec.js` covers acceptance-criteria-to-test-plan mapping, template sections,
 frontmatter validity, em-dashes, review staleness against git, duplicate criterion ids, and the
 half-applied-decision defect. It also flags criteria that look like they measure a problem rather
-than remove it. None of that needs a model.
+than remove it, and duties Design names at least twice that no criterion in any spec asserts
+(`--unasserted` adds the weaker per-spec bucket, where a sibling does the asserting). None of that needs a model.
 
 **Then spend the model only on judgement.** A review pass that adds value answers: is this design
 right, does it contradict a sibling spec, what did it miss, and are these criteria actually

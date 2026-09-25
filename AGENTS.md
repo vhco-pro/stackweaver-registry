@@ -48,8 +48,9 @@ make gate SPEC=docs/internal/plans/foundation/auth.md   # is one ready for `plan
 ```
 
 This catches unmapped acceptance criteria, missing template sections, em-dashes, review
-staleness, and the half-applied-decision defect (prose still pointing at a question the same
-file records as resolved). **A model should only be spent on what is left after this passes:**
+staleness, the half-applied-decision defect (prose still pointing at a question the same file
+records as resolved), and duties Design names that no criterion in any spec asserts - the gap
+five consecutive gate reviews found by hand before it was mechanised. **A model should only be spent on what is left after this passes:**
 is the design right, does it contradict a sibling spec, what did it miss.
 
 ## Two rules that matter more than the rest

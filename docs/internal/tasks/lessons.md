@@ -8,6 +8,35 @@ covers: []
 Newest first. Each entry records a mistake, its root cause, and the convention it produced.
 Anything learned that would otherwise live only in a chat session belongs here.
 
+## 2026-09-25 - The gap five reviews found by hand is now a script
+
+**What happened:** five consecutive gate reviews each found the same defect, in a different spec:
+something Design names as a duty, a mechanism or a mode has **no acceptance criterion policing
+it**, so it can be silently unimplemented and every criterion still passes. `immediate` was the
+only download policy no criterion in any spec exercised. Pruning reconstructibility, which Design
+calls what keeps the sweep sound, was asserted nowhere. "Registration validates every mount" had
+no criterion. Four security duties in `auth` had none. Each was found by a model reading
+carefully, at roughly 90k to 180k tokens a pass.
+
+**Root cause:** Design is where a spec explains itself and the criteria are where it commits, and
+nothing structurally connects them. A spec can be internally coherent, mechanically clean, and
+still make a promise it never asserts. Reviewers caught it five times because they were told to
+hunt for it, not because the document made it visible.
+
+**Convention:** `check-spec.js` now reports it. A backticked term is the tractable signal, since a
+spec backticks what it means technically: a term Design uses at least twice that no acceptance
+criterion mentions is reported as a candidate. It is scoped corpus-wide rather than per-spec,
+because a term this spec names and a sibling polices is a division of labour, not a gap; the
+weaker per-spec bucket is behind `--unasserted`.
+
+It is advisory, and deliberately so. On its first run over fifteen specs it found three
+candidates, and adjudicating them needed judgment a script does not have: two were
+`WWW-Authenticate`, which no criterion names directly but which a real `docker login` criterion
+cannot pass without, and the third was blocked on an open question, since writing its criterion
+now would presuppose the answer. **A detector that would have to be right to be useful would be
+wrong to write.** This one narrows where judgment gets spent, which is the whole economy the
+project runs on: free checks first, model only on what is left.
+
 ## 2026-09-24 - A review that dies mid-pass leaves edits of three different kinds
 
 **What happened:** six spec reviews ran concurrently; four terminated on a spend limit partway
