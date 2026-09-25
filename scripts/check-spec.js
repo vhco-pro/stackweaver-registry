@@ -137,6 +137,23 @@ function checkSpec(absPath) {
   }
   if (!section(body, 'Tasks')) warn(rel, 'no `## Tasks` section (/implement gates on it)');
 
+  // A spec with criteria but nothing but boilerplate behind them is a stub wearing a spec's
+  // frontmatter. npm.md reached a first review in that state, its resolved decision claiming to
+  // have been folded "into Design and Scope above" when no Design section existed at all.
+  // The test is substance, not a heading name: a spec may carry its design under its own
+  // headings (catalogue.md does), but a spec whose every section is template scaffolding has
+  // criteria with nothing behind them.
+  const TEMPLATE_HEADINGS = new Set([
+    'Context', 'Scope', 'Design', 'Acceptance Criteria', 'Test Plan',
+    'Implementation Phases', 'Tasks', 'Open Questions', 'Review Log',
+  ]);
+  const headings = [...body.matchAll(/^## (.+?)[ \t]*$/gm)].map((m) => m[1].trim());
+  const ownHeadings = headings.filter((h) => !TEMPLATE_HEADINGS.has(h));
+  if (!section(body, 'Design') && ownHeadings.length === 0) {
+    fail(rel, 'has acceptance criteria but no `## Design` section and no substantive sections of its own: a stub, not a spec');
+  }
+  if (!section(body, 'Implementation Phases')) warn(rel, 'no `## Implementation Phases` section');
+
   // ── review log freshness ───────────────────────────────────────────────────
   const log = section(body, 'Review Log') || '';
   const logRows = [...log.matchAll(/^\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([0-9a-f]{7,40})\s*\|/gm)];
