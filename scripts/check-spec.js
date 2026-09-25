@@ -163,9 +163,24 @@ function checkSpec(absPath) {
     if (openQs.length) fail(rel, `status is planned but ${openQs.length} question(s) are open`);
     // Uncommitted edits are invisible to a commit-range diff, so check the working tree too.
     // Without this, editing a planned spec and running the checker before committing passes.
+    //
+    // But the review that FLIPS a spec to planned is itself uncommitted when it finishes, so a
+    // flat failure here is unsatisfiable: the only way to clear it is to commit, and the
+    // pre-commit hook runs this check. The discriminator is whether the uncommitted diff adds a
+    // Review Log row. If it does, this is a review in progress and the status is its conclusion.
+    // If it does not, a planned spec is being edited with no new review, which is the drift the
+    // guard exists to catch.
     try {
       const dirty = execSync(`git -C ${ROOT} status --porcelain -- "${rel}"`, { encoding: 'utf-8' }).trim();
-      if (dirty) fail(rel, 'status is planned but the spec has uncommitted changes; re-review required');
+      if (dirty) {
+        const diff = execSync(`git -C ${ROOT} diff HEAD -- "${rel}"`, { encoding: 'utf-8' });
+        const addsReview = /^\+\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*[0-9a-f]{7,40}\s*\|/m.test(diff);
+        if (addsReview) {
+          warn(rel, 'planned by an uncommitted review; commit it so the freshness check has a sha to measure from');
+        } else {
+          fail(rel, 'status is planned but the spec has uncommitted changes that add no review row; re-review required');
+        }
+      }
     } catch { /* not a git tree */ }
     if (!lastSha) fail(rel, 'status is planned with no Review Log entry');
     else {

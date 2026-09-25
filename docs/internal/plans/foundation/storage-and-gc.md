@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Q10 was answered by the owner on 2026-09-26 (a pointer-targeted snapshot, plus the checkpoint-and-delta chain that reconstructs it, is a fifth mark root exempt from retention pruning) and folded through Scope, the invariant, Design, the property-test operation set and AC14/AC17/AC18, with the accepted cost recorded: retention no longer strictly bounds storage. Zero questions are now open, which makes this a gate candidate - it stays draft until a gate review judges the design."
+status: planned
+status_description: "Cleared by the 2026-09-26 gate review at 4548df3: zero open questions, all 19 criteria mapped, the fifth-root fold verified as fully applied, and the four gaps it left (the barrier re-check binding, the repoint-versus-prune serialisation, the unpoliced pin-visibility argument, and two generator reachability conditions) fixed in the same pass. planned means the design and its test obligations were judged, not any code: claim verification has been vacuous through every review because no internal/storage/ implementation exists, so the property, fault-injection and architecture suites the criteria demand are still the entire evidence base, and Phase 3 builds them before the GC they police."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
@@ -52,7 +52,9 @@ upload record that was never written.
   since pruning is what bounds the snapshot root and the snapshot-held half of the
   metadata-document root. It does **not** bound the fifth root: a pointer-targeted snapshot
   is exempt while targeted, so retention bounds storage only for snapshots nothing points
-  at (the resolved pointer-target question below carries that accepted cost).
+  at (the resolved pointer-target question below carries that accepted cost). Because that
+  cost was priced on the pin being visible and attributable, reporting extends to it: every
+  pointer whose target has aged out of the window is reported as pinning it (AC19).
 - Orphan cleanup for interrupted uploads.
 - Fault injection and property tests covering the races above.
 - Throughput benchmarks wired to a CI regression gate.
@@ -263,6 +265,31 @@ exercise:
   delete, which is why the property suite below has to generate repoints: a root that can be
   created and never released is storage that is unreclaimable in practice.
 
+  Against the write barrier the fifth root is unlike the other four: a repoint writes no
+  reference row and touches no digest, so it cannot flow through the shared reference-creation
+  call or cancel standing intents digest by digest. Two mechanisms close that gap, and both
+  are load-bearing. First, a repoint can only land on a snapshot whose blobs the current mark
+  already treats as live: `data-model.md` AC23 refuses repointing onto an out-of-window
+  snapshot nothing targets, and an in-window or already-targeted snapshot is marked by the
+  third or fifth root. Second, the delete pass's re-check counts the fifth root in what it
+  treats as referenced - a digest is referenced while any pointer-targeted snapshot's content
+  set, computed through its checkpoint-and-delta chain, includes it - exactly as it already
+  counts document digests for the fourth. And because that AC23 refusal and pruning's own
+  targeted check are both check-then-act reads of pointer state, they serialise with pointer
+  writes in PostgreSQL just as intent cancellation serialises with the delete phase: a repoint
+  commits only while its target still survives pruning, and a prune drops a snapshot only
+  while it is still untargeted at the drop itself. Anything looser lets two pointers trading
+  places over an aged snapshot slip a prune between the refusal's read and the repoint's
+  write, landing the pointer on a snapshot whose reconstruction chain is already gone (AC18).
+
+  The accepted cost of this root was priced on the pin being visible: what made
+  retention-no-longer-bounds-storage acceptable was that the failure mode is pinned storage
+  attributable to a named pointer, and that attribution is a reporting duty, not a hope. The
+  API therefore reports every pointer whose target snapshot is outside its repository's
+  effective retention window - the pointer, its target and how far past the window the target
+  has aged - beside the rollback-reach reporting already in Scope, so a forgotten environment
+  pointer is found from the API rather than from storage growth (AC19).
+
   Each root class has a defined end of life - a
   delete removes a published reference, LRU eviction under the per-repository quota ends a
   cached one (`proxy-cache.md`, resolved cache-eviction question) without deleting anything
@@ -336,7 +363,13 @@ This is the part of the spec that exists because the harness is blind here. Requ
   ACs covering it pass vacuously.
   The sweep's internal phases (mark, intent record, re-check, row delete, object delete) must
   be schedulable as first-class interleaving points, or the intent-window races stay
-  unreachable.
+  unreachable - and so must pruning's two (the targeted-and-retention check, then the drop),
+  or the repoint-versus-prune race can never be generated and the serialisation rule above is
+  asserted by nothing. One further reachability condition: generated histories must span at
+  least one checkpoint interval, so that a targeted snapshot can depend on deltas and
+  checkpoints that pruning would otherwise drop - against a history shorter than the
+  interval nothing ever threatens a reconstruction chain, and AC17's chain-survival clause
+  passes vacuously.
 - **Fault injection**: kill the server mid-upload, mid-commit and mid-GC, at each stage
   boundary - for GC that includes after mark, between intent recording and the delete pass,
   and between a row delete and its object delete; on restart the system is consistent and no
@@ -414,7 +447,14 @@ accepts one as evidence has missed the point of the spec.
       root: a snapshot protected only by that pointer, and already outside the retention
       window, is pruned on the next cycle, its blobs are collected, and the checkpoints and
       deltas no surviving snapshot depends on are dropped with it; a repoint interleaved with
-      a running sweep never collects a blob the pointer's new target needs.
+      a running sweep or pruning pass leaves the pointer's new target fully resolvable - no
+      blob it needs is collected, no checkpoint or delta it reconstructs through is dropped,
+      and it still serves afterwards.
+- [ ] AC19: A pointer whose target snapshot is outside its repository's effective retention
+      window is reported by the API - the pointer's name, its target and how far past the
+      window the target has aged - and a pointer whose target is inside the window is not,
+      so a forgotten environment pointer is discoverable from the API before it is
+      discovered from storage growth.
 
 ## Test Plan
 
@@ -437,7 +477,8 @@ accepts one as evidence has missed the point of the spec.
 | AC16 | property + integration | `internal/storage/gc_property_test.go` (metadata-document root); `internal/storage/metadata_blob_gc_test.go` |
 | AC15 | architecture test | `internal/storage/arch_test.go` |
 | AC17 | property + integration | `internal/storage/gc_property_test.go` (pointer-target root); `internal/storage/retention_test.go` (aged pointer target still serving) |
-| AC18 | property + integration | `internal/storage/gc_property_test.go` (repoint interleaved with the sweep); `internal/storage/retention_test.go` (release then prune) |
+| AC18 | property + integration | `internal/storage/gc_property_test.go` (repoint interleaved with the sweep and with pruning's phases); `internal/storage/retention_test.go` (release then prune) |
+| AC19 | integration | `internal/model/pointer_test.go` (out-of-window pin reporting) |
 
 ## Implementation Phases
 
@@ -449,8 +490,8 @@ accepts one as evidence has missed the point of the spec.
 
 ### Phase 3: GC
 - The chosen strategy, plus the property and fault-injection suites **written before it**
-- Retention pruning, including the pointer-target exemption and its release on repoint
-  (AC17, AC18)
+- Retention pruning, including the pointer-target exemption, its release on repoint and the
+  out-of-window pin reporting (AC17, AC18, AC19)
 
 ### Phase 4: Benchmarks
 - Throughput benchmarks and the CI regression gate
@@ -498,7 +539,10 @@ reclamation altogether.
 
 Because the root dies only on a repoint, that release path is load-bearing rather than
 incidental: AC18 polices it and the property suite generates repoints in both directions, since
-a root that can be created and never released is storage nothing reclaims.
+a root that can be created and never released is storage nothing reclaims. The visibility half
+of the argument is likewise policed rather than assumed: AC19 reports every pointer holding an
+out-of-window snapshot, because a pin that is only attributable in principle is one that fails
+as silently as the alternatives this option was chosen over.
 
 ### Resolved: the post-row-delete object race (was Q7)
 
@@ -631,3 +675,4 @@ not by weakening the storage model.
 | 2026-09-23 | a2d5219 | gate review: folded-decision application + adversarial + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code; siblings re-read at this sha) | Q7-Q9 verified as genuinely folded; four stale session-scoped remnants fixed (orphan-scan text, AC3's collection timing, the property op set, the was-Q4 record) plus the stale three-open intro; delete-conditional-on-standing-intent made explicit, single-deleter boundary given its named enforcer (AC15), pruning reconstructibility and the sibling-owned root-set dependency recorded; zero open questions, all ACs mapped; draft -> planned |
 | 2026-09-23 | d078c46 | gate re-review of the fourth root: application check + fifth-root hunt across all siblings + barrier and generator reachability + constitution + go-spec-reviewer (claim verification vacuous: still no `internal/storage/` code) | Fourth root was stated but half-applied: Scope still said three roots, the frontmatter cited the wrong AC, and the root's definition covered only snapshot-held documents, leaving proxied repositories' current documents (the motivating Debian case) unprotected - all fixed, with the document write bound to the barrier (AC9/AC10) and its death ops (supersession, downward threshold crossing) plus multi-repository and injected-clock reachability added to the property suite; intent-lifecycle contradiction fixed (intent now outlives the row delete so AC13's gate holds); replication and supply-chain placed against the root set; a genuine fifth-root gap found and raised as Q10 (pointer-targeted snapshots versus the retention window); stays draft on Q10 |
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review: application of decisions already made. Q10 answered option A, folded into the body before this record was written - Scope, the invariant, the Design mark-roots section and the root end-of-life list now carry five roots, the fifth defined as a snapshot any `Pointer` targets plus the checkpoint-and-delta chain that reconstructs it, unprunable while targeted, with the accepted cost (retention no longer strictly bounds storage, the pin visible and attributable to a named pointer) and the rejection of B and C recorded in the resolved record. Pruning reconstructibility and AC14 widened; AC17 (an aged pointer target survives pruning and still serves) and AC18 (a repoint or pointer deletion releases the root, after which the snapshot prunes and its blobs collect) added with Test Plan rows; the property-test operation set extended with repointing in both directions and an injected clock able to age a targeted snapshot, because a root that can be born and never die is untestable and its storage unreclaimable in practice. proxy-cache Q11 recorded here as the consequence it is: eviction ends the cached reference only, so it is not a second deletion path, AC15's single-deleter boundary now names it, and the second root's lifetime ends at eviction while the blob waits for the sweep. |
+| 2026-09-26 | 4548df3 | gate review: independent verification of the fifth-root fold (application check across Scope, invariant, Design, ACs, Test Plan and the property op set) + barrier-and-pruning race hunt + generator reachability + cross-spec against data-model, proxy-cache, replication and supply-chain-policy + constitution + go-spec-reviewer concurrency lens (claim verification vacuous, as in every prior pass: no `internal/storage/` code exists, so this pass judged the design and the fold, not an implementation) | The fold was genuinely applied - five roots in Scope, the invariant, Design and the end-of-life list, AC14 narrowed to untargeted snapshots, AC17/AC18 present with Test Plan rows, repoints in both directions and the targeted-aging clock in the op set - and the cross-spec claims held: data-model's AC23-versus-pin reasoning is sound (the refusal governs the transition, the pin governs aging in place, protection attaches on targeting), and replication's follower pointer is a true instance of the root. Four gaps the fold left were fixed directly, none needing the owner. One: the delete pass's re-check was never bound to the fifth root, though a repoint writes no reference row and so can never cancel an intent - the fourth root got exactly this binding and the fifth now has it, together with the serialisation rule the new root forces (AC23's refusal and pruning's targeted check are both check-then-act reads of pointer state, so they serialise with pointer writes as intent cancellation serialises with the delete phase; without it two pointers trading places over an aged snapshot let a prune slip between refusal-read and repoint-write). Two: AC18's interleaving clause was blob-level only and passable with the target's delta chain pruned and serving broken while every blob survived - it now demands the new target stays resolvable and serving, with pruning's two phases added as schedulable interleaving points, without which that race is unreachable and the rule vacuous. Three: the visibility argument that decided Q10 (pinned storage visible and attributable to a named pointer) was policed by no criterion in any spec, leaving option A without the mitigation it was accepted for - AC19 added with Scope, Design, Phase 3 and Test Plan carrying it. Four: generated histories must span a checkpoint interval or nothing ever threatens a reconstruction chain and AC17's chain-survival clause passes vacuously. Cross-spec: data-model's pointer API surface never offered the pointer deletion AC18 tests - corrected there with a Review Log row. Repository deletion exists in no spec; noted as a portfolio-wide absence rather than a defect of this root, since repoint and pointer deletion suffice to release every pin. Zero open questions, all 19 ACs mapped, nothing blocking: draft -> planned. |
