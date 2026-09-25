@@ -8,6 +8,35 @@ covers: []
 Newest first. Each entry records a mistake, its root cause, and the convention it produced.
 Anything learned that would otherwise live only in a chat session belongs here.
 
+## 2026-09-25 - Every versioned file was right; every issue body was wrong
+
+**What happened:** two claims were corrected in the docs weeks ago. Gitea's format count was
+changed from 24 (taken from Gitea's documentation page) to 23 (counted from source), and the
+catalogue's headline was changed from "~31 ecosystems across ~15 protocols" to 33 ecosystems
+across roughly 31 protocol implementations, after somebody added the rows up. A sweep of the
+whole repository for the refuted forms found **exactly one hit, and it was the record of the
+error itself** in `catalogue.md`. Every other versioned file had been corrected.
+
+Then the same sweep over the fifteen GitHub issues found the refuted claims alive in **four of
+them**: #5, #10, #11 and #12. None had been touched. #11 was worse than stale: it is **closed as
+completed**, and its body concludes "that asymmetry is the moat: ~31 advertised ecosystems off
+~15 implementations". Thirty-three off thirty-one is almost no collapse, so the moat argument
+that issue makes does not survive its own arithmetic, and it reads as settled.
+
+**Root cause:** a correction propagates through the things a correction pass can see. `grep`
+reaches the working tree. Nothing reaches an issue body, no tooling validates one, no reviewer
+reads one in a diff, and a closed issue is not even in the backlog a reader would scan.
+
+**Convention:** this is the constitution's findings-live-in-docs rule earning itself, and it is
+worth citing as evidence rather than as principle the next time an issue body starts growing an
+argument. An issue is a pointer. When a claim moves into an issue body, it leaves the only
+system that can keep it true.
+
+Two practical consequences. **Correct by comment, not by edit** - editing the body would have
+erased the evidence that the rot happened, which is the most useful thing the incident produced.
+And **check issue bodies whenever a headline claim changes**, because no automated check will:
+the repository's own `check-spec.js` and docs audit both stop at the filesystem boundary.
+
 ## 2026-09-25 - Zero open questions is not the same as settled
 
 **What happened:** `pypi.md` and `ansible-collections.md` both carried the frontmatter claim
