@@ -146,7 +146,7 @@ answer settles both.
 - `format-handler-interface` Q2: on a proxied miss, does the proxy wrap the handler or the handler call fetch-and-cache?
 - `format-handler-interface` Q4: do write-triggered shared services enter the interface now?
 
-## Round five: the live backlog (51)
+## Round five: the live backlog (49)
 
 Rounds one to three sorted questions by **what they block**, which is still how the tiers below
 work. Round four adds a second axis, because three gate reviews in a row produced questions that
@@ -185,26 +185,39 @@ than an interface one, so it is a different question. It belongs beside this clu
 is more evidence for the same verdict: the pin and the model were both fixed before the formats
 that would stress them existed, and the re-open's named inputs would not have surfaced either.
 
-### Cluster 2: what ends a blob's life (storage-and-gc Q10, proxy-cache Q11, supply-chain-policy Q5)
+### Cluster 2: what ends a blob's life - TWO OF THREE ANSWERED 2026-09-26 (supply-chain-policy Q5 remains)
 
-Three specs each own a way content can stop being served, and the three answers compose into one
-rule or into a contradiction.
+Three specs each own a way content can stop being served. Two are settled and folded; the third
+now has to compose with them rather than with an open field.
 
-- `storage-and-gc` Q10: is a pointer-targeted snapshot exempt from retention pruning, a fifth
-  mark root? Without an exemption, promoting to `prod` or leaving a repository idle past the
-  retention default prunes the snapshot, its blobs lose their only root, and live serving breaks
-  with no user action.
-- `proxy-cache` Q11: does eviction delete the blob, or only end its reference? If it deletes,
-  eviction is a **second deletion path** and needs its own deletion-intent barrier.
-- `supply-chain-policy` Q5: what happens to a condemned artifact? The quarantine option adds a
-  mark root, and this question already reconciles two settled specs that currently disagree about
-  the same real event.
+**`storage-and-gc` Q10: answered A.** A snapshot any `Pointer` targets is exempt from retention
+pruning, with the checkpoint-and-delta chain that reconstructs it. **A fifth mark root.** Accepted
+cost: retention no longer strictly bounds storage, since a forgotten environment pointer retains
+its snapshot, its chain back to a checkpoint and every blob they reference indefinitely. Chosen
+because the pin is visible and attributable to a named pointer, while auto-advancing would break
+promotion's bit-identical promise with no deploy and no repoint, and halting pruning would let one
+stale pointer hold a whole repository's reclamation hostage.
 
-`data-model.md` owns the mark-root set, and its gate review measured the blast radius: under Q10
-option A exactly three places in that spec widen, and under B or C it stands as written. Q11 it
-presupposes nothing about. That makes this cluster a bounded edit rather than an open risk, and
-it is **the cheapest path to this project's first `planned` spec**, since `storage-and-gc` is
-otherwise one answer away.
+**`proxy-cache` Q11: answered A.** Eviction ends the cached reference and deletes nothing; the
+deletion-intent sweep reclaims the blob. Eviction is **not** a second deletion path and inherits
+the write barrier, grace period and shared-blob safety rather than reimplementing them. Accepted
+cost: the quota accounts referenced bytes, so a repository returns to quota before the sweep frees
+physical space.
+
+Folded across all five specs that reference the root set on 2026-09-26. Two criteria turned out to
+be wrong rather than merely incomplete and were rewritten: `proxy-cache` AC7 assumed eviction was a
+deleter, and AC14 assumed stored-byte accounting. `storage-and-gc` AC17 and AC18 and `proxy-cache`
+AC16 were added, AC18 being the one that matters most - a mark root nothing can release is a
+storage leak with extra steps.
+
+**Still open: `supply-chain-policy` Q5** - what happens to a condemned artifact. Its quarantine
+option would now add a **sixth** mark root, and it still reconciles two settled specs that
+disagree about the same real event: `proxy-cache` purges on an explicit upstream security signal
+while the policy engine refuses and retains. Answering it no longer has to guess at the shape of
+the root set.
+
+`storage-and-gc` reached **zero open questions** on this fold and is the project's first gate
+candidate.
 
 ### Cluster 3: OCI has no session on the wire (data-model Q15, oci Q6)
 
@@ -304,12 +317,13 @@ Build steps 1 and 2 are the conformance harness core and the generic format.
 step-1 code rather than the step-2 code, and its answer constrains how every later subsystem gets
 conformance coverage at all.
 
-### Tier B: blocks foundation correctness (22)
+### Tier B: blocks foundation correctness (20)
 
 Build steps 3 and 4: the shared model, CAS and GC, then OCI with the proxy layer.
 
-**Cluster 2 in full** (`storage-and-gc` Q10, `proxy-cache` Q11, `supply-chain-policy` Q5) plus
-`proxy-cache` Q12 (how an upstream security signal is detected for content nobody is requesting).
+**Cluster 2's remainder** (`supply-chain-policy` Q5) plus `proxy-cache` Q12 (how an upstream
+security signal is detected for content nobody is requesting). Q10 and Q11 were answered on
+2026-09-26 and are folded.
 
 **Cluster 1 in full** (`auth` Q13, `supply-chain-policy` Q4, `format-handler-interface` Q9).
 Promoted from where an enforcement-topology question would normally sit, because it decides

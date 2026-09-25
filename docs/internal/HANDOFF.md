@@ -8,17 +8,17 @@ covers: []
 Written so this project can continue in any agent harness, not only the one it started in.
 Everything binding lives in the repository; nothing important is in a chat log.
 
-**Status as of 2026-09-25:** pre-alpha, no implementation code. Fifteen specs, none at
-`planned`, 51 open questions. Every spec has now had at least one review. The repository is
-private.
+**Status as of 2026-09-26:** pre-alpha, no implementation code. Fifteen specs, 49 open questions.
+Every spec has had at least one review. `storage-and-gc` is at zero open questions and is the
+project's first gate candidate. The repository is private.
 
 ## What state the project is in
 
 | | |
 |---|---|
 | Specs | 15, plus a tracking document |
-| `planned` | none. `storage-and-gc` reached it and went back to `draft` when a re-review found its fourth mark root half-applied and a fifth missing |
-| Awaiting a gate review, having been interrogated | none. Every spec now carries open questions |
+| `planned` | none yet. `storage-and-gc` reached it once and went back to `draft` when a re-review found its fourth mark root half-applied and a fifth missing. That fifth root is now settled (Q10 = A) and it is a gate candidate again |
+| Awaiting a gate review | `storage-and-gc`, at zero open questions after the 2026-09-26 fold. Every other spec carries open questions |
 | Largest question blocks | `replication` 7, `supply-chain-policy` 6, `auth` 5, `ansible-collections` 5, `oci` 4, `proxy-cache` 4, `project-charter` 4, `generic` 4 |
 | Issues | vhco-pro/stackweaver-registry#1 to #13 |
 | Code | a stub `cmd/stackweaver-registry/main.go` and nothing else, deliberately |
@@ -106,17 +106,15 @@ each review found something real. The bottleneck is no longer review coverage: i
 decisions. `question-triage.md` is the live backlog and organises the 41 open questions into four
 clusters that have to be answered together.
 
-1. **Answer Cluster 5 if you only answer one thing.** It is not the cheapest, it is the one that
-   gets worse by waiting. Four questions across three format specs show that the project's
-   central gate, the real client as test oracle, has nothing to say about management operations
-   no client performs: `pip` does not yank, `ansible-galaxy` does not delete. Each format will
-   answer it locally and differently unless it is decided once, and every management surface is
-   also a deletion path `storage-and-gc` must know about and a grant `auth` must have.
-2. **Answer Cluster 2: `storage-and-gc` Q10 with `proxy-cache` Q11.** Still the shortest route to
-   this project's first `planned` spec, and it got shorter: `data-model`'s gate review measured
-   the blast radius, so Q10 option A is a known three-place edit there and Q11 is
-   presupposition-free. Q10 is a live-serving break that needs no user action to trigger.
-   `supply-chain-policy` Q5 belongs to the same cluster and may add a mark root.
+1. **Answer Cluster 5.** A management-surface precedent decision, with context in
+   [`management-surfaces-and-the-oracle.md`](../analysis/management-surfaces-and-the-oracle.md).
+   Note that this cluster was originally framed here as a hole in the conformance gate and that
+   framing was wrong: the oracle can assert every one of those operations' effects even where no
+   client triggers them. The decision is ordinary, but four specs wait on it and each will answer
+   it differently if it is left to them.
+2. **Answer `supply-chain-policy` Q5**, the remainder of Cluster 2 now that Q10 and Q11 are
+   settled. Its quarantine option would add a sixth mark root, and it reconciles two settled
+   specs that disagree about the same real event.
 3. **Answer Cluster 1, `auth` Q13 first.** Three specs now need one thing the pinned handler
    interface does not provide: a request mapped to the package coordinate being acted on.
    `auth` Q13 leads, `supply-chain-policy` Q4 and `format-handler-interface` Q9 follow, because
