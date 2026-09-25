@@ -146,7 +146,7 @@ answer settles both.
 - `format-handler-interface` Q2: on a proxied miss, does the proxy wrap the handler or the handler call fetch-and-cache?
 - `format-handler-interface` Q4: do write-triggered shared services enter the interface now?
 
-## Round four: the live backlog (40)
+## Round four: the live backlog (41)
 
 Rounds one to three sorted questions by **what they block**, which is still how the tiers below
 work. Round four adds a second axis, because three gate reviews in a row produced questions that
@@ -154,7 +154,7 @@ are not independent: answering one alone either wastes the answer or forces it t
 Those are recorded as **clusters** first, since the cluster is the unit the owner should actually
 sit down with.
 
-### Cluster 1: the request-to-coordinate gap (auth Q13, supply-chain-policy Q4)
+### Cluster 1: the request-to-coordinate gap (auth Q13, supply-chain-policy Q4, format-handler-interface Q9)
 
 **Two specs hit the same wall from opposite directions, in separate reviews, before a line of
 code exists.** Both need an HTTP request mapped to the package coordinate being acted on, and
@@ -167,10 +167,16 @@ code exists.** Both need an HTTP request mapped to the package coordinate being 
   own recommendation is to sidestep the interface entirely by enforcing inside the shared
   resolution calls.
 
-Answer these together, or the second answer will contradict the first. The cluster also bears on
-whether the scheduled post-OCI interface re-open is the right remedy or arrives too late: two
-independent consumers needing the same missing capability is the evidence that re-open was
-supposed to wait for, and it has arrived early.
+- `format-handler-interface` Q9, raised by that spec's own gate review after it verified the two
+  above independently: whether the scheduled post-OCI re-open's evidence set expands to cover
+  this gap. The decisive detail is that **none of the re-open's three named inputs - generic,
+  OCI, and the Debian signed-index prototype - would have surfaced it.** The re-open was
+  scheduled to be informed by real implementations, and the gap arrived from specs instead, ahead
+  of any of them.
+
+Answer these together, or the second answer will contradict the first. The interface owner has
+taken no position beyond raising Q9, which is correct: whether an out-of-cycle amendment to the
+pin is tolerated depends on how auth Q13 is answered, so Q13 leads and Q9 follows.
 
 ### Cluster 2: what ends a blob's life (storage-and-gc Q10, proxy-cache Q11, supply-chain-policy Q5)
 
@@ -235,16 +241,16 @@ Build steps 1 and 2 are the conformance harness core and the generic format.
 step-1 code rather than the step-2 code, and its answer constrains how every later subsystem gets
 conformance coverage at all.
 
-### Tier B: blocks foundation correctness (17)
+### Tier B: blocks foundation correctness (18)
 
 Build steps 3 and 4: the shared model, CAS and GC, then OCI with the proxy layer.
 
 **Cluster 2 in full** (`storage-and-gc` Q10, `proxy-cache` Q11, `supply-chain-policy` Q5) plus
 `proxy-cache` Q12 (how an upstream security signal is detected for content nobody is requesting).
 
-**Cluster 1 in full** (`auth` Q13, `supply-chain-policy` Q4). Promoted from where an
-enforcement-topology question would normally sit, because it decides whether the pinned interface
-changes, and the interface is step-3 and step-4 work.
+**Cluster 1 in full** (`auth` Q13, `supply-chain-policy` Q4, `format-handler-interface` Q9).
+Promoted from where an enforcement-topology question would normally sit, because it decides
+whether the pinned interface changes, and the interface is step-3 and step-4 work.
 
 **Cluster 3 in full** (`data-model` Q15, `oci` Q6).
 

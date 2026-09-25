@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Q7 and Q8 answered 2026-09-23 and folded through the method set, AC5 and a new AC10. Zero open questions; awaiting an independent review pass to earn planned."
+status_description: "Gate review 2026-09-25 at 9a8f86d: eleven of twelve resolved decisions verified applied; the URL-shape decision's registration validation had no policing criterion (AC11 added, now 11 criteria). Stays draft on Q9: whether the re-open's evidence set covers the request-to-addressed-object gap auth.md Q13 and supply-chain-policy.md Q4 both hit."
 description: "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross."
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
@@ -131,8 +131,20 @@ reaches security-critical shared code. The dependency is recorded here as well a
 because a contract enforced on one side only is enforced nowhere.
 
 Its failure mode is stated for the same reason: a handler whose mapping omits a route
-under-protects itself silently. That is what `auth.md` AC18 and AC7's per-format cases catch,
-which is why both are runner-enforced rather than advisory.
+under-protects itself silently. That is what `auth.md` AC18 and this spec's AC7 catch (auth.md's
+own AC7 is credential-leak scanning; its side of the per-format cases is AC8), which is why both
+are runner-enforced rather than advisory.
+
+Two further inbound amendments are pending rather than missing, recorded here so each arrives
+as a revision to this section instead of a surprise. `auth.md` Q13 found the settled path/tag
+pattern scoping unimplementable against this pin: `Scope(r)` hands the central authorizer only a
+repository and an action, so the authorizer never sees the path or tag a pattern must match, and
+one of that question's options grows the pinned `Scope` type. `supply-chain-policy.md` Q4 hit
+the same wall from the policy side: central policy evaluation needs the request mapped to the
+package and version being resolved, no pinned method provides it, and its recommendation
+enforces inside the shared resolution calls in `Deps` instead. Both questions are owned and
+answered in their own specs; what their convergence means for the scheduled re-open's evidence
+set is Q9 below.
 
 This pin knowingly departs from the `go` skill's discover-don't-design guidance; the
 departure, its justification and its mitigation are recorded in the resolved method set
@@ -235,6 +247,12 @@ AC8 makes this a criterion of this spec rather than an intention.
 - [ ] AC10: A request whose `Scope(r)` returns an error is denied with the response an
       unauthorized caller receives, never served and never distinguishable from a forbidden or
       missing resource, while the server log records the real cause.
+- [ ] AC11: Registration enforces the mount scheme mechanically: a handler declaring a
+      non-root mount other than exactly `/{Name()}/`, or a root-anchored mount absent from the
+      registration layer's explicit carve-out list, fails registration before the server serves
+      any request - proven by fixture handlers declaring each violation. (That a carve-out is
+      also recorded in the claiming format's spec stays a review rule; the list is its
+      mechanical shadow.)
 - [ ] AC6: No handler performs its own network egress: inside `internal/format/**`, any call
       that moves bytes upstream - `net/http`'s package-level request helpers, `Client.Do`,
       `Transport.RoundTrip`, and the `net.Dial`/`net.Dialer` variants - fails `make verify`
@@ -268,7 +286,8 @@ AC8 makes this a criterion of this spec rather than an intention.
 | AC7 | unit | `conformance/core/case_validate_test.go` |
 | AC8 | manual | the re-open `/spec review` pass, recorded in this spec's Review Log before npm work starts |
 | AC9 | lint + unit | depguard allowlist in `.golangci.yml`; third-party-client fixture behind the `lintfixture` build tag, asserted by the same runner test as AC6 |
-| AC10 | unit + conformance | `internal/format/scope_test.go`; a deliberately unmapped route in `conformance/core/` asserting denial and log content |
+| AC10 | unit + conformance | `internal/format/scope_test.go` (denial semantics plus the server-log assertion, which is not protocol-observable and so cannot live in a conformance case per `conformance-harness.md`'s observation rule); a deliberately unmapped route in `conformance/core/` asserting the response is indistinguishable from an unauthorized one |
+| AC11 | unit | `internal/format/register_test.go` (fixture handlers: wrong non-root prefix, unlisted root anchor) |
 
 AC5's manual procedure: for each landing format, inspect the PR diff and record in the
 experiment log that it touches only `internal/format/<name>/`, its conformance cases, and the
@@ -291,6 +310,39 @@ route registration point; any other file is a finding against this spec.
 Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
+
+Q9 was raised by the 2026-09-25 gate review and awaits the owner. The resolved records that
+follow are kept rather than deleted, so the reasoning survives the next time someone asks why
+it was done this way.
+
+### Q9: Does the scheduled re-open's evidence set expand to cover the request-to-addressed-object gap two siblings have already hit?
+
+The re-open (AC8) was designed to catch what implementation discovers, so its inputs are the
+generic and OCI implementations plus the Debian prototype. But two sibling specs have now hit
+the same wall before any code exists, from independent directions: `auth.md` Q13 (pattern
+scoping cannot be evaluated, because `Scope(r)` carries no path or tag) and
+`supply-chain-policy.md` Q4 (policy evaluation cannot map a request to the package and version
+being resolved). Both are one structural gap: the pin translates a request to a repository and
+an action and nothing finer, so every shared layer that needs the addressed object is stuck.
+None of the re-open's three named inputs would surface this - generic and OCI exercise neither
+pattern scoping nor policy, and the Debian prototype targets write-triggered services. Whether
+each sibling question is answered now or deferred is decided in its own spec; what this spec
+owns is the re-open's scope.
+
+**Recommendation:** A - name both sibling questions' outcomes as re-open inputs now, and accept
+that an `auth.md` Q13 answer of "amend now" revises the pin out of cycle, exactly as `Scope(r)`
+itself entered the pin from a sibling decision.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Add both sibling outcomes to the re-open's named inputs; tolerate an out-of-cycle `Scope` amendment if auth.md Q13 answers that way** | The re-open cannot run blind to a gap already proven twice; the pin's amendment path stays the precedented one | The re-open's scope is partly set by sibling schedules, and a second out-of-cycle amendment further erodes the pin the experiment measures against |
+| **B. Amend the pin here and now: `Scope` grows an optional addressed-object field** | The gap closes before any handler is built, and auth AC19 becomes implementable immediately | Decides auth.md Q13 from the wrong spec, and adds a field no Tier 0 format exercises - the exact anticipation the pin exists to refuse |
+| **C. Leave the re-open's inputs as written; sibling answers arrive whenever their specs resolve** | The pin and the re-open stay exactly as adjudicated | The re-open can run and re-affirm a method set two specs have already shown incomplete, because none of its inputs exercises the gap |
+
+**Why this is yours:** it weighs the experiment's interface-stability measurement against
+evidence that arrived earlier than the design assumed, and it decides whether this spec's
+re-open or the siblings' own answers carry the fix - a cross-spec sequencing call only the
+owner can adjudicate.
 
 ### Resolved: the Scope() failure mode (was Q7)
 
@@ -444,10 +496,17 @@ Accepted cost: a second interface to design and maintain before it has a second 
 The alternative hard-codes Docker Hub's auth into the OCI handler and needs surgery for ECR,
 which is the union-of-quirks trap avoided elsewhere in this spec.
 
+Ownership note, 2026-09-25: no spec yet defines the adapter interface itself. `proxy-cache.md`
+consumes the axis (its negative-caching and preconfigured-upstream sections route provider
+quirks to adapters) and OCI's proxied phase is its first implementation, but the interface's
+shape currently has no owning document - the same one-directional-dependency shape this spec's
+fetch-and-cache obligation was corrected for.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-25 | 9a8f86d | gate review (draft -> planned decision): folded-decision application over all 12 resolved records + the `go` skill's interface lens applied hard (discovered-vs-designed, size, consumer placement, the *http.Request shape against the prior-art out-of-process finding) + adversarial + cross-spec (auth Q13 and AC18, supply-chain-policy Q4, conformance-harness AC11 and its protocol-observation rule, proxy-cache's fetch-and-cache obligation, npm's re-open gate, generic's Capabilities contract and open Q7, oci AC1, the catalogue's Tier 3 row) + constitution. Claim verification against code vacuous pre-implementation: the tree holds only a stub `cmd/stackweaver-registry/main.go` and no `internal/`; cross-spec claims and the one monorepo claim (`HandleServiceDiscovery` on the root `/.well-known/terraform.json` route) verified instead. Independent: this reviewer authored none of this spec's prior content | Gate not passed; stays draft on Q9. Eleven of twelve resolved decisions verified genuinely applied through Scope, Design, ACs and Test Plan; the twelfth, the URL-shape decision, reached Design ("Registration validates every mount") but had no policing criterion - AC11 added with a Test Plan row (fixture handlers failing registration on a wrong non-root prefix and an unlisted root anchor), closing the 12-decisions-versus-10-criteria gap where it was real. The discover-don't-design departure re-checked and found honestly recorded with its mitigation; the *http.Request foreclosure of an out-of-process boundary is knowingly priced in the resolved HTTP-direct and extension-boundary records, matching the prior-art warning rather than contradicting it, so no finding there. The sibling convergence verified independently rather than accepted: auth.md Q13 and supply-chain-policy.md Q4 hit the same structural gap in the pin (a request translates to repository plus action and nothing finer), none of the re-open's three named inputs would surface it, and both are now recorded in "The pinned method set" as pending inbound amendments, with the re-open's evidence set raised as Q9 for the owner, not decided. Corrections applied: the mapping-omission catch re-attributed to auth.md AC18 plus this spec's AC7 (auth.md's own AC7 is credential-leak scanning; its side is AC8); AC10's Test Plan row split, since a server-log assertion is not protocol-observable and the harness's observation rule bars it from a conformance case; the unowned upstream-adapter interface noted in its resolved record as a one-directional dependency. npm.md re-verified to carry the same re-open gate from its side; generic.md Q7's pending amendment to definition-of-done item 2 confirmed still open and correctly hooked. |
 | 2026-09-23 | 77b52ad | design + cross-spec consistency, **not independent**: this pass was run by the author of the `Scope(r)` addition, so its adversarial value on that method is limited and a later independent pass should re-check it | Mechanical gate clear (9 ACs, all mapped, no stale references). Two findings raised as Q7 and Q8: the runtime failure mode of `Scope(r)` is undefined on the authorization boundary, and AC5 is falsifiable by construction now that the proxy layer ships with OCI. Stays draft. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous pre-code; cross-spec citations checked instead) | Fixed internal contradictions (metadata ownership vs `data-model.md`, AC4 vs the generic exemption, a citation to a harness AC that does not exist); added AC6/AC7 because import-based architecture tests cannot hold the proxy and auth boundaries; raised Q1-Q5; stays `draft` |
 | 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (tree claim verification vacuous pre-code: the tree holds a stub `cmd/stackweaver-registry/main.go` only; cross-spec, catalogue and protocol claims checked instead) | All four folded decisions were recorded but unapplied to the body: pinned the method set into Design (the central artifact was still absent), rewrote the pre-decision declarative proxied-path prose to the handler-calls-fetch-and-cache flow, added Routing and registration with the Terraform root-anchor grounding, moved write-triggered services into Scope and Phase 3, added AC8 plus the re-open trigger and gate; corrected the stale claim that the harness spec lacks a mode-coverage AC (its AC11 is that AC); tightened AC6 to type-aware call-site enforcement with a fixture test; added the missing `## Tasks` section; raised Q6 (egress import allowlist); stays `draft` on Q6 |
