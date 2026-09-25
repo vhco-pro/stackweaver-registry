@@ -1,6 +1,6 @@
 ---
 status: in-progress
-status_description: "Fifth round 2026-09-25 after first reviews of all three remaining format specs. 51 open across 14 specs. Two new clusters, and Cluster 5 is the most consequential finding in this document: four questions across three formats show that conformance-as-oracle has no answer for operations no real client performs, which is a hole in the project's central gate rather than in any one spec."
+status_description: "Fifth round 2026-09-25, amended 2026-09-26. 51 open across 14 specs, minus storage-and-gc Q10 and proxy-cache Q11 now answered. Cluster 5's framing was corrected: it is a management-surface precedent question, not a hole in the conformance gate, because the oracle can assert every one of those operations' effects even where no client triggers them."
 description: "Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once."
 author: michielvha
 goal: "Prevent the mistake of answering 44 questions before the interactions between them are understood, by naming which ones actually gate the next commit."
@@ -230,32 +230,43 @@ several repositories (Q17, where two passages of the spec currently read opposit
 `replication` Q6 (how a follower authenticates to a leader) is the same vocabulary extended to
 instance identity, which `auth.md` does not define at all.
 
-### Cluster 5: operations no real client drives (pypi Q1 and Q3, npm Q3, ansible-collections Q5)
+### Cluster 5: management surfaces and the precedent they set (pypi Q1 and Q3, npm Q3, ansible-collections Q5)
 
-**This is the most consequential finding in this document, and it is about the project's central
-gate rather than about any one spec.** Three format reviews independently arrived at the same
-shape of question, and it is one the conformance harness cannot answer by construction.
+**This cluster was overstated here, and the correction matters more than the original claim.**
+It was recorded as a hole in the project's central gate: the real client as test oracle having
+nothing to say about management operations no client performs. That is wrong, and
+`pypi.md` Q1 had already said why. A management operation has a **trigger** and an **effect**, and
+the oracle's reach over them differs: no client yanks, but PEP 592 fully standardises what
+installers do with a yanked file, so the harness provisions the state and a real `pip install`
+asserts the behaviour. Every effect in this cluster is conformance-testable that way. Only the
+trigger is not, and only for PyPI and Galaxy, since `npm unpublish` and `npm deprecate` are real
+client commands.
 
-- `pypi` Q1: does v1 expose a hosted yank surface, given **no ecosystem client drives one**?
+Full context, grounded against the installed clients:
+[`management-surfaces-and-the-oracle.md`](../../analysis/management-surfaces-and-the-oracle.md).
+
+What remains is an ordinary and still-important decision: **what a format handler's management
+surface is**, settled before any management API or web UI is specced.
+
+- `pypi` Q1: does v1 expose a hosted yank surface? `twine` has no yank command, so the endpoint
+  would be ours and exercised by our tests alone, while pip verifies everything it causes.
 - `pypi` Q3: may a deleted filename be re-uploaded on the hosted path?
-- `npm` Q3: does hosted unpublish enforce the public registry's restrictions, or only ours?
+- `npm` Q3: does hosted unpublish enforce the public registry's restrictions, or only ours? This
+  one is fully oracle-testable on both trigger and effect; it is a semantics question, not a
+  surface question, and it belongs here only because its answer sets the same precedent.
 - `ansible-collections` Q5: is version deletion served at all, and through what surface?
+  `ansible-galaxy collection` has no delete subcommand.
 
-The project's thesis is that **the real client CLI is the test oracle**: correctness is an exit
-code rather than a judgment call, which is what makes autonomous development safe here. That
-works for everything a client does. It has nothing to say about management operations a client
-never performs. `pip` does not yank. `npm unpublish` exists but our own review found the client
-exits 0 on unrouted routes, so it is a weak oracle even where it exists. `ansible-galaxy` does
-not delete.
+They are one cluster because each answer sets the precedent for the others, and because every
+management surface is also a deletion path `storage-and-gc.md` must know about (Cluster 2) and an
+authorization surface `auth.md` must carry a grant for (Cluster 4). Left per format, four specs
+will answer one question four ways.
 
-So these four questions are really one: **what governs a surface the oracle cannot see?** Each
-format spec will otherwise answer it locally and differently, and the answers compound, because
-every management surface is also a deletion path that `storage-and-gc.md` must know about
-(Cluster 2) and an authorization surface `auth.md` must have a grant for (Cluster 4).
-
-The honest options are a cross-format management API specced once, per-format endpoints mirroring
-each ecosystem's own conventions, or declining the surface in v1 and saying so. That decision is
-not a format decision, which is why it is recorded here rather than in any of the four specs.
+The positions are a registry-owned endpoint per operation starting now, per-format endpoints
+mirroring each ecosystem's conventions, or declining management surfaces in v1. The third has a
+cost worth stating plainly: a hosted repository could then only hard-delete or do nothing, a
+hosted index that cannot yank cannot honestly claim PEP 592, and the matrix must record hosted
+PEP 592 as partial.
 
 ### Cluster 6: signature verification has consumers and no producer (supply-chain-policy Q6, ansible-collections Q3, pypi Q2)
 

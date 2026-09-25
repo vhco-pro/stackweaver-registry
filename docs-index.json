@@ -1,5 +1,12 @@
 [
   {
+    "path": "docs/internal/analysis/management-surfaces-and-the-oracle.md",
+    "description": "Context for the Cluster 5 decision: what management operations each ecosystem has, which of them a real client can drive, and the correction that the conformance oracle can test every one of their effects even where it cannot trigger them.",
+    "internal": true,
+    "status": "complete",
+    "covers": []
+  },
+  {
     "path": "docs/internal/conformance/matrix.md",
     "description": "The per-format, per-client conformance support matrix. Generated from conformance run results - do not hand-edit.",
     "internal": true,
