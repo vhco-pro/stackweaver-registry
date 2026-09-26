@@ -163,6 +163,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/julia.md",
+    "description": "Spec for the Julia format: the Pkg server protocol (the registries listing, registry, package and artifact tarballs addressed by git tree hash), hosted as a registry this registry generates from management-API publishes and proxied from pkg.julialang.org, with the tree hash verified as a coordinate rather than used as a storage key, and virtual repositories as the one way a client sees a private registry beside General.",
+    "internal": true,
+    "status": "draft",
+    "issue": "27",
+    "covers": [
+      "internal/format/julia/**",
+      "conformance/julia/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/maven.md",
     "description": "Spec for the Maven repository layout: the path-addressed release and SNAPSHOT files, the three levels of generated maven-metadata.xml, checksum and signature sidecars and Gradle Module Metadata, hosted and proxied, with Maven, Gradle, sbt and Leiningen as the conformance oracles.",
     "internal": true,

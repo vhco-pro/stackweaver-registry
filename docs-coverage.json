@@ -27,6 +27,9 @@
   "conformance/hex/**": [
     "docs/internal/plans/formats/hex.md"
   ],
+  "conformance/julia/**": [
+    "docs/internal/plans/formats/julia.md"
+  ],
   "conformance/maven/**": [
     "docs/internal/plans/formats/maven.md"
   ],
@@ -69,6 +72,9 @@
   ],
   "internal/format/hex/**": [
     "docs/internal/plans/formats/hex.md"
+  ],
+  "internal/format/julia/**": [
+    "docs/internal/plans/formats/julia.md"
   ],
   "internal/format/maven/**": [
     "docs/internal/plans/formats/maven.md"
