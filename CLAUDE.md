@@ -21,7 +21,7 @@ already served: Gitea has 23 formats and cannot proxy, Harbor proxies and speaks
 format that only hosts is a format Gitea already does for free, so design every handler with its
 proxy path from the start; it changes the storage model and cannot be bolted on later.
 
-The target is 33 ecosystems across ~31 protocol implementations, reaching 50+ client tools and
+The target is 33 ecosystems across 33 protocol implementations, reaching 50+ client tools and
 distributions. **Do not inflate that**: families multiply client reach, not the ecosystem count,
 and the conformance matrix reports per ecosystem so the advertised number can never exceed the
 tested one. Target list, tiers and the family mapping:
@@ -300,7 +300,7 @@ Project-specific rules the skill does not cover:
 - **All formats share one data model. No handler owns a table.** A handler reads and writes an
   opaque metadata document through the shared schema and never issues its own DDL. A format that
   appears to need its own table is evidence the shared model is wrong, raised as a spec change -
-  never a licence to add one. This is what makes breadth affordable rather than 31 bespoke
+  never a licence to add one. This is what makes breadth affordable rather than 33 bespoke
   schemas (`docs/internal/plans/foundation/data-model.md`).
 - **Every shared concern needs a named mechanical enforcer.** Handlers receive raw `*http.Request`,
   so the compiler holds nothing: each boundary (storage access, network egress, auth, snapshot

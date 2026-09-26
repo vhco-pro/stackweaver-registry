@@ -18,7 +18,7 @@ Pulp has the plumbing and no UI. Gitea has the UI and 23 formats and **cannot ca
 Harbor caches beautifully and speaks **only OCI**. JFrog and Sonatype have all of it and fence SSO,
 HA and quotas behind a licence.
 
-Breadth is the moat. 33 ecosystems across ~31 protocol implementations, reaching 50+ client tools
+Breadth is the moat. 33 ecosystems across 33 protocol implementations, reaching 50+ client tools
 and distributions - one Maven-layout handler serves Maven, Gradle, SBT, Ivy and Leiningen; one
 Debian archive handler serves every apt-based distro. The full mapping is public
 (`docs/internal/plans/formats/catalogue.md`) rather than hidden behind a marketing number.

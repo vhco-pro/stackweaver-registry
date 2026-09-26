@@ -21,7 +21,7 @@ No formats implemented yet. The harness is specced
 |---|---|---|---|---|---|---|---|
 | _none yet_ | | | | | | | |
 
-Target is 33 ecosystems across ~31 protocol implementations
+Target is 33 ecosystems across 33 protocol implementations
 (`docs/internal/plans/formats/catalogue.md`). **Rows are per ecosystem, never per family**, so the
 advertised number can never exceed the tested number - one Maven-layout handler earns its Gradle
 row only when a real Gradle client passes against it.
