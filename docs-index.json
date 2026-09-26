@@ -85,6 +85,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/composer.md",
+    "description": "Spec for the Composer (PHP) repository format: the packages.json root, the per-package p2 metadata files with their minification and ~dev split, dist archives, the in-band filter-list and security-advisory channels, hosted through the registry-owned management API and proxied against Packagist, with Composer as the conformance oracle.",
+    "internal": true,
+    "status": "draft",
+    "issue": "24",
+    "covers": [
+      "internal/format/composer/**",
+      "conformance/composer/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/generic.md",
     "description": "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end.",
     "internal": true,

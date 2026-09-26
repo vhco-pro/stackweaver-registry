@@ -6,6 +6,9 @@
   "conformance/cargo/**": [
     "docs/internal/plans/formats/cargo.md"
   ],
+  "conformance/composer/**": [
+    "docs/internal/plans/formats/composer.md"
+  ],
   "conformance/generic/**": [
     "docs/internal/plans/formats/generic.md"
   ],
@@ -39,6 +42,9 @@
   ],
   "internal/format/cargo/**": [
     "docs/internal/plans/formats/cargo.md"
+  ],
+  "internal/format/composer/**": [
+    "docs/internal/plans/formats/composer.md"
   ],
   "internal/format/generic/**": [
     "docs/internal/plans/formats/generic.md"
