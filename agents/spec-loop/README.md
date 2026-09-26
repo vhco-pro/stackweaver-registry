@@ -32,18 +32,36 @@ the queues are empty.
 A task prompt is one line: "Read `agents/spec-loop/<brief>` and follow it exactly. HEAD sha: <sha>.
 Author `docs/internal/plans/<dir>/<name>.md`; your hints are its line in `<queue>.tsv`."
 
-## Queue, in order
+## Queue, split by where it runs
 
-1. **Wave 1 reconciliation is done**: check-spec reported zero failures corpus-wide when it landed.
-   The few items it raised are the "Open items" section of `consequences.md`, for the next pass.
-2. **Foundation specs** (`foundation.tsv`), most-cited first: management-api, credential-management
-   (must reach `planned` before OCI Phase 1), artifact-verification, signing-service,
-   upstream-adapters, async-operations (reconcile with the `Operation` entity already in
-   `data-model.md`), repository-lifecycle, observability, deployment, web-ui.
-3. **Format specs** (`formats.tsv`): maven, nuget, hex, composer, conda, swift, cran, julia,
-   terraform, then debian, rpm, alpine, conan, vagrant, chef, puppet, luarocks, hackage, cpan,
-   opam, homebrew, openvsx, arch. Done already: generic, oci, npm, pypi, ansible-collections,
-   cargo, go-modules, helm, pub.
-4. **A reconciliation pass** over whatever the new specs queue in `consequences.md`.
-5. **Gate reviews**, starting with `storage-and-gc.md` (un-planned by the Wave 1 reconciliation)
-   and `credential-management.md`.
+Split by the owner on 2026-09-26: work that needs real package clients in containers runs on the
+owner's machine, one agent at a time; everything that only reads specs and published docs runs in
+a cloud session. Both push to the same repository, so always `git pull --rebase` before pushing.
+Each side appends to `consequences.md`; a conflict there is two lists to concatenate.
+
+### Local: needs podman or docker (one agent at a time)
+
+Format specs, grounded in captured traffic from the real client run in a container against a
+logging stub, as `cargo.md`, `helm.md` and `ansible-collections.md` were. In order:
+
+nuget, maven, hex, composer, conda, swift, cran, julia, terraform, debian, rpm, alpine, conan,
+vagrant, chef, puppet, luarocks, hackage, cpan, opam, homebrew, openvsx, arch.
+
+Done: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub.
+
+### Cloud: no containers needed (the owner's cloud credits)
+
+1. **The "Open items" in `consequences.md`**, with `reconcile-brief.md`: auth's Cargo pattern
+   bullet and yank note, and the question of an addressed-object kind for repository-wide index
+   documents (without it, a patterned-pull token cannot run cargo or helm at all).
+2. **Foundation specs**, with `foundation-brief.md`, one at a time, most-cited first:
+   management-api, credential-management (must reach `planned` before OCI Phase 1),
+   artifact-verification, signing-service, upstream-adapters, async-operations (reconcile with the
+   `Operation` entity already in `data-model.md`), repository-lifecycle, observability, deployment,
+   web-ui. Hints are each spec's line in `foundation.tsv`.
+3. **A reconciliation pass** over whatever those specs queue in `consequences.md`.
+4. **Gate reviews** (`agents/spec.md`, review mode): `storage-and-gc.md` first (un-planned by the
+   Wave 1 reconciliation), then `credential-management.md`, `conformance-harness.md` and
+   `generic.md`, which are the build-step 1 and 2 specs.
+5. **Bookkeeping** after each finished item: `question-triage.md`, `HANDOFF.md`, and GitHub issues
+   if `gh` is authenticated there (otherwise list the issues owed in the commit message).
