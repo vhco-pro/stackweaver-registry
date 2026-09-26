@@ -213,6 +213,14 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/write-triggered-services-prototype.md",
+    "description": "Defines the write-triggered services prototype that format-handler-interface.md AC8 names as an input to the scheduled interface re-open: what it must demonstrate, why Debian is the vehicle, and how anyone would know it succeeded.",
+    "internal": true,
+    "status": "draft",
+    "issue": "16",
+    "covers": []
+  },
+  {
     "path": "docs/internal/research/prior-art-artifact-repositories.md",
     "description": "Survey of existing artifact repository managers, establishing that the unserved gap is multi-format plus upstream caching plus SSO, and that hosting alone is already solved for free.",
     "internal": true,

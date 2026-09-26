@@ -146,7 +146,7 @@ answer settles both.
 - `format-handler-interface` Q2: on a proxied miss, does the proxy wrap the handler or the handler call fetch-and-cache?
 - `format-handler-interface` Q4: do write-triggered shared services enter the interface now?
 
-## Round five: the live backlog (49)
+## Round five: the live backlog (50)
 
 Rounds one to three sorted questions by **what they block**, which is still how the tiers below
 work. Round four adds a second axis, because three gate reviews in a row produced questions that
@@ -317,7 +317,7 @@ Build steps 1 and 2 are the conformance harness core and the generic format.
 step-1 code rather than the step-2 code, and its answer constrains how every later subsystem gets
 conformance coverage at all.
 
-### Tier B: blocks foundation correctness (20)
+### Tier B: blocks foundation correctness (21)
 
 Build steps 3 and 4: the shared model, CAS and GC, then OCI with the proxy layer.
 
@@ -330,6 +330,13 @@ Promoted from where an enforcement-topology question would normally sit, because
 whether the pinned interface changes, and the interface is step-3 and step-4 work.
 
 **Cluster 3 in full** (`data-model` Q15, `oci` Q6).
+
+**`write-triggered-services-prototype` Q1**: does the prototype cover asynchronous import tasks
+as well as signed indexes? The decision that created the prototype named both classes as things
+generic and OCI do not exercise, and Debian is a vehicle for only the first. Tier B because AC8
+blocks every Tier 1 format on the re-open this prototype feeds, so the question sets how much
+evidence a one-time six-format-blocking gate must have before it fires. It also bears on
+`ansible-collections` Q1, which is the async class's independent evidence.
 
 **Cluster 5 in full** (`pypi` Q1 and Q3, `npm` Q3, `ansible-collections` Q5), promoted here
 despite living in format specs scheduled at steps 5 and beyond. The questions are per format; the
