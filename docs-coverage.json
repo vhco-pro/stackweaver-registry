@@ -15,6 +15,9 @@
   "conformance/helm/**": [
     "docs/internal/plans/formats/helm.md"
   ],
+  "conformance/nuget/**": [
+    "docs/internal/plans/formats/nuget.md"
+  ],
   "conformance/oci/**": [
     "docs/internal/plans/formats/oci.md"
   ],
@@ -42,6 +45,9 @@
   ],
   "internal/format/npm/**": [
     "docs/internal/plans/formats/npm.md"
+  ],
+  "internal/format/nuget/**": [
+    "docs/internal/plans/formats/nuget.md"
   ],
   "internal/format/oci/**": [
     "docs/internal/plans/formats/oci.md"

@@ -129,6 +129,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/nuget.md",
+    "description": "Spec for the NuGet v3 registry format: the service index, the flat container, the paged registration hives, search and the PackagePublish push and unlist surface, hosted and proxied, with the dotnet CLI as the conformance oracle.",
+    "internal": true,
+    "status": "draft",
+    "issue": "21",
+    "covers": [
+      "internal/format/nuget/**",
+      "conformance/nuget/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/oci.md",
     "description": "Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor.",
     "internal": true,
