@@ -39,6 +39,9 @@
   "conformance/oci/**": [
     "docs/internal/plans/formats/oci.md"
   ],
+  "conformance/swift/**": [
+    "docs/internal/plans/formats/swift.md"
+  ],
   "internal/auth/**": [
     "docs/internal/plans/foundation/auth.md"
   ],
@@ -93,6 +96,9 @@
   ],
   "internal/format/pypi/**": [
     "docs/internal/plans/formats/pypi.md"
+  ],
+  "internal/format/swift/**": [
+    "docs/internal/plans/formats/swift.md"
   ],
   "internal/model/**": [
     "docs/internal/plans/foundation/data-model.md"

@@ -237,6 +237,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/swift.md",
+    "description": "Spec for the Swift package registry format (SE-0292): the per-package release list, release metadata, manifests with their version-specific alternates, source archives, the identifiers lookup that bridges Git dependencies, and the multipart publish with SE-0391 publisher signatures, hosted and proxied, with SwiftPM 5.10 and 6.4 as the conformance oracles.",
+    "internal": true,
+    "status": "draft",
+    "issue": "28",
+    "covers": [
+      "internal/format/swift/**",
+      "conformance/swift/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/auth.md",
     "description": "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present.",
     "internal": true,
