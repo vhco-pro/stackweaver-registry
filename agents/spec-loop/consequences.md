@@ -3,9 +3,9 @@
 Each Wave 1 agent could edit only the files it owned, so it reported the changes needed elsewhere.
 They are listed here grouped by the fold that raised them, not by target file.
 
-**Status:** every item targeting a foundation spec was applied in `7df8575`. Items targeting
-format specs and the management-surfaces analysis are being applied by the format-side
-reconciliation. Items asking for a new spec are the foundation queue in `foundation.tsv`.
+**Status:** everything above the "Open items" section is applied: foundation targets in `7df8575`,
+format targets and the management-surfaces analysis in the commit after `da0aecd`. Items asking for
+a new spec are carried by `foundation.tsv`. Only the "Open items" section remains.
 
 ## From replication fold (4d1aeb1)
 1. auth.md "Replication's pending amendment" (~l.413): replace with settled text - Q6 adopted A: no instance identity; follower uses ordinary machine token; `pull` authorizes the repo's replication read surface (pointer set, retained ranges, snapshot identities, deltas, checkpoints, blobs by digest); vocabulary stays pull/push/delete; pattern-narrowed `pull` does NOT authorize replication reads (consistent with patterned-listing refusal); replication routes mapped by replication package, checked by central authorizer (replication AC18); accepted widening: a pull token can read history the leader still retains after a hosted delete. Citation must become "replication.md's resolved instance-authentication question (was Q6)".
@@ -80,3 +80,10 @@ RESOLVED: the OCI credential contradiction (data-model+oci item 1) is met by aut
 9. storage-and-gc: management deletes are snapshot writes, no new deleter. If prototype AC11 shows a pending import can outlive grace, raise a revision request.
 10. Stale citations: go-modules.md (pypi Q1 ~l.136, ~892); helm.md (pypi Q1, ansible Q5, pypi Q3 ~702, ~744); pub.md (pypi Q1, npm Q2, npm Q3, ansible Q4, ansible Q5 at ~75, 359, 657-682, 715-731). SUBSTANTIVE: helm ~702 and pub ~673 must adopt the registry-owned management API, not Galaxy NG routes; pub's preconfigured-upstream option (~720-731) can ride the adopted ansible proxy-cache revision.
 11. pypi.md and npm.md must declare per-route addressed-object tables (auth requirement), like ansible does.
+
+## Open items (raised by the format-side reconciliation, da0aecd)
+1. auth.md Pattern scopes, Cargo bullet: says cargo reports the registered spelling on every route; cargo.md now uses the folded crate key, with `{crate}/{version}` on version routes. Align auth.md to cargo.md.
+2. auth.md: records a "Cargo yank uses push" divergence for the management-api author; cargo Q6 (adopted) resolved it from the cargo side: yank and unyank are bindings onto the management API's yank operation and need `delete`, like PyPI. Update auth.md's note. OWNER NOTE: both adopted under the delegation.
+3. auth.md (judgment call, adopt under delegation): a "repository-wide but reveals no names" addressed-object kind. Without one, cargo's config.json and Helm's index.yaml report `none`, so a token with only a patterned pull cannot run cargo or helm at all.
+4. management-api.md (when authored) must also carry: Helm's dispatch into the handler's write path so the index regenerates in the same snapshot, attaching a provenance file to an existing version with a coherence check, retirement, and per-format object reporting; pub's retraction (`delete`) and discontinuation (`push`); go-modules' deletion (410 plus retirement set); cargo's yank binding (`delete`).
+5. Every format now renders policy refusals, but each exact response shape must be checked against captured traffic when that format's policy conformance case is written.

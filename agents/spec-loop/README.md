@@ -34,10 +34,8 @@ Author `docs/internal/plans/<dir>/<name>.md`; your hints are its line in `<queue
 
 ## Queue, in order
 
-1. **Finish the format-side reconciliation** if `git log` does not show it: the items in
-   `consequences.md` that target `docs/internal/plans/formats/*` and
-   `docs/internal/analysis/management-surfaces-and-the-oracle.md`. The foundation side landed in
-   `7df8575`.
+1. **Wave 1 reconciliation is done**: check-spec reported zero failures corpus-wide when it landed.
+   The few items it raised are the "Open items" section of `consequences.md`, for the next pass.
 2. **Foundation specs** (`foundation.tsv`), most-cited first: management-api, credential-management
    (must reach `planned` before OCI Phase 1), artifact-verification, signing-service,
    upstream-adapters, async-operations (reconcile with the `Operation` entity already in

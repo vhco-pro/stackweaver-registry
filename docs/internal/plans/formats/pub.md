@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 at 4d1aeb1 as a grounded first draft; never reviewed. Every question the draft raised was written in decision shape and adopted at its own recommendation under the owner's standing delegation, so Open Questions holds zero open entries and five adopted records (grep 'standing delegation' to find and reverse them). Awaits a first independent review before it can reach planned."
+status_description: "Reconciled 2026-09-26 at da0aecd (not a review): Q2 revised to the registry-owned management API (retraction under delete, discontinuation under push, pub.dev's options routes not served), per-route addressed objects with content-addressed publish steps (AC15) and the 403 policy rendering through the challenge message (AC16) added; Q4 stands, now as proxy-cache's Q14 decision. Earlier: Authored 2026-09-26 at 4d1aeb1 as a grounded first draft; never reviewed. Every question the draft raised was written in decision shape and adopted at its own recommendation under the owner's standing delegation, so Open Questions holds zero open entries and five adopted records (grep 'standing delegation' to find and reverse them). Awaits a first independent review before it can reach planned."
 description: "Spec for the Pub format (Dart and Flutter): the hosted pub repository API v2, hosted and proxied, where the client unilaterally enforces content hashes, excludes retracted versions, and deletes its stored token on any 401."
 author: michielvha
 goal: "Give Dart and Flutter teams a private and caching pub repository whose behaviour is pinned to what the real dart pub client does, including the three rules it enforces without asking the server: content-hash verification, retracted-version exclusion, and stored-token deletion on 401."
@@ -43,9 +43,11 @@ the client enforces three rules unilaterally, none of which a server can negotia
 One count-integrity note, the same shape as npm's and PyPI's: the catalogue's row reaches Dart
 and Flutter through one client. dart.dev states that `flutter pub <subcommand>` and
 `dart pub <subcommand>` drive the same pub command-line interface, and the Flutter SDK bundles a
-Dart SDK. This spec tests `dart pub` only (AC1); whether the family's Flutter reach demands a
-Flutter-driven run is the catalogue's open client-reach question, not this spec's, and the
-advertised reach must not exceed the tested one in the meantime.
+Dart SDK. The catalogue's resolved client-reach decision (was Q5, its AC2) makes every client its
+multiplier table names a claim proven per client, and Pub has no multiplier row: it counts one
+client, `dart pub`, which this spec tests (AC1), and Flutter is the language reach of that
+client rather than a second counted one. Counting `flutter pub` separately would need a row in
+that table and its own run first.
 
 **Grounding for this draft, stated plainly.** Neither `dart` nor `flutter` is installed on the
 authoring host (`which dart flutter` found nothing), so no traffic was captured this run. Every
@@ -71,12 +73,13 @@ verdict recorded in the experiment log first. Pub is Tier 2, so this spec is rea
 that verdict is "continue". It inherits the handler-interface re-open gate
 (`format-handler-interface.md` AC8) transitively, since that gate precedes all of Tier 1.
 
-**The management-surface precedent is adopted here, not settled here.** The retraction and
-discontinuation surface below takes the same position `pypi.md` Q1 recommends for yank, under
-the owner's standing delegation. `foundation/question-triage.md` names that decision as one
-cross-format precedent (its Cluster 5) that should not be answered four ways by four format
-specs; if the owner settles Cluster 5 differently, the adopted record here is reversed in the
-same pass, and the surface section changes with it.
+**The management API must be specced before Phase 2.** Retraction, un-retraction and
+discontinuation are operations of the registry-owned management API the cross-format precedent
+settled on (`pypi.md`'s resolved hosted-yank decision, was Q1, with `npm.md` and
+`ansible-collections.md`), homed in `docs/internal/plans/foundation/management-api.md` (to be
+authored in the spec loop), which owns their URL shape, authorization and write accounting.
+AC6, AC7 and AC14 are untestable until that surface exists, so Phase 2 waits on that spec
+reaching `planned`; the requirements this format places on it are stated in Design.
 
 ## Scope
 
@@ -89,14 +92,16 @@ same pass, and the surface section changes with it.
   endpoints older clients use (version info and the `/packages/{p}/versions/{v}.tar.gz` redirect).
 - The three-step publish flow (initiate, multipart upload, finalize) with refusal of a version
   that already exists and of an archive that fails validation.
-- Retraction, un-retraction and discontinuation on the hosted path through handler-served
-  endpoints in pub.dev's own `options` shape, with the effect verified through the real client
-  (the adopted retraction-surface record below).
+- Retraction, un-retraction and discontinuation on the hosted path as operations of the
+  registry-owned management API, with the effect verified through the real client (the adopted
+  retraction-surface record below).
 - Bearer authentication per `foundation/auth.md`, including the spec-mandated
   `WWW-Authenticate` challenge and the 401/403/404 split that keeps the client's token intact
   (the adopted challenge record below).
 - The proxied path against pub.dev: classification, `archive_url` rewriting, conditional
   revalidation, negative caching, the advisories relay, and pub's rows of the removal table.
+- The per-route addressed objects `auth.md`'s pattern scopes evaluate, and the wire rendering of
+  a shared policy refusal.
 - Non-interactive client configuration through `PUB_HOSTED_URL`, per-dependency `hosted: url:`
   and `publish_to`, which is what makes the format-first mount work without a carve-out.
 
@@ -104,11 +109,12 @@ same pass, and the surface section changes with it.
 of done requires the deliberately unimplemented surface to be named:
 
 - **Advisory data on the hosted path.** The repository spec's advisories endpoint serves OSV
-  documents, and real advisory data belongs to `supply-chain-policy.md`, whose feed authority is
-  its own open question. The hosted listing omits `advisoriesUpdated`, so the client never asks
-  (the adopted advisories record below); on the proxied path the upstream's advisories are
-  relayed as metadata fidelity. Building a hosted advisory source here would prejudge the
-  sibling's feed decision, which is evidence sequencing, not effort.
+  documents, and real advisory data belongs to `supply-chain-policy.md`, whose resolved
+  advisory-feed decision (was Q1) makes OSV the single feed. The hosted listing omits
+  `advisoriesUpdated`, so the client never asks (the adopted advisories record below); on the
+  proxied path the upstream's advisories are relayed as metadata fidelity. Serving that feed
+  through pub's advisories shape is a revision of this spec once the feed exists; building a
+  hosted advisory source here first would duplicate it.
 - **pub.dev's site API**: search, account and likes endpoints, uploader and publisher management,
   automated-publishing configuration. None of it is in the repository specification, no client
   in the install-or-publish loop calls it, and advertising a pub.dev-proprietary surface would
@@ -119,10 +125,16 @@ of done requires the deliberately unimplemented surface to be named:
   Publishing.
 - **Hard deletion of a version or package.** The ecosystem has no delete surface: pub.dev never
   deletes on an author's request, retraction is its removal semantics, and a vanished version
-  on pub.dev is always administrative moderation. A registry-wide hard-delete surface is the
-  cross-format management decision `foundation/question-triage.md` Cluster 5 names, and until it
-  exists a bad upload is handled by retraction or by rollback through the snapshot pointer. This
-  is a shape-of-precedent reason, not an effort one.
+  on pub.dev is always administrative moderation. The registry-owned management API the
+  cross-format precedent settled on could carry one, but this format asks it for none: a bad
+  upload is handled by retraction or by rollback through the snapshot pointer, the ecosystem's
+  own answer. If a deletion operation is ever added, the cross-format retirement rule applies
+  and the coordinate is never reusable, since every lockfile pins its content hash.
+- **pub.dev's own `options` endpoints** (`PUT .../versions/{version}/options` and
+  `PUT .../options`). No `dart pub` command drives them; pub.dev's web UI does. Serving them
+  would be a per-format alias of the registry-owned retraction and discontinuation operations,
+  which the cross-format precedent declines wherever no client drives the route, exactly as
+  `ansible-collections.md` declines Galaxy NG's own `DELETE` routes.
 - **Interactive `dart pub login`.** The client uses its OAuth2 flow only for the hard-coded
   official servers (`_publish` in `lib/src/command/lish.dart`), never for a third-party hosted
   URL, so no login surface is applicable.
@@ -142,8 +154,8 @@ of done requires the deliberately unimplemented surface to be named:
 | Advisories | `GET <hosted-url>/api/packages/{package}/advisories`; `{"advisories": [OSV...], "advisoriesUpdated": <date-time>}`; requested by the client only when the listing carries `advisoriesUpdated` |
 | Deprecated version info | `GET <hosted-url>/api/packages/{package}/versions/{version}`, kept for pre-2.8 clients; pub.dev still answers it (probed 200) |
 | Deprecated download | `GET <hosted-url>/packages/{package}/versions/{version}.tar.gz`; pub.dev answers `303` to the `archive_url` (probed) |
-| Retraction | `GET` and `PUT <hosted-url>/api/packages/{package}/versions/{version}/options` with `{"isRetracted": bool}`: pub.dev's own API (`setVersionOptions` in its `pubapi.dart`), not part of the repository spec |
-| Discontinuation | `GET` and `PUT <hosted-url>/api/packages/{package}/options` with `{"isDiscontinued": bool, "replacedBy": string?}`: likewise pub.dev's own (`setPackageOptions`) |
+| Retraction | pub.dev's `GET` and `PUT <hosted-url>/api/packages/{package}/versions/{version}/options` with `{"isRetracted": bool}` is its own API (`setVersionOptions` in its `pubapi.dart`), not part of the repository spec, and is **not served** here: retraction is a registry-owned management operation (Design, "Retraction and discontinuation") |
+| Discontinuation | pub.dev's `GET` and `PUT <hosted-url>/api/packages/{package}/options` with `{"isDiscontinued": bool, "replacedBy": string?}` (`setPackageOptions`), likewise **not served**: a registry-owned management operation |
 | Errors | `{"error": {"code": ..., "message": ...}}` on 4xx; `401` and `403` additionally carry `WWW-Authenticate: Bearer realm="pub", message="..."` |
 
 The client attaches `User-Agent: Dart pub <sdk-version>` and retries failed requests with
@@ -269,7 +281,7 @@ handler's `Scope(r)` mapping and the shared authorizer together produce:
 | No credential, repository with anonymous read enabled | served |
 | Invalid, expired or revoked credential | `401` with the challenge (`foundation/auth.md` AC12 and the spec agree, and the client deleting that token is correct) |
 | Valid credential without read access | `404`, indistinguishable from a nonexistent repository (`foundation/auth.md` AC17); never `403`, which would confirm the name |
-| Valid credential with read but without the scope a write needs (publish, options) | `403` with the challenge and a message naming the missing permission; the client keeps the token, and the caller already knows the repository exists |
+| Valid credential with read but without the scope a write needs (publish) | `403` with the challenge and a message naming the missing permission; the client keeps the token, and the caller already knows the repository exists |
 
 A `401` is never sent to a valid token, because the spec says the client "knows for sure" the
 token is invalid on 401 and acts on it.
@@ -321,9 +333,10 @@ metadata-only mutations snapshot-creating writes. Pub's declaration:
 
 - A publish is **one** completed logical write, completed by the finalize `GET`; steps 1 and 2
   create in-flight upload state and no snapshot.
-- A retraction or un-retraction is one metadata-only write on the version document.
-- A discontinuation, or a change to `replacedBy`, is one metadata-only write on the package
-  document.
+- A retraction or un-retraction through the management API is one metadata-only write on the
+  version document.
+- A discontinuation, or a change to `replacedBy`, through the management API is one
+  metadata-only write on the package document.
 - A proxied repository creates no snapshots at all, per the model's settled rule; listing
   arrival, advisories arrival and revalidation are cache materialisation.
 
@@ -348,16 +361,31 @@ draws: the harness provisions the state and the real client proves the behaviour
 (dart.dev's command list, re-read 2026-09-26), and dart.dev documents retraction and
 discontinuation as actions on pub.dev's Admin tab. pub.dev's web UI performs them through its
 own API, `PUT .../versions/{version}/options` and `PUT .../options`, which the repository spec
-does not include. Per the adopted retraction-surface record, this registry serves those two
-endpoints on `local` repositories in exactly pub.dev's document shapes (`VersionOptions` and
-`PkgOptions` in pub.dev's `package_api.dart`), under `push` scope, with the `GET` forms
-returning current state. The shape is borrowed rather than invented so that nothing new is
-designed ahead of the cross-format management API, which can wrap these when it exists. The
-trigger is verified by this registry's own integration tests, and that is stated as such rather
-than implied to be conformance-covered.
+does not include. Per the adopted retraction-surface record, this registry does not serve those
+endpoints: retraction, un-retraction and discontinuation are operations of the registry-owned
+management API, `docs/internal/plans/foundation/management-api.md` (to be authored in the spec
+loop), the one management surface the cross-format precedent settled on, and with no client
+driving pub.dev's routes there is nothing for an alias to bind. This spec defines what each
+operation means and what `dart pub` sees afterwards; the shared spec defines URL shape, request
+form, authorization and audit. The trigger is verified by this registry's own integration tests
+against the management endpoint, and that is stated as such rather than implied to be
+conformance-covered; the effect is verified by the real client in cases whose `script` calls
+the management endpoint, or whose `state` seeds the retracted or discontinued state.
 
-Two pub.dev policies are deliberately **not** mirrored, on the reasoning `npm.md` Q3 recommends
-for unpublish: pub.dev allows retraction only within seven days of publication and undo only
+| Operation | Effect a client sees | Write | Action |
+|---|---|---|---|
+| Retract a version | A fresh `dart pub get` selects another version and annotates it "retracted"; a locked or exact-override pin still installs it | One metadata-only write on the version document | `delete` |
+| Un-retract a version | The version returns to resolution | One metadata-only write | `delete` |
+| Discontinue a package, optionally naming `replacedBy`, or clear it | `dart pub get` prints the discontinued notice and `dart pub outdated` shows the replacement, or they stop | One metadata-only write on the package document | `push` |
+
+The actions follow the cross-format mapping rather than pub.dev's single permission: retraction
+is yank-class, removal-class like PyPI's yank and so `delete`; discontinuation is a notice like
+npm's deprecation and so `push`. Each is evaluated against the object `{package}/{version}` or
+`{package}`, which this format requires the management API to report, and each is hosted only:
+against a proxied or virtual repository it is refused, the marks there arriving from upstream.
+
+Two pub.dev policies are deliberately **not** mirrored, on the reasoning `npm.md`'s resolved
+hosted-unpublish decision (was Q3) adopted for unpublish: pub.dev allows retraction only within seven days of publication and undo only
 within seven days of retraction (`canBeRetracted` and `canUndoRetracted` in its `models.dart`).
 Those windows protect a public commons; a private registry has operators and RBAC, so
 authorization is the only gate, and the divergence goes on the recorded exception list.
@@ -365,7 +393,7 @@ authorization is the only gate, and the divergence goes on the recorded exceptio
 package on another repository, so its existence is not checked.
 
 On the proxied path the trigger is absent and the marks arrive from upstream (the removal table
-below). The `options` endpoints answer `404` on `remote` and `virtual` repositories.
+below).
 
 ### The proxied path
 
@@ -415,9 +443,12 @@ Upstream events map onto the settled purge-or-flag table as pub's side of that c
 | An OSV advisory appears in `/advisories` for a cached version | Not a removal event: relayed at the next revalidation. The client (Dart 3.4 and later) surfaces the advisory itself unless the project lists it under `ignored_advisories`; `supply-chain-policy.md`'s own evaluation is a separate, central path |
 | `isDiscontinued`, `replacedBy` or an unknown field changes | An ordinary metadata change, propagated at the next revalidation |
 
-Detection happens at revalidation; whether anything more active exists is `proxy-cache.md` Q12
-and is owned there. pub.dev is not among the preconfigured upstreams, per the adopted
-preconfigured-upstream record below; a remote repository against it is user-configured.
+Detection happens at revalidation: per `proxy-cache.md`'s resolved answer (was Q12) the proxy
+layer never polls an upstream, and the active channel is `supply-chain-policy.md`'s advisory
+feed under the shared security-signal rule. pub.dev is not among the preconfigured upstreams: a
+remote repository against it is user-configured, per the adopted preconfigured-upstream record
+below and `proxy-cache.md`'s resolved preconfigured-set extension (was Q14), which deferred
+pub.dev until a `continue` verdict authorizes this format.
 
 One assertion trap, inherited from the npm and PyPI reviews: the client keeps a listing cache and
 a package cache under `PUB_CACHE`, and with a lockfile present it accepts a listing up to three
@@ -437,14 +468,54 @@ bytes are.
 
 The ecosystem signs nothing: pub has no package signature, no attestation and no provenance
 field on the wire. There is therefore no signature state for `supply-chain-policy.md` to consume
-from this format, and no producer for its open ownership question to name; this is recorded as
-an honest absence rather than a deferral. What pub does carry is advisory state, and the
+from this format, and nothing for the verification producer its resolved ownership decision (was
+Q6) names, `docs/internal/plans/foundation/artifact-verification.md`, to verify; this is recorded
+as an honest absence rather than a deferral. What pub does carry is advisory state, and the
 composition is stated so two mechanisms do not disagree: the client acts on relayed OSV
 advisories by itself, and central policy evaluation at resolution (through the shared calls in
-`Deps`, per that spec's recommended hook) is an independent refusal path that renders in pub's
-error shape when it fires. pub.dev's per-package OSV documents are the same schema
-`supply-chain-policy.md` recommends as its feed; whether they may seed that feed is that spec's
-feed-authority question, not this one's.
+`Deps`, that spec's resolved evaluation hook, was Q4) is an independent refusal path that renders
+as "Policy refusals on the wire" below states. pub.dev's per-package OSV documents are the same
+schema as the one feed that spec's resolved advisory-feed decision (was Q1) adopted, OSV, and
+they are relayed on the proxied path as the ecosystem's own signal, never ingested as a second
+feed.
+
+### Addressed objects and pattern scopes
+
+`auth.md`'s pattern scopes narrow a credential within one repository by matching the object each
+request addresses, and the format declares which object each route reports ("Pattern scopes"
+there; `format-handler-interface.md` AC12). Pub names are exact and contain no `-` or `/`, so the
+archive filename `{package}-{version}.tar.gz` splits unambiguously at its first hyphen, and a
+pattern for a family of packages is written `acme_*/**`.
+
+| Route | Object kind | Canonical object |
+|---|---|---|
+| Version listing, advisories | named | `{package}` |
+| Archive, deprecated version info, deprecated download | named | `{package}/{version}` |
+| Publish step 1 (`versions/new`) and step 2 (the multipart upload) | content-addressed | - |
+| Publish step 3 (finalize) | named | `{package}/{version}` from the staged archive's pubspec, recorded in the upload session at step 2; an unknown or expired upload id reports none |
+
+The publish rows follow OCI's shape on purpose: steps 1 and 2 open and fill an upload session
+bound to the digest it commits under, which is `auth.md`'s content-addressed kind, and the named
+write, the finalize that makes a version visible, is where the pattern governs. The residual is
+the one `auth.md` names for OCI: a patterned `push` can stage bytes outside its pattern, which
+never become a version and are collected by the upload-session cleanup. Retraction and
+discontinuation report their objects through the management API (above).
+
+A refusal under a pattern follows the status table above, reading the pattern as the caller's
+scope for that object: a read outside it is the no-read-access row, `404`, and a finalize outside
+it by a caller who can read the repository is the missing-write-scope row, `403`. It is **never**
+`401`, since the token is valid and a `401` would make the client delete it.
+
+### Policy refusals on the wire
+
+When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on a
+listing, archive or deprecated route of either path, the handler answers `403` with pub's error
+body and the `WWW-Authenticate` challenge, whose `message` names the policy and rule, or names
+the signal for a coordinate condemned under the shared security-signal rule: the challenge
+message is the mechanism the repository spec gives a server to put text in front of the user.
+`403` rather than the existence rule's `404`, because the caller is authorized and the content
+is what is refused, and never `401`, for the token-deletion reason above. Whether the client
+prints the message on an archive fetch as it does on an API call is AC16's capture to settle.
 
 ### What this format needs from `Deps`, and what it does not need
 
@@ -478,10 +549,12 @@ authoritative-reference resolution. Recording gates on the harness's redaction c
 (`conformance-harness.md` AC13), and every deliberate divergence, the seven-day windows and the
 stand-in publish among them, goes on the exception list before its flow is expected to replay.
 
-Provisioning a retracted or discontinued state for a case goes through the `options` endpoints;
-whether that is expressible in the case's `setup` block or must run in the script is decided by
-`conformance-harness.md` Q4's answer on how the vocabulary grows, and this spec records the need
-rather than assuming the key.
+Provisioning a retracted or discontinued state for a case follows the harness's resolved
+decisions on the closed vocabulary and on how `setup` is applied (was Q4 and Q5 there): `setup`
+never calls a management endpoint, so a case wanting only the effect seeds the state through its
+`state` key, and a case exercising trigger and effect together calls the management endpoint
+from its `script` and then runs the client. The pattern-scoped tokens AC15 needs come from the
+`credentials` key, and AC16's rules from `policies` and `advisories`.
 
 ## Acceptance Criteria
 
@@ -509,12 +582,13 @@ rather than assuming the key.
       sha256 of the bytes the `archive_url` serves, proven by `dart pub get --enforce-lockfile`
       succeeding on a second client with a fresh `PUB_CACHE` against a lockfile produced on the
       first; and no served archive response carries an `x-goog-hash` header.
-- [ ] AC6: Setting `isRetracted` through the version `options` endpoint on a hosted repository
+- [ ] AC6: Retracting a version through the registry-owned management API on a hosted repository
       makes a fresh `dart pub get` select the previous version and annotate the retracted one,
       while a project whose `pubspec.lock` already pins it, and one pinning it by exact
       `dependency_overrides`, still install it; clearing the flag restores it to resolution; and
       each change is one metadata-only write producing one snapshot.
-- [ ] AC7: Setting `isDiscontinued` and `replacedBy` through the package `options` endpoint makes
+- [ ] AC7: Discontinuing a package with a `replacedBy` through the registry-owned management API
+      makes
       `dart pub get` print the discontinued notice for a direct dependency and
       `dart pub outdated` show the replacement, and the listing carries both fields.
 - [ ] AC8: The proxied path installs a package from a pub.dev stand-in and serves it from cache on
@@ -546,10 +620,22 @@ rather than assuming the key.
 - [ ] AC13: Replay-match passes against a corpus recorded from pub.dev covering the recorded
       surface named in Design, with the publish flow replayed from its stand-in corpus on the
       recorded exception list.
-- [ ] AC14: The `options` endpoints require `push` scope on a `local` repository, a pull-only
-      token receives `403` and a request against a `remote` repository receives `404`; and a
-      publish initiated against a `remote` or `virtual` repository is refused at step 1 with
-      `400` and a code naming the repository type, which the client prints.
+- [ ] AC14: Retraction and un-retraction require `delete` and discontinuation requires `push` on a
+      `local` repository, a principal without the needed action is refused with no snapshot
+      created, and each operation against a `remote` or `virtual` repository is refused; a
+      request to pub.dev's `options` routes is not served and changes nothing; and a publish
+      initiated against a `remote` or `virtual` repository is refused at step 1 with `400` and a
+      code naming the repository type, which the client prints.
+- [ ] AC15: A token holding `pull` and `push` under the pattern `acme_*/**` publishes `acme_tool`
+      through the real three-step `dart pub publish` and installs it with `dart pub get`, and is
+      refused publishing `other_tool` at finalize with a `403` the client prints while keeping
+      its stored token, with no snapshot created, and refused resolving `other_tool` with a
+      `404`; and in proxied mode it installs an in-pattern package through the cache and is
+      refused another, never receiving a `401`.
+- [ ] AC16: A listing or archive request the shared policy layer refuses answers `403` with the
+      error body and a challenge `message` naming the policy, on the hosted and the proxied
+      path, and a real `dart pub get` of the refused version exits non-zero with that text in
+      its output and its stored token intact.
 
 ## Test Plan
 
@@ -560,15 +646,17 @@ rather than assuming the key.
 | AC3 | conformance + integration | `conformance/pub/publish_test.go` (republish and malformed-archive refusals, message in client output); `internal/format/pub/upload_session_test.go` (snapshot-table assertion; abandoned-upload collection against the storage layer's cleanup) |
 | AC4 | conformance | `conformance/pub/auth_test.go` (token store inspected after the invalid-token case; the 404 case shares `conformance/core/existence_oracle_test.go`'s assertion shape) |
 | AC5 | conformance + integration | `conformance/pub/enforce_lockfile_test.go` (two clients, fresh cache); `internal/format/pub/listing_test.go` (hash-equals-digest across every version; header assertion on archive responses) |
-| AC6 | conformance + integration | `conformance/pub/retraction_test.go` (fresh resolution, locked pin, override pin, un-retract); `internal/format/pub/options_test.go` (write-boundary and snapshot assertions) |
-| AC7 | conformance | `conformance/pub/discontinued_test.go` |
+| AC6 | conformance + integration | `conformance/pub/retraction_test.go` (the `script` retracts through the management endpoint; fresh resolution, locked pin, override pin, un-retract; a second case seeds the retracted state through `state`); `internal/format/pub/manage_retract_test.go` (write-boundary and snapshot assertions) |
+| AC7 | conformance | `conformance/pub/discontinued_test.go` (the `script` discontinues through the management endpoint) |
 | AC8 | conformance | `conformance/pub/proxied_test.go` (transcript + network-level assertion, fresh `PUB_CACHE` in setup; missing-name case) |
 | AC9 | conformance | `conformance/pub/proxied_ttl_test.go` (mutating local stand-in upstream with `ETag` support; network-level `304` assertion) |
 | AC10 | integration | `internal/format/pub/removal_test.go` (test upstream presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
 | AC11 | conformance | `conformance/pub/advisories_test.go` (hosted transcript negative; proxied relay with an affected-version fixture) |
 | AC12 | integration | `internal/format/pub/negotiation_test.go`; `internal/format/pub/legacy_endpoints_test.go` (no client oracle: the current client never requests these) |
 | AC13 | conformance | `conformance/pub/replay_test.go` |
-| AC14 | integration + conformance | `internal/format/pub/options_test.go` (scope and repository-type cases); `conformance/pub/publish_test.go` (publish against a remote repository, message in client output) |
+| AC14 | integration + conformance | `internal/format/pub/manage_retract_test.go` (action and repository-type cases, the unserved `options` routes); `conformance/pub/publish_test.go` (publish against a remote repository, message in client output) |
+| AC15 | conformance + unit | `conformance/pub/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; token store inspected after each refusal); `internal/format/pub/scope_object_test.go` (the object table, per route, including the content-addressed publish steps and the finalize lookup, `format-handler-interface.md` AC12) |
+| AC16 | conformance | `conformance/pub/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`) |
 
 The runner-enforced obligations, both modes and unauthenticated and unauthorized cases in each,
 apply from the sibling specs and are not restated per criterion here; AC4 covers pub's specific
@@ -579,10 +667,13 @@ status semantics on top of them.
 ### Phase 1: Hosted core
 - Listing rendering with `latest` and content hashes, archive serving under the hosted URL, the
   deprecated endpoints, the three-step publish with validation, republish refusal and the
-  upload-session lifecycle, the 401/403/404 split and the challenge header
+  upload-session lifecycle, the 401/403/404 split and the challenge header, the per-route
+  addressed-object declaration, the `403` policy rendering
 
 ### Phase 2: Mutation surface
-- The `options` endpoints for retraction and discontinuation in pub.dev's shapes; the
+- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
+  preconditions)
+- Retraction, un-retraction and discontinuation as registry-owned management operations; the
   write-boundary declaration exercised end to end
 
 ### Phase 3: Proxied path
@@ -605,7 +696,10 @@ None open. The five questions this draft raised were each written in the templat
 shape and then adopted at their own recommendation under the owner's standing delegation of
 2026-09-26 (`CLAUDE.md`), so that the loop keeps running; each record below opens with the
 adoption line so `grep -rn "standing delegation"` finds it, and every one is reversible by the
-owner. Each is folded through Scope, Design, the criteria and the Test Plan above.
+owner. Each is folded through Scope, Design, the criteria and the Test Plan above. The
+2026-09-26 cross-spec reconciliation revised Q2's adoption to the registry-owned management API
+the Cluster 5 format specs converged on, and recorded that the revision Q4 waited for has
+happened.
 
 ### Resolved: the authentication challenge versus the existence oracle (was Q1)
 
@@ -645,19 +739,34 @@ mechanism the spec provides for exactly this situation; C lost because it is the
 
 ### Resolved: the hosted retraction and discontinuation surface (was Q2)
 
-**Adopted 2026-09-26 under the owner's standing delegation.** Option A: v1 serves pub.dev's
-`options` endpoints on `local` repositories under `push` scope, with no time windows, the
-trigger integration-tested and the effect conformance-tested through the real client. Folded
-into Scope, the retraction section of Design, the write-boundary declaration, AC6, AC7 and
-AC14.
+**Adopted 2026-09-26 under the owner's standing delegation, and revised the same day by the
+cross-spec reconciliation.** Option D, added in that revision: retraction, un-retraction and
+discontinuation are operations of the registry-owned management API,
+`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), with no
+time windows, retraction under `delete` and discontinuation under `push`, the trigger
+integration-tested and the effect conformance-tested through the real client; pub.dev's own
+`options` routes are not served. Folded into the blocking preconditions, Scope, the wire table,
+the retraction section of Design, the write-boundary declaration, AC6, AC7, AC14 and Phase 2.
+
+As first adopted this record chose A, serving pub.dev's `options` endpoints under `push`, on the
+reading that A matched the PyPI yank recommendation of the time. That recommendation was then
+adopted in a different form: `pypi.md`'s resolved hosted-yank decision (was Q1), with `npm.md`
+and `ansible-collections.md` beside it, put every management operation on one registry-owned API
+and served a client's own route as a binding only where a client drives it. A's own accepted cost
+foresaw this ("if Cluster 5 is settled toward a single cross-format surface, these endpoints
+become that surface's pub rendering"); the revision goes one step further and declines the
+pub.dev routes, because no `dart pub` command drives them. The action split follows the
+cross-format mapping `auth.md` records for management operations: retraction is yank-class, so
+`delete`; discontinuation is deprecation-class, so `push`.
 
 Retraction and discontinuation are the ecosystem's only removal semantics and their effects are
 standardised in the client, but no client command triggers them and the repository spec has no
 endpoint for them; pub.dev's own web UI uses an API of its own. This is the same question
-`pypi.md` Q1 asks about yank, and `foundation/question-triage.md` Cluster 5 names it as one
-cross-format precedent.
+`pypi.md` asked about yank (was its Q1), and `foundation/question-triage.md` Cluster 5 named it
+as one cross-format precedent.
 
-**Recommendation:** A, matching `pypi.md` Q1's recommendation so the precedent is set once. The
+**Recommendation (as first written):** A, matching the PyPI yank recommendation of the time
+(`pypi.md`, was Q1) so the precedent is set once. The
 shape is pub.dev's rather than invented, so nothing is designed ahead of the cross-format
 management API; the model already treats a metadata-only mutation as a write; and a hosted pub
 repository that cannot retract can only hard-delete, which is the destructive operation
@@ -668,18 +777,20 @@ retraction exists to avoid and which this ecosystem does not even have.
 | **A. Serve pub.dev's `options` endpoints on hosted repositories now, authorization-only** | Hosted retraction and discontinuation are real and client-testable; the shape already exists in the ecosystem; operators get the soft delete instead of nothing | A management write surface on a format handler ahead of a management-API design, verified by our tests alone at the trigger; and a divergence from pub.dev's seven-day windows on the exception list |
 | **B. Proxied-only marks in v1; hosted retraction waits for the management-surface era** | No precedent set ahead of the cross-format decision | A hosted repository has no removal semantics at all, not even a hard delete, and the matrix must record hosted retraction as absent |
 | **C. Mirror pub.dev's seven-day retract and undo windows as well** | Replay-faithful to pub.dev's policy | Encodes public-commons policy against a private registry's data, blocks an operator from retracting their own week-old mistake, and the windows need pub.dev's clock semantics to mean anything |
+| **D. Registry-owned management operations, pub.dev's routes not served** (adopted in revision) | One management surface across formats, as PyPI, npm and Galaxy have; hosted retraction and discontinuation stay real and client-testable; no per-format route with only `curl` behind it | Phase 2 waits on `management-api.md`; an operator used to pub.dev's Admin tab finds the registry's management surface instead; a publisher needs `delete` to retract |
 
 **Why this is yours:** it sets the precedent for what a format handler's management surface is,
-ahead of any UI or management-API spec, the same product-surface sequencing call `pypi.md` Q1
-and `ansible-collections.md` Q5 carry, and it is owned by Cluster 5 rather than by any one
-format.
+the same product-surface sequencing call the PyPI and Galaxy management questions carried (was
+Q1 in `pypi.md`, was Q5 in `ansible-collections.md`), and it was owned by Cluster 5 rather than
+by any one format.
 
-Accepted cost: the trigger is verified only by this registry's own integration tests, stated as
-such in the Test Plan rather than implied to be conformance-covered; the seven-day divergence is
-an exception-list entry; and if Cluster 5 is settled toward a single cross-format surface, these
-endpoints become that surface's pub rendering rather than being removed. B lost because it
-leaves a hosted repository with no removal path in an ecosystem whose only removal is this one;
-C lost for the reason `npm.md` Q3's recommendation gives against mirroring unpublish windows.
+Accepted cost: D's, stated in the table, plus the trigger being verified only by this registry's
+own integration tests, stated as such in the Test Plan, and the seven-day divergence as an
+exception-list entry. A lost in revision because its per-format routes are the surface the
+cross-format precedent rules out wherever no client drives them; B lost because it leaves a
+hosted repository with no removal path in an ecosystem whose only removal is this one; C lost
+for the reason `npm.md`'s resolved hosted-unpublish decision (was Q3) gives against mirroring
+unpublish windows.
 
 ### Resolved: advisories on the hosted path (was Q3)
 
@@ -690,7 +801,8 @@ and supply-chain sections of Design, and AC11.
 
 The client fetches `/api/packages/{package}/advisories` only when the listing carries
 `advisoriesUpdated`, and since Dart 3.4 surfaces affected versions during resolution. Real
-advisory data belongs to `supply-chain-policy.md`, whose feed authority is open. This is npm's
+advisory data belongs to `supply-chain-policy.md`, whose feed authority was then open (settled
+since as OSV, its resolved advisory-feed decision, was Q1). This is npm's
 audit-request question in a kinder shape: the client asks only when told it may.
 
 **Recommendation:** A, because omission is silent and honest: no warning in any build, no
@@ -700,7 +812,7 @@ false all-clear, and no hosted package name sent anywhere.
 |---|---|---|
 | **A. Omit `advisoriesUpdated` on hosted listings; relay on proxied** | No false security claim; no client noise; the proxied path keeps the ecosystem's own signal intact | Hosted packages get no advisory surface until `supply-chain-policy.md` has a feed to serve, and the field's later appearance is a behaviour change clients will notice |
 | **B. Advertise the field and serve an empty advisory list** | Looks like a fully featured repository | Asserts "no known advisories" about content nothing checked, silently, on every resolution |
-| **C. Forward hosted package names to pub.dev's advisories endpoint** | Real answers for names that also exist publicly | An egress path from the hosted surface that leaks private package names to a third party, the dependency-confusion shape `npm.md` Q2 refuses |
+| **C. Forward hosted package names to pub.dev's advisories endpoint** | Real answers for names that also exist publicly | An egress path from the hosted surface that leaks private package names to a third party, the dependency-confusion shape `npm.md`'s resolved audit-request decision (was Q2) refuses |
 
 **Why this is yours:** it is a security-posture and privacy claim the product will be held to,
 priced against a feature gap on the hosted path.
@@ -712,30 +824,38 @@ a visible change. B lost because it is a silent false claim; C lost because it l
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option B: pub.dev is not added to
 the preconfigured upstreams or the nightly real-upstream job by this spec; a remote repository
-against it is user-configured, and the question is revisited with `ansible-collections.md` Q4.
-Folded into the proxied-path section of Design.
+against it is user-configured, and the question is revisited through the revision
+`ansible-collections.md`'s Galaxy decision (was its Q4) requested of `proxy-cache.md`. Folded
+into the proxied-path section of Design.
+
+That revision has since happened, and it answered for pub.dev too: `proxy-cache.md`'s resolved
+preconfigured-set extension (was Q14) added galaxy.ansible.com and deliberately left pub.dev and
+crates.io user-configured until a `continue` breadth-gate verdict authorizes their formats, each
+then decided as its own extension. So B stands, now as that spec's decision rather than a
+deferral pending it, and the revisit this record promised is the post-verdict extension.
 
 `proxy-cache.md` settled the preconfigured, enabled-by-default upstreams as npm, PyPI and Docker
-Hub, and the nightly job covers exactly that set. A Flutter team is the archetypal user of a
-pub cache, so the works-in-thirty-seconds argument applies, and `ansible-collections.md` Q4 asks
-the same question for Galaxy.
+Hub, and the nightly job covered exactly that set. A Flutter team is the archetypal user of a
+pub cache, so the works-in-thirty-seconds argument applies, and `ansible-collections.md` asked
+the same question for Galaxy (its preconfigured-upstream question, was Q4).
 
 **Recommendation:** B, because the preconfigured set is a decision the owner actually made, and
 the standing delegation does not extend to amending one from a sibling spec; the delegation
 covers this spec's questions, not `proxy-cache.md`'s resolved record. The right vehicle is the
-revision `ansible-collections.md` Q4 already requests of that spec, and pub.dev can ride it.
+revision the Galaxy decision requests of that spec (was Q4 there), and pub.dev can ride it.
 
 | Option | You get | It costs |
 |---|---|---|
 | **A. Preconfigure pub.dev and add it to the nightly job when the format ships** | The archetypal user's first run works without configuration; real-upstream drift is caught on a schedule | Amends an owner-made sibling decision from a Tier 2 spec, outside what the delegation licenses; one more real-upstream support surface |
-| **B. User-configured in v1; revisit with `ansible-collections.md` Q4's revision** | The sibling's resolved decision is untouched; one revision carries both candidates | A worse first-run story for pub than for npm, and no scheduled run against the real pub.dev until that revision lands |
+| **B. User-configured in v1; revisit with the Galaxy decision's revision (`ansible-collections.md`, was Q4)** | The sibling's resolved decision is untouched; one revision carries both candidates | A worse first-run story for pub than for npm, and no scheduled run against the real pub.dev until that revision lands |
 
 **Why this is yours:** it extends a set you settled in `proxy-cache.md`, and ranking a Tier 2
 format's first-run experience against the standing support surface is a product call.
 
 Accepted cost: the format's proxied path ships with no preconfigured upstream and no nightly
-row, and the gap is named for the sibling revision rather than fixed here. A lost on the
-delegation's own boundary, not on merit.
+row until a post-verdict extension of `proxy-cache.md` adds them. A lost on the delegation's own
+boundary, not on merit, and `proxy-cache.md` later rejected the same option there (its option B)
+because it commits support surface to a format the breadth gate may park.
 
 ### Resolved: a changed upstream content hash (was Q5)
 
@@ -777,3 +897,4 @@ inconsistent by construction.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 4d1aeb1 | authoring pass: grounded first draft, not a review | Grounded, with no client on the host, against the client source at `dart-lang/pub` master (hosted source, publish command, token store and authenticated client, HTTP retry and 406 handling, solver retraction rule, report and name validator), the repository specification v2 in the same repository, pub.dev's server source for the `options` API and its seven-day windows and `latest` rule, live pub.dev probes for the listing's `ETag`/`304` behaviour, the archive's `x-goog-hash` headers, the XML `404` and the unauthenticated `versions/new` challenge, and the SDK changelog for the 2.15/2.19/3.0/3.4 client watersheds. Design records the spec-versus-client disagreement on the hosted-url trailing slash (the client wins and the lockfile records it), the three client-enforced rules that shape the server (content hash against the fresh listing, retracted exclusion with the lockfile and override exceptions, token deletion on any 401 under the hosted URL), the prefix-only token attachment that forces every server-issued URL under the hosted URL, the `fields`-must-exist and `Location`-with-redirects-off shape of the publish flow, the 406 trap, and pub's rows of the removal table. Five questions written in decision shape and adopted at their recommendations under the standing delegation: the challenge-versus-oracle split (uniform 401 for no credential, 404 for authenticated-without-read, 403 only for missing write scope), the retraction and discontinuation surface (pub.dev's `options` shape, authorization-only, matching `pypi.md` Q1's recommendation), hosted advisories (omit the field), pub.dev as a preconfigured upstream (not from here: an owner-made sibling decision, deferred to `ansible-collections.md` Q4's revision), and a changed upstream content hash (purge and alert). Fourteen criteria, each with a Test Plan row. Sibling consequences named, not made: `foundation/auth.md` should record pub's mandated challenge beside OCI's and add a pub row to its client table. Stays draft, awaiting an independent first review. |
+| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the management surface re-homed from pub.dev's `options` routes onto the registry-owned management API (Q2 revised to option D; preconditions, Scope, out of scope, the wire table, the write boundary, the retraction section with its operation table and action split, AC6, AC7, AC14 and Phase 2); the addressed-object table (listing and advisories `{package}`, archive and deprecated routes `{package}/{version}`, publish steps 1 and 2 content-addressed, finalize named from the staged pubspec) with AC15 and the never-401 rule; the policy rendering (AC16); the client-reach note, the advisory-feed, verification-ownership and evaluation-hook citations, the harness setup note and the npm Q2 and Q3 citations rewritten to what was adopted. The preconfigured-upstream item (ride the ansible revision) was checked against the landed foundation and not applied as queued: `proxy-cache.md`'s resolved Q14 made that revision and deliberately left pub.dev user-configured until a `continue` verdict, so the Q4 record keeps option B and cites it. Stays draft. |

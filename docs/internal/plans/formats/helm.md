@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 at 4d1aeb1 as a grounded first draft: the classic index.yaml wire contract captured from three real Helm releases (3.20.0, 3.22.0, 4.3.0) and the cm-push plugin against a logging server, the ChartMuseum write API grounded in its source, and the classic-versus-OCI relationship settled. All seven questions adopted under the owner's standing delegation; awaits its first review."
+status_description: "Reconciled 2026-09-26 at da0aecd (not a review): Q2 revised to the registry-owned management API (ChartMuseum's upload stays the publish route; deletion and provenance attachment move to management-api.md and ChartMuseum's routes are not served, AC6, AC18, Phase 5), Q8 raised and adopted (upload object from a bounded Chart.yaml peek), per-route addressed objects (AC16) and the 403 policy rendering (AC17) added, retirement set placed in the package-level document, charter AC12 recorded. Earlier: Authored 2026-09-26 at 4d1aeb1 as a grounded first draft: the classic index.yaml wire contract captured from three real Helm releases (3.20.0, 3.22.0, 4.3.0) and the cm-push plugin against a logging server, the ChartMuseum write API grounded in its source, and the classic-versus-OCI relationship settled. All seven questions adopted under the owner's standing delegation; awaits its first review."
 description: "Spec for the classic Helm chart repository format (index.yaml plus .tgz and .prov over HTTP), hosted and proxied, and how it relates to the OCI path that oci.md already covers."
 author: michielvha
 goal: "Serve and cache classic Helm chart repositories with the real helm client as the oracle, with the repository-wide generated index and the de facto ChartMuseum upload API handled deliberately rather than discovered."
@@ -53,10 +53,12 @@ Three things make this format different from npm and PyPI, and each is a trap na
   to point at this registry, or the cache never sees the chart bytes.
 - **There is no standard upload API.** The chart repository guide describes a static layout and
   says nothing about writing to it. ChartMuseum's `POST /api/charts` is the de facto write
-  contract: the `helm cm-push` plugin drives it, and Gitea and GitLab expose the same shape.
-  Adopting it is a management-surface decision in the sense of
-  `docs/internal/analysis/management-surfaces-and-the-oracle.md`, and it is taken deliberately
-  below rather than by default.
+  contract: the `helm cm-push` plugin drives it, and Gitea and GitLab expose the same shape, so
+  it is served as this format's publish route. ChartMuseum's other write routes, provenance
+  upload and delete, are driven by no Helm client, and under the cross-format precedent
+  `pypi.md`, `npm.md` and `ansible-collections.md` adopted they are operations of the
+  registry-owned management API instead (the resolved upload-API decision below, as revised by
+  the 2026-09-26 reconciliation).
 
 Grounding for this run: the Helm chart repository guide, the provenance guide and the
 registries guide at helm.sh (read 2026-09-26); the Helm source at tags v3.20.0 and v4.3.0
@@ -77,6 +79,19 @@ scheduled in the charter's build-order step 7 after Maven, Go modules, NuGet, De
 and `format-handler-interface.md` AC8 blocks all Tier 1 handler work on the post-OCI re-open.
 Recorded here for the same one-sided-contract reason npm and PyPI record it.
 
+**The management API must be specced before Phase 5.** Chart-version deletion and provenance
+attachment are operations of `docs/internal/plans/foundation/management-api.md` (to be authored
+in the spec loop), which owns their URL shape, authorization and write accounting; AC6 and AC18
+are untestable until that surface exists, and the requirements this format places on it are
+stated in Design ("Management operations").
+
+**The shared signing and index service precedes this handler.** The charter builds it first in
+step 7, before Helm, and its AC12 forbids Helm's handler reaching `main` before that service has
+met its own criteria. Design below assumes the handler regenerates its unsigned index inside its
+own write; if the service, as built, owns index regeneration for every write-triggered format,
+the "index document" section is revised to consume it before Phase 1 begins, exactly as for the
+prototype finding that follows.
+
 **The write-triggered services finding must exist.** `write-triggered-services-prototype.md`
 AC7 produces the finding on whether a write-triggered regeneration is expressed through the
 pinned five methods plus `Deps` or needs a new method, and whether it preserves one snapshot
@@ -95,11 +110,15 @@ that class, and Design assumes the through-`Deps` shape; if the finding says oth
 - Hosted index generation as a write-triggered, repository-wide document: regenerated as part
   of every completed write, stored at the repository level of the shared model, captured in the
   snapshot delta, and served byte-for-byte.
-- The ChartMuseum write API as the hosted upload surface: `POST /api/charts` (raw or multipart
-  with `chart` and optional `prov` fields), `POST /api/prov`, and
-  `DELETE /api/charts/{name}/{version}`, driven by the real `helm cm-push` plugin and by
-  `curl`, with refusal of a republish under an existing coordinate (Resolved: republish and
-  retirement, below).
+- ChartMuseum's upload route as the hosted publish surface: `POST /api/charts` (raw or
+  multipart with `chart` and optional `prov` fields), driven by the real `helm cm-push` plugin
+  and by `curl`, with refusal of a republish under an existing coordinate (Resolved: republish
+  and retirement, below).
+- Chart-version deletion and after-the-fact provenance attachment as operations of the
+  registry-owned management API, with every deleted coordinate retired (Design, "Management
+  operations").
+- The per-route addressed objects `auth.md`'s pattern scopes evaluate (Design, "Addressed objects
+  and pattern scopes"), and the wire rendering of a shared policy refusal.
 - Provenance files: stored and served next to their chart, coherence-checked on upload against
   the chart they name, verified end to end by `helm pull --verify` and `helm verify`.
 - HTTP Basic with a registry token as password for reads and writes, plus the Bearer form
@@ -119,16 +138,23 @@ spec's definition of done requires the deliberately unimplemented surface to be 
   removed its classic path rather than unify the two, and building a projection would require
   one handler to read another's metadata, which the constitution forbids. Detail in the resolved
   decision.
+- **ChartMuseum's `POST /api/prov` and `DELETE /api/charts/{name}/{version}` routes.** No Helm
+  client drives either (`cm-push` uploads only the `chart` part, captured), so serving them
+  would be a per-format alias of the registry-owned management operations, which the
+  cross-format precedent declines exactly as `ansible-collections.md` declines Galaxy NG's own
+  `DELETE` routes. A CI script calling them changes its URL to the management API's; the
+  publish route every such script also calls is unchanged.
 - **ChartMuseum's read API** (`GET /api/charts`, `GET /api/charts/{name}`,
   `HEAD /api/charts/{name}/{version}`, the `templates` and `values` sub-resources). No Helm
   client reads them: `helm cm-push` fetches `index.yaml` to detect a repository and nothing
   else (captured), and the index is the ecosystem's read contract. A UI-era listing surface
   belongs to the registry's own management API, not to a per-format imitation.
-- **Signature verification of provenance files by the registry.** `supply-chain-policy.md` Q6
-  owns who verifies signatures, and provenance is designed to be verified by the client against
-  its own keyring; the registry stores and serves it faithfully (coherence-checked, not
-  signature-checked). The signature AC arrives with that producer spec, per the precedent that
-  spec set.
+- **Signature verification of provenance files by the registry.** Verification belongs to the
+  shared producer `docs/internal/plans/foundation/artifact-verification.md` (to be authored in
+  the spec loop), per `supply-chain-policy.md`'s resolved verification-ownership decision (was
+  Q6), and provenance is designed to be verified by the client against its own keyring; the
+  registry stores and serves it faithfully (coherence-checked, not signature-checked). Any
+  signature criterion arrives with that producer spec.
 - **Chart dependency resolution and `helm dependency update` flows.** They are client-side
   composition over the same read surface (a dependency's repository is fetched with the same
   `index.yaml` and `.tgz` requests); nothing new is served, so nothing new is asserted beyond
@@ -152,8 +178,7 @@ the conformance cases are written, and the corpus wins any disagreement.
 | Chart archive | `GET` on the entry's `urls[0]`, resolved against the repository URL if relative; the client sends `Accept: application/gzip,application/octet-stream`; hosted URL shape is `{repo}/charts/{name}-{version}.tgz` |
 | Provenance | `GET` on the chart URL with `.prov` appended, only under `--verify` or `--prov`; a 404 is a hard error under `--verify` (`failed to fetch provenance "<url>"`) |
 | Upload | `POST {repo}/api/charts`: multipart form with a `chart` file field and an optional `prov` field, or the raw `.tgz` as the body; `?force` query on a forced overwrite; `201 {"saved": true}` |
-| Provenance upload | `POST {repo}/api/prov`, raw `.prov` body; `201 {"saved": true}` |
-| Delete | `DELETE {repo}/api/charts/{name}/{version}`; removes the archive and its provenance; `200 {"deleted": true}` |
+| Provenance upload, delete | ChartMuseum's `POST {repo}/api/prov` and `DELETE {repo}/api/charts/{name}/{version}` are **not served**; both operations are the registry-owned management API's (Design, "Management operations") |
 | Liveness and identity | Nothing standard; `helm` probes nothing beyond the surfaces above |
 
 Constraints the captures established, each load-bearing:
@@ -245,9 +270,14 @@ The mapping uses the levels `data-model.md` provides and no others:
 | `Repository` metadata document | **The generated `index.yaml` itself** for a hosted repository, and the rewritten upstream index for a proxied one |
 | `RemoteFile` | For a proxied repository, one row per chart file per upstream URL, holding the resolved absolute upstream URL; several `urls` entries become several rows tried in order |
 
-The package-level document carries nothing in v1: Helm keeps no package-wide mutable state
-(dist-tags and `latest` have no equivalent; `helm` resolves the highest semver client-side from
-the index). The level stays available.
+The package-level document carries one thing: the chart's **retirement set**, every version
+ever deleted from it, carried forward by every later write because writes build on the newest
+snapshot, and surviving deletion of the chart's last version, so a chart with no live versions
+is absent from the index but still refuses its retired versions. That is the cross-format
+retirement rule `pypi.md`, `npm.md` and `ansible-collections.md` adopted, and it is where
+Resolved: republish and retirement keeps its record. Helm keeps no other package-wide mutable
+state (dist-tags and `latest` have no equivalent; `helm` resolves the highest semver client-side
+from the index).
 
 Every name-addressed read resolves through the snapshot pointer the handler is given, per the
 model's binding constraint. For this format that is the index: the handler serves the
@@ -302,11 +332,11 @@ which AC3 and AC4 assert for this format. Design assumes the handler performs th
 inside its own write through the metadata store in `Deps`, requiring no interface addition;
 this is the precondition recorded above.
 
-### The upload API is a management surface, chosen deliberately
+### The upload API is ChartMuseum's publish route
 
-The chart repository guide specifies reads only. The write contract this registry serves is
-ChartMuseum's (Resolved: upload API, below), because it is the one the ecosystem's clients
-already drive: `helm cm-push` 0.11.1 was captured sending `POST .../api/.../charts` as a
+The chart repository guide specifies reads only. The publish contract this registry serves is
+ChartMuseum's upload route (Resolved: upload API, below), because it is the one the ecosystem's
+clients already drive: `helm cm-push` 0.11.1 was captured sending `POST .../api/.../charts` as a
 chunked `multipart/form-data` body with a single `chart` file part
 (`Content-Type: application/octet-stream`, `Transfer-Encoding: chunked`, no `Content-Length`,
 `User-Agent: Go-http-client/1.1`), `?force` appended under `--force`, and `Authorization` as
@@ -318,9 +348,11 @@ CI scripts and this contract agree.
 In the terms of `management-surfaces-and-the-oracle.md`: the **effect** of every write here is
 fully oracle-testable (a new entry in the index a real `helm repo update` fetches, a chart a
 real `helm pull` retrieves), and the **trigger** has a real client for chart upload
-(`cm-push`), a `curl`-only path for provenance upload and delete, and no ecosystem client at
-all for the last two. So provenance upload and delete are the endpoints our own integration
-tests vouch for, with their effects proven by `helm`; that is stated rather than implied.
+(`cm-push`) and none for provenance attachment or deletion. That split decides which routes
+are this format's: upload is the ecosystem's publish, served in ChartMuseum's shape, while the
+two operations with no client are the registry-owned management API's (below), vouched for by
+our own integration tests with their effects proven by `helm`, which is stated rather than
+implied.
 
 Two routing facts follow from the plugin's URL construction, both captured:
 
@@ -334,8 +366,8 @@ Two routing facts follow from the plugin's URL construction, both captured:
 - `cm-push` uploads only the `chart` part. A `.prov` file sitting next to the archive was
   **not** attached (three captures: archive with provenance beside it, archive alone, and a
   chart directory it packaged itself), and passing the `.prov` path as the chart argument is an
-  error. Provenance therefore reaches a hosted repository only through `POST /api/prov` or the
-  multipart `prov` field, both `curl`-driven.
+  error. Provenance therefore reaches a hosted repository only through the multipart `prov`
+  field of an upload or the management API's attachment operation, both `curl`-driven.
 
 Upload semantics this registry enforces, each with a refusal that names its reason in the body
 because `cm-push` and `curl --fail-with-body` surface it:
@@ -353,6 +385,44 @@ because `cm-push` and `curl --fail-with-body` surface it:
 - The stored filename is `{name}-{version}.tgz` and the served URL basename is the same, for
   the `helm verify` reason above.
 
+### Management operations
+
+This format follows the precedent the Cluster 5 format specs share (`pypi.md`, `npm.md` and
+`ansible-collections.md`), whose common home is
+`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop):
+
+- **The surface is registry-owned, not ChartMuseum-shaped.** Deleting a chart version and
+  attaching a provenance file to an existing version are endpoints of the one management API
+  that spec defines. ChartMuseum's own routes for them are not served, because no Helm client
+  drives them, so an alias would be a per-format management surface with nothing but `curl`
+  behind it; the npm precedent of binding a client's own routes applies only where a client
+  exists. This spec defines what each operation means and what `helm` sees afterwards; the
+  shared spec defines URL shape, request form, authorization and audit.
+- **Each operation is a completed logical write through the shared write path**, which here
+  means the write that regenerates `index.yaml`: exactly one snapshot per operation, holding
+  the regenerated index; none for a refused one; and no blob-store object deleted directly, so
+  space returns only through retention pruning and `storage-and-gc.md`'s single-deleter
+  boundary holds unchanged.
+- **Authorization uses the settled `(repository, action)` vocabulary with no new action.**
+  Deletion is removal-class and requires `delete`; attaching provenance adds content and
+  requires `push`. Each is evaluated against the object `{name}/{version}`, so a patterned
+  grant manages only charts inside its pattern.
+- **Hosted only.** A proxied repository creates no snapshots and takes its removals from the
+  upstream per the removal table below, so either operation against one is refused.
+
+| Operation | Effect a client sees | Write | Action |
+|---|---|---|---|
+| Delete a chart version | The next `helm repo update` no longer lists it, `helm pull` of it fails, the other versions still pull, and its coordinate joins the retirement set so a re-upload is refused | One write, removing the archive and its provenance and regenerating the index | `delete` |
+| Attach a provenance file to an existing version | `helm pull --verify` of a previously unverifiable chart succeeds; the index is unchanged, since it does not mention provenance | One write, adding a `File` | `push` |
+
+What this format therefore requires of `management-api.md`, beyond the shared rules: an
+operation's write must reach this handler's own write path, because deletion is incomplete until
+the index is regenerated inside the same snapshot, which is the dispatch question that spec
+must answer against the pinned five methods; attachment must run the provenance coherence check
+above and refuse a version that already has a provenance file, since replacing one would change
+bytes the client already verified; and deletion must record the coordinate in the package-level
+retirement set within the same write.
+
 ### What counts as a write
 
 `data-model.md` requires each format spec to declare its ecosystem's write boundaries. Helm's
@@ -361,10 +431,12 @@ declaration:
 - One `POST /api/charts` is **one** completed logical write, whether it carries the archive
   alone or the archive and provenance together, and the index regeneration it triggers is part
   of that write, not a second one. One snapshot.
-- One `POST /api/prov` is one write: it adds a `File` to an existing version. The index does
-  not mention provenance files, but the snapshot still records the new file. One snapshot.
-- One `DELETE /api/charts/{name}/{version}` is one write, removing the archive and its
-  provenance and regenerating the index. One snapshot.
+- One provenance attachment through the management API is one write: it adds a `File` to an
+  existing version. The index does not mention provenance files, but the snapshot still records
+  the new file. One snapshot.
+- One chart-version deletion through the management API is one write, removing the archive and
+  its provenance, recording the coordinate in the retirement set, and regenerating the index.
+  One snapshot.
 - A refused upload of any kind leaves no snapshot.
 - A proxied repository creates no snapshots at all, per the model's settled rule; index
   arrival, revalidation and chart materialisation are cache materialisation.
@@ -390,10 +462,12 @@ root the model does not hold. The coherence check is cheap and needs no keys: th
 That catches the mistake `helm verify` would otherwise report as a tampered chart, at upload
 time, where the uploader can act on it.
 
-Where this meets `supply-chain-policy.md`: signature state is a policy input that spec consumes
-and nothing yet produces (its Q6 recommends a sibling verification spec). A stored `.prov` is
-that future producer's raw material, retrievable by digest, and this spec adds no policy
-behaviour and no signature criterion until the producer exists, per that spec's own precedent.
+Where this meets `supply-chain-policy.md`: signature state is a policy input that spec consumes,
+and its resolved verification-ownership decision (was Q6) names the producer, the shared
+`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop). A
+stored `.prov` is that producer's raw material, retrievable by digest, and this spec adds no
+signature criterion until the producer exists; the one policy behaviour it does carry is
+rendering a refusal (Design, "Policy refusals on the wire").
 One practical note for that future spec, learned the hard way this run: Helm's OpenPGP library
 rejected an Ed25519 key (`openpgp: unsupported feature: public key type: 22`), so the
 conformance fixture key is RSA and any registry-side verification will inherit the same
@@ -462,7 +536,9 @@ layer's fetch-and-cache API per the settled decisions in `proxy-cache.md`:
 Helm has **no explicit security-removal signal** in its index format: no holding-package
 convention, no status marker, nothing a purge rule could key on. Every upstream removal
 therefore falls on the keep-and-flag side of the settled table, and a security purge reaches
-Helm content only through `supply-chain-policy.md`'s advisory path when that lands. Helm's rows
+Helm content only through the advisory channel of the shared security-signal rule that
+`proxy-cache.md` and `supply-chain-policy.md` state verbatim, for whatever the OSV feed that
+spec adopted covers. Helm's rows
 of `proxy-cache.md` AC13's table:
 
 | Upstream event, as observed at index revalidation | Classification |
@@ -472,8 +548,9 @@ of `proxy-cache.md` AC13's table:
 | `deprecated: true` appears, or any other metadata field changes | An ordinary metadata change, propagated at the next revalidation; never a removal event |
 | The whole upstream index becomes unreachable | Serve-stale up to the bound, then error, per the settled revalidation-failure decision |
 
-Detection happens at revalidation; whether anything more active exists is `proxy-cache.md` Q12
-and is owned there.
+Detection happens at revalidation: per `proxy-cache.md`'s resolved answer (was Q12) the proxy
+layer never polls an upstream, and the only active channel is `supply-chain-policy.md`'s
+advisory feed.
 
 Two assertion traps, both grounded this run. The client caches the index locally and reads it
 for search and resolution, so a case proving a publish is visible runs `helm repo update` and
@@ -481,6 +558,42 @@ asserts the fetch in the transcript. And Helm 4 has a content cache that `helm p
 populate but does consult, so every proxied case starts from fresh `HELM_REPOSITORY_CACHE` and
 `HELM_CONTENT_CACHE` state and asserts both directions: the second pull reached this registry
 (transcript) and this registry did not contact the upstream (network layer).
+
+### Addressed objects and pattern scopes
+
+`auth.md`'s pattern scopes narrow a credential within one repository by matching the object each
+request addresses, and the format declares which object each route reports ("Pattern scopes"
+there; `format-handler-interface.md` AC12). Chart names carry no `/` and are exact,
+case-sensitive strings, so the canonical object is `{name}/{version}` with the version's literal
+`+`, and a pattern for a family of charts is written `acme-*/**`.
+
+| Route | Object kind | Canonical object |
+|---|---|---|
+| `GET index.yaml` | none | - |
+| Chart archive and provenance fetches | named | `{name}/{version}`, resolved from the requested basename through the pointed-at snapshot's index on the hosted path and the cached index's `RemoteFile` rows on the proxied one; a basename resolving to no coordinate reports none, and is answered as the existence rule dictates |
+| Upload, `POST api/charts` | named, or none | `{name}/{version}` from the archive's `Chart.yaml` when a bounded peek finds it as the archive's first entry; none otherwise (the resolved upload-object decision below) |
+
+The management operations report `{name}/{version}` too, a requirement on
+`management-api.md` recorded in "Management operations".
+
+What that gives and costs, applying `auth.md`'s rules rather than re-deciding them. Every Helm
+read starts from `index.yaml`, which enumerates every chart in the repository, and `helm cm-push`
+fetches it before uploading, so a credential holding **only** a patterned `pull` is refused at
+the first request and no Helm command works under it. Pattern narrowing on this format is
+therefore practical for writes: a CI credential confined to its own charts holds an unpatterned
+`pull` beside a `push` (and, for deletion, a `delete`) patterned `acme-*/**`. A patterned `pull`
+still narrows direct chart and provenance fetches, which AC16 asserts rather than leaving
+implied.
+
+### Policy refusals on the wire
+
+When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on a
+chart or provenance fetch of either path, the handler answers `403` with ChartMuseum's JSON
+error shape (an `error` member) naming the policy and rule, or naming the signal for a coordinate
+condemned under the shared security-signal rule. `403` rather than the existence rule's `404`,
+because the caller is authorized and the content is what is refused. Whether `helm pull`
+surfaces the body or only the status line is AC17's capture to settle; if only the status line,
+that is a finding for `supply-chain-policy.md`, not a quiet workaround here.
 
 ### Conformance, auth and the corpus
 
@@ -496,10 +609,12 @@ only from the `cm-push` plugin's `--access-token`. The OCI path's `helm registry
 the docker credential flow `oci.md` owns.
 
 `Scope(r)` for this handler: `GET index.yaml`, chart and provenance fetches map to `pull`;
-`POST api/charts` and `POST api/prov` to `push`; `DELETE api/charts/...` to `delete`. A request
-the mapping cannot classify is denied as unauthorized, per the interface's settled failure mode,
-and `helm repo add` against a repository the caller cannot read receives the same 404-shaped
-`index.yaml` response as against one that does not exist (auth's existence-oracle rule).
+`POST api/charts` to `push`; the addressed object each reports is declared in "Addressed objects
+and pattern scopes" below. The management operations are the management API's routes, not this
+handler's. A request the mapping cannot classify is denied as unauthorized, per the interface's
+settled failure mode, and `helm repo add` against a repository the caller cannot read receives
+the same 404-shaped `index.yaml` response as against one that does not exist (auth's
+existence-oracle rule).
 
 The pinned clients are one from each major: **Helm 3.22.0 and Helm 4.3.0**, the newest of each
 line at authoring (releases page, 2026-09-26). The skew is real even though the wire traffic
@@ -512,8 +627,10 @@ specification: `helm repo add` (empty and populated), `helm repo update`, `helm 
 `helm pull` by exact version, by constraint and by `--devel`, `helm pull --verify` with the
 provenance present and absent, `helm install --dry-run` from a named repository, a pull of a
 `+`-versioned chart, a relative-URL index and an absolute cross-host index, `cm-push` of a new
-chart and of a duplicate (the 409), `curl` upload of chart plus provenance, `curl` provenance
-upload alone, and a delete. Recording gates on the harness's redaction criterion
+chart and of a duplicate (the 409), and `curl` upload of chart plus provenance. ChartMuseum's
+provenance-upload and delete routes are not recorded, since this registry does not serve them;
+the management operations that replace them have no reference implementation to record, and
+their effects replay through the index-refetch and pull flows above. Recording gates on the harness's redaction criterion
 (`conformance-harness.md` AC13). The reference for the read half is two public repositories of
 different hosting classes; the reference for the write half is ChartMuseum itself, because no
 public registry serves the write API (Resolved: corpus reference, below).
@@ -528,11 +645,11 @@ public registry serves the write API (Resolved: corpus reference, below).
 - [ ] AC2: A chart uploaded through the real `helm cm-push` plugin, and a chart plus
       provenance uploaded through the multipart `chart` and `prov` fields, each become visible
       to a subsequent `helm repo update` and retrievable by `helm pull` with bytes whose sha256
-      equals the index entry's `digest`; `helm pull --verify` succeeds against the uploaded
-      provenance, and a provenance uploaded afterwards through `POST /api/prov` makes a
-      previously unverifiable chart verify, all through the real client.
-- [ ] AC3: Each chart upload, provenance upload and delete produces exactly one snapshot whose
-      repository-level document is the regenerated `index.yaml`; repointing the repository to
+      equals the index entry's `digest`; and `helm pull --verify` succeeds against the uploaded
+      provenance, all through the real client.
+- [ ] AC3: Each chart upload, and each provenance attachment and chart-version deletion through
+      the management API, produces exactly one snapshot whose repository-level document is the
+      regenerated `index.yaml`; repointing the repository to
       an earlier snapshot serves that snapshot's index and charts to the real client, and a
       refused upload leaves no snapshot.
 - [ ] AC4: N concurrent uploads of distinct charts produce N snapshots and a final index that
@@ -543,12 +660,15 @@ public registry serves the write API (Resolved: corpus reference, below).
       in the body, with or without `?force`, and nothing is committed; a coordinate that has
       been deleted refuses re-upload the same way; an archive that is not a valid chart or
       whose version is not valid semver is refused with nothing committed.
-- [ ] AC6: `DELETE /api/charts/{name}/{version}` removes the archive and its provenance, the
-      next `helm repo update` no longer lists the version, `helm pull` of it fails, and the
-      repository's other versions still pull, proven through the real client.
+- [ ] AC6: A chart version deleted through the registry-owned management API loses its archive
+      and its provenance, the next `helm repo update` no longer lists the version, `helm pull`
+      of it fails, and the repository's other versions still pull, proven through the real
+      client; and a request to ChartMuseum's `DELETE /api/charts/{name}/{version}` or
+      `POST /api/prov` route is not served and changes nothing.
 - [ ] AC7: A provenance upload whose `name` or `version` differs from the coordinate, or whose
-      `files:` sum differs from the archive's digest, is refused with nothing committed through
-      both upload forms; a coherent one is served byte-identical, and `helm verify` on the
+      `files:` sum differs from the archive's digest, is refused with nothing committed, both
+      through the upload's multipart `prov` field and through the management API's attachment
+      operation; a coherent one is served byte-identical, and `helm verify` on the
       pulled pair succeeds, while the registry verifies no signature (proven by an unverifiable
       signature from a key the registry never sees being accepted and then failing only at the
       client).
@@ -591,18 +711,34 @@ public registry serves the write API (Resolved: corpus reference, below).
       and as `Bearer`; an invalid token is rejected on every one of those paths; and an
       unauthenticated `helm repo add` against a private repository fails with the same
       `not a valid chart repository` outcome as against a repository that does not exist.
+- [ ] AC16: A token holding an unpatterned `pull` beside `push` under the pattern `acme-*/**`
+      uploads `acme-web` through the real `helm cm-push` and is refused uploading `other-web`,
+      with no snapshot created by the refusal; an upload whose archive does not begin with
+      `Chart.yaml` is refused to that token and accepted for an unpatterned `push`; a token
+      holding only `pull` under the same pattern is refused `index.yaml`, so `helm repo add`
+      under it fails, while a direct fetch of `acme-web`'s chart URL succeeds and of
+      `other-web`'s is refused; and in proxied mode the patterned-`pull` token fetches an
+      in-pattern chart URL and is refused another.
+- [ ] AC17: A chart or provenance fetch the shared policy layer refuses answers `403` with a body
+      naming the policy, on the hosted and the proxied path, and a real `helm pull` of the
+      refused version exits non-zero with an error that names the refusal.
+- [ ] AC18: Provenance attached through the registry-owned management API to a version that had
+      none makes a previously unverifiable chart pass `helm pull --verify`, and attaching to a
+      version that already has one is refused; deletion requires `delete` and attachment
+      `push`, a principal without the needed action is refused with no snapshot created, and
+      either operation against a proxied repository is refused.
 
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
 | AC1 | conformance | `conformance/helm/hosted_test.go` (pinned Helm 3.22.0 and 4.3.0; empty-repository case; zero-skipped-entries assertion on client output) |
-| AC2 | conformance | `conformance/helm/publish_test.go` (cm-push with `--context-path`; curl multipart chart+prov; curl `POST /api/prov` after the fact; digest assertion from the transcript) |
+| AC2 | conformance | `conformance/helm/publish_test.go` (cm-push with `--context-path`; curl multipart chart+prov; digest assertion from the transcript) |
 | AC3 | integration | `internal/format/helm/snapshot_test.go` (snapshot count per write, refused-upload no-snapshot, repoint serves the older index) + a conformance repoint case in `conformance/helm/hosted_test.go` |
 | AC4 | integration + property | `internal/format/helm/concurrent_publish_test.go` (N concurrent uploads, index completeness and digest agreement); `internal/format/helm/large_index_test.go` (threshold crossing, sweep, then a real-client fetch) |
 | AC5 | conformance | `conformance/helm/publish_test.go` (duplicate with and without `?force`; retired coordinate; invalid archive and invalid semver; snapshot-table assertion via the registry state, not the client) |
-| AC6 | conformance | `conformance/helm/delete_test.go` (transcript assertions on the index refetch and the failed pull) |
-| AC7 | conformance + integration | `conformance/helm/provenance_test.go` (`helm verify` round trip; unknown-key signature accepted then failing at the client); `internal/format/helm/prov_coherence_test.go` (name, version and sum mismatches through both upload forms) |
+| AC6 | integration + conformance | trigger: `internal/format/helm/manage_delete_test.go` (the management operation's snapshot, index regeneration and retirement set; the unserved ChartMuseum routes); effect: `conformance/helm/delete_test.go` (the `script` deletes through the management endpoint, then transcript assertions on the index refetch and the failed pull) |
+| AC7 | conformance + integration | `conformance/helm/provenance_test.go` (`helm verify` round trip; unknown-key signature accepted then failing at the client); `internal/format/helm/prov_coherence_test.go` (name, version and sum mismatches through the multipart field and the attachment operation) |
 | AC8 | conformance | `conformance/helm/naming_test.go` (`+` version through the real client; case-distinct packages) |
 | AC9 | conformance | `conformance/helm/proxied_test.go` (transcript + network-level assertion; fresh client caches in setup; relative-URL and absolute-cross-host upstream fixtures; basename-preservation assertion on the served index) |
 | AC10 | conformance | `conformance/helm/proxied_ttl_test.go` (mutating local stand-in upstream with and without validators; 304 asserted at the network layer) |
@@ -611,21 +747,28 @@ public registry serves the write API (Resolved: corpus reference, below).
 | AC13 | conformance | `conformance/helm/replay_test.go` |
 | AC14 | integration + conformance | `internal/format/helm/oci_separation_test.go` (one stored object, one `Blob` row, no cross-listing); `conformance/helm/separation_test.go` (`helm push oci://` then `helm repo update` on every classic repository; classic upload then `helm pull oci://` failing) |
 | AC15 | conformance | `conformance/helm/auth_test.go` (Basic on reads; cm-push Basic and Bearer; invalid token on each path; private-versus-missing `helm repo add` outcome) |
+| AC16 | conformance + unit | `conformance/helm/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; `curl` for the direct chart fetches); `internal/format/helm/scope_object_test.go` (the object table, per route, including the bounded-peek upload cases, `format-handler-interface.md` AC12) |
+| AC17 | conformance | `conformance/helm/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`) |
+| AC18 | integration + conformance | trigger: `internal/format/helm/manage_prov_test.go` (attachment snapshot, coherence refusal, existing-provenance refusal, action refusals, proxied refusal); effect: `conformance/helm/provenance_test.go` (the `script` attaches through the management endpoint, then `helm pull --verify` succeeds) |
 
 The runner-enforced obligations, both modes with unauthenticated and unauthorized cases in each,
 apply from the sibling specs and are not restated per criterion. The case set needs nothing
-beyond the harness's existing `setup` vocabulary (repositories, tokens, a local stand-in
-upstream, and fresh client cache directories, which are case-container state rather than
-server provisioning), so this format adds no pressure to `conformance-harness.md` Q4.
+beyond keys already in the harness's closed `setup` vocabulary (its resolved closed-vocabulary
+decision, was Q4): `repositories`, `credentials` (AC16's pattern-scoped tokens included), an
+`upstreams` stand-in, `state` for a pre-deleted coordinate, and `policies` with `advisories`
+for AC17; fresh client cache directories are case-container state rather than server
+provisioning. The management operations are called from a case's `script`, since `setup` never
+calls a management endpoint.
 
 ## Implementation Phases
 
 ### Phase 1: Hosted read and write
 - Repository-level index document generated on write, empty-repository index at creation,
-  chart and provenance serving under `charts/{name}-{version}.tgz`, the ChartMuseum write
-  API under the format-first mount, coordinate extraction from `Chart.yaml`, semver
-  validation, republish and retirement refusals, provenance coherence, delete, the
-  write-boundary declaration exercised end to end
+  chart and provenance serving under `charts/{name}-{version}.tgz`, ChartMuseum's upload route
+  under the format-first mount, coordinate extraction from `Chart.yaml`, semver validation,
+  republish and retirement refusals, provenance coherence on upload, the write-boundary
+  declaration exercised end to end, the per-route addressed-object declaration with the
+  bounded upload peek, the `403` policy rendering
 
 ### Phase 2: Scale and concurrency
 - Threshold crossing into the CAS-backed document, concurrent-upload regeneration under the
@@ -642,6 +785,11 @@ server provisioning), so this format adds no pressure to `conformance-harness.md
   pinned ChartMuseum (after the harness redaction gate), replay-match, the second pinned
   client, the OCI separation cases, experiment-log entries
 
+### Phase 5: Management operations
+- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned`
+- Chart-version deletion with index regeneration and the retirement set, provenance
+  attachment with the coherence check, their integration tests and effect cases (AC6, AC18)
+
 ## Tasks
 
 Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
@@ -651,7 +799,39 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 None open. Seven questions were raised while authoring and each was adopted at its own written
 recommendation under the owner's standing delegation of 2026-09-26, recorded below as adopted
 rather than decided so the owner can find and reverse any of them. Each is folded through
-Scope, Design, the criteria and the Test Plan above.
+Scope, Design, the criteria and the Test Plan above. The 2026-09-26 cross-spec reconciliation
+revised Q2's adoption to the registry-owned management API the Cluster 5 format specs converged
+on, and raised and adopted Q8 on what an upload reports to the pattern scopes.
+
+### Resolved: what an upload reports as its addressed object (was Q8, raised and adopted 2026-09-26)
+
+**Adopted 2026-09-26 under the owner's standing delegation.** Option C: `Scope(r)` for
+`POST api/charts` peeks a bounded prefix of the body and reports `{name}/{version}` from the
+archive's `Chart.yaml` when that is the archive's first entry, which is where `helm package`
+writes it; when the cap is reached first, or the first entry is anything else, it reports none.
+Folded through Design ("Addressed objects and pattern scopes"), AC16 and Phase 1.
+
+The judgment call it settles: `auth.md` requires every route to report the object it addresses,
+and an upload's coordinate is inside the gzipped tarball, never in the URL. The object has to be
+known before the artifact is accepted, or authorizing a patterned `push` means spooling an upload
+nobody has authorized yet; `ansible-collections.md` met the same problem with a multipart
+filename that precedes the bytes, and this format's filename is not a reliable coordinate.
+
+**Recommendation (adopted):** C, because it reads the coordinate from the only authoritative
+source, before accepting the artifact, and fails safe whenever it cannot.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Upload reports none** | Nothing to parse before authorization | A patterned `push` can never upload, so a CI credential cannot be confined to its own charts on this format at all |
+| **B. Split the multipart part's filename as `{name}-{version}.tgz`** | No body read before authorization | A chart name and a semver version both contain hyphens, so the split is ambiguous (`a-1.0.0-1.0.0.tgz`), the raw-body upload has no filename, and the filename is not what validation trusts, so a mislabelled part must be caught by a second check |
+| **C. A bounded peek at the archive's first entry when it is `Chart.yaml`** | The coordinate validation will use, read before acceptance; works for the raw and multipart forms; fails safe to none | `Scope(r)` reads and replays a bounded body prefix, including a small `prov` part preceding the chart, and a hand-built archive with `Chart.yaml` elsewhere uploads only under an unpatterned `push` |
+
+**Why this is yours:** it decides whether pattern-confined publishing exists on this format and
+what `Scope(r)` may read to support it.
+
+Accepted cost: the bounded replayed prefix, and hand-built archives needing an unpatterned
+`push`. A lost because it removes the feature for the format's main write; B lost because its
+answer is ambiguous exactly where chart names and prerelease versions meet.
 
 ### Resolved: classic and OCI are disjoint namespaces that share only the CAS (was Q1)
 
@@ -682,10 +862,24 @@ Folded into Context, Scope, the "Classic and OCI" section and AC14.
 
 ### Resolved: the ChartMuseum API is the hosted write surface (was Q2)
 
-**Adopted 2026-09-26 under the owner's standing delegation.** Option A: serve `POST
-/api/charts` (raw or multipart `chart` plus optional `prov`), `POST /api/prov` and
-`DELETE /api/charts/{name}/{version}` under the repository's format-first path, with
-ChartMuseum's response shapes, and serve none of its read API.
+**Adopted 2026-09-26 under the owner's standing delegation, and revised the same day by the
+cross-spec reconciliation.** Option D, added in that revision: serve ChartMuseum's `POST
+/api/charts` (raw or multipart `chart` plus optional `prov`) under the repository's format-first
+path with its response shapes, as this format's publish route, serve none of its read API, and
+serve neither `POST /api/prov` nor `DELETE /api/charts/{name}/{version}`: provenance attachment
+and chart-version deletion are operations of the registry-owned management API,
+`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop).
+
+As first adopted this record chose A, serving all three ChartMuseum write routes as the
+format-local precedent, "as it is recommended in" the PyPI and Galaxy management questions of
+the time. Those questions were then resolved the other way the same day: `pypi.md`'s resolved
+hosted-yank decision (was Q1) and `ansible-collections.md`'s resolved version-deletion decision
+(was Q5) put every management operation on one registry-owned API, binding a client's own route
+onto it only where a client drives it (`npm.md`). A's own accepted cost foresaw exactly this:
+"if the owner later settles a cross-format management surface, these endpoints remain as the
+ecosystem-facing aliases". The revision declines the aliases, because the precedent that
+settled the surface declines them wherever no client drives the route, and Helm's `POST
+/api/prov` and `DELETE` have none.
 
 The question was which upload API a format with no standard one should present, and it is the
 management-surface precedent question `management-surfaces-and-the-oracle.md` frames: the
@@ -697,12 +891,13 @@ delete do not, and all three effects are oracle-testable through `helm`.
 | **A. ChartMuseum's write API, verbatim shape** | `cm-push` and every existing curl-based CI script work unchanged; Gitea and GitLab users find the shape they know; chart upload has a real-client trigger | Two of three endpoints are verified by our integration tests plus the client-observed effect, stated rather than implied; a per-format convention rather than one cross-format surface |
 | **B. A registry-owned generic upload endpoint** | One shape across formats | No Helm client drives it, so even chart upload loses its real-client trigger, and every user rewrites their pipeline |
 | **C. No classic upload; classic repositories are populated by proxying or by OCI push** | Nothing verified without a client oracle | Hosted classic repositories become read-only, contradicting the family row's hosted claim, and pushes the Q1 projection back in through the side door |
+| **D. ChartMuseum's upload route as the publish; deletion and provenance attachment on the registry-owned management API** (adopted in revision) | `cm-push` and every curl publish script work unchanged; chart upload keeps its real-client trigger; one management surface across formats, as PyPI, npm and Galaxy have | A CI script that deletes or attaches provenance through ChartMuseum's routes must change its URL, and those two operations wait on `management-api.md` |
 
-Accepted cost: the format-local precedent (each format mirrors its ecosystem's convention) is
-set here as it is recommended in `pypi.md` Q1 and `ansible-collections.md` Q5; if the owner
-later settles a cross-format management surface, these endpoints remain as the ecosystem-facing
-aliases. Folded into Scope, "The upload API is a management surface", the write-boundary
-declaration, AC2, AC5, AC6 and AC7.
+Accepted cost: D's, stated in Scope; B lost because no Helm client drives it; C lost as above; A
+lost in revision because its aliases are the per-format management surface the cross-format
+precedent rules out wherever no client drives the route. Folded into Context, Scope, the wire
+table, "The upload API is ChartMuseum's publish route", "Management operations", the
+write-boundary declaration, AC2, AC3, AC5, AC6, AC7, AC18 and Phase 5.
 
 ### Resolved: no root-anchored mount for cm-push's default URL (was Q3)
 
@@ -741,8 +936,10 @@ whether operator convenience outranks that immutability.
 | **B. Honour `?force` as ChartMuseum's `--allow-overwrite` does** | In-place correction | Downstream caches serve stale bytes under an unchanged digest-less coordinate forever, and the `digest` in old indexes silently stops matching |
 | **C. Refuse while it exists, allow after delete** | Operators can correct through delete-then-upload | The same stale-cache hazard as B, one step later, and retention keeps the old bytes in snapshots anyway |
 
-Accepted cost: bump the version. This follows the direction `pypi.md` Q3 recommends, for the
-same reason: immutability is what this registry's own caching layer relies on for correctness.
+Accepted cost: bump the version. This follows the direction `pypi.md`'s resolved
+filename-retirement decision (was Q3) adopted, for the same reason: immutability is what this
+registry's own caching layer relies on for correctness. The retired coordinates live in the
+package-level document's retirement set, the cross-format home.
 Folded into Scope, the upload semantics, "What counts as a write" and AC5.
 
 ### Resolved: provenance is coherence-checked, never signature-verified (was Q5)
@@ -753,9 +950,9 @@ digest, or it is refused; its signature is not verified by the registry.
 
 | Option | You get | It costs |
 |---|---|---|
-| **A. Coherence check, no signature verification** | Catches the uploader's mistakes at upload time with no keys; stores exactly what the client will verify; leaves signature ownership to `supply-chain-policy.md` Q6 | A provenance signed by nobody the operator trusts is accepted and served, exactly as the ecosystem's repositories do |
+| **A. Coherence check, no signature verification** | Catches the uploader's mistakes at upload time with no keys; stores exactly what the client will verify; leaves signature ownership to `supply-chain-policy.md` (its verification-ownership question, since resolved, was Q6) | A provenance signed by nobody the operator trusts is accepted and served, exactly as the ecosystem's repositories do |
 | **B. Store verbatim with no checks, as ChartMuseum does** | Maximal fidelity to the reference | A mismatched provenance is served and every `helm pull --verify` of that chart fails with a tampering message that blames the registry |
-| **C. Verify the signature against an operator-configured keyring** | Only trusted-key provenance is served | Pre-empts the open producer question in `supply-chain-policy.md`, and the registry takes on keyring management that `auth.md`'s nothing-is-invented posture warns against |
+| **C. Verify the signature against an operator-configured keyring** | Only trusted-key provenance is served | Pre-empts the producer question then open in `supply-chain-policy.md` (resolved since: the producer is `artifact-verification.md`), and the registry takes on keyring management that `auth.md`'s nothing-is-invented posture warns against |
 
 Accepted cost: a divergence from ChartMuseum's accept-anything behaviour, which goes on the
 recorded exception list before the write corpus is expected to replay. Folded into Scope,
@@ -805,3 +1002,4 @@ and AC13.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 4d1aeb1 | authoring pass: grounded first draft, not a review | Wire contract captured from three real Helm releases (3.20.0 installed on this host, 3.22.0 and 4.3.0 downloaded) and `helm cm-push` 0.11.1 against a logging server: unconditional whole-index refetch on every update by every client, preemptive Basic auth confined to the repository's scheme and host unless `--pass-credentials`, `ResolveReferenceURL` semantics for relative URLs, literal `+` in the path, exact case-sensitive name keys, the filename dependency of `helm verify`, Helm 4's hex-decoded index digest and its non-populating content cache, `deprecated` as pure metadata, the chunked single-part `cm-push` upload that never attaches a `.prov`, and the plugin's `/api/{repo}/charts` versus `/{context}/api/{repo}/charts` URL shapes. Published contract grounded in the Helm chart repository, provenance and registries guides, the Helm source at v3.20.0 and v4.3.0, the ChartMuseum source and README, and the `helm-push` source. The classic-versus-OCI seam measured with a local `registry:2`: the OCI chart layer digest equals the `.tgz` sha256, the index `digest` and the `.prov` sum, so the paths share one `Blob` and nothing else. Public upstream validators measured with `curl -sI` (jetstack: ETag; GitHub Pages: ETag plus Last-Modified; prometheus-community index 6.4 MB). Seven questions written in the decision shape and adopted under the standing delegation: disjoint classic and OCI namespaces sharing only the CAS; the ChartMuseum write API as the management surface; no root-anchored mount for `cm-push`'s default URL; republish refused and deleted coordinates retired; provenance coherence-checked but never signature-verified; the hosted index generated on write and stored as the repository-level document; two public read references plus ChartMuseum for the write corpus. Fifteen criteria, each with a Test Plan row. Sibling consequences listed in the authoring report, not applied. Stays draft, awaiting first review. |
+| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the management surface re-homed from ChartMuseum's routes onto the registry-owned management API (Q2 revised to option D; Context, preconditions, Scope, the wire table, a new 'Management operations' section stating what this format requires of `management-api.md`, the write boundary, AC2, AC3, AC6, AC7, the new AC18, Test Plan and Phase 5); the retirement set placed in the package-level document; the charter AC12 signing-and-index-service precondition; the addressed-object table with Q8 raised and adopted (bounded peek at a first-entry `Chart.yaml`, none otherwise) and AC16, including the consequence that patterned-only `pull` cannot run helm; the policy rendering (AC17); stale citations of supply-chain Q6, proxy-cache Q12, harness Q4, pypi Q1 and Q3 and ansible Q5 rewritten to what was adopted. Stays draft. |

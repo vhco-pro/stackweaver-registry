@@ -2,7 +2,7 @@
 description: "Context for the Cluster 5 decision: what management operations each ecosystem has, which of them a real client can drive, and the correction that the conformance oracle can test every one of their effects even where it cannot trigger them."
 covers: []
 status: complete
-status_description: "Written 2026-09-26 because the owner asked for more context before deciding Cluster 5. Corrects an overstatement in question-triage.md's framing of that cluster, made by the same author."
+status_description: "Written 2026-09-26 because the owner asked for more context before deciding Cluster 5. Corrects an overstatement in question-triage.md's framing of that cluster, made by the same author. Extended the same day by the cross-spec reconciliation: Cargo rows added (yank, unyank and owners are real client commands, so trigger and effect are both oracle-testable) and a dated note recording how Cluster 5 was adopted."
 author: michielvha
 goal: "Give the Cluster 5 decision an accurate frame, by separating the operation a client can trigger from the state a client can observe, and grounding both against the installed clients."
 ---
@@ -51,6 +51,8 @@ Grounded against the clients installed on this host rather than against document
 | npm unpublish | **Yes**, `npm unpublish` exists | Yes, installation fails |
 | npm deprecate | **Yes**, `npm deprecate` exists | Yes, the installer surfaces the deprecation message |
 | Galaxy collection deletion | **No.** `ansible-galaxy collection` offers download, init, build, publish, install and list, and nothing else | Yes, installation fails |
+| Cargo yank / unyank | **Yes**, `cargo yank` and `cargo yank --undo` (captured against cargo 1.70.0 and 1.98.1, `formats/cargo.md`) | **Yes.** A fresh resolution refuses a yanked version while an existing lockfile still downloads it, and `cargo install` refuses a crate whose every version is yanked |
+| Cargo owners | **Yes**, `cargo owner --list`, `--add` and `--remove` (captured, as above) | **Yes.** The listing prints what the registry returns, and a refused mutation prints the registry's `errors[].detail` |
 
 Two things follow that the earlier framing obscured.
 
@@ -64,6 +66,12 @@ exits 0 on unrouted `-rev` routes, so a server that implements unpublish not at 
 naive exit-code assertion. That is why `npm.md` AC9 asserts the HTTP transcript rather than the
 exit code. It is a testable operation that needs a carefully written test, which is a different
 problem from an untestable one.
+
+**Cargo is in npm's category, added 2026-09-26.** Yank, unyank and the owners commands are all
+real client commands, so trigger and effect are both oracle-testable through `cargo` itself,
+and a Cargo yank case is an ordinary conformance case. The remaining questions there were
+semantic: which action a yank requires, and what an owners mutation means on a registry whose
+authorization is central (`formats/cargo.md` answers both).
 
 **PyPI and Galaxy share the actual gap, and it is only the trigger.** Neither ecosystem has a
 client-side management command, so an endpoint we build is exercised only by our own tests. Note
@@ -105,6 +113,14 @@ or per-format; and, if they exist, what verifies the trigger given no third-part
 The honest answer to the last part is our own integration tests plus the client-observable effect,
 and saying so explicitly is better than implying a conformance case covers the trigger.
 
-Three specs carry the format-local versions of this: `pypi.md` Q1 and Q3, `npm.md` Q3,
-`ansible-collections.md` Q5. They stay owner-pending. This document exists so the answer is given
-against what is true rather than against the overstatement in the triage.
+Three specs carried the format-local versions of this: `pypi.md` Q1 and Q3, `npm.md` Q3,
+`ansible-collections.md` Q5. This document exists so the answer is given against what is true
+rather than against the overstatement in the triage.
+
+**Update, 2026-09-26.** Those questions were adopted under the owner's standing delegation, and
+they converged on the first position above in its cross-format form: one registry-owned
+management API, owed as `docs/internal/plans/foundation/management-api.md`, with a client's own
+route served as a binding onto the same operation only where a client drives it (npm, and Cargo
+per the table). The trigger of every operation with no client is verified by our integration
+tests, and its effect by the real client, exactly as the section above states. The reasoning is
+in each spec's resolved records; this analysis is not re-decided by them.

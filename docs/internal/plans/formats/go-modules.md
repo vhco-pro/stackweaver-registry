@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Grounded first draft 2026-09-26, not yet reviewed. Every wire claim is grounded against the module reference source, the go command's own source in GOROOT, the checksum-database design, and real runs of go1.25.5 and go1.26.0 through a logging proxy in front of proxy.golang.org and sum.golang.org. Six questions written in decision shape and adopted under the owner's standing delegation; none open."
+status_description: "Reconciled 2026-09-26 at da0aecd (not a review): hosted deletion now rides the registry-owned management API with 410 and a retirement set (AC17, Phase 5); per-route addressed objects in module@version form with the passthrough none (AC18); stale catalogue, supply-chain, pypi and proxy-cache citations resolved. Earlier: Grounded first draft 2026-09-26, not yet reviewed. Every wire claim is grounded against the module reference source, the go command's own source in GOROOT, the checksum-database design, and real runs of go1.25.5 and go1.26.0 through a logging proxy in front of proxy.golang.org and sum.golang.org. Six questions written in decision shape and adopted under the owner's standing delegation; none open."
 description: "Spec for the Go modules format: the GOPROXY protocol hosted and proxied, the checksum-database passthrough, and what hosted means for an ecosystem with no publish API."
 author: michielvha
 goal: "Serve the go command as a module proxy and a checksum-database mirror so a build fleet resolves, verifies and downloads every module, private and public, through this registry alone."
@@ -40,12 +40,11 @@ or through the proxy's `/sumdb/` passthrough. A module proxy that does not mirro
 database sends every fresh client straight to Google, and cannot serve toolchain downloads at
 all (Design, "The checksum-database passthrough").
 
-**The catalogue files Go under a "Git-backed" family** with Swift and Julia, and whether that
-family survives is the catalogue's own open question (`catalogue.md` Q3, which already observes
-that "no git anywhere on the wire" is true of GOPROXY). This spec specs the protocol on its own
-terms regardless of how that question resolves: the wire format is HTTP GET over a fixed path
-grammar, and nothing here changes if the family is split. Count integrity: this spec tests the
-`go` command only; it claims no client reach beyond it.
+**The catalogue files Go as its own single-ecosystem family, "GOPROXY module proxy".** It once
+grouped Go with Swift and Julia under "Git-backed", and its resolved decision splitting that
+label (was Q3) did so on exactly the observation this spec rests on: there is no git anywhere on
+the GOPROXY wire, which is HTTP GET over a fixed path grammar. Count integrity: this spec tests
+the `go` command only; it claims no client reach beyond it.
 
 ### Grounding
 
@@ -82,6 +81,11 @@ side only is enforced nowhere. Go modules is charter build-order step 7, after n
 in practice the gate is discharged long before this format is reachable, but it binds this spec
 independently.
 
+**The management API must be specced before Phase 5.** Hosted version deletion is an operation of
+the registry-owned management API, `docs/internal/plans/foundation/management-api.md` (to be
+authored in the spec loop), which owns its URL shape, authorization and write accounting; AC17
+is untestable until that surface exists. Phases 1 to 4 do not wait on it.
+
 **Two shared-layer amendments this spec depends on are requested, not assumed.** The proxied
 `.zip` verification below needs a fetch-and-cache mode the settled stream-and-verify decision
 does not offer, and the checksum-database passthrough needs an upstream adapter kind with no
@@ -110,6 +114,8 @@ edit its siblings.
 - Non-interactive client authentication as the `go` command actually sends it: HTTP Basic
   from `.netrc`, or headers from a `GOAUTH` command, both over HTTPS only.
 - Virtual repositories as a single `GOPROXY` base aggregating hosted and proxied members.
+- The per-route addressed objects `auth.md`'s pattern scopes evaluate (AC18), and hosted version
+  deletion through the registry-owned management API with deleted versions retired (AC17).
 
 **Out of scope for v1**, each with a non-effort reason, recorded because the interface spec's
 definition of done requires the deliberately unimplemented surface to be named:
@@ -127,14 +133,17 @@ definition of done requires the deliberately unimplemented surface to be named:
   rather than a registry protocol, and `GOPROXY` is the supported way to point the client here.
 - **Running an origin checksum database (signing our own transparency log for hosted
   modules).** Clients would need a registry public key in `GOSUMDB`, which makes the registry a
-  trust root, a key-management product surface the write-triggered-services prototype and
-  `supply-chain-policy.md` Q6 are still deciding for signed content generally. Go's own design
+  trust root, a key-management product surface that belongs to the shared signing and index
+  service (charter build-order step 7), with verification owned by
+  `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop) per
+  `supply-chain-policy.md`'s resolved verification-ownership decision (was Q6). Go's own design
   routes private modules through `GONOSUMDB` instead, and this spec follows it.
-- **A version-deletion endpoint.** Go's soft-delete is `retract`, which the author publishes
-  inside a new version's `go.mod` and which needs no registry surface; hard deletion is the
-  cross-format management-surface precedent question (`question-triage.md` Cluster 5,
-  `pypi.md` Q1) and arrives through that surface, not a Go-specific one (the resolved
-  deletion decision below).
+- **A Go-specific version-deletion endpoint.** Go's soft-delete is `retract`, which the author
+  publishes inside a new version's `go.mod` and which needs no registry surface; hard deletion
+  is an operation of the registry-owned management API the cross-format precedent settled on
+  (`pypi.md`'s resolved hosted-yank decision, was Q1, and its siblings), homed in
+  `docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), never a
+  Go route (the resolved deletion decision below; AC17).
 - **The `index.golang.org` feed and the `/cached-only` variant.** Both are proxy.golang.org
   service features no `go` client consumes.
 - **Vulnerability data (vuln.go.dev, `govulncheck`).** Advisory feeds belong to
@@ -255,7 +264,8 @@ The registry validates before anything commits:
 - If `$module@$version/go.mod` is present, its `module` directive names `$module`, and a
   `+incompatible` version carries no `go.mod` at all (the reference's compatibility rule: that
   suffix exists precisely for versions of repositories without one).
-- **A version that already exists is refused** (409, body naming the reason). Module content
+- **A version that already exists, or was deleted and so sits in the retirement set, is
+  refused** (409, body naming the reason). Module content
   is pinned by `go.sum` in every consumer and cached forever by every proxy on the immutability
   assumption this registry's own proxied path makes; accepting a re-upload changes bytes under
   a coordinate the ecosystem treats as immutable.
@@ -294,12 +304,16 @@ without it to assert the refusal and that the module path never left the registr
   the version, both files and the derived metadata. A refused upload leaves nothing behind.
 - **A retraction is not a registry write.** It arrives as content inside a later version's
   `go.mod`, published like any other version; the registry stores it and never reads it.
-- **A deletion is one management write** when the cross-format management surface brings one;
-  Go's protocol contribution is fixed now so the surface has a contract to meet: a deleted
-  version leaves `list` and its `.info`, `.mod` and `.zip` answer 410 Gone, the status the
-  protocol assigns to "was here, may be found elsewhere", so a `GOPROXY` fallback list still
-  works. No criterion polices this until the producer exists, per the precedent `auth.md`
-  applied to its expiry-warning criterion.
+- **A deletion is one management write**, performed through the registry-owned management API
+  (`docs/internal/plans/foundation/management-api.md`, to be authored in the spec loop). Go's
+  protocol contribution is the contract that operation must meet: a deleted version leaves
+  `list` and its `.info`, `.mod` and `.zip` answer 410 Gone, the status the protocol assigns to
+  "was here, may be found elsewhere", so a `GOPROXY` fallback list still works; and the version
+  is **retired**, recorded in the package-level document's retirement set so a later upload of
+  it is refused as a duplicate is, because every consumer's `go.sum` and every proxy's cache
+  still bind that coordinate to the deleted bytes. Retirement is the cross-format rule
+  `pypi.md`, `npm.md` and `ansible-collections.md` adopted, applied here. Deletion requires
+  `delete`, is refused on a proxied repository, and creates exactly one snapshot (AC17).
 - **A proxied repository creates no snapshots**, per the model's settled rule; every cache
   materialisation, including checksum-database tiles, is a cache fill.
 
@@ -312,7 +326,7 @@ The levels `data-model.md` provides are enough, with no new table:
 | `Package` | one per module path, keyed by the **unescaped** path (`github.com/BurntSushi/toml`); the major-suffixed `/v2` path is a distinct package, as the ecosystem treats it |
 | `Version` | one per canonical version string, pseudo-versions and `+incompatible` included; its metadata document holds `Time`, the `h1:` zip and `go.mod` sums, the passthrough `Origin` object when an upstream supplied one, and a verification state (verified against the checksum database, unverifiable under a no-sum pattern, or hosted) |
 | `File` | two per version: the zip (`$version.zip`) and the `go.mod` bytes (`$version.mod`), each a CAS blob keyed by the sha256 the store computes; the `h1:` sums are metadata, never storage keys (`storage-and-gc.md`) |
-| `Package`-level document | on the proxied path, the upstream's `list` and `@latest` bodies as cached mutable metadata with their TTL state; on the hosted path nothing, since `list` is rendered from version rows |
+| `Package`-level document | on the proxied path, the upstream's `list` and `@latest` bodies as cached mutable metadata with their TTL state; on the hosted path the retirement set of deleted versions (carried forward by every later write, and surviving deletion of the module's last version), since `list` is rendered from version rows |
 | `Repository`-level document | the repository's checksum-database binding: which database name it answers `/sumdb/$name/` for, and which mirror repository backs it (below) |
 
 The checksum-database mirror is its own `remote` repository of this format, with an `Upstream`
@@ -399,8 +413,9 @@ Upstream removal maps onto the settled purge-or-flag table as Go's side of that 
 | A `retract` directive appearing in a newer version's `go.mod` | An ordinary metadata change: a new version arrived. Never a removal event; the client, not the registry, hides the retracted version |
 | `Origin` or `Time` changing in an `.info` | An ordinary metadata change, propagated at the next revalidation |
 
-Detection happens at revalidation; whether anything more active exists is `proxy-cache.md`
-Q12 and is owned there. Serve-stale applies to `list`, `@latest` and `.info` under the settled
+Detection happens at revalidation: per `proxy-cache.md`'s resolved answer (was Q12) the proxy
+layer never polls an upstream, and the active channel is `supply-chain-policy.md`'s advisory
+feed under the shared security-signal rule. Serve-stale applies to `list`, `@latest` and `.info` under the settled
 bound; `.mod` and `.zip` are immutable and never stale.
 
 ### The checksum-database passthrough
@@ -558,6 +573,32 @@ enabled works with no `.netrc` at all, and the unauthenticated and unauthorized 
 of every format (`format-handler-interface.md` AC7, `auth.md` AC8) are meaningful from the
 first commit because repositories are private by default.
 
+### Addressed objects and pattern scopes
+
+`auth.md`'s pattern scopes narrow a credential within one repository by matching the object each
+request addresses, and the format declares which object each route reports ("Pattern scopes"
+there; `format-handler-interface.md` AC12). A module path is already `/`-segmented, so it is
+the object as it stands, **unescaped** (the `!`-encoding decoded, as the package key is), and a
+version joins it with `@` inside the last segment, the ecosystem's own `module@version` form:
+
+| Route | Object kind | Canonical object |
+|---|---|---|
+| `$module/@v/list`, `$module/@latest` | named | `{module}` |
+| `.info`, `.mod` and `.zip` for a version, a branch or a revision | named | `{module}@{version}`, the version as the request names it |
+| Hosted upload, `PUT $module/@v/$version.zip` | named | `{module}@{version}` |
+| Every checksum-database passthrough route under `/sumdb/$name/` | none | - |
+
+Consequences, applying `auth.md`'s rules rather than re-deciding them. Because the version sits
+inside the last segment, `corp.example.com/*` covers a one-level module and every version of it,
+while a major-suffixed `corp.example.com/lib/v2` is one segment deeper and needs
+`corp.example.com/**`. The passthrough reads the checksum database's log, not an object of this
+repository, so it is refused to a patterned credential; that costs a patterned client nothing
+for the modules it is confined to, since hosted modules are covered by `GONOSUMDB` in any case
+(AC1) and the client then never consults the database for them, but a build that also resolves
+public modules through the registry holds an unpatterned scope on the repository serving them.
+A refusal here is the existence rule's 404, which a `GOPROXY` list reads as "try the next
+entry", exactly as the status-code section already states for an unauthorized caller.
+
 ### Signing, provenance and supply-chain policy
 
 The protocol carries no signatures. Provenance is the checksum database's transparency log
@@ -695,6 +736,20 @@ before its flow is expected to replay.
       `Version` differs is rejected without caching; unknown `.info` members such as `Origin`
       are passed through unchanged, and hosted `.info` bodies carry only `Version` and
       `Time`.
+- [ ] AC17: A hosted version deleted through the registry-owned management API leaves `list`,
+      its `.info`, `.mod` and `.zip` answer 410, and `GOPROXY=registry,direct` falls through
+      for it with the real client; the deletion creates exactly one snapshot, a principal
+      without `delete` is refused with none created, and a deletion against a proxied
+      repository is refused; and a later upload of the deleted version is refused with 409 as
+      AC2 refuses a duplicate, including after the deletion's snapshot has been pruned and after
+      the module's last version is gone.
+- [ ] AC18: A token holding `pull` and `push` under the pattern `corp.example.com/**` uploads
+      `corp.example.com/lib` and `corp.example.com/lib/v2` and downloads both through the real
+      client with `GONOSUMDB` covering the prefix, and is refused `list`, `.info` and `.zip` for
+      `other.example.com/lib` and an upload there; a token patterned `corp.example.com/*`
+      downloads `corp.example.com/lib@v1.0.0` and is refused `corp.example.com/lib/v2`; a
+      patterned token is refused every `/sumdb/` route; and in proxied mode a patterned token
+      downloads an in-pattern module through the cache and is refused an out-of-pattern one.
 
 ## Test Plan
 
@@ -716,12 +771,15 @@ before its flow is expected to replay.
 | AC14 | integration | `internal/format/go/removal_test.go` (stand-in upstream presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
 | AC15 | conformance | `conformance/go/virtual_test.go` (hosted plus proxied members; per-module first-match; sumdb refusal for the hosted prefix) |
 | AC16 | integration | `internal/format/go/info_test.go` (version-mismatch rejection; unknown-member passthrough; hosted body shape) |
+| AC17 | integration + conformance | trigger: `internal/format/go/manage_delete_test.go` (snapshot count, `delete` refusal, proxied refusal, retired-version refusal after pruning under an injected clock and after last-version deletion); effect: `conformance/go/delete_test.go` (the `script` deletes through the management endpoint, then the real client sees 410 and falls through, and a `curl` re-upload is refused) |
+| AC18 | conformance + unit | `conformance/go/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key); `internal/format/go/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
 
 ## Implementation Phases
 
 ### Phase 1: Hosted core
 - Routing and case-decoding, upload with the reference zip checks, `.mod` and `.info`
   derivation, `h1:` sums, `list` and `@latest`, republish refusal, the write boundary
+- The per-route addressed-object declaration and the pattern-scope cases (AC18)
 
 ### Phase 2: The checksum-database passthrough and auth
 - The mirror repository and its adapter kind, `supported`, tile and lookup classification,
@@ -735,6 +793,11 @@ before its flow is expected to replay.
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate), replay-match,
   the second pinned client, experiment-log entries
+
+### Phase 5: Management surface
+- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned`
+- Version deletion through the registry-owned management API with 410 and the retirement set
+  (AC17)
 
 ## Tasks
 
@@ -878,9 +941,16 @@ deletion endpoint; retraction needs no registry surface; hard deletion arrives t
 cross-format management surface, and this spec fixes only the protocol effect (410 and removal
 from `list`) so that surface has a contract to meet.
 
+The cross-format answer this record waited on has since been adopted: management operations are
+endpoints of one registry-owned management API, `docs/internal/plans/foundation/management-api.md`
+(to be authored in the spec loop), per `pypi.md`'s resolved hosted-yank decision (was Q1) and its
+Cluster 5 siblings. The 410 contract therefore gained its policing criterion (AC17) and a
+Phase 5 gated on that spec, and folding it applied the cross-format retirement rule those
+siblings adopted: a deleted version is never re-uploadable.
+
 **Recommendation:** A, because Go already has an author-side soft-delete with fully specified
 client semantics that the registry serves without doing anything, so the only surface left is
-the one `question-triage.md` Cluster 5 is deciding for every format at once; a Go-specific
+the one `question-triage.md` Cluster 5 was then deciding for every format at once; a Go-specific
 endpoint would answer that question from the wrong spec.
 
 | Option | You get | It costs |
@@ -889,13 +959,14 @@ endpoint would answer that question from the wrong spec.
 | **B. A Go-specific `DELETE $module/@v/$version`** | Operators can remove a bad upload today | Four formats answering one question four ways, a new deletion path `storage-and-gc.md` must know about, and a precedent set from the smallest format surface |
 
 **Why this is yours:** it sequences a per-format surface against the portfolio-wide precedent
-question, the same class as `pypi.md` Q1.
+question, the same class as `pypi.md`'s hosted-yank question (was Q1).
 
-Accepted cost: an unpoliced 410 rule until the management surface exists, per the precedent
-`auth.md` applied to its expiry-warning criterion. B lost on the precedent.
+Accepted cost: an unpoliced 410 rule until the management surface exists, now bounded by AC17
+and the Phase 5 gate. B lost on the precedent.
 
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 4d1aeb1 | authoring pass: grounded first draft, not a review | Wire surface, status semantics, case-encoding, client request sequencing, retraction behaviour, prefix probing, the `list` second column, credential transmission (none over plain HTTP; URL userinfo refused), toolchain downloads (zip-only, upstream 302, mandatory sumdb even with `GOSUMDB=off`) and the checksum-database passthrough (supported probe, lookup and tile sequence, proxy.golang.org answering 404 to `supported`) all grounded against the module reference source, the go command's source in GOROOT 1.25.5 (`proxy.go`, `sumdb.go`, `fetch.go`, `toolchain.go`, vendored `x/mod` `module`, `zip`, `sumdb`, `dirhash`), the sumdb design, and real runs of go1.25.5 and go1.26.0 through a logging proxy in front of proxy.golang.org and sum.golang.org with fresh `GOMODCACHE` and `GOPATH`. Six questions written in decision shape and adopted under the standing delegation: hosted publishing as a registry-owned zip `PUT` on the zip's URL; the checksum-database passthrough with private-path refusal; fetch-then-verify for proxied zips (an exception to stream-and-verify requested of `proxy-cache.md`); client pins 1.26 and 1.20; GOPROXY-speaking upstreams only, VCS origins deferred; no Go-specific deletion endpoint with the 410 effect fixed. Sixteen criteria, each with a Test Plan row. Sibling consequences reported, not applied: an `auth.md` client-table row for `go`, a `proxy-cache.md` verify-after-receipt mode and a checksum-database adapter kind, and a `catalogue.md` note that this spec is family-neutral. |
+| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the catalogue's Git-backed split (was Q3) cited in Context; the origin-checksum-database exclusion re-cited to the signing service (charter step 7) and `artifact-verification.md` (supply-chain was Q6); the Cluster 5 answer folded: deletion through `management-api.md` with 410, retirement set in the package-level document, republish refusal extended, AC17, Phase 5 and a precondition, and the Q6 record updated; proxy-cache's resolved Q12 cited; the addressed-object table (`{module}` for list and latest, `{module}@{version}` for version routes and upload, every `/sumdb/` route none) with AC18. Nothing found already done. Stays draft. |

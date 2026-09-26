@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "2026-09-26 at 0dbca1f: Q1-Q5 adopted under the owner's standing delegation and folded, and Q6-Q8 raised and adopted in the same pass. Synchronous import validation with the task record in a shared Operation entity data-model.md must gain (AC9); namespaces as a name segment isolated by auth pattern scopes (AC10); empty hosted signatures, proxied ones passed through, producer the to-be-authored artifact-verification.md (AC11); version deletion through the to-be-authored management-api.md with versions retired forever (AC12); galaxy.ansible.com preconfigured (AC13). Now Tier 1 at charter step 6a. No open questions; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-26 at da0aecd (not a review): the Operation entity and the galaxy.ansible.com preconfigured amendment now exist in their owning specs, so those preconditions are updated; the 403 policy rendering added (AC14). Earlier: 2026-09-26 at 0dbca1f: Q1-Q5 adopted under the owner's standing delegation and folded, and Q6-Q8 raised and adopted in the same pass. Synchronous import validation with the task record in a shared Operation entity data-model.md must gain (AC9); namespaces as a name segment isolated by auth pattern scopes (AC10); empty hosted signatures, proxied ones passed through, producer the to-be-authored artifact-verification.md (AC11); version deletion through the to-be-authored management-api.md with versions retired forever (AC12); galaxy.ansible.com preconfigured (AC13). Now Tier 1 at charter step 6a. No open questions; stays draft pending a gate review."
 description: "Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist."
 author: michielvha
 goal: "Serve the one ecosystem whose only free self-hosted options are heavy enough that practitioners abandon them."
@@ -54,14 +54,15 @@ that owns it, because a contract enforced on one side only is enforced nowhere:
   asynchronous half is built on a Galaxy-shaped publish-and-poll
   (`foundation/write-triggered-services-prototype.md`), so the interface this handler is built
   against was re-opened with this format's hardest mechanism in view.
-- **The shared model's `Operation` entity, before Phase 1.** The import-task record lives in a
-  first-class asynchronous-operation entity `data-model.md` does not yet have (Design, "Import
-  tasks"). No handler owns a table, so Phase 1 cannot store a task record until the entity
-  exists; the charter builds its production form as the asynchronous-operation subsystem at
-  step 6a, immediately before this handler.
-- **The preconfigured-upstreams amendment to `proxy-cache.md`, before Phase 2 ships.**
-  galaxy.ansible.com joins the preconfigured, enabled-by-default upstreams and the nightly
-  real-upstream job (Design, "The proxied path"), which revises a decision that spec settled.
+- **The shared model's `Operation` entity, before Phase 1.** The import-task record lives in the
+  first-class asynchronous-operation entity `data-model.md` now specifies (its "Operations"
+  section and AC32; Design, "Import tasks" here). No handler owns a table, so Phase 1 cannot
+  store a task record until the entity is built; the charter builds its production form as the
+  asynchronous-operation subsystem at step 6a, immediately before this handler.
+- **The preconfigured-upstreams amendment to `proxy-cache.md`: made.** galaxy.ansible.com joins
+  the preconfigured, enabled-by-default upstreams and the nightly real-upstream job (Design,
+  "The proxied path") through that spec's resolved preconfigured-set extension (was Q14), with
+  its AC15 and AC19 carrying the row; what remains for Phase 2 is building it.
 - **`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop),
   before Phase 3.** Version and collection deletion are registry-owned management endpoints
   whose shape, authorization and write accounting that spec owns; AC12 is untestable until the
@@ -80,7 +81,8 @@ scopes (Design, "Namespaces"), an empty `signatures` list on hosted versions and
 list passed through on proxied ones (Design, "Signatures"), version and collection deletion
 through the registry-owned management API (Design, "The management surface"), and the proxied
 path: pull-through caching of an upstream Galaxy server with `download_url` rewriting, with
-galaxy.ansible.com preconfigured and enabled by default (Design, "The proxied path").
+galaxy.ansible.com preconfigured and enabled by default (Design, "The proxied path"), and the
+wire rendering of a shared policy refusal (Design, "Policy refusals on the wire").
 
 **Out of scope:**
 
@@ -188,7 +190,7 @@ is terminal by the time the response carries its URI. The client's first poll th
 large artifact holds the POST open for its validation.
 
 The record lives in a first-class **`Operation` entity in the shared model**, which
-`data-model.md` gains for this format and for the write-triggered services prototype's
+`data-model.md` gained for this format and for the write-triggered services prototype's
 asynchronous half (the resolved import-task-record decision below). The prototype exercises it
 first, the step 4a re-open confirms or revises its shape on that evidence, and the charter's
 step 6a builds its production form before this handler. The properties this spec relies on,
@@ -312,8 +314,9 @@ upstream beside npm, PyPI and Docker Hub, and the nightly real-upstream job runs
 proxied suite against it once the format ships. The works-in-thirty-seconds argument that
 settled the original three in `proxy-cache.md` applies with extra force to the ecosystem this
 project exists for, and without a scheduled run nothing would ever exercise the real upstream
-this path is written against. That revises `proxy-cache.md`'s settled preconfigured-upstreams
-decision through its own revision mechanism (Blocking preconditions), and its accepted cost is
+this path is written against. `proxy-cache.md` made that revision of its settled
+preconfigured-upstreams decision through its own mechanism (its resolved preconfigured-set
+extension, was Q14), and its accepted cost is
 the same one that decision priced: galaxy.ansible.com's rate limits, authentication changes and
 quirks join the standing support surface. The handler classifies responses under
 `proxy-cache.md`'s governing distinction, which the proxy layer never guesses: collection
@@ -329,6 +332,18 @@ bytes, directly from the upstream and the cache never sees it. The version detai
 `signatures` list is **not** rewritten or stripped: it passes through as the upstream served it
 (Design, "Signatures"). Publish, the import-task endpoints and the management operations are
 hosted-only.
+
+### Policy refusals on the wire
+
+When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on the
+version-detail or artifact-download route of either path, the handler answers `403` with a JSON
+error body naming the policy and rule, or naming the signal for a coordinate condemned under the
+shared security-signal rule; the body's exact shape follows the error shape the recorded corpus
+shows galaxy.ansible.com using for a refused read, since `ansible-galaxy` renders whatever that
+server sends. `403` rather than the existence rule's `404`, because the caller is authorized and
+the content is what is refused. Whether the client prints the text is what AC14 proves. A
+publish is never refused this way: policy governs resolution, and an import that fails
+validation keeps its own contract (AC8).
 
 ### What the real client cannot oracle, recorded
 
@@ -407,6 +422,10 @@ surface deliberately unimplemented or not client-testable:
       operator configuration, a proxied install through that preconfigured upstream succeeds
       with the upstream swapped for a stand-in as the harness requires, and the nightly
       real-upstream job runs this format's proxied suite against the real galaxy.ansible.com.
+- [ ] AC14: A version-detail or artifact request the shared policy layer refuses answers `403`
+      with a body naming the policy, on the hosted and the proxied path, and a real
+      `ansible-galaxy collection install` of the refused version exits non-zero with that text
+      in its output.
 
 ## Test Plan
 
@@ -425,6 +444,7 @@ surface deliberately unimplemented or not client-testable:
 | AC11 | conformance | `conformance/ansible/signatures_test.go` (hosted refusal under a signature requirement; a fixture stand-in upstream serving a collection signed with a fixture GnuPG key, which the `script` imports into the client keyring) |
 | AC12 | integration + conformance | trigger: `internal/format/ansible/manage_delete_test.go` (snapshot count per operation, `delete` refusal, proxied refusal, retired-version refusal after pruning under an injected clock and after last-version deletion); effect: `conformance/ansible/delete_test.go` (the `script` deletes through the management endpoint, then the real client's install fails and a real republish is refused through the import task) |
 | AC13 | integration + conformance + ci | `internal/format/ansible/preconfigured_test.go` (fresh-install upstream set); `conformance/ansible/proxied_test.go` (preconfigured-upstream case against the stand-in); the nightly real-upstream workflow `proxy-cache.md` AC15 defines, with this format's row |
+| AC14 | conformance | `conformance/ansible/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`) |
 
 The case set stays inside the harness's closed `setup` vocabulary: `credentials` carries AC10's
 pattern-scoped token (the token scope of `auth.md`, patterns included), `upstreams` carries
@@ -442,12 +462,12 @@ apply from the sibling specs and are not restated per criterion here.
 - Discovery, collection and version endpoints, artifact download, multipart publish with
   synchronous import-task validation and the task record in the `Operation` entity, duplicate
   and retired version refusal, token auth, the per-route addressed-object table, `signatures: []`
-  on hosted versions
+  on hosted versions, the `403` rendering of the typed policy refusal
 
 ### Phase 2: Proxied path
 - Response classification, `download_url` rewriting, signature pass-through, cache and offline
   behaviour through the shared proxy layer, galaxy.ansible.com as a preconfigured upstream and
-  its nightly row (after the `proxy-cache.md` amendment)
+  its nightly row (per `proxy-cache.md`'s preconfigured-set extension)
 
 ### Phase 3: Management surface
 - Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned`
@@ -624,8 +644,9 @@ feature its main competitor ships.
 preconfigured and enabled as the fourth preconfigured upstream, and the nightly real-upstream
 job gains this format's row when the format ships (Design, "The proxied path"; AC13). The
 amendment to `proxy-cache.md`'s settled preconfigured-upstreams decision goes through that
-spec's own revision mechanism; it is recorded here as a blocking precondition of Phase 2 and was
-not made from this spec.
+spec's own revision mechanism; it was recorded here as a blocking precondition of Phase 2 and was
+not made from this spec. That spec has since made it, as its resolved preconfigured-set extension
+(was Q14), so the precondition is discharged.
 
 Accepted cost: a sibling's settled decision reopens, and galaxy.ansible.com's rate limits and
 authentication quirks join the standing support surface. Why B lost: the format the project
@@ -792,3 +813,4 @@ somewhere downstream fails, far from the deletion that caused it.
 |------|----------|---------------|---------|
 | 2026-09-25 | 331ef25 | first review (never previously interrogated): protocol grounding by running the real client this pass (ansible-galaxy from ansible-core 2.18.18rc1 against a local logging server, live galaxy.ansible.com probes, and the client source on disk) + adversarial + cross-spec (format-handler-interface's pinned method set, URL-shape record and definition of done; data-model's write-boundary obligation and no-handler-owns-a-table rule; proxy-cache's classification, integrity and preconfigured-upstream decisions; auth's client table and repository-scoped model; conformance-harness's setup vocabulary, stand-in rule and authoritative-reference resolution; supply-chain-policy Q6; catalogue Q4 and charter Q1) + constitution + go-spec-reviewer. Claim verification against code vacuous pre-implementation: the tree holds only a stub `cmd/stackweaver-registry/main.go`, no `internal/` or `conformance/` exists, so protocol claims were verified against captured traffic instead of a tree. Independent: this reviewer authored none of the spec's prior content | The premise survived its refute-check (Forgejo's package docs, re-read this pass, list 24 types with no Ansible), but the draft understated its own protocol and missed sibling obligations. Wire contract pinned from capture: the auth header is `Authorization: Token <token>` on every request including discovery, correcting `foundation/auth.md`'s "Bearer or Basic" guess (synced there as a cross-spec row); the client rebuilds the import-poll URL from its own configured base plus the last path segment of the publish response's task URI, fixing where the endpoint must live; the poll contract (404 while queued, `finished_at`, `state: failed` with `error.code`/`error.description`, `messages[]`) recorded; the format-first mount verified by a real run, joining the URL-shape record's client evidence; the per-file digest claim corrected (`FILES.json` carries them, `MANIFEST.json` anchors `FILES.json` by digest). The proxied path had one AC and no design: classification declaration (metadata mutable under TTL, artifacts immutable), `download_url` rewriting (without which the cache never sees the artifact bytes) and the integrity digest added. The write-boundary declaration `data-model.md` makes a review item was absent and is now stated: one successful import task, one snapshot. Definition-of-done gaps closed: two pinned client versions (AC2), replay corpus (AC7), failed-import contract (AC8), and the deliberately-unimplemented recording added; AC6 corrected off "public Galaxy", since the main suite runs against stand-ins. Raised Q1 (the import-task record has no home in a model with no async-operation entity, the exact class the interface spec deferred to its re-open), Q2 (namespaces versus repository-scoped auth, touching open auth Q13/Q16), Q3 (signatures: serving has a client oracle, attachment has none, and supply-chain-policy Q6 owns the producer), Q4 (whether galaxy.ansible.com joins the preconfigured upstreams, amending a resolved proxy-cache decision), Q5 (deletion has no client oracle; the OCI precedent cuts the other way). Stays draft on Q1-Q5. |
 | 2026-09-26 | 0dbca1f | folding adopted recommendations under the standing delegation | Not a review: adoption and application of this spec's own recommendations, made consistent with the Cluster 5 and Cluster 6 format specs and the prototype. Q1 adopted as A for its mechanism (synchronous validation, terminal before the first poll); folding found its storage half (the repository-level metadata document) contradicts settled rules, since that document is snapshot content and a failed import would create a snapshot, so the home was raised as Q6 in decision shape and adopted as B: a format-agnostic `Operation` entity in `data-model.md`, outside snapshot content, atomic with the snapshot it produces, pruned after a window (new Design section "Import tasks", AC9, a Phase 1 precondition). Q2 adopted as A, and since `auth.md` adopted pattern scopes in the same pass the per-route addressed-object table is declared now and a token scoped `alpha/**` is confined to its namespace (Design "Namespaces", AC10). Q3 adopted as A with the requirements this format places on `docs/internal/plans/foundation/artifact-verification.md` (to be authored) recorded; its silence on proxied signatures raised as Q7 and adopted as A, pass-through (Design "Signatures", AC11). Q4 adopted as A, the `proxy-cache.md` amendment recorded as a Phase 2 precondition for that spec to make (AC13). Q5 adopted as B for its decision, re-homed onto the registry-owned management API in `docs/internal/plans/foundation/management-api.md` (to be authored) instead of Galaxy NG routes, for consistency with pypi and npm (Design "The management surface", AC12, Phase 3); folding it raised Q8, re-publishing a deleted version, adopted as A: retired forever, live duplicates refused too (Artifact validation, AC12). Also: blocking preconditions section added (interface re-open, now binding since the catalogue promoted this format to Tier 1; Operation entity; proxy-cache amendment; management-api.md); sequencing note rewritten to Tier 1 at charter step 6a; sibling citations now resolved (auth pattern scoping and grants, supply-chain-policy component inventory and verification ownership, conformance-harness setup vocabulary) reframed with historical qualifiers; conformance notes aligned with the harness's closed vocabulary and seed path (management triggers called from `script`). Test Plan rows added for AC9 to AC13. Stays draft. |
+| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Found already done by the interrupted fold (d56e1ff): the Tier 1 sequencing (charter item), the resolved supply-chain Q3 and Q6 citations, the harness closed-vocabulary note, the auth Q13 citations and the per-route addressed-object table. Applied: the per-format policy rendering (403 naming the policy, AC14, `conformance/ansible/policy_test.go`); the Operation precondition now cites `data-model.md`'s Operations section and AC32; the preconfigured-upstreams precondition recorded as discharged by `proxy-cache.md`'s resolved preconfigured-set extension (was Q14), in the preconditions, the proxied path, Phase 2 and the Q4 record. Stays draft. |

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Folded 2026-09-26 at 4d1aeb1 under the owner's standing delegation: Q3 (registry token as the docker login credential, no refresh token), Q4 (documented exception list, with v1.1.1's four structural skips grounded against the suite source), Q5 (cross-mount only with proven read on the source, indistinguishable 202 fallback), Q6 (sliding idle expiry with a cap, defined once in data-model.md) and the new Q7 (a two-repository suite credential) adopted; AC1 rewritten, AC7-AC10 added. Zero open questions; stays draft until a gate review, and AC1 depends on auth.md defining a credential kind that can span two repositories."
+status_description: "Reconciled 2026-09-26 at da0aecd (not a review): the suite credential is auth.md's opt-in multi-repository token (its Q22, AC29), so AC1 no longer waits on a credential kind; the token surface is homed in the to-be-authored credential-management.md; per-route addressed objects with tag-pattern cases (AC11), the DENIED policy rendering (AC12) and the catalogue's named clients Podman, ORAS and Helm-as-OCI (AC13) added. Earlier: Folded 2026-09-26 at 4d1aeb1 under the owner's standing delegation: Q3 (registry token as the docker login credential, no refresh token), Q4 (documented exception list, with v1.1.1's four structural skips grounded against the suite source), Q5 (cross-mount only with proven read on the source, indistinguishable 202 fallback), Q6 (sliding idle expiry with a cap, defined once in data-model.md) and the new Q7 (a two-repository suite credential) adopted; AC1 rewritten, AC7-AC10 added. Zero open questions; stays draft until a gate review, and AC1 depends on auth.md defining a credential kind that can span two repositories."
 description: "Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor."
 author: michielvha
 goal: "Pass the official OCI distribution-spec conformance suite with zero skips, proving the harness and the shared layers against a standards-body gate."
@@ -38,7 +38,9 @@ benefit from having solved.
 surfaces; chunked and resumable blob upload with bounded session lifetime; cross-repository
 blob mount that reveals nothing about repositories the client cannot read; manifest lists; the
 referrers API; and the OCI token authentication flow, with registry tokens as the `docker login`
-credential.
+credential; the per-route addressed objects `auth.md`'s pattern scopes evaluate, carried through
+the token endpoint; the wire rendering of a shared policy refusal; and the catalogue's named OCI
+clients beside Docker (Podman, ORAS, Helm-as-OCI) on both paths.
 
 **Out of scope for v1:** replication between instances, vulnerability scanning, and signature
 verification enforcement. Harbor does these well and integration beats reimplementation.
@@ -74,14 +76,18 @@ refused at the client's next exchange and its reach ends with the already-issued
 token's lifetime (`auth.md` AC5). Second, **token issuance, listing and revocation are on this
 format's critical path**: OCI cannot ship before a user can obtain the credential `docker
 login` needs, so Phase 1 depends on that surface. It is cross-format (npm, pip and Maven present
-the same tokens), so it is not specced here: `auth.md`'s resolved expiry-warning placement names
-it as a credential-management surface spec of its own, which must also carry the expiry-warning
-criterion, and that spec does not exist yet.
+the same tokens), so it is not specced here: `auth.md`'s resolved token-management decision (was
+Q21) homes it in `docs/internal/plans/foundation/credential-management.md` (to be authored in
+the spec loop), which owns token issuance, listing and revocation, the expiry-warning criterion
+and any future robot-account principal, and must reach `planned` before this format's Phase 1.
 
-Under `auth.md`'s single-repository tokens, a registry token authorizes one repository, and the
-token service grants the subset of a multi-repository scope request the token covers. That is
+A registry token authorizes one repository by default, and the token service grants only the
+subset of a multi-repository scope request the token covers (`auth.md` AC26). That default is
 what makes a real `docker` client's cross-repository mount fall back (see "Cross-repository
-mount") and what the suite credential below cannot be.
+mount"). A token spanning two repositories exists only by the explicit opt-in `auth.md` adopted
+for this format's suite (its resolved two-repository credential decision, was Q22, and AC29),
+with each repository named by identity and never by pattern, and that opt-in token is what the
+suite credential below is.
 
 ### The official suite, pinned, and what zero skips actually buys
 
@@ -143,11 +149,12 @@ The list at v1.1.1, all four entries structural:
 `OCI_CROSSMOUNT_NAMESPACE` from it (v1.1.1 `setup.go` and `02_push_test.go`). The harness
 therefore provisions, for AC1, a credential granting `pull`, `push` and `delete` on the namespace
 and `pull` and `push` on the cross-mount namespace, and the mount-into-another-repository case
-answers `201` under it (adopted 2026-09-26, the resolved suite-credential decision below).
-Which credential kind can hold grants on two repositories is `auth.md`'s to define; this spec
-states the requirement, and AC1 is unsatisfiable until some credential kind meets it. Pointing
-the cross-mount namespace at the namespace itself, or listing the cross-mount cases as
-exceptions, would pass the gate without testing the surface, and both are ruled out.
+answers `201` under it (adopted 2026-09-26, the resolved suite-credential decision below). The
+credential kind is settled: it is a registry token carrying `auth.md`'s explicit
+multi-repository opt-in with both repositories named by identity (`auth.md` AC29), provisioned
+through the harness's `credentials` key. Pointing the cross-mount namespace at the namespace
+itself, or listing the cross-mount cases as exceptions, would pass the gate without testing the
+surface, and both are ruled out.
 
 ### Mapping onto the shared data model
 
@@ -221,9 +228,61 @@ reference-creation barrier like every other reference-to-an-old-blob path
 target never depends on the source keeping the blob.
 
 Accepted cost, visible to users: a client whose credential cannot read the source never
-mounts, and pushes the bytes again - and under `auth.md`'s single-repository tokens that is
-every client presenting a registry token, so for now a real `docker` push never mounts at all. That costs bandwidth, not storage, because the CAS stores the re-sent content
+mounts, and pushes the bytes again - and since registry tokens are single-repository unless
+opted into more, that is every client presenting a default token, so a real `docker` push
+mounts only under a token opted into both repositories (AC8 exercises the default, AC1's suite
+the opt-in). That costs bandwidth, not storage, because the CAS stores the re-sent content
 once.
+
+### Addressed objects and pattern scopes
+
+`auth.md`'s pattern scopes narrow a credential within one repository by matching the object each
+request addresses, and the format declares which object each route reports ("Pattern scopes"
+there; `format-handler-interface.md` AC12). The repository name, slashes included, is the
+scope's repository and never part of the object, so OCI's named objects are tags, and a tag has
+no `/`: an OCI pattern is a single segment such as `v1.*`, `release-*` or one literal tag.
+
+| Route | Object kind | Canonical object |
+|---|---|---|
+| `GET /v2/` (API version check) | addresses no repository; answered from authentication alone | - |
+| `GET`, `HEAD`, `PUT` and `DELETE` on `/v2/<name>/manifests/<tag>` | named | the tag |
+| `GET`, `HEAD`, `PUT` and `DELETE` on `/v2/<name>/manifests/<digest>` | content-addressed | - |
+| `GET`, `HEAD` and `DELETE` on `/v2/<name>/blobs/<digest>` | content-addressed | - |
+| Upload sessions: `POST /v2/<name>/blobs/uploads/` (monolithic, chunked, and `mount` with `from`), and `PATCH`, `PUT` and status `GET` on the session URL | content-addressed | - |
+| `GET /v2/<name>/tags/list` | none | - |
+| `GET /v2/<name>/referrers/<digest>` | none | - |
+| `GET /v2/_catalog` (not part of the distribution spec, and not served in v1) | none | - |
+
+What that gives and costs, applying `auth.md`'s evaluation rules rather than re-deciding them:
+
+- A token scoped to one tag pulls that tag, including its config and layer blobs and, for a
+  multi-architecture index, its child manifests by digest, and pushes that tag through the
+  ordinary blob-upload-then-manifest sequence; it is refused every other tag.
+- A patterned `delete` deletes tags inside its pattern and nothing by digest: deleting a
+  manifest by digest removes every tag pointing at it, which is why `auth.md` withholds the
+  content-addressed allowance from `delete`.
+- A patterned credential is refused the tag list and the referrers listing, because both
+  enumerate names. A plain `docker pull` of a known tag never lists, so the common path is
+  unaffected; a tool that discovers signatures or tags through a listing needs an unpatterned
+  scope.
+- The residual `auth.md` names is present here and stays named: a patterned `push` can upload an
+  untagged manifest by digest, including a referrer whose `subject` points at another tag's
+  manifest.
+- The token endpoint carries the pattern into the JWT it mints (`auth.md` AC26), so exchanging
+  a narrow credential never yields a repository-wide access token.
+
+### Policy refusals on the wire
+
+When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines (its
+enforcement inside the calls in `Deps`, a manifest or blob read refused for a condemned
+coordinate or digest), the handler renders it in the distribution spec's own error envelope:
+status `403` with an `errors` entry whose `code` is `DENIED`, the spec's code for access to a
+resource being refused, and whose `message` names the policy and rule, or for content condemned
+under the shared security-signal rule, names the signal. `403` rather than the existence rule's
+`404`, because the caller is authorized to the repository and it is the content that is refused.
+This is the first format with that rendering, so it is where supply-chain-policy's AC1 and AC2
+cases live; whether the real client surfaces the message is exactly what they, and AC12 here,
+prove, and the case's capture re-grounds this shape before any later format copies it.
 
 ### The proxied path
 
@@ -273,12 +332,29 @@ upstream adapter axis (`format-handler-interface.md`, resolved Q4), not to this 
       arbitrary username, succeeds non-interactively for both pinned Docker versions, and a
       push and pull then work under it; the token endpoint's responses carry no refresh token;
       and once the registry token is revoked, the next token exchange is refused.
+- [ ] AC11: A registry token holding `pull` and `push` under the pattern `v1.*`, exchanged at the
+      token endpoint by the real `docker` client, pushes and pulls the tag `v1.0`, including a
+      multi-architecture index whose child manifests are fetched by digest, and is refused
+      pushing or pulling `v2.0` and `latest`; the same token is refused the tag list and the
+      referrers listing; with `delete` under the same pattern it deletes the tag `v1.0` and is
+      refused deleting a manifest or a blob by digest; and in proxied mode it pulls `v1.0`
+      through the cache and is refused `v2.0`.
+- [ ] AC12: A manifest or blob request the shared policy layer refuses, on the hosted path and
+      on the proxied path, answers `403` with an `errors` entry carrying code `DENIED` and a
+      message naming the policy, or naming the signal for content condemned under the
+      security-signal rule, and a real `docker pull` of the refused image exits non-zero with
+      that message in its output.
+- [ ] AC13: Every OCI client the catalogue's multiplier table names beside Docker, each pinned by
+      image digest, passes against this handler on both paths: `podman push` and `podman pull`
+      round-trip an image, `oras push` and `oras pull` round-trip a non-image artifact, and
+      `podman pull`, `oras pull` and `helm pull oci://` each succeed through a proxied
+      repository with the second pull served from cache.
 
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
-| AC1 | conformance | `conformance/oci/official_test.go` (the exception list's machine-readable copy in `conformance/oci/`, read by the runner) |
+| AC1 | conformance | `conformance/oci/official_test.go` (the exception list's machine-readable copy in `conformance/oci/`, read by the runner; the suite credential is a token carrying `auth.md` AC29's multi-repository opt-in over both namespaces) |
 | AC2 | conformance | `conformance/oci/hosted_test.go` |
 | AC3 | conformance | `conformance/oci/helm_test.go` |
 | AC4 | conformance | `conformance/oci/chunked_test.go` (scripted client; the durability half lives in `storage-and-gc.md`'s plan) |
@@ -288,6 +364,9 @@ upstream adapter axis (`format-handler-interface.md`, resolved Q4), not to this 
 | AC8 | conformance | `conformance/oci/crossmount_test.go` (real `docker` client, network-level assertion; scripted client for the indistinguishability cases) |
 | AC9 | integration | `internal/format/oci/crossmount_test.go` (access tokens minted by the token service with the scopes under test) |
 | AC10 | conformance | `conformance/oci/login_test.go` (both pinned Docker versions; revocation via the auth layer) |
+| AC11 | conformance + unit | `conformance/oci/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; the tag-scoped multi-architecture pull, refused digest delete and refused tag list `auth.md` AC24 names; a tag-patterned token provisioned through the `credentials` key); `internal/format/oci/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
+| AC12 | conformance | `conformance/oci/policy_test.go` (hosted and proxied modes, the file `supply-chain-policy.md` AC1 and AC2 name; rules through the `policies` key and a controlled advisory through `advisories`) |
+| AC13 | conformance | `conformance/oci/clients_test.go` (Podman, ORAS and Helm-as-OCI, pinned by digest, hosted and proxied; the catalogue's client-reach evidence for this row) |
 
 ## Implementation Phases
 
@@ -295,8 +374,9 @@ upstream adapter axis (`format-handler-interface.md`, resolved Q4), not to this 
 - Manifest and blob endpoints with monolithic upload, wired to the shared CAS and the token
   auth service
 - `docker login` with a registry token at the token endpoint, no refresh token (AC10); depends
-  on the credential-management surface (token issuance and revocation) being specced and built
-  first
+  on `docs/internal/plans/foundation/credential-management.md` (to be authored in the spec loop)
+  reaching `planned` and its token issuance and revocation being built first
+- The per-route addressed-object declaration, with the pattern carried into minted JWTs (AC11)
 
 ### Phase 2: Chunked and resumable upload
 - Sessions, ranges, resume, against the storage layer's upload lifecycle
@@ -312,8 +392,13 @@ upstream adapter axis (`format-handler-interface.md`, resolved Q4), not to this 
 
 ### Phase 5: The gate
 - Official suite at zero skips outside the exception list, with its issues filed and its
-  machine-readable copy in `conformance/oci/`; the two-repository suite credential; the client
-  version matrix (Docker x2, Helm), matrix reporting
+  machine-readable copy in `conformance/oci/`; the two-repository suite credential as an opt-in
+  multi-repository token; the client version matrix (Docker x2, Helm) and the catalogue's
+  named clients (Podman, ORAS, AC13); matrix reporting
+
+### Phase 6: Policy refusal rendering
+- Waits on `supply-chain-policy.md`'s enforcement (charter step 4b); the `DENIED` rendering of
+  the typed refusal on both paths (AC12)
 
 ## Tasks
 
@@ -346,7 +431,9 @@ conformance tests - putting the zero-skips goal at risk.
 the scoped, revocable machine credential `auth.md` defines, called a personal access token in
 this question - presented as the password of the Basic credential at the token endpoint, with
 the username not an authentication input. Robot accounts are not part of this adoption; they
-would be a new principal kind, which is `auth.md`'s to define.
+would be a new principal kind, which `auth.md`'s resolved token-management decision (was Q21)
+places in `docs/internal/plans/foundation/credential-management.md` (to be authored in the spec
+loop).
 
 **Recommendation (as written before adoption):** A - personal access tokens (and later robot
 accounts) usable as the password at the token endpoint; every incumbent registry converged on
@@ -362,7 +449,9 @@ surface, whose shape outlives OCI. `foundation/auth.md` settles how a credential
 scoped; what remained open here was how a non-interactive `docker login` obtains one.
 
 Accepted cost: token issuance, listing and revocation sit on OCI's critical path (Phase 1), in
-a credential-management surface spec that `auth.md` names and nobody has written yet.
+the credential-management surface spec `auth.md`'s resolved token-management decision (was Q21)
+names, `docs/internal/plans/foundation/credential-management.md` (to be authored in the spec
+loop).
 Option B lost because an SSO-first identity model has users with no password at all, and a
 static password in CI secrets is exactly the long-lived primary credential `auth.md`'s design
 avoids. Derived in folding, not separately decided: the token endpoint issues no refresh token,
@@ -484,10 +573,12 @@ testing the surface.
 **Why this is the owner's:** it decides whether the flagship gate may depend on a credential
 shape another spec has not yet settled.
 
-Accepted cost: AC1 cannot be met until `auth.md` defines a credential kind that holds grants on
-two repositories, whether a multi-repository registry token or another principal kind. Options
-B and C lost because each passes the gate without exercising the surface, which is the soft
-gate Q4's rule exists to prevent. Folded into Design and AC1.
+Accepted cost: AC1 could not be met until `auth.md` defined a credential kind that holds grants
+on two repositories. It now does: `auth.md`'s resolved two-repository credential decision (was
+Q22, AC29) adopted multi-repository registry tokens by explicit opt-in, each repository named by
+identity, and the suite credential is such a token. Options B and C lost because each passes the
+gate without exercising the surface, which is the soft gate Q4's rule exists to prevent. Folded
+into Design and AC1.
 
 ### Resolved: build approach (was Q1)
 
@@ -504,5 +595,6 @@ its credibility.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the two-repository suite credential is met by `auth.md`'s resolved Q22 and AC29 (opt-in multi-repository token, repositories named by identity), rewritten through Design, the cross-mount accepted cost, the Q7 record, the AC1 Test Plan row and Phase 5; the token-management surface and robot accounts cited to `credential-management.md` (auth's resolved Q21), Phase 1 depending on it reaching planned; the addressed-object table (manifest by tag named; manifests by digest, blobs and upload sessions content-addressed; tag list, referrers and catalog none; the JWT carrying the pattern per auth AC26) with AC11 as the pattern-refusal case in both modes; the per-format policy rendering (403, `DENIED`, AC12, Phase 6) the supply-chain fold queued for OCI first; the catalogue's resolved client-reach decision applied as AC13. Nothing found already done. Stays draft. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review. Adopted Q3 option A (the `auth.md` registry token as the Basic password at the token endpoint; derived: no refresh token, and token issuance on the Phase 1 critical path), Q4 option B (documented exception list; grounding against the v1.1.1 suite source showed complementary `RunOnlyIf`/`RunOnlyIfNot` pairs make literal zero skips unreachable for any registry, so the list holds four structural entries, each needing its partner to pass, and the admissible classes widened to upstream-defect and structural), Q5 option A (mount only with `pull` on the source and the digest held there, indistinguishable `202` fallback otherwise, no mount without `from`, `OCI_AUTOMATIC_CROSSMOUNT=false`), Q6 option B (sliding idle expiry with a cap, recorded in `data-model.md`'s single upload-session definition because the storage spec is planned and was not edited). Also raised and adopted in this pass: Q7 (the suite presents one credential across two repositories, so the harness needs a credential holding grants on both; `auth.md` must supply the kind). Changed: Scope, the token-auth, suite, chunked-upload and new cross-repository-mount Design sections, AC1 rewritten, AC7 (session expiry on the wire), AC8 (the mount leak closed through a real `docker` client plus indistinguishable scripted responses), AC9 (mount success path and the mounted blob under the target's upload scope) and AC10 (`docker login` with a registry token) added, Test Plan rows and all phases but Phase 4. Zero open questions. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous pre-code; suite claims grounded against the v1.1.1 and main conformance READMEs) | Expanded Design: suite pinned to a tagged release, zero-skips implications spelled out, token-service placement derived from the handler boundary, data-model mapping gap and durability split named; tightened AC1/AC2/AC6; raised Q2-Q6 (manifest graph, docker login credential, zero-skips escape hatch, cross-mount leak policy, session lifetime); stays draft. |

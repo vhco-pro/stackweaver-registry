@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "2026-09-26 at 4d1aeb1: Q2 and Q3 adopted under the owner's standing delegation and folded, and Q4 raised and adopted in the same pass. Audit requests get an honest 404 (AC18); unpublish is authorization-only (AC15) and, with deprecation, is a registry-owned management operation homed in the to-be-authored management-api.md with npm's client routes bound onto it (AC17); unpublished versions are retired forever (AC16). No open questions; stays draft pending a gate review, with Phase 2 blocked on management-api.md."
+status_description: "Reconciled 2026-09-26 at da0aecd (not a review): AC14 cites the charter's settled cost procedure and npm follows charter step 4b (AC12); the shared security-signal rule cited with refusal-before-fetch added to AC11; per-route addressed objects (AC19), the 403 policy rendering (AC20) and Yarn, pnpm and Bun as proven clients (AC21) added. Earlier: 2026-09-26 at 4d1aeb1: Q2 and Q3 adopted under the owner's standing delegation and folded, and Q4 raised and adopted in the same pass. Audit requests get an honest 404 (AC18); unpublish is authorization-only (AC15) and, with deprecation, is a registry-owned management operation homed in the to-be-authored management-api.md with npm's client routes bound onto it (AC17); unpublished versions are retired forever (AC16). No open questions; stays draft pending a gate review, with Phase 2 blocked on management-api.md."
 description: "Spec for the npm registry format, where the caching proxy of the public registry is the primary use case rather than private publishing."
 author: michielvha
 goal: "Deliver the most-wanted upstream cache in real deployments, and be the first format where the proxy path is the point."
@@ -31,10 +31,10 @@ every time anyone publishes, which makes it the proving ground for TTLs, conditi
 revalidation and negative caching.
 
 One count-integrity note: the catalogue's npm family row claims client reach across npm, Yarn,
-pnpm and Bun. This spec tests the npm CLI only (AC1), and the conformance matrix reports what is
-tested; whether the family's client-reach claim demands its own conformance coverage is the
-catalogue's open client-reach question, not this spec's, and the advertised reach must not
-exceed the tested one in the meantime.
+pnpm and Bun, and the catalogue's resolved client-reach decision (was Q5, its AC2) makes each of
+those a claim to be proven against this one handler on both paths, never an illustration. The
+npm CLI is this spec's primary oracle (AC1 onward), and AC21 carries the other three, so the
+advertised reach can equal the tested one.
 
 ## Blocking preconditions
 
@@ -42,9 +42,10 @@ exceed the tested one in the meantime.
 `format-handler-interface.md` pins a minimal method set before either implementation exists, on
 the explicit understanding that it will be wrong about something and is re-opened once OCI passes
 its conformance suite. That re-open gate blocks all Tier 1 handler work, and npm is the first of
-it. The re-open's evidence set is itself under question (that spec's Q9, raised after two
-siblings hit the same gap in the pin); however Q9 is answered, the gate itself holds and npm
-waits behind it.
+it. The re-open's evidence set was widened by that spec's resolved evidence-set decision (was
+Q9) to include the pattern-scope and policy-hook outcomes of `auth.md` and
+`supply-chain-policy.md`, which is also why `Scope(r)` now reports an addressed object; the gate
+itself is unchanged and npm waits behind it.
 
 The gate is recorded here as well as there deliberately: a contract enforced on only one side is
 enforced nowhere, and npm is also the measurement baseline for the experiment's headline metric.
@@ -59,6 +60,12 @@ charter answered it on 2026-09-26 (its "Measuring per-format cost"), so this pre
 discharged on paper and holds in practice through AC14, the criterion that makes the baseline
 this spec's deliverable rather than an intention.
 
+**Artifact verification and supply-chain policy precede this handler.** The charter builds both
+at step 4b, before npm, so that every format from npm onward enforces policy on both paths from
+its first commit, and its AC12 forbids npm's handler reaching `main` before they meet their own
+criteria. This spec therefore renders the typed policy refusal from Phase 1 (Design, "Policy
+refusals on the wire") rather than retrofitting it.
+
 **The management API must be specced before Phase 2.** Unpublish and deprecation are
 registry-owned management operations that this format's client routes bind onto (Design, "The
 management surface"). Their shared shape, authorization and write accounting belong to
@@ -72,14 +79,18 @@ serving, scoped packages, publish (including refusing a republish of an existing
 dist-tags (list, add, move, delete), unpublish and deprecation as bindings onto registry-owned
 management operations (authorization-only, with every unpublished version retired), an honest
 404 to the audit requests the client sends by default, bearer-token presentation per
-`foundation/auth.md`, and the proxied path against the public registry including detection of
-npm's explicit security signal.
+`foundation/auth.md`, the per-route addressed objects its pattern scopes evaluate, the wire
+rendering of a shared policy refusal, the catalogue's named npm-family clients (Yarn, pnpm and
+Bun), and the proxied path against the public registry including detection of npm's explicit
+security signal.
 
 **Out of scope for v1**, each with its reason, and recorded here because the interface spec's
 definition of done requires the deliberately unimplemented surface to be named:
 
-- **`npm audit` endpoints.** Real advisory data belongs to `supply-chain-policy.md`, whose feed
-  authority is its own open question; building an advisory surface here first would prejudge it.
+- **`npm audit` endpoints.** Real advisory data belongs to `supply-chain-policy.md`, whose
+  resolved advisory-feed decision (was Q1) makes OSV the single feed; serving that feed through
+  npm's audit shape is a revision of this spec once the feed exists, and building an advisory
+  surface here first would duplicate it.
   The audit requests npm sends anyway during a default install still need an answer, because
   silence is not an available option: they get an honest 404 (Design, "Audit requests").
 - **Provenance attestation verification.** Verification belongs to the shared producer
@@ -258,13 +269,15 @@ Upstream removal maps onto the settled purge-or-flag table as npm's side of that
 
 | Upstream event, as observed at revalidation | Classification |
 |---|---|
-| The packument's versions replaced by a security-holding placeholder (the `0.0.1-security` shape, the "security holding package" description) | The **explicit security signal**: purge the cached content and alert the operator |
+| The packument's versions replaced by a security-holding placeholder (the `0.0.1-security` shape, the "security holding package" description) | The **explicit security signal**: from that moment every resolution of the named coordinates is refused with an error naming the signal and no upstream fetch of them is made, the cached references end (the purge), a refusal record is written and the operator is alerted once, per the shared security-signal rule stated verbatim in `proxy-cache.md` and `supply-chain-policy.md` |
 | Versions vanishing without that shape (author unpublish) | Keep serving, record an operator-visible divergence |
 | A `deprecated` field appearing on versions | An ordinary metadata change, propagated at the next revalidation; never a removal event |
 
 Detection happens at revalidation only: per `proxy-cache.md`'s resolved answer (was Q12) the
 proxy layer never polls an upstream, and the active channel is `supply-chain-policy.md`'s
-advisory feed. The holding-package shape is a heuristic against an unversioned upstream
+advisory feed, whose malware advisories condemn the same coordinates through the same rule, so
+a holding package observed here and an OSV `MAL-` entry for it are one condemnation, never two
+purges. The holding-package shape is a heuristic against an unversioned upstream
 convention, which is one more reason the corpus and the drift job re-ground it rather than this
 table being trusted forever.
 
@@ -272,6 +285,51 @@ One assertion trap: npm keeps a client-side cache, so a second install that neve
 registry proves nothing about ours. AC6's case asserts both directions: the second install
 reached this registry (transcript) and this registry did not contact the upstream (network
 layer), with fresh client cache state as part of the case setup.
+
+### Addressed objects and pattern scopes
+
+`auth.md`'s pattern scopes narrow a credential within one repository by matching the object each
+request addresses, and the format declares which object each route reports ("Pattern scopes"
+there; `format-handler-interface.md` AC12). npm's declaration, with a scoped name's slash taken
+literally, so `@scope/name` is two segments:
+
+| Route | Object kind | Canonical object |
+|---|---|---|
+| Packument, `GET /{name}` | named | `{name}` |
+| Version manifest, `GET /{name}/{version}` | named | `{name}/{version}` |
+| Tarball, `GET /{name}/-/{basename}-{version}.tgz` | named | `{name}/{version}`, the version read from the filename after the known `{basename}-` prefix |
+| Publish and deprecate, `PUT /{name}` | named | `{name}`, from the URL; the body is not parsed before authorization |
+| dist-tags list, add, move and delete | named | `{name}` |
+| Unpublish a version: the `-rev` `PUT` | named | `{name}` |
+| Unpublish a version: the tarball `DELETE` | named | `{name}/{version}` |
+| Unpublish a package, `DELETE /{name}/-rev/{rev}` | named | `{name}` |
+| `GET /-/ping`, `GET /-/whoami` | none | - |
+| Both audit endpoints | none | - |
+
+Consequences, applying `auth.md`'s rules rather than re-deciding them:
+
+- There is no implicit wildcard, so a credential for one scope is written `@acme/**`, which
+  admits both the packument (`@acme/tool`) and the tarball (`@acme/tool/1.0.0`); `@acme/*`
+  admits the packument and refuses the tarball, so it installs nothing. An unscoped package is
+  covered by `{name}/**`.
+- Publishing, deprecation and dist-tag moves are narrowed per package, never per version,
+  because their object comes from the URL: reading the publish body before authorizing it would
+  spool an unauthorized upload.
+- `npm ping`, `npm whoami` and the audit requests address nothing in the repository and are
+  refused to a patterned credential. A default install still succeeds under one, because the
+  client treats a failed audit as a warning (Design, "Audit requests"); AC19 asserts that
+  rather than assuming it.
+
+### Policy refusals on the wire
+
+When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, the
+handler answers `403` with the JSON error body this format uses for its other refusals, its
+`error` member naming the policy and rule, or naming the signal for a coordinate condemned
+under the shared security-signal rule. `403` rather than the existence rule's `404`, because the
+caller is authorized and the content is what is refused. The same rendering serves the hosted
+and the proxied path, and the shape follows OCI's first rendering (`oci.md`, "Policy refusals on
+the wire"); whether the real client prints the text is what AC20's case proves, and its capture
+re-grounds the body shape.
 
 ### Conformance, auth and the corpus
 
@@ -322,14 +380,16 @@ matches the public registry, so that flow replays.
 - [ ] AC11: An upstream packument replaced by the security-holding shape purges the cached
       content and raises the operator alert, while versions vanishing without that shape keep
       serving with a recorded divergence, as npm's side of the settled removal table in
-      `proxy-cache.md` (its AC13).
+      `proxy-cache.md` (its AC13); and after the purge a fresh `npm install` of a condemned
+      version is refused with an error naming the signal, with no upstream request for it,
+      asserted at the network layer, as the shared security-signal rule requires.
 - [ ] AC12: A packument request carrying the install-v1 Accept header receives the abbreviated
       document with the matching content type, a plain-JSON request receives the full document,
       and both are assembled from the same stored state, proven by a mutation appearing in both.
 - [ ] AC13: A `PUT` publishing a version that already exists is refused, matching the public
       registry's refusal, and the refused request leaves no new snapshot behind.
-- [ ] AC14: Before PyPI work begins and with the charter's Q3 answered, the experiment log
-      holds npm's per-format cost under that settled attribution procedure, together with an
+- [ ] AC14: Before PyPI work begins, the experiment log holds npm's per-format cost under the
+      charter's settled procedure ("Measuring per-format cost"), together with an
       explicit finding on whether the proxy layer built for OCI generalised, so the N+1
       comparison has its baseline.
 - [ ] AC15: Unpublish is gated by authorization alone: a version another package in the same
@@ -348,6 +408,21 @@ matches the public registry, so that flow replays.
 - [ ] AC18: Both audit endpoints answer 404 with no advisory document in hosted, proxied and
       virtual repositories, a default `npm install` against each succeeds, and no audit request
       reaches any upstream, asserted at the network layer.
+- [ ] AC19: A token holding `pull` and `push` under the pattern `@acme/**` publishes and installs
+      `@acme/tool` through the real client, including its tarball, with the default install
+      succeeding although its audit request is refused, and is refused publishing or installing
+      `@other/tool` and the unscoped `acme-tool`; with `delete` under the same pattern it
+      unpublishes `@acme/tool@1.0.0` and is refused unpublishing `@other/tool`; and in proxied
+      mode it installs an `@acme`-scoped package through the cache and is refused an unscoped
+      one.
+- [ ] AC20: A packument or tarball request the shared policy layer refuses answers `403` with
+      the JSON error body naming the policy, on the hosted and the proxied path, and a real
+      `npm install` of the refused version exits non-zero with that text in its output.
+- [ ] AC21: Yarn, pnpm and Bun, each pinned by image digest, pass this format's install cases on
+      both paths with each as the client (AC1, AC4 and AC6), and each that has a publish command
+      publishes a package that a subsequent install retrieves with a matching integrity hash,
+      as the catalogue's client-reach criterion (its AC2) requires of every client its
+      multiplier table names.
 
 ## Test Plan
 
@@ -363,7 +438,7 @@ matches the public registry, so that flow replays.
 | AC8 | conformance | `conformance/npm/replay_test.go` |
 | AC9 | conformance | `conformance/npm/unpublish_test.go` (transcript assertions) |
 | AC10 | conformance | `conformance/npm/deprecate_test.go` (hosted and proxied cases) |
-| AC11 | integration | `internal/format/npm/removal_test.go` (test upstream presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
+| AC11 | integration + conformance | `internal/format/npm/removal_test.go` (test upstream presenting each event class; the shared-layer half is `proxy-cache.md` AC13's); `conformance/npm/security_signal_test.go` (post-purge install refused naming the signal; network-level assertion of no upstream fetch) |
 | AC12 | integration | `internal/format/npm/packument_test.go` |
 | AC13 | conformance | `conformance/npm/publish_test.go` (republish case) |
 | AC14 | manual | `docs/internal/tasks/experiment-log.md`, reviewed before PyPI starts |
@@ -371,12 +446,17 @@ matches the public registry, so that flow replays.
 | AC16 | conformance + integration | `conformance/npm/publish_test.go` (republish-after-unpublish case, same and different tarball); `internal/format/npm/retirement_test.go` (after pruning under an injected clock, after whole-package unpublish, new version accepted) |
 | AC17 | conformance + integration | `conformance/npm/manage_binding_test.go` (twin packages in one `script`: one operated through the management endpoint, one through real `npm unpublish` and `npm deprecate`; served packuments compared); `internal/format/npm/manage_binding_test.go` (snapshot count per operation through each entry point, `push` and `delete` grants) |
 | AC18 | conformance | `conformance/npm/audit_test.go` (hosted, proxied and virtual cases; transcript shows both 404s, network layer shows no upstream audit request) |
+| AC19 | conformance + unit | `conformance/npm/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; a pattern-scoped token provisioned through the `credentials` key); `internal/format/npm/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
+| AC20 | conformance | `conformance/npm/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`) |
+| AC21 | conformance | `conformance/npm/clients_test.go` (Yarn, pnpm and Bun pinned by digest, running the install, lockfile and proxied cases, and publish where the client has a command) |
 
 ## Implementation Phases
 
 ### Phase 1: Hosted core
 - Packument assembly and content negotiation, tarball serving, scoped names, publish with
   integrity verification and republish refusal, the audit endpoints' 404
+- The per-route addressed-object declaration and the pattern-scope cases; the `403` rendering
+  of the typed policy refusal
 
 ### Phase 2: Mutation surface
 - Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
@@ -387,11 +467,11 @@ matches the public registry, so that flow replays.
 
 ### Phase 3: Proxied path
 - Classification and URL rewriting, conditional revalidation, negative caching, the removal
-  table and security-signal detection
+  table and security-signal detection, with the refusal-before-fetch that follows a signal
 
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate), replay-match,
-  the second pinned client, experiment-log entries
+  the second pinned client, Yarn, pnpm and Bun (AC21), experiment-log entries
 
 ## Tasks
 
@@ -531,3 +611,4 @@ before its flow is expected to replay.
 |------|----------|---------------|---------|
 | 2026-09-25 | 331ef25 | first review: protocol grounding at published-contract level (the `npm/registry` docs describe reads only, so the write half is grounded in prior-art implementations and flagged for re-grounding in captured traffic per the standing rule) + adversarial + cross-spec (interface AC8/Q9 re-open gate, charter Q3's before-npm obligation from `question-triage.md`, data-model's write-boundary and snapshot rules and its AC13, proxy-cache's settled classification/removal/serve-stale/negative-caching decisions and its AC13, harness `setup` vocabulary, corpus rules and redaction gate, auth AC4, supply-chain-policy Q6, the catalogue's npm family row) + constitution; code-claim verification vacuous pre-implementation (no `internal/format/npm/`, no `conformance/npm/`) | The spec was a stub wearing a reviewed spec's frontmatter: no summary, no Design, no Phases, no Tasks, and its one resolved decision claimed it was "folded into Design and Scope above" when no Design section existed and no accepted cost was recorded - both corrected. Body built out from grounded protocol facts: the wire surface including the `-rev` unpublish routes (where an unrouted surface is a silent no-op because the client exits 0 on 404), content negotiation and the corgi Accept header, the encoded-slash routing trap, tarball URL rewriting, the write-boundary declaration `data-model.md` requires of every format spec, the proxied classification and npm's side of the settled removal table (security-holding shape purges; author unpublish keeps and flags; deprecation is never a removal), the client-side-cache trap that made AC6 vacuously passable, and the non-interactive auth path (token via `setup`, no new harness vocabulary). Scope gained unpublish, deprecation, republish refusal, content negotiation and security-signal detection; out-of-scope items each gained a non-effort reason. Six criteria added (AC9 unpublish with transcript assertions, AC10 deprecation both paths, AC11 the removal table, AC12 content negotiation, AC13 republish refusal, AC14 the measurement baseline) with Test Plan rows; AC7's row retargeted from `internal/proxy/` (which duplicated proxy-cache AC2/AC3) to an npm-path conformance case. Both blocking preconditions now recorded: the interface re-open (with its Q9 noted as widening the evidence set, not moving the gate) and charter Q3 before npm starts. Q2 (audit-request disposition: 404 vs empty stub vs forwarding, a security-posture and privacy call) and Q3 (hosted unpublish policy vs public-registry emulation) raised for the owner, not decided. Stays draft. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review: adoption and application of this spec's own recommendations, made consistent with the other Cluster 5 format specs. Q2 adopted as A: both audit endpoints answer 404 in every mode with nothing forwarded (new Design section "Audit requests", wire-table row, Scope, corpus exception list, AC18). Q3 adopted as A, authorization-only unpublish with the public registry's restrictions unenforced (AC15), and made consistent with pypi and Galaxy: unpublish and deprecation are registry-owned management operations homed in `docs/internal/plans/foundation/management-api.md` (to be authored), with the `-rev` routes and the deprecate `PUT` served as bindings onto them, `delete` for unpublish and `push` for deprecation, hosted only (new Design section "The management surface", AC17, a Phase 2 blocking precondition). Folding Q3 exposed Q4 (may an unpublished version be republished), written in decision shape and adopted as A: retired forever through a package-level retirement set, the name staying usable (write-boundary section, AC16), matching pypi's filename retirement and Galaxy's version retirement. The provenance out-of-scope item now names `docs/internal/plans/foundation/artifact-verification.md` (to be authored) as the producer; the charter precondition records that charter's cost-attribution question was answered in its own spec during this pass; the proxy-cache security-signal citation updated to that spec's resolved passive-detection answer. Test Plan rows added for AC15 to AC18. Stays draft. |
+| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: AC14 reworded to the charter's settled 'Measuring per-format cost'; the step-4b precondition (charter AC12) added; the interface re-open's evidence set cited as resolved (was Q9); the audit out-of-scope reason updated to supply-chain's resolved OSV feed; the security-signal rule cited in the removal table and detection note, with AC11 extended to a post-purge install refused naming the signal and no upstream fetch; the addressed-object table (packument and routes by name `{name}`, version-addressed routes `{name}/{version}`, ping, whoami and audit none) with AC19 as the pattern-refusal case in both modes; the policy rendering (AC20); the catalogue's resolved client-reach decision applied to Yarn, pnpm and Bun (AC21). Nothing found already done. Stays draft. |

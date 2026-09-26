@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 as a grounded first draft: wire contract captured from cargo 1.70.0 and 1.98.1 against a logging stub, checked against the Cargo book, the cargo source and the live crates.io index. Five questions written and adopted under the owner's standing delegation. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-26 at da0aecd (not a review): Q6 raised and adopted (yank and unyank are bindings onto the registry-owned management operation, authorized by delete, AC19); per-route addressed objects over the folded key (AC17) and the 403 policy rendering (AC18) added; charter AC9 recorded; Q4 confirmed by proxy-cache's Q14. Earlier: Authored 2026-09-26 as a grounded first draft: wire contract captured from cargo 1.70.0 and 1.98.1 against a logging stub, checked against the Cargo book, the cargo source and the live crates.io index. Five questions written and adopted under the owner's standing delegation. Awaits a /spec review pass."
 description: "Spec for the Cargo (Rust) registry format: the sparse index protocol and the crates.io-style web API, hosted and proxied, with cargo as the conformance oracle for reads, publish and yank alike."
 author: michielvha
 goal: "Serve Rust teams a private crate registry and a crates.io cache from one handler, with every management operation cargo itself can drive verified through the real client."
@@ -59,8 +59,12 @@ Debian's expensive; how it is produced decides whether hosted Cargo is a renderi
 materialisation problem. Second, `cargo yank` and `cargo owner` are **real client commands**, so
 unlike PyPI and Galaxy this format's management surface has a third-party oracle for both trigger
 and effect, which is the distinction `docs/internal/analysis/management-surfaces-and-the-oracle.md`
-draws; this spec therefore adds no question to that analysis's cluster, and its yank criteria are
-ordinary conformance cases.
+draws, and this format is recorded there beside npm. That makes Cargo npm's case, not PyPI's:
+under the cross-format precedent `pypi.md`, `npm.md` and `ansible-collections.md` adopted, yank
+and unyank are operations of the registry-owned management API, and cargo's own routes are
+served as bindings onto them (Design, "Yank is a binding onto the registry-owned operation"; the
+resolved yank-binding decision below). Its yank criteria stay ordinary conformance cases,
+because the real client drives the trigger.
 
 ## Blocking preconditions
 
@@ -72,8 +76,14 @@ on one side only is enforced nowhere.
 
 **The breadth gate decides whether this format is built at all.** `formats/catalogue.md` AC5
 forbids Tier 2 work until Tier 1 is complete and the continue-or-shrink verdict is in the
-experiment log. This spec exists now so the catalogue's AC1 (a spec before any code) holds and
+experiment log, and `project-charter.md` AC9 forbids any Tier 2 handler code on `main` before an
+owner-recorded `continue` verdict (after `shrink`, this spec is `parked`). This spec exists now so the catalogue's AC1 (a spec before any code) holds and
 so the format's traps are on record before the gate, not to pull the format forward.
+
+**The management API must be specced before Phase 2's yank.** Yank and unyank are bindings onto
+operations of `docs/internal/plans/foundation/management-api.md` (to be authored in the spec
+loop), which owns their shared shape, authorization and write accounting, so the yank half of
+Phase 2 waits on that spec reaching `planned`.
 
 ## Scope
 
@@ -84,7 +94,10 @@ so the format's traps are on record before the gate, not to pull the format forw
 - Crate download at the `dl` endpoint, with the `.crate` bytes verified against the index's
   `cksum`.
 - The registry web API as cargo drives it: publish with its length-prefixed binary body, yank
-  and unyank, the owners endpoints, and search.
+  and unyank as bindings onto the registry-owned management operations, the owners endpoints,
+  and search.
+- The per-route addressed objects `auth.md`'s pattern scopes evaluate (AC17), and the wire
+  rendering of a shared policy refusal (AC18).
 - Registry-token authentication in the exact form cargo sends: the bare token as the whole
   `Authorization` header value, the `auth-required` flag, and the `WWW-Authenticate: Cargo`
   challenge that makes cargo present the token on index and download requests.
@@ -267,12 +280,10 @@ How this meets `auth.md`, whose rules this spec does not bend:
 - **The handler renders the challenge; the shared layer decides.** As `formats/oci.md` does for
   its `WWW-Authenticate` challenge, the Cargo handler owns the wire form of the denial and the
   central authorizer owns the verdict. The mapping the handler declares through `Scope(r)`:
-  `config.json`, index files, downloads and search are `pull`; publish, yank and unyank are
-  `push`; the owners mutations are refused before any scope evaluation (below). The addressed
-  object the amended pin requires (`format-handler-interface.md`, "The pinned method set") is
-  the crate's registered spelling on every index, download, publish, yank and owners route, so
-  a pattern scope can narrow a token to one crate; `config.json` and search address the
-  repository as a whole and report *none*.
+  `config.json`, index files, downloads, the owners listing and search are `pull`; publish is
+  `push`; yank and unyank are `delete`, as the registry-owned operation they bind onto requires
+  (below); the owners mutations are refused before any scope evaluation (below). The addressed
+  object each route reports is declared in "Addressed objects and pattern scopes".
 - **The challenge is not an existence oracle.** For a credential-less request the handler
   answers 401 with the challenge **uniformly**, whether the repository is private, missing, or
   belongs to someone else; for a request carrying a valid token that lacks `pull` the answer is
@@ -319,6 +330,8 @@ metadata-only mutations snapshot-creating writes. Cargo's declaration:
   still be available for download", and the capture confirms an existing lockfile downloads the
   yanked version while a fresh resolution refuses it. A registry that removed the file on yank
   would break every lockfile that pins it, which is the precise failure yank exists to avoid.
+- A yank or unyank is the same one write whichever entry point drives it, cargo's own route or
+  the registry-owned management endpoint it binds onto (below).
 - Owners mutations are refused and write nothing; the owners listing is a read.
 - **A republish of an existing version is refused** with the reason in the body and leaves no
   snapshot behind, matching the public registry. The `.crate` at a coordinate is the immutable
@@ -327,6 +340,74 @@ metadata-only mutations snapshot-creating writes. Cargo's declaration:
   caches, silently.
 - A proxied repository creates no snapshots at all; index arrival and revalidation are cache
   materialisation.
+
+### Yank is a binding onto the registry-owned operation
+
+The cross-format precedent (`pypi.md`'s resolved hosted-yank decision, was Q1, with `npm.md` and
+`ansible-collections.md`) makes every management operation an operation of one registry-owned
+management API, `docs/internal/plans/foundation/management-api.md` (to be authored in the spec
+loop), and where an ecosystem client drives an operation over its own wire, that route is served
+as a **binding onto the same operation**, as npm's `-rev` routes are. Cargo is that case: the
+`DELETE .../yank` and `PUT .../unyank` routes above are bindings onto the registry-owned yank
+operation, with one implementation behind two ways in (the resolved yank-binding decision
+below). What that fixes:
+
+- **Authorization is `delete`, the same as PyPI's yank.** One operation carries one
+  authorization rule, and yank is removal-class across formats. A principal holding `push`
+  alone publishes but cannot yank, which is more than crates.io asks of an owner, and is the
+  accepted cost.
+- **Hosted only.** A yank against a proxied repository is refused; its yanks arrive from the
+  upstream per the removal table below.
+- **Nothing is deleted.** Yank flips a flag in one snapshot, and the `.crate` stays served, as
+  the write-boundary declaration above states.
+- **The owners mutations are not management operations.** They are refused before scope
+  evaluation (the resolved owners decision below), so there is no operation for them to bind
+  onto, and the owners listing stays a `pull` read.
+
+What this format requires of `management-api.md`: a yank and an unyank operation on a version,
+reporting the object `{crate}/{version}` in the canonical form below, producing exactly one
+metadata-only snapshot, and reachable from cargo's own routes with identical semantics and
+authorization (AC19).
+
+### Addressed objects and pattern scopes
+
+`auth.md`'s pattern scopes narrow a credential within one repository by matching the object each
+request addresses, and the format declares which object each route reports ("Pattern scopes"
+there; `format-handler-interface.md` AC12). The canonical crate name is the **folded key** the
+model already stores, lowercase with `_` replaced by `-`, not the registered spelling: a pattern
+must match byte for byte against a canonical form, the index request arrives lowercased by the
+client, and the folded key is computable from every spelling any route carries, so `acme-*`
+covers `Acme_Tool` however a request spells it.
+
+| Route | Object kind | Canonical object |
+|---|---|---|
+| `config.json` | none | - |
+| Crate index file | named | `{crate}` |
+| Crate download | named | `{crate}/{version}` |
+| Publish | named | `{crate}/{version}`, from the metadata JSON, which the length-prefixed body carries before the `.crate` bytes, so no unauthorized crate is spooled; validation refuses a `.crate` whose manifest disagrees with it |
+| Yank and unyank | named | `{crate}/{version}` |
+| Owners listing and mutations | named | `{crate}` |
+| Search | none | - |
+
+What that gives and costs, applying `auth.md`'s rules rather than re-deciding them. Every cargo
+command fetches `config.json` first, and `config.json` addresses the repository as a whole, so
+a credential holding **only** a patterned `pull` is refused at the first request and no cargo
+command works under it. Pattern narrowing on this format is therefore practical for writes: a
+CI credential confined to its own crates holds an unpatterned `pull` beside a `push` and a
+`delete` patterned `acme-*/**`, and publishes and yanks only those crates. A patterned `pull`
+still narrows direct index and download requests, which AC17 asserts rather than leaving
+implied. Search is refused to a patterned credential as it already is to any credential-less
+request.
+
+### Policy refusals on the wire
+
+When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on an
+index-file or download route of either path, the handler answers `403` with the `errors` body
+this format uses for every refusal, its `detail` naming the policy and rule, or naming the
+signal for a coordinate condemned under the shared security-signal rule. `403` rather than the
+existence rule's `404`, because the caller is authorized and the content is what is refused.
+The client prints `detail` verbatim on API refusals (captured); whether it does so on an index
+or download refusal is what AC18's case proves.
 
 ### The proxied path
 
@@ -381,7 +462,9 @@ Upstream removal maps onto the settled purge-or-flag table as Cargo's side of th
 | Any other field change (`rust_version`, `features`, a new line appended) | An ordinary metadata change, propagated at the next revalidation |
 
 Detection happens at revalidation, passively, per the resolved security-signal detection
-decision in `proxy-cache.md` (was Q12); the active channel is the policy engine's advisory feed.
+decision in `proxy-cache.md` (was Q12); the active channel is the policy engine's advisory feed,
+under the shared security-signal rule, whose OSV malware advisories (RustSec among OSV's
+ecosystems) condemn a coordinate in every remote repository of this format.
 Cargo has no holding-package convention and no advisory field in the index,
 so the 451 and `cksum` rows are the only explicit signals this wire can carry; anything else a
 security removal looks like is the keep-and-flag backstop plus the policy engine's advisory
@@ -487,6 +570,21 @@ exception list before its flow is expected to replay.
       hosted route under the format mount answers a git smart-HTTP request.
 - [ ] AC16: Replay-match passes against a corpus recorded from crates.io covering the recorded
       surface named in Design.
+- [ ] AC17: A token holding an unpatterned `pull` beside `push` and `delete` under the pattern
+      `acme-*/**` publishes, yanks and unyanks `Acme_Tool` through the real 1.98.1 client and is
+      refused publishing or yanking `other-tool`, with no snapshot created by a refusal; a token
+      holding only `pull` under the same pattern fetches `acme-tool`'s index file and downloads
+      its `.crate` and is refused `other-tool`'s, is refused `config.json`, and a real
+      `cargo fetch` under it therefore fails at its first request; and in proxied mode the
+      patterned-`pull` token downloads an in-pattern crate and is refused another.
+- [ ] AC18: An index-file or download request the shared policy layer refuses answers `403` with
+      an `errors[].detail` naming the policy, on the hosted and the proxied path, and a real
+      `cargo fetch` of the refused version exits non-zero with that text in its output.
+- [ ] AC19: A yank and an unyank driven through the registry-owned management endpoint produce
+      the same served index line, exactly one snapshot each, and the same authorization outcome
+      as the same operation driven through `cargo yank` and `cargo yank --undo`; a principal
+      holding `push` without `delete` is refused through both entry points with no snapshot
+      created; and a yank against a proxied repository is refused.
 
 ## Test Plan
 
@@ -508,6 +606,9 @@ exception list before its flow is expected to replay.
 | AC14 | conformance | `conformance/cargo/source_replacement_test.go` (network-level assertion) |
 | AC15 | integration | `internal/format/cargo/upstream_config_test.go` |
 | AC16 | conformance | `conformance/cargo/replay_test.go` |
+| AC17 | conformance + unit | `conformance/cargo/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; `curl` for the direct index and download requests of the patterned-`pull` token); `internal/format/cargo/scope_object_test.go` (the object table, per route, including folding of every spelling, `format-handler-interface.md` AC12) |
+| AC18 | conformance | `conformance/cargo/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`) |
+| AC19 | conformance + integration | `conformance/cargo/manage_binding_test.go` (twin crates in one `script`: one yanked through the management endpoint, one through real `cargo yank`; served index lines compared); `internal/format/cargo/manage_binding_test.go` (snapshot count per entry point, `push`-only refusal, proxied refusal) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their visibility, `credentials`, an
@@ -526,8 +627,10 @@ restated per criterion here.
 
 ### Phase 2: The web API
 - Publish with the binary body, feature splitting, collision and duplicate refusals, the
-  write-boundary declaration exercised end to end; yank and unyank; owners listing and refusals;
-  search
+  write-boundary declaration exercised end to end; owners listing and refusals; search; the
+  per-route addressed-object declaration and the `403` policy rendering
+- Yank and unyank as bindings onto the registry-owned operations, waiting on
+  `docs/internal/plans/foundation/management-api.md` reaching `planned` (AC4, AC19)
 
 ### Phase 3: Proxied path
 - `config.json` rewriting and upstream download-URL composition from the `dl` template,
@@ -548,7 +651,45 @@ None open. The five questions this draft raised were each written in the templat
 shape and then adopted at their own recommendation under the owner's standing delegation of
 2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided,
 folded through Scope, Design, the criteria and the Test Plan in the same pass, and reversible
-by the owner at any time. `grep -rn "standing delegation"` is the owner's review queue.
+by the owner at any time. `grep -rn "standing delegation"` is the owner's review queue. A sixth,
+whether yank binds onto the registry-owned management operation, was raised and adopted the same
+way by the 2026-09-26 cross-spec reconciliation, which also recorded that the `proxy-cache.md`
+revision Q4 looked to has happened and confirmed its answer.
+
+### Resolved: yank as a binding onto the registry-owned operation (was Q6, raised and adopted 2026-09-26)
+
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: cargo's yank and unyank
+routes are served as bindings onto the yank operation of the registry-owned management API,
+`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), authorized
+by `delete` like every yank, with one implementation behind both entry points. Folded through
+Context, the blocking preconditions, Scope, the `Scope(r)` mapping, the write-boundary
+declaration, Design ("Yank is a binding onto the registry-owned operation"), AC19 and Phase 2.
+
+The judgment call it settles: this spec was authored in the same pass that adopted the
+cross-format management precedent, and it kept yank as a Cargo route authorized by `push`, on
+crates.io's model where an owner who publishes may also yank. The precedent adopted beside it
+says the opposite on both counts: management operations are the registry's, never a format's,
+with client-driven routes served as bindings (npm's case, which Cargo's is); and PyPI's yank,
+the same operation, requires `delete`. Left as written, one operation would carry two
+authorization rules depending on which format's client asked.
+
+**Recommendation (adopted):** A, because the precedent exists precisely so that the question is
+not answered once per format, and because an operation's authorization cannot sensibly depend on
+the wire it arrived over.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. A binding onto the shared yank operation, authorized by `delete`** | One yank, one rule, one write path across PyPI and Cargo; the real client still oracles the trigger | A CI credential that publishes cannot also yank without `delete`, which is more than crates.io asks of an owner; the yank half of Phase 2 waits on `management-api.md` |
+| **B. A Cargo-local yank route authorized by `push`, as authored** | crates.io's permission model unchanged; no dependency on an unwritten spec | Two implementations of yank and two authorization rules for one operation, the format-by-format answer the precedent was adopted to prevent |
+| **C. A binding onto the shared operation, but authorized by `push` for Cargo only** | The shared implementation with crates.io's permission model | The operation's authorization then depends on the entry point, which the central authorizer cannot express without per-format policy, and a `push` token could yank a PyPI release through the shared endpoint if the rule were widened instead |
+
+**Why this is yours:** it decides whether an ecosystem's permission habit or the registry's
+single authorization rule governs an operation both share.
+
+Accepted cost: publishers need `delete` to yank, stated here and in the Design section; and the
+yank half of Phase 2 cannot start before `management-api.md` is `planned`. B lost because it is
+the per-format answer the precedent rules out; C lost because an entry-point-dependent rule is
+authorization logic a handler would have to carry.
 
 ### Resolved: the git index protocol (was Q1)
 
@@ -606,8 +747,9 @@ state, which is what the refusal declines.
 | **B. Listing served from publisher records; mutations refused with the reason** | Central authorization untouched; the client's command answers honestly; per-crate rights stay where `auth.md` put them | `cargo owner --add` fails against this registry, and the listing is informational rather than a grant |
 | **C. No owners surface: 404 on all three** | Nothing to explain | `cargo owner --list` fails with a bare not-found, which reads as a broken registry |
 
-**Why this is yours:** it sets what "owner" means on this registry ahead of the human-grant
-vocabulary you have not yet settled in `auth.md`, a product-surface call.
+**Why this is yours:** it sets what "owner" means on this registry, a product-surface call made
+when the human-grant vocabulary was still open in `auth.md` (settled since as its resolved
+human-grant decision, was Q16, in the machine vocabulary, which this answer already assumed).
 
 Accepted cost: a divergence on the exception list, and a listing whose entries are publishers
 rather than grant holders, which the `msg`-free response cannot explain and the docs must.
@@ -647,6 +789,11 @@ user-configured in v1 and not added to the preconfigured set; the trigger for re
 catalogue's Tier 2 verdict, at which point the precedent to follow is the resolved
 preconfigured-upstream decision in `ansible-collections.md` (was its Q4), which adopted adding
 galaxy.ansible.com as the fourth upstream through `proxy-cache.md`'s own revision mechanism.
+
+That revision has since been made, and it confirmed this answer: `proxy-cache.md`'s resolved
+preconfigured-set extension (was Q14) added galaxy.ansible.com and left crates.io and pub.dev
+user-configured until a `continue` breadth-gate verdict authorizes their formats, each then
+decided as its own extension. The revisit this record names is that extension.
 
 The question: `proxy-cache.md` settled npm, PyPI and Docker Hub as the preconfigured,
 enabled-by-default upstreams, with the nightly real-upstream job covering exactly that set, and
@@ -703,3 +850,4 @@ captured form before the auth cases are written.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 4d1aeb1 | authoring pass: grounded first draft, not a review | Grounded the wire contract three ways: captured traffic from `cargo 1.70.0` and `cargo 1.98.1` run in containers against a logging stub (publish body decoded with its two little-endian lengths, duplicate publish on each client generation, yank, unyank, owners, search, `cargo add`, `cargo fetch`, conditional refreshes, mixed-case and separator-permutation lookups, the 401 challenge and token retry, yank resolution with and without a lockfile, `cargo info` and `cargo install` on a yanked crate); the Cargo book's index, web API, authentication and credential-provider pages plus the cargo source for the sparse client, publish wait, index lookup and `cargo add`; and the live `index.crates.io` (`config.json`, `ETag`/`Last-Modified`/`Cache-Control`, a 304, 404s on missing and wrong-case paths, the immutable download endpoint). Version milestones taken from the Rust release notes (sparse stabilised 1.68, default 1.70, registry-auth 1.74, `cargo info` 1.82, publish wait 1.66). Design built from that: the rendered append-only index file with a snapshot-derived `ETag`, the three-layer name trap with folded key plus registered spelling, the bare-token auth form and the 401 dance with its 1.74 floor, the search-cannot-authenticate limitation, the write-boundary declaration with yank as a metadata-only write, the proxied classification with `config.json` never served verbatim, the cross-registry `registry` field as a client-side routing directive answered by source replacement, Cargo's rows of the removal table (yank mirrored, 404/410 keep-and-flag, 451 and `cksum` change purge), and the fresh-`CARGO_HOME` assertion trap. Five questions written in decision shape and adopted under the standing delegation: sparse only (git deliberately unimplemented, AC15), owners listing-plus-refusal (AC9), both name-collision classes refused (AC5), crates.io not preconfigured in v1, and the uniform 401 challenge reconciled with the existence rule via the OCI precedent (AC6). Sixteen criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here: an `auth.md` client-table row for cargo, a Cargo yank row beside the PyPI one in `proxy-cache.md`'s removal table, and a Cargo row in the management-surfaces analysis. Stays draft; awaits an independent review. |
+| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: charter AC9 beside catalogue AC5 in the breadth-gate precondition; the Cluster 5 precedent folded in: Q6 raised and adopted (yank and unyank as bindings onto `management-api.md`'s yank operation, `delete` as for PyPI, hosted only), through Context, preconditions, Scope, the `Scope(r)` mapping, the write boundary, a new Design section and AC19, resolving from this side the yank-to-push divergence `auth.md` recorded for the management-api author; the addressed-object table over the folded key with version-level objects, `config.json` and search none, publish object from the metadata JSON that precedes the crate bytes, with AC17 and the consequence that patterned-only `pull` cannot run cargo; the policy rendering (AC18); the shared security-signal rule cited; the Q2 record's human-grant wording qualified as resolved; the Q4 record noted as confirmed by `proxy-cache.md`'s resolved Q14. The management-surfaces analysis gained Cargo's rows. Stays draft. |

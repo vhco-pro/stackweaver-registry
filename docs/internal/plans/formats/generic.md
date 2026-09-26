@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Q4 to Q7 adopted 2026-09-26 under the owner's standing delegation (flat prefix listing, per-repository overwrite with an immutable mode, per-repository retention rules counting versions within packages, a formal replay-match exemption), and five judgment calls the fold exposed adopted the same way (Q9 to Q13: snapshot-pinned pagination, idempotent same-content PUT, retention as a shared internal/retention pass, one snapshot per retention pass, union of rules). Folded through Scope, Design, Phases and AC4, AC5, AC8, with AC9 to AC13 added. Zero open questions; stays draft pending a gate review, and depends on a sibling amendment to data-model.md (core-parsed retention rules on Repository); the format-handler-interface.md side of the replay exemption (Capabilities reference-implementation field, definition-of-done item 2) is already applied there."
+status_description: "Reconciled 2026-09-26 at da0aecd (not a review): per-route addressed objects declared for auth.md's pattern scopes with the pattern-refusal and grammar cases (AC14), the shared policy refusal rendered as 403 (AC15, Phase 3), and the settings API now named as the charter's step-2 management surface core; the data-model amendment for core-parsed retention rules has landed there. Earlier: Q4 to Q7 adopted 2026-09-26 under the owner's standing delegation (flat prefix listing, per-repository overwrite with an immutable mode, per-repository retention rules counting versions within packages, a formal replay-match exemption), and five judgment calls the fold exposed adopted the same way (Q9 to Q13: snapshot-pinned pagination, idempotent same-content PUT, retention as a shared internal/retention pass, one snapshot per retention pass, union of rules). Folded through Scope, Design, Phases and AC4, AC5, AC8, with AC9 to AC13 added. Zero open questions; stays draft pending a gate review, and depends on a sibling amendment to data-model.md (core-parsed retention rules on Repository); the format-handler-interface.md side of the replay exemption (Capabilities reference-implementation field, definition-of-done item 2) is already applied there."
 description: "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end."
 author: michielvha
 goal: "Exercise every shared layer with a protocol simple enough that any failure is unambiguously a harness or infrastructure failure, not a protocol misreading."
@@ -37,7 +37,9 @@ worked examples for every later format.
 **In scope:** authenticated PUT to a repository path, GET, HEAD, listing by segment-aligned
 prefix with snapshot-consistent pagination, delete, overwrite semantics with a per-repository
 immutability switch, and retention policies by age and by count, scoped per repository with
-optional path-prefix filters.
+optional path-prefix filters. Also the per-route addressed objects `auth.md`'s pattern scopes
+evaluate (Design, "Addressed objects and pattern scopes"), and the rendering of a shared policy
+refusal.
 
 **Out of scope:** the proxied path. This is the one format permitted to declare proxy support
 `unsupported` (see `format-handler-interface.md`, resolved Q2) - there is no upstream protocol
@@ -55,10 +57,12 @@ below); `Capabilities()` declares it and the conformance matrix renders it as ex
 passing (AC9).
 
 **Depended on, not owned:** the operator-facing API through which a repository's settings (the
-immutability switch, retention rules) are changed. It is shared across formats and belongs to a
-repository-management surface no spec defines yet. Until one exists, conformance provisions
-settings through the harness's `setup` vocabulary and the integration tests through the shared
-model directly.
+immutability switch, retention rules) are changed. It is shared across formats and belongs to
+the management surface core the charter builds beside this format at step 2 (repository and
+token operations), whose spec is owed as `docs/internal/plans/foundation/management-api.md` (to
+be authored in the spec loop). Conformance never needs it: settings are provisioned through the
+harness's `setup` vocabulary, which the server's seed subcommand applies through the shared
+layers, and the integration tests write the shared model directly.
 
 ## Design
 
@@ -87,6 +91,41 @@ invocation. Artifact URLs follow the resolved mapping below:
   deletion path to the store. The same holds for retention: it is an automated deleter of
   metadata references and nothing else, which keeps every blob-deletion decision inside the one
   component whose safety is property-tested and fault-injected.
+
+A request the shared policy layer refuses (`supply-chain-policy.md`, the typed refusal its
+resolution calls in `Deps` return) is answered `403` with a `text/plain` body naming the policy
+and the rule that refused, the same body shape as this format's other refusals, which
+`curl --fail-with-body` prints (AC15). The caller is authorized and the content is what is
+refused, so the existence rule's `404` does not apply. Generic precedes the policy layer in the
+build order (charter step 4b), so the case lands when that layer does.
+
+### Addressed objects and pattern scopes
+
+`auth.md`'s pattern scopes narrow a credential within one repository by matching the object a
+request addresses, and which object each route reports is the format's to declare ("Pattern
+scopes" there; `format-handler-interface.md` AC12). Generic's declaration, in the canonical
+form the pattern grammar matches byte for byte:
+
+| Route | Object kind | Canonical object |
+|---|---|---|
+| PUT, GET, HEAD and DELETE on an artifact path | named | the artifact path below the repository, `{package}/{version}/{path/to/file}`, exactly as the strict path grammar accepted it |
+| Listing (GET on the repository root, with or without `prefix`) | none | - |
+
+Retention runs outside any request and reports no object. Three consequences, stated so they
+are not discovered:
+
+- A pattern matches the whole artifact path with no implicit wildcard, so a credential confined
+  to one package is written `{package}/**`, and one confined to a version
+  `{package}/{version}/**`. The grammar's own example `prod/*` matches no generic artifact at
+  all, since every artifact path has at least three segments; AC14 exercises the same grammar
+  cases one segment deeper.
+- A patterned credential cannot list, even with a `prefix` inside its pattern, because a listing
+  enumerates names and `auth.md` refuses every such route to a patterned scope (its AC24). A CI
+  job holding a `prod/**` token fetches the paths it already knows. That is auth's accepted
+  cost, not re-decided here.
+- Every route that writes or deletes is named, so a patterned `push` or `delete` never reaches
+  outside its pattern: this format has no content-addressed route for `auth.md`'s
+  content-addressed allowance to widen.
 
 ### Prefixes are segment-aligned
 
@@ -199,7 +238,7 @@ the shared word suggests.
 
 The proving-ground claim has to be honest about coverage. Exercised end to end: the harness
 core loop, case schema, `setup` vocabulary and CI wiring; authenticated and unauthenticated
-request handling; the CAS commit path and cross-path deduplication; snapshot-per-write and
+request handling, and pattern scopes over named objects; the CAS commit path and cross-path deduplication; snapshot-per-write and
 snapshot-pinned reads; the delete-to-GC handoff; and retention as the first automated deleter.
 **Not** exercised: chunked/resumable upload, the proxy and cache layers, mutable-metadata TTL
 semantics, and the recording-proxy/replay-match machinery - there is no reference
@@ -266,6 +305,17 @@ conformance credential was settled by `auth.md` rather than here.
       object-store delete, asserted at the store, and an architecture test fails if
       `internal/retention` imports a format handler package or the database or object-storage
       drivers directly.
+- [ ] AC14: Pattern scopes narrow generic credentials as `auth.md` AC19 and AC24 state, in
+      hosted mode (proxied support is declared unsupported): a token holding `pull` and `push`
+      under the pattern `prod/*/app.tgz` PUTs and GETs `prod/1.0/app.tgz` and is refused on
+      `prod-staging/1.0/app.tgz`, `prod/1.0/sub/app.tgz` and `staging/1.0/app.tgz`; the same
+      actions under `prod/**` are accepted for `prod/1.0/sub/app.tgz`; a patterned token is
+      refused the listing even when its `prefix` lies inside the pattern; a `delete` token
+      patterned `prod/**` deletes `prod/1.0/app.tgz` and is refused on `staging/1.0/app.tgz`;
+      and no refused request changes the stored artifacts or the listing's snapshot number.
+- [ ] AC15: A GET the shared policy layer refuses answers `403` with a body naming the policy
+      and its rule, which `curl --fail-with-body` prints, and the artifact is still served to
+      the same request once the policy no longer refuses it.
 
 ## Test Plan
 
@@ -284,6 +334,8 @@ conformance credential was settled by `auth.md` rather than here.
 | AC11 | conformance | `conformance/generic/overwrite_test.go` (repositories provisioned mutable and immutable through `setup`) |
 | AC12 | integration | `internal/retention/retention_test.go` (snapshot count, fault-injected commit failure, the two injected interleavings) |
 | AC13 | integration + architecture test | `internal/retention/retention_test.go` (object-store delete spy); `internal/retention/arch_test.go` |
+| AC14 | conformance + unit | `conformance/generic/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, the grammar cases, and the refused listing `auth.md` AC24 names; pattern-scoped tokens provisioned through the `credentials` key); `internal/format/generic/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
+| AC15 | conformance | `conformance/generic/policy_test.go` (a rule provisioned through the harness's `policies` key; written when the policy layer lands at charter step 4b) |
 
 ## Implementation Phases
 
@@ -292,11 +344,16 @@ conformance credential was settled by `auth.md` rather than here.
 - Segment-aligned prefixes and snapshot-pinned listing pagination
 - The overwrite setting and the same-content idempotent PUT
 - `Capabilities()` declaring proxy `unsupported` and reference-implementation availability `none`
+- The per-route addressed-object declaration and the pattern-scope cases
 
 ### Phase 2: Retention
 - The format-agnostic retention pass in `internal/retention`, reading core-parsed repository
   rules, with the integration tests proving exact-set deletion, single-write atomicity and the
   per-package concurrent-write exclusion
+
+### Phase 3: Policy refusal rendering
+- Waits on `supply-chain-policy.md`'s enforcement (charter step 4b); the `403` rendering of the
+  typed refusal and its conformance case
 
 ## Tasks
 
@@ -563,3 +620,4 @@ metadata and never becomes a filesystem path.
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous pre-code) | Added Design, HEAD/DELETE criteria (AC7/AC8) and two-client-version alignment; raised Q2-Q8 (model mapping, path grammar, listing, overwrite, retention scoping, replay exemption, auth gap); flagged cross-spec gaps (runner mode-check vs `unsupported`, harness Phase 2 claims generic proxied cases); stays draft. |
 | 2026-09-23 | 9c971d4 | cross-spec consistency (proxy exemption propagation) | Replaced the stale unresolved sibling claim with the settled `Capabilities()` and harness AC11 contract; the format's existing open questions still keep it draft. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review: adoption and fold. Adopted Q4 option A (flat recursive listing on the repository root with a segment-aligned prefix), Q5 option C (overwrite by default, immutable mode refusing replacement with 409 but not deletion), Q6 option A (per-repository rules; the version is the deleted unit, count rules count within a package, filters reach at most `{package}/{version}`, one last-write clock), Q7 option A (formal replay-match exemption mirroring the proxy one: spec record, `Capabilities()` declaration, matrix renders exempt). Folding exposed and adopted Q9 (pagination pinned to the first page's snapshot), Q10 (same-digest re-PUT is an idempotent 200 in both modes, not a write), Q11 (retention cannot be handler code under the pinned interface, so it is a format-agnostic `internal/retention` pass over shared entities with core-parsed rules), Q12 (declared write boundaries: one snapshot per PUT, DELETE and retention pass, with per-package exclusion of concurrent writes) and Q13 (rules combine as a union of deletions). Design rewritten around these, including the statement that retention adds no GC mark root and frees space only after the snapshot-retention window. AC4, AC5 and AC8 rewritten; AC9 to AC13 added with Test Plan rows; phases and `covers` updated. Sibling amendments reported rather than made: format-handler-interface.md (a `Capabilities()` reference-implementation field and definition-of-done item 2), data-model.md (core-parsed retention rules on `Repository`). |
+| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the per-route addressed-object table `auth.md` requires (artifact path named on PUT, GET, HEAD and DELETE; listing none, so a patterned token cannot list, its AC24), with AC14 carrying the pattern-refusal case `auth.md` AC8 requires, the AC19 grammar cases one segment deeper, and the refused listing, in `conformance/generic/auth_test.go` plus the per-route table test; the supply-chain per-format rendering of the typed policy refusal (403, `text/plain` naming the policy; AC15, Phase 3 after charter step 4b); the 'Depended on' paragraph now cites the charter's step-2 management surface core and the owed `management-api.md`, and the harness seed path. Found already done: the data-model side of retention (core-parsed rules on `Repository`, per-version last-write time) landed in the foundation reconciliation. Nothing else queued for this file. Stays draft. |
