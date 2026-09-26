@@ -12,6 +12,9 @@
   "conformance/conda/**": [
     "docs/internal/plans/formats/conda.md"
   ],
+  "conformance/cran/**": [
+    "docs/internal/plans/formats/cran.md"
+  ],
   "conformance/generic/**": [
     "docs/internal/plans/formats/generic.md"
   ],
@@ -51,6 +54,9 @@
   ],
   "internal/format/conda/**": [
     "docs/internal/plans/formats/conda.md"
+  ],
+  "internal/format/cran/**": [
+    "docs/internal/plans/formats/cran.md"
   ],
   "internal/format/generic/**": [
     "docs/internal/plans/formats/generic.md"
