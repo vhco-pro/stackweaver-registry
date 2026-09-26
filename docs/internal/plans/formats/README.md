@@ -16,6 +16,7 @@ One spec per package format, each owning its own protocol surface and conformanc
 | [generic.md](./generic.md) | Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end. |
 | [go-modules.md](./go-modules.md) | Spec for the Go modules format: the GOPROXY protocol hosted and proxied, the checksum-database passthrough, and what hosted means for an ecosystem with no publish API. |
 | [helm.md](./helm.md) | Spec for the classic Helm chart repository format (index.yaml plus .tgz and .prov over HTTP), hosted and proxied, and how it relates to the OCI path that oci.md already covers. |
+| [maven.md](./maven.md) | Spec for the Maven repository layout: the path-addressed release and SNAPSHOT files, the three levels of generated maven-metadata.xml, checksum and signature sidecars and Gradle Module Metadata, hosted and proxied, with Maven, Gradle, sbt and Leiningen as the conformance oracles. |
 | [npm.md](./npm.md) | Spec for the npm registry format, where the caching proxy of the public registry is the primary use case rather than private publishing. |
 | [nuget.md](./nuget.md) | Spec for the NuGet v3 registry format: the service index, the flat container, the paged registration hives, search and the PackagePublish push and unlist surface, hosted and proxied, with the dotnet CLI as the conformance oracle. |
 | [oci.md](./oci.md) | Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor. |

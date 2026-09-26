@@ -15,6 +15,9 @@
   "conformance/helm/**": [
     "docs/internal/plans/formats/helm.md"
   ],
+  "conformance/maven/**": [
+    "docs/internal/plans/formats/maven.md"
+  ],
   "conformance/nuget/**": [
     "docs/internal/plans/formats/nuget.md"
   ],
@@ -42,6 +45,9 @@
   ],
   "internal/format/helm/**": [
     "docs/internal/plans/formats/helm.md"
+  ],
+  "internal/format/maven/**": [
+    "docs/internal/plans/formats/maven.md"
   ],
   "internal/format/npm/**": [
     "docs/internal/plans/formats/npm.md"
