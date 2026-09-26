@@ -248,6 +248,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/terraform.md",
+    "description": "Spec for the Terraform and OpenTofu registry format: a host-bound, root-anchored discovery document, the module and provider registry protocols and the provider network mirror protocol on one handler, hosted modules and registry-signed providers published through the management API, a proxied path that verifies upstream provider signatures and turns commit-pinned VCS module sources into cached archives, and a download capability for the byte routes no client sends a credential to.",
+    "internal": true,
+    "status": "draft",
+    "issue": "29",
+    "covers": [
+      "internal/format/terraform/**",
+      "conformance/terraform/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/auth.md",
     "description": "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present.",
     "internal": true,

@@ -42,6 +42,9 @@
   "conformance/swift/**": [
     "docs/internal/plans/formats/swift.md"
   ],
+  "conformance/terraform/**": [
+    "docs/internal/plans/formats/terraform.md"
+  ],
   "internal/auth/**": [
     "docs/internal/plans/foundation/auth.md"
   ],
@@ -99,6 +102,9 @@
   ],
   "internal/format/swift/**": [
     "docs/internal/plans/formats/swift.md"
+  ],
+  "internal/format/terraform/**": [
+    "docs/internal/plans/formats/terraform.md"
   ],
   "internal/model/**": [
     "docs/internal/plans/foundation/data-model.md"
