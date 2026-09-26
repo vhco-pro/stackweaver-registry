@@ -9,6 +9,9 @@
   "conformance/composer/**": [
     "docs/internal/plans/formats/composer.md"
   ],
+  "conformance/conda/**": [
+    "docs/internal/plans/formats/conda.md"
+  ],
   "conformance/generic/**": [
     "docs/internal/plans/formats/generic.md"
   ],
@@ -45,6 +48,9 @@
   ],
   "internal/format/composer/**": [
     "docs/internal/plans/formats/composer.md"
+  ],
+  "internal/format/conda/**": [
+    "docs/internal/plans/formats/conda.md"
   ],
   "internal/format/generic/**": [
     "docs/internal/plans/formats/generic.md"
