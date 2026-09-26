@@ -119,6 +119,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/hex.md",
+    "description": "Spec for the Hex (Elixir and Erlang) format: the signed protobuf registry resources, the package tarball with its inner and outer checksums, the HTTP API that mix and rebar3 publish and retire through, hosted and proxied, with the shared signing service producing every hosted registry document and hex.pm's signed payloads served unmodified on the proxied path.",
+    "internal": true,
+    "status": "draft",
+    "issue": "23",
+    "covers": [
+      "internal/format/hex/**",
+      "conformance/hex/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/maven.md",
     "description": "Spec for the Maven repository layout: the path-addressed release and SNAPSHOT files, the three levels of generated maven-metadata.xml, checksum and signature sidecars and Gradle Module Metadata, hosted and proxied, with Maven, Gradle, sbt and Leiningen as the conformance oracles.",
     "internal": true,

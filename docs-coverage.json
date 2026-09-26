@@ -15,6 +15,9 @@
   "conformance/helm/**": [
     "docs/internal/plans/formats/helm.md"
   ],
+  "conformance/hex/**": [
+    "docs/internal/plans/formats/hex.md"
+  ],
   "conformance/maven/**": [
     "docs/internal/plans/formats/maven.md"
   ],
@@ -45,6 +48,9 @@
   ],
   "internal/format/helm/**": [
     "docs/internal/plans/formats/helm.md"
+  ],
+  "internal/format/hex/**": [
+    "docs/internal/plans/formats/hex.md"
   ],
   "internal/format/maven/**": [
     "docs/internal/plans/formats/maven.md"
