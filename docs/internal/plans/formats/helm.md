@@ -5,7 +5,7 @@ description: "Spec for the classic Helm chart repository format (index.yaml plus
 author: michielvha
 goal: "Serve and cache classic Helm chart repositories with the real helm client as the oracle, with the repository-wide generated index and the de facto ChartMuseum upload API handled deliberately rather than discovered."
 priority: "medium"
-issue: ""
+issue: 19
 created: 2026-09-26
 covers:
   - "internal/format/helm/**"

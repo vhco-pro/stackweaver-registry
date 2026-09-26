@@ -5,7 +5,7 @@ description: "Spec for the Go modules format: the GOPROXY protocol hosted and pr
 author: michielvha
 goal: "Serve the go command as a module proxy and a checksum-database mirror so a build fleet resolves, verifies and downloads every module, private and public, through this registry alone."
 priority: "medium"
-issue: ""
+issue: 18
 created: 2026-09-26
 covers:
   - "internal/format/go/**"

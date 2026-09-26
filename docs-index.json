@@ -68,6 +68,7 @@
     "description": "Spec for the Cargo (Rust) registry format: the sparse index protocol and the crates.io-style web API, hosted and proxied, with cargo as the conformance oracle for reads, publish and yank alike.",
     "internal": true,
     "status": "draft",
+    "issue": "17",
     "covers": [
       "internal/format/cargo/**",
       "conformance/cargo/**"
@@ -100,6 +101,7 @@
     "description": "Spec for the Go modules format: the GOPROXY protocol hosted and proxied, the checksum-database passthrough, and what hosted means for an ecosystem with no publish API.",
     "internal": true,
     "status": "draft",
+    "issue": "18",
     "covers": [
       "internal/format/go/**",
       "conformance/go/**"
@@ -110,6 +112,7 @@
     "description": "Spec for the classic Helm chart repository format (index.yaml plus .tgz and .prov over HTTP), hosted and proxied, and how it relates to the OCI path that oci.md already covers.",
     "internal": true,
     "status": "draft",
+    "issue": "19",
     "covers": [
       "internal/format/helm/**",
       "conformance/helm/**"
@@ -141,6 +144,7 @@
     "description": "Spec for the Pub format (Dart and Flutter): the hosted pub repository API v2, hosted and proxied, where the client unilaterally enforces content hashes, excludes retracted versions, and deletes its stored token on any 401.",
     "internal": true,
     "status": "draft",
+    "issue": "20",
     "covers": [
       "internal/format/pub/**"
     ]

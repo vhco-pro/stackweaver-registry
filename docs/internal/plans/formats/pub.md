@@ -5,7 +5,7 @@ description: "Spec for the Pub format (Dart and Flutter): the hosted pub reposit
 author: michielvha
 goal: "Give Dart and Flutter teams a private and caching pub repository whose behaviour is pinned to what the real dart pub client does, including the three rules it enforces without asking the server: content-hash verification, retracted-version exclusion, and stored-token deletion on 401."
 priority: "low"
-issue: ""
+issue: 20
 created: 2026-09-26
 covers:
   - "internal/format/pub/**"

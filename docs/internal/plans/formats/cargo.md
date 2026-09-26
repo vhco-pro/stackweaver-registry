@@ -5,7 +5,7 @@ description: "Spec for the Cargo (Rust) registry format: the sparse index protoc
 author: michielvha
 goal: "Serve Rust teams a private crate registry and a crates.io cache from one handler, with every management operation cargo itself can drive verified through the real client."
 priority: "medium"
-issue: ""
+issue: 17
 created: 2026-09-26
 covers:
   - "internal/format/cargo/**"
