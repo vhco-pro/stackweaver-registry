@@ -204,6 +204,28 @@ resumability is what autonomous runs depend on.
 acceptance criterion lacks a `## Test Plan` row, while `## Tasks` is unpopulated, or while the
 last `## Review Log` entry is stale relative to `main`.
 
+### Standing delegation of open questions (owner, 2026-09-26)
+
+The owner has delegated open questions so the spec loop runs continuously: **an agent blocked on
+an open question adopts that question's own recommendation and keeps going.** This replaces the
+earlier rule that open questions belong to the owner, for as long as the delegation stands. It is
+bounded, so it does not turn the gate into a rubber stamp:
+
+- **Only a written recommendation can be adopted.** A question must already be in the template's
+  decision shape (framing, **Recommendation:**, options table with "You get" and "It costs", "Why
+  this is yours"). A question without one gets one written first, then adopted.
+- **Record it as adopted, never as decided.** Convert it to `### Resolved: <topic> (was Qn)`
+  opening with `**Adopted YYYY-MM-DD under the owner's standing delegation.**`, then the chosen
+  option, its accepted cost, and why the alternatives lost. `grep -rn "standing delegation"` is
+  the owner's review queue, and any adopted answer is reversible by the owner at any time.
+- **Fold it through the body in the same pass.** Scope, Design, the acceptance criteria and the
+  Test Plan, and every sibling spec the answer touches. The half-applied decision is this
+  project's most recurrent defect and delegation makes it more likely, not less.
+- **It covers open questions only.** It never reverses a decision the owner actually made, never
+  weakens `auth.md` AC10 (external security review of the implementation), and never changes this
+  file: a question asking to change the constitution is adopted by editing this file explicitly,
+  in its own commit, never by a spec quietly diverging from it.
+
 **This file is the constitution.** `/spec review` checks every spec against it as an explicit
 lens, and there is deliberately no second principles document to drift from it. A spec that needs
 to contradict a rule here is a request to change this file, raised as an Open Question, never

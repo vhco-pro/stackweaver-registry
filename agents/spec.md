@@ -74,10 +74,12 @@ Reviews are **repeatable by design**; a spec normally takes several passes. Each
    standing rule is a finding, and a spec that needs to contradict one is a request to
    change `CLAUDE.md` - raise it as an Open Question, never as a silent exception.
 4. **Route findings.** Factual corrections are applied directly. Judgment calls become
-   new `## Open Questions` entries addressed to the owner - **never answer them
-   yourself** - written in the template's decision shape (heading, recommendation,
-   options table), never as prose. Surface them with AskUserQuestion so the pass can
-   fold the answer in and delete the question in one sitting.
+   `## Open Questions` entries written in the template's decision shape (heading,
+   recommendation, options table), never as prose. **While the owner's standing delegation
+   of 2026-09-26 stands** (`CLAUDE.md`), a question that blocks the pass is then adopted at
+   its recommendation, recorded as `### Resolved: ... (was Qn)` opening with "Adopted ...
+   under the owner's standing delegation", and folded through the body and every affected
+   sibling in the same pass. Without the delegation, questions go to the owner unanswered.
 5. **Append to `## Review Log`**: date, the HEAD sha verified against, the lens, and a
    one-line outcome. The log is the gate's memory - `/implement` compares its sha
    against `main`.
@@ -93,8 +95,10 @@ Reviews are **repeatable by design**; a spec normally takes several passes. Each
   run; a review verdict only after running the check. For anything protocol-facing, the
   citation is captured client traffic or the published spec, never a recollection of how
   the client behaves.
-- **Open questions belong to the owner.** A review that answers its own questions has
-  converted a gate into a rubber stamp.
+- **Open questions belong to the owner, who has delegated them.** Under the standing delegation
+  an agent adopts the question's own written recommendation, marked as adopted rather than
+  decided so the owner can find and reverse it. It never invents an answer the question did not
+  recommend, and never adopts without folding.
 - **One document.** Never create a companion spec/design/notes file for the same
   feature; fold everything into the plan file.
 - **Canonical statuses only** (`draft`, `planned`, `in-progress`, `complete`,
