@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Folded 2026-09-26 at 4d1aeb1: all six questions adopted under the owner's standing delegation, plus Q7 and Q8 raised and adopted while folding. OSV is the single feed and advisory-dependent policy fails closed when stale (offline instances import bulk exports); enforcement is retroactive; a byte-level cataloguer in the shared layer supplies the component inventory; policy is enforced inside the Deps resolution calls with no pinned-method change; signature state is a verdict consumed from artifact-verification.md (to be authored). Q5 was adopted as D, not its written recommendation B, because B would have reversed the owner's purge decision: a security signal purges through either channel under one rule shared verbatim with proxy-cache.md, everything else is refused and retained, and no GC mark root is added. AC9-AC16 added, 16 criteria all mapped, zero open questions; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): Context now places the build at charter step 4b, after artifact verification and the interface re-open and before npm (charter AC12); the stale claim that the harness needs a matching extension is replaced by the harness's existing policies and advisories keys, whose provisioners this spec builds (Phase 3; AC2 extended). Earlier: all six questions adopted under the owner's standing delegation plus Q7 and Q8; Q5 adopted as D, not its written B, to keep the owner's purge decision. 16 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for scanning artifacts and enforcing supply-chain policy at the registry boundary - blocking by vulnerability, licence or signature state, on both hosted and proxied content."
 author: michielvha
 goal: "Make the registry a policy enforcement point rather than a passive store, so a rule about what may enter a build is applied where every artifact already passes."
@@ -30,18 +30,25 @@ This matters most for the proxied path, which is this project's differentiator: 
 that can refuse a known-malicious package is a supply-chain control, while one that cannot is a
 faster way to fetch it.
 
-Ordering: `proxy-cache.md` lists supply-chain policy out of its own scope with the note that
-policy "needs this first", so this spec's proxied phase depends on the proxy layer landing at
-charter build-order step 4. The dependency is recorded in both directions here so neither spec
+Ordering: this spec is built at charter build-order step 4b (`project-charter.md`, its build
+order and AC12), after artifact verification, whose verdicts it consumes, and after the step 4a
+interface re-open, and **before npm**, so every format from npm onward is built with enforcement
+on both paths from its first commit and any bend this spec forces in the handler interface lands
+before the measurement baseline rather than inside the Tier 1 series. `proxy-cache.md` lists
+supply-chain policy out of its own scope with the note that policy "needs this first", so this
+spec's proxied phase depends on the proxy layer landing at step 4, which precedes it. The dependency is recorded in both directions here so neither spec
 discovers it has no counterparty. The proxy layer also lands the first half of the
 security-signal rule this spec shares with it (Design, below): the condemnation record, the
 refusal before any upstream fetch, and the upstream channel as the record's first source. This
 spec adds the advisory feed as the second channel rather than building a second mechanism. The
 same recording obligation applies to the conformance harness: AC2 needs a case that provisions
-a policy rule and a controlled advisory source, and `conformance-harness.md`'s case `setup`
-currently provisions only repositories, tokens and upstreams, so that spec needs a matching
-extension before AC2's case can be expressed. A conformance case may not depend on the live
-feed's contents, or it fails and passes on somebody else's publishing schedule.
+a policy rule and a controlled advisory source. `conformance-harness.md`'s closed `setup`
+vocabulary already defines the two keys, `policies` and `advisories`, with this spec named as
+where they land (its resolved closed-vocabulary decision), and its runner rejects them as "not
+yet landed" until then. Building both provisioners on the harness's seed path is therefore this
+spec's work, not the harness's (Phase 3), and AC2's case is expressed through them. A
+conformance case may not depend on the live feed's contents, or it fails and passes on somebody
+else's publishing schedule.
 
 A third dependency is forward rather than backward: signature and attestation state is consumed
 here as a verdict and produced by a sibling spec,
@@ -337,7 +344,9 @@ before the producer is written rather than shaped by it.
       the refusal, not only by an integration test reading our own response.
 - [ ] AC2: The same artifact arriving through the **proxied** path is refused identically, proven
       by a conformance case against a real client, using a case-controlled advisory source
-      rather than the live feed.
+      rather than the live feed, with the rule and the advisory provisioned through the
+      harness's `policies` and `advisories` `setup` keys, whose provisioners this spec
+      builds, so the runner no longer rejects either as not yet landed.
 - [ ] AC3: An artifact whose licence, as detected from its bytes, violates repository policy is
       refused, and one that does not is served, on both the hosted and proxied paths.
 - [ ] AC4: Policy evaluation happens in the shared layer and the policy layer stays off the
@@ -401,7 +410,7 @@ before the producer is written rather than shaped by it.
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
 | AC1 | integration + conformance | `internal/policy/vulnerability_test.go`, `conformance/oci/policy_test.go` (hosted mode) |
-| AC2 | conformance | `conformance/oci/policy_test.go` (proxied mode) |
+| AC2 | conformance | `conformance/oci/policy_test.go` (proxied mode; rule and advisory through the `policies` and `advisories` keys); `conformance/core/seed_test.go` (both provisioners reached through the seed path) |
 | AC3 | integration | `internal/policy/licence_test.go` (both paths, licence detected by the cataloguer) |
 | AC4 | architecture test | `internal/policy/arch_test.go` (both import directions) |
 | AC5 | integration | `internal/policy/audit_test.go` (including post-eviction, post-purge and stale-feed records) |
@@ -433,8 +442,9 @@ rule's second channel on the proxy layer's condemnation record.
 
 ### Phase 3: The proxied path
 Enforcement on cache misses and refusal before any upstream fetch, the scan-window setting on the
-proxy's waiter path, `streamed` rule rejection, the offline-mode feed behaviour, and conformance
-cases on both paths.
+proxy's waiter path, `streamed` rule rejection, the offline-mode feed behaviour, the
+`policies` and `advisories` provisioners on the harness's seed path, and conformance cases on
+both paths.
 
 ## Tasks
 
@@ -716,5 +726,6 @@ surfaces, which is a product promise about what "attached policy" means.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review. Adopted Q1 (A: OSV, fail closed on stale data), Q2 (A: retroactive), Q3 (C: byte-level cataloguer in `internal/policy`, coordinate matching always on), Q4 (B: policy-enforcing `Deps` implementations returning a typed refusal) and Q6 (A: sibling `artifact-verification.md`, to be authored in the spec loop, with the verdict-source interface defined here). Q5 adopted as a new option D rather than its written recommendation B, recorded as such in its section: B would have narrowed `proxy-cache.md`'s owner-settled purge to refuse-and-retain, which the delegation may not reverse, so a security signal purges through either channel and every other condemnation is refused and retained; the security-signal rule is stated verbatim in both specs and adds no GC mark root, so `storage-and-gc.md` is untouched. Folding raised and adopted Q7 (no offline exemption from the staleness threshold; local OSV bulk import, freshness from the newest imported record) and Q8 (a rule that cannot bind is refused at configuration: `streamed` remotes, uncovered formats and ecosystems, signature rules before a verdict source). Body changes: Context gained the proxy-layer and verification dependencies; Scope and Out of scope rewritten; Design gained the advisory-feed section and the security-signal rule, and its evaluation-hook, inventory, GC and signature sections were rewritten from open tension to adopted design, including what each `Deps` call refuses. AC3, AC4, AC5, AC6 and AC7 rewritten; AC9-AC16 added with Test Plan rows; phases rewritten. |
+| 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the charter fold: Context's ordering paragraph now states the build at step 4b, after artifact verification and the step 4a re-open and before npm, per the charter's build order and AC12. From the harness and generic fold: the Context claim that `conformance-harness.md` provisions only repositories, tokens and upstreams and needs a matching extension was stale, since its closed vocabulary already defines `policies` and `advisories` as landing with this spec; rewritten, Phase 3 now builds both provisioners on the seed path, and AC2 asserts its case is provisioned through them. Found already consistent: the refusal type declared beside `Deps` in `internal/format` (now also stated in `format-handler-interface.md`), and no GC mark root added (now also placed in `data-model.md`'s non-root table). |
 | 2026-09-23 | d078c46 | first review: adversarial + constitution + cross-spec (proxy-cache's settled stream-and-verify, single-flight, serve-stale and security-purge decisions; data-model's opaque metadata typing; format-handler-interface's pinned five methods and `Scope(r)` precedent; storage-and-gc's four mark roots and eviction; auth's client-not-artifact boundary) + go-spec-reviewer; claim verification vacuous pre-code (no `internal/policy/` exists). The reviewer terminated on a spend limit before writing this row; it is recorded here from the diff | Three of `proxy-cache.md`'s settled decisions were shown to collide with cache-then-scan and the collisions stated rather than left for implementation: refuse-until-scanned is incompatible with streaming to the initiating client, the scan lands inside the coalescing latency bound every waiter shares, and serve-stale needs the advisory feed as its independent signal. Evaluation order on a miss derived (coordinate-decidable rules refuse before any upstream request, giving AC8: condemned content is neither fetched nor cached). The auth precedent this spec invokes was shown to be unearned - central evaluation needs a request-to-coordinate mapping no pinned method provides - raising Q4. Component inventory named as the central tension (Q3): the flagship first format is the one coordinate matching cannot see into. Two settled specs shown to disagree on one real event (purge versus refuse-and-retain), raising Q5. Signature state confirmed to have no producer in any spec, raising Q6 and explaining the deliberately absent AC. Policy records placed against the GC root set as explicitly not a root, so a refusal outlives the blob it condemned (AC5, AC7) and eviction cannot launder a condemned artifact. Scan failure separated from scan result (AC6). AC1/AC3/AC7 extended across both paths. Stays draft on Q1-Q6. |
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and only a consequential update: neither decision is this spec's. The GC-and-eviction section now says five enumerated roots (pointer-targeted snapshots became the fifth on 2026-09-26) and states eviction correctly under proxy-cache's answer - it drops the cached reference and the sweep reclaims the bytes, eviction itself deleting nothing - which leaves the digest-independence argument behind AC7 intact and if anything longer-lived. Q5 is left open and unanswered; only its option C wording was corrected, since the mark root quarantine would add is now a sixth rather than a fifth. This spec's position that policy records are not a root is unchanged. |

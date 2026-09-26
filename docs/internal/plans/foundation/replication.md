@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Folded 2026-09-26 at 4d1aeb1 under the owner's standing delegation: all seven questions adopted (follower-side gap detection and re-seed, read-only per-repository replicas, no virtual replication, freeze for proxied content across the gap, explicit takeover with acknowledged manual fencing, pull-scoped machine tokens, out-of-band manifest digest) plus three raised and adopted in the same pass (whole pointer set replicates, chained snapshot identity for divergence detection, freeze publishes through the hosted ingest path). 20 criteria, zero open questions. Stays draft pending a gate review and sibling amendments in auth.md, data-model.md and format-handler-interface.md."
+status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): Context now states the charter's placement (step 10, after Tier 1, not gated by the breadth verdict); this spec owns building the harness's replication setup provisioner (Phase 1, AC15 extended); the sibling amendments it asked for have landed in the specs (auth.md's pull widening, data-model.md's link, identity, freeze write kind and provenance, format-handler-interface.md's reserved non-colliding mount, AC18 extended), leaving only the server-side ingest hook pending at the interface re-open; freeze of a signed-index format is re-signed by the shared signing service. Earlier: all seven questions adopted under the owner's standing delegation plus Q8-Q10. 20 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for replicating content between registry instances - geo-distribution, disaster recovery and air-gapped mirroring - built on the content-addressed store and immutable snapshots."
 author: michielvha
 goal: "Let one logical registry span sites, so a build pulls locally and an air-gapped environment can be fed a verifiable snapshot."
@@ -25,9 +25,12 @@ is discharged and the remaining reason to wait was
 build effort, which is no longer a constraint (`project-charter.md`, the standing scope
 decision).
 
-Replication has no step of its own in the charter's build order, and this spec does not invent
-one: where it lands in the sequence is set by `project-charter.md`, which owns the build order.
-The phases below sequence the work inside this spec only.
+Where it lands in the sequence is set by `project-charter.md`, which owns the build order: **step
+10, after Tier 1 completes, and not gated by the breadth verdict**, because replication transfers
+snapshots of every format generically and its hardest cases need formats that already exist -
+mutable metadata (npm, PyPI) and signed indexes (Debian, RPM), where a follower must serve
+indexes it did not sign. Replication is not breadth, so a `shrink` verdict at step 8 does not
+cancel it. The phases below sequence the work inside this spec only.
 
 Three use cases, in descending order of how well the existing model serves them:
 
@@ -258,13 +261,19 @@ exactly like any other publish:
 - **Only cached content freezes.** Freeze does not crawl an upstream: files known only through
   `RemoteFile` rows, and anything served `streamed`, are not in the cache and are reported as
   excluded. Warming the cache on the connected side is the operator's workflow.
+- **A signed-index format is re-signed, by the shared service.** Because the target handler
+  renders the frozen repository's metadata, a frozen Debian or RPM repository serves indexes
+  signed by the shared signing and index service (charter step 7) under this instance's key,
+  never by the handler and never with the upstream's signature. Freeze adds no signing of its
+  own, and archive signing, if the owner ever reverses the archive trust-root decision below,
+  belongs to that same service.
 
 Freeze needs a way to drive a handler's hosted ingest from blobs already in the store, which the
 pinned five-method interface (`format-handler-interface.md`) does not offer: its hosted writes
 arrive over HTTP. The hook's shape is therefore an addition argued at that spec's scheduled
 re-open, and the freeze phase below is sequenced after it. The freeze write kind and its
-provenance record are likewise the shared data model's to define (`data-model.md` owns the
-entities); this spec states what they must do.
+provenance record are likewise the shared data model's to define, and `data-model.md` now does
+(its "Replication's records" section and AC30); this spec states what they must do.
 
 ### A follower's GC is the same GC, and replication is a second writer into its CAS
 
@@ -388,7 +397,9 @@ instance identity: the leader's authorizer sees a token like any other.
   them. The replication package declares its own route-to-scope mapping, evaluated by the
   central authorizer, and an architecture test asserts that every replication route is mapped
   and that none evaluates authorization itself (AC18). This is the named enforcer the
-  constitution requires of a shared boundary.
+  constitution requires of a shared boundary. The routes mount under a first path segment
+  `format-handler-interface.md`'s registration layer holds as reserved, so no handler's
+  format-first mount or root-anchored claim can collide with them (its AC11).
 
 The accepted cost is that `pull` widens: any pull-scoped CI token can enumerate snapshot history
 and read deltas, and so can reach content that a hosted delete removed from the head but that
@@ -499,7 +510,10 @@ printed.
 - [ ] AC15: A freeze of a remote repository, exported and imported into an isolated instance
       running in offline mode, serves the frozen content to the ecosystem's real client there
       with no network between the instances, and the frozen files' provenance is readable from
-      the importing instance's API.
+      the importing instance's API; the case declares the two instances network-isolated in the
+      harness and provisions its repositories and links through the harness's `replication`
+      `setup` key, whose provisioner this spec builds, so the runner no longer rejects that key
+      as not yet landed.
 - [ ] AC16: Takeover refuses to run without the operator's explicit fencing acknowledgement, with
       a refusal naming the duty; with it, the repository stops replicating, accepts writes, its
       next write creates the snapshot numbered one past the last replicated snapshot and chained
@@ -515,8 +529,9 @@ printed.
       it (push-only, or scoped to another repository) and a `pull` grant narrowed below the
       whole repository are refused on every replication route with the response an
       unauthorized caller receives; and an architecture test asserts every replication route
-      is mapped to a scope evaluated by the central authorizer and that no replication route
-      evaluates authorization itself.
+      is mapped to a scope evaluated by the central authorizer, that no replication route
+      evaluates authorization itself, and that every replication route sits under the reserved
+      mount registration refuses to handlers.
 - [ ] AC19: Export prints its manifest digest; import refuses to start without a manifest digest
       argument, refuses with nothing committed when the digest does not match the archive's
       manifest, and refuses an archive whose manifest was rewritten with every internal digest
@@ -545,25 +560,29 @@ printed.
 | AC12 | architecture | `internal/replication/arch_test.go` (replica write capability held only by the applier) |
 | AC13 | integration | `internal/replication/source_test.go` (remote and virtual sources refused; follower-defined virtual resolution) |
 | AC14 | integration | `internal/replication/freeze_test.go` (table-driven over every handler declaring proxy support; network-level no-egress assertion; sweep-before-commit fault) |
-| AC15 | conformance | `conformance/replication/freeze_airgap_test.go` (two instances, no network between them, offline mode, real client) |
+| AC15 | conformance | `conformance/replication/freeze_airgap_test.go` (two network-isolated instances, offline mode, real client, links through the `replication` key); `conformance/core/seed_test.go` (the `replication` provisioner reached through the seed path) |
 | AC16 | integration | `internal/replication/takeover_test.go` |
 | AC17 | integration | `internal/replication/divergence_test.go` (post-takeover split brain; leader restored from backup) |
 | AC18 | integration | `internal/replication/auth_test.go` (pull, push-only, other-repository and pattern-narrowed tokens on every replication route) |
-| AC18 | architecture | `internal/replication/arch_test.go` (every replication route mapped through the central authorizer) |
+| AC18 | architecture | `internal/replication/arch_test.go` (every replication route mapped through the central authorizer and mounted under the reserved segment) |
 | AC19 | fault injection | `internal/replication/airgap_trust_test.go` (missing digest, wrong digest, rewritten self-consistent manifest) |
 | AC20 | integration | `internal/replication/pointers_test.go` (create, promote, rollback, delete; pin release on the follower) |
 
 ## Implementation Phases
 
 ### Phase 0: Sibling prerequisites
-Not work in this spec's package, but it gates Phase 1: `data-model.md` gains the replication link
-entity and the retained snapshot identity record, and `auth.md` records that `pull` authorizes
-the replication read surface and that a pattern-narrowed grant does not. Phase 4 additionally
-waits on the freeze write kind and provenance record in `data-model.md` and the ingest hook at
-`format-handler-interface.md`'s scheduled re-open.
+Not work in this spec's package, but it gates Phase 1. Status at the 2026-09-26 reconciliation:
+`auth.md` records that `pull` authorizes the replication read surface and that a
+pattern-narrowed grant does not (its section "What `pull` also authorizes: replication reads",
+done); `data-model.md` defines the replication link, the retained snapshot identity, the freeze
+write kind and the provenance record (its AC29 to AC31, done in the spec, built in its Phase 5);
+`format-handler-interface.md` reserves a non-colliding mount for the replication routes (its
+AC11, done). Still pending: the server-side ingest hook, a named input to that spec's scheduled
+re-open, which Phase 4 waits on.
 
 ### Phase 1: Pull replication
-Snapshot-range transfer with want-list blob fetch, checkpoint-based seed and re-seed, snapshot
+The harness's `replication` `setup` provisioner on the seed path, including a taken-over starting
+state, so every later phase's conformance cases can be expressed. Snapshot-range transfer with want-list blob fetch, checkpoint-based seed and re-seed, snapshot
 identity and divergence refusal, pointer-set mirroring, digest verification, atomic pointer
 moves, resume, read-only enforcement on replicas with its architecture test, replication
 authentication with its route mapping and architecture test, source-type refusal, and the
@@ -843,3 +862,4 @@ and whether freeze waits on an interface re-open.
 | 2026-09-23 | d078c46 | first review: adversarial + constitution + cross-spec (data-model's delta/checkpoint representation and repository types, storage-and-gc's four mark roots and single-writer machinery, auth's missing instance identity) + go-spec-reviewer; claim verification vacuous pre-code (no `internal/replication/` exists) | Transfer unit corrected for the delta-plus-checkpoint representation (contiguous deltas vs checkpoint-based seed, reconstructibility on the follower), follower GC bound to all four roots and the shared reference-creation and intent machinery, remote repositories excluded as sources, follower retention clock and served-snapshot protection stated, archive contiguity/atomicity/idempotence specified; AC2 moved to fault injection and made consistent with AC3, AC5 hardened, AC7 extended to the fourth root and transfer interleavings, AC8-AC10 added; Q3-Q7 raised (virtual repositories, air-gapped proxied content, DR promotion, instance-to-instance auth, archive trust root); stays draft |
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and this spec is only a consequential update: the decision's home is `storage-and-gc.md`. Context, the follower-GC bullet and AC7 carried from four mark roots to five. The fifth root does cover a follower: a replication pointer targets a snapshot exactly as an environment pointer does, so the follower's served snapshot and its reconstruction chain are exempt from the follower's own pruning while targeted, which turns the previously replication-local 'the served snapshot is never pruned' rule into an instance of the shared root, released when replication advances the pointer. Scoped explicitly to the follower's store: what a leader may prune while a follower is behind is Q1, which the root set does not answer and which stays open along with Q2-Q7. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a gate review. Adopted Q1 A (leader prunes consulting no follower; follower detects the gap from the leader's advertised retained ranges and re-seeds, fetching blobs by want-list so held blobs are never re-sent), Q2 A (read-only replicas, per-repository roles, mixed-role instances; options table written first, the question had none), Q3 A (virtual and remote sources refused; followers compose their own virtuals), Q4 B (freeze: one publish of cached content into a local repository, provenance not as `RemoteFile`, never contacts upstream), Q5 A (per-repository takeover command gated on an explicit fencing acknowledgement, numbering and identity continue), Q6 A (ordinary machine token, `pull` authorizes the replication read surface; derived: a pattern-narrowed `pull` does not), Q7 A (mandatory out-of-band manifest digest at import). Folding exposed three judgment calls, raised and adopted as Q8 A (the whole pointer set replicates, not only the head, which the spec's single-number tracking had silently assumed), Q9 A (chained per-snapshot identity retained past pruning, so a split brain or restored leader is detected rather than applied) and Q10 A (freeze publishes through the hosted ingest path and the handler renders metadata). Body rewritten through Context (build order deferred to the charter), Scope, every Design section (new: pointer set, identity, read-only, freeze, takeover, authentication; retention section rewritten to the adopted option), and Phases (Phase 0 sibling prerequisites; Phase 3 is now takeover, Phase 4 freeze). AC1, AC2, AC5-AC10 rewritten to assert the adopted behaviour (AC6 no longer an either-or); AC11-AC20 added, each with a Test Plan row, AC18 with two. Sibling amendments needed in `auth.md`, `data-model.md`, `format-handler-interface.md` and, text only, `storage-and-gc.md`; none made here. Stays draft. |
+| 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the charter fold: Context's claim that replication has no build-order step was stale; it now cites step 10, after Tier 1, not gated by the breadth verdict, with the charter's reason. From the harness and generic fold: this spec owns building the harness's `replication` provisioner, now Phase 1's first item and asserted through AC15, whose case declares its two instances network-isolated and offline. From the auth and interface fold: Phase 0 records the sibling amendments as landed (auth's replication-read widening; data-model's link, identity, freeze write kind and provenance, applied in the same reconciliation; the interface's reserved mount, now cited in the authentication section and asserted by AC18's architecture test), with the server-side ingest hook the one remaining prerequisite, pending at the interface re-open. From the replication fold's signing note: a frozen signed-index repository is re-signed by the shared signing and index service, and any future archive signing belongs there too. Freeze's metadata sentence updated now that `data-model.md` defines the write kind. |

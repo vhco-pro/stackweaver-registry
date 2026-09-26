@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Q4 adopted 2026-09-26 under the owner's standing delegation (a closed setup vocabulary owned here, with the policy, advisory and replication keys pre-listed), plus Q5 exposed by the fold and adopted the same way (setup applied by the server binary's seed subcommand through the shared layers). Folded through Scope, Design, Phases and AC15, with AC17 to AC20 added so setup and the replay-match exemption rendering are asserted. Zero open questions; stays draft, since adopting a recommendation is not a gate review."
+status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): external-suite skips (the OCI suite's g.Skip) are improper unless they match the format spec's machine-readable exception list, with the issue-number, structural-partner and passing-entry rules (AC21); the per-format auth case-set rule now requires a pattern-refusal case in both modes and credentials entries express patterns and the multi-repository opt-in (AC22); instances can be declared network-isolated for replication's air-gap case and the replication key carries a taken-over starting state, its provisioner built by replication.md; management triggers come from script and effects from state or the trigger (no new keys). Earlier: Q4 and Q5 adopted under the owner's standing delegation. Zero open questions; stays draft pending a gate review."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -125,7 +125,12 @@ code. Roughly:
   it, and AC3 asserts its guarantee under exactly that reuse
 - `instances`: optional; a case defaults to one server instance and may instead declare
   several named ones (and, once `replication.md` lands, the replication links between them),
-  so a flow can publish to one instance and pull from another
+  so a flow can publish to one instance and pull from another. A set of instances may also be
+  declared **network-isolated**: the runner then gives them no network path to one another, so
+  the case's `script`, which reaches each, is the only channel between them, and each may be
+  started in offline mode through its configuration. That is the shape an air-gapped transfer
+  needs (`replication.md` AC15: an archive exported on one side, carried by the script, and
+  imported on the other with no network between them)
 - `setup`: what to provision on the server side before the client runs, in the closed
   vocabulary defined in the next section and nowhere else (the resolved decision that the
   vocabulary is closed, below)
@@ -134,6 +139,24 @@ code. Roughly:
   a required HTTP transcript shape
 - `skip`: when present, **must** carry an issue number. A bare skip is a silent regression and
   the runner rejects it.
+
+**Skips inside an external suite.** A case source this harness does not write - the official
+`opencontainers/distribution-spec` suite is the first - can skip cases from inside its own
+control flow (`g.Skip`), where no `skip` field exists to carry an issue number. Such a skip is
+**improper**, and fails the run under AC9, unless it matches an entry in the owning format
+spec's exception list, which the runner reads from that list's machine-readable copy under
+`conformance/<format>/`, never from a second hand-kept list. The rules are the ones
+`formats/oci.md` settled for its list (its resolved conformance-exceptions decision, was Q4),
+applied here as runner behaviour for every external source:
+
+- every entry carries an issue number, and an entry without one fails the run;
+- a **structural** entry names its partner case and holds only if that partner ran and passed in
+  the same run, so an exception can never hide the behaviour its pair exists to test;
+- an entry whose case ran and passed fails the run, so the list only shrinks by evidence and
+  never quietly outlives its cause;
+- a skip or failure that matches no entry fails the run.
+
+AC21 asserts the four rules against fixture suite results.
 
 ### The `setup` vocabulary
 
@@ -145,12 +168,12 @@ input language grow wherever a consumer happens to need it.
 | Key | Provisions | Schema of an entry | Lands with |
 |---|---|---|---|
 | `repositories` | Repositories on an instance | The `Repository` entity of `data-model.md`: format, type (`local` / `remote` / `virtual`), visibility, virtual member order, the named upstream binding of a `remote`, and the repository metadata document verbatim | Phase 2 (with generic) |
-| `credentials` | The identities the script presents: none, a token scoped to named repositories and actions, or a deliberately wrong scope | The token scope of `auth.md` | Phase 2 (with generic) |
+| `credentials` | The identities the script presents: none, a token scoped to a repository and actions, each scope optionally narrowed by a pattern, a token spanning several named repositories under `auth.md`'s explicit multi-repository opt-in, or a deliberately wrong scope | The token scope of `auth.md`, patterns and the multi-repository opt-in included | Phase 2 (with generic) |
 | `upstreams` | Named upstreams a `remote` repository binds to | A stand-in (an image by digest, or a harness fixture server) **and** the identity of the real service it stands in for; see "Upstream bindings" | Phase 2 (with generic) |
 | `state` | Content and state already on the server when the client starts: packages, versions and files with fixture bytes, plus the metadata documents at the levels the data model defines | Shared-model entities, with fixture bytes named by path inside the case directory and metadata documents carried verbatim | Phase 2 (with generic) |
 | `advisories` | A case-controlled advisory source, never the live feed | The advisory-source format of `supply-chain-policy.md` | `supply-chain-policy.md` |
 | `policies` | Supply-chain policy rules on named repositories | The policy-rule configuration of `supply-chain-policy.md` | `supply-chain-policy.md` |
-| `replication` | Replication links between the case's named `instances` | The replication-link configuration of `replication.md` | `replication.md` |
+| `replication` | Replication links between the case's named `instances`, and a replica's starting state: an active link, or a repository already taken over (its fencing acknowledgement given) so a post-takeover case starts there | The replication-link and takeover configuration of `replication.md`; the no-network pair its air-gap cases need is expressed by declaring those instances network-isolated, not by this key | `replication.md`, which builds this key's provisioner |
 
 Every entry may name the instance it targets; a case declaring a single instance omits it. The
 keys the siblings' provisioners have not yet landed are in the table now rather than added
@@ -215,26 +238,38 @@ implementation discovers it has no counterparty:
 
 - **Per-format auth cases are a validator rule, not only a sibling's criterion.** `auth.md` AC8
   and `format-handler-interface.md` AC7 both require every format's case set to contain
-  unauthenticated and unauthorized cases in both modes, and both map that enforcement to this
-  harness's case-set validation (`conformance/core/case_validate_test.go`). The schema expresses
-  such a case as a `credentials` entry that provisions no credential, or a wrongly-scoped one,
-  plus an `expect` of denial.
+  unauthenticated, unauthorized and pattern-refusal cases in both modes, and both map that
+  enforcement to this harness's case-set validation (`conformance/core/case_validate_test.go`),
+  which AC22 asserts from this side. The schema expresses such a case as a `credentials` entry
+  that provisions no credential, a wrongly-scoped one, or one patterned to a single named
+  object and presented against another, plus an `expect` of denial.
 - **Supply-chain policy refusals are conformance cases on both paths.** `supply-chain-policy.md`
   AC1 and AC2 assert a policy refusal against a real client, hosted and proxied alike. The case
   provisions the rule through `policies` and the controlled advisory through `advisories`, and
   the proxied variant binds its upstream to a stand-in serving the affected artifact.
 - **Replication scenarios need more than one instance.** `replication.md`'s follower scenarios
   cannot be expressed in a single-server case; the `instances` declaration and AC16 exist for
-  them, and the links between the instances are the `replication` key, whose provisioner lands
-  with that subsystem.
+  them, and the links between the instances are the `replication` key, whose provisioner
+  `replication.md` builds. Its air-gap case (AC15 there) declares the two instances
+  network-isolated and in offline mode, and its takeover cases start from a `replication` entry
+  naming a repository already taken over.
 - **The nightly real-upstream job reuses these suites.** `proxy-cache.md` AC15 runs the proxied
   suites against the real preconfigured upstreams; the run-selected upstream binding above is
   what lets it do so without the case body changing, and AC19 asserts it.
-- **Management effects are asserted from pre-provisioned state.** A yanked file or a deprecated
-  version is provisioned through `state`, so the effect a resolving
-  client observes is a full-strength conformance case whether or not a management endpoint
-  exists (the hosted yank, unpublish and version-deletion surface questions in `pypi.md`,
-  `npm.md` and `ansible-collections.md` decide whether one does).
+- **Management triggers come from `script`, effects from `state` or the trigger.** The hosted
+  management operations are settled as registry-owned endpoints in `pypi.md`, `npm.md` and
+  `ansible-collections.md` (their resolved management-surface decisions), so a case wanting
+  trigger and effect together calls the endpoint from its `script` and then runs the real
+  client (`pypi.md` AC12 and AC13, `npm.md` AC17, `ansible-collections.md` AC12), while a case
+  wanting only the effect seeds the post-operation state through `state` - a yanked file, a
+  deprecated version, a deleted version with its retirement set carried verbatim in the
+  package-level document. `setup` never calls a management endpoint, whatever surface
+  exists.
+- **Galaxy's namespace and signature cases fit the vocabulary as it stands.**
+  `ansible-collections.md` AC10 presents a token patterned to one namespace (`alpha/**`)
+  through a `credentials` entry, and its AC11 binds its upstream to a stand-in fixture server
+  serving a collection signed with a fixture key through `upstreams`, the keyring import being
+  client-side in the `script`. Neither needs a new key.
 
 ### The recording proxy, and why it is the real leverage
 
@@ -323,7 +358,9 @@ an acceptance criterion rather than a design note.
 - [ ] AC16: A case declaring several server instances gets each provisioned with the same
       per-case isolation guarantees, and the script reaches every instance the case names,
       demonstrated by a two-instance case whose write to one instance is not observable on the
-      other.
+      other; and two instances declared network-isolated have no network path to each other
+      while the script still reaches both, demonstrated by a connection from one instance to
+      the other failing in the same case.
 - [ ] AC4: Client containers are pinned by digest; a case referencing a mutable tag fails
       validation before it runs.
 - [ ] AC5: The runner rejects any `skip` that does not carry an issue number.
@@ -382,6 +419,18 @@ an acceptance criterion rather than a design note.
       availability `none` as exempt, citing the format's spec, never as passing and never as missing; a format with no
       corpus and no such declaration renders as missing. Proven by the matrix generator over
       three fixture formats, one per outcome.
+- [ ] AC21: A skip reported from inside an external case source fails the run unless it matches
+      an entry of the owning format's machine-readable exception list under
+      `conformance/<format>/`; the run also fails when an entry lacks an issue number, when a
+      structural entry's partner case did not run and pass in the same run, and when a listed
+      case ran and passed. Proven by fixture suite results, one per rule, plus one fully
+      matching run that passes.
+- [ ] AC22: The runner rejects a format's case set that lacks an unauthenticated, an
+      unauthorized or a pattern-refusal case in any mode the format supports, with an error
+      naming the missing kind and mode, and a `credentials` entry provisions a pattern-scoped
+      token and a multi-repository opt-in token that are then authorized exactly as `auth.md`
+      defines: the patterned token refused outside its pattern, the opt-in token honoured on
+      both named repositories and refused on a third.
 
 ## Test Plan
 
@@ -402,17 +451,20 @@ an acceptance criterion rather than a design note.
 | AC13 | unit + integration | `conformance/record/redact_test.go` (allowlist, corpus rejection), plus a recording session in `conformance/record/proxy_test.go` carrying a credential in a non-permitted header, per the criterion's own proof |
 | AC14 | integration | `conformance/record/stateful_replay_test.go` (OCI chunked-upload corpus; a minimal chunked-upload fixture server stands in until the OCI handler exists, as AC2's broken-handler fixture already does) |
 | AC15 | integration | `conformance/record/seeded_replay_test.go` (pull-flow corpus; missing-declaration fixture) |
-| AC16 | integration | `conformance/core/topology_test.go` |
+| AC16 | integration | `conformance/core/topology_test.go` (including a network-isolated pair) |
 | AC17 | unit | `conformance/core/case_validate_test.go` (misspelt-key, not-yet-landed-key and valid fixtures) |
 | AC18 | integration + architecture test | `conformance/core/seed_test.go` (a `state`-seeded generic artifact fetched by `curl`, and a fixture handler whose version metadata flag changes what the client receives); `conformance/core/arch_test.go` (seed-path imports) |
 | AC19 | integration | `conformance/core/upstream_binding_test.go` (one case file, two fixture upstream servers, plus the missing-stand-in rejection) |
-| AC20 | unit | `conformance/core/matrix_test.go` (passing, exempt and missing fixture formats) |
+| AC20 | unit | `conformance/core/matrix_test.go` (passing, exempt and missing fixture formats); shared with `format-handler-interface.md` AC13, which asserts the same rendering from the `Capabilities()` side |
+| AC21 | unit | `conformance/core/external_skip_test.go` (fixture suite results: unlisted skip, entry without an issue, structural entry whose partner failed, listed case that passed, a fully matching run) |
+| AC22 | unit + integration | `conformance/core/case_validate_test.go` (case sets missing each auth case kind in each mode); `conformance/core/seed_test.go` (patterned and multi-repository `credentials` entries) |
 
 ## Implementation Phases
 
 ### Phase 1: Core runner
-- Case schema (including the isolation declaration and multi-instance topology), validation,
-  digest pinning, skip-requires-issue
+- Case schema (including the isolation declaration and multi-instance topology with
+  network-isolated instance sets), validation, digest pinning, skip-requires-issue, and the
+  per-format auth case-set rule (AC22)
 - The closed `setup` vocabulary and its first validation layer (unknown key versus
   not-yet-landed key), and run-selected upstream bindings
 - Server lifecycle with per-case isolation
@@ -432,14 +484,15 @@ an acceptance criterion rather than a design note.
   starting-state seeding
 
 ### Phase 4: Official suites and reporting
-- OCI distribution-spec suite as a case source
+- OCI distribution-spec suite as a case source, with external-suite skips matched against the
+  format's machine-readable exception list (AC21)
 - Matrix generation, including the replay-match column and its declared exemption, and the CI
   staleness gate
 - Scheduled latest-client drift job
 
 After these phases the `advisories`, `policies` and `replication` provisioners land with
-`supply-chain-policy.md` and `replication.md`, each switching its key from "not yet landed" to
-provisioned. Any key beyond the table is a revision of this spec and its re-review, per the
+`supply-chain-policy.md` and `replication.md`, which own building them, each switching its key
+from "not yet landed" to provisioned. Any key beyond the table is a revision of this spec and its re-review, per the
 resolved decision that the vocabulary is closed.
 
 ## Tasks
@@ -595,3 +648,4 @@ question in `formats/npm.md`.**
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous: pre-implementation tree, stub `main.go` only) | Added mode-coverage, drift-job and credential-redaction ACs (AC11-AC13); named TLS interception and stateful-replay request correlation as design constraints; raised Q1 (CI trigger policy) and Q2 (corpus refresh policy); stays draft. |
 | 2026-09-23 | 9c971d4 | cross-spec consistency (generic proxy exemption) | Corrected Phase 2 to use generic's hosted cases and explicitly test its unsupported proxy declaration, matching AC11 and the format spec; status remains draft pending its existing gate review. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review: adoption and fold. Q4 adopted as option B (closed vocabulary owned here) with the known sibling needs pre-listed as keys (`repositories`, `credentials`, `upstreams`, `state` provisioned from Phase 2, since the seed path writes through shared layers that land with generic; `advisories`, `policies`, `replication` waiting only on their provisioners), two-layer pre-run validation that tells a typo from a not-yet-landed key, and entry shapes other specs own validated by the seed path's dry run. Folding exposed Q5 (how `setup` is applied), adopted as the server binary's seed subcommand writing through the shared-layer calls, which is what makes state no client can trigger (a yanked file, a policy rule, a replication link) provisionable with no management API, per `management-surfaces-and-the-oracle.md`. Design gained the vocabulary table, the seed path, run-selected upstream bindings (proxy-cache AC15) and the rule that a corpus's starting state uses the same vocabulary; the sibling-requirements list now maps each sibling to its key; trust-store injection moved out of `setup` to the client side. AC15 rewritten onto the vocabulary and seed path; AC17 (closed validation), AC18 (state no client triggered, through the shared write path, with an architecture test), AC19 (run-selected upstream binding) and AC20 (matrix renders a declared replay-match exemption as exempt, from generic's adopted replay-match exemption) added with Test Plan rows. `setup` is no longer unasserted. |
+| 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the data-model and OCI fold: external-suite skips are improper under AC9 unless they match the owning format spec's exception list, read from its machine-readable copy under `conformance/<format>/`, with every entry needing an issue number, a structural entry holding only while its partner ran and passed in the same run, and an entry whose case passed failing the run (new Design paragraph, AC21). From the auth and interface fold: the per-format auth validator rule now names the pattern-refusal case in both modes, the `credentials` key's schema expresses a pattern and `auth.md`'s multi-repository opt-in (AC22 asserts both). From the replication fold: an air-gapped pair is declared by marking instances network-isolated and offline (AC16 extended), and the `replication` key carries a taken-over starting state; its provisioner is `replication.md`'s to build. From the format-management fold: the sibling-requirements list now says management triggers are called from `script` (pypi AC12 and AC13, npm AC17, ansible AC12), effect-only cases seed through `state`, ansible AC10 uses a pattern-scoped `credentials` entry and AC11 a signed fixture stand-in in `upstreams`; no new keys, and the stale sentence treating those management surfaces as undecided was rewritten. From the generic fold: AC20's Test Plan row records that `format-handler-interface.md` AC13 shares `conformance/core/matrix_test.go`. Phases 1 and 4 updated. |

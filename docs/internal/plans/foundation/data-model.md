@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Folded 2026-09-26 at 4d1aeb1 under the owner's standing delegation: Q15 adopted (the in-flight membership check is repository-scoped) and, because it was the third collision of one root cause, one definition of an upload session and the upload scope written into Design for every consumer to cite; the new Q16 adopted (session lifetime defaults, one hour idle and 24 hours absolute). AC18 rewritten, AC26 and AC27 added; the mark-root set is unchanged. Zero open questions; stays draft until a gate review."
+status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): gained the records sibling specs adopted and needed from the shared model, so no subsystem grows its own table. Each version's last completed write time and core-parsed retention rules on Repository (for generic's retention pass), the Operation entity (for Galaxy import tasks and the prototype's deferred half), replication's link, chained snapshot identity, freeze write kind and per-file provenance, the rule that a Package outlives its versions (the retirement sets depend on it), and the policy layer's records placed outside the model. None adds a GC mark root; the set stays five, each record placed against it in a new Design table. AC28-AC34 added with Test Plan rows, Phases 1, 2 and 4 extended and Phase 5 added; the 31 figures corrected to 33. Zero open questions; stays draft until a gate review."
 description: "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies."
 author: michielvha
 goal: "Make breadth affordable by giving all 33 ecosystems one metadata schema, so a format is parsing plus routes rather than a bespoke database design."
@@ -21,7 +21,7 @@ affordable, and it did not exist until the prior-art survey showed why it has to
 ## Context
 
 The specs as originally written left metadata storage to each format handler. Across 33
-ecosystems that reproduces 31 bespoke schemas, 31 sets of migrations, and 31 different answers to
+ecosystems that reproduces 33 bespoke schemas, 33 sets of migrations, and 33 different answers to
 "what does it mean for a version to exist" - which is the opposite of the modularity the project
 depends on.
 
@@ -73,7 +73,9 @@ remote modelling together.
   added to this list on 2026-09-26, when the owner settled that a pointer-targeted snapshot -
   plus the checkpoint-and-delta chain that reconstructs it - is exempt from retention pruning
   while targeted. The set is this spec's to amend, so any further change lands here as a
-  revision of this list, never as a sibling-side extension.
+  revision of this list, never as a sibling-side extension. The records later added for
+  sibling subsystems (below) add none: each is placed against the set explicitly in Design,
+  "Records that are not mark roots".
 
 - **The snapshot dimension**: every completed logical write - a publish, a hosted delete, a
   metadata-only mutation - produces an immutable repository snapshot, stored as a delta with
@@ -82,6 +84,14 @@ remote modelling together.
 - **The one definition of an upload session and of the upload scope**, including the session
   lifetime, which every spec that keys a mechanism on upload state uses rather than restating
   (the Design section "Upload sessions and the upload scope").
+- **Records the sibling subsystems need from the shared model**, added 2026-09-26 by the Wave 1
+  reconciliation so that no subsystem grows a table of its own: each version's last completed
+  write time and core-parsed retention rules on `Repository`, for `formats/generic.md`'s
+  retention pass; the `Operation` entity, for asynchronous and long-running operations
+  (`formats/ansible-collections.md`'s import tasks and the write-triggered services
+  prototype's deferred half); and replication's records (`replication.md`): the replication
+  link, the per-snapshot chained identity, the freeze write kind and the per-file provenance
+  record. Plus one rule the management operations depend on: a `Package` outlives its versions.
 
 **Out of scope**
 
@@ -93,17 +103,21 @@ remote modelling together.
 
 | Entity | Owns | Notes |
 |---|---|---|
-| `Repository` | name, format, **type** (`local` / `remote` / `virtual`), visibility, metadata document | The unit of RBAC. A `remote` carries exactly one upstream; a `virtual` carries an ordered member list |
-| `Package` | name, format, metadata document | One per package name per repository |
-| `Version` | version string, format-specific metadata document | Metadata is a JSON document the handler reads and writes; the core never interprets it |
+| `Repository` | name, format, **type** (`local` / `remote` / `virtual`), visibility, metadata document, retention rules | The unit of RBAC. A `remote` carries exactly one upstream; a `virtual` carries an ordered member list. Retention rules are configuration the core parses, never part of the opaque document ("Retention rules and a version's write time") |
+| `Package` | name, format, metadata document | One per package name per repository. **Outlives its versions**: removing every version leaves the row and its package-level document in the head ("A package outlives its versions") |
+| `Version` | version string, format-specific metadata document, last completed write time | Metadata is a JSON document the handler reads and writes; the core never interprets it. The write time is core-maintained and queryable |
 | `File` | filename, relative path, digest | Links a version to blobs; multiple files per version is the norm (wheel plus sdist, jar plus pom plus sources) |
 | `Blob` | digest, size | Content-addressed. Deduplicated across every format and repository |
 | `Upstream` | URL, credential ref, download policy, adapter type | Bound one-to-one to a `remote` repository. Rotating a credential touches one row |
 | `VirtualMember` | virtual repository ref, member repository ref, position | The ordered aggregation. Position **is** the resolution order; there is no separate failover field anywhere |
 | `Reference` | from version, to version, relation (for example OCI's `subject`) | A format-agnostic edge the core can traverse without parsing handler metadata. GC marks through it; the OCI referrers API is one indexed query over it |
 | `RemoteFile` | `Upstream` ref, upstream path, last-checked | An upstream source for a file, retained when the file gains a local blob so revalidation and failover keep their provenance |
-| `Snapshot` | monotonic number, repository, delta (membership plus all three metadata levels), checkpoint marker | Immutable. Exactly one per completed logical write; cache materialisation never creates one |
+| `Snapshot` | monotonic number, repository, delta (membership plus all three metadata levels), checkpoint marker | Immutable. Exactly one per completed logical write; cache materialisation never creates one. On a replica the numbers are the leader's |
 | `Pointer` | name, repository, target snapshot | What a serving URL resolves through. Several per repository: one tracks the newest snapshot, others are environments repointed by promotion and rollback |
+| `SnapshotIdentity` | repository, snapshot number, delta digest, predecessor identity, identity | The chained identity `replication.md` compares to detect a divergent history. One per snapshot, **never pruned**, references no blob |
+| `ReplicationLink` | local repository ref, leader URL, leader repository name, credential ref, status, last successful sync, takeover record | Makes a `local` repository a replica. The credential reference resolves in the same store as upstream credentials. At most one active link per repository |
+| `FileProvenance` | file ref, source remote repository, upstream URL and path, fetch time | Where a frozen file came from. Distinct from `RemoteFile`: it is a record, never an upstream source the model fetches from |
+| `Operation` | repository ref, format, kind, wire id, state, created and finished times, initiating principal, authorizing scope, result document, produced snapshot ref | An asynchronous or long-running operation's record. **Not repository content**: in no snapshot, untouched by repointing and rollback, pruned after a window |
 
 **Opaque metadata hangs at all three levels.** `Repository`, `Package` and `Version` each carry a
 metadata document the core never parses, so a handler stores state at whichever level the
@@ -313,7 +327,9 @@ no client can ever see, and `storage-and-gc.md`'s rule that hosted deletes recla
 through retention pruning assumes the delete left the head snapshot. Each handler's spec
 declares where its ecosystem's write boundaries fall - which requests complete a publish, and
 which bulk operations (a cleanup deleting many versions) group into one write rather than many -
-and that declaration is a review item. A **proxied repository creates no snapshots at all**:
+and that declaration is a review item. `formats/generic.md` was the first spec to make it,
+including a retention pass over one repository as one write however many versions it removes,
+and a freeze (below) is one write however many files it copies. A **proxied repository creates no snapshots at all**:
 content arriving by sync or on demand is cache materialisation, not a write.
 
 Serving always resolves through a `Pointer`. Every repository has a default pointer that
@@ -373,6 +389,140 @@ repository's own in-flight upload records under the upload scope (see "Upload se
 upload scope" and "Reads from in-flight publish state" above). It is narrow on purpose: a digest
 read asks whether exactly these bytes exist, which no snapshot answers differently, and it never
 reaches another repository's records.
+
+### A package outlives its versions
+
+Removing a version never removes its `Package`. A completed write that removes a package's last
+version leaves the `Package` row and its package-level metadata document in the head snapshot,
+and every later snapshot carries them forward until a write changes them. How a handler renders
+a package with no versions (npm serves it as absent, Galaxy answers 404 for the collection) is
+wire format and the handler's; whether the row exists is not.
+
+The rule exists because three format specs keep a **retirement set** in the package-level
+document: PyPI's deleted filenames (`formats/pypi.md`), npm's unpublished `name@version`
+coordinates (`formats/npm.md`) and Galaxy's deleted versions (`formats/ansible-collections.md`),
+each retired forever so a coordinate binds one set of bytes for the life of the repository. A
+package that vanished with its last version would take its retirement set with it and silently
+re-open every retired coordinate to a new upload. This spec guarantees only that the row and
+its document survive the removal of every version; carrying the set forward in the write that
+removes a version is the handler's and the management surface's. One interaction is named
+rather than left to be found: a pointer moved backwards restores the package-level document of
+an older snapshot (AC13), which can predate a retirement, so any operation that moves a default
+pointer backwards must preserve the retirement set, an obligation that belongs to the
+management surface spec owed as `foundation/management-api.md` rather than to the snapshot
+mechanism here (AC33).
+
+### Retention rules and a version's write time
+
+`formats/generic.md` settled retention policies as a shared, format-agnostic pass in
+`internal/retention`, and that pass can only read what the core parses, so two things live in
+the shared model rather than in any handler's document:
+
+- **Retention rules on `Repository`**, as core-parsed configuration beside visibility, never
+  inside the opaque repository metadata document. A rule has a kind (`age` or `count`), its
+  parameter (a duration or a number of versions) and an optional filter naming at most a
+  package, or a package and a version. A rule whose filter reaches below a version is refused
+  when it is configured, because retention deletes whole versions. What the rules mean and how
+  several combine is `formats/generic.md`'s; the shape they are stored in is this spec's.
+- **Each version's last completed write time**, maintained by the core and queryable through
+  the metadata store: the time of the most recent completed write that touched any of the
+  version's files. Only a completed write advances it; cache materialisation, a read and a
+  request that writes nothing (generic's idempotent same-content upload) never do.
+
+A retention pass is an ordinary completed write that ends references by writing a snapshot, so
+it adds no mark root and deletes no object: space returns through snapshot pruning and the
+sweep, which is why "keep 7 days" frees its space after roughly 37 under the default snapshot
+retention window (AC28).
+
+### Operations
+
+An `Operation` records work a client or an operator started and may observe finishing later: a
+Galaxy import task (`formats/ansible-collections.md`, its resolved import-task-record decision,
+was Q6), the write-triggered services prototype's deferred import, and any later asynchronous or
+long-running operation. It is format-agnostic and, like everything here, owned by the core:
+
+- **Fields.** The repository it acts on; the format and a kind (the handler's name for what the
+  operation does); a wire identifier, generated unguessably from `crypto/rand` with at least
+  128 bits, which is what a client polls by; a state; created and finished times; the
+  initiating principal; the scope the originating write was authorized under (action and
+  addressed object, per `auth.md`); a **result document** the handler writes and the core never
+  parses, as with every metadata document; and a reference to the snapshot it produced.
+- **State is monotonic.** `pending`, then `running`, then exactly one terminal state,
+  `completed` or `failed`; a state may be skipped but never revisited, and a terminal state
+  never changes.
+- **It is not repository content.** No snapshot delta contains an operation, no repoint or
+  rollback changes one, and creating or finishing one is never by itself a completed logical
+  write, so a failed operation creates no snapshot.
+- **Its terminal transition commits atomically with the snapshot it produces.** The snapshot
+  reference is set only on `completed`, in the same transaction as the snapshot, so there is
+  never a snapshot whose operation reads unfinished or a completed operation with no snapshot.
+- **It is pruned after a configurable window** counted from its finished time; a read of a
+  pruned or unknown identifier answers as not found, which Galaxy's client already reads as
+  "not yet". An unfinished operation is never pruned.
+- **Reading it requires the originating write's authorization**, evaluated against the scope
+  it recorded, so an operation identifier is not a side channel into another principal's work.
+
+It must exist before the write-triggered services prototype's asynchronous half (its Phase 4)
+and before `formats/ansible-collections.md`'s Phase 1. The prototype then tests whether this
+shape fits a genuinely deferred import (its question 6), and the charter's step 6a builds the
+production asynchronous-operation subsystem on it; a change the prototype forces comes back to
+this spec as a revision (AC32).
+
+### Replication's records
+
+`replication.md` transfers snapshots between instances and settled what that requires of the
+shared model (its Phase 0). Four additions, none of them format-specific:
+
+- **The replication link.** A `local` repository with an active `ReplicationLink` is a replica:
+  the link names the leader's URL, the leader's repository name, a credential reference that
+  resolves in the same store that holds upstream credentials (so rotating it touches one row
+  and it is never logged), a status (`active`, `failed`, `reseeding`, `diverged`), the time of
+  the last successful sync, and, once an operator takes the repository over, the takeover
+  record: the leader, the snapshot number and identity it took over at, and when. A link
+  attaches only to a `local` repository, and a repository has at most one active link. **Snapshot
+  numbers on a replica are the leader's**, since nothing else writes there, and a takeover's
+  next write is numbered one past the last replicated snapshot, so the sequence simply
+  continues (AC31).
+- **The chained snapshot identity.** Every snapshot has a `SnapshotIdentity`: the digest, under
+  the store's digest algorithm, of its number, its delta's digest and its predecessor's
+  identity, the same construction as a git commit, with no key and no signature. The record is
+  **never pruned**: pruning drops checkpoints and deltas, never the identity, so any two
+  positions stay comparable after any amount of pruning. The delta digest inside it is a hash
+  recorded for comparison, not a CAS reference, so it dangles once the delta is pruned and GC
+  never reads it (AC29).
+- **Freeze, a write kind whose content comes from a cache.** A freeze publishes the content a
+  `remote` repository has cached with a local blob into a `local` repository as **one completed
+  logical write**, producing exactly one snapshot there however many files it copies, through
+  the target handler's hosted ingest path and the shared reference-creation call. The frozen
+  files hold ordinary published references in the target, so they fall under the first mark
+  root and survive a later eviction of the source cache. No `RemoteFile` row is created in the
+  target, because a `RemoteFile` is an upstream source the model fetches from, and a frozen
+  repository must never contact an upstream. The semantics of the operation (what freezes, what
+  is excluded, how a swept source fails it) are `replication.md`'s; this spec defines only that
+  it is a write kind of the shared model (AC30).
+- **Per-file provenance.** Each frozen file gets a `FileProvenance` record written in the same
+  completed write: the source remote repository, the upstream URL and path, and when the cached
+  copy was fetched. It is immutable, readable from the API, carried in export archives with the
+  file it describes, and holds a URL rather than a digest, so it references no blob.
+
+### Records that are not mark roots
+
+The shared model holds several kinds of record that mention content without keeping it alive,
+and each is placed against the root set here rather than left to be discovered by a sweep. None
+adds a mark root; the set stays at the five in Scope.
+
+| Record | Why it is not a root |
+|---|---|
+| `SnapshotIdentity` | Its delta digest is a comparison hash, not a CAS reference; it must outlive the content it describes |
+| `ReplicationLink` | References a credential and a leader, no content |
+| `FileProvenance` | Holds an upstream URL and path, no digest; the frozen file's own published reference is what keeps its blob live |
+| `Operation` | A pending operation's uploaded bytes are protected only by the repository-scoped grace, the same way any committed-but-unreferenced blob is ("Upload sessions and the upload scope"); whether a pending import can outlive that grace is the write-triggered services prototype's question 5, and a gap it finds is a revision request to `storage-and-gc.md` and this set, never an operation-side pin. A produced-snapshot reference does not protect the snapshot from pruning |
+| Retention rules | Reference no content at all |
+| The policy layer's records: condemnation records, scan results, the component inventory index and refusal records (`supply-chain-policy.md`) | Owned by `internal/policy`, outside the format entity model, and keyed by digest and coordinate as audit provenance that must outlive the artifact: a refusal stays explainable after the blob is gone, and a policy record that pinned its blob would make refused malware uncollectable. They are the core-owned records the resolved metadata-typing decision below anticipated as "a separate index built later", so no handler owns them either |
+
+Each of these tolerates a dangling digest or snapshot reference by design. AC34 proves the
+table: a blob mentioned only by these records is collected, and each record stays readable
+afterwards.
 
 ## Acceptance Criteria
 
@@ -465,6 +615,49 @@ reaches another repository's records.
       sweep run after the grace period has elapsed with no other activity, provided a session
       opened there is still inside its idle window, and becomes collectable once that session
       expires and the grace then lapses.
+- [ ] AC28: A repository's retention rules are stored as core-parsed configuration outside its
+      opaque metadata document, each with a kind (`age` or `count`), its parameter and an
+      optional filter naming at most a package or a package and a version, and a rule whose
+      filter reaches below a version is refused at configuration; every version's last
+      completed write time is readable through the metadata store and advances on each
+      completed write touching any of its files and on nothing else - not on cache
+      materialisation, a read, or a request that writes nothing.
+- [ ] AC29: Every snapshot has a `SnapshotIdentity` equal to the digest of its number, its delta's digest
+      and its predecessor's identity; after pruning removes a snapshot's delta and checkpoint
+      its identity record is still present and still compares equal to an independently
+      recomputed chain; and on a replica the snapshot numbers and identities are the leader's,
+      with the first write after a takeover numbered one past the last replicated snapshot and
+      chained to its identity.
+- [ ] AC30: A freeze of a remote repository's cached content into a local repository is one
+      completed logical write: exactly one snapshot is created in the target however many
+      files it copies, each frozen file holds a published reference made through the shared
+      reference-creation call and a `FileProvenance` record naming its source remote repository,
+      upstream URL and path, and fetch time, no `RemoteFile` row exists in the target
+      repository, and after the source cache's entries are evicted and swept the frozen files
+      and their provenance are unchanged and still served.
+- [ ] AC31: A `ReplicationLink` attaches only to a `local` repository, at most one active link per
+      repository, carrying the leader URL, the leader repository name, a credential reference
+      that resolves in the upstream-credential store and a status; rotating that credential
+      changes exactly one row; and a takeover records the leader, the snapshot number and
+      identity, and the time it took over at.
+- [ ] AC32: An `Operation`'s state moves only forward through `pending`, `running` and one
+      terminal state, and a terminal state never changes; its produced-snapshot reference is set
+      only on `completed`, committed atomically with that snapshot (a fault injected between
+      them leaves neither), and a failed operation creates no snapshot; no snapshot's content
+      set contains an operation and a repoint or rollback changes none; its wire identifier
+      carries at least 128 random bits; it is pruned only after finishing plus the configured
+      window, after which reading it answers not found; and reading it is refused to a
+      principal lacking the authorization its originating write was granted under.
+- [ ] AC33: Removing every version of a package, by one write or several, leaves the `Package`
+      row and its package-level metadata document in the head snapshot and in every later
+      snapshot until a write changes them, and they survive pruning of every snapshot in which
+      a version existed.
+- [ ] AC34: No record listed in "Records that are not mark roots" keeps a blob alive, and each
+      outlives the blob it mentions: a blob whose only mention is a `SnapshotIdentity`'s delta
+      digest, a `FileProvenance` record, an
+      operation's result document or produced-snapshot reference, a retention rule, or a policy
+      record is collected by the sweep once no mark root reaches it and its repository's grace
+      has lapsed, and each of those records is still readable afterwards.
 
 ## Test Plan
 
@@ -497,26 +690,42 @@ reaches another repository's records.
 | AC25 | integration | `internal/storage/retention_test.go` (checkpoint and delta dependency across pruning) |
 | AC26 | integration | `internal/storage/upload_session_test.go` (injected clock) |
 | AC27 | property | `internal/storage/gc_property_test.go` (open-session interleavings on an injected clock) |
+| AC28 | unit + integration | `internal/model/retention_config_test.go` (rule shape, refused deep filter, rules absent from the metadata document); `internal/model/write_time_test.go` (advanced by completed writes only) |
+| AC29 | integration | `internal/model/snapshot_identity_test.go` (recomputed chain across pruning; replica numbering and takeover continuation) |
+| AC30 | integration | `internal/model/freeze_test.go` (snapshot count, provenance fields, no `RemoteFile` in the target, source evicted and swept) |
+| AC31 | integration | `internal/model/replication_link_test.go` |
+| AC32 | integration + fault injection | `internal/model/operation_test.go` (transitions, atomic terminal commit under an injected fault, pruning window on an injected clock, authorization on read) |
+| AC33 | integration | `internal/model/snapshot_test.go` (last-version removal, later snapshots, pruning) |
+| AC34 | property | `internal/storage/gc_property_test.go` (blobs mentioned only by non-root records collected; records readable after) |
 
 ## Implementation Phases
 
 ### Phase 1: Core entities
 Repository, Package, Version, File, Blob, with opaque metadata documents at all three levels.
 The upload session record and its lifetime (AC26), and repository-scoped in-flight digest
-resolution under the upload scope (AC18).
+resolution under the upload scope (AC18). A package outliving its versions (AC33), each
+version's last completed write time and core-parsed retention rules on `Repository` (AC28).
 
 ### Phase 2: Snapshots and pointers
 `Snapshot` (deltas plus periodic checkpoints, capturing membership and metadata) and
 `Pointer`: the default always-advancing pointer, named environment pointers with the
 promotion, rollback and reach-reporting API (AC22, AC23), and the pointer-resolution
-architecture test.
+architecture test. The chained snapshot identity, written with every snapshot and never pruned
+(AC29).
 
 ### Phase 3: Remote modelling
 `Upstream`, `RemoteFile`, download policies, upstream failover.
 
 ### Phase 4: GC integration
 The cached, retained-snapshot and pointer-targeted-snapshot reference classes, the open-session
-hold on repository grace (AC27), and the property tests that police them.
+hold on repository grace (AC27), the records placed outside the root set (AC34), and the
+property tests that police them.
+
+### Phase 5: Records for sibling subsystems
+The `Operation` entity (AC32), which must land before the write-triggered services prototype's
+asynchronous half (its Phase 4) and before `formats/ansible-collections.md`'s Phase 1; and
+replication's replication link and freeze write kind with its provenance record (AC30, AC31),
+which must land before `replication.md`'s Phase 1 and Phase 4 respectively.
 
 ## Tasks
 
@@ -527,7 +736,9 @@ Populated by `/tasks` once this spec reaches `planned`.
 None are open. Q15 (raised by the 2026-09-24 gate review) and Q16 (raised while folding it)
 were adopted on 2026-09-26 under the owner's standing delegation and folded through Scope, the
 Design sections "Upload sessions and the upload scope" and "Reads from in-flight publish state",
-AC18, AC26, AC27, the Test Plan and Phases 1 and 4. Q1 through Q3 were answered on 2026-09-22
+AC18, AC26, AC27, the Test Plan and Phases 1 and 4. The records added the same day by the Wave 1
+reconciliation (AC28 to AC34) apply decisions adopted in sibling specs and raised no question
+here. Q1 through Q3 were answered on 2026-09-22
 and Q4 through Q14 on 2026-09-23.
 
 Resolved decisions are kept below rather than deleted, so the reasoning survives the next time
@@ -783,13 +994,20 @@ returns a JSON document it never interprets.
 Accepted cost: the core cannot query across formats, so features like "every artifact under this
 licence" need a separate index built later rather than falling out of the schema. That is the
 right trade: the core gaining knowledge of any single format's metadata shape is the first step
-back toward the 31 bespoke schemas this model exists to prevent.
+back toward the 33 bespoke schemas this model exists to prevent.
+
+Noted 2026-09-26 by the Wave 1 reconciliation: the separate index this anticipated now has an
+owner. `supply-chain-policy.md`'s component inventory, catalogued from artifact bytes by its
+shared cataloguer, is that index; it and the policy layer's other records are core-owned,
+outside the format entity model, and not mark roots (Design, "Records that are not mark
+roots").
 
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review. Adopted Q15 option A: the in-flight digest-read membership check is repository-scoped, so any principal authorized to pull from R resolves R's committed-but-unreferenced digests and none resolves them through another repository. Because this was the third collision of "a session the wire does not have" (after the grace period and `oci.md`'s session-lifetime question), wrote the single definition the triage asked for as a new Design section, "Upload sessions and the upload scope": an upload session is exactly one blob's upload into one repository, ended by commit or expiry; there is no push session and no mechanism may key on one or on the uploader's identity; anything spanning commit to reference is scoped to the repository; an open session holds its repository's grace open; a digest resolves in a repository only through that repository's own content. Adopted `oci.md`'s session-lifetime decision into that definition and raised and adopted Q16 for its defaults. Checked against `storage-and-gc.md`: its repository-scoped grace re-scoping is consistent with the definition; two gaps it cannot close itself are reported as sibling consequences (the open-session grace hold, and AC3's undefined session expiry). Changed: Scope, the new Design section, "Reads from in-flight publish state", the Snapshots carve-out, AC18 rewritten, AC26 (lifetime) and AC27 (open-session grace hold) added, Test Plan, Phases 1 and 4, the was-Q14 amendment note. The mark-root set is untouched: in-flight and mounted blobs are protected by grace, not by a root. Zero open questions. |
+| 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied every queued item targeting this spec. From `replication.md`: the `ReplicationLink` entity (leader URL, leader repository name, credential reference in the upstream-credential store, status, last sync, takeover record; local repositories only, one active link), the never-pruned `SnapshotIdentity` (its delta digest a comparison hash, not a CAS reference), freeze as a snapshot-creating write kind whose frozen files hold published references and no `RemoteFile`, the `FileProvenance` record, and replica numbering as the leader's with takeover continuing it. From `formats/generic.md`: core-parsed retention rules on `Repository` (kind, parameter, filter at most `{package}/{version}`) and each version's last completed write time; its write-boundary declaration noted as the first made. From the format-management fold: the `Operation` entity with monotonic state, immutable terminal states, an unguessable wire id, the authorizing scope recorded for reads, a terminal transition atomic with its snapshot, pruning after a window, and no snapshot-content role; and the rule that a `Package` outlives its versions, with the rollback-versus-retirement-set interaction named as the management surface's obligation. From `supply-chain-policy.md`: its condemnation, scan, component-inventory and refusal records placed outside the format entity model, and the metadata-typing record's anticipated index identified as its component inventory. From the charter fold: 31 bespoke schemas corrected to 33 (Context, the was-Q3 record). Mark-root check: none of the additions is a root, so nothing needed reporting; a new Design table places each record against the set and AC34 proves a blob mentioned only by them is collected. AC28-AC34 added with Test Plan rows; Scope, the entity table, Phases 1, 2 and 4 and a new Phase 5 updated. |
 | 2026-09-26 | 4548df3 | cross-spec correction during storage-and-gc's gate review | Not a review of this spec. The pin's release path had no producer: Design said "only a repoint or a pointer deletion releases it" and `storage-and-gc.md` AC18 tests pointer deletion, but this spec's pointer-management API surface offered only create, repoint and reach-reporting. Deletion of a named environment pointer added to that surface; the default pointer is not deletable, which is entailed rather than decided, since name-addressed serving resolves only through pointers and a repository whose default pointer could be deleted would stop serving name reads entirely. Q15 untouched and still open. |
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and this spec is not the decision's home - but it owns the mark-root set, so the amendment lands here. The 1701a48 gate review's prediction of what changes under Q10 option A was checked against the file rather than trusted, and all three items were real: the Scope liveness bullet (now five roots, the fifth being a snapshot a `Pointer` targets plus its reconstruction chain), the pruning-reconstructibility sentence in the Snapshots section (a checkpoint or delta survives while any snapshot that survives pruning depends on it, targeted or in-window) and AC25's notion of retained (now surviving, with a pointer-targeted out-of-window snapshot among the survivors). Also folded: the Design consequences bullet's four reference classes, a Snapshots-section paragraph defining the pin and its accepted cost, the was-Q5 record's amendment note, and Phase 4. AC23 was checked for contradiction and is not one: it refuses repointing **to** an untargeted out-of-window snapshot while the pin protects a snapshot already targeted from aging out, so protection attaches on targeting and is not retroactive - stated in Design and in AC23 itself. Q15 is untouched and still open. |
 | 2026-09-24 | 1701a48 | gate review: application check of all 14 resolved decisions + adversarial (OCI push flow vs the pointer model) + cross-spec in both directions against storage-and-gc, proxy-cache, replication, oci and supply-chain-policy + unpoliced-design-claim hunt + constitution + go-spec-reviewer; claim verification against code vacuous (the tree holds only a stub `cmd/stackweaver-registry/main.go`, no `internal/` exists); the terminated reviewer's three kept edits re-verified rather than trusted, all three sound | 12 of 14 decisions genuinely applied; two were half-applied and are now folded: the promotion scope-in had left Design's Snapshots section claiming a single always-advancing v1 pointer and no snapshot API while Scope, the entity table and AC22/AC23 said the opposite (Phase 2 also still built the v1 pointer, and no phase built promotion), and the fourth-mark-root resync had left the Design consequences bullet claiming a three-root sweep. Derived, not decided: hosted deletes and metadata-only mutations are snapshot-creating completed writes, entailed by pointer-only name serving plus immutable snapshots plus oci.md's content-management scope, folded into the Snapshots section, the Scope bullet, the Snapshot entity row and AC9. AC24 added (`immediate` was the only download policy no criterion anywhere exercised) and AC25 added (pruning reconstructibility was named by Design as what keeps the sweep sound and policed by no AC in this spec or the sibling). Supersession notes added to the was-Q2, was-Q4, was-Q7 and was-Q14 records; `Pointer` gained its repository ref; the root-set liveness bullet now names storage-and-gc Q10 as a pending amendment to the set this spec owns; one stale three-root remnant fixed in proxy-cache's resolved cache-location record. Coherence under the open sibling questions assessed: under storage-and-gc Q10 option A the liveness bullet, the pruning-reconstructibility sentence and AC25's notion of retained must widen to pointer-targeted snapshots, under B or C this spec stands as written; proxy-cache Q11 presupposes nothing here under either answer. One genuine defect found in a settled decision's mechanism and raised as Q15: the in-flight digest-read membership check is session-scoped, but OCI has no push session on the wire and the blob's upload session is closed before the client's HEAD arrives, so the check has nothing to key on - the same wire reality that re-scoped the grace period. Stays draft on Q15. |

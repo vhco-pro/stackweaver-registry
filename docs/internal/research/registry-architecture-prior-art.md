@@ -127,7 +127,10 @@ makes this a decision about interface *shape* today even if the boundary stays i
    artifact arrived. Adopt Pulp's `RemoteArtifact` concept and its three download policies.
 3. **A shared generic data model is the real enabler of breadth**, per Gitea. Our specs currently
    leave the metadata model to each handler, which would reproduce 31 bespoke schemas. That needs
-   a foundation spec of its own.
+   a foundation spec of its own. (Note, 2026-09-26: the figure is kept as written at the time of
+   this survey. The catalogue has since split its "Git-backed" label into the three wire
+   protocols it covered, so the target is now 33 protocol implementations and the equivalent
+   figure 33; `data-model.md` exists as the spec this point called for.)
 4. **Upstream adapters are a separate axis from format handlers**, per Harbor. Our `proxy-cache.md`
    does not currently distinguish them.
 5. **Signed-index formats are a distinct, expensive class**, per Gitea's 7 service-layer types.

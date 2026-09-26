@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Folded 2026-09-26 at 4d1aeb1: Q10, Q12 and Q13 adopted under the owner's standing delegation, so no question is open. Waiters are served from the CAS after the verified commit, with the coalescing timeout now a stall timeout; this layer detects security signals passively and never polls, the advisory feed in supply-chain-policy.md being the active channel; offline mode is one instance-wide switch. The security-signal rule is now stated verbatim here and in supply-chain-policy.md: the owner's purge stands for either channel and means ending cached references, with a condemnation record and refusal before any upstream fetch. AC5, AC11 and AC13 rewritten, AC17 and AC18 added, 18 criteria all mapped; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): Q14 raised and adopted under the owner's standing delegation to take ansible-collections' requested revision: galaxy.ansible.com joins the owner's preconfigured npm, PyPI and Docker Hub (an extension, not a reversal) and the nightly job gains its row when Ansible ships, while pub.dev and crates.io stay user-configured until their formats are authorized to build. Scope, the nightly section and AC15 updated, AC19 added (the fresh-install preconfigured set). Earlier: Q10, Q12 and Q13 adopted, Q11 answered by the owner. 19 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials."
 author: michielvha
 goal: "Deliver the one capability no free multi-format registry has, so the project is not a slower Gitea with fewer formats."
@@ -55,8 +55,10 @@ build reliability, egress cost and supply-chain control.
 - Resolution across several upstreams by aggregating their remote repositories in a `virtual`
   repository, whose member order is the resolution order. **Failover is not a field on any
   entity** (`data-model.md`, resolved upstream and repository structure).
-- Preconfigured upstreams: npm, PyPI and Docker Hub ship configured and enabled (the resolved
-  preconfigured-upstreams decision below).
+- Preconfigured upstreams: npm, PyPI, Docker Hub and galaxy.ansible.com ship configured and
+  enabled, each once its format ships (the resolved preconfigured-upstreams decision below, and
+  its extension to Galaxy in the resolved preconfigured-set extension). pub.dev and crates.io
+  stay user-configured until their formats are authorized to build.
 - Cache eviction: least-recently-used under a per-repository storage quota, ending the cached
   reference only. Eviction deletes no object; the deletion-intent sweep in `storage-and-gc.md`
   reclaims the blob, so the quota accounts referenced bytes rather than stored bytes (the
@@ -298,8 +300,9 @@ Two behavioural consequences follow, and they are Design-level rather than bookk
 
 The main conformance suite runs against local stand-ins; a separate nightly scheduled job runs
 the proxied suites against the real preconfigured upstreams (the resolved real-upstream
-decision), covering each of npm, PyPI and Docker Hub once its format ships - at build-order
-step 4 that is Docker Hub alone. A red nightly opens an issue carrying the failing evidence
+decision), covering each of npm, PyPI, Docker Hub and galaxy.ansible.com once its format ships -
+at build-order step 4 that is Docker Hub alone, and galaxy.ansible.com joins with Ansible
+collections at step 6a. A red nightly opens an issue carrying the failing evidence
 rather than only colouring a dashboard, because a scheduled job that can go quietly red is a job
 that gets ignored. This pairs with the client-drift job in `conformance-harness.md`. It does not
 conflict with offline mode, which is a deployment posture rather than a test environment:
@@ -376,8 +379,9 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       performed by eviction itself; the blob disappears only after the next sweep, and only if
       nothing referenced it again in the meantime.
 - [ ] AC15: The nightly real-upstream job runs the proxied suites of the shipped preconfigured
-      upstreams and opens an issue on failure, demonstrated by a manual dispatch against a
-      deliberately failing fixture.
+      upstreams - npm, PyPI, Docker Hub and galaxy.ansible.com, each from the release its
+      format ships in - and opens an issue on failure, demonstrated by a manual dispatch
+      against a deliberately failing fixture.
 - [ ] AC17: While a coalesced fetch is unverified, only the initiating client receives bytes:
       every waiter receives its first byte after the verified CAS commit and is served from the
       CAS, and a fetch that fails verification or is truncated gives every waiter an error with
@@ -386,6 +390,11 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       configured sync, a remote repository makes no upstream request across several metadata
       TTLs (asserted at the network layer), and an upstream security signal is acted on at the
       first revalidation that observes it.
+- [ ] AC19: A fresh installation with no operator configuration carries, for each shipped
+      format among npm, PyPI, OCI and Ansible collections, exactly one enabled remote
+      repository bound to that format's preconfigured upstream (npm's public registry, PyPI,
+      Docker Hub, galaxy.ansible.com), and none for any other format, pub.dev and crates.io
+      included.
 
 ## Test Plan
 
@@ -409,6 +418,7 @@ one direction only is how a Phase 4 discovers it has no counterparty.
 | AC16 | integration | `internal/proxy/eviction_test.go` (re-fetch between eviction and sweep, object-store delete assertion) |
 | AC17 | integration + fault injection | `internal/proxy/singleflight_test.go` (per-client byte timelines against the commit, corrupt and truncated upstream bodies) |
 | AC18 | integration | `internal/proxy/passive_detection_test.go` (injected clock across several TTLs with no traffic, network-level assertion, then one request revalidating into a signal) |
+| AC19 | integration | `internal/proxy/preconfigured_test.go` (fresh-install upstream set per shipped format) |
 
 ## Implementation Phases
 
@@ -429,7 +439,7 @@ is this layer's first proving ground, and npm at step 5 tests whether it general
   security-signal rule's upstream channel (the condemnation record, the purge as ending cached
   references, refusal before any upstream fetch, one alert per condemnation) with passive
   detection and its exposure stated in the operator documentation, divergence flagging, the
-  nightly real-upstream job
+  preconfigured upstream set (AC19), the nightly real-upstream job
 
 ## Tasks
 
@@ -437,7 +447,10 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None remain open. The 2026-09-23 review pass raised Q10 through Q13, each an interaction
+None remain open. Q14 was raised and adopted on 2026-09-26 by the Wave 1 reconciliation, under
+the owner's standing delegation, to take `ansible-collections.md`'s requested extension of the
+preconfigured set through this spec's own revision; the owner may reverse it. The 2026-09-23
+review pass raised Q10 through Q13, each an interaction
 between decisions that were settled individually. Q11 (eviction mechanics) was answered by the
 owner on 2026-09-26; Q10, Q12 and Q13 were adopted the same day under the owner's standing
 delegation and are reversible by the owner. All four are folded into Design, Scope, the
@@ -445,6 +458,41 @@ acceptance criteria and the Test Plan above. All earlier questions (Q1-Q9) were 
 owner and are folded into Design, Scope and the acceptance criteria above.
 Resolved decisions are kept rather than deleted, so the reasoning survives the next time someone
 asks why it was done this way.
+
+### Resolved: extending the preconfigured upstream set (was Q14, raised and adopted 2026-09-26)
+
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: galaxy.ansible.com joins
+the preconfigured, enabled-by-default upstreams, and the nightly real-upstream job gains its row
+when Ansible collections ships; pub.dev and crates.io stay user-configured until a `continue`
+breadth-gate verdict authorizes their formats to build, each then decided as its own extension.
+Folded into Scope, the nightly section, AC15 and the new AC19.
+
+This is an **extension of an owner decision, not a reversal**: the resolved preconfigured-upstreams
+decision below keeps npm, PyPI and Docker Hub exactly as the owner settled them. It was raised
+here because `ansible-collections.md` adopted adding galaxy.ansible.com (its resolved
+preconfigured-upstream decision, was Q4) and recorded the amendment as this spec's to make
+through its own revision, and because two Tier 2 specs deferred the same question to that
+revision: `pub.md` (its pub.dev decision) and `cargo.md` (its crates.io decision).
+
+**Recommendation:** A. The works-in-thirty-seconds argument that settled the trio applies with
+extra force to the one ecosystem where hosting alone differentiates, and Ansible collections is a
+Tier 1 format built at step 6a, so its upstream is certain to ship. pub.dev and crates.io are Tier
+2, behind charter AC9's breadth gate, so preconfiguring them now commits a support surface to
+formats that may never be built.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Add galaxy.ansible.com now; pub.dev and crates.io wait for their formats' build authorization** | The project's origin ecosystem caches in thirty seconds; the nightly job exercises the real upstream its proxied path was written against; no support surface for unbuilt formats | galaxy.ansible.com's rate limits and authentication quirks join the standing support surface; Flutter and Rust users configure their upstream by hand until a later extension |
+| **B. Add galaxy.ansible.com, pub.dev and crates.io now** | Every specced proxied path has a preconfigured upstream from its first release | Commits configuration and nightly rows to Tier 2 formats the breadth gate may park, and widens the support surface before any evidence says those formats ship |
+| **C. Keep the owner's trio unchanged** | No new support surface | Contradicts the adopted Galaxy decision, leaving Ansible collections' proxied path with no preconfigured upstream and no scheduled run against the real service |
+
+**Why this is yours:** it extends a set you settled, and the size of the standing real-upstream
+support surface is a product call.
+
+Accepted cost: one more real upstream in the support surface and the nightly job, and a
+first-run gap for pub and Cargo users until their formats are authorized. B lost because it
+spends support surface on formats that may be parked; C lost because it leaves an adopted
+sibling decision unapplied.
 
 ### Resolved: what coalesced waiters receive (was Q10)
 
@@ -639,7 +687,8 @@ cached reference, never the object, so the quota it enforces is measured in refe
 
 **Settled 2026-09-23: a separate nightly scheduled job.** The main conformance suite runs
 against local stand-ins; a nightly job exercises the real npm, PyPI and Docker Hub, pairing
-naturally with the client-drift job this project already specs.
+naturally with the client-drift job this project already specs. (Since 2026-09-26 also
+galaxy.ansible.com, per the preconfigured-set extension above.)
 
 Accepted cost: a break against a real upstream is found up to a day late, and nightly jobs are
 easy to start ignoring once they go red. A red nightly must therefore open an issue rather than
@@ -677,11 +726,15 @@ Accepted cost: their rate limits, authentication changes and protocol quirks bec
 surface. Each preconfigured upstream therefore needs conformance cases in proxied mode against
 the real service, not only against a local stand-in.
 
+Extended 2026-09-26, the owner's three unchanged: galaxy.ansible.com joins them (the resolved
+preconfigured-set extension above, was Q14, adopted under the owner's standing delegation).
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review. Adopted Q10 (B: waiters served from the CAS after the verified commit), Q12 (A: passive detection on revalidation, with `supply-chain-policy.md`'s advisory feed as the active channel the recommendation anticipated) and Q13 (A: instance-wide offline switch, which also suspends the advisory feed's network sync). Folded jointly with the resolved `supply-chain-policy.md` Q5, whose adopted answer keeps this spec's owner-settled purge for security signals from either channel: the security-signal rule is now stated verbatim in both specs, and Design says what purge means under the eviction-mechanics answer (every cached reference ends, the sweep reclaims the bytes, no object deleted by the purge, no mark root added, held by `storage-and-gc.md` AC15), with the condemnation record built here as the first source and consulted by fetch-and-cache before any upstream request. One derived change recorded in Design rather than raised: the coalescing timeout is a stall timeout, since waiters now wait for the full download. Scope, Out of scope, the integrity, coalescing, serve-stale, offline, removal and GC sections of Design, and Phases 1 and 3 updated; the was-Q7 record gained an outcome-unchanged extension note. AC5, AC11 and AC13 rewritten; AC17 (waiter byte timeline) and AC18 (no background polling) added with Test Plan rows. |
+| 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the format-management fold: `ansible-collections.md` adopted galaxy.ansible.com as a preconfigured upstream and left the amendment to this spec's own revision, and `pub.md` and `cargo.md` deferred pub.dev and crates.io to the same revision. Since that extends a set the owner settled (was Q3), it was written in decision shape and adopted as Q14 option A rather than edited in silently: galaxy.ansible.com joins, the owner's three are unchanged, and pub.dev and crates.io wait for their formats' build authorization. Folded through Scope, the real-upstream section, AC15 (the named set, each from its format's release), the new AC19 (fresh-install set per shipped format) with a Test Plan row, Phase 3, and extension notes on the was-Q3 and was-Q9 records. Not applied, since no queued item carries it: the Cargo yank row `formats/cargo.md` asks for in the upstream-removal table. |
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review: application of decisions already made. Q11 answered option A and folded before this record was written - the GC-interaction section now says eviction ends the reference and deletes nothing, so it is not a second deletion path and inherits `storage-and-gc.md` AC15's single-deleter boundary, and the two behavioural consequences are stated in Design rather than only in the resolved record: the quota accounts referenced bytes rather than stored bytes (so a repository is back within quota before the sweep frees the space, which AC14 now says), and a re-fetch between eviction and the sweep dedup-hits the still-present blob, which is also the ordering answer against a concurrent fetch. AC7 rewritten from 'never deletes a blob hosted content references' to 'deletes no object at all', since the old wording presumed eviction was a deleter; AC16 added for the evict-then-re-fetch window with an object-store delete assertion. Scope, Phase 3 and the was-Q8 record updated, and the four-root statements here (GC interaction, resolved cache-location) carried to five for storage-and-gc Q10. |
 | 2026-09-24 | d078c46 | cross-spec consistency (storage-and-gc's fourth mark root) | Not a review. The GC-interaction section still described a three-root sweep and credited cached references as the third root rather than the second. Corrected to the canonical four, and the fourth root's motivating case recorded here where it originates: a proxied repository's current index document is a CAS blob no `File` row references, and it produces no snapshots, so the current-document half of that root is all that protects it. Q11 remains open and still bears on the cached-reference root. |
 | 2026-09-24 | 1701a48 | cross-spec sync during data-model's gate review | Not a review. One three-root remnant survived the sync above, in the resolved cache-location record; corrected to the canonical four roots. |

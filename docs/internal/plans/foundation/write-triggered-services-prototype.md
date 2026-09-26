@@ -2,7 +2,7 @@
 description: "Defines the write-triggered services prototype that format-handler-interface.md AC8 names as an input to the scheduled interface re-open: what it must demonstrate for both classes its deciding record named (signed indexes, with Debian as the vehicle, and asynchronous operations, with a Galaxy-shaped publish-and-poll), and how anyone would know it succeeded."
 covers: []
 status: draft
-status_description: "2026-09-26 at 0dbca1f: Q1 adopted under the owner's standing delegation (B, extend to an async publish path) and folded. The prototype now has two halves, Debian signed indexes and a genuinely deferred Galaxy-shaped publish-and-poll on the shared Operation entity data-model.md must gain, with AC8-AC12 asserting the async half and AC7 requiring six answered questions. Never gate-reviewed; no open questions; stays draft."
+status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): the gate-size wording no longer carries a fragile count (the re-open blocks every Tier 1 format, of which the catalogue now lists nine), the Operation entity is cited as defined in data-model.md (its AC32) rather than owed, and Context names the re-open inputs as format-handler-interface.md AC8 now states them, both halves included. Earlier: Q1 adopted under the owner's standing delegation (B, extend to an async publish path), giving the Debian signed-index half and a Galaxy-shaped deferred publish-and-poll half, AC8-AC12 and six answered questions (AC7). Never gate-reviewed; no open questions; stays draft."
 author: michielvha
 goal: "Make the interface re-open's evidence concrete, so the decision on write-triggered services is argued from something built rather than from anticipation."
 priority: "high"
@@ -15,8 +15,11 @@ created: 2026-09-26
 ## Context
 
 `format-handler-interface.md` pinned its method set at five and scheduled a re-open after OCI,
-before any Tier 1 handler work. Its AC8 names three inputs to that re-open: the generic
-implementation, the OCI implementation, and **the Debian write-triggered services prototype**.
+before any Tier 1 handler work. Its AC8 names the inputs to that re-open: the generic
+implementation, the OCI implementation, **this prototype's finding on both of its halves** (the
+Debian-shaped signed-index half and the Galaxy-shaped asynchronous half), and further sibling
+evidence (the request-to-coordinate evidence, the server-side ingest hook, management
+dispatch).
 
 The prototype exists because of that spec's resolved write-triggered-services decision, which
 settled on 2026-09-23 that such services would not enter the interface immediately but would be
@@ -28,7 +31,7 @@ blind."
 **Nothing anywhere defines what the prototype is.** AC8 requires it, the charter's build order
 schedules it between steps 4 and 5, and the accepted cost of the decision is recorded, but no
 document says what it builds, what it must demonstrate, or how anyone would know it had
-succeeded. That is a named precondition for a gate that blocks six Tier 1 formats, and it is
+succeeded. That is a named precondition for a gate that blocks every Tier 1 format, and it is
 undefined. This plan closes that.
 
 This is not a Debian format spec, nor a Galaxy one. Debian delivery is charter build step 7 and
@@ -51,8 +54,8 @@ entity and names this prototype as what decides whether deferral is expressible.
 - A Galaxy-shaped asynchronous vehicle: enough of a Galaxy v3 publish, import poll and install to
   make a **genuinely deferred** import fire, where the publish request returns before the import
   has committed and a shared runner completes it, exercised by real `ansible-galaxy`. It stores
-  its task records in the shared model's `Operation` entity, which `data-model.md` must gain
-  before this half starts (the same entity `ansible-collections.md` requires).
+  its task records in the shared model's `Operation` entity, which `data-model.md` defines (its
+  "Operations" section and AC32) and must have built before this half starts (the same entity `ansible-collections.md` requires).
 - The three questions the re-open needs answered, and evidence for each.
 - Whether the shared layer or the handler owns the trigger, the regeneration and the signing key.
 - Whether the shared layer or the handler owns deferred work, and whether a pending import needs
@@ -276,7 +279,8 @@ Asynchronous operations:
 - Concurrency, the snapshot boundary, and the CAS-backed `Release` crossing the size threshold.
 
 ### Phase 4: The asynchronous half
-- Waits on the `Operation` entity in `data-model.md`. A minimal Galaxy-shaped publish, poll and
+- Waits on the `Operation` entity `data-model.md` defines (its AC32), built in that spec's
+  Phase 5. A minimal Galaxy-shaped publish, poll and
   install; deferral through a shared runner; then the hard cases: the snapshot boundary, crash
   recovery at each step, and a GC sweep while an import is pending. Record what was awkward.
 
@@ -311,7 +315,7 @@ path AC8 already blocks, for no evidence B does not also produce.
 
 Made consistent with `ansible-collections.md`, whose import-task decisions were adopted in the
 same pass (was Q1 and Q6 there): that format validates synchronously in v1 and keeps its task
-record in a shared `Operation` entity `data-model.md` must gain, and this half is what tells the
+record in a shared `Operation` entity `data-model.md` now defines, and this half is what tells the
 re-open, and then the charter's step 6a asynchronous-operation subsystem, whether deferral is
 expressible and what the entity must look like. The entity is a precondition of Phase 4 here and
 of Phase 1 there.
@@ -326,7 +330,7 @@ was raised. If the re-open is meant not to be blind, it is not obvious it should
 of what the decision named.
 
 **Recommendation:** B - extend this prototype with a minimal async publish path, because the
-re-open is a scheduled, one-time gate blocking six Tier 1 formats, and discovering mid-Tier-1 that
+re-open is a scheduled, one-time gate blocking every Tier 1 format, and discovering mid-Tier-1 that
 the interface cannot express an async import is exactly the contamination of the format-cost
 measurement that the write-triggered decision was taken to avoid.
 
@@ -336,7 +340,7 @@ measurement that the write-triggered decision was taken to avoid.
 | **B. Extend to a minimal async publish path** | The re-open sees both classes its decision named; the Galaxy import-task question gains evidence instead of waiting on a second re-open | A second vehicle to build, and the async path has no real-client oracle for the trigger, so its evidence is weaker in kind than the apt evidence |
 | **C. Split: a separate async prototype, also before the re-open** | Each prototype stays coherent, and the async one can be scheduled against whenever the async-model question is answered | Two gates before Tier 1 rather than one, and the schedule risk lands on the critical path that AC8 already blocks |
 
-**Why this is yours:** it sets how much evidence a one-time, six-format-blocking gate is required
+**Why this is yours:** it sets how much evidence a one-time gate blocking every Tier 1 format is required
 to have before it fires, and that is a sequencing and risk call rather than a technical one.
 
 ## Review Log
@@ -344,3 +348,4 @@ to have before it fires, and that is a sequencing and risk call rather than a te
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 0dbca1f | folding adopted recommendations under the standing delegation | Not a review: adoption and application of this spec's own recommendation, made consistent with `ansible-collections.md`'s import-task decisions adopted in the same pass. Q1 adopted as B: the prototype gains a genuinely deferred Galaxy-shaped publish-and-poll, driven by the real `ansible-galaxy`, storing task records in the shared `Operation` entity. Context, Scope (the async vehicle in; Galaxy format delivery and the production async subsystem out, both step 6a), Design (the second class rewritten as a design section with its collisions: the snapshot rule, GC grace for a pending import, the pinned method set, crash durability) and the finding's question list (three to six) folded. AC7 rewritten to six answers; AC8 (real-client publish and install against a deferred import, transcript proving deferral), AC9 (one snapshot on success, none on failure, atomic with the terminal state), AC10 (crash at each step), AC11 (GC sweep past grace while pending) and AC12 (architecture test: no handler-owned deferred work) added with Test Plan rows; Phase 4 added for the async half, the finding moved to Phase 5. The two citations of the Galaxy spec's since-resolved import-task question reframed as resolved. Stays draft. |
+| 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the charter fold: three places said the re-open blocks six Tier 1 formats, but Tier 1 now has nine rows (npm, PyPI, Ansible collections, Maven, Go modules, NuGet, Helm, Debian, RPM) and the re-open blocks any Tier 1 handler work, so each is rephrased without a count (Context, the Q1 recommendation and its why-yours line). From the format-management fold, as a consequence of `data-model.md` gaining the `Operation` entity in this same reconciliation: Scope, the was-Q1 record and Phase 4 cite the entity as defined there (its AC32, built in its Phase 5) rather than owed. Context's list of the re-open's inputs updated to what `format-handler-interface.md` AC8 now names, both halves of this prototype included. Not changed: `storage-and-gc.md` asks for a revision request only if AC11 here shows a pending import outliving the grace period, which is this prototype's finding to make. |

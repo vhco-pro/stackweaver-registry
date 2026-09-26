@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Fold 2026-09-26 at 4d1aeb1 under the owner's standing delegation: Q9 adopted (the re-open's evidence set gains the request-to-coordinate evidence, and must re-examine rather than inherit out-of-cycle amendments). auth.md's pattern decision made the second such amendment here: the pinned Scope type carries an addressed object (named, content-addressed or none); the method set stays at five. AC7 and AC8 extended, AC12 added; generic's parallel replay-exemption decision absorbed as a second Capabilities field and AC13 (now 13 criteria). Zero open questions. Stays draft pending a gate review."
+status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): the re-open's inputs and AC8 now name both halves of the write-triggered services prototype (Debian signed indexes, Galaxy-shaped async) and its six-question finding, plus two hook questions from siblings: a server-side ingest hook, which replication's freeze is blocked on, and management dispatch from management-api.md; shared-layer routes (replication, management) mount under reserved segments registration refuses to handlers (AC11 extended); the three policy-enforcing Deps calls return a typed policy refusal declared in internal/format, so handlers use errors.As without importing internal/policy (AC14 added, no method change); AC13 shares conformance/core/matrix_test.go with the harness; 31 corrected to 33. Earlier: Q9 adopted under the owner's standing delegation. 14 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross."
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
@@ -26,7 +26,7 @@ result.
 
 The metadata schema is **not** this spec's concern: it belongs to
 `docs/internal/plans/foundation/data-model.md`, which exists because leaving storage to each
-handler would reproduce 31 bespoke schemas. A handler is protocol translation over a shared
+handler would reproduce 33 bespoke schemas. A handler is protocol translation over a shared
 model, and that split is what makes "add a format" a bounded unit of work.
 
 Two constraints from the charter shape this:
@@ -58,8 +58,9 @@ Two constraints from the charter shape this:
 
 - Write-triggered shared services (signed-index generation, async import pipelines). Deferred
   by the resolved write-triggered services decision below: absent from the pinned method set,
-  and prototyped against Debian before the scheduled re-open so the re-open is not blind to
-  the expensive class.
+  and prototyped before the scheduled re-open in two halves, a Debian-shaped signed-index half
+  and a Galaxy-shaped asynchronous half (`write-triggered-services-prototype.md`), so the
+  re-open is not blind to either class.
 
 ## Design
 
@@ -117,12 +118,23 @@ Those dependency interfaces' signatures belong to the specs that own the layers;
 pins only that they arrive through `Deps` and that a handler holds no capability it was not
 handed.
 
+**Three of those entries are policy-enforcing**, per `supply-chain-policy.md`'s resolved
+evaluation-hook decision (was Q4 there): the metadata store's version resolution, the blob
+store's read by digest and the fetch-and-cache entry evaluate the repository's policy before
+returning content, and return a **typed policy refusal** instead of content when policy
+refuses. The refusal type is declared in `internal/format`, beside `Deps` and the consumer
+interfaces it carries, so a handler recognises it with `errors.As` and renders it in its
+protocol's own error shape without importing `internal/policy`, which that spec's AC4 forbids.
+No method changes: the refusal travels as an error value through calls the pin already has
+(AC14).
+
 Deliberately absent, not forgotten: lifecycle methods (`Init`, `Close`, health checks); a
 resolve/list/upload operation vocabulary, because those are protocol operations a handler
 serves over HTTP, which the HTTP-direct decision makes redundant as interface methods; and
 any per-request classification hook, because classification travels as an argument to the
 fetch-and-cache call per the proxied-miss decision. Additions ride the scheduled re-open,
-argued from two real implementations and the Debian prototype rather than from anticipation.
+argued from two real implementations and the write-triggered services prototype rather than
+from anticipation.
 The two exceptions, both to what `Scope(r)` carries and both forced by a sibling security
 decision rather than anticipated, are recorded below as out-of-cycle amendments.
 
@@ -186,6 +198,17 @@ discovery document needs anchoring, since its service entries can point back int
 format-first space. Root anchoring is therefore a declared `Mount` the registration layer
 validates, not an OCI if-statement in the router.
 
+**Shared-layer routes need mounts no handler can collide with.** Not every route belongs to a
+handler: `replication.md`'s replication read surface is mapped by the replication package
+under the central authorizer, and the registry-owned management API the format specs settled
+on (owed as `foundation/management-api.md`) is one API across formats rather than per-format
+routes. Each mounts under a **reserved** first path segment that the registration layer holds
+in a second explicit list beside the carve-out list, so the two kinds of mount can never
+overlap: registration refuses a handler whose `Name()` equals a reserved segment, and a
+root-anchored claim that falls under one, before the server serves any request (AC11). Which
+strings are reserved belongs to the specs that own those surfaces; that they are reserved, and
+held mechanically, is this spec's.
+
 The opinionated-client check on the settled scheme, at published-spec level and to be
 re-grounded in captured traffic when each format's spec is written: the Go module proxy
 takes an arbitrary base URL through `GOPROXY`, including a path; Debian apt takes an
@@ -234,10 +257,19 @@ from evidence, not a better guess now. Concretely:
 - **Blocked on it:** any Tier 1 handler work. npm is the format-cost baseline, and revising
   the interface mid-Tier-1 would contaminate the experiment's headline measurement, so the
   re-open lands first.
-- **Inputs:** the generic and OCI implementations, and the Debian write-triggered services
-  prototype (the resolved write-triggered services decision below). Per the resolved re-open
+- **Inputs:** the generic and OCI implementations, and the write-triggered services prototype
+  (the resolved write-triggered services decision below) with **both** its halves: the
+  Debian-shaped signed-index half and the Galaxy-shaped asynchronous half, answering the six
+  questions its finding records (`write-triggered-services-prototype.md`, "What the prototype
+  produces"). Two further hook questions arrive from siblings and are argued here rather than
+  inside their own specs, because each asks whether the pin must grow: **a server-side ingest
+  hook**, driving a handler's hosted ingest from blobs already in the store rather than from an
+  HTTP request, which `replication.md`'s freeze needs and which blocks its freeze phase; and
+  **management dispatch**, how a registry-owned management operation reaches the handler whose
+  document it changes given only the five pinned methods, which the management surface spec
+  owed as `foundation/management-api.md` must answer and feed here. Per the resolved re-open
   evidence decision below, also the **request-to-coordinate evidence**, because none of those
-  three would surface it: `auth.md`'s pattern-evaluation outcome, as the addressed-object
+  would surface it: `auth.md`'s pattern-evaluation outcome, as the addressed-object
   amendment actually behaved in the generic and OCI handlers; `supply-chain-policy.md`'s
   outcome on where central policy evaluation intercepts a request; and, recorded beside them as
   further evidence that the pin and the shared model were fixed before the formats that stress
@@ -281,7 +313,8 @@ AC8 makes this a criterion of this spec rather than an intention.
       missing resource, while the server log records the real cause.
 - [ ] AC11: Registration enforces the mount scheme mechanically: a handler declaring a
       non-root mount other than exactly `/{Name()}/`, or a root-anchored mount absent from the
-      registration layer's explicit carve-out list, fails registration before the server serves
+      registration layer's explicit carve-out list, or a `Name()` or root-anchored mount
+      colliding with a reserved shared-layer mount, fails registration before the server serves
       any request - proven by fixture handlers declaring each violation. (That a carve-out is
       also recorded in the claiming format's spec stays a review rule; the list is its
       mechanical shadow.)
@@ -308,16 +341,22 @@ AC8 makes this a criterion of this spec rather than an intention.
       `available`, and a format declaring `none` is rendered by the conformance matrix as
       exempt from replay-match citing its spec, never as passing - the same contract
       `conformance-harness.md` AC20 states from the matrix side.
+- [ ] AC14: The typed policy refusal is declared in `internal/format`, and a fixture handler that
+      imports nothing from `internal/policy` recognises it with `errors.As` when the
+      metadata-resolution, blob-read or fetch-and-cache call in its `Deps` returns it, while the
+      pinned method set is unchanged at five.
 - [ ] AC9: At the scheduled re-open, a depguard import allowlist for `internal/format/**` is in
       place, seeded from the generic and OCI handlers' actual import lists, and a fixture
       importing a third-party HTTP client fails `make verify`. Until then the residual bypass
       is accepted and named in the re-open's inputs.
 - [ ] AC8: Before any Tier 1 handler work begins, the scheduled re-open has run: this spec's
       Review Log carries the post-OCI re-open entry, and "The pinned method set" reflects its
-      outcome, re-affirmed or revised, with the generic and OCI implementations, the Debian
-      prototype and the request-to-coordinate evidence named in "The scheduled re-open" cited
-      as its evidence, and with an explicit verdict on each out-of-cycle amendment and on
-      whether the addressed object and the policy coordinate converge.
+      outcome, re-affirmed or revised, with the generic and OCI implementations, the
+      write-triggered services prototype's finding on all six of its questions (both the
+      signed-index and the asynchronous halves) and the request-to-coordinate evidence named in
+      "The scheduled re-open" cited as its evidence, and with an explicit verdict on each
+      out-of-cycle amendment, on whether the addressed object and the policy coordinate
+      converge, on the server-side ingest hook, and on management dispatch.
 
 ## Test Plan
 
@@ -333,8 +372,9 @@ AC8 makes this a criterion of this spec rather than an intention.
 | AC8 | manual | the re-open `/spec review` pass, recorded in this spec's Review Log before npm work starts |
 | AC9 | lint + unit | depguard allowlist in `.golangci.yml`; third-party-client fixture behind the `lintfixture` build tag, asserted by the same runner test as AC6 |
 | AC10 | unit + conformance | `internal/format/scope_test.go` (denial semantics plus the server-log assertion, which is not protocol-observable and so cannot live in a conformance case per `conformance-harness.md`'s observation rule); a deliberately unmapped route in `conformance/core/` asserting the response is indistinguishable from an unauthorized one |
-| AC11 | unit | `internal/format/register_test.go` (fixture handlers: wrong non-root prefix, unlisted root anchor) |
-| AC13 | unit | `internal/format/capabilities_test.go` (every registered handler's declaration: `none` for generic only); the matrix rendering itself is asserted by `conformance-harness.md` AC20's fixture formats |
+| AC11 | unit | `internal/format/register_test.go` (fixture handlers: wrong non-root prefix, unlisted root anchor, a `Name()` and a root anchor colliding with a reserved shared-layer mount) |
+| AC13 | unit | `internal/format/capabilities_test.go` (every registered handler's declaration: `none` for generic only); the matrix rendering itself is asserted in `conformance/core/matrix_test.go`, shared with `conformance-harness.md` AC20 |
+| AC14 | unit | `internal/format/policy_refusal_test.go` (fixture handler, fixture `Deps` returning the refusal from each of the three calls; import assertion that the fixture package does not import `internal/policy`) |
 | AC12 | unit | `internal/format/<name>/scope_test.go` per handler (route table covering every mount's routes and all three object kinds), with a shared helper in `internal/format/scope_test.go` that fails when a registered route is missing from the table |
 
 AC5's manual procedure: for each landing format, inspect the PR diff and record in the
@@ -344,16 +384,17 @@ route registration point; any other file is a finding against this spec.
 ## Implementation Phases
 
 ### Phase 1: Interface and registration
-- Interface definition, including the `Scope` type with its addressed object, route
-  registration, architecture tests
+- Interface definition, including the `Scope` type with its addressed object and the typed
+  policy refusal beside `Deps` (AC14), route registration with the carve-out and reserved
+  shared-mount lists, architecture tests
 
 ### Phase 2: Proven by two
 - Generic and OCI handlers, confirming the interface survives a trivial and a hard format
 
 ### Phase 3: The scheduled re-open
-- The Debian write-triggered services prototype, then the re-open review pass (AC8) over it,
-  the two Tier 0 handlers and the request-to-coordinate evidence, before any Tier 1 handler
-  work
+- The write-triggered services prototype, both halves, then the re-open review pass (AC8) over
+  its finding, the two Tier 0 handlers, the request-to-coordinate evidence, the server-side
+  ingest hook and management dispatch, before any Tier 1 handler work
 
 ## Tasks
 
@@ -507,6 +548,12 @@ remains when these services properly land. That is cheaper than discovering mid-
 interface cannot express them, which would contaminate the format-cost measurement. Folded
 into Scope (out of scope) and Phase 3, 2026-09-23.
 
+Extended 2026-09-26, the decision unchanged: the prototype's own resolved async-coverage
+decision (was Q1 in `write-triggered-services-prototype.md`, adopted under the owner's standing
+delegation) gave it a second, Galaxy-shaped asynchronous half beside the Debian one, because
+this record named async import tasks as the other class and Debian exercises only signed
+indexes. The re-open's inputs and AC8 name both halves and the six questions they answer.
+
 ### Resolved: the generic proxy exemption in the constitution (was Q5)
 
 **Closed 2026-09-22 as a documentation correction, not an owner decision.** The owner
@@ -573,3 +620,4 @@ fetch-and-cache obligation was corrected for.
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous pre-code; cross-spec citations checked instead) | Fixed internal contradictions (metadata ownership vs `data-model.md`, AC4 vs the generic exemption, a citation to a harness AC that does not exist); added AC6/AC7 because import-based architecture tests cannot hold the proxy and auth boundaries; raised Q1-Q5; stays `draft` |
 | 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (tree claim verification vacuous pre-code: the tree holds a stub `cmd/stackweaver-registry/main.go` only; cross-spec, catalogue and protocol claims checked instead) | All four folded decisions were recorded but unapplied to the body: pinned the method set into Design (the central artifact was still absent), rewrote the pre-decision declarative proxied-path prose to the handler-calls-fetch-and-cache flow, added Routing and registration with the Terraform root-anchor grounding, moved write-triggered services into Scope and Phase 3, added AC8 plus the re-open trigger and gate; corrected the stale claim that the harness spec lacks a mode-coverage AC (its AC11 is that AC); tightened AC6 to type-aware call-site enforcement with a fixture test; added the missing `## Tasks` section; raised Q6 (egress import allowlist); stays `draft` on Q6 |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation. Not a gate review | Adopted Q9 A: the re-open's named inputs now include the request-to-coordinate evidence (auth.md's pattern-evaluation outcome as the addressed object behaves in the generic and OCI handlers, supply-chain-policy.md's evaluation-hook outcome, and ansible-collections.md's async-import-task finding as further evidence the pin and model were fixed early), and the re-open must give an explicit verdict on each out-of-cycle amendment and on whether the addressed object and the policy coordinate converge. auth.md adopted its pattern question as "amend now" in the same pass, so the amendment is made and recorded as out of cycle, with why: the pinned `Scope` type gains an addressed object of three kinds (named, content-addressed, none), because the only other places a pattern could be evaluated - inside a handler, or per-format URL grammar in shared code - are both forbidden; the method set stays at five. `Scope(r)` itself relabelled as the first out-of-cycle amendment. Policy needs no amendment, since supply-chain-policy.md resolved its hook inside `Deps` in parallel; the citations were updated to that resolution. Criteria: AC7 extended with a runner-enforced pattern-refusal case; AC8 extended to the new inputs and verdicts; AC12 added (per-handler route table test of object reporting, missing routes failing) with a Test Plan row; Phases 1 and 3 updated. Q9's option B row corrected: both Tier 0 formats do exercise the field. The 2026-09-25 row's two sibling-question citations reworded to past tense, since both questions are now resolved; its meaning is unchanged. Also absorbed, because it landed in parallel and left this spec citing a resolved question as open: `formats/generic.md` adopted its replay-match exemption the same day, so `Capabilities()` gains reference-implementation availability, definition-of-done item 2 now states the exemption and its containment, and AC13 asserts it with a Test Plan row (now 13 criteria). Stays draft. |
+| 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the replication fold: the re-open's inputs gain the server-side ingest hook (driving hosted ingest from blobs already in the store, which `replication.md`'s freeze phase is blocked on), and shared-layer routes such as the replication read surface mount under reserved first segments held in a second registration list, so a handler's `Name()` or root-anchored claim colliding with one fails registration (Design, AC11 extended). From the supply-chain fold: the metadata-resolution, blob-read and fetch-and-cache entries in `Deps` are policy-enforcing and return a typed policy refusal declared in `internal/format` beside `Deps`, so a handler uses `errors.As` without importing `internal/policy` (AC14 added; the method set is unchanged at five). From the format-management fold: the re-open's inputs and AC8 name both prototype halves (Debian signed indexes, Galaxy-shaped async) and its six-question finding, plus management dispatch, which `management-api.md` must answer; Scope's out-of-scope item and Phase 3 updated, and the was-Q4 record gained an extension note. From the generic fold: AC13's Test Plan row now shares `conformance/core/matrix_test.go` with `conformance-harness.md` AC20. From the charter fold: 31 bespoke schemas corrected to 33. |

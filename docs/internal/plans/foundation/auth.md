@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Fold 2026-09-26 at 4d1aeb1 under the owner's standing delegation: Q13-Q17 adopted (patterns within one repository, evaluated against an addressed object added to the pinned Scope type out of cycle; plaintext credentials refused without an explicit flag; the expiry-warning AC deferred to the credential-management surface spec; human grants in the machine vocabulary plus the admin role; single-repository tokens), plus Q18-Q20 raised and adopted in the same pass (segment-glob grammar, content-addressed and repository-wide requests under a pattern, token authority bounded by its owner). Q21-Q22 forced by formats/oci.md's parallel adoptions (a dedicated credential-management spec, owed before OCI Phase 1; multi-repository tokens only by explicit enumerated opt-in, for the two-repository OCI suite credential). Replication's pull widening absorbed. 30 criteria, zero open questions; stays draft pending a gate review. AC10 still requires external review of the implementation regardless of spec status."
+status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): the client table gained the cargo row (the bare token as the whole Authorization value on API requests; on index and downloads only after the Cargo login_url challenge taught auth-required; never on search) and the docker row's token-endpoint wording (registry token as the Basic password, username not an input, no refresh token); the verifier's four presentation forms are asserted by the new AC31, AC3 and AC27 extended; Galaxy's and Cargo's addressed-object declarations recorded under Pattern scopes; management operations mapped onto pull/push/delete with no new action, with the Cargo-versus-PyPI yank divergence left for management-api.md. Earlier: Q13-Q22 adopted under the owner's standing delegation. 31 criteria, zero open questions; stays draft pending a gate review. AC10 still requires external review of the implementation regardless of spec status."
 description: "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present."
 author: michielvha
 goal: "Give every format one auth model that real package clients can use, while keeping user passwords, MFA, account recovery and federation outside our code."
@@ -26,16 +26,17 @@ shared concern handlers must not implement.
 ### Why this cannot be fully outsourced to an identity provider
 
 **Package clients cannot do OIDC.** There is no browser, no redirect, no PKCE in `docker login`,
-`npm`, `pip`, `mvn` or `ansible-galaxy`. They present:
+`npm`, `pip`, `mvn`, `ansible-galaxy` or `cargo`. They present:
 
 | Client | What it sends |
 |---|---|
-| `docker` / `podman` | The OCI token flow: a `WWW-Authenticate` challenge, then a bearer token from a token endpoint, scoped per repository and action |
+| `docker` / `podman` | The OCI token flow: a `WWW-Authenticate` challenge, then a bearer token from a token endpoint, scoped per repository and action. At the token endpoint the client presents the registry token as the Basic password (`docker login --password-stdin`); the username is not an authentication input, and the endpoint issues no refresh token, so a revoked registry token's reach ends with the already-issued access token's lifetime inside AC5's window (`formats/oci.md`, the resolved docker-login-credential decision) |
 | `npm` | `Authorization: Bearer <token>` from `.npmrc` |
 | `pip` / `twine` | HTTP Basic, conventionally username `__token__` with the token as password |
 | `mvn` | HTTP Basic from `settings.xml` |
 | `helm` | Bearer or Basic depending on the endpoint |
 | `ansible-galaxy` | `Authorization: Token <token>` on every request, including discovery; `Bearer` only under the separate Keycloak `auth_url` flow, Basic only with a configured username/password (captured 2026-09-25 from ansible-core 2.18.18rc1; see `formats/ansible-collections.md`, "The wire contract") |
+| `cargo` | The bare token string as the whole `Authorization` value, with no scheme. Sent on every authenticated web API request (publish, yank, unyank, owners). Sent on index and download requests only after the registry has signalled `auth-required`: a credential-less `config.json` fetch answered 401 with the challenge `WWW-Authenticate: Cargo login_url="<url>"`, then a retried fetch returning `auth-required: true`; only cargo 1.74 and later perform that retry. **Never sent on search**, even with a token configured, so search cannot authenticate (captured 2026-09-26 from cargo 1.70.0 and 1.98.1 against a logging stub; see `formats/cargo.md`, "Authentication: a bare token, and the challenge that unlocks it") |
 
 No identity provider solves this, Zitadel included. It is not an IdP shortcoming: it is a
 protocol requirement of 33 separate client tools. **Registry tokens must be issued and verified
@@ -44,8 +45,8 @@ by us regardless of which IdP handles humans.**
 Per the constitution, the client is the specification and this table is working knowledge, not
 ground truth: each row must be confirmed against captured traffic from the real client before
 that format's auth conformance cases are written. The `helm` row is the least certain, since
-that ecosystem has changed header conventions across versions; the `ansible-galaxy` row is now
-grounded in captured traffic rather than recollection.
+that ecosystem has changed header conventions across versions; the `ansible-galaxy` and `cargo`
+rows are grounded in captured traffic rather than recollection.
 
 ### What is outsourced
 
@@ -174,8 +175,11 @@ identity arriving from the provider gets whatever the registry's own default-rol
 which is a separate decision from authentication. Conflating the two is how an SSO integration
 quietly becomes a privilege-escalation path.
 
-**Machine**: a token presented as Bearer or as Basic, depending on what the client sends.
-Verification resolves the token to a principal plus its scopes. The Basic-auth path exists
+**Machine**: a token presented in whichever of four forms the client sends - as Bearer, as the
+Basic password, as Galaxy's `Token <token>`, or as Cargo's scheme-less value, where the whole
+`Authorization` header is the token. Verification resolves the token to the same principal and
+scopes whatever the form, and an `Authorization` value in no recognised form is an
+authentication failure, never the anonymous principal (AC31). The Basic-auth path exists
 because pip and Maven have no alternative, not because it is preferred. In the Basic form the
 password field carries the token and the username is not an authentication input, matching the
 pip `__token__` convention. A scope binds to the repository's identity, never its name: a
@@ -205,7 +209,7 @@ lose their authority with them, so automation should be owned by a principal tha
 one person.
 
 **TLS is required on every credential-bearing path** - Bearer, Basic, the Galaxy `Token` form,
-and the OCI token endpoint - since Basic is plaintext without it. The server enforces this
+Cargo's scheme-less form, and the OCI token endpoint - since Basic is plaintext without it. The server enforces this
 rather than documenting it (the resolved plaintext-credential decision below): a request that
 presents a credential over a connection the server did not itself terminate with TLS is refused
 before the credential is looked up, verified or logged, with an error stating that credentials
@@ -335,6 +339,18 @@ at the token-service boundary.
 Accepted cost: the words read as container-flavoured to a Maven or PyPI user, and `pull` is an
 odd verb for a package download. That is a documentation problem rather than a security one.
 
+**Management operations add no action.** The format specs that settled hosted management
+operations on 2026-09-26 map each onto this vocabulary, evaluated against the operation's
+addressed object like any other route: removal-class operations require `delete` (PyPI yank,
+unyank, file deletion and release deletion; npm unpublish of a version or a package; Galaxy
+version and collection deletion) and metadata changes require `push` (npm deprecate and
+undeprecate), so a pattern-scoped grant manages only inside its pattern. A proposal for a
+`manage` or `yank` action is a change to this vocabulary, landing in human grants and token
+scopes at once. One divergence is recorded for the management surface spec owed as
+`foundation/management-api.md`, which must reconcile it rather than inherit it: Cargo's
+client-native yank and unyank map to `push` (`formats/cargo.md`), where PyPI's registry-owned
+yank maps to `delete`.
+
 ### Pattern scopes
 
 Per the 2026-09-23 scope decision, **path and tag patterns layer on that base unit**, and per
@@ -354,7 +370,18 @@ handler can parse its URL grammar. The object has one of three kinds:
 | none | the route addresses the repository as a whole, including every route whose response enumerates names | a generic listing; an OCI tag list or catalog |
 
 Which object each route reports is format knowledge, declared in each format's spec alongside
-its route-to-scope mapping; this spec fixes only the kinds and how they evaluate.
+its route-to-scope mapping; this spec fixes only the kinds and how they evaluate. Two
+consumers show the shape a declaration takes:
+
+- **Galaxy** (`formats/ansible-collections.md`, "Namespaces") reports `{namespace}/{name}` for
+  the collection detail and version list, `{namespace}/{name}/{version}` for the version detail
+  and artifact download, and the same for a publish, taking the object from the multipart file
+  part's declared filename, which precedes the artifact bytes, and refusing an artifact whose
+  `collection_info` disagrees with it so a mislabelled part cannot evade the pattern. An import
+  poll reports the object of the publish its task records, and discovery reports none. A
+  namespace is therefore granted by a pattern such as `alpha/**`.
+- **Cargo** (`formats/cargo.md`, "Authentication") reports the crate's registered spelling on
+  every index, download, publish, yank and owners route, and none for `config.json` and search.
 
 **How a patterned scope evaluates** (the resolved requests-naming-no-object decision below). A
 scope with no pattern authorizes its action on every request to its repository, whatever the
@@ -457,8 +484,10 @@ afterwards. This is deliberately inconvenient.
       least two different providers, with no provider-specific code on the path.
 - [ ] AC2: With no OIDC configured, the local admin account authenticates and the server is
       fully usable; the account cannot be used once OIDC is configured unless explicitly kept.
-- [ ] AC3: `docker login` succeeds against the OCI token flow, and a token scoped to one
-      repository **cannot** read another, asserted by a conformance case that expects denial.
+- [ ] AC3: `docker login --password-stdin` succeeds against the OCI token flow with a registry
+      token as the Basic password and any username, the token endpoint's responses carry no
+      refresh token, and a token scoped to one repository **cannot** read another, asserted by
+      a conformance case that expects denial.
 - [ ] AC4: `npm`, `pip` and `mvn` each authenticate using the credential form that client
       natively sends, proven by conformance cases running the real clients.
 - [ ] AC5: A revoked credential is rejected on the next request on every path except an
@@ -540,8 +569,8 @@ afterwards. This is deliberately inconvenient.
       outside the pattern exactly as the credential is; and a token request naming scopes the
       credential does not hold, including scopes on another repository, is answered with a JWT
       carrying only the credential's own scopes.
-- [ ] AC27: With the plaintext flag unset, a request presenting a Bearer, Basic or `Token`
-      credential over a connection the server did not terminate with TLS is refused with an
+- [ ] AC27: With the plaintext flag unset, a request presenting a Bearer, Basic, `Token` or
+      scheme-less credential over a connection the server did not terminate with TLS is refused with an
       error stating that credentials require TLS, identically for a valid and an invalid
       credential, without the credential being looked up or logged, and never answered as
       anonymous; an `X-Forwarded-Proto: https` header does not change the outcome. With the
@@ -564,6 +593,12 @@ afterwards. This is deliberately inconvenient.
       token's matching scope is refused on the next request on every path except an
       already-issued OCI JWT, which fails once expired and no later; and no token, including
       one owned by the admin, can perform an administrative action.
+- [ ] AC31: One registry token authenticates as the same principal with the same scopes when
+      presented as `Authorization: Bearer <token>`, as the Basic password with any username,
+      as `Authorization: Token <token>`, and as a scheme-less `Authorization: <token>`; an
+      `Authorization` value in none of these forms, or naming an unknown scheme, is rejected
+      with an authentication error and never treated as anonymous, including on a repository
+      with anonymous read enabled.
 
 ## Test Plan
 
@@ -571,7 +606,7 @@ afterwards. This is deliberately inconvenient.
 |-----------|-----------|---------------|
 | AC1 | integration | `internal/auth/oidc_test.go` (two providers in containers) |
 | AC2 | integration | `internal/auth/local_test.go` |
-| AC3 | conformance | `conformance/oci/auth_test.go` |
+| AC3 | conformance | `conformance/oci/auth_test.go` (`docker login --password-stdin` with a registry token, token-endpoint response inspected for a refresh token, cross-repository denial) |
 | AC4 | conformance | `conformance/<format>/auth_test.go` |
 | AC5 | integration | `internal/auth/revocation_test.go` |
 | AC6 | unit | `internal/auth/token_test.go` |
@@ -599,6 +634,7 @@ afterwards. This is deliberately inconvenient.
 | AC28 | integration | `internal/auth/grant_test.go` |
 | AC29 | integration | `internal/auth/token_scope_test.go` (single-repository default, refused and accepted multi-repository creation, unnamed repository refused); the cross-repository mount under an opt-in token is also exercised by `formats/oci.md` AC1's suite run |
 | AC30 | integration | `internal/auth/token_owner_test.go` |
+| AC31 | unit + integration | `internal/auth/credential_form_test.go` (the four forms resolving identically; unknown schemes and malformed values rejected, never anonymous) |
 
 **AC10 procedure**: before the first auth code merges, a security review is performed by a party
 other than the implementing agent, covering token lifecycle, scope enforcement, the OIDC
@@ -610,7 +646,9 @@ Review Log. A spec-level review does not satisfy this; it reviews the implementa
 ### Phase 1: Machine identity
 Token model, one-way storage (per Q4's answer), single-repository scopes (several
 repositories only by the explicit opt-in) with optional patterns validated against the grammar,
-the owner-intersection rule, revocation, and the plaintext refusal on every credential path. Ported from Stackweaver's `apikey` service.
+the owner-intersection rule, revocation, the four presentation forms the client table needs
+(Bearer, Basic, Galaxy's `Token`, Cargo's scheme-less value; AC31), and the plaintext refusal
+on every credential path. Ported from Stackweaver's `apikey` service.
 
 ### Phase 2: Human identity
 OIDC client, local admin fallback, session issuance, human grants and the admin role.
@@ -1055,3 +1093,4 @@ world-readable until it matters.
 | 2026-09-24 | 1701a48 | gate review (draft -> planned decision): folded-decision application over all 12 resolved records + adversarial + cross-spec (format-handler-interface's pinned `Scope(r)`, conformance-harness case validation, oci/generic client contracts, replication Q6, supply-chain-policy's precedent invocation) + constitution + go-spec-reviewer. Claim verification vacuous pre-code: no `internal/auth/**` exists, the tree holds only a stub `cmd/stackweaver-registry/main.go`; the one checkable claim set, the Stackweaver `apikey` port, was re-verified against that repo and one attribution corrected. Independent: this reviewer authored none of the spec's prior content | Gate not passed; stays `draft` on Q13-Q17. Eleven of twelve resolved decisions verified genuinely applied through Scope, Design, ACs and Test Plan; the twelfth, pattern scoping, is half-applied - present in Scope and AC19, absent from Design, and unimplementable against the pinned `Scope(r)` which returns only repository+action (Q13). Corrections applied: HMAC capability tokens re-attributed to `registry_artifact_token.go` (they are not in the apikey service); stale Open Questions intro (claimed Q4-Q12 awaited the owner; all were resolved); AC8 restored to "in both modes", matching interface AC7 and the harness's description of this very criterion; AC7 extended to scan a successful authentication's output, not only a failed one. Four Design-named security duties had no policing criterion and gained one each: AC20 (OIDC flow bindings and ID-token validation rejected per-tamper), AC21 ((issuer, subject) keying against email remap/collision), AC22 (session cookie flags, CSRF on state-changing UI routes, server-side logout), AC23 (token-service algorithm confusion and mid-flight key rotation). Raised Q13 (pattern evaluation vs the pinned Scope shape, grammar, and range), Q14 (plaintext credential acceptance: opt-in flag vs docs-only, the one risky state not behind an explicit choice), Q15 (where the promised expiry-warning criterion lands, given what was then oci.md Q3 owns the unspecced token-management surface), Q16 (human-side grant vocabulary between "nothing" and "administer"), Q17 (single- vs multi-repository token scopes, ambiguous between two of the spec's own passages). Replication's pending inbound amendment (instance-to-instance identity) recorded in Scope vocabulary so it arrives as a revision, not a surprise. AC10's external implementation review stands untouched; nothing in this pass satisfies it. |
 | 2026-09-25 | 331ef25 | cross-spec sync from the ansible-collections first review. Not a review | The `ansible-galaxy` client-table row said "Bearer or Basic depending on the endpoint"; captured traffic (ansible-core 2.18.18rc1 against a logging server) shows `Authorization: Token <token>` on every request, with Bearer only under the Keycloak `auth_url` flow. Row split from `helm` and corrected with provenance; the least-certain caveat now names `helm` alone. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation. Not a gate review | Adopted Q13 A (pinned `Scope` gains an addressed object, patterns narrow within one identity-bound repository; the amendment itself made in the interface spec), Q14 A (plaintext credential refused before lookup unless the explicit flag is set, no forwarding-header trust), Q15 A (expiry-warning AC owed by the credential-management surface spec; outbound dependency recorded), Q16 A (human grants `(principal, repository, action)` with optional pattern, plus the global admin role, which alone administers), Q17 A (single-repository tokens; the resolved token-scope-unit record's contradictory "one deliberately broad token" wording corrected with a dated note so one reading remains). Folding exposed three judgment calls, raised and adopted as Q18 A (segment-glob grammar: `*` within a segment, `**` across whole segments, nothing else special, validated at creation), Q19 A (a patterned scope authorizes content-addressed requests for pull and push, never delete, and never a repository-wide or name-enumerating request) and Q20 A (token authority is the per-request intersection with its owner's current grants; tokens carry no administrative authority). Two more were forced by `formats/oci.md` adopting its own questions in parallel, and were raised and adopted here: Q21 A (the token-management surface, expiry-warning criterion and any robot-account principal belong to a new sibling spec, `foundation/credential-management.md`, owed before OCI's Phase 1, because the OCI spec placed the surface's home on this spec while Q15 had placed it there) and Q22 B (multi-repository tokens exist only by explicit opt-in with repositories enumerated by identity, because oci.md's flagship AC1 needs one suite credential on two repositories; Q17's record amended to the single reading "one repository by default, several only by deliberate opt-in"). Body: Scope (in and out of scope), Design (machine surface, TLS paragraph, OCI token service subset grants and pattern-carrying JWTs, bootstrap forward reference, Token expiry, central authorization's `Scope` shape, new Pattern scopes and Human grants sections), and replication's settled `pull` widening absorbed into a rewritten section, which also cleared a stale citation of replication's question as open. Criteria: AC8, AC14 and AC19 rewritten; AC24-AC30 added (AC29 carrying the Q22 opt-in), each with a Test Plan row; Phases 1-4 updated. AC10's external implementation review untouched and unsatisfied by this pass. Stays draft. |
+| 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Items found already done: replication's settled `pull` widening (the section "What `pull` also authorizes: replication reads" already carries the adopted Q6 answer, the pattern-narrowed refusal, the replication package's own mapping under the central authorizer and the accepted widening, and cites it as resolved), and the OCI two-repository credential contradiction, already met by the resolved two-repository credential decision (was Q22) and AC29. Applied: the `docker`/`podman` row now states the token-endpoint credential (`formats/oci.md`'s resolved docker-login decision: registry token as the Basic password, username not an input, no refresh token, revocation inside AC5's window) and AC3 asserts it; a `cargo` row from `formats/cargo.md`'s captured traffic (bare token as the whole `Authorization` value on authenticated API requests; on index and download only after a 401 with `WWW-Authenticate: Cargo login_url="..."` and a retried `config.json` showing `auth-required`, 1.74 and later; search never authenticates), with the machine-surface paragraph, the TLS paragraph and AC27 extended to the scheme-less form and AC31 added for the four presentation forms; under Pattern scopes, Galaxy's addressed-object mapping (`{namespace}/{name}`, `{namespace}/{name}/{version}`, the publish object from the multipart file part's declared filename checked against `collection_info`, the poll reporting its task's object) and Cargo's; under Scope vocabulary, management operations mapped onto `delete` and `push` with no new action, and the Cargo `push` versus PyPI `delete` yank divergence recorded for `management-api.md` to reconcile. Phase 1 updated. AC10's external review untouched. |
