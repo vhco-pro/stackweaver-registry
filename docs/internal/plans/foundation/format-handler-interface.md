@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Gate review 2026-09-25 at 9a8f86d: eleven of twelve resolved decisions verified applied; the URL-shape decision's registration validation had no policing criterion (AC11 added, now 11 criteria). Stays draft on Q9: whether the re-open's evidence set covers the request-to-addressed-object gap auth.md Q13 and supply-chain-policy.md Q4 both hit."
+status_description: "Fold 2026-09-26 at 4d1aeb1 under the owner's standing delegation: Q9 adopted (the re-open's evidence set gains the request-to-coordinate evidence, and must re-examine rather than inherit out-of-cycle amendments). auth.md's pattern decision made the second such amendment here: the pinned Scope type carries an addressed object (named, content-addressed or none); the method set stays at five. AC7 and AC8 extended, AC12 added; generic's parallel replay-exemption decision absorbed as a second Capabilities field and AC13 (now 13 criteria). Zero open questions. Stays draft pending a gate review."
 description: "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross."
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
@@ -104,8 +104,8 @@ either merely might:
 |---|---|---|
 | `Name()` | `string` | The catalogue key (`generic`, `oci`): the default mount prefix, the conformance matrix row, the log field |
 | `Mounts()` | `[]Mount`, a `Mount` being a URL prefix plus a root-anchored flag | Generic returns the default format-first mount; OCI claims the root-anchored `/v2/` (Routing and registration, below) |
-| `Capabilities()` | `Capabilities`, carrying proxy support: `supported` or `unsupported` | The machine-readable home of the declaration AC4's runner honours; generic declares `unsupported`, closing the "neither sibling spec currently says how" gap recorded in `formats/generic.md` |
-| `Scope(r)` | `(Scope, error)`, a `Scope` being a repository plus one of `pull`/`push`/`delete`. **An error denies the request**, with the same response an unauthorized caller receives | The route-to-scope mapping the central authorizer evaluates (`auth.md`). Needed from the **first** format, not at the re-open: AC7's unauthenticated and unauthorized cases apply from day one, and without this the shared layer cannot know what it is authorizing |
+| `Capabilities()` | `Capabilities`, carrying proxy support (`supported` or `unsupported`) and reference-implementation availability (`available` or `none`) | The machine-readable home of the two declarations the harness honours: AC4's runner honours `unsupported`, and the conformance matrix renders `none` as a replay-match exemption (AC13). Generic declares both, closing the "neither sibling spec currently says how" gap recorded in `formats/generic.md`; the second field arrived with generic's resolved replay-exemption decision |
+| `Scope(r)` | `(Scope, error)`, a `Scope` being a repository, one of `pull`/`push`/`delete`, and the **addressed object**: exactly one of *named* (the handler's canonical name for the finest named thing the route addresses), *content-addressed* (content identified by digest, or an upload bound to one), or *none* (the repository as a whole, including every name-enumerating route). **An error denies the request**, with the same response an unauthorized caller receives | The route-to-scope mapping the central authorizer evaluates (`auth.md`). Needed from the **first** format, not at the re-open: AC7's unauthenticated, unauthorized and pattern-refusal cases apply from day one, and without this the shared layer cannot know what it is authorizing. The addressed object is the second out-of-cycle amendment (below): generic reports artifact paths, OCI reports tags, and both have content-addressed and listing routes, so both Tier 0 formats exercise all three kinds |
 | `ServeHTTP(w, r)` | embedded `http.Handler` | The resolved HTTP-direct decision: the handler receives the real request and response |
 
 Construction is by injection: each format package exposes `New(deps Deps) Handler`, and
@@ -123,8 +123,11 @@ serves over HTTP, which the HTTP-direct decision makes redundant as interface me
 any per-request classification hook, because classification travels as an argument to the
 fetch-and-cache call per the proxied-miss decision. Additions ride the scheduled re-open,
 argued from two real implementations and the Debian prototype rather than from anticipation.
+The two exceptions, both to what `Scope(r)` carries and both forced by a sibling security
+decision rather than anticipated, are recorded below as out-of-cycle amendments.
 
-`Scope(r)` entered the pin from a sibling decision rather than from this spec: `auth.md`
+**`Scope(r)` itself is the first out-of-cycle amendment**, made 2026-09-23. It entered the pin
+from a sibling decision rather than from this spec: `auth.md`
 settled that each handler declares a route-to-scope mapping which the shared layer evaluates,
 so that per-format URL grammar - including OCI's slash-bearing names under `/v2/` - never
 reaches security-critical shared code. The dependency is recorded here as well as there,
@@ -135,16 +138,30 @@ under-protects itself silently. That is what `auth.md` AC18 and this spec's AC7 
 own AC7 is credential-leak scanning; its side of the per-format cases is AC8), which is why both
 are runner-enforced rather than advisory.
 
-Two further inbound amendments are pending rather than missing, recorded here so each arrives
-as a revision to this section instead of a surprise. `auth.md` Q13 found the settled path/tag
-pattern scoping unimplementable against this pin: `Scope(r)` hands the central authorizer only a
-repository and an action, so the authorizer never sees the path or tag a pattern must match, and
-one of that question's options grows the pinned `Scope` type. `supply-chain-policy.md` Q4 hit
-the same wall from the policy side: central policy evaluation needs the request mapped to the
-package and version being resolved, no pinned method provides it, and its recommendation
-enforces inside the shared resolution calls in `Deps` instead. Both questions are owned and
-answered in their own specs; what their convergence means for the scheduled re-open's evidence
-set is Q9 below.
+**The addressed object is the second out-of-cycle amendment**, made 2026-09-26 for `auth.md`'s
+pattern-evaluation decision (its resolved record, was Q13, adopted under the owner's standing
+delegation). That spec settled path and tag patterns that narrow a scope within one repository,
+and the pin as first written made them unimplementable: `Scope(r)` handed the central authorizer
+only a repository and an action, so it never saw the path or tag a pattern must match. The two
+places a pattern could otherwise be evaluated are both forbidden - an auth check inside the
+handler, or per-format URL grammar in shared code - so the type grew, and only the type: the
+method set stays at five. Which object kind each route reports is declared in the format's own
+spec; how each kind evaluates against a pattern is `auth.md`'s ("Pattern scopes").
+
+Its failure mode is the first amendment's, sharpened. A handler reporting a named route as
+*content-addressed* or *none*, or reporting a name that is not the canonical one, over-grants or
+under-grants a patterned credential silently, so AC12 table-tests every handler's object
+reporting per route and AC7 requires a pattern-refusal case in every format's case set.
+
+The same structural gap - the pin maps a request to a repository and an action, and nothing
+finer - was hit independently from the policy side: central policy evaluation needs the package
+and version being resolved. That need is met without a further amendment: `supply-chain-policy.md`
+settled its evaluation hook (its resolved record, was Q4, adopted 2026-09-26) as enforcement
+inside the policy-enforcing resolution calls the server core hands every handler through
+`Deps`, where the package and version are already structured arguments; the addressed object
+is a canonical string for matching, not a structured coordinate, so it does not serve policy.
+Whether the two converge on one structured request coordinate is a question for the scheduled
+re-open, which now takes both as named inputs (the resolved re-open evidence decision below).
 
 This pin knowingly departs from the `go` skill's discover-don't-design guidance; the
 departure, its justification and its mitigation are recorded in the resolved method set
@@ -198,9 +215,12 @@ A format is complete when, and only when:
 1. Conformance cases pass in **both** modes, against at least two client versions - or the
    format's spec records a declared unsupported mode matching its `Capabilities()`
    declaration (`generic` is the single permitted case).
-2. Replay-match passes against a recorded corpus from a reference implementation. (Whether
-   `generic`, which has no reference implementation to record from, holds a named exemption
-   from this item is `formats/generic.md` Q7, owner-pending; its answer amends this line.)
+2. Replay-match passes against a recorded corpus from a reference implementation - or the
+   format's spec records that no reference implementation exists and its `Capabilities()`
+   declares `none`, which the matrix renders as exempt, never as passing (AC13). `generic` is
+   the single permitted case, per the replay-exemption decision `formats/generic.md` resolved
+   2026-09-26 under the owner's standing delegation, and the exemption is contained exactly as
+   the proxy one is: only a format whose own spec records it may declare it.
 3. No case is skipped without an issue number.
 4. Its spec under `docs/internal/plans/formats/` records which parts of the ecosystem protocol
    are deliberately unimplemented, so the matrix does not imply coverage that does not exist.
@@ -215,7 +235,19 @@ from evidence, not a better guess now. Concretely:
   the interface mid-Tier-1 would contaminate the experiment's headline measurement, so the
   re-open lands first.
 - **Inputs:** the generic and OCI implementations, and the Debian write-triggered services
-  prototype (the resolved write-triggered services decision below).
+  prototype (the resolved write-triggered services decision below). Per the resolved re-open
+  evidence decision below, also the **request-to-coordinate evidence**, because none of those
+  three would surface it: `auth.md`'s pattern-evaluation outcome, as the addressed-object
+  amendment actually behaved in the generic and OCI handlers; `supply-chain-policy.md`'s
+  outcome on where central policy evaluation intercepts a request; and, recorded beside them as
+  further evidence that the pin and the shared model were fixed before the formats that stress
+  them existed, `ansible-collections.md`'s finding that an asynchronous import task has no
+  entity in the shared model.
+- **Out-of-cycle amendments are re-examined, not inherited:** the re-open re-affirms or revises
+  each amendment made between the pin and the re-open - `Scope(r)` (2026-09-23) and its
+  addressed object (2026-09-26), each made early because a sibling security decision was
+  unimplementable without it - on the same evidence standard as the rest of the method set, and
+  states whether the addressed object and the policy coordinate should converge.
 - **Form:** a `/spec review` pass over this spec, its outcome recorded in the Review Log and
   reflected in "The pinned method set"; the owner adjudicates any change.
 - **Also delivered at the re-open:** the egress import allowlist (AC9). The forbid rule covers
@@ -261,17 +293,31 @@ AC8 makes this a criterion of this spec rather than an intention.
       fixture proves the rule fires. (Import-based architecture tests cannot catch this,
       because every handler legitimately imports `net/http` for its request and response
       types; enforcement therefore binds to egress call sites.)
-- [ ] AC7: Every format's conformance case set includes unauthenticated and unauthorized request
-      cases in both modes, and the runner rejects a case set without them, so a handler that
-      skips the shared auth check fails conformance rather than review.
+- [ ] AC7: Every format's conformance case set includes unauthenticated, unauthorized and
+      pattern-refusal request cases in both modes (a pattern-refusal case presents a token
+      patterned to one named object against another, and expects denial), and the runner
+      rejects a case set without them, so a handler that skips the shared auth check or
+      misreports its addressed object fails conformance rather than review.
+- [ ] AC12: Every handler's `Scope(r)` returns the correct addressed object for each of its
+      routes: a named-object route carries its canonical name, a digest-addressed or upload
+      route is content-addressed, and a name-enumerating or repository-wide route is none - proven
+      per handler by a table test over its whole route set, in which a route absent from the
+      table fails the test.
+- [ ] AC13: `Capabilities()` carries reference-implementation availability beside proxy
+      support; the generic handler declares `none`, every other registered handler declares
+      `available`, and a format declaring `none` is rendered by the conformance matrix as
+      exempt from replay-match citing its spec, never as passing - the same contract
+      `conformance-harness.md` AC20 states from the matrix side.
 - [ ] AC9: At the scheduled re-open, a depguard import allowlist for `internal/format/**` is in
       place, seeded from the generic and OCI handlers' actual import lists, and a fixture
       importing a third-party HTTP client fails `make verify`. Until then the residual bypass
       is accepted and named in the re-open's inputs.
 - [ ] AC8: Before any Tier 1 handler work begins, the scheduled re-open has run: this spec's
       Review Log carries the post-OCI re-open entry, and "The pinned method set" reflects its
-      outcome, re-affirmed or revised, with the generic and OCI implementations and the
-      Debian prototype cited as its evidence.
+      outcome, re-affirmed or revised, with the generic and OCI implementations, the Debian
+      prototype and the request-to-coordinate evidence named in "The scheduled re-open" cited
+      as its evidence, and with an explicit verdict on each out-of-cycle amendment and on
+      whether the addressed object and the policy coordinate converge.
 
 ## Test Plan
 
@@ -288,6 +334,8 @@ AC8 makes this a criterion of this spec rather than an intention.
 | AC9 | lint + unit | depguard allowlist in `.golangci.yml`; third-party-client fixture behind the `lintfixture` build tag, asserted by the same runner test as AC6 |
 | AC10 | unit + conformance | `internal/format/scope_test.go` (denial semantics plus the server-log assertion, which is not protocol-observable and so cannot live in a conformance case per `conformance-harness.md`'s observation rule); a deliberately unmapped route in `conformance/core/` asserting the response is indistinguishable from an unauthorized one |
 | AC11 | unit | `internal/format/register_test.go` (fixture handlers: wrong non-root prefix, unlisted root anchor) |
+| AC13 | unit | `internal/format/capabilities_test.go` (every registered handler's declaration: `none` for generic only); the matrix rendering itself is asserted by `conformance-harness.md` AC20's fixture formats |
+| AC12 | unit | `internal/format/<name>/scope_test.go` per handler (route table covering every mount's routes and all three object kinds), with a shared helper in `internal/format/scope_test.go` that fails when a registered route is missing from the table |
 
 AC5's manual procedure: for each landing format, inspect the PR diff and record in the
 experiment log that it touches only `internal/format/<name>/`, its conformance cases, and the
@@ -296,14 +344,16 @@ route registration point; any other file is a finding against this spec.
 ## Implementation Phases
 
 ### Phase 1: Interface and registration
-- Interface definition, route registration, architecture tests
+- Interface definition, including the `Scope` type with its addressed object, route
+  registration, architecture tests
 
 ### Phase 2: Proven by two
 - Generic and OCI handlers, confirming the interface survives a trivial and a hard format
 
 ### Phase 3: The scheduled re-open
-- The Debian write-triggered services prototype, then the re-open review pass (AC8), before
-  any Tier 1 handler work
+- The Debian write-triggered services prototype, then the re-open review pass (AC8) over it,
+  the two Tier 0 handlers and the request-to-coordinate evidence, before any Tier 1 handler
+  work
 
 ## Tasks
 
@@ -311,38 +361,50 @@ Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-Q9 was raised by the 2026-09-25 gate review and awaits the owner. The resolved records that
-follow are kept rather than deleted, so the reasoning survives the next time someone asks why
-it was done this way.
+None remain open. Q9 was raised by the 2026-09-25 gate review and adopted on 2026-09-26 under
+the owner's standing delegation; its record opens by saying so, and the owner may reverse it.
+The resolved records that follow are kept rather than deleted, so the reasoning survives the
+next time someone asks why it was done this way.
 
-### Q9: Does the scheduled re-open's evidence set expand to cover the request-to-addressed-object gap two siblings have already hit?
+### Resolved: the re-open's evidence set and the request-to-coordinate gap (was Q9)
 
-The re-open (AC8) was designed to catch what implementation discovers, so its inputs are the
-generic and OCI implementations plus the Debian prototype. But two sibling specs have now hit
-the same wall before any code exists, from independent directions: `auth.md` Q13 (pattern
-scoping cannot be evaluated, because `Scope(r)` carries no path or tag) and
-`supply-chain-policy.md` Q4 (policy evaluation cannot map a request to the package and version
-being resolved). Both are one structural gap: the pin translates a request to a repository and
-an action and nothing finer, so every shared layer that needs the addressed object is stuck.
-None of the re-open's three named inputs would surface this - generic and OCI exercise neither
-pattern scoping nor policy, and the Debian prototype targets write-triggered services. Whether
-each sibling question is answered now or deferred is decided in its own spec; what this spec
-owns is the re-open's scope.
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: both sibling outcomes are
+named inputs to the scheduled re-open, and an out-of-cycle amendment to `Scope` is tolerated
+because `auth.md` answered "amend now". It did, in the same pass (its resolved pattern-evaluation
+record, was Q13), so the amendment is made: the pinned `Scope` type carries an addressed object,
+recorded in "The pinned method set" as the second out-of-cycle amendment with its reason, while
+the method set stays at five. The policy side needs no amendment: `supply-chain-policy.md` resolved its
+evaluation hook (was Q4, adopted the same day) as enforcement inside the shared resolution
+calls in `Deps`.
+`ansible-collections.md`'s finding that an asynchronous import task has no entity in the shared
+model is recorded beside them as further evidence the pin and the model were fixed early.
+Folded through Design ("The pinned method set", "The scheduled re-open"), AC7, AC8, the new
+AC12, the Test Plan and Phases 1 and 3.
 
-**Recommendation:** A - name both sibling questions' outcomes as re-open inputs now, and accept
-that an `auth.md` Q13 answer of "amend now" revises the pin out of cycle, exactly as `Scope(r)`
-itself entered the pin from a sibling decision.
+Accepted cost: the re-open's scope is now partly set by sibling schedules, and a second
+out-of-cycle amendment further erodes the pin the experiment measures against; the re-open is
+therefore obliged (AC8) to re-examine both amendments on the same evidence standard rather than
+inherit them, so they cannot become permanent by default. B lost because it decided auth's
+question from the wrong spec - the amendment it proposed is the one now made, but made where the
+security decision lives and with a grammar and evaluation rules behind it. C lost because the
+re-open could run on inputs that exercise neither pattern scoping nor policy and re-affirm a
+method set two specs had already shown incomplete.
+
+The question as raised: the re-open's inputs were the generic and OCI implementations plus the
+Debian prototype, and two sibling specs had hit the same wall before any code existed - the pin
+translates a request to a repository and an action and nothing finer - with none of the three
+inputs able to surface it.
 
 | Option | You get | It costs |
 |---|---|---|
-| **A. Add both sibling outcomes to the re-open's named inputs; tolerate an out-of-cycle `Scope` amendment if auth.md Q13 answers that way** | The re-open cannot run blind to a gap already proven twice; the pin's amendment path stays the precedented one | The re-open's scope is partly set by sibling schedules, and a second out-of-cycle amendment further erodes the pin the experiment measures against |
-| **B. Amend the pin here and now: `Scope` grows an optional addressed-object field** | The gap closes before any handler is built, and auth AC19 becomes implementable immediately | Decides auth.md Q13 from the wrong spec, and adds a field no Tier 0 format exercises - the exact anticipation the pin exists to refuse |
+| **A. Add both sibling outcomes to the re-open's named inputs; tolerate an out-of-cycle `Scope` amendment if auth.md's pattern question answers that way** | The re-open cannot run blind to a gap already proven twice; the pin's amendment path stays the precedented one | The re-open's scope is partly set by sibling schedules, and a second out-of-cycle amendment further erodes the pin the experiment measures against |
+| **B. Amend the pin here and now: `Scope` grows an optional addressed-object field** | The gap closes before any handler is built, and auth AC19 becomes implementable immediately | Decides auth's question from the wrong spec, and adds a field no Tier 0 format exercises - the exact anticipation the pin exists to refuse |
 | **C. Leave the re-open's inputs as written; sibling answers arrive whenever their specs resolve** | The pin and the re-open stay exactly as adjudicated | The re-open can run and re-affirm a method set two specs have already shown incomplete, because none of its inputs exercises the gap |
 
-**Why this is yours:** it weighs the experiment's interface-stability measurement against
-evidence that arrived earlier than the design assumed, and it decides whether this spec's
-re-open or the siblings' own answers carry the fix - a cross-spec sequencing call only the
-owner can adjudicate.
+One correction to B's row as raised: it said no Tier 0 format exercises the field. Both do -
+generic's path-scoped CI credential is the scope decision's own `prod/*` example, and OCI's is
+its "one tag" example - which is part of why the amendment met the pin's own bar for an early
+addition.
 
 ### Resolved: the Scope() failure mode (was Q7)
 
@@ -506,7 +568,8 @@ fetch-and-cache obligation was corrected for.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
-| 2026-09-25 | 9a8f86d | gate review (draft -> planned decision): folded-decision application over all 12 resolved records + the `go` skill's interface lens applied hard (discovered-vs-designed, size, consumer placement, the *http.Request shape against the prior-art out-of-process finding) + adversarial + cross-spec (auth Q13 and AC18, supply-chain-policy Q4, conformance-harness AC11 and its protocol-observation rule, proxy-cache's fetch-and-cache obligation, npm's re-open gate, generic's Capabilities contract and open Q7, oci AC1, the catalogue's Tier 3 row) + constitution. Claim verification against code vacuous pre-implementation: the tree holds only a stub `cmd/stackweaver-registry/main.go` and no `internal/`; cross-spec claims and the one monorepo claim (`HandleServiceDiscovery` on the root `/.well-known/terraform.json` route) verified instead. Independent: this reviewer authored none of this spec's prior content | Gate not passed; stays draft on Q9. Eleven of twelve resolved decisions verified genuinely applied through Scope, Design, ACs and Test Plan; the twelfth, the URL-shape decision, reached Design ("Registration validates every mount") but had no policing criterion - AC11 added with a Test Plan row (fixture handlers failing registration on a wrong non-root prefix and an unlisted root anchor), closing the 12-decisions-versus-10-criteria gap where it was real. The discover-don't-design departure re-checked and found honestly recorded with its mitigation; the *http.Request foreclosure of an out-of-process boundary is knowingly priced in the resolved HTTP-direct and extension-boundary records, matching the prior-art warning rather than contradicting it, so no finding there. The sibling convergence verified independently rather than accepted: auth.md Q13 and supply-chain-policy.md Q4 hit the same structural gap in the pin (a request translates to repository plus action and nothing finer), none of the re-open's three named inputs would surface it, and both are now recorded in "The pinned method set" as pending inbound amendments, with the re-open's evidence set raised as Q9 for the owner, not decided. Corrections applied: the mapping-omission catch re-attributed to auth.md AC18 plus this spec's AC7 (auth.md's own AC7 is credential-leak scanning; its side is AC8); AC10's Test Plan row split, since a server-log assertion is not protocol-observable and the harness's observation rule bars it from a conformance case; the unowned upstream-adapter interface noted in its resolved record as a one-directional dependency. npm.md re-verified to carry the same re-open gate from its side; generic.md Q7's pending amendment to definition-of-done item 2 confirmed still open and correctly hooked. |
+| 2026-09-25 | 9a8f86d | gate review (draft -> planned decision): folded-decision application over all 12 resolved records + the `go` skill's interface lens applied hard (discovered-vs-designed, size, consumer placement, the *http.Request shape against the prior-art out-of-process finding) + adversarial + cross-spec (auth Q13 and AC18, supply-chain-policy Q4, conformance-harness AC11 and its protocol-observation rule, proxy-cache's fetch-and-cache obligation, npm's re-open gate, generic's Capabilities contract and open Q7, oci AC1, the catalogue's Tier 3 row) + constitution. Claim verification against code vacuous pre-implementation: the tree holds only a stub `cmd/stackweaver-registry/main.go` and no `internal/`; cross-spec claims and the one monorepo claim (`HandleServiceDiscovery` on the root `/.well-known/terraform.json` route) verified instead. Independent: this reviewer authored none of this spec's prior content | Gate not passed; stays draft on Q9. Eleven of twelve resolved decisions verified genuinely applied through Scope, Design, ACs and Test Plan; the twelfth, the URL-shape decision, reached Design ("Registration validates every mount") but had no policing criterion - AC11 added with a Test Plan row (fixture handlers failing registration on a wrong non-root prefix and an unlisted root anchor), closing the 12-decisions-versus-10-criteria gap where it was real. The discover-don't-design departure re-checked and found honestly recorded with its mitigation; the *http.Request foreclosure of an out-of-process boundary is knowingly priced in the resolved HTTP-direct and extension-boundary records, matching the prior-art warning rather than contradicting it, so no finding there. The sibling convergence verified independently rather than accepted: what was then auth.md Q13 and what was then supply-chain-policy.md Q4 hit the same structural gap in the pin (a request translates to repository plus action and nothing finer), none of the re-open's three named inputs would surface it, and both are now recorded in "The pinned method set" as pending inbound amendments, with the re-open's evidence set raised as Q9 for the owner, not decided. Corrections applied: the mapping-omission catch re-attributed to auth.md AC18 plus this spec's AC7 (auth.md's own AC7 is credential-leak scanning; its side is AC8); AC10's Test Plan row split, since a server-log assertion is not protocol-observable and the harness's observation rule bars it from a conformance case; the unowned upstream-adapter interface noted in its resolved record as a one-directional dependency. npm.md re-verified to carry the same re-open gate from its side; what was then generic.md Q7's pending amendment to definition-of-done item 2 confirmed still open and correctly hooked. |
 | 2026-09-23 | 77b52ad | design + cross-spec consistency, **not independent**: this pass was run by the author of the `Scope(r)` addition, so its adversarial value on that method is limited and a later independent pass should re-check it | Mechanical gate clear (9 ACs, all mapped, no stale references). Two findings raised as Q7 and Q8: the runtime failure mode of `Scope(r)` is undefined on the authorization boundary, and AC5 is falsifiable by construction now that the proxy layer ships with OCI. Stays draft. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous pre-code; cross-spec citations checked instead) | Fixed internal contradictions (metadata ownership vs `data-model.md`, AC4 vs the generic exemption, a citation to a harness AC that does not exist); added AC6/AC7 because import-based architecture tests cannot hold the proxy and auth boundaries; raised Q1-Q5; stays `draft` |
 | 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (tree claim verification vacuous pre-code: the tree holds a stub `cmd/stackweaver-registry/main.go` only; cross-spec, catalogue and protocol claims checked instead) | All four folded decisions were recorded but unapplied to the body: pinned the method set into Design (the central artifact was still absent), rewrote the pre-decision declarative proxied-path prose to the handler-calls-fetch-and-cache flow, added Routing and registration with the Terraform root-anchor grounding, moved write-triggered services into Scope and Phase 3, added AC8 plus the re-open trigger and gate; corrected the stale claim that the harness spec lacks a mode-coverage AC (its AC11 is that AC); tightened AC6 to type-aware call-site enforcement with a fixture test; added the missing `## Tasks` section; raised Q6 (egress import allowlist); stays `draft` on Q6 |
+| 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation. Not a gate review | Adopted Q9 A: the re-open's named inputs now include the request-to-coordinate evidence (auth.md's pattern-evaluation outcome as the addressed object behaves in the generic and OCI handlers, supply-chain-policy.md's evaluation-hook outcome, and ansible-collections.md's async-import-task finding as further evidence the pin and model were fixed early), and the re-open must give an explicit verdict on each out-of-cycle amendment and on whether the addressed object and the policy coordinate converge. auth.md adopted its pattern question as "amend now" in the same pass, so the amendment is made and recorded as out of cycle, with why: the pinned `Scope` type gains an addressed object of three kinds (named, content-addressed, none), because the only other places a pattern could be evaluated - inside a handler, or per-format URL grammar in shared code - are both forbidden; the method set stays at five. `Scope(r)` itself relabelled as the first out-of-cycle amendment. Policy needs no amendment, since supply-chain-policy.md resolved its hook inside `Deps` in parallel; the citations were updated to that resolution. Criteria: AC7 extended with a runner-enforced pattern-refusal case; AC8 extended to the new inputs and verdicts; AC12 added (per-handler route table test of object reporting, missing routes failing) with a Test Plan row; Phases 1 and 3 updated. Q9's option B row corrected: both Tier 0 formats do exercise the field. The 2026-09-25 row's two sibling-question citations reworded to past tense, since both questions are now resolved; its meaning is unchanged. Also absorbed, because it landed in parallel and left this spec citing a resolved question as open: `formats/generic.md` adopted its replay-match exemption the same day, so `Capabilities()` gains reference-implementation availability, definition-of-done item 2 now states the exemption and its containment, and AC13 asserts it with a Test Plan row (now 13 criteria). Stays draft. |

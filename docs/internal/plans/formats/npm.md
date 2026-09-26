@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "First review 2026-09-25 at 331ef25: the spec had no Design section and its resolved decision claimed folding into one; the wire surface, data-model mapping, write boundaries, proxied classification and removal table are now in the body, with six criteria added (AC9-AC14). Stays draft on Q2 (audit-request disposition) and Q3 (hosted unpublish policy), plus the two blocking preconditions."
+status_description: "2026-09-26 at 4d1aeb1: Q2 and Q3 adopted under the owner's standing delegation and folded, and Q4 raised and adopted in the same pass. Audit requests get an honest 404 (AC18); unpublish is authorization-only (AC15) and, with deprecation, is a registry-owned management operation homed in the to-be-authored management-api.md with npm's client routes bound onto it (AC17); unpublished versions are retired forever (AC16). No open questions; stays draft pending a gate review, with Phase 2 blocked on management-api.md."
 description: "Spec for the npm registry format, where the caching proxy of the public registry is the primary use case rather than private publishing."
 author: michielvha
 goal: "Deliver the most-wanted upstream cache in real deployments, and be the first format where the proxy path is the point."
@@ -51,17 +51,27 @@ enforced nowhere, and npm is also the measurement baseline for the experiment's 
 An interface revision landing mid-npm would contaminate exactly the number the whole project
 exists to produce.
 
-**The charter's cost-attribution question (its Q3) must be answered before npm starts.** npm is
+**The charter's cost-attribution question must be answered before npm starts.** npm is
 the baseline the N+1 comparison is measured against, and a baseline collected under an undefined
 procedure is not a baseline; the obligation is stated in `foundation/question-triage.md` and
-recorded here from this side for the same one-sided-contract reason as the re-open gate. AC14
-is the criterion that makes the baseline this spec's deliverable rather than an intention.
+recorded here from this side for the same one-sided-contract reason as the re-open gate. The
+charter answered it on 2026-09-26 (its "Measuring per-format cost"), so this precondition is
+discharged on paper and holds in practice through AC14, the criterion that makes the baseline
+this spec's deliverable rather than an intention.
+
+**The management API must be specced before Phase 2.** Unpublish and deprecation are
+registry-owned management operations that this format's client routes bind onto (Design, "The
+management surface"). Their shared shape, authorization and write accounting belong to
+`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), so
+Phase 2 waits on that spec reaching `planned`. Phases 1, 3 and 4 do not.
 
 ## Scope
 
 **In scope:** packument assembly with content negotiation (full and abbreviated), tarball
 serving, scoped packages, publish (including refusing a republish of an existing version),
-dist-tags (list, add, move, delete), unpublish and deprecation, bearer-token presentation per
+dist-tags (list, add, move, delete), unpublish and deprecation as bindings onto registry-owned
+management operations (authorization-only, with every unpublished version retired), an honest
+404 to the audit requests the client sends by default, bearer-token presentation per
 `foundation/auth.md`, and the proxied path against the public registry including detection of
 npm's explicit security signal.
 
@@ -70,11 +80,12 @@ definition of done requires the deliberately unimplemented surface to be named:
 
 - **`npm audit` endpoints.** Real advisory data belongs to `supply-chain-policy.md`, whose feed
   authority is its own open question; building an advisory surface here first would prejudge it.
-  What the registry answers to the audit requests npm sends anyway during a default install is
-  Q2, because silence is not an available option.
-- **Provenance attestation verification.** Ownership of signature and attestation verification
-  is undecided (`supply-chain-policy.md` Q6 recommends a sibling verification spec); npm
-  provenance lands there or in its consumer, not here.
+  The audit requests npm sends anyway during a default install still need an answer, because
+  silence is not an available option: they get an honest 404 (Design, "Audit requests").
+- **Provenance attestation verification.** Verification belongs to the shared producer
+  `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop),
+  per the verification-ownership decision adopted in `supply-chain-policy.md`; npm provenance
+  lands there or in its consumer, not here.
 - **Search (`/-/v1/search`).** The endpoint shape is trivial but the ranking inputs (quality,
   popularity, maintenance scores) have no conformance oracle and no data source in this system;
   a stub that returns results without them would be a different product claim. Follow-on spec.
@@ -104,7 +115,7 @@ captured traffic when the recording corpus is made, and the corpus wins any disa
 | Unpublish a package | `DELETE /{name}/-rev/{rev}` |
 | Deprecate | `PUT /{name}` on the publish route, no attachments, distinguished by the `npm-command` header and the body shape |
 | Liveness and identity | `GET /-/ping`, `GET /-/whoami` |
-| Audit | `POST /-/npm/v1/security/advisories/bulk`, with `POST /-/npm/v1/security/audits/quick` as the client's fallback; sent by default during install (Q2) |
+| Audit | `POST /-/npm/v1/security/advisories/bulk`, with `POST /-/npm/v1/security/audits/quick` as the client's fallback; sent by default during install and answered 404 (Design, "Audit requests") |
 
 ### Packument assembly and content negotiation
 
@@ -148,21 +159,84 @@ dist-tag move). npm's declaration:
 - A publish `PUT` is **one** completed logical write, even though it carries a version, its
   files and a dist-tag update in one body.
 - Each dist-tag `PUT` or `DELETE` is one write.
-- The unpublish packument `PUT` at `-rev` is one write; the tarball `DELETE` that follows it in
-  the client's flow is a second write only if it changes head content, which after the `PUT` it
+- The unpublish packument `PUT` at `-rev` is one write, and records the removed version in the
+  package's retirement set within that same write; the tarball `DELETE` that follows it in the
+  client's flow is a second write only if it changes head content, which after the `PUT` it
   normally does not.
-- A whole-package `DELETE` is one write.
-- A deprecation is one metadata-only write.
+- A whole-package `DELETE` is one write, retiring every version it removes.
+- A deprecation, or its reversal with an empty message, is one metadata-only write.
 
 A proxied repository creates no snapshots at all, per the model's settled rule; packument
 arrival and revalidation are cache materialisation.
 
 Two protocol behaviours ride on this section. Republishing an existing version is refused, as
 the public registry refuses it; a registry that accepts it silently rewrites history that
-lockfiles already pin. And the unpublish routes carry a trap: the npm client treats a 404 on
+lockfiles already pin. **Republishing an unpublished version is refused the same way**, as the
+public registry also refuses it: the `integrity` a lockfile pins and the tarball this registry's
+own proxy layer caches forever both bind bytes to `name@version`, so unpublishing ends a
+version's life without freeing its coordinate. The package-level document holds the retirement
+set, which every later write carries forward, and a package whose every version is gone is
+served as absent while still refusing its retired versions. The package name itself is not
+retired: a new version under it publishes normally. And the unpublish routes carry a trap: the npm client treats a 404 on
 the `-rev` routes as "already gone" and exits 0, so an unrouted unpublish surface is a silent
 no-op with a green exit code. AC9's case therefore asserts through the transcript and a
 subsequent failed install, never through the client's exit code alone.
+
+### The management surface
+
+A management operation has a **trigger** (the call that changes state) and an **effect** (what a
+resolving client then sees), and the oracle's reach over them differs
+(`docs/internal/analysis/management-surfaces-and-the-oracle.md`). npm is the one Cluster 5 format
+where both are client-driven: `npm unpublish` and `npm deprecate` exist, so the real client
+oracles the trigger as well as the effect, and the one weakness is the exit-code trap above.
+
+This spec follows the precedent shared by the Cluster 5 format specs (`pypi.md`,
+`ansible-collections.md` and this one), whose common home is
+`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop):
+
+- **Each operation is a registry-owned management operation**, exposed through that one
+  management API. npm's own client routes (the `-rev` unpublish routes and the deprecate `PUT`)
+  are served as **bindings onto the same operations**, with identical semantics, authorization
+  and write accounting, because the client drives them and a registry npm users cannot
+  unpublish from with `npm unpublish` is not an npm registry. There is one operation and two
+  ways in, never two implementations.
+- **Each operation is a completed logical write through the shared write path**: exactly one
+  snapshot per operation as declared above, none for a refused one, and no blob-store object
+  deleted directly, so space returns only through retention pruning and the single-deleter
+  boundary in `storage-and-gc.md` holds unchanged.
+- **Authorization is the only gate, in the settled `(repository, action)` vocabulary with no
+  new action.** Unpublish is removal-class and requires `delete`; deprecation is a metadata
+  change and requires `push`. The public registry's restrictions (its unpublish time window and
+  its refusal when other packages depend on the version) are **not** enforced: they encode
+  public-commons policy that is meaningless against this registry's data, and an operator
+  blocked from removing their own content will not accept the answer. The divergence goes on
+  the recorded exception list.
+- **Hosted only.** A proxied repository creates no snapshots and takes its removals from the
+  upstream per the settled removal table, so unpublish or deprecate against one is refused.
+- **Verification.** The trigger is verified twice: by this registry's integration tests against
+  the management endpoint, and by the real client through the bindings. The effect is verified
+  by a real `npm install` in a conformance case.
+
+| Operation | Client binding | Effect a client sees | Action |
+|---|---|---|---|
+| Unpublish a version | `npm unpublish name@version` (`-rev` `PUT`, then tarball `DELETE`) | The version leaves the packument and no longer installs; its coordinate is retired | `delete` |
+| Unpublish a package | `npm unpublish name --force` (`-rev` `DELETE`) | The name no longer resolves; every removed version is retired | `delete` |
+| Deprecate or undeprecate a version | `npm deprecate` (the publish-route `PUT` without attachments) | Install prints the served message, or stops printing it | `push` |
+
+### Audit requests
+
+`npm install` POSTs the dependency tree to the bulk advisory endpoint by default and falls back to
+the quick-audit endpoint on error. This registry answers **both with a 404**, in every repository
+mode, and forwards neither anywhere. The client then prints its audit warning and the install
+itself succeeds.
+
+The two rejected answers are each worse than noise in a build log: an empty advisory document
+would be this registry asserting "no known vulnerabilities" about content it never checked, by
+default, to every client, and forwarding the request to the public registry's advisory endpoint
+would send the names and versions of private packages to a third party. The real answer arrives
+when `supply-chain-policy.md` has an advisory feed to serve, as a revision of this section. The
+public corpus contains a real advisory exchange, so the audit exchange is normalised out of
+replay and the divergence sits on the recorded exception list.
 
 ### The proxied path
 
@@ -188,8 +262,9 @@ Upstream removal maps onto the settled purge-or-flag table as npm's side of that
 | Versions vanishing without that shape (author unpublish) | Keep serving, record an operator-visible divergence |
 | A `deprecated` field appearing on versions | An ordinary metadata change, propagated at the next revalidation; never a removal event |
 
-Detection happens at revalidation; whether anything more active exists is `proxy-cache.md` Q12
-and is owned there. The holding-package shape is a heuristic against an unversioned upstream
+Detection happens at revalidation only: per `proxy-cache.md`'s resolved answer (was Q12) the
+proxy layer never polls an upstream, and the active channel is `supply-chain-policy.md`'s
+advisory feed. The holding-package shape is a heuristic against an unversioned upstream
 convention, which is one more reason the corpus and the drift job re-ground it rather than this
 table being trusted forever.
 
@@ -211,8 +286,11 @@ lockfile, publish, scoped install and publish, dist-tag list/add/move/delete, `n
 full packument), deprecate, unpublish, and a missing-package failure. This list is the review
 baseline for the recording script. Recording gates on the harness's redaction criterion
 (`conformance-harness.md` AC13), and every deliberate divergence from public-registry behaviour
-(the answers to Q2 and Q3, if divergent) goes on the recorded exception list **before** its flow
-is expected to replay, per the settled corpus-source decision below.
+goes on the recorded exception list **before** its flow is expected to replay, per the settled
+corpus-source decision below. Two are known now: the audit exchange, answered 404 and
+normalised out of replay, and unpublish succeeding where the public registry's time-window or
+dependent-count restrictions would refuse it. Refusing to republish an unpublished version
+matches the public registry, so that flow replays.
 
 ## Acceptance Criteria
 
@@ -254,6 +332,22 @@ is expected to replay, per the settled corpus-source decision below.
       holds npm's per-format cost under that settled attribution procedure, together with an
       explicit finding on whether the proxy layer built for OCI generalised, so the N+1
       comparison has its baseline.
+- [ ] AC15: Unpublish is gated by authorization alone: a version another package in the same
+      repository depends on, and a version older than the public registry's unpublish window
+      under an injected registry clock, both unpublish for a principal holding `delete`; a
+      principal holding only `push` is refused with no snapshot created; and unpublish or
+      deprecate against a proxied repository is refused.
+- [ ] AC16: Republishing an unpublished version, with the same tarball or a different one, is
+      refused as AC13 refuses a republish, including after the unpublish snapshot has been
+      pruned out of retention and after a whole-package unpublish, while a new version under
+      the same name publishes normally.
+- [ ] AC17: Unpublish and deprecate driven through the registry-owned management endpoint
+      produce the same served packument, exactly one snapshot each, and the same authorization
+      outcome as the same operation driven through `npm unpublish` and `npm deprecate`, with deprecation
+      permitted by `push` and unpublish requiring `delete`.
+- [ ] AC18: Both audit endpoints answer 404 with no advisory document in hosted, proxied and
+      virtual repositories, a default `npm install` against each succeeds, and no audit request
+      reaches any upstream, asserted at the network layer.
 
 ## Test Plan
 
@@ -273,15 +367,23 @@ is expected to replay, per the settled corpus-source decision below.
 | AC12 | integration | `internal/format/npm/packument_test.go` |
 | AC13 | conformance | `conformance/npm/publish_test.go` (republish case) |
 | AC14 | manual | `docs/internal/tasks/experiment-log.md`, reviewed before PyPI starts |
+| AC15 | integration + conformance | `internal/format/npm/manage_unpublish_test.go` (dependent-count and injected-clock cases, `push`-only refusal with snapshot count unchanged, proxied refusal); `conformance/npm/unpublish_test.go` (real client unpublishing a depended-on version) |
+| AC16 | conformance + integration | `conformance/npm/publish_test.go` (republish-after-unpublish case, same and different tarball); `internal/format/npm/retirement_test.go` (after pruning under an injected clock, after whole-package unpublish, new version accepted) |
+| AC17 | conformance + integration | `conformance/npm/manage_binding_test.go` (twin packages in one `script`: one operated through the management endpoint, one through real `npm unpublish` and `npm deprecate`; served packuments compared); `internal/format/npm/manage_binding_test.go` (snapshot count per operation through each entry point, `push` and `delete` grants) |
+| AC18 | conformance | `conformance/npm/audit_test.go` (hosted, proxied and virtual cases; transcript shows both 404s, network layer shows no upstream audit request) |
 
 ## Implementation Phases
 
 ### Phase 1: Hosted core
 - Packument assembly and content negotiation, tarball serving, scoped names, publish with
-  integrity verification and republish refusal
+  integrity verification and republish refusal, the audit endpoints' 404
 
 ### Phase 2: Mutation surface
-- dist-tags, unpublish, deprecation; the write-boundary declaration exercised end to end
+- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
+  preconditions)
+- dist-tags; unpublish and deprecation as registry-owned management operations with the client
+  routes bound onto them; the retirement set; the write-boundary declaration exercised end to
+  end
 
 ### Phase 3: Proxied path
 - Classification and URL rewriting, conditional revalidation, negative caching, the removal
@@ -297,12 +399,27 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-The questions this spec raised before its first review were answered by the owner and folded
-into the body; the 2026-09-25 first review raised Q2 and Q3 below. Resolved decisions are kept
-rather than deleted, so the reasoning survives the next time someone asks why it was done this
-way.
+None open. The questions this spec raised before its first review were answered by the owner
+and folded into the body. The 2026-09-25 first review raised Q2 and Q3, and folding them on
+2026-09-26 exposed Q4; all three were adopted that day under the owner's standing delegation and
+folded through Scope, Design, the criteria (AC15 to AC18) and the Test Plan. Resolved decisions
+are kept rather than deleted, so the reasoning survives the next time someone asks why it was
+done this way.
 
-### Q2: What does the registry answer to the audit requests npm sends during every default install?
+### Resolved: audit-request disposition (was Q2)
+
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: both audit endpoints
+answer an honest 404 in every repository mode, nothing is forwarded, the audit exchange is
+normalised out of the replay corpus, and the divergence sits on the recorded exception list
+(Design, "Audit requests"; AC18).
+
+Accepted cost: a warning in every default install against this registry. Why the alternatives
+lost: B makes this registry assert "no known vulnerabilities" about content it never checked,
+silently and by default, and C leaks private package names and versions to a third party
+through an egress path from the hosted surface. The real answer arrives with
+`supply-chain-policy.md`'s advisory feed, as a revision of the Design section.
+
+The original question:
 
 `npm install` POSTs the dependency tree to the bulk advisory endpoint by default, falls back to
 the quick-audit endpoint on error, and prints a warning when neither answers. The audit
@@ -324,7 +441,28 @@ replay corpus and the divergence on the recorded exception list; the real answer
 leaking private package names, which is a security-posture and privacy claim the product will be
 held to, not something the fleet can measure its way to.
 
-### Q3: Does hosted unpublish enforce the public registry's restrictions, or only our authorization?
+### Resolved: hosted unpublish policy (was Q3)
+
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: authorization-only.
+Anyone the central authorizer permits (`delete` on the repository) may unpublish; the public
+registry's time window and dependent-count restrictions are not enforced, and the divergence
+sits on the recorded exception list (Design, "The management surface"; AC15).
+
+Made consistent with the other Cluster 5 answers: unpublish and deprecation are registry-owned
+management operations homed in `docs/internal/plans/foundation/management-api.md` (to be
+authored in the spec loop), with npm's client routes served as bindings onto them rather than
+as a separate implementation (AC17). This is the one Cluster 5 format where the real client
+oracles the trigger as well as the effect, which the analysis in
+`docs/internal/analysis/management-surfaces-and-the-oracle.md` records; the precedent is shared
+so that four specs do not answer one question four ways.
+
+Accepted cost: diverging from public-registry behaviour, so any recorded unpublish-refusal flow
+cannot replay. Why B lost: its rules need npmjs's data set to mean anything, and it blocks
+operators from removing content they own on their own registry. Authorization-only governs
+**whether** a version may be removed; it does not free the removed coordinate, which is Q4's
+separate answer below.
+
+The original question:
 
 The public registry restricts unpublish (time windows, dependent counts) to protect a public
 commons. A private registry has operators, RBAC and no commons.
@@ -341,6 +479,40 @@ data, and an operator blocked from removing their own content will not accept th
 **Why this is yours:** it decides what the product promises operators about removing their own
 content, and whether fidelity to the public registry outranks operator control - a product call.
 
+### Resolved: republishing an unpublished version (was Q4)
+
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: an unpublished
+`name@version` is retired and can never be republished, with the same bytes or different ones;
+the package name itself stays usable for new versions (Design, "What counts as a write"; AC16).
+
+Raised and adopted in the same pass because folding Q3 exposed it: authorization-only unpublish
+says nothing about whether the removed coordinate is free again, and two readings of "operator
+control" diverge exactly there. Accepted cost: an operator who unpublished a bad version must
+publish a new version number rather than reuse the old one. Why B lost: it is a correctness
+hole rather than a freedom, since every lockfile that pinned the old `integrity` and every cache
+that saw the old tarball, this registry's own proxy layer included, would then disagree with the
+registry. It also matches `pypi.md`'s filename retirement and `ansible-collections.md`'s version
+retirement, adopted in the same pass, so retirement is one cross-format rule.
+
+The question as raised:
+
+Q3's answer lets an authorized principal unpublish any version. Once it is gone, may the same
+`name@version` be published again? The public registry says never. A private registry could say
+yes, on the same operator-control reasoning that settled Q3.
+
+**Recommendation:** A - retire the coordinate. Q3 removed public-commons policy; version
+immutability is not public-commons policy but a property lockfile integrity checks and this
+registry's own immutable-artifact caching depend on for correctness.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. An unpublished version is retired forever; the name stays usable** | `name@version` binds one tarball for the life of the repository, so no lockfile or cache is ever contradicted; matches the public registry, so the flow replays | A botched version cannot be fixed in place; the operator publishes a new version number |
+| **B. Unpublish frees the version for republishing** | An operator can correct a bad publish under the same version | A lockfile pinning the old `integrity` fails against the new tarball, and a proxied-of-hosted cache that saw the old tarball serves it forever against metadata that now disagrees |
+
+**Why this is yours:** it is a product promise about correcting mistakes, bounded by a
+correctness property other parts of the system rely on, and it decides how far Q3's operator
+control extends.
+
 ### Resolved: corpus source (was Q1)
 
 **Settled 2026-09-22: the public npm registry is authoritative**, per the general rule in
@@ -350,11 +522,12 @@ diverge from public-registry behaviour goes on the recorded exception list, with
 
 Accepted cost: recording needs network access and is subject to the public registry's rate
 limits, so corpora are committed rather than re-recorded per run, and a divergence this spec
-chooses (Q2 and Q3 above are candidates) must be on the exception list before its flow is
-expected to replay.
+chooses (the audit and unpublish-policy answers above are two) must be on the exception list
+before its flow is expected to replay.
 
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-25 | 331ef25 | first review: protocol grounding at published-contract level (the `npm/registry` docs describe reads only, so the write half is grounded in prior-art implementations and flagged for re-grounding in captured traffic per the standing rule) + adversarial + cross-spec (interface AC8/Q9 re-open gate, charter Q3's before-npm obligation from `question-triage.md`, data-model's write-boundary and snapshot rules and its AC13, proxy-cache's settled classification/removal/serve-stale/negative-caching decisions and its AC13, harness `setup` vocabulary, corpus rules and redaction gate, auth AC4, supply-chain-policy Q6, the catalogue's npm family row) + constitution; code-claim verification vacuous pre-implementation (no `internal/format/npm/`, no `conformance/npm/`) | The spec was a stub wearing a reviewed spec's frontmatter: no summary, no Design, no Phases, no Tasks, and its one resolved decision claimed it was "folded into Design and Scope above" when no Design section existed and no accepted cost was recorded - both corrected. Body built out from grounded protocol facts: the wire surface including the `-rev` unpublish routes (where an unrouted surface is a silent no-op because the client exits 0 on 404), content negotiation and the corgi Accept header, the encoded-slash routing trap, tarball URL rewriting, the write-boundary declaration `data-model.md` requires of every format spec, the proxied classification and npm's side of the settled removal table (security-holding shape purges; author unpublish keeps and flags; deprecation is never a removal), the client-side-cache trap that made AC6 vacuously passable, and the non-interactive auth path (token via `setup`, no new harness vocabulary). Scope gained unpublish, deprecation, republish refusal, content negotiation and security-signal detection; out-of-scope items each gained a non-effort reason. Six criteria added (AC9 unpublish with transcript assertions, AC10 deprecation both paths, AC11 the removal table, AC12 content negotiation, AC13 republish refusal, AC14 the measurement baseline) with Test Plan rows; AC7's row retargeted from `internal/proxy/` (which duplicated proxy-cache AC2/AC3) to an npm-path conformance case. Both blocking preconditions now recorded: the interface re-open (with its Q9 noted as widening the evidence set, not moving the gate) and charter Q3 before npm starts. Q2 (audit-request disposition: 404 vs empty stub vs forwarding, a security-posture and privacy call) and Q3 (hosted unpublish policy vs public-registry emulation) raised for the owner, not decided. Stays draft. |
+| 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review: adoption and application of this spec's own recommendations, made consistent with the other Cluster 5 format specs. Q2 adopted as A: both audit endpoints answer 404 in every mode with nothing forwarded (new Design section "Audit requests", wire-table row, Scope, corpus exception list, AC18). Q3 adopted as A, authorization-only unpublish with the public registry's restrictions unenforced (AC15), and made consistent with pypi and Galaxy: unpublish and deprecation are registry-owned management operations homed in `docs/internal/plans/foundation/management-api.md` (to be authored), with the `-rev` routes and the deprecate `PUT` served as bindings onto them, `delete` for unpublish and `push` for deprecation, hosted only (new Design section "The management surface", AC17, a Phase 2 blocking precondition). Folding Q3 exposed Q4 (may an unpublished version be republished), written in decision shape and adopted as A: retired forever through a package-level retirement set, the name staying usable (write-boundary section, AC16), matching pypi's filename retirement and Galaxy's version retirement. The provenance out-of-scope item now names `docs/internal/plans/foundation/artifact-verification.md` (to be authored) as the producer; the charter precondition records that charter's cost-attribution question was answered in its own spec during this pass; the proxy-cache security-signal citation updated to that spec's resolved passive-detection answer. Test Plan rows added for AC15 to AC18. Stays draft. |

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reviewed 2026-09-22: counts verified (33 = 2+8+10+13; 31 distinct families); three new open questions block planned (Git-backed family split, tier-gate vs charter scheduling, client-reach proof)."
+status_description: "Folded 2026-09-26 under the owner's standing delegation: Git-backed split (33 across 33), Ansible promoted to Tier 1 with the gate binding Tiers 2 and 3 handler code but never speccing, client reach proven per client, and a named Terraform trigger. Totals 2 + 9 + 10 + 12 = 33. Zero open questions; stays draft pending a gate review."
 description: "The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat."
 author: michielvha
 goal: "Fix the breadth target at 33 ecosystems, record which protocol families multiply client reach, and set the order and the gate that decide whether breadth is affordable."
@@ -35,27 +35,33 @@ unaffordable.
 ## Where breadth multiplies, and where it does not
 
 A caution first, because the temptation to inflate here is strong and this document is the place
-that has to resist it: **the 33 ecosystems below are roughly 31 distinct protocol
-implementations.** Shared-format families do not meaningfully shrink that number, because each
-family already appears as a single row.
+that has to resist it: **the 33 ecosystems below are 33 distinct protocol implementations.** No
+family collapses two ecosystem rows into one implementation. Every family appears as a single
+row, and the one label that used to group three rows, "Git-backed", turned out on inspection to
+name a resolution model rather than a wire protocol, so it was split on 2026-09-26 (resolved
+below). Until then this document said "roughly 31".
 
 What families *do* multiply is the **client and distribution surface** reached per handler:
 
 | One handler | Reaches | Multiplier |
 |---|---|---|
 | **Maven layout** | Maven, Gradle, SBT, Ivy, Leiningen - so Java, Kotlin, Scala, Clojure, Groovy | 5 build tools, 5 languages |
-| **Debian archive** | Debian, Ubuntu, Mint, Pop!_OS, every apt derivative | the whole apt world |
+| **Debian archive** | apt on Debian, Ubuntu, Mint and Pop!_OS | 4 named distributions; other apt derivatives are likely served but are not counted until tested |
 | **RPM repodata** | RHEL, Fedora, SUSE, Rocky, Alma | 5 distributions |
 | **Simple index** | pip, uv, Poetry, pdm | 4 Python tools |
 | **npm** | npm, Yarn, pnpm, Bun | 4 JavaScript package managers |
-| **OCI distribution** | Docker, Podman, ORAS, Helm-as-OCI, WASM artifacts | containers plus a growing set |
-| **Git-backed** | Go modules, Swift packages, Julia General | 3 ecosystems, one resolution model |
+| **OCI distribution** | Docker, Podman, ORAS, Helm-as-OCI | 4 named clients; WASM and other artifact types ride the same protocol through these clients and are not counted separately |
 
-So **33 ecosystems and ~31 implementations reach well over 50 distinct client tools and
-distributions.** That is the honest version of the claim, and it is still the strongest position
-available: nobody free offers this breadth *with* upstream caching.
+Every entry in the "Reaches" column is a **claim to be proven by that real client**, not an
+illustration (AC2). Counted once each, with the six multiplier handlers' clients plus one client
+for each of the other 27 ecosystems and the `helm` CLI counted once although it appears under
+both Helm and OCI, the named reach is about 52. So **33 ecosystems across 33 implementations
+reach 50+ named client tools and distributions**, and the advertised figure is never larger than
+the number the conformance matrix shows passing (AC3). That is the honest version of the claim,
+and it is still the strongest position available: nobody free offers this breadth *with*
+upstream caching.
 
-The moat is not arithmetic. It is that the conformance harness makes each of those ~31
+The moat is not arithmetic. It is that the conformance harness makes each of those 33
 implementations cheap enough to build and, crucially, cheap enough to *keep working* as each
 ecosystem changes its protocol on its own schedule. Competitors are not blocked by the count;
 they are blocked by the treadmill.
@@ -63,9 +69,22 @@ they are blocked by the treadmill.
 Family boundaries are asserted here and **must be proven by conformance**, not assumed. Where a
 family member diverges (Gradle's module metadata alongside Maven POMs, `uv` versus `pip` on index
 semantics), the divergence gets its own cases and, if it is large enough, its own handler. A
-family that turns out not to be a family is a finding worth recording, not a failure.
+family that turns out not to be a family is a finding worth recording, not a failure; "Git-backed"
+is the first such finding.
 
 ## The catalogue
+
+**Every ecosystem below is specced now; only building is gated.** On 2026-09-26 the owner
+directed that all 33 be specced up front, Tiers 2 and 3 included, in the same spec loop as the
+foundation (`project-charter.md`, "Speccing is not gated; building is"). The tiers order the
+**build**, and the Phase 3 gate governs whether Tiers 2 and 3 are built at all. A spec written
+before the gate is re-reviewed against the foundation as it then stands before its handler
+starts, because `/implement` refuses a spec whose last review is stale relative to `main`.
+
+A tier position changes only by **promotion**: the row moves into the higher tier's table in
+this document, the totals line below is updated, and the promotion is recorded as a Resolved
+entry with its reason. There is no exception clause and no out-of-order build, so the tier tables
+are always the single source of build order.
 
 ### Tier 0 - proving the harness
 
@@ -77,14 +96,17 @@ family that turns out not to be a family is a finding worth recording, not a fai
 ### Tier 1 - the formats that carry adoption
 
 These are what teams actually deploy a registry for, and between them they establish every hard
-mechanism: mutable metadata, TTL revalidation, negative caching, signed indexes.
+mechanism: mutable metadata, TTL revalidation, negative caching, signed indexes, and a
+client-visible asynchronous operation. One row is here for market position rather than install
+volume: Ansible collections, promoted on 2026-09-26 because hosting it alone is differentiating.
 
 | Ecosystem | Family | Notes |
 |---|---|---|
 | npm | npm | Most-wanted upstream cache. Mutable packument drives the TTL design. |
 | PyPI | Simple index | The generalisation measurement against npm. |
+| Ansible collections | Galaxy v3 | Promoted from Tier 3 on 2026-09-26. The one ecosystem where hosting alone is differentiating, and the first format whose publish is an asynchronous import task the client polls. |
 | Maven | Maven layout | Unlocks the entire JVM world in one handler. |
-| Go modules | Git-backed | Module proxy plus checksum-db semantics. |
+| Go modules | GOPROXY module proxy | The GOPROXY HTTP protocol plus checksum-database semantics; no git on the wire. |
 | NuGet | NuGet | .NET, and a large enterprise install base. |
 | Helm | Helm + OCI | Classic `index.yaml` alongside the OCI path. |
 | Debian (apt) | Debian archive | First format requiring **GPG-signed indexes**; clients hard-refuse without them. |
@@ -100,7 +122,7 @@ mechanism: mutable metadata, TTL revalidation, negative caching, signed indexes.
 | Conda | Conda |
 | Alpine (apk) | Alpine |
 | Conan (C/C++) | Conan |
-| Swift packages | Git-backed |
+| Swift packages | Swift package registry (SE-0292) |
 | Pub (Dart/Flutter) | Pub |
 | Hex (Elixir/Erlang) | Hex |
 | CRAN (R) | CRAN |
@@ -112,7 +134,6 @@ supported".
 
 | Ecosystem | Family |
 |---|---|
-| Ansible collections | Galaxy v3 |
 | Terraform / OpenTofu modules and providers | Terraform registry |
 | Vagrant boxes | Vagrant |
 | Chef cookbooks | Chef |
@@ -121,114 +142,148 @@ supported".
 | Hackage (Haskell) | Hackage |
 | CPAN (Perl) | CPAN |
 | opam (OCaml) | opam |
-| Julia General | Git-backed |
+| Julia General | Julia Pkg server |
 | Homebrew bottles | Bottles |
 | Open VSX (editor extensions) | Open VSX |
 | Arch (pacman) | Arch |
 
-**Headline count at full delivery: 33 ecosystems, ~31 protocol implementations, 50+ client tools
+**Headline count at full delivery: 33 ecosystems, 33 protocol implementations, 50+ client tools
 and distributions reached.** For comparison, Gitea covers 23 ecosystems with no proxying at all,
 and Harbor covers 1 with excellent proxying.
 
-Tier totals: 2 + 8 + 10 + 13 = 33. Keep this line updated when a row is added or removed; it is
-the arithmetic check on every number quoted above, and an earlier draft of this document claimed
-"~30 ecosystems across ~15 protocols" purely because nobody had added the rows up.
+Tier totals: 2 + 9 + 10 + 12 = 33. Distinct families: 33, one per row. Keep this line updated
+when a row is added, removed or promoted; it is the arithmetic check on every number quoted above,
+and an earlier draft of this document claimed "~30 ecosystems across ~15 protocols" purely
+because nobody had added the rows up. AC6 makes the check mechanical.
 
 ## Two formats deserve specific comment
 
-**Terraform/OpenTofu** is in Tier 3 here only because Stackweaver already implements the
-Terraform Registry v1 protocol for modules and providers, with publishing, GPG signing and
-protocol-level authorization. That is a working implementation to port rather than a protocol to
-learn, so its real cost is far below its tier position. Promote it the moment a shared brand story
-makes it worth doing.
+**Terraform/OpenTofu** is in Tier 3 only because Stackweaver already implements the Terraform
+Registry v1 protocol for modules and providers, with publishing, GPG signing and protocol-level
+authorization. That is a working implementation to port rather than a protocol to learn, so its
+real cost is far below its tier position. It has one named promotion trigger: **Stackweaver
+adopting this registry as the backend for its own module and provider registry**, recorded as a
+decision in Stackweaver's documentation. That event turns the port into shared infrastructure
+for both platforms rather than a long-tail format, and it is then promoted into Tier 1 as a row
+move under the promotion rule above. Nothing else promotes it.
 
 **Ansible collections** is the one ecosystem where hosting *alone* is differentiating: Gitea does
 not support it, Forgejo's support is an unmerged proposal, and the only free options are heavy
-Pulp deployments. Its tier position understates its value.
+Pulp deployments. Its old Tier 3 position understated that value, so it was promoted into Tier 1
+on 2026-09-26, third in build order after npm and PyPI, which keeps the early slot the charter
+had already given it without making the tier gate ceremonial.
 
 ## Acceptance Criteria
 
 - [ ] AC1: Every ecosystem in the catalogue has a spec under `docs/internal/plans/formats/`
-      before any of its code is written.
-- [ ] AC2: Each family's shared-protocol claim is proven by conformance cases from **at least two
-      different member ecosystems** passing against one handler, or the family is split.
-- [ ] AC3: The conformance matrix reports per **ecosystem**, not per family, so the advertised
-      count is never larger than the tested count.
+      before any of its code is written, and all 33 specs exist before the Phase 3 breadth-gate
+      verdict is recorded, so the gate decides what is built, never what is written.
+- [ ] AC2: Every client and distribution named in the multiplier table passes its ecosystem's
+      hosted and proxied conformance suites against that ecosystem's one handler, and appears
+      in the conformance matrix's Client column under the ecosystem's row, never as a row of its
+      own; a named client that cannot pass is removed from the table, or gets its own handler
+      under the resolved family-divergence decision. Any future family label shared by two
+      ecosystem rows is proven by conformance cases from both member ecosystems passing against
+      one handler before the rows may share it.
+- [ ] AC3: The ecosystem count and the client-reach figure advertised in `README.md` never
+      exceed, respectively, the number of ecosystem rows and the number of distinct clients the
+      conformance matrix shows passing on both paths, with one matrix row per ecosystem, never
+      per family.
 - [ ] AC4: No ecosystem is advertised as supported until both its hosted and proxied paths pass.
-- [ ] AC5: Tier 1 is complete before any Tier 2 work begins, and the Phase 3 continue-or-shrink
-      decision is recorded in the experiment log with the Tier 1 per-format cost trend as its
-      evidence.
+- [ ] AC5: No handler code for a Tier 2 or Tier 3 ecosystem exists before every Tier 1 format
+      has met its definition of done and the Phase 3 continue-or-shrink verdict is recorded in
+      the experiment log with the Tier 1 per-format cost trend as its evidence; an ecosystem is
+      built early only by promotion into Tier 1 recorded in this document.
+- [ ] AC6: The tier totals line equals the row counts of the four tier tables, and the distinct
+      family count it states equals the number of distinct Family values across them; no Family
+      value appears on two rows unless AC2's two-member proof exists for it.
 
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
-| AC1 | ci | structure check in `make verify`: every `internal/format/<name>` maps to `docs/internal/plans/formats/<name>.md` |
-| AC2 | conformance | `conformance/<family>/<ecosystem>_test.go` |
-| AC3 | ci | matrix generation, `docs/internal/conformance/matrix.md` |
+| AC1 | ci | structure check in `make verify`: every catalogue row resolves to a spec under `docs/internal/plans/formats/`, every `internal/format/<name>` maps to one, and a recorded gate verdict fails while any row lacks a spec |
+| AC2 | conformance | `conformance/<ecosystem>/`, each suite run once per named client image; the matrix Client column is generated from those runs |
+| AC3 | ci | matrix generation for `docs/internal/conformance/matrix.md`, plus a check in `make verify` comparing the figures in `README.md` against the matrix's passing counts |
 | AC4 | conformance | `conformance/<format>/hosted_test.go`, `proxied_test.go` |
-| AC5 | manual | `docs/internal/tasks/experiment-log.md` |
+| AC5 | ci + manual | structure check in `make verify`: an `internal/format/<name>` for a Tier 2 or Tier 3 row fails without the gate verdict entry in `docs/internal/tasks/experiment-log.md`; the verdict's evidence is reviewed manually at Phase 3 against the charter's gate definition |
+| AC6 | ci | structure check in `make verify`: parses the tier tables and the totals line, and fails on any count mismatch or on a shared Family value without a two-member AC2 suite |
 
 ## Implementation Phases
+
+### Phase 0: Spec every ecosystem
+All 33 ecosystem specs authored in the spec loop, per the owner's 2026-09-26 direction. Under
+way now; AC1's second clause is what closes it.
 
 ### Phase 1: Tier 0
 Generic and OCI, proving the harness.
 
 ### Phase 2: Tier 1
-The eight adoption formats, in the order listed. Signed-index formats (Debian, RPM) last within
-the tier, since they add GPG signing to the shared layers.
+The nine adoption formats, in the order listed: npm, PyPI, Ansible collections, Maven, Go
+modules, NuGet, Helm, Debian, RPM. Signed-index formats (Debian, RPM) last within the tier, since
+they add GPG signing to the shared layers. The charter's build order interleaves shared
+subsystems between them (`project-charter.md`, steps 4b, 6a and 7).
 
 ### Phase 3: Re-evaluate
-Read the experiment log. If per-format cost is falling, continue to Tier 2. If it is flat, the
-breadth bet is wrong and the catalogue shrinks to what is already delivered. **This gate is real,
-not ceremonial.**
+The owner applies the charter's pre-committed breadth-gate definition to the nine Tier 1 rows of
+the experiment log. On `continue`, proceed to Tier 2. On `shrink`, the breadth bet is wrong, the
+catalogue shrinks to what is already delivered, and every unbuilt Tier 2 and Tier 3 spec is set
+to `parked` rather than deleted. **This gate is real, not ceremonial.**
 
 ### Phase 4: Tiers 2 and 3
-Fan out, one spec and one handler per ecosystem.
+Fan out, one handler per ecosystem against its existing spec, each spec re-reviewed against the
+then-current foundation first.
+
+## Tasks
+
+Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-Three questions raised by the 2026-09-22 review await the owner. All earlier questions were
-answered and folded into the catalogue and family sections above; their decisions are kept
-below as Resolved entries, so the reasoning survives the next time someone asks why it was
-done this way.
+None open. The three questions raised by the 2026-09-22 review (Q3, Q4, Q5) were adopted on
+2026-09-26 under the owner's standing delegation and folded into the family section, the tier
+tables, the criteria and the phases above; folding Q4 exposed one further judgment call (Q6),
+adopted the same way. Every adopted answer is reversible by the owner. The two decisions settled
+by the owner in the first round are kept below as Resolved entries, so the reasoning survives
+the next time someone asks why it was done this way.
 
-### Q3: Is "Git-backed" one family, or three protocols wearing one label?
+### Resolved: "Git-backed" is three protocols, not one family (was Q3)
 
-Go modules resolve through the GOPROXY protocol (a plain HTTP API: `/@v/list`, `.info`,
-`.mod`, `.zip`, `/@latest`) plus the checksum-database transparency log - no git anywhere on
-the wire, and this document's own Tier 1 row says "Module proxy plus checksum-db semantics".
-Swift package registries implement the Swift Package Registry service API (SE-0292, a JSON
-API with versioned media types). Julia's Pkg resolves via Pkg servers or a git-repo registry
-of TOML files. Three genuinely different wire protocols share only a resolution *model*.
-AC2 requires a family be proven by two member ecosystems passing against one handler, which
-this family would almost certainly fail - and it is the only family whose collapse produces
-the ~31 figure quoted in `README.md`, `CLAUDE.md`, the charter and the conformance matrix.
+**Adopted 2026-09-26 under the owner's standing delegation.** Option B: split now into three
+single-ecosystem families, "GOPROXY module proxy" (Go modules), "Swift package registry
+(SE-0292)" (Swift packages) and "Julia Pkg server" (Julia General). The multiplier table loses
+its Git-backed row, the headline becomes 33 ecosystems across 33 protocol implementations, and
+the totals line states the family count, which AC6 checks mechanically so a shared label can
+never again collapse the count without a two-member proof. The files quoting "~31" outside this
+document are listed for correction by their owners; this document is the arithmetic source.
 
-**Recommendation:** B, split now - the divergence is established by published protocol specs,
-not something conformance needs to discover, and correcting the headline number before it is
-public is cheaper than after.
+Accepted cost: the headline loses its "fewer protocols than ecosystems" framing, and the "~31"
+figure has to be corrected in `README.md`, `CLAUDE.md`, the charter, the conformance matrix and
+the "31 bespoke schemas" phrasing of two foundation specs. Keeping the family and letting AC2
+adjudicate (A) lost because the divergence is established by the published protocols already,
+so AC2 would only force the same correction later and in public.
 
 | Option | You get | It costs |
 |---|---|---|
 | **A. Keep the family; let AC2 adjudicate** | The ~31 headline stands for now; no cross-file edits | The count rests on a family whose members demonstrably speak three different wire protocols, so AC2 likely forces the same edits later as a public correction |
 | **B. Split into three single-ecosystem families now** | A count that survives AC2; the family table stops claiming a wire-level multiplier that is only model-deep | ~31 becomes ~33 in four other files, and the family multiplier table loses a row |
 
-**Why this is yours:** ~31 is the advertised headline; changing it is a positioning call,
-not a measurement.
+### Resolved: the tier gate reaches Tier 3, and early builds are promotions (was Q4)
 
-### Q4: Does the Tier 1 gate bind Tier 3, and how do the two named early builds get scheduled without breaking it?
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: Ansible collections is
+promoted into Tier 1 (third, after PyPI), AC5 now binds Tier 2 **and** Tier 3 handler code, and
+Terraform/OpenTofu gets one named promotion trigger (Q6). Reconciled with the owner's direction
+of the same day that all 33 ecosystems be specced now: **the gate binds building, never
+speccing.** AC1 now requires every spec to exist before the gate fires, AC5 forbids Tier 2 and
+Tier 3 handler code before it, and a `shrink` verdict parks the unbuilt specs rather than
+leaving them unwritten. The charter's build order and phases give Ansible its Tier 1 slot (step
+6a), so the charter and this document agree.
 
-AC5 forbids Tier 2 work before Tier 1 completes but says nothing about Tier 3, so as written
-a Tier 3 format may be built at any time. Meanwhile the charter's Phase 4 schedules Ansible
-collections (Tier 3 here) immediately after PyPI and before the Tier 1 remainder, its spec
-already exists, and this document invites promoting Terraform/OpenTofu "the moment a shared
-brand story makes it worth doing". Closing the AC5 loophole to cover Tier 3 would contradict
-the charter; leaving it open makes the tier gate ceremonial for a third of the catalogue.
-
-**Recommendation:** A - promote Ansible collections into Tier 1 (its own section already
-argues its value is understated), give Terraform an explicit named promotion trigger, and
-extend AC5 to "any Tier 2 or Tier 3 work".
+Accepted cost: Tier 1 grows to nine and the "formats that carry adoption" story absorbs a format
+there for market position, and the breadth gate's Tier 1 series gains a ninth point. Keeping the
+tiers with a promotion bypass (B) lost because a documented bypass makes the gate ceremonial for
+whoever invokes it; a strict gate that drops Ansible from the early slot (C) lost because it
+delays the one format with no good free alternative for no evidential gain.
 
 | Option | You get | It costs |
 |---|---|---|
@@ -236,28 +291,53 @@ extend AC5 to "any Tier 2 or Tier 3 work".
 | **B. Keep tiers; add an explicit promotion rule recorded in this doc** | Tiers stay a pure cost ordering | The gate has a documented bypass and AC5 needs wording that tolerates it |
 | **C. Strict gate; charter drops Ansible from Phase 4** | The simplest gate | Contradicts the charter's settled sequencing and delays the one format with no good free alternative |
 
-**Why this is yours:** sequencing the differentiating niche format against the adoption
-formats is a product call, not a measurement.
+### Resolved: client-reach claims are proven per client (was Q5)
 
-### Q5: What proves a family's client-reach claim when the family has only one ecosystem row?
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: AC2 is now a
+client-reach criterion. Every client and distribution the multiplier table names must pass its
+ecosystem's hosted and proxied suites against the one handler, and that evidence appears in the
+matrix's Client column under the ecosystem's row, never as an ecosystem row. AC3 extends count
+integrity to the reach figure. With the Git-backed split no family has two ecosystem rows, so
+AC2's original two-ecosystem clause survives only as the rule for any future shared label, which
+AC6 enforces. The table's uncountable entries ("every apt derivative", "WASM artifacts") were
+reworded so every counted entry is a nameable client.
 
-AC2 demands two member *ecosystems*, but six of the multiplier families (npm, Simple index,
-Maven layout, Debian archive, RPM repodata, OCI) have exactly one ecosystem row each, so AC2
-can never bind them - while the claims that actually sell the multiplier (Gradle, uv, Yarn,
-Podman, apt derivatives) are proven by nothing. The conformance matrix doc meanwhile says a
-Maven-layout handler "earns its Gradle row" from a real Gradle client, which treats Gradle as
-a row - contradicting this catalogue, where Gradle is client reach and only Maven counts
-toward the 33.
-
-**Recommendation:** A - add a client-reach clause to AC2 and settle that such evidence
-appears in the matrix's Client column under the ecosystem row, never as a new ecosystem row.
+Accepted cost: real conformance work per named client (Gradle, SBT, Ivy, Leiningen, uv, Poetry,
+pdm, Yarn, pnpm, Bun, Podman, ORAS, and each named distribution), and the reach figure falls if
+any of them fails. Leaving the table illustrative (B) lost because the 50+ headline would ship
+untested, the exact failure AC3 exists to prevent, and the matrix's "earns its Gradle row"
+wording would keep contradicting this document.
 
 | Option | You get | It costs |
 |---|---|---|
 | **A. AC2 gains a client-reach clause; clients appear under the ecosystem row** | The 50+ figure becomes testable; count integrity extends to the multiplier table; the matrix wording gets a single definition to follow | Real conformance work per named client (Gradle, SBT, Ivy, Leiningen, uv, Poetry, pdm, Yarn, pnpm, Bun, Podman, ...) |
 | **B. AC2 stays ecosystem-only; the multiplier table is illustrative** | No extra suite cost | The 50+ headline ships untested, the exact failure mode AC3 exists to prevent, and the matrix's Gradle-row sentence still contradicts this doc |
 
-**Why this is yours:** it sets the conformance budget for a marketing claim.
+### Resolved: what promotes Terraform/OpenTofu (was Q6)
+
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A, folded into "Two formats
+deserve specific comment": Stackweaver adopting this registry as the backend for its own module
+and provider registry is the one trigger, and it acts as a row move under the promotion rule.
+
+Accepted cost: a cheap format may wait behind the gate. Owner discretion (B) lost because it
+reopens the bypass Q4 closed, and no trigger (C) lost because shared infrastructure for both
+platforms is a genuine reason, not a preference.
+
+Raised while folding Q4, whose recommendation called for "an explicit named promotion trigger"
+without naming one. The old wording, "the moment a shared brand story makes it worth doing", was
+a bypass with no observable condition.
+
+**Recommendation:** A - tie promotion to an event outside this repository that changes what the
+port is for.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Stackweaver adopts this registry as its module and provider backend** | An observable, recorded event; at that point the port serves two platforms and stops being long tail | Terraform may wait for the gate even though it is cheap, if Stackweaver never adopts |
+| **B. Owner discretion, recorded when exercised** | Maximum flexibility | A bypass by another name, the thing Q4 closed |
+| **C. No trigger: Terraform waits for the gate like every other Tier 3 row** | The simplest rule | Ignores a real reason, shared infrastructure, that would justify building it early |
+
+**Why this is yours:** it ties this project's order to the sister platform's roadmap, a product
+call.
 
 ### Resolved: family divergence (was Q1)
 
@@ -283,3 +363,4 @@ the tested count.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-22 | afbb4e4 | adversarial + constitution + count integrity | Arithmetic verified (33 = 2+8+10+13; exactly 31 distinct families; 50+ reach plausible at ~54); fixed Clojars misclassification, missing npm multiplier row, Tier 1 order vs Phase 2, AC1/AC5 wording; raised Q3/Q4/Q5; stays draft. |
+| 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Adopted Q3 (B: Git-backed split into GOPROXY module proxy, Swift package registry and Julia Pkg server; headline now 33 ecosystems across 33 implementations), Q4 (A: Ansible collections promoted to Tier 1 third in order, AC5 extended to Tier 3, reconciled with the owner's spec-everything direction so the gate binds building only) and Q5 (A: client reach proven per named client in the matrix Client column), plus Q6 exposed by the fold (Terraform promotes only when Stackweaver adopts this registry as its module and provider backend). Body changes: family section and multiplier table rewritten (Git-backed row removed, uncountable entries reworded, reach recounted at about 52); promotion rule and spec-everything statement added; tier tables and totals line corrected to 2 + 9 + 10 + 12 = 33 with 33 distinct families; AC1 (all 33 specs before the gate), AC2 (client reach), AC3 (advertised figures bounded by the matrix) and AC5 (Tier 2 and 3 handler code gated, early builds only by promotion) rewritten, AC6 (mechanical totals and family check) added, each with a Test Plan row; Phase 0 (spec everything) added and Phase 2 lists the nine in order; Tasks placeholder added. Stays draft: no gate review has been run. |

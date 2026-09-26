@@ -3,8 +3,17 @@
     "docs/internal/conformance/matrix.md",
     "docs/internal/plans/foundation/conformance-harness.md"
   ],
+  "conformance/cargo/**": [
+    "docs/internal/plans/formats/cargo.md"
+  ],
   "conformance/generic/**": [
     "docs/internal/plans/formats/generic.md"
+  ],
+  "conformance/go/**": [
+    "docs/internal/plans/formats/go-modules.md"
+  ],
+  "conformance/helm/**": [
+    "docs/internal/plans/formats/helm.md"
   ],
   "conformance/oci/**": [
     "docs/internal/plans/formats/oci.md"
@@ -19,14 +28,26 @@
   "internal/format/ansible/**": [
     "docs/internal/plans/formats/ansible-collections.md"
   ],
+  "internal/format/cargo/**": [
+    "docs/internal/plans/formats/cargo.md"
+  ],
   "internal/format/generic/**": [
     "docs/internal/plans/formats/generic.md"
+  ],
+  "internal/format/go/**": [
+    "docs/internal/plans/formats/go-modules.md"
+  ],
+  "internal/format/helm/**": [
+    "docs/internal/plans/formats/helm.md"
   ],
   "internal/format/npm/**": [
     "docs/internal/plans/formats/npm.md"
   ],
   "internal/format/oci/**": [
     "docs/internal/plans/formats/oci.md"
+  ],
+  "internal/format/pub/**": [
+    "docs/internal/plans/formats/pub.md"
   ],
   "internal/format/pypi/**": [
     "docs/internal/plans/formats/pypi.md"
@@ -43,6 +64,9 @@
   ],
   "internal/replication/**": [
     "docs/internal/plans/foundation/replication.md"
+  ],
+  "internal/retention/**": [
+    "docs/internal/plans/formats/generic.md"
   ],
   "internal/storage/**": [
     "docs/internal/plans/foundation/data-model.md",

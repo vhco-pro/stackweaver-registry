@@ -64,6 +64,16 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/cargo.md",
+    "description": "Spec for the Cargo (Rust) registry format: the sparse index protocol and the crates.io-style web API, hosted and proxied, with cargo as the conformance oracle for reads, publish and yank alike.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/cargo/**",
+      "conformance/cargo/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/catalogue.md",
     "description": "The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat.",
     "internal": true,
@@ -81,7 +91,28 @@
     "issue": "6",
     "covers": [
       "internal/format/generic/**",
+      "internal/retention/**",
       "conformance/generic/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/formats/go-modules.md",
+    "description": "Spec for the Go modules format: the GOPROXY protocol hosted and proxied, the checksum-database passthrough, and what hosted means for an ecosystem with no publish API.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/go/**",
+      "conformance/go/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/formats/helm.md",
+    "description": "Spec for the classic Helm chart repository format (index.yaml plus .tgz and .prov over HTTP), hosted and proxied, and how it relates to the OCI path that oci.md already covers.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/helm/**",
+      "conformance/helm/**"
     ]
   },
   {
@@ -103,6 +134,15 @@
     "covers": [
       "internal/format/oci/**",
       "conformance/oci/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/formats/pub.md",
+    "description": "Spec for the Pub format (Dart and Flutter): the hosted pub repository API v2, hosted and proxied, where the client unilaterally enforces content hashes, excludes retracted versions, and deletes its stored token on any 401.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/pub/**"
     ]
   },
   {

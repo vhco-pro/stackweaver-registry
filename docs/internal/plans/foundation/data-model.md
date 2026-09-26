@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Gate review 2026-09-24 at 1701a48: the promotion scope-in was half-applied (Design and Phase 2 still described the single-pointer v1) and is now folded through; deletes and metadata-only mutations derived as snapshot-creating writes; AC24 (immediate policy) and AC25 (pruning reconstructibility) added; Q15 raised - the in-flight membership check's session scoping has no wire session to key on. Stays draft until the owner answers Q15. Consequential update 2026-09-26: storage-and-gc Q10 was answered option A, so the mark-root set this spec owns is now five - the liveness bullet, the Snapshots section, the pruning-reconstructibility sentence, AC23 (its relationship to aging in place stated explicitly) and AC25 all widened for pointer-targeted snapshots."
+status_description: "Folded 2026-09-26 at 4d1aeb1 under the owner's standing delegation: Q15 adopted (the in-flight membership check is repository-scoped) and, because it was the third collision of one root cause, one definition of an upload session and the upload scope written into Design for every consumer to cite; the new Q16 adopted (session lifetime defaults, one hour idle and 24 hours absolute). AC18 rewritten, AC26 and AC27 added; the mark-root set is unchanged. Zero open questions; stays draft until a gate review."
 description: "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies."
 author: michielvha
 goal: "Make breadth affordable by giving all 33 ecosystems one metadata schema, so a format is parsing plus routes rather than a bespoke database design."
@@ -79,6 +79,9 @@ remote modelling together.
   metadata-only mutation - produces an immutable repository snapshot, stored as a delta with
   periodic full checkpoints, and serving resolves through a pointer to one. The schema carries this from day one, and the promotion and rollback features
   above build directly on it.
+- **The one definition of an upload session and of the upload scope**, including the session
+  lifetime, which every spec that keys a mechanism on upload state uses rather than restating
+  (the Design section "Upload sessions and the upload scope").
 
 **Out of scope**
 
@@ -182,6 +185,66 @@ serve everyone" is now five plus the edge. That is cheaper than either flattenin
 `File` rows, which loses the referrers query, or teaching the core to parse OCI manifests, which
 is the coupling this whole model exists to prevent.
 
+### Upload sessions and the upload scope
+
+This is the **one definition of a session in this system**. Every spec that keys a mechanism on
+upload state uses it rather than restating it: `storage-and-gc.md`'s grace period and orphan
+cleanup, `formats/oci.md`'s session lifetime and cross-repository mount, and the in-flight read
+check in the next section. It exists because the unqualified word "session" was applied three
+times to a boundary the wire does not have - once by the grace period, once by the in-flight
+read check, once by the session-lifetime question - and each time the fix was a local re-scope.
+Adopted 2026-09-26 with the in-flight-scope and session-lifetime decisions below.
+
+- **An upload session is exactly one blob's upload into one repository.** It is opened when a
+  client initiates an upload, continued by chunk and status requests, and ended by exactly one
+  of two events: **commit** (digest verified, blob committed) or **expiry**. It has a wire
+  identity - OCI's upload URL carries a unique session ID (distribution-spec v1.1.1, "POST then
+  PUT", read 2026-09-26) - and it belongs to the repository it was opened in. A single-request
+  upload is a session that opens and commits at once, and a successful OCI cross-repository
+  mount is the same degenerate case whose bytes are already in the CAS. The session is the unit of
+  resumability, of the write-ahead session record orphan cleanup enumerates from
+  (`storage-and-gc.md`, "Upload lifecycle"), and of expiry. **Nothing outlives commit on it**:
+  once the blob commits the session is gone, and no later request carries or needs its
+  identity.
+- **There is no push session.** No wire protocol this registry serves groups several blob
+  uploads and the reference that eventually names them into one identifiable unit. An OCI push
+  is independent blob sessions followed, minutes later or never, by a manifest `PUT` that names
+  none of them. So no mechanism may key on a push session, a client connection, or "the current
+  push", because none is observable - and none may key on the uploader's identity either,
+  which is observable but is not a boundary the protocol respects: a blob committed by one CI
+  worker and a manifest sent by another under a different credential is one legitimate push.
+- **The upload scope is the repository.** Anything that must span the gap between a blob's
+  commit and the reference that names it - which is by construction after its upload session
+  has ended - is scoped to the repository the session was opened in, the only boundary every
+  request of a push names. A committed-but-unreferenced blob is therefore **in flight in
+  repository R**: a statement about R's upload records, never about a session or an identity.
+  The grace period (`storage-and-gc.md`, the resolved grace-period boundary) and the in-flight
+  read check below both use this scope, and they are the only two mechanisms that span that
+  gap.
+- **An open upload session holds its repository's upload scope open.** Continuation requests
+  are write activity in the session's repository, and while any upload session in a repository
+  is unexpired that repository's grace does not lapse. Without this, a client paused inside the
+  idle window with earlier layers already committed could return to find those layers swept,
+  which breaks the promise that resumability makes.
+- **A digest resolves in a repository only through that repository's own content**: what its
+  pointer resolves, plus its own in-flight records under the upload scope (and, for a `remote`
+  repository, its own cached and upstream-resolvable content). The CAS stores each blob once
+  across every repository (AC2), and that sharing never makes a digest visible from a
+  repository that does not hold it - not to a read, not to an existence check, and not to an
+  OCI cross-repository mount (`formats/oci.md`, "Cross-repository mount").
+
+**Session lifetime.** An upload session expires after an idle period with no continuation
+request, and in any case at an absolute cap counted from its opening. Every continuation request
+(a chunk, a status query, the final commit request) refreshes the idle period; nothing refreshes
+the cap. The defaults are **one hour idle and 24 hours absolute**, both configurable
+instance-wide (the resolved session-lifetime-defaults decision below). The idle period is what a
+paused CI job or a client retrying across a network drop survives; the cap bounds a client that
+trickles bytes forever. Expiry ends the client's right to resume; it does not by itself reclaim
+anything - an expired session's partial bytes are orphans that `storage-and-gc.md`'s orphan scan
+collects once its repository's grace has also lapsed (its AC3). How a format answers a request
+on an expired session is wire format and belongs to the format's spec (for OCI, `404` with
+`BLOB_UPLOAD_UNKNOWN`).
+
 ### Reads from in-flight publish state
 
 An OCI client `HEAD`s blobs it has just uploaded, **before** it sends the manifest - so there is
@@ -189,14 +252,19 @@ legitimately visible content belonging to no snapshot yet. A strict pointer-only
 serve that, and OCI push does not work without it.
 
 The rule: **digest-addressed reads may additionally resolve against the repository's own
-in-flight upload records** - immutable CAS content, plus a membership check so this visibility
-is not an existence oracle. The check was settled as session-scoped, but that scoping has a
-broken premise on the wire it exists for: OCI has no push session, and a blob's own upload
-session is already closed when the client `HEAD`s the committed blob, so the read that must
-pass the check carries no session to check against - the same wire reality that forced
-`storage-and-gc.md` to re-scope its grace period from session to repository. What boundary the
-check keys on instead is Q15. **Every name-addressed read still resolves through the snapshot
-pointer**, with no exception.
+in-flight upload records** - immutable CAS content, committed and not yet referenced. Only
+committed blobs are in flight in this sense; the partial bytes of an open session are never
+readable by digest, since their digest has not been verified. The membership check that keeps
+this from being an existence oracle is **scoped to the repository** (adopted 2026-09-26, was
+Q15): any principal authorized to pull from repository R resolves R's in-flight digests,
+whichever principal committed them, and no principal resolves them through any other
+repository. That is the upload scope defined above, and it is keyed on the one boundary every
+request of a push names; the session scoping it replaces had a broken premise, because the
+blob's own upload session has ended by the time the client's `HEAD` arrives and OCI has no push
+session to fall back on. The accepted residue is an existence disclosure inside R's own trust
+boundary: a principal who can already read R can learn that someone committed a digest R does
+not yet reference. **Every name-addressed read still resolves through the snapshot pointer**,
+with no exception.
 
 That split keeps the pointer authoritative where authority matters. A digest read asks "do you
 have exactly these bytes", which no snapshot can answer differently; a name read asks "what is
@@ -301,9 +369,10 @@ architecture test enforces this, because a single handler reading "latest" direc
 reintroduces the retrofit.
 
 The one carve-out is digest-addressed reads, which may additionally resolve against the
-repository's own in-flight upload records (see "Reads from in-flight publish state" above).
-It is narrow on purpose: a digest read asks whether exactly these bytes exist, which no snapshot
-answers differently.
+repository's own in-flight upload records under the upload scope (see "Upload sessions and the
+upload scope" and "Reads from in-flight publish state" above). It is narrow on purpose: a digest
+read asks whether exactly these bytes exist, which no snapshot answers differently, and it never
+reaches another repository's records.
 
 ## Acceptance Criteria
 
@@ -337,9 +406,12 @@ answers differently.
 - [ ] AC17: GC marks through a `Reference` edge: an OCI index whose child manifests are untagged
       keeps those children live, and the referrers API answers from an indexed query over the
       edge without the core parsing any handler metadata.
-- [ ] AC18: A digest-addressed read resolves against the repository's own in-flight upload
-      records, a name-addressed read never does, and one client cannot read another's in-flight
-      uploads.
+- [ ] AC18: A blob committed into repository R and not yet referenced resolves by digest in R
+      for a principal authorized to pull from R that did not commit it, and a manifest naming it
+      is then accepted under that second principal's credential; the same digest is not found
+      through any other repository, including one the caller can read, although the CAS holds
+      the bytes; the partial bytes of an uncommitted session never resolve by digest; and a
+      name-addressed read never resolves in-flight records at all.
 - [ ] AC19: A proxied repository creates no snapshot on cache materialisation, including
       on-demand metadata arrival.
 - [ ] AC20: Two concurrent writes to one metadata document do not silently lose one: the stale
@@ -383,6 +455,16 @@ answers differently.
       pointer-targeted snapshot older than the window is among the survivors; every surviving
       snapshot afterwards still resolves its full content set, membership and all three
       metadata levels included.
+- [ ] AC26: An upload session expires after the idle period with no continuation request and at
+      the absolute cap however active it is, and not before either: on an injected clock, a
+      session receiving a continuation inside every idle window survives past one idle period
+      and dies at the cap, an idle one dies one idle period after its last continuation, and
+      the defaults are one hour and 24 hours unless configured otherwise.
+- [ ] AC27: While any upload session in a repository is unexpired, that repository's grace does
+      not lapse: on an injected clock, a blob committed earlier in the repository survives a
+      sweep run after the grace period has elapsed with no other activity, provided a session
+      opened there is still inside its idle window, and becomes collectable once that session
+      expires and the grace then lapses.
 
 ## Test Plan
 
@@ -405,7 +487,7 @@ answers differently.
 | AC15 | unit | `internal/model/snapshot_test.go` |
 | AC16 | integration | `internal/model/virtual_resolution_test.go` (network-level assertion) |
 | AC17 | integration | `internal/model/reference_edge_test.go`; `conformance/oci/referrers_test.go` |
-| AC18 | integration | `internal/model/inflight_read_test.go` |
+| AC18 | integration | `internal/model/inflight_read_test.go`; `conformance/oci/split_identity_push_test.go` (scripted client: blobs committed under one credential, `HEAD` and manifest `PUT` under another) |
 | AC19 | integration | `internal/proxy/no_snapshot_test.go` |
 | AC20 | integration | `internal/model/metadata_concurrency_test.go` |
 | AC21 | integration | `internal/model/metadata_storage_test.go` |
@@ -413,11 +495,15 @@ answers differently.
 | AC23 | integration | `internal/model/rollback_test.go` |
 | AC24 | integration | `internal/proxy/immediate_test.go` (network-level assertion) |
 | AC25 | integration | `internal/storage/retention_test.go` (checkpoint and delta dependency across pruning) |
+| AC26 | integration | `internal/storage/upload_session_test.go` (injected clock) |
+| AC27 | property | `internal/storage/gc_property_test.go` (open-session interleavings on an injected clock) |
 
 ## Implementation Phases
 
 ### Phase 1: Core entities
 Repository, Package, Version, File, Blob, with opaque metadata documents at all three levels.
+The upload session record and its lifetime (AC26), and repository-scoped in-flight digest
+resolution under the upload scope (AC18).
 
 ### Phase 2: Snapshots and pointers
 `Snapshot` (deltas plus periodic checkpoints, capturing membership and metadata) and
@@ -429,8 +515,8 @@ architecture test.
 `Upstream`, `RemoteFile`, download policies, upstream failover.
 
 ### Phase 4: GC integration
-The cached, retained-snapshot and pointer-targeted-snapshot reference classes, and the property
-tests that police them.
+The cached, retained-snapshot and pointer-targeted-snapshot reference classes, the open-session
+hold on repository grace (AC27), and the property tests that police them.
 
 ## Tasks
 
@@ -438,39 +524,89 @@ Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-One question is open: Q15, raised by the 2026-09-24 gate review. Q1 through Q3 were answered
-on 2026-09-22 and Q4 through Q14 on 2026-09-23, all folded through Scope, the entity table,
-the Design sections and the acceptance criteria. Implementation cannot start while Q15 stands.
+None are open. Q15 (raised by the 2026-09-24 gate review) and Q16 (raised while folding it)
+were adopted on 2026-09-26 under the owner's standing delegation and folded through Scope, the
+Design sections "Upload sessions and the upload scope" and "Reads from in-flight publish state",
+AC18, AC26, AC27, the Test Plan and Phases 1 and 4. Q1 through Q3 were answered on 2026-09-22
+and Q4 through Q14 on 2026-09-23.
 
 Resolved decisions are kept below rather than deleted, so the reasoning survives the next time
 someone asks why it was done this way.
 
-### Q15: What boundary scopes the in-flight digest-read membership check, given OCI has no session on the wire?
+### Resolved: the in-flight membership check's scope (was Q15)
 
-The resolved reads-from-in-flight-publish-state decision (was Q14) settled the digest/name
-split, and that split stands. Its mechanism does not: it scoped the anti-probing membership
-check to the upload session, and by the time an OCI client `HEAD`s a blob it has just
-committed, that blob's upload session is closed and the `HEAD` carries no session identifier
-at all - there is no push session on the wire, the exact reality that forced
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: repository scope. Any
+principal authorized to pull from a repository resolves that repository's in-flight digests,
+whichever principal committed them, and no principal resolves them through any other
+repository.
+
+The question, as raised: the resolved reads-from-in-flight-publish-state decision (was Q14)
+settled the digest/name split, and that split stands. Its mechanism did not: it scoped the
+anti-probing membership check to the upload session, and by the time an OCI client `HEAD`s a
+blob it has just committed, that blob's upload session is closed and the `HEAD` carries no
+session identifier at all - there is no push session on the wire, the exact reality that forced
 `storage-and-gc.md` to re-scope its grace period from session to repository. As written the
-check has nothing to key on, and two implementors would build different systems: one keying
-on the authenticated uploader identity, one on repository access. The answer amends the
-"Reads from in-flight publish state" section and AC18's assertion.
+check had nothing to key on, and two implementors would have built different systems.
 
-**Recommendation:** A - repository scope. It matches the wire (the repository is the only
-boundary every relevant request names), matches the precedent the grace period set for the
-identical reason, and cannot break a push whose blob upload and manifest PUT come from
-different workers. The residual disclosure is small: a principal must already hold access to
-the repository, whose published content it can read anyway.
+**Recommendation (as written before adoption):** A - repository scope. It matches the wire (the
+repository is the only boundary every relevant request names), matches the precedent the grace
+period set for the identical reason, and cannot break a push whose blob upload and manifest PUT
+come from different workers. The residual disclosure is small: a principal must already hold
+access to the repository, whose published content it can read anyway.
 
 | Option | You get | It costs |
 |---|---|---|
 | **A. Repository scope: any principal authorized on the repository resolves its in-flight digests** | Implementable from what the wire provides; multi-worker pushes (blob from one runner, manifest from another) work; same boundary as the settled grace period | A principal with repository access can probe digests of content another client committed but has not yet referenced - an existence disclosure inside the repository's own trust boundary |
 | **B. Uploader-identity scope: only the identity that committed the blob resolves it pre-reference** | Closes intra-repository probing entirely; the in-flight window discloses nothing to anyone but its creator | Breaks any push where the manifest PUT arrives under a different identity or token than the blob commits, and the failure is a 404 mid-push on the flagship format's conformance path |
 
-**Why this is yours:** it prices an existence-disclosure window against client compatibility
-on the format the zero-skips gate is sold on, and it amends the mechanism of a decision you
-already made - a security-posture call, not something the fleet can measure its way to.
+**Why this was the owner's:** it prices an existence-disclosure window against client
+compatibility on the format the zero-skips gate is sold on, and it amends the mechanism of a
+decision the owner already made.
+
+Accepted cost: a principal who can already pull from a repository can learn that some other
+client committed a digest the repository does not yet reference. Option B lost because it
+breaks a legitimate push shape - blobs from one worker, manifest from another - with a 404
+mid-push on the flagship format, and it keys on the uploader's identity, which the one
+definition of an upload session now rules out as a boundary the protocol does not respect.
+
+This was the third collision of one root cause (the grace period, this check, and `oci.md`'s
+session lifetime all assumed a session the wire lacks), so the adoption also wrote the single
+definition in Design, "Upload sessions and the upload scope", which every consumer now cites
+instead of re-scoping locally. Folded into that section, "Reads from in-flight publish state",
+the Snapshots carve-out, AC18 (rewritten to assert repository scope with a second principal and
+cross-repository invisibility) and Phase 1.
+
+### Resolved: upload session lifetime defaults (was Q16)
+
+**Adopted 2026-09-26 under the owner's standing delegation.** Option A: one hour idle, 24 hours
+absolute, both configurable instance-wide.
+
+The question, raised while folding Q15 and `formats/oci.md`'s session-lifetime decision (which
+chose sliding idle expiry with an absolute cap but no values): an upload session is
+format-agnostic, so its lifetime belongs in the one definition here, and a mechanism with two
+parameters and no defaults is two implementors' guesses.
+
+**Recommendation (as written before adoption):** A - one hour idle covers a CI job paused
+between steps and a client retrying across a network drop; 24 hours covers a multi-gigabyte
+layer over a slow link; and because an open session holds its repository's grace open, an
+abandoned session delays that repository's collection by at most one idle period after its last
+request.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. One hour idle, 24 hours absolute** | Survives realistic pauses and slow links; an abandoned session stops holding its repository's grace within an hour | A client paused for more than an hour inside one blob upload must restart that blob |
+| **B. Fifteen minutes idle, six hours absolute** | Orphans and grace holds end sooner | A CI job waiting on a slow step or a queued runner loses its in-progress blob, and a very large layer on a slow link can hit the cap |
+| **C. A long fixed window only (days)** | One parameter, generous to every client | Contradicts the sliding-expiry decision, and an abandoned session would hold its repository's grace open for days |
+
+**Why this is the owner's:** it draws the resumability promise made to clients in numbers, and
+no measurement derives it.
+
+Accepted cost: a client paused inside one blob upload for more than an hour, or uploading one
+blob for more than a day, must restart it. Option B trades real CI pauses for faster orphan
+collection the grace period already bounds; option C abandons the adopted sliding shape and lets
+an abandoned session pin its repository's grace for days. Folded into the Design section's
+"Session lifetime" paragraph and AC26; AC27 asserts the grace hold the defaults were priced
+against.
 
 ### Resolved: what counts as a write (was Q4)
 
@@ -614,8 +750,9 @@ security-relevant rather than incidental.
 
 Amended 2026-09-24: the split stands; the check's session scoping does not. OCI has no push
 session on the wire and the blob's own upload session is closed before the client's `HEAD`
-arrives, so a session-scoped check has nothing to key on - the boundary it keys on instead is
-Q15.
+arrives, so a session-scoped check has nothing to key on. Amended again 2026-09-26: the check
+is repository-scoped, per the adopted in-flight membership scope (was Q15) and the one
+definition of an upload session in Design.
 
 ### Resolved: remote modelling (was Q1)
 
@@ -652,6 +789,7 @@ back toward the 31 bespoke schemas this model exists to prevent.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review. Adopted Q15 option A: the in-flight digest-read membership check is repository-scoped, so any principal authorized to pull from R resolves R's committed-but-unreferenced digests and none resolves them through another repository. Because this was the third collision of "a session the wire does not have" (after the grace period and `oci.md`'s session-lifetime question), wrote the single definition the triage asked for as a new Design section, "Upload sessions and the upload scope": an upload session is exactly one blob's upload into one repository, ended by commit or expiry; there is no push session and no mechanism may key on one or on the uploader's identity; anything spanning commit to reference is scoped to the repository; an open session holds its repository's grace open; a digest resolves in a repository only through that repository's own content. Adopted `oci.md`'s session-lifetime decision into that definition and raised and adopted Q16 for its defaults. Checked against `storage-and-gc.md`: its repository-scoped grace re-scoping is consistent with the definition; two gaps it cannot close itself are reported as sibling consequences (the open-session grace hold, and AC3's undefined session expiry). Changed: Scope, the new Design section, "Reads from in-flight publish state", the Snapshots carve-out, AC18 rewritten, AC26 (lifetime) and AC27 (open-session grace hold) added, Test Plan, Phases 1 and 4, the was-Q14 amendment note. The mark-root set is untouched: in-flight and mounted blobs are protected by grace, not by a root. Zero open questions. |
 | 2026-09-26 | 4548df3 | cross-spec correction during storage-and-gc's gate review | Not a review of this spec. The pin's release path had no producer: Design said "only a repoint or a pointer deletion releases it" and `storage-and-gc.md` AC18 tests pointer deletion, but this spec's pointer-management API surface offered only create, repoint and reach-reporting. Deletion of a named environment pointer added to that surface; the default pointer is not deletable, which is entailed rather than decided, since name-addressed serving resolves only through pointers and a repository whose default pointer could be deleted would stop serving name reads entirely. Q15 untouched and still open. |
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and this spec is not the decision's home - but it owns the mark-root set, so the amendment lands here. The 1701a48 gate review's prediction of what changes under Q10 option A was checked against the file rather than trusted, and all three items were real: the Scope liveness bullet (now five roots, the fifth being a snapshot a `Pointer` targets plus its reconstruction chain), the pruning-reconstructibility sentence in the Snapshots section (a checkpoint or delta survives while any snapshot that survives pruning depends on it, targeted or in-window) and AC25's notion of retained (now surviving, with a pointer-targeted out-of-window snapshot among the survivors). Also folded: the Design consequences bullet's four reference classes, a Snapshots-section paragraph defining the pin and its accepted cost, the was-Q5 record's amendment note, and Phase 4. AC23 was checked for contradiction and is not one: it refuses repointing **to** an untargeted out-of-window snapshot while the pin protects a snapshot already targeted from aging out, so protection attaches on targeting and is not retroactive - stated in Design and in AC23 itself. Q15 is untouched and still open. |
 | 2026-09-24 | 1701a48 | gate review: application check of all 14 resolved decisions + adversarial (OCI push flow vs the pointer model) + cross-spec in both directions against storage-and-gc, proxy-cache, replication, oci and supply-chain-policy + unpoliced-design-claim hunt + constitution + go-spec-reviewer; claim verification against code vacuous (the tree holds only a stub `cmd/stackweaver-registry/main.go`, no `internal/` exists); the terminated reviewer's three kept edits re-verified rather than trusted, all three sound | 12 of 14 decisions genuinely applied; two were half-applied and are now folded: the promotion scope-in had left Design's Snapshots section claiming a single always-advancing v1 pointer and no snapshot API while Scope, the entity table and AC22/AC23 said the opposite (Phase 2 also still built the v1 pointer, and no phase built promotion), and the fourth-mark-root resync had left the Design consequences bullet claiming a three-root sweep. Derived, not decided: hosted deletes and metadata-only mutations are snapshot-creating completed writes, entailed by pointer-only name serving plus immutable snapshots plus oci.md's content-management scope, folded into the Snapshots section, the Scope bullet, the Snapshot entity row and AC9. AC24 added (`immediate` was the only download policy no criterion anywhere exercised) and AC25 added (pruning reconstructibility was named by Design as what keeps the sweep sound and policed by no AC in this spec or the sibling). Supersession notes added to the was-Q2, was-Q4, was-Q7 and was-Q14 records; `Pointer` gained its repository ref; the root-set liveness bullet now names storage-and-gc Q10 as a pending amendment to the set this spec owns; one stale three-root remnant fixed in proxy-cache's resolved cache-location record. Coherence under the open sibling questions assessed: under storage-and-gc Q10 option A the liveness bullet, the pruning-reconstructibility sentence and AC25's notion of retained must widen to pointer-targeted snapshots, under B or C this spec stands as written; proxy-cache Q11 presupposes nothing here under either answer. One genuine defect found in a settled decision's mechanism and raised as Q15: the in-flight digest-read membership check is session-scoped, but OCI has no push session on the wire and the blob's upload session is closed before the client's HEAD arrives, so the check has nothing to key on - the same wire reality that re-scoped the grace period. Stays draft on Q15. |

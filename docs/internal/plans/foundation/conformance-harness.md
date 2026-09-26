@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Gate review 2026-09-23 at d078c46 added declared replay starting state (AC15) and multi-instance case topology (AC16), and repointed mode-coverage enforcement at Capabilities(). Q4 open: whether the case setup vocabulary is closed. The reviewer terminated on a spend limit before logging; see the Review Log note."
+status_description: "Q4 adopted 2026-09-26 under the owner's standing delegation (a closed setup vocabulary owned here, with the policy, advisory and replication keys pre-listed), plus Q5 exposed by the fold and adopted the same way (setup applied by the server binary's seed subcommand through the shared layers). Folded through Scope, Design, Phases and AC15, with AC17 to AC20 added so setup and the replay-match exemption rendering are asserted. Zero open questions; stays draft, since adopting a recommendation is not a gate review."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -47,13 +47,16 @@ never in a recollection of how a client behaves.
 - A format-agnostic harness core: start a server instance, run a client container against it,
   capture stdout/stderr/exit code, assert.
 - Declarative case definitions, so adding a case is data rather than code.
+- A closed `setup` vocabulary and a seed path that provisions server-side state before the
+  client runs, including state no client can trigger, through the shared layers only.
 - A **recording proxy** that sits between a real client and a *reference* server (Verdaccio, a
   local Gitea, Harbor, a public registry) and records the traffic as a golden corpus.
 - A **replay-match** mode that asserts our server's responses against that corpus.
 - Client version matrix support: a format is tested against more than one client release.
 - Integration of the official `opencontainers/distribution-spec` conformance suite as an OCI
   case source.
-- Machine-readable results that generate `docs/internal/conformance/matrix.md`.
+- Machine-readable results that generate `docs/internal/conformance/matrix.md`, including each
+  format's replay-match status and any exemption its `Capabilities()` declares.
 
 **Out of scope**
 
@@ -77,7 +80,9 @@ The harness core knows nothing about any format. Per case it:
    every instance in a case gets the same isolation guarantees, and the script receives each
    instance's URL and credentials - the capability `replication.md`'s leader-and-follower
    scenarios consume.
-2. Provisions whatever the case declares it needs: a repository, a token, an upstream.
+2. Provisions whatever the case's `setup` declares, in the closed vocabulary and through the
+   seed path defined below: repositories, credentials, upstream bindings, pre-provisioned
+   content and state, and the configuration of subsystems a case depends on.
 3. Runs the client container with the case's script, the server URL and credentials injected.
 4. Captures exit code, stdout, stderr and the full HTTP transcript through an inspecting proxy.
 5. Evaluates the case's assertions against all four.
@@ -98,7 +103,9 @@ Two constraints on the capture path, named here because they shape every case:
   HTTPS), so both the inspecting proxy and the recording proxy must terminate TLS with a
   harness CA injected into the client container's trust store. Trust-store injection is
   per-client (docker's `certs.d`, npm's `cafile`, pip's `REQUESTS_CA_BUNDLE`) and is therefore
-  part of each format's case setup, not of the harness core.
+  part of each format's client image or `script`, not of the harness core. It is deliberately
+  not a `setup` key: `setup` provisions server-side state only, and everything client-side
+  lives in the client container.
 
 ### Case definition
 
@@ -119,15 +126,87 @@ code. Roughly:
 - `instances`: optional; a case defaults to one server instance and may instead declare
   several named ones (and, once `replication.md` lands, the replication links between them),
   so a flow can publish to one instance and pull from another
-- `setup`: what to provision before the client runs - repositories, tokens, upstreams (a
-  local stand-in or a real external service, interchangeably), and repository or server
-  configuration a case depends on, such as visibility, a supply-chain policy rule and the
-  advisory fixture that triggers it (how this vocabulary grows is Q4)
+- `setup`: what to provision on the server side before the client runs, in the closed
+  vocabulary defined in the next section and nowhere else (the resolved decision that the
+  vocabulary is closed, below)
 - `script`: the client command sequence
 - `expect`: exit code, required and forbidden output patterns, resulting digests, and optionally
   a required HTTP transcript shape
 - `skip`: when present, **must** carry an issue number. A bare skip is a silent regression and
   the runner rejects it.
+
+### The `setup` vocabulary
+
+The vocabulary is **closed and owned by this spec** (the resolved decision that it is closed,
+below). A case may use only the keys in this table; a sibling that needs a new one gets it by
+revising this spec, which puts the need in front of a review instead of letting the oracle's
+input language grow wherever a consumer happens to need it.
+
+| Key | Provisions | Schema of an entry | Lands with |
+|---|---|---|---|
+| `repositories` | Repositories on an instance | The `Repository` entity of `data-model.md`: format, type (`local` / `remote` / `virtual`), visibility, virtual member order, the named upstream binding of a `remote`, and the repository metadata document verbatim | Phase 2 (with generic) |
+| `credentials` | The identities the script presents: none, a token scoped to named repositories and actions, or a deliberately wrong scope | The token scope of `auth.md` | Phase 2 (with generic) |
+| `upstreams` | Named upstreams a `remote` repository binds to | A stand-in (an image by digest, or a harness fixture server) **and** the identity of the real service it stands in for; see "Upstream bindings" | Phase 2 (with generic) |
+| `state` | Content and state already on the server when the client starts: packages, versions and files with fixture bytes, plus the metadata documents at the levels the data model defines | Shared-model entities, with fixture bytes named by path inside the case directory and metadata documents carried verbatim | Phase 2 (with generic) |
+| `advisories` | A case-controlled advisory source, never the live feed | The advisory-source format of `supply-chain-policy.md` | `supply-chain-policy.md` |
+| `policies` | Supply-chain policy rules on named repositories | The policy-rule configuration of `supply-chain-policy.md` | `supply-chain-policy.md` |
+| `replication` | Replication links between the case's named `instances` | The replication-link configuration of `replication.md` | `replication.md` |
+
+Every entry may name the instance it targets; a case declaring a single instance omits it. The
+keys the siblings' provisioners have not yet landed are in the table now rather than added
+later, because each already has a named consumer (below): what waits on the sibling is the
+provisioner, not a revision of this schema.
+
+**Validation happens before anything runs, in two layers.** The runner rejects a case whose
+`setup` uses a key this table does not define, with an error naming the unknown key. A key the
+table defines but whose provisioner has not landed is rejected with a *different* error naming
+the key and the spec it lands with, so a typo is never indistinguishable from a subsystem that
+does not exist yet - which is the property an open vocabulary could not offer. Entry shapes
+whose schema another spec owns are then validated by the seed path's own dry run against the
+server's configuration validation, still before any server or client container starts. The
+harness core never interprets an entry: it hands entries to the seed path, which is how AC1's
+format-agnostic claim survives a vocabulary whose entries carry format-specific metadata.
+
+**The seed path.** `setup` is applied by the server binary itself, through a seed subcommand
+run against the instance's isolated database schema and storage prefix, which writes through
+the same shared-layer calls a handler uses (the metadata store, the CAS commit and the shared
+reference-creation call) and never through a handler, a raw SQL statement or a direct object
+write (the resolved decision on how `setup` is applied, below). Three consequences follow, and each is why this
+path was chosen:
+
+- **State no client can trigger is provisionable.** A yanked PyPI file, a supply-chain policy
+  rule or a replication link needs no management endpoint to exist, so a case can assert the
+  client-observable effect of a management operation that no real client performs
+  (`docs/internal/analysis/management-surfaces-and-the-oracle.md`). A yank case provisions the
+  yanked file through `state`, runs a real `pip install`, and asserts the yanked version is
+  skipped while an exact pin still resolves. Where a management endpoint does exist (the hosted
+  yank surface `pypi.md` adopted), a case that wants trigger and effect together calls it from
+  its `script`, as any HTTP client would, and then runs the real client; `setup` never calls a
+  management endpoint, so the harness has one provisioning mechanism whatever the product's
+  management surface turns out to be. A trigger no ecosystem client drives remains our own
+  integration tests' to verify, and no conformance case claims a third party vouched for it.
+- **Seeded state obeys every shared-model invariant.** A `state` entry is a completed logical
+  write in `data-model.md`'s sense and produces a snapshot the same way an upload does, and the
+  seed path is a reference-creating writer that the deletion-intent barrier and
+  `storage-and-gc.md` AC10's architecture test already cover. Seeding into a reused instance
+  is therefore just another concurrent writer, not a special case.
+- **Metadata documents are carried verbatim.** The core never parses a metadata document, so a
+  `state` entry carries the document exactly as the owning handler stores it, and the case
+  lives in that format's own case directory beside the handler that defines the shape. A
+  handler that changes its document shape breaks its own seeded cases loudly, because the real
+  client then observes the wrong state.
+
+**Upstream bindings.** A case names an upstream; it never names where that upstream lives.
+Every `upstreams` entry carries a stand-in, and the run, not the case, selects the binding:
+the main suite binds every upstream to its stand-in and so needs no network, and the nightly
+real-upstream job (`proxy-cache.md` AC15) rebinds the same entries to the real services with
+the case body unchanged. An entry without a stand-in fails validation, since the main suite
+could not run it offline.
+
+**Corpus starting state uses the same vocabulary.** The starting-state declaration AC15
+requires of a corpus is written in `state` and `repositories` terms and applied through the
+same seed path, so a replay seeds its server exactly as a case does and there is one
+provisioning mechanism rather than two that can disagree.
 
 ### What sibling specs already require of this schema
 
@@ -138,17 +217,24 @@ implementation discovers it has no counterparty:
   and `format-handler-interface.md` AC7 both require every format's case set to contain
   unauthenticated and unauthorized cases in both modes, and both map that enforcement to this
   harness's case-set validation (`conformance/core/case_validate_test.go`). The schema expresses
-  such a case as a `setup` that provisions no credential, or a wrongly-scoped one, plus an
-  `expect` of denial.
+  such a case as a `credentials` entry that provisions no credential, or a wrongly-scoped one,
+  plus an `expect` of denial.
 - **Supply-chain policy refusals are conformance cases on both paths.** `supply-chain-policy.md`
-  AC1 and AC2 assert a policy refusal against a real client, hosted and proxied alike, which is
-  why `setup` must be able to provision a policy rule and its advisory fixture.
+  AC1 and AC2 assert a policy refusal against a real client, hosted and proxied alike. The case
+  provisions the rule through `policies` and the controlled advisory through `advisories`, and
+  the proxied variant binds its upstream to a stand-in serving the affected artifact.
 - **Replication scenarios need more than one instance.** `replication.md`'s follower scenarios
   cannot be expressed in a single-server case; the `instances` declaration and AC16 exist for
-  them, and replication-link provisioning joins the `setup` vocabulary when that subsystem lands.
+  them, and the links between the instances are the `replication` key, whose provisioner lands
+  with that subsystem.
 - **The nightly real-upstream job reuses these suites.** `proxy-cache.md` AC15 runs the proxied
-  suites against the real preconfigured upstreams, so an upstream in `setup` must be swappable
-  between a local stand-in and the real service without the case body changing.
+  suites against the real preconfigured upstreams; the run-selected upstream binding above is
+  what lets it do so without the case body changing, and AC19 asserts it.
+- **Management effects are asserted from pre-provisioned state.** A yanked file or a deprecated
+  version is provisioned through `state`, so the effect a resolving
+  client observes is a full-strength conformance case whether or not a management endpoint
+  exists (the hosted yank, unpublish and version-deletion surface questions in `pypi.md`,
+  `npm.md` and `ansible-collections.md` decide whether one does).
 
 ### The recording proxy, and why it is the real leverage
 
@@ -183,7 +269,9 @@ corpus-location decision requires replay to work from a clean checkout with no n
 state can be seeded only from the corpus itself and the small fixtures it carries. A corpus that
 does not declare the state its requests depend on can replay nothing but cold-start flows, and
 the failure would surface as a baffling 404 mismatch rather than a named gap, which is why AC15
-makes the declaration mandatory and makes its absence a loud error.
+makes the declaration mandatory and makes its absence a loud error. The declaration is written in the
+`setup` vocabulary and applied through the same seed path as a case's `setup` (above), so there
+is one provisioning mechanism to trust rather than two.
 
 Corpora and transcripts are also a leak surface. Recording against the public registry can
 capture real credentials (auth headers, tokens, cookies), and the drift job attaches failing
@@ -248,10 +336,12 @@ an acceptance criterion rather than a design note.
       the reference server, replays with those values correlated to our server's equivalents.
       A corpus format that cannot express "this request value came from that earlier response"
       fails this criterion.
-- [ ] AC15: A corpus declares the server state its requests depend on, and a pull-shaped
-      recorded flow replays against a server seeded solely from that declaration and the
-      corpus's carried fixtures, with no network access; replaying a corpus that omits a needed
-      declaration fails with an error naming the missing state, not with a response mismatch.
+- [ ] AC15: A corpus declares the server state its requests depend on, in the `setup`
+      vocabulary's `repositories` and `state` terms, and a pull-shaped recorded flow replays
+      against a server seeded solely from that declaration and the corpus's carried fixtures,
+      through the same seed path a case uses, with no network access; replaying a corpus that
+      omits a needed declaration fails with an error naming the missing state, not with a
+      response mismatch.
 - [ ] AC8: The official `opencontainers/distribution-spec` conformance suite runs as a case
       source and its individual results appear in the matrix.
 - [ ] AC9: `make conformance` exits non-zero if any case fails or is improperly skipped.
@@ -269,6 +359,29 @@ an acceptance criterion rather than a design note.
       name is redacted at capture time, and the runner rejects a corpus containing any
       non-permitted field. Proven by a recording session carrying a credential in a header the
       list does not name, which must arrive redacted.
+- [ ] AC17: The case `setup` vocabulary is closed: before any container starts, the runner
+      rejects a case whose `setup` uses a key the vocabulary table does not define, and rejects
+      a defined key whose provisioner has not landed (today `advisories`, `policies` and
+      `replication`) with a different error naming the key and the spec it lands with. Proven by three fixture cases (a misspelt key, a not-yet-landed
+      key, a valid case), where only the valid one reaches the seed path and the two rejections
+      are distinguishable by error alone.
+- [ ] AC18: `setup` provisions state no client triggered, through the shared write path and
+      nothing else. A generic artifact provisioned through `state` alone, with no upload ever
+      issued, is fetched byte-identical by `curl` and appears in the listing; a version-level
+      metadata document seeded through `state` reaches the handler verbatim, proven by a
+      fixture handler whose response depends on a field of that document; and the seed path
+      writes only through the shared metadata store, CAS commit and reference-creation calls,
+      held by an architecture test that fails if it imports a handler package or the database
+      or object-storage drivers directly.
+- [ ] AC19: An upstream's binding is chosen by the run, never by the case: one proxied case file,
+      byte-identical across both runs, passes against two different upstream servers selected
+      only by the run's binding argument, and a case whose `upstreams` entry has no stand-in
+      fails validation.
+- [ ] AC20: The generated matrix renders every format's replay-match status from run results,
+      and renders a format whose `Capabilities()` declares reference-implementation
+      availability `none` as exempt, citing the format's spec, never as passing and never as missing; a format with no
+      corpus and no such declaration renders as missing. Proven by the matrix generator over
+      three fixture formats, one per outcome.
 
 ## Test Plan
 
@@ -290,18 +403,28 @@ an acceptance criterion rather than a design note.
 | AC14 | integration | `conformance/record/stateful_replay_test.go` (OCI chunked-upload corpus; a minimal chunked-upload fixture server stands in until the OCI handler exists, as AC2's broken-handler fixture already does) |
 | AC15 | integration | `conformance/record/seeded_replay_test.go` (pull-flow corpus; missing-declaration fixture) |
 | AC16 | integration | `conformance/core/topology_test.go` |
+| AC17 | unit | `conformance/core/case_validate_test.go` (misspelt-key, not-yet-landed-key and valid fixtures) |
+| AC18 | integration + architecture test | `conformance/core/seed_test.go` (a `state`-seeded generic artifact fetched by `curl`, and a fixture handler whose version metadata flag changes what the client receives); `conformance/core/arch_test.go` (seed-path imports) |
+| AC19 | integration | `conformance/core/upstream_binding_test.go` (one case file, two fixture upstream servers, plus the missing-stand-in rejection) |
+| AC20 | unit | `conformance/core/matrix_test.go` (passing, exempt and missing fixture formats) |
 
 ## Implementation Phases
 
 ### Phase 1: Core runner
 - Case schema (including the isolation declaration and multi-instance topology), validation,
   digest pinning, skip-requires-issue
+- The closed `setup` vocabulary and its first validation layer (unknown key versus
+  not-yet-landed key), and run-selected upstream bindings
 - Server lifecycle with per-case isolation
 - Client container execution and capture
 
 ### Phase 2: First subject
 - The generic format's hosted cases as the runner's proving ground, plus validation that its
-      declared unsupported proxy capability exempts it from proxied-mode coverage
+  declared unsupported proxy capability exempts it from proxied-mode coverage
+- The seed subcommand and its dry-run validation, landing with the shared metadata store, CAS
+  and auth that generic needs anyway, since the seed path writes through those layers and
+  cannot exist before them; the `repositories`, `credentials`, `upstreams` and `state`
+  provisioners, with the three sibling keys still rejected as not yet landed
 
 ### Phase 3: Recording and replay
 - Recording proxy, corpus format, per-format normalisation rules
@@ -310,12 +433,14 @@ an acceptance criterion rather than a design note.
 
 ### Phase 4: Official suites and reporting
 - OCI distribution-spec suite as a case source
-- Matrix generation, CI staleness gate
+- Matrix generation, including the replay-match column and its declared exemption, and the CI
+  staleness gate
 - Scheduled latest-client drift job
 
-The `setup` vocabulary is expected to grow after these phases as sibling subsystems land
-(policy provisioning with `supply-chain-policy.md`, replication links with `replication.md`);
-Q4 decides the mechanism by which it grows.
+After these phases the `advisories`, `policies` and `replication` provisioners land with
+`supply-chain-policy.md` and `replication.md`, each switching its key from "not yet landed" to
+provisioned. Any key beyond the table is a revision of this spec and its re-review, per the
+resolved decision that the vocabulary is closed.
 
 ## Tasks
 
@@ -323,40 +448,69 @@ Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-Q4 was raised by the 2026-09-23 gate review and awaits the owner. The resolved decisions that
-follow it are kept rather than deleted, so the reasoning survives the next time someone asks why
-it was done this way.
+None open. Q4 (raised by the 2026-09-23 gate review) and Q5 (exposed while folding Q4's answer)
+were adopted on 2026-09-26 under the owner's standing delegation, so the owner may reverse
+either. Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
 
-### Q4: How does the case `setup` vocabulary grow as sibling subsystems land?
+### Resolved: the `setup` vocabulary is closed (was Q4)
 
-`setup` today provisions repositories, tokens and upstreams. Three siblings already need more
-from it: `supply-chain-policy.md` AC2 needs a policy rule and a controlled advisory fixture,
-`replication.md` needs replication links between named instances, and `proxy-cache.md` AC15
-needs an upstream that swaps between a local stand-in and a real service without the case body
-changing. Each of those is a shared-schema change arriving from a spec that does not own this
-schema, which is exactly the shape the constitution's no-handler-owns-a-table rule exists to
-govern - and the harness core is additionally forbidden from importing any format package
-(AC1), so the vocabulary cannot simply grow wherever a consumer happens to need it.
+**Adopted 2026-09-26 under the owner's standing delegation.** Option B: a closed vocabulary
+owned by this spec and amended only by revising it. The table in "The `setup` vocabulary"
+defines the keys; the runner rejects anything else before a container starts (AC17).
 
-**Recommendation:** B, a closed vocabulary this spec owns and amends by revision, because the
-harness is the oracle every other spec is verified against, and an oracle whose input language
-any consumer can extend is an oracle nobody can reason about.
+Accepted cost: each genuinely new kind of setup waits on a revision of this spec and its
+re-review, which puts the harness on the critical path of any sibling needing one. The cost is
+smaller than the option priced it, because every need already known is in the table now: the
+`advisories`, `policies` and `replication` keys exist today and wait only on their
+provisioners, and an entry whose shape another spec owns is validated against that spec's own
+configuration schema through the seed path's dry run, so a sibling changing its rule format does
+not need a revision here.
+
+Option A lost because it makes a typo indistinguishable from a provisioner that has not landed,
+and the runner's before-it-runs validation, which AC4 and AC5 already depend on, stops being
+possible. Option C lost because its registry is a second place the AC1 boundary can be breached,
+while B with the known keys pre-listed already gives the siblings most of C's independence.
+
+`setup` is named throughout Design and was asserted by no criterion anywhere; AC17 (closed
+validation), AC18 (state no client triggered, through the shared write path) and AC19
+(run-selected upstream bindings) are the criteria this answer owed.
 
 | Option | You get | It costs |
 |---|---|---|
 | **A. Open vocabulary: a case declares setup as free-form data a provisioner plugin interprets** | Siblings add what they need without touching this spec; no cross-spec sequencing | The schema stops being checkable: a typo in a case's setup key is indistinguishable from a provisioner that has not landed yet, and the runner cannot validate a case before running it, which AC4 and AC5 depend on it doing |
-| **B. Closed vocabulary owned here, amended by revising this spec** | Every case validates statically; one place records what the harness can provision; a sibling's need becomes a visible, reviewed amendment | Each new subsystem's conformance coverage waits on an amendment to this spec and its re-review, so the harness is on the critical path of every sibling that needs new setup |
+| **B. Closed vocabulary owned here, amended by revising this spec** (adopted) | Every case validates statically; one place records what the harness can provision; a sibling's need becomes a visible, reviewed amendment | Each new subsystem's conformance coverage waits on an amendment to this spec and its re-review, so the harness is on the critical path of every sibling that needs new setup |
 | **C. Closed core vocabulary plus a registered-extension mechanism: subsystems register named provisioners at build time, the runner validates against the registered set** | Static validation survives; subsystems land their own provisioning without editing this spec's schema | A second registry to keep honest, and the AC1 import rule has to be restated for it (a format package must not be able to register one), so the boundary this spec is proudest of gains a second place it can be breached |
 
-**Why this is yours:** it decides whether the test oracle's input language is closed, and that
-ranks the harness's checkability against every sibling's delivery independence - a constitution-
-level trade, not a measurable one.
+### Resolved: how `setup` is applied (was Q5)
 
-**The answer must bring an acceptance criterion with it.** `setup` is named five times in Design
-and asserted by no criterion in any spec, which `check-spec.js`'s unasserted-duty check now
-reports. No criterion can be written before the answer, because one written now would presuppose
-whether the vocabulary is closed - which is the question. This note exists so the gap is closed
-when the answer lands rather than surviving it.
+**Adopted 2026-09-26 under the owner's standing delegation.** Raised while folding the closed
+vocabulary: a closed list of keys says what a case may provision but not how, and the answer
+decides whether state no client can trigger (a yanked file, a policy rule, a replication link)
+is provisionable at all before the product has a management API.
+
+**Recommendation:** A - the server binary's own seed subcommand, writing through the shared
+layers against the instance's isolated store, because it is the only option that provisions
+management state without depending on an undecided management surface and without adding a
+network-reachable write path to the binary under test.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. A seed subcommand of the server binary, writing through the shared-layer calls against the instance's isolated database schema and storage prefix** (adopted) | Works with no management API; the binary under test is the shipped binary; seeded state obeys every shared-model invariant because it goes through the same calls a handler uses | Setup bypasses a management endpoint even where one exists, so conformance never covers a management trigger; the seed path is one more writer that must stay on the shared calls, which needs its own architecture test |
+| **B. Provision through the server's public management API** | Setup exercises a real product surface on every run | Every case needing state waits on an endpoint for that state: `ansible-collections.md` has not decided whether deletion is served at all, no spec defines a policy or replication-link API, and a case-controlled advisory source is test infrastructure that should never be a product API |
+| **C. A test-only HTTP seeding endpoint enabled by a flag** | Seeding works against a running instance over the same channel the client uses | A network-reachable arbitrary-write surface that must never ship enabled, in the binary under test; a flag guarding it is one misconfiguration from a critical vulnerability |
+
+**Why this is yours:** it trades coverage of management triggers against independence from an
+undecided product surface, which is a judgment about what the oracle is for.
+
+Accepted cost: `setup` never exercises a management endpoint, so a management surface earns
+conformance coverage only where a case's `script` calls it deliberately (the pattern for
+`pypi.md`'s adopted yank surface) and is otherwise verified by our own integration tests - which
+`docs/internal/analysis/management-surfaces-and-the-oracle.md` shows is the honest position
+anyway, since no ecosystem client drives those triggers. The seed path's confinement to the
+shared calls is AC18's architecture half. B lost because it makes the oracle wait on a product
+endpoint for every kind of state it provisions, including state that should never have one; C
+lost on security alone.
 
 ### Resolved: redaction direction (was Q3)
 
@@ -440,3 +594,4 @@ question in `formats/npm.md`.**
 | 2026-09-23 | 5c40011 | gate review: design adversarial + constitution + cross-spec (claim verification vacuous: no `conformance/` tree yet). Independence: the reviewer authored this spec's CI-trigger and recording-precondition sections, so its adversarial value on those two is limited | Mechanically clear. Two corrections applied: stateful replay, which Design names as the hardest constraint, had no criterion and AC6/AC7 could both pass on stateless GETs alone (AC14 added); AC3 now asserts isolation under instance reuse, the path where it can actually break. Q3 raised on redaction being a denylist that fails open. Stays draft. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous: pre-implementation tree, stub `main.go` only) | Added mode-coverage, drift-job and credential-redaction ACs (AC11-AC13); named TLS interception and stateful-replay request correlation as design constraints; raised Q1 (CI trigger policy) and Q2 (corpus refresh policy); stays draft. |
 | 2026-09-23 | 9c971d4 | cross-spec consistency (generic proxy exemption) | Corrected Phase 2 to use generic's hosted cases and explicitly test its unsupported proxy declaration, matching AC11 and the format spec; status remains draft pending its existing gate review. |
+| 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review: adoption and fold. Q4 adopted as option B (closed vocabulary owned here) with the known sibling needs pre-listed as keys (`repositories`, `credentials`, `upstreams`, `state` provisioned from Phase 2, since the seed path writes through shared layers that land with generic; `advisories`, `policies`, `replication` waiting only on their provisioners), two-layer pre-run validation that tells a typo from a not-yet-landed key, and entry shapes other specs own validated by the seed path's dry run. Folding exposed Q5 (how `setup` is applied), adopted as the server binary's seed subcommand writing through the shared-layer calls, which is what makes state no client can trigger (a yanked file, a policy rule, a replication link) provisionable with no management API, per `management-surfaces-and-the-oracle.md`. Design gained the vocabulary table, the seed path, run-selected upstream bindings (proxy-cache AC15) and the rule that a corpus's starting state uses the same vocabulary; the sibling-requirements list now maps each sibling to its key; trust-store injection moved out of `setup` to the client side. AC15 rewritten onto the vocabulary and seed path; AC17 (closed validation), AC18 (state no client triggered, through the shared write path, with an architecture test), AC19 (run-selected upstream binding) and AC20 (matrix renders a declared replay-match exemption as exempt, from generic's adopted replay-match exemption) added with Test Plan rows. `setup` is no longer unasserted. |

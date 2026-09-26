@@ -331,8 +331,13 @@ for (const f of allSpecFiles) {
   });
 }
 
-for (const { rel, body } of crossRefs) {
+for (const { rel, body: fullBody } of crossRefs) {
   const self = path.basename(rel);
+  // The Review Log is a historical record: a row saying what a past pass found cites the
+  // questions and criteria as they were then. Checking it against today's state flags every
+  // log row the moment a sibling resolves a question, which is noise, and rewriting history to
+  // silence it would be worse. Only the live body is checked.
+  const body = fullBody.split(/^## Review Log[ \t]*$/m)[0];
   // "`conformance-harness.md` AC11", "formats/generic.md Q7", "`oci.md`'s AC1"
   const HISTORICAL = /\b(resolved|resolves|settled|settles|was its|was|answer to|answered|per)\b/i;
   for (const m of body.matchAll(/([a-z0-9-]+\.md)`?(?:'s)?([^.\n]{0,40}?)\b(AC\d+|Q\d+)\b/gi)) {
