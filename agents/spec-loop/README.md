@@ -56,7 +56,7 @@ Nothing local remains unless a gate review asks for a fresh capture.
    `descriptor` object kind). Its follow-ups (items 33-38) join the reconciliation pass, step 3.
 2. **Foundation specs**, with `foundation-brief.md`, one at a time, most-cited first:
    ~~management-api~~ (done 2026-09-27, #44), ~~credential-management~~ (done 2026-09-27, #45) (must reach `planned` before OCI Phase 1),
-   ~~artifact-verification~~ (done 2026-09-27, #46), signing-service, upstream-adapters, async-operations (reconcile with the
+   ~~artifact-verification~~ (done 2026-09-27, #46), ~~signing-service~~ (done 2026-09-27, #47), upstream-adapters, async-operations (reconcile with the
    `Operation` entity already in `data-model.md`), repository-lifecycle, observability, deployment,
    web-ui. Hints are each spec's line in `foundation.tsv`.
 3. **A reconciliation pass** over whatever those specs queue in `consequences.md`.

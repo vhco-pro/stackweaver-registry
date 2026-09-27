@@ -103,6 +103,9 @@
     "docs/internal/plans/formats/catalogue.md",
     "docs/internal/plans/foundation/format-handler-interface.md"
   ],
+  "internal/format/*/index/**": [
+    "docs/internal/plans/foundation/signing-service.md"
+  ],
   "internal/format/alpine/**": [
     "docs/internal/plans/formats/alpine.md"
   ],
@@ -199,6 +202,9 @@
   "internal/format/vagrant/**": [
     "docs/internal/plans/formats/vagrant.md"
   ],
+  "internal/index/**": [
+    "docs/internal/plans/foundation/signing-service.md"
+  ],
   "internal/manage/**": [
     "docs/internal/plans/foundation/management-api.md"
   ],
@@ -217,6 +223,9 @@
   ],
   "internal/retention/**": [
     "docs/internal/plans/formats/generic.md"
+  ],
+  "internal/signing/**": [
+    "docs/internal/plans/foundation/signing-service.md"
   ],
   "internal/storage/**": [
     "docs/internal/plans/foundation/data-model.md",

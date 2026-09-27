@@ -522,6 +522,18 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/signing-service.md",
+    "description": "Spec for the shared signing and generated-index service: the production form of the write-triggered services prototype's signed-index half. It regenerates every repository-wide or version-scoped generated document inside the write that invalidates it, stores it as CAS-backed metadata, keeps signatures as records outside snapshot content so rotation and rollback never rewrite history, renders pointer-scoped freshness (dated envelopes, TUF versions, forward-moving Last-Modified), holds every signing key behind one custody seam (encrypted file, KMS, PKCS#11, operator-held) that no handler can reach, publishes public keys in each ecosystem's form, and runs virtual merges as deferred work. Twenty-two formats consume it; it produces and never verifies.",
+    "internal": true,
+    "status": "draft",
+    "issue": "47",
+    "covers": [
+      "internal/signing/**",
+      "internal/index/**",
+      "internal/format/*/index/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/storage-and-gc.md",
     "description": "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide.",
     "internal": true,
