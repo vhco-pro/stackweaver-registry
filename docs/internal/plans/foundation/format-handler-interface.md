@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): the re-open's inputs and AC8 now name both halves of the write-triggered services prototype (Debian signed indexes, Galaxy-shaped async) and its six-question finding, plus two hook questions from siblings: a server-side ingest hook, which replication's freeze is blocked on, and management dispatch from management-api.md; shared-layer routes (replication, management) mount under reserved segments registration refuses to handlers (AC11 extended); the three policy-enforcing Deps calls return a typed policy refusal declared in internal/format, so handlers use errors.As without importing internal/policy (AC14 added, no method change); AC13 shares conformance/core/matrix_test.go with the harness; 31 corrected to 33. Earlier: Q9 adopted under the owner's standing delegation. 14 criteria, zero open questions; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-27 at 713c1e3 with the foundation authoring wave (not a review): the pin stays five, held now by a reflection test (AC16); the three optional interfaces the new foundation specs introduced (management-api's Operator, signing-service's Indexer, web-ui's surface.Declarer) are recorded together as type-asserted at registration and as one named re-open input, with Q10 adopted under the standing delegation to keep them three rather than consolidate before the evidence exists; Scope's addressed object gains auth Q23's descriptor kind, riding the 2026-09-26 amendment, with the sentinel test in AC12; Capabilities gains Virtual and Rename (AC13); Deps gains the Verifier, upstream.Options on fetch-and-cache, the server.hosts lookup and a *slog.Logger with request correlation; the handler import boundary is one list with one test (AC15); the reserved-segment table is exhaustive (api, ui, healthz, readyz, metrics, the replication segment, exactly /) and AC11 fixtures each; the carve-out class splits into path-only (OCI) and host-bound (Terraform, Puppet /v3/) claims. Earlier (2026-09-26): Wave 1 folds, Q9 adopted. 16 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross."
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
@@ -45,16 +45,27 @@ Two constraints from the charter shape this:
 
 - The handler interface: the pinned minimal method set (Design, "The pinned method set"),
   the construction contract, and the injected shared-layer dependencies.
-- The registration mechanism: format-first mounts plus declared root-anchored claims
-  (Design, "Routing and registration").
+- The optional capability interfaces shared layers discover by type assertion at registration
+  (Design, "Optional interfaces discovered at registration"): that they are optional, that they
+  never grow the pin, and that registration records which a handler declares.
+- The registration mechanism: format-first mounts, declared root-anchored claims (path-only
+  and host-bound), and the reserved first segments no handler may take (Design, "Routing and
+  registration").
 - The shared concerns handlers consume rather than implement: authentication, authorization,
   blob storage, metadata persistence through the shared data model (`data-model.md`), the proxy
-  cache, and request logging.
+  cache, artifact verification, and request logging.
 - The conformance obligations a handler must satisfy to be considered complete.
 
 **Out of scope**
 
 - Any individual format. Those are separate specs under `docs/internal/plans/formats/`.
+
+- The semantics behind the optional interfaces: management operations and their vocabulary
+  (`management-api.md`), index generation and signing (`signing-service.md`), client recipes
+  and display hints (`web-ui.md`), deferred execution (`async-operations.md`), repository
+  lifecycle and the `configure` operation (`repository-lifecycle.md`), and the host-binding
+  configuration (`deployment.md`). This spec records only that each reaches a handler without
+  growing the pin, and how registration discovers it.
 
 - Write-triggered shared services (signed-index generation, async import pipelines). Deferred
   by the resolved write-triggered services decision below: absent from the pinned method set,
@@ -105,18 +116,37 @@ either merely might:
 |---|---|---|
 | `Name()` | `string` | The catalogue key (`generic`, `oci`): the default mount prefix, the conformance matrix row, the log field |
 | `Mounts()` | `[]Mount`, a `Mount` being a URL prefix plus a root-anchored flag | Generic returns the default format-first mount; OCI claims the root-anchored `/v2/` (Routing and registration, below) |
-| `Capabilities()` | `Capabilities`, carrying proxy support (`supported` or `unsupported`) and reference-implementation availability (`available` or `none`) | The machine-readable home of the two declarations the harness honours: AC4's runner honours `unsupported`, and the conformance matrix renders `none` as a replay-match exemption (AC13). Generic declares both, closing the "neither sibling spec currently says how" gap recorded in `formats/generic.md`; the second field arrived with generic's resolved replay-exemption decision |
-| `Scope(r)` | `(Scope, error)`, a `Scope` being a repository, one of `pull`/`push`/`delete`, and the **addressed object**: exactly one of *named* (the handler's canonical name for the finest named thing the route addresses), *content-addressed* (content identified by digest, or an upload bound to one), or *none* (the repository as a whole, including every name-enumerating route). **An error denies the request**, with the same response an unauthorized caller receives | The route-to-scope mapping the central authorizer evaluates (`auth.md`). Needed from the **first** format, not at the re-open: AC7's unauthenticated, unauthorized and pattern-refusal cases apply from day one, and without this the shared layer cannot know what it is authorizing. The addressed object is the second out-of-cycle amendment (below): generic reports artifact paths, OCI reports tags, and both have content-addressed and listing routes, so both Tier 0 formats exercise all three kinds |
+| `Capabilities()` | `Capabilities`, carrying proxy support (`supported` or `unsupported`), reference-implementation availability (`available` or `none`), virtual aggregation `Virtual` (`supported` or `unsupported`) and repository rename `Rename` (`supported` or `unsupported`) | The machine-readable home of the declarations the harness and the shared layers honour: AC4's runner honours proxy `unsupported`, the conformance matrix renders `none` as a replay-match exemption and `Virtual: unsupported` as a virtual-column exemption (AC13), and `repository-lifecycle.md` refuses a virtual repository or a rename of a format that declares either `unsupported` (its AC4 and AC13), which is how `formats/hex.md`'s "no virtual aggregation, no rename" becomes a refusal rather than a repository every client rejects. Generic declares all four, closing the "neither sibling spec currently says how" gap recorded in `formats/generic.md`; the second field arrived with generic's resolved replay-exemption decision, the third and fourth with `repository-lifecycle.md` (2026-09-27). Fields on this type are declarations, not amendments to the method set |
+| `Scope(r)` | `(Scope, error)`, a `Scope` being a repository, one of `pull`/`push`/`delete`, and the **addressed object**: exactly one of *named* (the handler's canonical name for the finest named thing the route addresses), *content-addressed* (content identified by digest, or an upload bound to one), *descriptor* (a repository-wide document whose body carries no name, version or digest of any object the repository holds: protocol configuration, a discovery probe, a signing-key document; `pull`-only under a patterned scope, per `auth.md`'s resolved name-free-document decision, was Q23), or *none* (the repository as a whole, including every name-enumerating route). **An error denies the request**, with the same response an unauthorized caller receives | The route-to-scope mapping the central authorizer evaluates (`auth.md`). Needed from the **first** format, not at the re-open: AC7's unauthenticated, unauthorized and pattern-refusal cases apply from day one, and without this the shared layer cannot know what it is authorizing. The addressed object is the second out-of-cycle amendment (below): generic reports artifact paths, OCI reports tags, and both have content-addressed and listing routes, so both Tier 0 formats exercise named, content-addressed and none; the descriptor kind is exercised first by Cargo's `config.json`, Conan's capability probe and RPM's `repomd.xml` (`auth.md`, "Pattern scopes"), and whether a Tier 0 route reports it (OCI's `GET /v2/` version probe is the candidate) is `formats/oci.md`'s to declare |
 | `ServeHTTP(w, r)` | embedded `http.Handler` | The resolved HTTP-direct decision: the handler receives the real request and response |
 
 Construction is by injection: each format package exposes `New(deps Deps) Handler`, and
 `Deps` carries the consumer-side interfaces to every shared layer the handler may touch -
 the blob store (CAS), the metadata store (the three-level opaque documents and
 snapshot-pointer resolution `data-model.md` defines), the proxy layer's fetch-and-cache
-entry point (`proxy-cache.md`), the central authorizer (`auth.md`), and the request logger.
-Those dependency interfaces' signatures belong to the specs that own the layers; this spec
-pins only that they arrive through `Deps` and that a handler holds no capability it was not
-handed.
+entry point (`proxy-cache.md`), which carries the handler's upstream location and an
+`upstream.Options` value down to the adapter layer the handler never sees
+(`upstream-adapters.md`, "The adapter seam"), the central authorizer (`auth.md`), the
+verifier (`Verifier`, two methods, `Check` for integrity entries and `Verify` for signature
+and attestation schemes, declared in `internal/format` beside `Deps` and satisfied by
+`internal/verify`; `artifact-verification.md`, "How a handler reaches the verifier"), the
+host-binding lookup (which repository, if any, `server.hosts` binds the request's hostname
+to; Routing and registration, below), and the request logger, which is the standard
+library's `*slog.Logger` with a handler that reads request correlation (`request_id`,
+`trace_id`, principal, repository, format) from the context, so a handler never sets those
+attributes by hand (`observability.md`, "Structured logging", its AC15). Those dependency
+interfaces' signatures belong to the specs that own the layers; this spec pins only that
+they arrive through `Deps` and that a handler holds no capability it was not handed.
+
+The corollary is an **import boundary**, held mechanically because `Deps` is the only door:
+no package under `internal/format/**` imports `internal/policy` (AC14), `internal/verify`
+(`artifact-verification.md` AC4), `internal/upstream` (`upstream-adapters.md` AC29),
+`internal/repository` (`repository-lifecycle.md` AC8, which also forbids the reverse edge),
+`internal/telemetry`, the OpenTelemetry API or `client_golang` (`observability.md` AC2),
+`internal/manage` (`management-api.md` AC2) or `internal/async` (`async-operations.md`
+AC16). Each owning spec holds its edge in its own test; `internal/format/arch_test.go` holds
+the whole list from this side, with a violation fixture per edge, so a new shared package
+that forgets its boundary test still fails here (AC15).
 
 **Three of those entries are policy-enforcing**, per `supply-chain-policy.md`'s resolved
 evaluation-hook decision (was Q4 there): the metadata store's version resolution, the blob
@@ -132,9 +162,12 @@ Deliberately absent, not forgotten: lifecycle methods (`Init`, `Close`, health c
 resolve/list/upload operation vocabulary, because those are protocol operations a handler
 serves over HTTP, which the HTTP-direct decision makes redundant as interface methods; and
 any per-request classification hook, because classification travels as an argument to the
-fetch-and-cache call per the proxied-miss decision. Additions ride the scheduled re-open,
-argued from two real implementations and the write-triggered services prototype rather than
-from anticipation.
+fetch-and-cache call per the proxied-miss decision; and any management, index-generation or
+UI-declaration method, because each is a capability only some handlers have, and each reaches
+its handler through an optional interface discovered at registration ("Optional interfaces
+discovered at registration", below) rather than through the pin. Additions ride the scheduled
+re-open, argued from two real implementations and the write-triggered services prototype
+rather than from anticipation.
 The two exceptions, both to what `Scope(r)` carries and both forced by a sibling security
 decision rather than anticipated, are recorded below as out-of-cycle amendments.
 
@@ -165,6 +198,47 @@ Its failure mode is the first amendment's, sharpened. A handler reporting a name
 under-grants a patterned credential silently, so AC12 table-tests every handler's object
 reporting per route and AC7 requires a pattern-refusal case in every format's case set.
 
+**The descriptor kind rides this second amendment**; it does not open a third. On 2026-09-27
+`auth.md` resolved its name-free-document question (was Q23, adopted under the owner's standing
+delegation): a patterned-only `pull` could not run cargo or conan at all, because the
+repository-wide document every client reads first (`config.json`, the capability probe) was
+*none* and a patterned scope refuses *none*. The kind set therefore grows from three to four
+with **descriptor**, a repository-wide document whose body names no object the repository
+holds, authorized for `pull` only under a patterned scope and never for `push` or `delete`.
+`auth.md` treats the value as riding the 2026-09-26 amendment and so does this spec: it widens
+the same type for the same reason, pattern evaluation, adds no method, and the re-open
+re-examines it with the rest of the amendment rather than as a separate item. Its failure mode
+is the one a table cannot catch by inspection, an enumerating document labelled a descriptor,
+so `auth.md` gives the kind its own mechanical enforcer, the **sentinel test**, and AC12 runs it
+for every route a handler reports as a descriptor: seed the repository with an object whose
+name, version and digest are sentinels occurring nowhere else, fetch the route, and fail on any
+sentinel in the body.
+
+### Optional interfaces discovered at registration
+
+Three shared layers need something from a handler that the pin does not carry and that only
+some handlers have. Each declares a **consumer-side optional interface** where it is used, in
+the Go skill's sense and in the idiom `io.WriterTo` and `http.Flusher` use, and the
+registration layer type-asserts it once, at registration, recording which a handler declares.
+A handler that lacks the capability implements nothing. The method set stays at five; the
+resolved optional-interfaces decision below (was Q10) accepts three separate interfaces rather
+than one, and hands the fold-in verdict to the re-open.
+
+| Interface | Declared in | Methods | Who calls it, and for what |
+|---|---|---|---|
+| `Operator` | `internal/manage`, with the value types `Operation`, `Outcome`, `Kind` and `Binding` in `internal/format` beside the pinned `Scope` | `Operations() []format.Kind`, `Bindings() []format.Binding`, `Authorize(ctx, op) ([]format.Scope, error)`, `Apply(ctx, tx, op) (format.Outcome, error)` | `management-api.md`'s `Submit`, for every registry-owned management operation and every client-wire binding onto one: `Apply` runs inside the write transaction the core opened (its resolved dispatch decision, was Q2). `repository-lifecycle.md` delivers a rename as a `configure` operation whose `args` carry `{"rename": {"from", "to"}}`; a handler with no `Operator` receives nothing and its rename conformance case proves its documents were never name-bound. `async-operations.md`'s runner reaches a handler **only** through `Operator.Apply` via `internal/manage`, never directly: the prototype's question 4 is answered with no pinned method |
+| `Indexer` | `internal/format`, beside `Deps` | `Generator() index.Generator` | `signing-service.md`'s index runtime, before every commit on a repository whose handler declares it: the handler returns a pure generator from its sibling package `internal/format/<name>/index` (records in, bytes out; it imports `internal/index`'s value types and nothing else of the registry). The prototype's question 1 is answered the same way: no pinned method |
+| `surface.Declarer` | `internal/surface` | `Surface() surface.Declaration` | `web-ui.md`'s renderer and the conformance runner's recipe step, for the per-format client recipes and display hints embedded as `surface.yaml` in the handler package (its resolved declaration-home decision, was Q1); a handler without it renders generically and fails that spec's AC17, since every format must declare at least one recipe |
+
+Two rules hold across the three. First, **the pin is held by a test, not by memory**: a
+reflection test asserts `format.Handler` has exactly five methods, so a sixth cannot arrive
+unnoticed, and registration records the optional set each handler declares so the report is
+data rather than recollection (AC16). Second, **deferred work never starts in a handler**: no
+package outside `internal/async` and the HTTP server's accept loop starts a goroutine that
+outlives a request or owns a `time.Ticker` or `time.AfterFunc`, which `async-operations.md`
+AC16 generalises from the prototype's AC12 to every package and holds with an AST scan; a
+handler's only route to deferred work is declaring an `Operator` kind deferred.
+
 The same structural gap - the pin maps a request to a repository and an action, and nothing
 finer - was hit independently from the policy side: central policy evaluation needs the package
 and version being resolved. That need is met without a further amendment: `supply-chain-policy.md`
@@ -188,26 +262,54 @@ mount is accepted only where the claiming format's spec records the carve-out - 
 commented, never looking like an accident to the next reader.
 
 The carve-out class is ecosystems that address a registry by bare hostname, leaving no room
-for a path prefix. OCI is the first: `docker pull host/name:tag` puts the repository inside
-the OCI name path, so the handler claims the root-anchored `/v2/` the distribution spec
-requires. The catalogue holds one more: Terraform/OpenTofu (Tier 3) is also host-addressed
-and discovers services through `/.well-known/terraform.json` at the host root - the
-Stackweaver monorepo's working registry implementation registers exactly that root route
-(`HandleServiceDiscovery` in `backend/internal/api/routes/routes.go`) - though only the
-discovery document needs anchoring, since its service entries can point back into
-format-first space. Root anchoring is therefore a declared `Mount` the registration layer
-validates, not an OCI if-statement in the router.
+for a path prefix. It has two sub-classes, and the `Mount` says which:
+
+- **Path-only claims** are served on every hostname and carry the repository inside the path.
+  OCI is the one instance: `docker pull host/name:tag` puts the repository inside the OCI name
+  path, so the handler claims the root-anchored `/v2/` the distribution spec requires.
+- **Host-bound claims** carry no repository at all, so the hostname must supply it. The
+  registry binds a hostname to exactly one repository through `server.hosts`
+  (`deployment.md`, its resolved host-binding decision, was Q8: a list of `{hostname,
+  repository}` in configuration, because a hostname is a deployment fact, DNS and a certificate
+  SAN, before it is a registry fact; reloaded on `SIGHUP`; a binding to a missing repository is
+  a startup warning and a `404` on that host). The claiming handler serves its root-anchored
+  path only on a hostname bound to a repository of its format and answers `404` elsewhere, in
+  its own protocol's error shape. Terraform/OpenTofu (Tier 3) discovers services through
+  `/.well-known/terraform.json` at the host root - the Stackweaver monorepo's working registry
+  implementation registers exactly that root route (`HandleServiceDiscovery` in
+  `backend/internal/api/routes/routes.go`) - and only the discovery document needs anchoring,
+  since its service entries point back into format-first space (`formats/terraform.md`). Puppet
+  (Tier 3) claims the whole of `/v3/` on a bound hostname, publish included, because PDK posts
+  `/v3/releases` to the host root and drops any path it was given (`formats/puppet.md`'s
+  resolved PDK-publish decision, was Q1, grounded in captured traffic).
+
+The binding reaches the handler through `Deps` as a lookup from the request's hostname to the
+bound repository, refreshed by the registration layer on `SIGHUP` so the handler holds a live
+view rather than a startup snapshot; whether that is the binding's right home is a named input
+to the scheduled re-open. Root anchoring is therefore a declared `Mount` the registration layer
+validates against its carve-out list, not an OCI if-statement in the router, and a host-bound
+claim is a declared `Mount` with a flag, not a per-format routing rule.
 
 **Shared-layer routes need mounts no handler can collide with.** Not every route belongs to a
-handler: `replication.md`'s replication read surface is mapped by the replication package
-under the central authorizer, and the registry-owned management API the format specs settled
-on (owed as `foundation/management-api.md`) is one API across formats rather than per-format
-routes. Each mounts under a **reserved** first path segment that the registration layer holds
-in a second explicit list beside the carve-out list, so the two kinds of mount can never
-overlap: registration refuses a handler whose `Name()` equals a reserved segment, and a
-root-anchored claim that falls under one, before the server serves any request (AC11). Which
-strings are reserved belongs to the specs that own those surfaces; that they are reserved, and
-held mechanically, is this spec's.
+handler. Each shared surface mounts under a **reserved** first path segment that the
+registration layer holds in a second explicit list beside the carve-out list, so the two kinds
+of mount can never overlap: registration refuses a handler whose `Name()` equals a reserved
+segment, a root-anchored claim that falls under one, and any claim at exactly `/`, before the
+server serves any request (AC11). The list, exhaustive as of 2026-09-27, with the spec that
+owns each string:
+
+| Reserved segment | Owner | What mounts there |
+|---|---|---|
+| `api` | `management-api.md` (its AC1) | The registry-owned management API, versioned as `/api/v1`, including the token, robot and key routes `credential-management.md` contributes |
+| `ui` | `web-ui.md` (its AC2) | The web UI's static assets and SPA routes, and the browser sign-in routes `internal/auth` mounts under `/ui/auth/` |
+| `healthz`, `readyz`, `metrics` | `observability.md` (its AC22) | The probes on the main listener; `metrics` is reserved even though it is served on the telemetry listener by default, so enabling it on the main listener never collides |
+| the replication segment | `replication.md` | The replication read surface, mapped by the replication package under the central authorizer (its AC18); that spec names the string |
+| exactly `/` | `web-ui.md` (its AC1) | Served by `internal/ui` as a `302` to `/ui/`; the mount rule already admits no handler mount at `/` (non-root mounts are `/{Name()}/`, root-anchored claims are listed carve-outs), and it is recorded here so the next reader does not take the gap for an accident |
+
+Which strings are reserved belongs to the specs that own those surfaces; that they are
+reserved, held mechanically, and listed here in one place so the two lists can be checked
+against each other, is this spec's. A new shared surface adds its row here and its fixture to
+AC11 in the same pass.
 
 The opinionated-client check on the settled scheme, at published-spec level and to be
 re-grounded in captured traffic when each format's spec is written: the Go module proxy
@@ -266,20 +368,38 @@ from evidence, not a better guess now. Concretely:
   hook**, driving a handler's hosted ingest from blobs already in the store rather than from an
   HTTP request, which `replication.md`'s freeze needs and which blocks its freeze phase; and
   **management dispatch**, how a registry-owned management operation reaches the handler whose
-  document it changes given only the five pinned methods, which the management surface spec
-  owed as `foundation/management-api.md` must answer and feed here. Per the resolved re-open
-  evidence decision below, also the **request-to-coordinate evidence**, because none of those
-  would surface it: `auth.md`'s pattern-evaluation outcome, as the addressed-object
-  amendment actually behaved in the generic and OCI handlers; `supply-chain-policy.md`'s
-  outcome on where central policy evaluation intercepts a request; and, recorded beside them as
-  further evidence that the pin and the shared model were fixed before the formats that stress
-  them existed, `ansible-collections.md`'s finding that an asynchronous import task has no
-  entity in the shared model.
+  document it changes given only the five pinned methods, which `management-api.md` has
+  answered with the optional `Operator` interface (its resolved dispatch decision, was Q2, and
+  its AC27, which requires this spec to name that answer here before any Tier 1 handler
+  starts). Per the resolved re-open evidence decision below, also the **request-to-coordinate
+  evidence**, because none of those would surface it: `auth.md`'s pattern-evaluation outcome,
+  as the addressed-object amendment actually behaved in the generic and OCI handlers, now
+  including the descriptor kind and its sentinel test; `supply-chain-policy.md`'s outcome on
+  where central policy evaluation intercepts a request; and, recorded beside them as further
+  evidence that the pin and the shared model were fixed before the formats that stress them
+  existed, `ansible-collections.md`'s finding that an asynchronous import task has no entity in
+  the shared model.
+- **The optional interfaces, as one input:** `Operator` (`management-api.md`; evidence is
+  generic's `delete-file` and the prototype's Debian-shaped `publish` and `configure`, both
+  built on it before any Tier 1 handler), `Indexer` (`signing-service.md`'s answer to the
+  prototype's question 1: an optional interface, not a sixth method, revised before its Phase 1
+  if the prototype finds the callback needs request context a generator cannot be given) and
+  `surface.Declarer` (`web-ui.md`), together with `async-operations.md`'s finding that the
+  runner reaches a handler only through the `Apply` method of `Operator`, via `internal/manage`
+  (the prototype's question 4). The
+  re-open states, per interface, one of three verdicts: fold into the pin, keep optional, or
+  consolidate with another; the resolved optional-interfaces decision below (was Q10) says why
+  the third is not taken now.
+- **The host binding:** `server.hosts` `{hostname, repository}` from configuration, passed at
+  construction through `Deps` and reloadable on `SIGHUP` (`deployment.md`, its AC12), as the
+  Terraform and Puppet host-bound claims exercised it; the re-open states whether `Deps` is the
+  binding's right home or the construction contract should carry it explicitly.
 - **Out-of-cycle amendments are re-examined, not inherited:** the re-open re-affirms or revises
   each amendment made between the pin and the re-open - `Scope(r)` (2026-09-23) and its
-  addressed object (2026-09-26), each made early because a sibling security decision was
-  unimplementable without it - on the same evidence standard as the rest of the method set, and
-  states whether the addressed object and the policy coordinate should converge.
+  addressed object (2026-09-26, widened with the descriptor kind 2026-09-27), each made early
+  because a sibling security decision was unimplementable without it - on the same evidence
+  standard as the rest of the method set, and states whether the addressed object and the
+  policy coordinate should converge.
 - **Form:** a `/spec review` pass over this spec, its outcome recorded in the Review Log and
   reflected in "The pinned method set"; the owner adjudicates any change.
 - **Also delivered at the re-open:** the egress import allowlist (AC9). The forbid rule covers
@@ -314,10 +434,13 @@ AC8 makes this a criterion of this spec rather than an intention.
 - [ ] AC11: Registration enforces the mount scheme mechanically: a handler declaring a
       non-root mount other than exactly `/{Name()}/`, or a root-anchored mount absent from the
       registration layer's explicit carve-out list, or a `Name()` or root-anchored mount
-      colliding with a reserved shared-layer mount, fails registration before the server serves
-      any request - proven by fixture handlers declaring each violation. (That a carve-out is
-      also recorded in the claiming format's spec stays a review rule; the list is its
-      mechanical shadow.)
+      colliding with a reserved shared-layer segment (`api`, `ui`, `healthz`, `readyz`,
+      `metrics`, the replication segment), or any claim at exactly `/`, fails registration
+      before the server serves any request - proven by fixture handlers declaring each
+      violation, one per reserved string. A host-bound root-anchored claim is served only on a
+      hostname `server.hosts` binds to a repository of the claiming format and answers `404`
+      elsewhere. (That a carve-out is also recorded in the claiming format's spec stays a review
+      rule; the list is its mechanical shadow.)
 - [ ] AC6: No handler performs its own network egress: inside `internal/format/**`, any call
       that moves bytes upstream - `net/http`'s package-level request helpers, `Client.Do`,
       `Transport.RoundTrip`, and the `net.Dial`/`net.Dialer` variants - fails `make verify`
@@ -332,19 +455,37 @@ AC8 makes this a criterion of this spec rather than an intention.
       rejects a case set without them, so a handler that skips the shared auth check or
       misreports its addressed object fails conformance rather than review.
 - [ ] AC12: Every handler's `Scope(r)` returns the correct addressed object for each of its
-      routes: a named-object route carries its canonical name, a digest-addressed or upload
-      route is content-addressed, and a name-enumerating or repository-wide route is none - proven
-      per handler by a table test over its whole route set, in which a route absent from the
-      table fails the test.
-- [ ] AC13: `Capabilities()` carries reference-implementation availability beside proxy
-      support; the generic handler declares `none`, every other registered handler declares
-      `available`, and a format declaring `none` is rendered by the conformance matrix as
-      exempt from replay-match citing its spec, never as passing - the same contract
-      `conformance-harness.md` AC20 states from the matrix side.
+      routes across all four kinds: a named-object route carries its canonical name, a
+      digest-addressed or upload route is content-addressed, a name-free repository-wide
+      document is a descriptor, and a name-enumerating or repository-wide route that can name
+      objects is none - proven per handler by a table test over its whole route set, in which a
+      route absent from the table fails the test, and for every route the table reports as a
+      descriptor the sentinel test runs: the repository is seeded with an object whose name,
+      version and digest are sentinels occurring nowhere else, the route is fetched, and any
+      sentinel in the response body fails the handler's table.
+- [ ] AC13: `Capabilities()` carries reference-implementation availability, `Virtual` and
+      `Rename` beside proxy support; the generic handler declares `none` and every other
+      registered handler `available`; both Tier 0 handlers declare `Virtual: supported` and
+      `Rename: supported` (`repository-lifecycle.md` runs its virtual and rename cases against
+      them); a format declaring `none` is rendered by the conformance matrix as exempt from
+      replay-match citing its spec, never as passing, and a format declaring `Virtual:
+      unsupported` is rendered exempt in the virtual column the same way - the contract
+      `conformance-harness.md` AC20 and `repository-lifecycle.md` AC4 state from the matrix
+      side.
 - [ ] AC14: The typed policy refusal is declared in `internal/format`, and a fixture handler that
       imports nothing from `internal/policy` recognises it with `errors.As` when the
       metadata-resolution, blob-read or fetch-and-cache call in its `Deps` returns it, while the
       pinned method set is unchanged at five.
+- [ ] AC15: No package under `internal/format/**` imports `internal/policy`, `internal/verify`,
+      `internal/upstream`, `internal/repository`, `internal/telemetry`, the OpenTelemetry API,
+      `client_golang`, `internal/manage` or `internal/async`, and `internal/repository` imports
+      no handler package; the whole list is held by one architecture test in `internal/format`
+      with a violation fixture per edge, independently of the owning specs' own tests.
+- [ ] AC16: `format.Handler` has exactly five methods, asserted by reflection so a sixth cannot
+      arrive unnoticed; registration type-asserts `Operator`, `Indexer` and `surface.Declarer`
+      once and records the set each handler declares; a fixture handler implementing none of
+      the three registers with an empty set and serves requests, and a fixture implementing all
+      three registers with all three recorded.
 - [ ] AC9: At the scheduled re-open, a depguard import allowlist for `internal/format/**` is in
       place, seeded from the generic and OCI handlers' actual import lists, and a fixture
       importing a third-party HTTP client fails `make verify`. Until then the residual bypass
@@ -355,8 +496,10 @@ AC8 makes this a criterion of this spec rather than an intention.
       write-triggered services prototype's finding on all six of its questions (both the
       signed-index and the asynchronous halves) and the request-to-coordinate evidence named in
       "The scheduled re-open" cited as its evidence, and with an explicit verdict on each
-      out-of-cycle amendment, on whether the addressed object and the policy coordinate
-      converge, on the server-side ingest hook, and on management dispatch.
+      out-of-cycle amendment (the descriptor kind included), on whether the addressed object and
+      the policy coordinate converge, on the server-side ingest hook, on each of the three
+      optional interfaces (`Operator`, `Indexer`, `surface.Declarer`: fold in, keep optional, or
+      consolidate), and on the host binding's home.
 
 ## Test Plan
 
@@ -372,10 +515,12 @@ AC8 makes this a criterion of this spec rather than an intention.
 | AC8 | manual | the re-open `/spec review` pass, recorded in this spec's Review Log before npm work starts |
 | AC9 | lint + unit | depguard allowlist in `.golangci.yml`; third-party-client fixture behind the `lintfixture` build tag, asserted by the same runner test as AC6 |
 | AC10 | unit + conformance | `internal/format/scope_test.go` (denial semantics plus the server-log assertion, which is not protocol-observable and so cannot live in a conformance case per `conformance-harness.md`'s observation rule); a deliberately unmapped route in `conformance/core/` asserting the response is indistinguishable from an unauthorized one |
-| AC11 | unit | `internal/format/register_test.go` (fixture handlers: wrong non-root prefix, unlisted root anchor, a `Name()` and a root anchor colliding with a reserved shared-layer mount) |
-| AC13 | unit | `internal/format/capabilities_test.go` (every registered handler's declaration: `none` for generic only); the matrix rendering itself is asserted in `conformance/core/matrix_test.go`, shared with `conformance-harness.md` AC20 |
+| AC11 | unit + integration | `internal/format/register_test.go` (fixture handlers: wrong non-root prefix, unlisted root anchor, a `Name()` and a root anchor for each reserved string `api`, `ui`, `healthz`, `readyz`, `metrics` and the replication segment, a claim at exactly `/`); the host-bound serving rule in `internal/server/hosts_test.go`, shared with `deployment.md` AC12 |
+| AC13 | unit | `internal/format/capabilities_test.go` (every registered handler's four declarations: `none` for generic only; `Virtual` and `Rename` `supported` for both Tier 0 handlers); the matrix rendering itself is asserted in `conformance/core/matrix_test.go`, shared with `conformance-harness.md` AC20 and `repository-lifecycle.md` AC4 |
 | AC14 | unit | `internal/format/policy_refusal_test.go` (fixture handler, fixture `Deps` returning the refusal from each of the three calls; import assertion that the fixture package does not import `internal/policy`) |
-| AC12 | unit | `internal/format/<name>/scope_test.go` per handler (route table covering every mount's routes and all three object kinds), with a shared helper in `internal/format/scope_test.go` that fails when a registered route is missing from the table |
+| AC15 | architecture test | `internal/format/arch_test.go` (import walk over every handler package against the forbidden list, one violation fixture per edge, plus the reverse edge from `internal/repository`); the owning specs' own tests (`internal/format/verify_boundary_test.go` for `artifact-verification.md` AC4, `internal/upstream/import_boundary_test.go`, `internal/telemetry/boundary_test.go`, `internal/manage/arch_test.go`, `internal/async/arch_test.go`) stay where they are |
+| AC16 | unit | `internal/format/pin_test.go` (reflection over `format.Handler`: exactly five methods); `internal/format/register_test.go` (optional-set recording for a fixture declaring none and one declaring all three) |
+| AC12 | unit | `internal/format/<name>/scope_test.go` per handler (route table covering every mount's routes and all four object kinds), with a shared helper in `internal/format/scope_test.go` that fails when a registered route is missing from the table and runs the sentinel check (seed sentinels, fetch, scan the body) for every route the table reports as a descriptor |
 
 AC5's manual procedure: for each landing format, inspect the PR diff and record in the
 experiment log that it touches only `internal/format/<name>/`, its conformance cases, and the
@@ -384,9 +529,13 @@ route registration point; any other file is a finding against this spec.
 ## Implementation Phases
 
 ### Phase 1: Interface and registration
-- Interface definition, including the `Scope` type with its addressed object and the typed
-  policy refusal beside `Deps` (AC14), route registration with the carve-out and reserved
-  shared-mount lists, architecture tests
+- Interface definition, including the `Scope` type with its four-kind addressed object, the
+  four-field `Capabilities` type, the typed policy refusal, the `Verifier` consumer interface
+  and the `Indexer` interface beside `Deps` (AC14), the `Operation`, `Outcome`, `Kind` and
+  `Binding` value types, route registration with the carve-out list (path-only and host-bound
+  claims, the `server.hosts` lookup in `Deps`) and the reserved-segment list, type assertion
+  and recording of the three optional interfaces (AC16), the pin reflection test (AC16), and
+  the architecture tests including the import boundary (AC15)
 
 ### Phase 2: Proven by two
 - Generic and OCI handlers, confirming the interface survives a trivial and a hard format
@@ -394,7 +543,8 @@ route registration point; any other file is a finding against this spec.
 ### Phase 3: The scheduled re-open
 - The write-triggered services prototype, both halves, then the re-open review pass (AC8) over
   its finding, the two Tier 0 handlers, the request-to-coordinate evidence, the server-side
-  ingest hook and management dispatch, before any Tier 1 handler work
+  ingest hook, the three optional interfaces and the host binding, before any Tier 1 handler
+  work
 
 ## Tasks
 
@@ -403,9 +553,49 @@ Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 ## Open Questions
 
 None remain open. Q9 was raised by the 2026-09-25 gate review and adopted on 2026-09-26 under
-the owner's standing delegation; its record opens by saying so, and the owner may reverse it.
-The resolved records that follow are kept rather than deleted, so the reasoning survives the
-next time someone asks why it was done this way.
+the owner's standing delegation; Q10 was raised and adopted on 2026-09-27 during cross-spec
+reconciliation. Each record opens by saying so, and the owner may reverse either. The resolved
+records that follow are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
+
+### Resolved: three optional interfaces beside the pin (was Q10)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: the three optional
+interfaces (`Operator`, `Indexer`, `surface.Declarer`) stay three, each declared by the shared
+layer that consumes it and type-asserted at registration; none rides an out-of-cycle amendment,
+because none touches the method set, and the fold-in or consolidation verdict is deferred to the
+scheduled re-open, which takes all three as one named input. Folded through Scope, Design
+("Optional interfaces discovered at registration", "The scheduled re-open"), AC8, AC16 and its
+Test Plan row, and Phases 1 and 3.
+
+The question as raised: three sibling specs authored on 2026-09-27 each answered "how does my
+layer reach a handler without a sixth pinned method" the same way, with an optional interface
+discovered at registration. Three such interfaces, each with its own assertion site and its own
+"forgot to implement it" failure mode, is a shape the pin never anticipated, and the question is
+whether to accept it, consolidate it, or fold one or more into the pin now.
+
+**Recommendation:** A. Each interface has a different consumer and a different reason to exist:
+`Operator` has four methods and is called inside a write transaction, `Indexer` returns a pure
+generator the runtime calls before commit, and `surface.Declarer` returns static data read once.
+The Go skill's rule that the consumer declares the interface at its point of use produces
+exactly three, and a merged interface would force a handler with, say, a recipe but no
+management operations to implement stubs for the rest, which is the all-or-nothing coupling the
+pin was designed to avoid. The evidence the re-open exists to gather (generic and OCI on
+`Operator` and `surface.Declarer`, the prototype on `Operator` and `Indexer`) does not exist
+yet, so consolidating or folding now would be the anticipation the pin refuses.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Three interfaces, each owned by its consumer; verdict at the re-open** | No pin amendment; each interface is declared where the Go skill says it should be; the re-open judges from two real handlers and the prototype | Three assertion sites and three ways to forget an implementation, mitigated by AC16's recorded optional set and each owner's own registration-time check (`management-api.md`'s declared-kinds record, `web-ui.md` AC17) |
+| **B. One `Extensions` interface consolidating all three now** | One assertion site | A handler with one capability implements stubs for the others; three shared layers coupled through one type none of them owns; decided without the evidence the re-open gathers |
+| **C. Fold `Operator` into the pin now, since most formats have management operations** | The most-used capability becomes compulsory | A third out-of-cycle amendment, for a capability `management-api.md` itself says half the handlers lack (proxied-only formats), made before any handler has implemented it |
+
+**Why this is yours:** it fixes the shape of every extension point a format's management, index
+and UI halves are built on, and it decides how much the pin's "exactly five" claim still means.
+
+Accepted cost: two Tier 0 handlers and the prototype will be written against three separate
+optional forms, and the re-open may rename or merge them; AC16 makes the pin count and each
+handler's declared set data the re-open can read rather than reconstruct.
 
 ### Resolved: the re-open's evidence set and the request-to-coordinate gap (was Q9)
 
@@ -534,6 +724,12 @@ discovery document points back into format-first space; registration therefore e
 root anchoring as a declared `Mount` rather than a one-off (Design, "Routing and
 registration").
 
+Extended 2026-09-27, the decision unchanged: a third claim, Puppet's `/v3/`, arrived from
+captured PDK traffic (`formats/puppet.md`, resolved PDK-publish decision, was Q1), and with it
+the carve-out class split into path-only claims (OCI) and host-bound claims (Terraform, Puppet)
+served only on a hostname `server.hosts` binds to one repository (`deployment.md`, resolved
+host-binding decision, was Q8). Design records both sub-classes and the reserved-segment table.
+
 ### Resolved: write-triggered shared services (was Q4)
 
 **Settled 2026-09-23: not added to the interface now, but prototyped against Debian before the
@@ -605,11 +801,12 @@ Accepted cost: a second interface to design and maintain before it has a second 
 The alternative hard-codes Docker Hub's auth into the OCI handler and needs surgery for ECR,
 which is the union-of-quirks trap avoided elsewhere in this spec.
 
-Ownership note, 2026-09-25: no spec yet defines the adapter interface itself. `proxy-cache.md`
-consumes the axis (its negative-caching and preconfigured-upstream sections route provider
-quirks to adapters) and OCI's proxied phase is its first implementation, but the interface's
-shape currently has no owning document - the same one-directional-dependency shape this spec's
-fetch-and-cache obligation was corrected for.
+Ownership note, 2026-09-25, closed 2026-09-27: at the time no spec defined the adapter
+interface itself, the same one-directional-dependency shape this spec's fetch-and-cache
+obligation was corrected for. `upstream-adapters.md` now owns it: the `Adapter` interface in
+`internal/upstream`, the `Router` the proxy layer holds, and the `upstream.Options` value the
+fetch-and-cache entry in `Deps` passes down. Handlers never see an adapter and never import
+`internal/upstream` (its AC29; AC15 here).
 
 ## Review Log
 
@@ -621,3 +818,4 @@ fetch-and-cache obligation was corrected for.
 | 2026-09-23 | 3e3ae0a | folded-decision application + adversarial + constitution + go-spec-reviewer (tree claim verification vacuous pre-code: the tree holds a stub `cmd/stackweaver-registry/main.go` only; cross-spec, catalogue and protocol claims checked instead) | All four folded decisions were recorded but unapplied to the body: pinned the method set into Design (the central artifact was still absent), rewrote the pre-decision declarative proxied-path prose to the handler-calls-fetch-and-cache flow, added Routing and registration with the Terraform root-anchor grounding, moved write-triggered services into Scope and Phase 3, added AC8 plus the re-open trigger and gate; corrected the stale claim that the harness spec lacks a mode-coverage AC (its AC11 is that AC); tightened AC6 to type-aware call-site enforcement with a fixture test; added the missing `## Tasks` section; raised Q6 (egress import allowlist); stays `draft` on Q6 |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation. Not a gate review | Adopted Q9 A: the re-open's named inputs now include the request-to-coordinate evidence (auth.md's pattern-evaluation outcome as the addressed object behaves in the generic and OCI handlers, supply-chain-policy.md's evaluation-hook outcome, and ansible-collections.md's async-import-task finding as further evidence the pin and model were fixed early), and the re-open must give an explicit verdict on each out-of-cycle amendment and on whether the addressed object and the policy coordinate converge. auth.md adopted its pattern question as "amend now" in the same pass, so the amendment is made and recorded as out of cycle, with why: the pinned `Scope` type gains an addressed object of three kinds (named, content-addressed, none), because the only other places a pattern could be evaluated - inside a handler, or per-format URL grammar in shared code - are both forbidden; the method set stays at five. `Scope(r)` itself relabelled as the first out-of-cycle amendment. Policy needs no amendment, since supply-chain-policy.md resolved its hook inside `Deps` in parallel; the citations were updated to that resolution. Criteria: AC7 extended with a runner-enforced pattern-refusal case; AC8 extended to the new inputs and verdicts; AC12 added (per-handler route table test of object reporting, missing routes failing) with a Test Plan row; Phases 1 and 3 updated. Q9's option B row corrected: both Tier 0 formats do exercise the field. The 2026-09-25 row's two sibling-question citations reworded to past tense, since both questions are now resolved; its meaning is unchanged. Also absorbed, because it landed in parallel and left this spec citing a resolved question as open: `formats/generic.md` adopted its replay-match exemption the same day, so `Capabilities()` gains reference-implementation availability, definition-of-done item 2 now states the exemption and its containment, and AC13 asserts it with a Test Plan row (now 13 criteria). Stays draft. |
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the replication fold: the re-open's inputs gain the server-side ingest hook (driving hosted ingest from blobs already in the store, which `replication.md`'s freeze phase is blocked on), and shared-layer routes such as the replication read surface mount under reserved first segments held in a second registration list, so a handler's `Name()` or root-anchored claim colliding with one fails registration (Design, AC11 extended). From the supply-chain fold: the metadata-resolution, blob-read and fetch-and-cache entries in `Deps` are policy-enforcing and return a typed policy refusal declared in `internal/format` beside `Deps`, so a handler uses `errors.As` without importing `internal/policy` (AC14 added; the method set is unchanged at five). From the format-management fold: the re-open's inputs and AC8 name both prototype halves (Debian signed indexes, Galaxy-shaped async) and its six-question finding, plus management dispatch, which `management-api.md` must answer; Scope's out-of-scope item and Phase 3 updated, and the was-Q4 record gained an extension note. From the generic fold: AC13's Test Plan row now shares `conformance/core/matrix_test.go` with `conformance-harness.md` AC20. From the charter fold: 31 bespoke schemas corrected to 33. |
+| 2026-09-27 | 713c1e3 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every queued item targeting this file verified against the current text of its source spec before applying. The pin stays five and AC16 now holds the count by reflection. The three optional interfaces the authoring wave introduced - `Operator` (`management-api.md`, resolved dispatch decision, was Q2, four methods, declared in `internal/manage`, with value types in `internal/format`), `Indexer` (`signing-service.md`, `Generator() index.Generator`, the prototype's question 1), `surface.Declarer` (`web-ui.md`, resolved declaration-home decision, was Q1) - are recorded in a new Design subsection as type-asserted at registration and as one named re-open input with a per-interface verdict required by AC8; Q10 raised in the template's decision shape and adopted under the standing delegation: keep three, do not consolidate or fold before the re-open's evidence exists; none rides an out-of-cycle amendment because none touches the method set. `async-operations.md`'s finding that the runner reaches a handler only through `Operator.Apply` (the prototype's question 4) and its generalised no-goroutine rule recorded. `repository-lifecycle.md`: `Capabilities()` gains `Virtual` and `Rename`, AC13 extended, the rename `configure` operation named under `Operator`. `auth.md` Q23: the `descriptor` kind, stated explicitly as riding the 2026-09-26 amendment as auth.md treats it; AC12 covers four kinds and runs the sentinel test on every descriptor route, the shared helper gaining the check. `Deps`: the `Verifier` (`artifact-verification.md`), `upstream.Options` on fetch-and-cache (`upstream-adapters.md`, which now owns the adapter axis; the 2026-09-25 ownership note closed), the `server.hosts` lookup (`deployment.md`, was Q8), the `*slog.Logger` with context correlation (`observability.md`). The handler import boundary consolidated into AC15 with one test and a fixture per edge (policy, verify, upstream, repository both ways, telemetry and OTel and client_golang, manage, async). Reserved segments made an exhaustive owner-cited table (`api`, `ui`, `healthz`, `readyz`, `metrics`, the replication segment, exactly `/`) with AC11 naming a fixture per string; the carve-out class split into path-only and host-bound claims with Puppet's `/v3/` (Open item 25) recorded beside Terraform, the was-Q3 record extended. Old-fold items (replication 4, supply-chain 2, harness 2, format-management 4, charter 4) found already applied at fe54272. 16 criteria. Stays draft. |

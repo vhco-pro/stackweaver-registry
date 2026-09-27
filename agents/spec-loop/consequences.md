@@ -351,6 +351,7 @@ OWNER NOTE (repo hygiene, not a spec item): a 2.4 MB Go binary `artifactory` (bu
 One target file per agent. A file listed here has had every item targeting it applied; later sections may add new items for it.
 - data-model.md: DONE 2026-09-27. Applied management-api 1-3, credential-management 1, artifact-verification 1, signing-service 1 (closes theme 1 and Open items 20, 22, 26, 27, 28, 30, 32 on the data-model side), upstream-adapters 4, async-operations 1-2, repository-lifecycle 1-2 (plus theme 9 / Open item 12), observability 1, web-ui 8, Open item 16. Mark roots stay five. New ACs 35-42.
 - storage-and-gc.md: DONE 2026-09-27. Applied artifact-verification 2 (read-path verification, AC21-22), async-operations 4 (AC23), signing-service 2 and Open items 20, 26, 28 (AC16), management-api 4 and format-management 9 (AC15), repository-lifecycle 3-4 (AC24-25), data-model reconciliation 7 (pre-commit hook, AC25), deployment 6 and 10 (gc. keys AC29, LockSweep, jobs AC26, checker AC27), observability 11 (AC28, AC7). Adopted Q11 (segment digests for range reads). Stays draft pending its gate review.
+- format-handler-interface.md: DONE 2026-09-27. Applied management-api 8, artifact-verification 6, signing-service 7, upstream-adapters 6, async-operations 12, repository-lifecycle 6, observability 2-3, deployment 11, web-ui 3, Open items 25 and 33. Adopted Q10 (three optional interfaces stay three; verdict at the re-open). Pin stays five (AC16). New ACs 15-16.
 
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
@@ -368,4 +369,11 @@ Wording-only unless stated: each target now cites data-model.md instead of sayin
 1. data-model.md, `Blob` row and "Records that are not mark roots" (SUBSTANTIVE): add `segment_digests` (sha256 per fixed 4 MiB segment, computed in the commit pass; metadata, never a key; not a root) and a "verification failed" mark set and cleared by the read path (storage-and-gc AC21, resolved was-Q11); an AC clause that the CAS key stays the single canonical digest.
 2. deployment.md, "Prefixes reserved for owners that have not tabled keys yet": `gc.` is now tabled; move it into the key inventory with storage-and-gc's six keys and defaults (`gc.grace` 6h, `gc.sweep_interval` 1h, `gc.prune_interval` 1h, `gc.orphan_scan_interval` 24h, `gc.snapshot_retention` 720h, `gc.intent_gate_wait` 30s).
 3. Wording only, "consequence" -> citation of the applied storage-and-gc criterion: artifact-verification.md (~l.237, ~l.413, ~l.993: AC21, AC22); signing-service.md (~l.415, ~l.457, ~l.676: AC16); management-api.md (~l.1065: AC15, AC24); repository-lifecycle.md (~l.617, ~l.658, ~l.253: AC24, AC25; its AC9 row shares `internal/storage/arch_test.go` with AC25); async-operations.md (~l.594, ~l.760, ~l.807: AC23; storage job intervals are the `gc.*_interval` keys); observability.md (~l.64, ~l.369, ~l.599, ~l.778: AC21, AC22, AC28).
+
+## From format-handler-interface.md reconciliation (2026-09-27)
+1. replication.md, Design (~l.401): name the reserved first-segment string for the replication read surface, plus an AC11-style fixture name for `internal/format/register_test.go`.
+2. repository-lifecycle.md (~l.283, name grammar): cite format-handler-interface's full reserved table (`api`, `ui`, `healthz`, `readyz`, `metrics`, the replication segment); `v2` is a carve-out, not a reserved segment.
+3. oci.md and generic.md: declare `Virtual: supported` and `Rename: supported` in `Capabilities()`; oci.md also declares whether `GET /v2/` reports `descriptor` or `none` (AC12's four kinds).
+4. deployment.md (~l.542): the host binding is now carried through `Deps`, its home named as a re-open input.
+5. management-api.md AC27, signing-service.md "What this feeds the re-open", web-ui.md: wording only, the answer is recorded in format-handler-interface.md ("Optional interfaces discovered at registration", resolved was-Q10).
 
