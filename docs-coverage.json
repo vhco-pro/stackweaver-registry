@@ -6,6 +6,9 @@
   "conformance/alpine/**": [
     "docs/internal/plans/formats/alpine.md"
   ],
+  "conformance/arch/**": [
+    "docs/internal/plans/formats/arch.md"
+  ],
   "conformance/cargo/**": [
     "docs/internal/plans/formats/cargo.md"
   ],
@@ -96,6 +99,9 @@
   ],
   "internal/format/ansible/**": [
     "docs/internal/plans/formats/ansible-collections.md"
+  ],
+  "internal/format/arch/**": [
+    "docs/internal/plans/formats/arch.md"
   ],
   "internal/format/cargo/**": [
     "docs/internal/plans/formats/cargo.md"

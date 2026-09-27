@@ -75,6 +75,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/arch.md",
+    "description": "Spec for Arch Linux pacman repositories served to pacman 6 and 7: repositories holding many databases in Arch's {db}/os/{arch} layout, each database and files document generated and signed by the shared signing service on every write, every hosted package given a detached repository signature without its bytes changing, the database and package trust layers kept apart, a pointer-scoped forward-moving Last-Modified so a rollback reaches pacman's time-conditioned refresh, a proxied path serving Arch's unsigned databases and packager-signed packages verbatim, and virtual databases merged and re-signed.",
+    "internal": true,
+    "status": "draft",
+    "issue": "43",
+    "covers": [
+      "internal/format/arch/**",
+      "conformance/arch/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/cargo.md",
     "description": "Spec for the Cargo (Rust) registry format: the sparse index protocol and the crates.io-style web API, hosted and proxied, with cargo as the conformance oracle for reads, publish and yank alike.",
     "internal": true,
