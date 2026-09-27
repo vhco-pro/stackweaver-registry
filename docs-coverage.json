@@ -93,6 +93,9 @@
   "internal/auth/**": [
     "docs/internal/plans/foundation/auth.md"
   ],
+  "internal/credential/**": [
+    "docs/internal/plans/foundation/credential-management.md"
+  ],
   "internal/format/*.go": [
     "docs/internal/plans/foundation/management-api.md"
   ],

@@ -433,6 +433,16 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/credential-management.md",
+    "description": "Spec for the credential-management surface: issuing, listing, rotating and revoking registry tokens under /api/v1/tokens, the robot-account principal that lets automation outlive the people who set it up, the expiry states that make a dying token visible before it fails, registered public keys for clients that sign requests, and an OIDC exchange that mints short-lived tokens for CI without a stored secret.",
+    "internal": true,
+    "status": "draft",
+    "issue": "45",
+    "covers": [
+      "internal/credential/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/data-model.md",
     "description": "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies.",
     "internal": true,

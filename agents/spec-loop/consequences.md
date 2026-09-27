@@ -180,3 +180,21 @@ OWNER NOTE: management-api Q1 flips NuGet unlist/relist and conda revoke/unrevok
 14. credential-management.md (to author): mount under `/api/v1/tokens` inside the `api` reservation. async-operations.md and signing-service.md (to author): own deferred execution and key-operation semantics; the wire shape (`Operation`, poll route, `configure` kind) is management-api.md's.
 15. replication.md: no change (its reserved segment is distinct from `api`).
 
+
+## From credential-management.md authoring (2026-09-27, issue #45)
+Addresses data-model+oci item 4, auth+FHI item 5, management-api item 14, Open items 14, 18, 24 and theme 8 (theme 8's forms are confirmed as auth.md's work, not credential-management's).
+OWNER NOTE: an OIDC token exchange (trusted publishing generalised) was adopted in scope at Phase 3, off OCI's critical path; it grows the auth surface and belongs in auth AC10's external review.
+1. data-model.md, entity table, "Records that are not mark roots", AC34: add `Principal` (kind human|robot, identity key or robot name, display fields, enabled), `Credential` (kind token|public-key, owner ref, name, lookup prefix + SHA-256 hash or public key + fingerprint, scope rows (repository identity, actions, pattern) with multi-repository mark, created, expires or non-expiring, revoked at/by, rotated-from ref, last used), `Grant` (auth.md's (principal, repository, action, pattern)), `TrustPolicy` (robot ref, issuer, audience, claim constraints). None is a mark root. credential-management AC24 gates code on it.
+2. auth.md, "A token never exceeds its owner" and resolved Q20's accepted cost, Scope out-of-scope bullet: the robot-account principal now exists (credential-management "Robot accounts", AC9); replace the "this spec defines no robot" wording with a citation.
+3. auth.md, "Token expiry": cite credential-management.md AC5 as the criterion that lands the expiry warning.
+4. auth.md, AC31 and the client table: path-segment forms (conda `/t/{token}/`, luarocks `api/1/{key}`, Terraform capability), vendor headers (X-Jfrog-Art-Api, X-NuGet-ApiKey, X-ApiKey, X-OpenVSX-Token) and Chef's signed headers are auth.md's verifier concerns with redaction (AC7) and plaintext refusal (AC27), per credential-management's resolved boundary (was Q6).
+5. auth.md, "Tokens are never stored recoverable" / "Nothing is invented": record the token value shape `swr_<lookup prefix><secret>` (base32, fixed non-secret marker) as the concrete form of the lookup prefix.
+6. management-api.md, "Mount, versioning and wire conventions": the credential surface also mounts `/api/v1/robots` and `/api/v1/keys`; the closed problem-type list gains `scope-exceeds-owner` and `lifetime-policy`; AC25's OpenAPI test covers routes contributed by `internal/credential`.
+7. management-api.md, "Audit" / resolved Q5: credential events follow the grant/upstream-credential precedent (audit line, no `Operation`), citing credential-management's resolved audit-shape decision.
+8. conformance-harness.md, `credentials` setup key: must express a token owned by a named robot, a registered RSA public key (private key delivered to the client container as a file; chef Open item 24), and a token in state `expiring` (credential-management AC5).
+9. project-charter.md step 2: token operations cite credential-management.md Phase 1 by name.
+10. oci.md, Design, Phase 1, resolved Q3: drop "(to be authored in the spec loop)"; the suite credential is minted through `POST /api/v1/tokens` with `multi_repository: true` (credential-management AC7).
+11. chef.md, Context and resolved Q1: cite credential-management.md `/api/v1/keys` (AC12; PEM RSA >= 2048, immutable unique key name = X-Ops-Userid, rotation is register-new-then-delete).
+12. pypi.md, openvsx.md, Scope: trusted publishing is homed in credential-management's OIDC exchange (`POST /api/v1/tokens/exchange`, Phase 3); their format-shaped routes become bindings onto it.
+13. terraform.md, conda.md, luarocks.md: drop "to be authored" wording where they cite credential-management.md.
+14. observability.md (to author): a gauge of credentials per state and owner kind. deployment.md (to author): the eight `credentials.*` keys and the first-mint procedure (curl with the local admin credential; no CLI in v1).
