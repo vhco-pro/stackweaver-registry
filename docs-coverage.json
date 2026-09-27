@@ -51,6 +51,9 @@
   "conformance/oci/**": [
     "docs/internal/plans/formats/oci.md"
   ],
+  "conformance/puppet/**": [
+    "docs/internal/plans/formats/puppet.md"
+  ],
   "conformance/rpm/**": [
     "docs/internal/plans/formats/rpm.md"
   ],
@@ -126,6 +129,9 @@
   ],
   "internal/format/pub/**": [
     "docs/internal/plans/formats/pub.md"
+  ],
+  "internal/format/puppet/**": [
+    "docs/internal/plans/formats/puppet.md"
   ],
   "internal/format/pypi/**": [
     "docs/internal/plans/formats/pypi.md"

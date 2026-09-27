@@ -271,6 +271,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/puppet.md",
+    "description": "Spec for Puppet modules served to puppet module install and upgrade (Puppet 7 and OpenVox 8) and r10k: the Forge API v3 read surface under a format-first mount with every URI rendered relative to the configured base, whole-module release lists, SHA-256 and MD5 on every release, publish through the Forge's POST /v3/releases (path-respecting for puppet-blacksmith, root-anchored on a bound hostname for PDK), deprecation, withdrawal and hard deletion as bindings onto registry-owned management operations, a verifying Forge cache that handles premium and login-required modules explicitly, and per-module virtual repositories.",
+    "internal": true,
+    "status": "draft",
+    "issue": "36",
+    "covers": [
+      "internal/format/puppet/**",
+      "conformance/puppet/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/pypi.md",
     "description": "Spec for the PyPI format, scheduled as the experiment's generalisation test - does format N+1 cost less than format N?",
     "internal": true,

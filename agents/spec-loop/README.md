@@ -45,9 +45,9 @@ Format specs, grounded in captured traffic from the real client run in a contain
 logging stub, as `cargo.md`, `helm.md` and `ansible-collections.md` were. In order:
 
 conan,
-puppet, luarocks, hackage, cpan, opam, homebrew, openvsx, arch.
+luarocks, hackage, cpan, opam, homebrew, openvsx, arch.
 
-Done: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub, nuget, maven, hex, composer, conda, cran, julia, swift, terraform, rpm, debian, alpine, conan, vagrant, chef.
+Done: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub, nuget, maven, hex, composer, conda, cran, julia, swift, terraform, rpm, debian, alpine, conan, vagrant, chef, puppet.
 
 ### Cloud: no containers needed (the owner's cloud credits)
 
