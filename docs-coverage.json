@@ -15,6 +15,9 @@
   "conformance/cran/**": [
     "docs/internal/plans/formats/cran.md"
   ],
+  "conformance/debian/**": [
+    "docs/internal/plans/formats/debian.md"
+  ],
   "conformance/generic/**": [
     "docs/internal/plans/formats/generic.md"
   ],
@@ -38,6 +41,9 @@
   ],
   "conformance/oci/**": [
     "docs/internal/plans/formats/oci.md"
+  ],
+  "conformance/rpm/**": [
+    "docs/internal/plans/formats/rpm.md"
   ],
   "conformance/swift/**": [
     "docs/internal/plans/formats/swift.md"
@@ -66,6 +72,9 @@
   ],
   "internal/format/cran/**": [
     "docs/internal/plans/formats/cran.md"
+  ],
+  "internal/format/debian/**": [
+    "docs/internal/plans/formats/debian.md"
   ],
   "internal/format/generic/**": [
     "docs/internal/plans/formats/generic.md"
@@ -99,6 +108,9 @@
   ],
   "internal/format/pypi/**": [
     "docs/internal/plans/formats/pypi.md"
+  ],
+  "internal/format/rpm/**": [
+    "docs/internal/plans/formats/rpm.md"
   ],
   "internal/format/swift/**": [
     "docs/internal/plans/formats/swift.md"

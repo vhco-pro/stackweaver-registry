@@ -118,6 +118,16 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/debian.md",
+    "description": "Spec for the Debian apt archive format: the dists and pool layout with InRelease, Release and Release.gpg, the Packages, Sources, Contents indices and their by-hash forms, hosted through the shared signing and index service with the signed envelope scoped to the serving pointer, proxied as a byte-for-byte, chain-verified cache of an upstream archive, and merged into signed virtual views, with apt on four generations as the oracle.",
+    "internal": true,
+    "status": "draft",
+    "covers": [
+      "internal/format/debian/**",
+      "conformance/debian/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/generic.md",
     "description": "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end.",
     "internal": true,
@@ -234,6 +244,17 @@
     "issue": "9",
     "covers": [
       "internal/format/pypi/**"
+    ]
+  },
+  {
+    "path": "docs/internal/plans/formats/rpm.md",
+    "description": "Spec for RPM repositories (rpm-md repodata) served to dnf, yum and zypper: repositories holding many trees, each tree's repomd.xml and its primary, filelists, other, updateinfo, comps and modules documents generated and signed by the shared signing service as a write-triggered index, publisher-signed packages whose bytes the registry never alters, the two trust layers kept apart, a proxied path that serves upstream metadata verbatim with its vendor signature, and virtual trees merged and re-signed.",
+    "internal": true,
+    "status": "draft",
+    "issue": "30",
+    "covers": [
+      "internal/format/rpm/**",
+      "conformance/rpm/**"
     ]
   },
   {
