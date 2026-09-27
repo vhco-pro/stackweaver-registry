@@ -45,6 +45,9 @@
   "conformance/julia/**": [
     "docs/internal/plans/formats/julia.md"
   ],
+  "conformance/luarocks/**": [
+    "docs/internal/plans/formats/luarocks.md"
+  ],
   "conformance/maven/**": [
     "docs/internal/plans/formats/maven.md"
   ],
@@ -120,6 +123,9 @@
   ],
   "internal/format/julia/**": [
     "docs/internal/plans/formats/julia.md"
+  ],
+  "internal/format/luarocks/**": [
+    "docs/internal/plans/formats/luarocks.md"
   ],
   "internal/format/maven/**": [
     "docs/internal/plans/formats/maven.md"
