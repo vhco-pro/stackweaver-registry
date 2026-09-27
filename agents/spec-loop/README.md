@@ -8,8 +8,11 @@ the queues are empty.
 
 ## Rules for running it
 
-- **At most two agents at a time.** The owner set this after parallel runs of nine to fifteen
-  agents exhausted the spend limit twice and killed work mid-write.
+- **One agent at a time.** The owner tightened this on 2026-09-27 (budget: the cloud credits are
+  finite) from an earlier two-agent limit, itself set after parallel runs of nine to fifteen agents
+  exhausted the spend limit twice and killed work mid-write.
+- **Spec work runs on the `fable` tier** (authoring, folding, reconciliation, gate reviews), matching
+  `.claude/commands/spec.md`'s `model:` pin. Pass the model explicitly when spawning an agent.
 - Every agent writes its Review Log row and status_description last, so an interrupted agent
   leaves finished work with no record, never a record of unfinished work. On resume, check which
   files have today's Review Log row: those finished.
@@ -49,9 +52,8 @@ Nothing local remains unless a gate review asks for a fresh capture.
 
 ### Cloud: no containers needed (the owner's cloud credits)
 
-1. **The "Open items" in `consequences.md`**, with `reconcile-brief.md`: auth's Cargo pattern
-   bullet and yank note, and the question of an addressed-object kind for repository-wide index
-   documents (without it, a patterned-pull token cannot run cargo or helm at all).
+1. ~~**The auth.md "Open items" (1-3) in `consequences.md`**~~ DONE 2026-09-27 (auth Q23,
+   `descriptor` object kind). Its follow-ups (items 33-38) join the reconciliation pass, step 3.
 2. **Foundation specs**, with `foundation-brief.md`, one at a time, most-cited first:
    management-api, credential-management (must reach `planned` before OCI Phase 1),
    artifact-verification, signing-service, upstream-adapters, async-operations (reconcile with the

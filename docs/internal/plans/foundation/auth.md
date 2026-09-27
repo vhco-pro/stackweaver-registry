@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): the client table gained the cargo row (the bare token as the whole Authorization value on API requests; on index and downloads only after the Cargo login_url challenge taught auth-required; never on search) and the docker row's token-endpoint wording (registry token as the Basic password, username not an input, no refresh token); the verifier's four presentation forms are asserted by the new AC31, AC3 and AC27 extended; Galaxy's and Cargo's addressed-object declarations recorded under Pattern scopes; management operations mapped onto pull/push/delete with no new action, with the Cargo-versus-PyPI yank divergence left for management-api.md. Earlier: Q13-Q22 adopted under the owner's standing delegation. 31 criteria, zero open questions; stays draft pending a gate review. AC10 still requires external review of the implementation regardless of spec status."
+status_description: "Reconciled 2026-09-27 at 94f86f3 with the format-side folds (not a review): Q23 raised and adopted under the standing delegation, adding a fourth addressed-object kind, descriptor, for a repository-wide document that names no object (Cargo's config.json, Conan's probe, RPM's repomd.xml), which a patterned pull may read, held by a sentinel test in each handler's object table and asserted by the new AC32; Helm's index.yaml and RPM's primary stay none, so helm, dnf and zypper still need an unpatterned pull. The Cargo addressed-object bullet now follows cargo.md's folded crate key with {crate}/{version} on version routes, and the Cargo yank divergence is gone: yank and unyank are bindings onto the management API's yank operation and need delete. Earlier (2026-09-26): cargo and docker client rows, AC31 for the four presentation forms, Galaxy's declaration, management operations mapped onto pull/push/delete; Q13-Q22 adopted. 32 criteria, zero open questions; stays draft pending a gate review. AC10 still requires external review of the implementation regardless of spec status."
 description: "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present."
 author: michielvha
 goal: "Give every format one auth model that real package clients can use, while keeping user passwords, MFA, account recovery and federation outside our code."
@@ -342,14 +342,18 @@ odd verb for a package download. That is a documentation problem rather than a s
 **Management operations add no action.** The format specs that settled hosted management
 operations on 2026-09-26 map each onto this vocabulary, evaluated against the operation's
 addressed object like any other route: removal-class operations require `delete` (PyPI yank,
-unyank, file deletion and release deletion; npm unpublish of a version or a package; Galaxy
-version and collection deletion) and metadata changes require `push` (npm deprecate and
-undeprecate), so a pattern-scoped grant manages only inside its pattern. A proposal for a
-`manage` or `yank` action is a change to this vocabulary, landing in human grants and token
-scopes at once. One divergence is recorded for the management surface spec owed as
-`foundation/management-api.md`, which must reconcile it rather than inherit it: Cargo's
-client-native yank and unyank map to `push` (`formats/cargo.md`), where PyPI's registry-owned
-yank maps to `delete`.
+unyank, file deletion and release deletion; Cargo yank and unyank; npm unpublish of a version or
+a package; Galaxy version and collection deletion) and metadata changes require `push` (npm
+deprecate and undeprecate), so a pattern-scoped grant manages only inside its pattern. A
+proposal for a `manage` or `yank` action is a change to this vocabulary, landing in human grants
+and token scopes at once. **One operation carries one authorization rule whatever wire it
+arrives over.** Where a client has a native command for a management operation, that route is a
+binding onto the registry-owned operation in `foundation/management-api.md` and inherits its
+action: Cargo's `cargo yank` and `cargo yank --undo` routes are bindings onto the management
+API's yank operation and require `delete` exactly as PyPI's yank does (`formats/cargo.md`, the
+resolved yank-binding decision, was Q6), so a Cargo publisher holding `push` alone publishes but
+cannot yank. The divergence an earlier pass recorded here, Cargo yank under `push`, was settled
+from the Cargo side and no longer exists.
 
 ### Pattern scopes
 
@@ -361,13 +365,21 @@ exception, and a fleet-style grant over `prod-*` repositories is not expressible
 
 **What the authorizer matches against.** Beside the repository and action, the pinned `Scope`
 type carries the object the request addresses, which the handler reports because only the
-handler can parse its URL grammar. The object has one of three kinds:
+handler can parse its URL grammar. The object has one of four kinds:
 
 | Kind | Meaning | Example routes |
 |---|---|---|
 | named | the handler's canonical name for the finest named thing the route addresses | a generic artifact path; an OCI manifest by tag; an npm package name |
 | content-addressed | the route reads or writes content identified by digest, or an upload bound to a digest when it commits | an OCI blob, a manifest by digest, an upload session |
-| none | the route addresses the repository as a whole, including every route whose response enumerates names | a generic listing; an OCI tag list or catalog |
+| descriptor | the route serves a repository-wide document whose body carries no name, version or digest of any object the repository holds: protocol configuration, a discovery probe, a signing-key document, an index of metadata files named by checksum and type | Cargo's `config.json`; Conan's capability probe; RPM's `repomd.xml`, its signature and key document; zypper's `media.1/media` |
+| none | the route addresses the repository as a whole and its response can name objects, including every route that enumerates names | a generic listing; an OCI tag list or catalog; Helm's `index.yaml`; RPM's `primary` |
+
+The descriptor kind exists for one reason (the resolved name-free-document decision below, was
+Q23): several clients open every command with a repository-wide document that reveals nothing,
+and under three kinds that document had to be none, so a credential holding only a patterned
+`pull` could not run the client at all. A handler may report a route as a descriptor only when
+the sentinel test in "The mechanical catch" below holds for it; a document that names even one
+package is none.
 
 Which object each route reports is format knowledge, declared in each format's spec alongside
 its route-to-scope mapping; this spec fixes only the kinds and how they evaluate. Two
@@ -380,8 +392,21 @@ consumers show the shape a declaration takes:
   `collection_info` disagrees with it so a mislabelled part cannot evade the pattern. An import
   poll reports the object of the publish its task records, and discovery reports none. A
   namespace is therefore granted by a pattern such as `alpha/**`.
-- **Cargo** (`formats/cargo.md`, "Authentication") reports the crate's registered spelling on
-  every index, download, publish, yank and owners route, and none for `config.json` and search.
+- **Cargo** (`formats/cargo.md`, "Addressed objects and pattern scopes") canonicalises the
+  crate name to the **folded key** its model stores, lowercase with `_` replaced by `-`, never
+  the registered spelling, because a pattern matches byte for byte and the folded key is
+  computable from every spelling any route carries, so `acme-*` covers `Acme_Tool` however a
+  request spells it. It reports `{crate}` for the crate's index file and the owners routes,
+  `{crate}/{version}` for the download, the publish (from the metadata JSON that precedes the
+  `.crate` bytes, refusing an archive whose manifest disagrees), and yank and unyank; `config.json`
+  is a descriptor, and search is none.
+- **The name-free documents** every client reads first are descriptors, not none: Cargo's
+  `config.json`, Conan's capability probe and user routes, RPM's `repomd.xml` with its signature
+  and key document, and zypper's `media.1/media` and `content` probes. The enumerating indexes
+  stay none: Helm's `index.yaml` lists every version of every chart, and RPM's `primary` lists
+  every package in the tree, so a patterned `pull` is refused them and helm, dnf and zypper do
+  not run under a patterned-only `pull` on those formats (the resolved name-free-document
+  decision below, was Q23).
 
 **How a patterned scope evaluates** (the resolved requests-naming-no-object decision below). A
 scope with no pattern authorizes its action on every request to its repository, whatever the
@@ -389,7 +414,20 @@ kind. A scope with a pattern authorizes:
 
 - a **named** object only when the name matches the pattern;
 - a **content-addressed** object for `pull` and `push`, and never for `delete`;
+- a **descriptor** object for `pull` only, and never for `push` or `delete`;
 - a **none** object never.
+
+The descriptor allowance reveals nothing a pattern protects: the credential already holds a
+scope on the repository, so the repository's existence and its protocol configuration are not
+secrets from it, and a descriptor by definition names no object. It is `pull`-only because the
+documents it covers are written by administrators or by management operations that report none,
+never by a pattern-narrowed client. What it buys is stated exactly rather than generously: a
+token holding only a patterned `pull` runs `cargo fetch` and `cargo add` end to end (the
+descriptor `config.json`, then the in-pattern crate's named index file and download), passes
+Conan's probe, and reaches RPM's `repomd.xml`; it is still refused Helm's `index.yaml`, RPM's
+`primary`, Conan's search and every other enumerating document, so helm, dnf and zypper remain
+unrunnable under a patterned-only `pull`, and the standing recipe for those formats stays an
+unpatterned `pull` beside a patterned `push` and `delete`.
 
 The content-addressed allowance is the accepted cost. Without it a tag-scoped token could not
 pull the blobs its own tag references, and a multi-architecture pull resolves child manifests
@@ -428,7 +466,13 @@ is repository-wide. The claim's encoding is an implementation decision AC10's re
 that reports the wrong kind, or a name that is not the canonical one, under-grants or
 over-grants silently, so every format's case set carries a pattern-refusal case in both modes,
 runner-enforced (`format-handler-interface.md` AC7), and each handler's object reporting is
-table-tested per route (`format-handler-interface.md` AC12).
+table-tested per route (`format-handler-interface.md` AC12). The descriptor kind adds the one
+misreport a table cannot catch by inspection, an enumerating document labelled a descriptor, so
+it carries its own mechanical enforcer, the **sentinel test**: for every route a handler reports
+as a descriptor, the per-handler object test seeds the repository with an object whose name,
+version and digest are sentinels that occur nowhere else, fetches the route, and fails if any
+sentinel appears in the body. The test is the definition of the kind made executable, and a
+route that fails it is none (AC32; the interface spec's AC12 table test is where it runs).
 
 ### Human grants
 
@@ -599,6 +643,14 @@ afterwards. This is deliberately inconvenient.
       `Authorization` value in none of these forms, or naming an unknown scheme, is rejected
       with an authentication error and never treated as anonymous, including on a repository
       with anonymous read enabled.
+- [ ] AC32: A patterned scope authorizes a descriptor object for `pull` and refuses it for `push`
+      and `delete`; a token holding only `pull` patterned to one crate completes a real
+      `cargo fetch` against a hosted and a proxied repository (`config.json`, the in-pattern
+      crate's index file and download) and is refused another crate's index file; the same
+      token is refused Helm's `index.yaml` and RPM's `primary`, so `helm repo add` and a dnf
+      refresh fail under it; and for every route a handler reports as a descriptor, the
+      sentinel test finds no seeded object name, version or digest in the response body, a
+      route with any sentinel present failing the handler's object table.
 
 ## Test Plan
 
@@ -635,6 +687,7 @@ afterwards. This is deliberately inconvenient.
 | AC29 | integration | `internal/auth/token_scope_test.go` (single-repository default, refused and accepted multi-repository creation, unnamed repository refused); the cross-repository mount under an opt-in token is also exercised by `formats/oci.md` AC1's suite run |
 | AC30 | integration | `internal/auth/token_owner_test.go` |
 | AC31 | unit + integration | `internal/auth/credential_form_test.go` (the four forms resolving identically; unknown schemes and malformed values rejected, never anonymous) |
+| AC32 | unit + conformance | `internal/auth/pattern_test.go` (descriptor evaluation per action); `conformance/cargo/auth_test.go` (patterned-only `pull` running `cargo fetch` in both modes, refused another crate's index file; `formats/cargo.md` AC17); `conformance/helm/auth_test.go` and `conformance/rpm/pattern_test.go` (patterned-only `pull` refused `index.yaml` and `primary`; `formats/helm.md` AC16, `formats/rpm.md` AC14); the sentinel test in each handler's `internal/format/<name>/scope_object_test.go` through the shared helper `format-handler-interface.md` AC12 names |
 
 **AC10 procedure**: before the first auth code merges, a security review is performed by a party
 other than the implementing agent, covering token lifecycle, scope enforcement, the OIDC
@@ -658,8 +711,9 @@ Challenge, token endpoint, scoped JWTs carrying any pattern, subset grants for m
 requests. Gated by the official conformance suite.
 
 ### Phase 4: Enforcement
-Central authorization over the three addressed-object kinds, the runner-enforced per-format
-auth and pattern-refusal cases, architecture tests.
+Central authorization over the four addressed-object kinds, including the descriptor's
+`pull`-only allowance and the sentinel test behind it, the runner-enforced per-format auth and
+pattern-refusal cases, architecture tests.
 
 ## Tasks
 
@@ -670,7 +724,9 @@ Populated by `/tasks` once this spec reaches `planned`.
 None remain open. Q13 through Q17 were raised by the 2026-09-24 gate review and adopted on
 2026-09-26 under the owner's standing delegation, together with Q18 through Q22, raised and
 adopted in the same pass: Q18 to Q20 because folding exposed them, Q21 and Q22 because sibling
-adoptions in `formats/oci.md` landed on this spec that day; each adopted record opens by
+adoptions in `formats/oci.md` landed on this spec that day. Q23 was raised by the format-side
+reconciliation (cargo, helm, rpm and conan each found that a patterned-only `pull` could not run
+their client) and adopted 2026-09-27; each adopted record opens by
 saying so, and the owner may reverse any of them. Q1 through Q12 are all resolved (Q1-Q3 on
 2026-09-23 from the original draft, Q4-Q12 answered 2026-09-23 after the security review that
 raised them). The resolved records that follow are kept rather than deleted, so the reasoning
@@ -763,8 +819,60 @@ Accepted cost: the digest-reachability residual in A's row, named in Design so i
 rather than a surprise. B lost because a feature that cannot pass its own flagship format is not
 a feature; C lost because it widens the one action whose mistakes are unrecoverable.
 
+(Refined 2026-09-27 by the name-free-document decision below, was Q23: the none kind this record
+refuses is now split, and a repository-wide document that names no object is a descriptor a
+patterned `pull` may read. Every enumerating document, and every route this record's examples
+name, stays none and stays refused; the reasoning above is unchanged.)
+
 **Why this is yours:** it decides what a tag-scoped credential actually protects on a
 content-addressed format, which operators will read as a promise.
+
+### Resolved: a name-free repository-wide document under a patterned `pull` (was Q23, raised and adopted 2026-09-27)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: a fourth addressed-object
+kind, **descriptor**, for a repository-wide document whose body carries no name, version or
+digest of any object the repository holds, which a patterned scope authorizes for `pull` only;
+every enumerating document stays none. The kind is held by a mechanical enforcer, the sentinel
+test, run inside each handler's per-route object table (`format-handler-interface.md` AC12).
+Folded through Design ("Pattern scopes": the object-kind table, the evaluation rules, the
+consumer declarations and the mechanical catch), AC32 and its Test Plan row, and Phase 4.
+
+The judgment call it settles: the resolved requests-naming-no-object decision (was Q19) refuses
+every none object to a patterned scope, and four format specs then found the same consequence
+independently. Every cargo command opens with `config.json`, every Conan command with a
+capability probe, every dnf and zypper refresh with `repomd.xml`, and every Helm read with
+`index.yaml`; under three kinds each is none, so a credential holding only a patterned `pull`
+fails at its first request and can run none of those clients. Each spec recorded the limitation
+and the recipe (unpatterned `pull`, patterned `push` and `delete`) and asked this spec whether a
+kind for "repository-wide but reveals no names" should exist, since the rule's purpose, that a
+listing never reveals names outside the pattern, is untouched by a document that names nothing.
+
+Verifying the ask against the four specs narrowed it: Cargo's `config.json`, Conan's probe and
+user routes, RPM's `repomd.xml` and zypper's probes are name-free, but Helm's `index.yaml`
+enumerates every version of every chart and RPM's `primary` enumerates every package in the
+tree, so no honest kind can make helm, dnf or zypper runnable under a patterned-only `pull`.
+
+**Recommendation (adopted):** A, because it makes the one client the rule was needlessly blocking
+work without weakening what the rule protects, and because the kind can be defined as a test
+rather than as a judgment.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. A fourth kind, descriptor, `pull`-only for a patterned scope, defined by the sentinel test** | A patterned-only `pull` runs cargo end to end and passes Conan's probe; the deny-by-default reading survives because a descriptor names nothing by definition and the test enforces the definition; no per-handler exception | A fourth kind to misreport, caught only by the sentinel test; the gain is honest but small: cargo fully, Conan's probe only, RPM's failure point moves from `repomd.xml` to `primary`, Helm unchanged |
+| **B. Keep three kinds; the documented recipe stands** | Nothing changes; three kinds are easier to reason about | A pattern-scoped read credential is impossible on every format whose client opens with a descriptor, for no protective reason on the name-free ones; four specs carry a limitation the rule never needed |
+| **C. Render the enumerating documents filtered to the pattern** | A patterned `pull` runs every client, including helm, dnf and zypper | The handler must learn the pattern to filter, which is an auth check inside the handler, the boundary the constitution forbids; a filtered `repomd.xml` cannot carry the repository signature; and a per-pattern index is a second document per credential to generate and cache |
+| **D. Exempt the specific routes per format** | The same reach as A with no new kind | A per-handler exception to the central rule, the class AC18 exists to catch; conan.md already rejected it as its option B |
+
+Accepted cost: a fourth kind and a fourth way for a handler to be wrong, held by the sentinel
+test rather than by review; and the limitation stays on Helm and RPM, stated exactly in Design so
+nobody reads the kind as a fix it is not. B lost because it preserves a limitation with no
+protective value on the name-free routes; C lost because it puts the pattern inside the handler
+and breaks signed metadata; D lost because it is the per-format exception the central authorizer
+exists to make unnecessary.
+
+**Why this is yours:** it widens what a pattern-narrowed read credential can see, which
+operators will read as a promise, and it settles the same question four format specs each
+raised to this one.
 
 ### Resolved: a token's authority relative to its owner (was Q20, raised and adopted 2026-09-26)
 
@@ -1094,3 +1202,4 @@ world-readable until it matters.
 | 2026-09-25 | 331ef25 | cross-spec sync from the ansible-collections first review. Not a review | The `ansible-galaxy` client-table row said "Bearer or Basic depending on the endpoint"; captured traffic (ansible-core 2.18.18rc1 against a logging server) shows `Authorization: Token <token>` on every request, with Bearer only under the Keycloak `auth_url` flow. Row split from `helm` and corrected with provenance; the least-certain caveat now names `helm` alone. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation. Not a gate review | Adopted Q13 A (pinned `Scope` gains an addressed object, patterns narrow within one identity-bound repository; the amendment itself made in the interface spec), Q14 A (plaintext credential refused before lookup unless the explicit flag is set, no forwarding-header trust), Q15 A (expiry-warning AC owed by the credential-management surface spec; outbound dependency recorded), Q16 A (human grants `(principal, repository, action)` with optional pattern, plus the global admin role, which alone administers), Q17 A (single-repository tokens; the resolved token-scope-unit record's contradictory "one deliberately broad token" wording corrected with a dated note so one reading remains). Folding exposed three judgment calls, raised and adopted as Q18 A (segment-glob grammar: `*` within a segment, `**` across whole segments, nothing else special, validated at creation), Q19 A (a patterned scope authorizes content-addressed requests for pull and push, never delete, and never a repository-wide or name-enumerating request) and Q20 A (token authority is the per-request intersection with its owner's current grants; tokens carry no administrative authority). Two more were forced by `formats/oci.md` adopting its own questions in parallel, and were raised and adopted here: Q21 A (the token-management surface, expiry-warning criterion and any robot-account principal belong to a new sibling spec, `foundation/credential-management.md`, owed before OCI's Phase 1, because the OCI spec placed the surface's home on this spec while Q15 had placed it there) and Q22 B (multi-repository tokens exist only by explicit opt-in with repositories enumerated by identity, because oci.md's flagship AC1 needs one suite credential on two repositories; Q17's record amended to the single reading "one repository by default, several only by deliberate opt-in"). Body: Scope (in and out of scope), Design (machine surface, TLS paragraph, OCI token service subset grants and pattern-carrying JWTs, bootstrap forward reference, Token expiry, central authorization's `Scope` shape, new Pattern scopes and Human grants sections), and replication's settled `pull` widening absorbed into a rewritten section, which also cleared a stale citation of replication's question as open. Criteria: AC8, AC14 and AC19 rewritten; AC24-AC30 added (AC29 carrying the Q22 opt-in), each with a Test Plan row; Phases 1-4 updated. AC10's external implementation review untouched and unsatisfied by this pass. Stays draft. |
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Items found already done: replication's settled `pull` widening (the section "What `pull` also authorizes: replication reads" already carries the adopted Q6 answer, the pattern-narrowed refusal, the replication package's own mapping under the central authorizer and the accepted widening, and cites it as resolved), and the OCI two-repository credential contradiction, already met by the resolved two-repository credential decision (was Q22) and AC29. Applied: the `docker`/`podman` row now states the token-endpoint credential (`formats/oci.md`'s resolved docker-login decision: registry token as the Basic password, username not an input, no refresh token, revocation inside AC5's window) and AC3 asserts it; a `cargo` row from `formats/cargo.md`'s captured traffic (bare token as the whole `Authorization` value on authenticated API requests; on index and download only after a 401 with `WWW-Authenticate: Cargo login_url="..."` and a retried `config.json` showing `auth-required`, 1.74 and later; search never authenticates), with the machine-surface paragraph, the TLS paragraph and AC27 extended to the scheme-less form and AC31 added for the four presentation forms; under Pattern scopes, Galaxy's addressed-object mapping (`{namespace}/{name}`, `{namespace}/{name}/{version}`, the publish object from the multipart file part's declared filename checked against `collection_info`, the poll reporting its task's object) and Cargo's; under Scope vocabulary, management operations mapped onto `delete` and `push` with no new action, and the Cargo `push` versus PyPI `delete` yank divergence recorded for `management-api.md` to reconcile. Phase 1 updated. AC10's external review untouched. |
+| 2026-09-27 | 94f86f3 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the three auth items of the format-side reconciliation, each verified against the current `formats/cargo.md`, `formats/helm.md`, `formats/rpm.md`, `formats/conan.md` and `format-handler-interface.md`. The Cargo addressed-object bullet under Pattern scopes now follows cargo.md's table: the folded crate key (lowercase, `_` to `-`) rather than the registered spelling, `{crate}` on the index file and owners routes, `{crate}/{version}` on download, publish, yank and unyank. The Scope-vocabulary note recording a Cargo `push` versus PyPI `delete` yank divergence for `management-api.md` is replaced by the settled rule: one operation carries one authorization rule whatever wire it arrives over, and Cargo's yank and unyank are bindings onto the management API's yank operation needing `delete` (cargo.md's resolved yank-binding decision, was Q6). Raised and adopted Q23 A, the "repository-wide but reveals no names" judgment call four format specs sent here: a fourth addressed-object kind, descriptor, which a patterned scope authorizes for `pull` only, defined by a sentinel test run in each handler's AC12 object table; folded through the object-kind table, the evaluation rules, the consumer declarations, the mechanical catch, Phase 4, and the new AC32 with its Test Plan row. Verification narrowed the ask: helm's `index.yaml` and rpm's `primary` enumerate names and stay none, so the kind makes cargo runnable under a patterned-only `pull`, passes Conan's probe and moves rpm's failure to `primary`, and Design says so exactly. Q19's record carries a dated refinement note. AC10's external review untouched. Stays draft. |
