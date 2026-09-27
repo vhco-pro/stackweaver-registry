@@ -255,8 +255,14 @@
     "docs/internal/plans/foundation/data-model.md",
     "docs/internal/plans/foundation/storage-and-gc.md"
   ],
+  "internal/surface/**": [
+    "docs/internal/plans/foundation/web-ui.md"
+  ],
   "internal/telemetry/**": [
     "docs/internal/plans/foundation/observability.md"
+  ],
+  "internal/ui/**": [
+    "docs/internal/plans/foundation/web-ui.md"
   ],
   "internal/upstream/**": [
     "docs/internal/plans/foundation/upstream-adapters.md"
@@ -275,5 +281,8 @@
   ],
   "scripts/check-config-keys.js": [
     "docs/internal/plans/foundation/deployment.md"
+  ],
+  "web/**": [
+    "docs/internal/plans/foundation/web-ui.md"
   ]
 }
