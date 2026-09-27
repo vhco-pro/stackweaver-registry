@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): gained the records sibling specs adopted and needed from the shared model, so no subsystem grows its own table. Each version's last completed write time and core-parsed retention rules on Repository (for generic's retention pass), the Operation entity (for Galaxy import tasks and the prototype's deferred half), replication's link, chained snapshot identity, freeze write kind and per-file provenance, the rule that a Package outlives its versions (the retirement sets depend on it), and the policy layer's records placed outside the model. None adds a GC mark root; the set stays five, each record placed against it in a new Design table. AC28-AC34 added with Test Plan rows, Phases 1, 2 and 4 extended and Phase 5 added; the 31 figures corrected to 33. Zero open questions; stays draft until a gate review."
+status_description: "Reconciled 2026-09-27 at 97da8ab with the foundation authoring wave (not a review), after the 2026-09-26 Wave 1 reconciliation: the shared model now carries every record the ten new foundation specs adopted and need, so no subsystem grows its own table. The core-held Retirement set and an Operation widened to every management operation (management-api); Principal, Credential, Grant and TrustPolicy (credential-management); the verification records' non-root row (artifact-verification); the per-pointer freshness record, PointerDocument, Signature, SigningKey, declared blob lists and the write transaction's pre-commit hook, with AC22 qualified (signing-service, closing the seven-format freshness theme); the Upstream row's transport fields and UpstreamCredential (upstream-adapters); Job and Schedule with cancelled as a terminal state and the job-held grace (async-operations, observability); repository identity, lifecycle state, tombstone, empty boundary snapshots and the per-format Virtual capability (repository-lifecycle); the Package.name index (web-ui). None adds a GC mark root; the set stays five, and the fourth root's reach widens under storage-and-gc's amendment. AC35-AC42 added with Test Plan rows, AC32-AC34 rewritten, every phase updated. Zero open questions; stays draft until a gate review."
 description: "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies."
 author: michielvha
 goal: "Make breadth affordable by giving all 33 ecosystems one metadata schema, so a format is parsing plus routes rather than a bespoke database design."
@@ -92,10 +92,27 @@ remote modelling together.
   prototype's deferred half); and replication's records (`replication.md`): the replication
   link, the per-snapshot chained identity, the freeze write kind and the per-file provenance
   record. Plus one rule the management operations depend on: a `Package` outlives its versions.
+- **Records the foundation authoring wave needed**, added 2026-09-27 by the reconciliation of
+  the ten foundation specs authored that day, again so that no subsystem grows a table of its
+  own: the core-held `Retirement` set (`management-api.md`); the widening of `Operation` to
+  every management operation, with `cancelled` as a terminal state and the `Job` and
+  `Schedule` records behind deferred work (`management-api.md`, `async-operations.md`); the
+  repository's identity, lifecycle state and tombstone (`repository-lifecycle.md`); the
+  per-pointer freshness record, the `PointerDocument`, `Signature` and `SigningKey` records
+  and the declared blob-digest list a CAS-backed document may carry (`signing-service.md`);
+  `Principal`, `Credential`, `Grant` and `TrustPolicy` (`credential-management.md`); the
+  `Upstream` row's transport configuration and the `UpstreamCredential` record
+  (`upstream-adapters.md`); the verification records placed beside the policy layer's
+  (`artifact-verification.md`); the per-format virtual capability (`repository-lifecycle.md`,
+  first forced by `formats/hex.md`); and the index behind the search route (`web-ui.md`).
+  None adds a mark root either; the fourth root's **reach** grows to the declared blob lists and
+  to CAS-backed pointer documents, which `storage-and-gc.md` records as its own amendment.
 
 **Out of scope**
 
-- Per-format index generation. That belongs to handlers and to the signed-index shared service.
+- Per-format index generation. That belongs to handlers and to the signed-index shared service
+  (`signing-service.md`), which renders the freshness record this spec owns into each format's
+  signal; this spec holds the record, never the rendering.
 
 ## Design
 
@@ -103,21 +120,42 @@ remote modelling together.
 
 | Entity | Owns | Notes |
 |---|---|---|
-| `Repository` | name, format, **type** (`local` / `remote` / `virtual`), visibility, metadata document, retention rules | The unit of RBAC. A `remote` carries exactly one upstream; a `virtual` carries an ordered member list. Retention rules are configuration the core parses, never part of the opaque document ("Retention rules and a version's write time") |
+| `Repository` | **identity** (the primary key), name, format, **type** (`local` / `remote` / `virtual`), visibility, metadata document, retention rules, **lifecycle state** (`active` / `read_only` / `deleted`), `deleted_at`, deleting principal, effective retention override | The unit of RBAC. A `remote` carries exactly one upstream; a `virtual` carries an ordered member list. Retention rules and the lifecycle state are configuration the core parses, never part of the opaque document ("Retention rules and a version's write time", "Repository identity and lifecycle state"). Every other table references the identity, never the name |
 | `Package` | name, format, metadata document | One per package name per repository. **Outlives its versions**: removing every version leaves the row and its package-level document in the head ("A package outlives its versions") |
 | `Version` | version string, format-specific metadata document, last completed write time | Metadata is a JSON document the handler reads and writes; the core never interprets it. The write time is core-maintained and queryable |
 | `File` | filename, relative path, digest | Links a version to blobs; multiple files per version is the norm (wheel plus sdist, jar plus pom plus sources) |
 | `Blob` | digest, size | Content-addressed. Deduplicated across every format and repository |
-| `Upstream` | URL, credential ref, download policy, adapter type | Bound one-to-one to a `remote` repository. Rotating a credential touches one row |
+| `Upstream` | URL, credential ref, download policy, `adapter` (default `https`), `hosts` (the off-origin allowlist with a credential role per host), `tls`, `limits`, `http2` | Bound one-to-one to a `remote` repository. Rotating a credential touches one row. The transport fields are `upstream-adapters.md`'s to interpret ("Upstream configuration and upstream credentials") |
 | `VirtualMember` | virtual repository ref, member repository ref, position | The ordered aggregation. Position **is** the resolution order; there is no separate failover field anywhere |
 | `Reference` | from version, to version, relation (for example OCI's `subject`) | A format-agnostic edge the core can traverse without parsing handler metadata. GC marks through it; the OCI referrers API is one indexed query over it |
 | `RemoteFile` | `Upstream` ref, upstream path, last-checked | An upstream source for a file, retained when the file gains a local blob so revalidation and failover keep their provenance |
 | `Snapshot` | monotonic number, repository, delta (membership plus all three metadata levels), checkpoint marker | Immutable. Exactly one per completed logical write; cache materialisation never creates one. On a replica the numbers are the leader's |
-| `Pointer` | name, repository, target snapshot | What a serving URL resolves through. Several per repository: one tracks the newest snapshot, others are environments repointed by promotion and rollback |
+| `Pointer` | name, repository, target snapshot, **freshness record** (`moved_at`, generation counter) | What a serving URL resolves through. Several per repository: one tracks the newest snapshot, others are environments repointed by promotion and rollback. The freshness record advances at every transition and never moves backwards ("Freshness scoped to the pointer") |
 | `SnapshotIdentity` | repository, snapshot number, delta digest, predecessor identity, identity | The chained identity `replication.md` compares to detect a divergent history. One per snapshot, **never pruned**, references no blob |
 | `ReplicationLink` | local repository ref, leader URL, leader repository name, credential ref, status, last successful sync, takeover record | Makes a `local` repository a replica. The credential reference resolves in the same store as upstream credentials. At most one active link per repository |
 | `FileProvenance` | file ref, source remote repository, upstream URL and path, fetch time | Where a frozen file came from. Distinct from `RemoteFile`: it is a record, never an upstream source the model fetches from |
-| `Operation` | repository ref, format, kind, wire id, state, created and finished times, initiating principal, authorizing scope, result document, produced snapshot ref | An asynchronous or long-running operation's record. **Not repository content**: in no snapshot, untouched by repointing and rollback, pruned after a window |
+| `Operation` | repository ref, format, kind, wire id, state, created and finished times, initiating principal, authorizing scope, idempotency key, request id, result document, produced snapshot ref | The record of **every management operation**, synchronous or deferred, plus every asynchronous import. **Not repository content**: in no snapshot, untouched by repointing and rollback, pruned after a window |
+
+The rows above are the **content model**: what a repository holds and how it is served. The
+records below sit beside it. Each is owned by the core and stored in the shared schema, none is
+snapshot content, and none is a GC mark root (Design, "Records that are not mark roots"); the
+sibling spec named in each row defines its semantics, and this spec defines only that the record
+exists in the shared model with these fields, so that no subsystem grows a table of its own.
+
+| Record | Owns | Defined by |
+|---|---|---|
+| `Retirement` | repository ref, format, canonical coordinate string, retired-at, retiring operation ref | `management-api.md`, "Retirement is core-held". Written in the retiring operation's transaction; never pruned; the shared write path refuses a write claiming a retired coordinate |
+| `Job` | id, kind, opaque args document, state (`pending` / `running` / `completed` / `failed` / `cancelled`), `run_at`, `attempts`, `max_attempts`, created and finished times, `last_error`, `lease_owner`, `lease_expires_at`, `lease_token`, `coalesce_key`, `exclusive_key`, optional operation ref, optional repository ref, checkpoint document, `trace_context`, `request_id` | `async-operations.md`, "The `Job` record and the `Operation`"; the trace fields are `observability.md`'s (its AC16). Partial unique indexes over `coalesce_key` where pending and `exclusive_key` where running; pruned after its retention window and never before its `Operation` |
+| `Schedule` | name, kind, args, interval or `next_run_at`, `last_run_at`, `last_result`, enabled | `async-operations.md`, "The scheduler" |
+| `PointerDocument` | pointer ref, document key, inline bytes or CAS digest, produced-at, the counter value it carries | `signing-service.md`, "Storage". A re-rendered body scoped to a pointer (Debian's `InRelease`, Hackage's `timestamp.json`); outside snapshot content |
+| `Signature` | repository ref, body digest, key id, signing profile, signature bytes, created | `signing-service.md`, "Storage". Keyed by body digest and key; pruned when no retained snapshot or pointer document holds its body |
+| `SigningKey` | repository ref, purpose, algorithm, state (`announced` / `active` / `retired`), backend kind and reference, public forms, created | `signing-service.md`, "Key custody". Private material lives in the backend the reference names, never in this row |
+| `Principal` | kind (`human` / `robot`), identity key or robot name, display fields, enabled | `credential-management.md`, "What a credential is, and who owns it" |
+| `Credential` | kind (`token` / `public-key`), owner ref, name, lookup prefix and SHA-256 hash or public key and fingerprint, scope rows (repository identity, actions, pattern) with the multi-repository mark, created, expiry or non-expiring, revoked at and by, rotated-from ref, last used | `credential-management.md`. A token's value is never stored recoverably (`auth.md`); a scope names a repository by identity and grants nothing once that repository is deleted |
+| `Grant` | principal ref, repository ref, action, optional pattern | `auth.md`'s `(principal, repository, action, pattern)`; administered by `management-api.md`; deleted with its repository (`repository-lifecycle.md`) |
+| `TrustPolicy` | robot ref, issuer, audience, claim constraints | `credential-management.md`, "OIDC exchange: `/api/v1/tokens/exchange`" |
+| `UpstreamCredential` | name, kind, material encrypted under the instance master key, created, `rotated_at`, `last_used` | `upstream-adapters.md`, "Configuration on the `Upstream` row". The store `Upstream` and `ReplicationLink` credential references resolve in; a referenced record cannot be deleted |
+| Verification records | verdicts keyed `(repository, blob digest, scheme)`, trust sets and their revisions, superseded marks, the re-evaluation queue | `artifact-verification.md`, "The verdict is a stored fact". Owned by `internal/verify`, outside the format entity model beside the policy layer's records |
 
 **Opaque metadata hangs at all three levels.** `Repository`, `Package` and `Version` each carry a
 metadata document the core never parses, so a handler stores state at whichever level the
@@ -135,6 +173,19 @@ review found as three concrete holes in Tier 1.
 The core owns every table. A handler reads and writes the metadata documents and never issues its
 own DDL. **If a format appears to need its own table, that is a signal the shared model is wrong,
 not a licence to add one** - raise it as a spec change.
+
+**A coordinate is not a storage key.** A `Blob` is keyed by its digest and by nothing else, and
+an ecosystem's own identifier for content lives in the metadata document as a verified
+coordinate. `formats/julia.md` is the case that makes the distinction concrete: one git tree
+hash is backed by several valid tarballs (gzip and zstd of one tree), so one `Version` there has
+several `File` rows, each keyed by its own blob digest, and the tree hash is a coordinate the
+handler verifies and records, never a key the store resolves. The model needs nothing new for
+it; the rule is stated so that no format is tempted to key a blob by what its client calls it.
+
+**The search index.** `web-ui.md`'s cross-format search (`GET /api/v1/search`, the route
+`management-api.md` owns) is a name match over `Package.name` scoped to the repositories the
+caller may read, so the shared schema carries an index over `Package.name` per repository. It is
+an index, not an entity, and it references no blob (AC42).
 
 ### Repository types and resolution order
 
@@ -157,6 +208,51 @@ This is a deliberate scope addition: `project-charter.md` previously deferred vi
 repositories. They return to v1 because the alternative is an ad-hoc ordering field that
 reimplements them badly, and because the aggregation is what makes one client URL able to see
 both private and proxied content.
+
+**Virtual aggregation is a per-format capability, not a property of the model.** `formats/hex.md`
+was the first format for which a virtual repository is impossible: the repository name is inside
+the signed payload and every unmodified client checks it against the name it configured, so a
+merged document can never verify for both a hosted member and an upstream one
+(`formats/conda.md` then confirmed the converse, that a format signing nothing with the
+repository name aggregates without trouble). The model therefore does not assume every format
+supports the `virtual` type. A handler declares `Virtual` as `supported` or `unsupported` in its
+`Capabilities()` (`format-handler-interface.md`), and `repository-lifecycle.md`'s creation path
+refuses a `virtual` repository of a format declaring `unsupported` with `capability-unsupported`
+and the format's own reason (its AC4); the conformance matrix reads the same field to render the
+virtual column as exempt for that format, so the advertised breadth never exceeds the tested one.
+For `formats/julia.md` the opposite holds: a virtual repository is the only way a private package
+that depends on the General registry can resolve, so `supported` is the norm and `unsupported`
+the declared exception. The type table above is unchanged by this; what changes is that a
+`virtual` row exists only for a format that can serve one (AC38).
+
+### Repository identity and lifecycle state
+
+`repository-lifecycle.md` settled how a repository is identified, what states it passes through
+and what survives its deletion, and each of those is a column on `Repository` that the core
+parses, never a field inside the opaque document:
+
+- **Identity is the primary key.** Every repository has an identity generated by the core at
+  creation, 128 bits from `crypto/rand`, rendered in the API with a fixed `rep_` marker, and it
+  is the only column any other table may reference: a grant, a credential scope, a signing key,
+  a trust set, a `VirtualMember`, a `ReplicationLink`, a `Job`, a policy rule and a
+  `Retirement` each name a repository by identity. **The name is a label** the identity
+  currently wears; a rename changes the label and nothing else, and a deleted-and-recreated name
+  inherits nothing, by construction rather than by a check at use.
+- **The unique index on `name` is partial**, `WHERE state <> 'deleted'`, so a deleted
+  repository's tombstone keeps its last name for listings while a new repository may take the
+  name the moment the deletion commits.
+- **The lifecycle state** is `active`, `read_only` or `deleted`, with `deleted_at` and the
+  deleting principal recorded on the transition to `deleted`, and an **effective retention
+  override** the deletion may set to zero (`reclaim: now`) as an input to snapshot pruning.
+  Which writes each state admits, and the one predicate every completed write consults, are
+  `repository-lifecycle.md`'s; the columns are this spec's.
+- **The tombstone.** When the pruner drops a deleted repository's last snapshot, the row stays
+  as a tombstone (identity, last name, format, type, `deleted_at`, deleting principal, the
+  deleting operation's reference) and is never removed, so a credential listing, an audit trail,
+  a `Retirement` and an `Operation` can always render the repository they name. It is listed
+  only through the deleted-repositories listing, by identity. Its `Package` rows, trust set
+  revisions, policy rules, `SigningKey` material and `PointerDocument` records are dropped at
+  that moment; verdicts, condemnation and refusal records, retirements and operations are not.
 
 ### Cached and hosted are the same store
 
@@ -294,11 +390,14 @@ have exactly these bytes", which no snapshot can answer differently; a name read
 
 `on_demand` is the default and is what "caching proxy" means in this product.
 
-**A proxied repository creates no snapshots.** On-demand metadata arrival is treated as cache
-materialisation, and cached content stays out of snapshot content sets entirely. Eviction
+**A proxied repository creates no content snapshots.** On-demand metadata arrival is treated as
+cache materialisation, and cached content stays out of snapshot content sets entirely. Eviction
 therefore never fights the snapshot mark root, and the hot proxy path never touches the snapshot
 sequence. The accepted cost is that a `remote` repository has no rollback story, because it has
-no snapshots to roll back to.
+no content snapshots to roll back to. The one snapshot a `remote` does hold is the empty initial
+snapshot its default pointer targets from creation (below, "Snapshots, pointers and what counts
+as a write"), which exists so the pointer, its freshness record and its cache-scoped documents
+have somewhere to hang; nothing that arrives by sync or on demand ever adds to it.
 
 ### Writing and storing metadata documents
 
@@ -329,8 +428,24 @@ declares where its ecosystem's write boundaries fall - which requests complete a
 which bulk operations (a cleanup deleting many versions) group into one write rather than many -
 and that declaration is a review item. `formats/generic.md` was the first spec to make it,
 including a retention pass over one repository as one write however many versions it removes,
-and a freeze (below) is one write however many files it copies. A **proxied repository creates no snapshots at all**:
-content arriving by sync or on demand is cache materialisation, not a write.
+and a freeze (below) is one write however many files it copies, as is the management surface's
+bulk operation (`management-api.md`, "Every operation is one completed logical write"). A
+**proxied repository creates no content snapshots**: content arriving by sync or on demand is
+cache materialisation, not a write.
+
+**Creation and deletion are the boundaries of the sequence.** Repository creation writes an
+initial empty snapshot, stored as a checkpoint so it depends on no chain, and creates the
+default pointer on it, so name-addressed serving resolves from the first request. Every type
+gets it, `remote` and `virtual` included: they never write a content snapshot, but the pointer
+is where the freshness record and the pointer-scoped documents below hang, and nothing
+name-addressed resolves without one (`repository-lifecycle.md`, "Creation"; `management-api.md`
+AC19). Deleting a `local` repository is a completed logical write in the retention-pass shape:
+it removes every current row as one write however many versions it held and produces one final
+empty snapshot, again a checkpoint, onto which the default pointer moves once the named pointers
+are deleted; a `remote` or `virtual` has only its initial snapshot, dropped with the pointer.
+The deletion's other effects, and the tombstone the pruner leaves, are `repository-lifecycle.md`'s
+("Deletion"); this spec fixes that the sequence opens and closes with an empty checkpoint, so
+the pruner and the roots need no special case for either end (AC38).
 
 Serving always resolves through a `Pointer`. Every repository has a default pointer that
 advances to the newest snapshot on each completed write, so a repository nobody promotes
@@ -342,6 +457,20 @@ AC18 polices; the default pointer is not deletable, since name-addressed serving
 through it - and reporting how far back
 rollback actually reaches, per the retention reporting `storage-and-gc.md` requires. Snapshots
 themselves stay an internal representation; what the API exposes is pointers and the reach.
+**The HTTP home of that surface is `management-api.md`**, "Pointer management": its pointer
+listing, `PUT` and `DELETE` routes, the actions each requires and the `out-of-reach` refusal
+that renders AC23. A repoint is not a write and creates no snapshot; it does leave an
+`Operation` of kind `repoint` (below) and advances the pointer's freshness record (next
+section), which is what makes a rollback visible to the clients that would otherwise ignore it.
+
+**The write transaction exposes a pre-commit hook.** A completed logical write is one
+transaction, and `signing-service.md` regenerates a format's served index inside that
+transaction so the index and the content it describes land in the same snapshot ("The write path
+dispatches; the handler cannot forget"). The shared write path therefore offers a hook that runs
+after the handler's changes and before commit, in the same transaction, with the snapshot's
+content set visible to it; a hook that fails fails the write, and nothing is committed. It is a
+seam of the shared write path, not a handler method, so the pinned method set is untouched
+(AC37).
 
 **A pointer pins what it targets.** Settled 2026-09-26: the snapshot a pointer targets, and the
 checkpoint-and-delta chain that reconstructs it, are exempt from retention pruning while the
@@ -390,6 +519,63 @@ upload scope" and "Reads from in-flight publish state" above). It is narrow on p
 read asks whether exactly these bytes exist, which no snapshot answers differently, and it never
 reaches another repository's records.
 
+### Freshness scoped to the pointer, and the documents that hang on it
+
+Seven formats arrived at one finding from different clients (the consequences queue's
+cross-cutting theme 1): apt ignores a `Release` older than the one it holds
+(`formats/debian.md`); TUF clients fail hard on a lower `version` and adopt the same content
+re-signed at a higher one (`formats/hackage.md`); Conan keeps a newer cached revision over an
+older remote one (`formats/conan.md`); LuaRocks, CPAN and Arch revalidate with
+`If-Modified-Since`, so a `304` hides a rollback (`formats/luarocks.md`, `formats/cpan.md`,
+`formats/arch.md`); and curl's `--time-cond` in brew discards any `200` whose `Last-Modified` is
+not newer than its own clock at the last fetch, so even an exact-match `304` rule is not enough
+(`formats/homebrew.md`). A rollback served from a snapshot's stored bytes is therefore invisible
+to every client that already updated, on every one of those formats. The mechanism is one, and
+its ownership is split (`signing-service.md`, the resolved freshness-split decision, was its Q4):
+**this spec owns the record, `signing-service.md` owns rendering it into each format's signal,
+and `proxy-cache.md` owns the cache-scoped equivalent for `remote` repositories.**
+
+- **The freshness record on `Pointer`.** Every pointer carries `moved_at` and a **generation
+  counter**. Both advance at every pointer transition: a write advancing the default pointer, a
+  promotion, a rollback, a key switch and a cadence re-sign. `moved_at` is set to the later of
+  the transition time and one second after its previous value, so it never moves backwards
+  whatever the clock does; the counter is incremented by one per transition and never lowered.
+  Both are written only by the pointer transition itself, in the transaction that moves the
+  pointer, so no handler and no service computes freshness (`signing-service.md` AC27). Conan's
+  "last-repoint time" and LuaRocks' "monotonic per-pointer change time" are this record; those
+  specs cite it rather than carrying their own.
+- **`PointerDocument`.** Where a client's freshness rule reads a field inside the signed bytes
+  (apt's `Date`, TUF's `version` and `expires`), the body itself must change at every pointer
+  move, so it is re-rendered per pointer: a `PointerDocument` holds (pointer, document key,
+  inline bytes or CAS digest, produced-at, the counter value it carries) and is produced inside
+  the write for the default pointer, inside every repoint, on the expiry cadence and at a key
+  rotation. It is **outside snapshot content**: a snapshot holds the index a repository had,
+  the pointer holds the envelope this environment serves it under. When CAS-backed it is
+  protected by the fourth mark root's current-document half, an extension of that root's reach
+  that `storage-and-gc.md` carries as its own amendment; it is not a new root.
+- **`Signature`.** A signature over a generated body is a record keyed by (repository, body
+  digest, key id, profile), never snapshot content, so a key rotation is one atomic batch of
+  records and creates no snapshot, and a rollback to a snapshot whose bodies have no record
+  under the current key produces the missing records inside the repoint. The served document is
+  assembled from body and record by the profile's framing rule. The record is pruned when no
+  retained snapshot and no pointer document holds its body. `SigningKey` is the record of the
+  key itself, with its state and the custody backend its private material lives in; the material
+  is never in this schema.
+- **Declared blob digests on a CAS-backed document.** A document that consists of several blobs
+  (Hackage's append-only index, one gzip member per write; CPAN's `CHECKSUMS` per author
+  directory) declares the digests of its parts in the document, and the fourth mark root marks
+  through the declared list, so a part is live while any current or retained document declares
+  it. This is `formats/hackage.md`'s and `formats/cpan.md`'s request and, like the pointer
+  document, it widens the fourth root's reach and adds no root (`storage-and-gc.md` AC16's
+  amendment).
+
+**AC22 is qualified, not weakened.** Promotion still serves bit-identical **content** in both
+environments: the same snapshot, the same blobs, the same metadata documents at every level.
+What differs by design is the pointer's freshness record and its pointer documents: `prod`'s
+`InRelease` carries a later `Date` and a different signature than `staging`'s did, because
+otherwise the clients above would never notice the promotion at all. A test that compared the
+served envelope byte for byte across environments would be asserting a bug (AC36).
+
 ### A package outlives its versions
 
 Removing a version never removes its `Package`. A completed write that removes a package's last
@@ -398,19 +584,26 @@ and every later snapshot carries them forward until a write changes them. How a 
 a package with no versions (npm serves it as absent, Galaxy answers 404 for the collection) is
 wire format and the handler's; whether the row exists is not.
 
-The rule exists because three format specs keep a **retirement set** in the package-level
+The rule survives for two reasons, neither of them the one it was first written for. A package
+with no versions is still **addressable**, so a management operation, a listing and a later
+publish have a row to act on; and the package-level document still carries **format state**
+(npm dist-tags, Maven's `latest` and `release`) that a format may need to keep or reset when
+versions return. It was first written to protect a **retirement set** kept in the package-level
 document: PyPI's deleted filenames (`formats/pypi.md`), npm's unpublished `name@version`
 coordinates (`formats/npm.md`) and Galaxy's deleted versions (`formats/ansible-collections.md`),
-each retired forever so a coordinate binds one set of bytes for the life of the repository. A
-package that vanished with its last version would take its retirement set with it and silently
-re-open every retired coordinate to a new upload. This spec guarantees only that the row and
-its document survive the removal of every version; carrying the set forward in the write that
-removes a version is the handler's and the management surface's. One interaction is named
-rather than left to be found: a pointer moved backwards restores the package-level document of
-an older snapshot (AC13), which can predate a retirement, so any operation that moves a default
-pointer backwards must preserve the retirement set, an obligation that belongs to the
-management surface spec owed as `foundation/management-api.md` rather than to the snapshot
-mechanism here (AC33).
+each retired forever so a coordinate binds one set of bytes for the life of the repository.
+`management-api.md` moved that set out of the document (its resolved retirement-placement
+decision, was its Q3) into the core-held `Retirement` record: (repository, format, the
+handler's canonical coordinate string, retired-at, retiring operation), written in the retiring
+operation's transaction, **not snapshot content**, never pruned and never a mark root, with the
+shared write path refusing any write whose addressed object is retired in that repository. The
+trap this spec once named for the management surface, a pointer moved backwards restoring a
+package-level document that predates a retirement (AC13) and thereby re-opening a coordinate,
+cannot occur now: a repoint touches snapshot content and the set is not snapshot content, so
+preservation across a backwards repoint holds by construction rather than by every handler
+remembering to re-merge (AC33, AC35). The retiring operation's reference dangles once that
+`Operation` is pruned, which the record tolerates: the coordinate and the time are what a refusal
+needs to explain itself.
 
 ### Retention rules and a version's write time
 
@@ -436,37 +629,98 @@ retention window (AC28).
 
 ### Operations
 
-An `Operation` records work a client or an operator started and may observe finishing later: a
-Galaxy import task (`formats/ansible-collections.md`, its resolved import-task-record decision,
-was Q6), the write-triggered services prototype's deferred import, and any later asynchronous or
-long-running operation. It is format-agnostic and, like everything here, owned by the core:
+An `Operation` records **every management operation** and every asynchronous import: a content
+operation or an administration through `management-api.md` (a yank, a version delete, a
+repoint, a lifecycle transition, a `configure`), completed in the request or deferred to a
+worker; a Galaxy import task (`formats/ansible-collections.md`, its resolved import-task-record
+decision, was its Q6); and the write-triggered services prototype's deferred import. It was first
+framed as the record of asynchronous work only; `management-api.md` widened it to the durable,
+authorization-bound record of everything that got past authorization (its resolved audit-record
+decision, was its Q5), so that "who did what to this repository and when" is one query. It is
+format-agnostic and, like everything here, owned by the core:
 
-- **Fields.** The repository it acts on; the format and a kind (the handler's name for what the
-  operation does); a wire identifier, generated unguessably from `crypto/rand` with at least
-  128 bits, which is what a client polls by; a state; created and finished times; the
-  initiating principal; the scope the originating write was authorized under (action and
-  addressed object, per `auth.md`); a **result document** the handler writes and the core never
-  parses, as with every metadata document; and a reference to the snapshot it produced.
-- **State is monotonic.** `pending`, then `running`, then exactly one terminal state,
-  `completed` or `failed`; a state may be skipped but never revisited, and a terminal state
-  never changes.
+- **Fields.** The repository it acts on; the format and a kind (the shared vocabulary's name for
+  what the operation does, `management-api.md`'s closed kind table, including `repoint` and
+  `lifecycle`; a handler's own kinds for imports); a wire identifier, generated unguessably from
+  `crypto/rand` with at least 128 bits, which is what a client polls by; a state; created and
+  finished times; the initiating principal; the scope the originating write was authorized
+  under (action and addressed object, per `auth.md`); an optional **idempotency key**, so a
+  retried write with the same key and payload returns this record instead of acting twice; the
+  **request id** of the request that created it, shared with the audit line and, for deferred
+  work, with the `Job`; a **result document** the handler writes and the core never parses, as
+  with every metadata document; and a reference to the snapshot it produced.
+- **State is monotonic.** `pending`, then `running`, then exactly one of three terminal states,
+  `completed`, `failed` or `cancelled`; a state may be skipped but never revisited, and a
+  terminal state never changes. A synchronous operation is created `pending` and reaches its
+  terminal state in the same request. `cancelled` arrived with `async-operations.md`'s
+  cooperative cancellation (its resolved cancellation decision, was its Q5): a pending deferred
+  operation that never ran, or a running one whose worker stopped at a checkpoint and committed
+  nothing.
 - **It is not repository content.** No snapshot delta contains an operation, no repoint or
   rollback changes one, and creating or finishing one is never by itself a completed logical
-  write, so a failed operation creates no snapshot.
-- **Its terminal transition commits atomically with the snapshot it produces.** The snapshot
-  reference is set only on `completed`, in the same transaction as the snapshot, so there is
-  never a snapshot whose operation reads unfinished or a completed operation with no snapshot.
-- **It is pruned after a configurable window** counted from its finished time; a read of a
-  pruned or unknown identifier answers as not found, which Galaxy's client already reads as
-  "not yet". An unfinished operation is never pruned.
-- **Reading it requires the originating write's authorization**, evaluated against the scope
-  it recorded, so an operation identifier is not a side channel into another principal's work.
+  write, so a failed or cancelled operation creates no snapshot.
+- **A snapshot-producing operation's terminal transition commits atomically with its
+  snapshot.** The snapshot reference is set only on `completed`, in the same transaction as the
+  snapshot, so there is never a snapshot whose operation reads unfinished or a completed
+  content operation with no snapshot. Kinds that are not writes, a `repoint`, a `freeze`, a
+  `thaw`, a `rename`, a `configure` that changes no served document, complete with no snapshot
+  reference, because they created no snapshot; the kind says which is which.
+- **It is pruned after a configurable window** counted from its finished time
+  (`management-api.md`'s `management.operation_retention`, 90 days by default, which is also
+  the idempotency window); a read of a pruned or unknown identifier answers as not found, which
+  Galaxy's client already reads as "not yet". An unfinished operation is never pruned, and a
+  `Job` is never pruned before the operation it executed.
+- **Reading one by its identifier requires the originating write's authorization**, evaluated
+  against the scope it recorded, so an operation identifier is not a side channel into another
+  principal's work. Listing operations per repository and registry-wide is `management-api.md`'s
+  surface and carries its own authorization.
+- **A pending operation pins nothing.** Its uploaded bytes are protected by the repository-scoped
+  grace, the same way any committed-but-unreferenced blob is ("Upload sessions and the upload
+  scope"), and the `Job` executing it holds that grace open while unfinished (next section), so
+  a deferred import never outlives the grace its bytes depend on. That answers the question the
+  write-triggered services prototype was to test (its question 5), in design, so the prototype
+  verifies rather than discovers; the root set stays five and there is no operation-side pin.
 
 It must exist before the write-triggered services prototype's asynchronous half (its Phase 4)
 and before `formats/ansible-collections.md`'s Phase 1. The prototype then tests whether this
-shape fits a genuinely deferred import (its question 6), and the charter's step 6a builds the
-production asynchronous-operation subsystem on it; a change the prototype forces comes back to
-this spec as a revision (AC32).
+shape fits a genuinely deferred import (its question 6), and `async-operations.md` builds the
+production subsystem that executes it; a change either forces comes back to this spec as a
+revision (AC32).
+
+### Jobs and schedules
+
+`async-operations.md` runs every deferred and scheduled activity in the registry on one
+PostgreSQL-backed queue, and the queue's records are the shared model's: the `Operation` is the
+client's view of a deferred write and the `Job` is the runner's, written together at every
+transition in one transaction so neither can be observed ahead of the other (its AC5).
+
+- **`Job`** carries an id, a `kind` from the registry of workers, an opaque `args` document only
+  the kind's worker parses, a monotonic state (`pending`, `running`, then `completed`, `failed`
+  or `cancelled`; a retry is `pending` again with `attempts` incremented and a later `run_at`),
+  the scheduling fields (`run_at`, `attempts`, `max_attempts`, created and finished times, a
+  bounded `last_error` that never holds a credential), the lease fields (`lease_owner`,
+  `lease_expires_at`, and `lease_token`, a fresh 128-bit fencing value per claim that every
+  write the job makes to its own row must carry), two nullable keys held by **partial unique
+  indexes** (`coalesce_key` where `state = 'pending'`, so a burst of identical requests enqueues
+  one job; `exclusive_key` where `state = 'running'`, so two jobs with the key never run at
+  once), an optional `Operation` reference, an optional repository reference (the repository
+  whose grace it holds open), a `checkpoint` document the worker may write between attempts,
+  and, set at enqueue, the W3C `traceparent` as `trace_context` and the originating
+  `request_id`, so a job that runs hours later starts its span with a link to the request that
+  asked for it and its audit line still names that request (`observability.md` AC16).
+- **`Schedule`** is a periodic job's definition: name, kind, args, an interval or a
+  `next_run_at` the kind derives, `last_run_at`, `last_result`, enabled. The scheduler enqueues
+  a job per due schedule with the schedule name as `coalesce_key`, so an outage yields one
+  catch-up job, not one per missed tick.
+- **Placement.** Neither is repository content: in no snapshot, untouched by repoint and
+  rollback, never a mark root. A terminal `Job` is pruned after `async.job_retention` from its
+  finished time and **never before the `Operation` it references**, so a poll never finds an
+  operation whose execution record vanished first. An **unfinished job naming a repository holds
+  that repository's grace open**, exactly as an unexpired upload session does (its resolved
+  grace-hold decision, was its Q4): a timing input to the same grace clock, not a root and not a
+  pin, released at the job's terminal transition. A repository's deletion cancels its pending
+  jobs in the deletion transaction and cooperatively cancels its running ones; the hold stands
+  until each is terminal (`repository-lifecycle.md`, "Deletion").
 
 ### Replication's records
 
@@ -505,18 +759,82 @@ shared model (its Phase 0). Four additions, none of them format-specific:
   copy was fetched. It is immutable, readable from the API, carried in export archives with the
   file it describes, and holds a URL rather than a digest, so it references no blob.
 
+### Principals, credentials and grants
+
+`auth.md` fixed the authorization model and `credential-management.md` the surface that mints,
+lists, rotates and revokes what it checks; the records both evaluate are the shared model's
+(`credential-management.md` AC24 gates its code on their presence here). A **`Principal`** is a
+human (identified by the OIDC identity key) or a robot (identified by name), with display fields
+and an enabled flag. A **`Credential`** is a token or a registered public key owned by one
+principal: for a token, a non-secret lookup prefix and the SHA-256 hash of the secret, never the
+value (`auth.md`, "Tokens are never stored recoverable"); for a public key, the key and its
+fingerprint; plus its scope rows, each (repository identity, actions, pattern) with the
+multi-repository mark `auth.md` AC29 requires, its creation, expiry or non-expiring mark,
+revocation time and revoker, the credential it was rotated from, and when it was last used. A
+**`Grant`** is `auth.md`'s (principal, repository, action, optional pattern), administered by
+`management-api.md` and deleted in its repository's deletion transaction. A **`TrustPolicy`**
+binds a robot to an OIDC issuer, audience and claim constraints for the token exchange. Every
+repository reference in these records is by identity, so a credential scope naming a deleted
+repository stays readable, renders its name from the tombstone, and grants nothing (AC39).
+
+### Upstream configuration and upstream credentials
+
+`upstream-adapters.md` owns how the registry talks to an upstream, and everything it needs to
+know is configuration on the `Upstream` row, core-parsed, never inside a metadata document
+(its "Configuration on the `Upstream` row"): `adapter`, the registered adapter name, default
+`https`; `hosts`, the off-origin allowlist of `{host, role}` entries where the role is `none`
+(reachable with no credential), `root` (the upstream's own credential is presented) or `own`
+(a named second credential is presented), default empty, exact names or single-label wildcards;
+`tls`, an optional CA bundle reference, an optional client certificate and key reference, and
+`insecure_skip_verify`, refused unless set explicitly; `limits`, `concurrency` (default 10) and
+`cooldown_cap` (default one hour); and `http2`, default true. The adapter enforces them at
+connect time; this spec only gives them a row. The credential references on `Upstream` and on
+`ReplicationLink` resolve in one store, the **`UpstreamCredential`** record: name, kind (the
+adapter spec's table), the kind's material encrypted at rest under the instance master key
+(`proxy-cache.md` AC6), created, `rotated_at`, `last_used`. Rotating one touches one row, its
+value is write-only, and deleting one that an `Upstream` or a `ReplicationLink` references is
+refused (`repository-lifecycle.md`, its resolved in-use decision, was its Q9) (AC40).
+
+### Verification records
+
+`artifact-verification.md` stores what it concluded about a blob as a **verdict** keyed by
+(repository, blob digest, scheme), beside a per-repository **trust set** with numbered revisions,
+the **superseded marks** a revision change puts on the verdicts computed under the previous one,
+and the **re-evaluation queue** that recomputes them ("The verdict is a stored fact"). They are
+core-owned records of `internal/verify`, outside the format entity model in the place this spec
+made for the policy layer's records, and they must outlive the blob they describe for the same
+reason a refusal record does: "why was this refused" stays answerable after the bytes are gone,
+and a verdict that pinned its blob would make refused content uncollectable. A verdict references
+the artifact's digest and the digest of the signature or attestation it verified, and tolerates
+either dangling. Attestations and signatures stored as files of a version are ordinary snapshot
+content and need nothing here.
+
 ### Records that are not mark roots
 
 The shared model holds several kinds of record that mention content without keeping it alive,
 and each is placed against the root set here rather than left to be discovered by a sweep. None
-adds a mark root; the set stays at the five in Scope.
+adds a mark root; the set stays at the five in Scope. Two additions of 2026-09-27 widen the
+**reach** of the fourth root, CAS-backed metadata documents, without adding a sixth: a CAS-backed
+`PointerDocument` is a current document the root protects, and a document's declared blob-digest
+list is marked through ("Freshness scoped to the pointer"). `storage-and-gc.md` owns the root's
+definition and carries both as its amendment (its AC16).
 
 | Record | Why it is not a root |
 |---|---|
 | `SnapshotIdentity` | Its delta digest is a comparison hash, not a CAS reference; it must outlive the content it describes |
 | `ReplicationLink` | References a credential and a leader, no content |
 | `FileProvenance` | Holds an upstream URL and path, no digest; the frozen file's own published reference is what keeps its blob live |
-| `Operation` | A pending operation's uploaded bytes are protected only by the repository-scoped grace, the same way any committed-but-unreferenced blob is ("Upload sessions and the upload scope"); whether a pending import can outlive that grace is the write-triggered services prototype's question 5, and a gap it finds is a revision request to `storage-and-gc.md` and this set, never an operation-side pin. A produced-snapshot reference does not protect the snapshot from pruning |
+| `Operation` | A pending operation's uploaded bytes are protected only by the repository-scoped grace, the same way any committed-but-unreferenced blob is ("Upload sessions and the upload scope"), and the `Job` executing a deferred operation holds that grace open until it is terminal (`async-operations.md`, its resolved grace-hold decision, was its Q4), which is a timing input to the grace clock and never an operation-side pin. A produced-snapshot reference does not protect the snapshot from pruning |
+| `Job`, `Schedule` | An unfinished job holds its repository's grace open, which is the same clock the upload session already drives; neither record references a blob, and a job's checkpoint document is opaque state, not content. Pruned by `async.job_retention`, never before the job's `Operation` |
+| `Retirement` | Names a coordinate string, never a blob; it must outlive every snapshot that ever held the coordinate, since its whole purpose is to refuse the coordinate after the content is gone |
+| `Repository` tombstone | A deleted repository's row survives its last snapshot forever with identity, name, format, type, deletion time and principal, and the deleting operation's reference; it references no content |
+| The pointer freshness record | Two scalars on `Pointer`; the pointer's target is what the fifth root protects, and the record adds nothing to it |
+| `PointerDocument` | Not a root itself: when CAS-backed its blob is protected as a current document under the fourth root's reach while the record exists, and the record is dropped with its pointer or at tombstone time |
+| `Signature` | Its body digest is kept alive by the snapshot or pointer document that holds the body; a record whose body nothing holds is pruned with it, never the other way round |
+| `SigningKey` | References a custody backend, public forms and a repository, no content; public forms stay retrievable by digest until tombstone time, then are dropped |
+| `Principal`, `Credential`, `Grant`, `TrustPolicy` | Reference principals, repositories by identity, and key material; no blob and no snapshot. A scope naming a deleted repository stays readable and grants nothing |
+| `UpstreamCredential` | Encrypted material and bookkeeping, no content |
+| Verification records: verdicts keyed (repository, blob digest, scheme), trust sets and their revisions, superseded marks and the re-evaluation queue (`artifact-verification.md`) | A verdict must outlive the blob it explains, and a pinned blob would make refused content uncollectable; the record tolerates both the artifact digest and the verified signature's digest dangling. Trust set revisions are dropped at tombstone time, verdicts never |
 | Retention rules | Reference no content at all |
 | The policy layer's records: condemnation records, scan results, the component inventory index and refusal records (`supply-chain-policy.md`) | Owned by `internal/policy`, outside the format entity model, and keyed by digest and coordinate as audit provenance that must outlive the artifact: a refusal stays explainable after the blob is gone, and a policy record that pinned its blob would make refused malware uncollectable. They are the core-owned records the resolved metadata-typing decision below anticipated as "a separate index built later", so no handler owns them either |
 
@@ -542,8 +860,12 @@ afterwards.
       resolves in member order, and serving succeeds when the first member's upstream is
       unreachable. No entity carries a failover field; order comes from `VirtualMember.position`.
 - [ ] AC22: A repository carries several named pointers; promoting an environment repoints it at
-      a snapshot already served elsewhere, and the content served is bit-identical to what that
-      other environment served, with no re-upload.
+      a snapshot already served elsewhere, and the **content** served is bit-identical to what
+      that other environment served, with no re-upload: the same blobs and the same metadata
+      documents at all three levels. The pointer's freshness record and its `PointerDocument`
+      records are not, by design: after the promotion the promoted pointer's `moved_at` and
+      generation counter are later than before and its pointer documents are re-rendered, while
+      the source pointer's are unchanged.
 - [ ] AC23: Rollback repoints an environment at an earlier retained snapshot and the previously
       served content returns, including metadata at all three levels; a snapshot outside the
       retention window that no pointer targets is refused with the reach the API reports, while
@@ -640,24 +962,94 @@ afterwards.
       that resolves in the upstream-credential store and a status; rotating that credential
       changes exactly one row; and a takeover records the leader, the snapshot number and
       identity, and the time it took over at.
-- [ ] AC32: An `Operation`'s state moves only forward through `pending`, `running` and one
-      terminal state, and a terminal state never changes; its produced-snapshot reference is set
-      only on `completed`, committed atomically with that snapshot (a fault injected between
-      them leaves neither), and a failed operation creates no snapshot; no snapshot's content
-      set contains an operation and a repoint or rollback changes none; its wire identifier
-      carries at least 128 random bits; it is pruned only after finishing plus the configured
-      window, after which reading it answers not found; and reading it is refused to a
-      principal lacking the authorization its originating write was granted under.
+- [ ] AC32: An `Operation`'s state moves only forward through `pending`, `running` and exactly
+      one of `completed`, `failed` and `cancelled`, and a terminal state never changes; a
+      synchronous management operation is created and reaches its terminal state in one
+      request; a snapshot-producing operation's produced-snapshot reference is set only on
+      `completed`, committed atomically with that snapshot (a fault injected between them
+      leaves neither), a failed or cancelled operation creates no snapshot, and a `repoint`
+      completes with no snapshot reference; no snapshot's content set contains an operation and
+      a repoint or rollback changes none; its wire identifier carries at least 128 random bits;
+      it records the request id and, when sent, the idempotency key of the request that created
+      it; it is pruned only after finishing plus the configured window, after which reading it
+      answers not found; and reading it by identifier is refused to a principal lacking the
+      authorization its originating write was granted under.
 - [ ] AC33: Removing every version of a package, by one write or several, leaves the `Package`
       row and its package-level metadata document in the head snapshot and in every later
       snapshot until a write changes them, and they survive pruning of every snapshot in which
-      a version existed.
+      a version existed; the package's retired coordinates are held in `Retirement` records,
+      not in that document, so repointing the default pointer to a snapshot older than a
+      retirement and back changes no `Retirement` record and the coordinate stays refused
+      throughout.
 - [ ] AC34: No record listed in "Records that are not mark roots" keeps a blob alive, and each
       outlives the blob it mentions: a blob whose only mention is a `SnapshotIdentity`'s delta
-      digest, a `FileProvenance` record, an
-      operation's result document or produced-snapshot reference, a retention rule, or a policy
-      record is collected by the sweep once no mark root reaches it and its repository's grace
-      has lapsed, and each of those records is still readable afterwards.
+      digest, a `FileProvenance` record, an operation's result document or produced-snapshot
+      reference, a `Job`'s checkpoint document, a `Retirement`, a `Signature` record, a
+      `SigningKey`'s public form, a `Credential` or `Grant`, a verification verdict, a retention
+      rule, or a policy record is collected by the sweep once no mark root reaches it and its
+      repository's grace has lapsed, and each of those records is still readable afterwards; and
+      a blob mentioned only by a `PointerDocument` or by a document's declared blob-digest list
+      is **not** collected while that document is current, and is collected once the pointer
+      document is dropped or the declaring document is neither current nor retained, because
+      those two are the fourth root's reach, not a sixth root.
+- [ ] AC35: A `Retirement` record (repository identity, format, canonical coordinate string,
+      retired-at, retiring operation reference) is written in the same transaction as the
+      operation that retires the coordinate, appears in no snapshot's content set, survives
+      pruning of every snapshot that held the coordinate and the pruning of its retiring
+      `Operation`, and is never pruned; a write claiming a retired coordinate in that
+      repository is refused by the shared write path, and the same coordinate in a repository
+      recreated under the same name (a new identity) is not retired.
+- [ ] AC36: Every `Pointer` carries `moved_at` and a generation counter that advance on every
+      transition (a default-pointer advance, a promotion, a rollback, a key switch, a cadence
+      re-sign) and on nothing else; on an injected clock stepped backwards between two
+      transitions `moved_at` still increases by at least one second and the counter by exactly
+      one; both are written only in the transaction that moves the pointer; a `PointerDocument`
+      is produced per pointer inside the write for the default pointer and inside every repoint,
+      lives in no snapshot's content set, is untouched by a repoint of any other pointer, and is
+      dropped with its pointer or at tombstone time.
+- [ ] AC37: A `Signature` record is keyed by (repository, body digest, key id, profile), appears
+      in no snapshot's content set, is created inside the write or repoint that first serves its
+      body under the current key and in one atomic batch at a key rotation with no snapshot
+      created, and is pruned once no retained snapshot and no pointer document holds its body; a
+      `SigningKey` row holds state, algorithm, purpose, public forms and a custody reference and
+      never private material; a CAS-backed document declaring a blob-digest list keeps every
+      declared blob live while the document is current or held by a retained snapshot; and the
+      shared write path runs the registered pre-commit hook after the handler's changes and
+      before commit in the same transaction, a failing hook committing nothing.
+- [ ] AC38: `Repository`'s primary key is a 128-bit random identity rendered with the `rep_`
+      marker, every foreign key into the table targets it and no table carries a repository
+      name column; the unique index on `name` is partial over rows whose state is not `deleted`,
+      so a name is reusable the moment a deletion commits; `state`, `deleted_at`, the deleting
+      principal and the effective retention override are core-parsed columns absent from the
+      metadata document; creation of a repository of any of the three types writes an initial
+      empty checkpoint snapshot and the default pointer on it; deletion of a `local` is one
+      completed write producing one final empty checkpoint snapshot; the tombstone row survives
+      pruning of its last snapshot and every later sweep; and a `virtual` repository of a format
+      whose `Capabilities()` declares `Virtual: unsupported` is refused at creation and no
+      `Repository` row is written.
+- [ ] AC39: `Principal`, `Credential`, `Grant` and `TrustPolicy` exist in the shared schema with
+      the fields the entity table gives them; a token `Credential` stores a lookup prefix and a
+      SHA-256 hash and no column holds the token value; every repository reference in the four
+      records is by identity; and a credential scope naming a deleted repository stays readable,
+      renders the repository's last name from the tombstone, and authorizes nothing.
+- [ ] AC40: An `Upstream` row carries `adapter` (default `https`), `hosts` with a role per entry
+      (`none`, `root`, `own` with a credential reference), `tls` (CA bundle reference, client
+      certificate and key reference, `insecure_skip_verify` refused unless explicit), `limits`
+      (`concurrency` default 10, `cooldown_cap` default one hour) and `http2` (default true), all
+      outside the metadata document; an `UpstreamCredential` stores its material encrypted under
+      the instance master key and never in clear, rotating it changes exactly one row, and
+      deleting one referenced by an `Upstream` or a `ReplicationLink` is refused.
+- [ ] AC41: `Job` and `Schedule` exist in the shared schema with the fields the entity table
+      gives them; the partial unique indexes hold (a second `pending` job with the same
+      `coalesce_key` is not inserted; a second `running` job with the same `exclusive_key` is
+      refused); a `Job`'s `trace_context` and `request_id` are set at enqueue and equal the
+      enqueuing request's; a terminal job is pruned after `async.job_retention` from its
+      finished time and never while its `Operation` exists; and an unfinished job naming a
+      repository holds that repository's grace open on an injected clock exactly as an unexpired
+      upload session does (AC27), released at its terminal transition.
+- [ ] AC42: The shared schema carries an index over `Package.name` per repository, the
+      search query plans against it rather than scanning the package table, and no new entity
+      or mark root accompanies it.
 
 ## Test Plan
 
@@ -696,36 +1088,57 @@ afterwards.
 | AC31 | integration | `internal/model/replication_link_test.go` |
 | AC32 | integration + fault injection | `internal/model/operation_test.go` (transitions, atomic terminal commit under an injected fault, pruning window on an injected clock, authorization on read) |
 | AC33 | integration | `internal/model/snapshot_test.go` (last-version removal, later snapshots, pruning) |
-| AC34 | property | `internal/storage/gc_property_test.go` (blobs mentioned only by non-root records collected; records readable after) |
+| AC34 | property | `internal/storage/gc_property_test.go` (blobs mentioned only by non-root records collected; records readable after; pointer-document and declared-list blobs live while current, collected after) |
+| AC35 | integration | `internal/model/retirement_test.go` (same-transaction write, absent from snapshots, survives pruning and operation prune, refusal through the shared write path, recreated identity not retired) |
+| AC36 | integration | `internal/model/pointer_freshness_test.go` (every transition kind on an injected clock stepped backwards; written only by the transition; pointer documents per pointer, outside snapshots, dropped with the pointer) |
+| AC37 | integration + property | `internal/model/signature_record_test.go` (keying, rotation batch with no snapshot, pruning with the body); `internal/model/signing_key_test.go` (no private material column); `internal/storage/metadata_blob_gc_test.go` (declared blob lists); `internal/model/write_hook_test.go` (hook ordering, failing hook commits nothing) |
+| AC38 | unit + integration | `internal/model/schema_test.go` (schema introspection: identity foreign keys, no name column, partial unique index; shared with `repository-lifecycle.md` AC3); `internal/model/repository_lifecycle_test.go` (initial and final empty checkpoint snapshots on all three types, tombstone across pruning and sweeps, `Virtual: unsupported` refusal with a fixture handler) |
+| AC39 | unit + integration | `internal/model/credential_records_test.go` (fields, no token-value column, identity references, deleted-repository scope readable and inert) |
+| AC40 | unit + integration | `internal/model/upstream_test.go` (extended: transport fields outside the document); `internal/model/upstream_credential_test.go` (encrypted at rest, one-row rotation, in-use refusal) |
+| AC41 | integration + property | `internal/model/job_test.go` (fields, partial unique indexes, trace fields at enqueue, prune ordering against `Operation`); `internal/storage/gc_property_test.go` (queued and retrying job in the operation set on an injected clock) |
+| AC42 | integration | `internal/model/package_index_test.go` (index present; `EXPLAIN` of the search query uses it) |
 
 ## Implementation Phases
 
 ### Phase 1: Core entities
 Repository, Package, Version, File, Blob, with opaque metadata documents at all three levels.
-The upload session record and its lifetime (AC26), and repository-scoped in-flight digest
-resolution under the upload scope (AC18). A package outliving its versions (AC33), each
-version's last completed write time and core-parsed retention rules on `Repository` (AC28).
+The repository's identity as primary key, its lifecycle columns, the partial unique index on
+`name` and the tombstone (AC38, with `repository-lifecycle.md` Phase 1). The upload session
+record and its lifetime (AC26), and repository-scoped in-flight digest resolution under the
+upload scope (AC18). A package outliving its versions (AC33), each version's last completed
+write time and core-parsed retention rules on `Repository` (AC28). The `Package.name` index
+(AC42). `Principal`, `Credential`, `Grant` and `TrustPolicy` (AC39), which
+`credential-management.md` Phase 1 needs at charter step 2.
 
 ### Phase 2: Snapshots and pointers
 `Snapshot` (deltas plus periodic checkpoints, capturing membership and metadata) and
-`Pointer`: the default always-advancing pointer, named environment pointers with the
-promotion, rollback and reach-reporting API (AC22, AC23), and the pointer-resolution
+`Pointer`: the default always-advancing pointer created on the initial empty snapshot at
+creation, named environment pointers with the promotion, rollback and reach-reporting model
+(AC22, AC23; the HTTP surface is `management-api.md`'s), and the pointer-resolution
 architecture test. The chained snapshot identity, written with every snapshot and never pruned
-(AC29).
+(AC29). The pointer freshness record and the `PointerDocument` record (AC36), and the write
+transaction's pre-commit hook (AC37), which `signing-service.md` Phase 1 builds on. The
+`Operation` entity in its widened form (AC32), which `management-api.md` Phase 1 needs at
+charter step 2, before the write-triggered services prototype's asynchronous half and before
+`formats/ansible-collections.md`'s Phase 1. The `Retirement` record lands with it, as this spec's
+AC35 requires.
 
 ### Phase 3: Remote modelling
-`Upstream`, `RemoteFile`, download policies, upstream failover.
+`Upstream` with its transport configuration, `UpstreamCredential`, `RemoteFile`, download
+policies, upstream failover (AC40, with `upstream-adapters.md` Phase 1).
 
 ### Phase 4: GC integration
 The cached, retained-snapshot and pointer-targeted-snapshot reference classes, the open-session
-hold on repository grace (AC27), the records placed outside the root set (AC34), and the
-property tests that police them.
+hold on repository grace (AC27), the records placed outside the root set (AC34), the fourth
+root's reach over pointer documents and declared blob lists, and the property tests that police
+them.
 
 ### Phase 5: Records for sibling subsystems
-The `Operation` entity (AC32), which must land before the write-triggered services prototype's
-asynchronous half (its Phase 4) and before `formats/ansible-collections.md`'s Phase 1; and
-replication's replication link and freeze write kind with its provenance record (AC30, AC31),
-which must land before `replication.md`'s Phase 1 and Phase 4 respectively.
+`Job` and `Schedule` (AC41), which `async-operations.md` Phase 1 needs when the queue core lands;
+`Signature` and `SigningKey` (AC37), before `signing-service.md` Phase 1; the verification
+records' row, before `artifact-verification.md` Phase 1; and replication's replication link and
+freeze write kind with its provenance record (AC30, AC31), which must land before
+`replication.md`'s Phase 1 and Phase 4 respectively.
 
 ## Tasks
 
@@ -738,8 +1151,13 @@ were adopted on 2026-09-26 under the owner's standing delegation and folded thro
 Design sections "Upload sessions and the upload scope" and "Reads from in-flight publish state",
 AC18, AC26, AC27, the Test Plan and Phases 1 and 4. The records added the same day by the Wave 1
 reconciliation (AC28 to AC34) apply decisions adopted in sibling specs and raised no question
-here. Q1 through Q3 were answered on 2026-09-22
-and Q4 through Q14 on 2026-09-23.
+here, and so do the records added on 2026-09-27 by the reconciliation of the foundation
+authoring wave (AC35 to AC42, and the qualification of AC22): every one transcribes a decision
+a sibling spec adopted under the delegation, and where two siblings could have read differently
+(a `remote`'s one initial snapshot against the was-Q11 rule; a completed operation with no
+snapshot against the atomic-commit rule) the derivation is recorded in the amendment notes
+below rather than as a new question. Q1 through Q3 were answered on 2026-09-22 and Q4 through
+Q14 on 2026-09-23.
 
 Resolved decisions are kept below rather than deleted, so the reasoning survives the next time
 someone asks why it was done this way.
@@ -876,6 +1294,11 @@ This also gives the upstream-adapter axis settled in `format-handler-interface.m
 in the schema, which it previously lacked. Accepted cost: one more entity. The alternative was
 rewriting every remote row on a credential rotation, with failover ordering left implicit.
 
+Extended 2026-09-27 by `upstream-adapters.md`, which now owns the adapter axis: the row gained
+`adapter`, `hosts`, `tls`, `limits` and `http2`, and the credential store the row references
+became the `UpstreamCredential` record (Design, "Upstream configuration and upstream
+credentials", AC40). The entity and its one-to-one binding stand.
+
 ### Resolved: metadata levels (was Q8)
 
 **Settled 2026-09-23: an opaque metadata document at all three levels - `Repository`, `Package`
@@ -926,6 +1349,22 @@ is treated as cache materialisation, and cached content stays out of snapshot co
 This keeps eviction from fighting the snapshot mark root and keeps the snapshot sequence off the
 hot proxy path. Accepted cost: a `remote` repository has no rollback story, because it has no
 snapshots. Pinning a build to "npm as of Monday" is therefore not a v1 capability.
+
+Amended 2026-09-27 by `repository-lifecycle.md`'s creation rule, a refinement and not a reversal:
+a `remote` (and a `virtual`) does hold exactly one snapshot, the empty checkpoint written at
+creation for its default pointer to target, because the pointer is where the freshness record
+and the cache-scoped documents hang and nothing name-addressed resolves without one. No content
+ever enters it, nothing arriving by sync or on demand creates another, and both purposes of the
+decision (eviction never fights the snapshot root; the hot path never touches the sequence) hold
+as before. Folded into "Download policies", "Snapshots, pointers and what counts as a write" and
+AC38; AC19 is unchanged.
+
+The same day, `management-api.md`'s widening of `Operation` to every management operation
+implied that a completed operation need not have a snapshot: a `repoint`, a `freeze`, a `thaw`
+and a `rename` complete without one because they create none. The atomic-commit rule in
+"Operations" now binds snapshot-producing kinds, which is what it always protected against (a
+snapshot whose operation reads unfinished, or a content operation reported complete with no
+snapshot), and AC32 says so.
 
 ### Resolved: concurrent metadata writes (was Q12)
 
@@ -1006,6 +1445,7 @@ roots").
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
+| 2026-09-27 | 97da8ab | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Applied every item in `agents/spec-loop/consequences.md` targeting this spec from the ten foundation specs authored 2026-09-27, each verified against the source spec's current text rather than the queue's summary. From `management-api.md`: the core-held `Retirement` record (AC35), `Operation` widened from asynchronous-only to every management operation with idempotency key, request id and the `repoint` and `lifecycle` kinds, the HTTP home of pointer management cited, and creation establishing the default pointer on an initial empty snapshot; the package-outlives-versions rationale reworded (addressability and format state, no longer the set) and AC33 with it. From `credential-management.md`: `Principal`, `Credential`, `Grant`, `TrustPolicy` (AC39). From `artifact-verification.md`: the verification records' non-root row. From `signing-service.md`: the pointer freshness record (`moved_at`, generation counter), `PointerDocument`, `Signature`, `SigningKey`, the declared blob-digest list on a CAS-backed document, the write transaction's pre-commit hook, and AC22 qualified (content bit-identical, freshness signals and pointer documents not), which closes cross-cutting theme 1 and Open items 20, 22, 26, 27, 28, 30 and 32 on the data-model side (AC36, AC37). From `upstream-adapters.md`: the `Upstream` row's transport fields and `UpstreamCredential` (AC40). From `async-operations.md`: `Job` and `Schedule`, `cancelled` as a third terminal state, and the job-held grace replacing the "prototype's question 5" wording (AC41; AC32 rewritten). From `repository-lifecycle.md`: identity as primary key with the `rep_` rendering, the lifecycle columns, the partial unique index on `name`, the never-removed tombstone, initial and final empty checkpoint snapshots on every type, and the per-format `Virtual` capability that closes theme 9 and Open item 12 (AC38). From `observability.md`: `Job.trace_context` and `request_id`. From `web-ui.md`: the `Package.name` index (AC42). Open item 16 (Julia) recorded as an application of the digest-keying rule; Open item 29 (opam needs no freshness record) needed nothing. Mark-root check: none of the additions is a root, the set stays five; the fourth root's reach widens to CAS-backed pointer documents and declared blob lists, stated here as `storage-and-gc.md`'s amendment (its consequence item from the signing-service fold). Two derivations recorded as amendment notes rather than new questions: a `remote` holds one empty initial snapshot (was-Q11 refined, not reversed) and a completed operation of a non-writing kind has no snapshot (the atomic-commit rule binds snapshot-producing kinds). Entity table split into the content model and the records beside it; non-root table extended; AC34 extended to every new record; eight criteria added with Test Plan rows; Phases 1 to 5 updated. Zero open questions; `node scripts/check-spec.js` run on this file with zero failures. Stays draft until a gate review. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review. Adopted Q15 option A: the in-flight digest-read membership check is repository-scoped, so any principal authorized to pull from R resolves R's committed-but-unreferenced digests and none resolves them through another repository. Because this was the third collision of "a session the wire does not have" (after the grace period and `oci.md`'s session-lifetime question), wrote the single definition the triage asked for as a new Design section, "Upload sessions and the upload scope": an upload session is exactly one blob's upload into one repository, ended by commit or expiry; there is no push session and no mechanism may key on one or on the uploader's identity; anything spanning commit to reference is scoped to the repository; an open session holds its repository's grace open; a digest resolves in a repository only through that repository's own content. Adopted `oci.md`'s session-lifetime decision into that definition and raised and adopted Q16 for its defaults. Checked against `storage-and-gc.md`: its repository-scoped grace re-scoping is consistent with the definition; two gaps it cannot close itself are reported as sibling consequences (the open-session grace hold, and AC3's undefined session expiry). Changed: Scope, the new Design section, "Reads from in-flight publish state", the Snapshots carve-out, AC18 rewritten, AC26 (lifetime) and AC27 (open-session grace hold) added, Test Plan, Phases 1 and 4, the was-Q14 amendment note. The mark-root set is untouched: in-flight and mounted blobs are protected by grace, not by a root. Zero open questions. |
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied every queued item targeting this spec. From `replication.md`: the `ReplicationLink` entity (leader URL, leader repository name, credential reference in the upstream-credential store, status, last sync, takeover record; local repositories only, one active link), the never-pruned `SnapshotIdentity` (its delta digest a comparison hash, not a CAS reference), freeze as a snapshot-creating write kind whose frozen files hold published references and no `RemoteFile`, the `FileProvenance` record, and replica numbering as the leader's with takeover continuing it. From `formats/generic.md`: core-parsed retention rules on `Repository` (kind, parameter, filter at most `{package}/{version}`) and each version's last completed write time; its write-boundary declaration noted as the first made. From the format-management fold: the `Operation` entity with monotonic state, immutable terminal states, an unguessable wire id, the authorizing scope recorded for reads, a terminal transition atomic with its snapshot, pruning after a window, and no snapshot-content role; and the rule that a `Package` outlives its versions, with the rollback-versus-retirement-set interaction named as the management surface's obligation. From `supply-chain-policy.md`: its condemnation, scan, component-inventory and refusal records placed outside the format entity model, and the metadata-typing record's anticipated index identified as its component inventory. From the charter fold: 31 bespoke schemas corrected to 33 (Context, the was-Q3 record). Mark-root check: none of the additions is a root, so nothing needed reporting; a new Design table places each record against the set and AC34 proves a blob mentioned only by them is collected. AC28-AC34 added with Test Plan rows; Scope, the entity table, Phases 1, 2 and 4 and a new Phase 5 updated. |
 | 2026-09-26 | 4548df3 | cross-spec correction during storage-and-gc's gate review | Not a review of this spec. The pin's release path had no producer: Design said "only a repoint or a pointer deletion releases it" and `storage-and-gc.md` AC18 tests pointer deletion, but this spec's pointer-management API surface offered only create, repoint and reach-reporting. Deletion of a named environment pointer added to that surface; the default pointer is not deletable, which is entailed rather than decided, since name-addressed serving resolves only through pointers and a repository whose default pointer could be deleted would stop serving name reads entirely. Q15 untouched and still open. |

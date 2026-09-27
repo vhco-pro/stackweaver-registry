@@ -346,3 +346,19 @@ OWNER NOTE (repo hygiene, not a spec item): a 2.4 MB Go binary `artifactory` (bu
 7. project-charter.md, Design "Language": name the frontend (TypeScript/React under `web/`) as CLAUDE.md does.
 8. data-model.md: an index over `Package.name` per repository for the search route; no new entity, no root.
 9. repository-lifecycle.md, state table: name the admin-only API read for the deleted listing; rename and virtual capability are surfaced through `GET /api/v1/formats`.
+
+## Reconciliation pass (step 3), progress log
+One target file per agent. A file listed here has had every item targeting it applied; later sections may add new items for it.
+- data-model.md: DONE 2026-09-27. Applied management-api 1-3, credential-management 1, artifact-verification 1, signing-service 1 (closes theme 1 and Open items 20, 22, 26, 27, 28, 30, 32 on the data-model side), upstream-adapters 4, async-operations 1-2, repository-lifecycle 1-2 (plus theme 9 / Open item 12), observability 1, web-ui 8, Open item 16. Mark roots stay five. New ACs 35-42.
+
+## From data-model.md reconciliation (2026-09-27)
+Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
+1. signing-service.md (~l.439, ~l.460): "`data-model.md`'s to add" -> "added in data-model.md (Design 'Freshness scoped to the pointer', AC36, AC37)"; ~l.437: "no retained snapshot holds" -> "no retained snapshot or pointer document holds" (data-model AC37).
+2. async-operations.md (~l.267, ~l.299): cite data-model.md "Jobs and schedules", AC41; AC32 now admits `cancelled`.
+3. upstream-adapters.md (~l.393, ~l.411): cite data-model.md "Upstream configuration and upstream credentials", AC40.
+4. credential-management.md (~l.187-190): the "entity table has none of these three" claim is now false; cite data-model.md "Principals, credentials and grants", AC39; AC24's gate condition is met.
+5. management-api.md (~l.631, ~l.510): the `Operation` wording change is made (data-model "Operations"); `Retirement` cites data-model AC35.
+6. repository-lifecycle.md: AC3's `internal/model/schema_test.go` row is shared with data-model AC38; cite data-model "Repository identity and lifecycle state".
+7. storage-and-gc.md (SUBSTANTIVE, with repository-lifecycle item 4 and signing-service item 2): the sole write-transaction constructor exposes data-model's pre-commit hook (after the handler's changes, before commit, same transaction; a failing hook commits nothing), which signing-service's regeneration consumes.
+8. artifact-verification.md (~l.90, ~l.608): records are listed in data-model's non-root table (AC34).
+9. observability.md (~l.646) and web-ui.md (~l.792): applied; cite data-model AC41 (trace fields) and AC42 (index).
