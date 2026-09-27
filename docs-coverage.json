@@ -21,6 +21,9 @@
   "conformance/conda/**": [
     "docs/internal/plans/formats/conda.md"
   ],
+  "conformance/cpan/**": [
+    "docs/internal/plans/formats/cpan.md"
+  ],
   "conformance/cran/**": [
     "docs/internal/plans/formats/cran.md"
   ],
@@ -99,6 +102,9 @@
   ],
   "internal/format/conda/**": [
     "docs/internal/plans/formats/conda.md"
+  ],
+  "internal/format/cpan/**": [
+    "docs/internal/plans/formats/cpan.md"
   ],
   "internal/format/cran/**": [
     "docs/internal/plans/formats/cran.md"
