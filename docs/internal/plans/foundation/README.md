@@ -10,6 +10,7 @@ Foundation specs: the harness, storage, the format interface and the proxy layer
 
 | Name | Description |
 |------|-------------|
+| [artifact-verification.md](./artifact-verification.md) | Spec for artifact signature and attestation verification: one shared verifier behind the handlers and the proxy layer, per-repository trust sets, Sigstore, OpenPGP, CMS, apk, RPM, JWS, Ed25519 and TUF entries for the ecosystems the format specs raise, and a stored per-digest verdict that supply-chain-policy.md consumes. |
 | [auth.md](./auth.md) | Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present. |
 | [conformance-harness.md](./conformance-harness.md) | Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus. |
 | [credential-management.md](./credential-management.md) | Spec for the credential-management surface: issuing, listing, rotating and revoking registry tokens under /api/v1/tokens, the robot-account principal that lets automation outlive the people who set it up, the expiry states that make a dying token visible before it fails, registered public keys for clients that sign requests, and an OIDC exchange that mints short-lived tokens for CI without a stored secret. |

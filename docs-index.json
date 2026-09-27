@@ -413,6 +413,16 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/artifact-verification.md",
+    "description": "Spec for artifact signature and attestation verification: one shared verifier behind the handlers and the proxy layer, per-repository trust sets, Sigstore, OpenPGP, CMS, apk, RPM, JWS, Ed25519 and TUF entries for the ecosystems the format specs raise, and a stored per-digest verdict that supply-chain-policy.md consumes.",
+    "internal": true,
+    "status": "draft",
+    "issue": "46",
+    "covers": [
+      "internal/verify/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/auth.md",
     "description": "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present.",
     "internal": true,
