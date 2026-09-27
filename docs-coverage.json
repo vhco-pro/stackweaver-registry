@@ -2,6 +2,9 @@
   ".github/workflows/**": [
     "docs/internal/plans/foundation/observability.md"
   ],
+  "cmd/**": [
+    "docs/internal/plans/foundation/deployment.md"
+  ],
   "cmd/stackweaver-registry/**": [
     "docs/internal/plans/foundation/management-api.md"
   ],
@@ -93,14 +96,23 @@
   "conformance/vagrant/**": [
     "docs/internal/plans/formats/vagrant.md"
   ],
+  "deploy/**": [
+    "docs/internal/plans/foundation/deployment.md"
+  ],
   "internal/async/**": [
     "docs/internal/plans/foundation/async-operations.md"
   ],
   "internal/auth/**": [
     "docs/internal/plans/foundation/auth.md"
   ],
+  "internal/config/**": [
+    "docs/internal/plans/foundation/deployment.md"
+  ],
   "internal/credential/**": [
     "docs/internal/plans/foundation/credential-management.md"
+  ],
+  "internal/db/**": [
+    "docs/internal/plans/foundation/deployment.md"
   ],
   "internal/format/*.go": [
     "docs/internal/plans/foundation/management-api.md"
@@ -233,6 +245,9 @@
   "internal/retention/**": [
     "docs/internal/plans/formats/generic.md"
   ],
+  "internal/server/**": [
+    "docs/internal/plans/foundation/deployment.md"
+  ],
   "internal/signing/**": [
     "docs/internal/plans/foundation/signing-service.md"
   ],
@@ -257,5 +272,8 @@
   ],
   "scripts/build-docs-index.js": [
     "docs/internal/guidelines/documentation/PLAN_AND_DOC_FRONTMATTER.md"
+  ],
+  "scripts/check-config-keys.js": [
+    "docs/internal/plans/foundation/deployment.md"
   ]
 }

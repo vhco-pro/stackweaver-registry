@@ -317,3 +317,20 @@ OWNER NOTE: `internal/telemetry` is another shared package outside the storage/p
 17. conformance-harness.md, "What sibling specs already require": `conformance/core/request_id_test.go` (X-Request-Id on every response) and `route_label_test.go` (post-suite `http_route` never the bare mount).
 18. deployment.md (to author): the 17 `telemetry.*` keys and defaults, the second listener `:9464` not exposed publicly, `alerts.yaml` packaging with the templated signing lead, a Grafana dashboard reading the generated catalogue, log collection and rotation, SIGHUP for the audit file.
 19. .golangci.yml and `make verify` (whoever lands step 2 wiring): `sloglint` (context all, no-global all, snake keys, static msg), `forbidigo` for print families, `depguard` for the two import boundaries (observability AC1/AC2/AC8).
+
+## From deployment.md authoring (2026-09-27, issue #52)
+Addresses the deployment lines in charter item 13, credential-management 14, signing-service 15, upstream-adapters 14, async-operations 14, observability 18, themes 2 and 3, Open items 16, 18, 25, 28.
+1. signing-service.md, Configuration table: replace the `signing.master_key` row with a citation of deployment.md's `security.master_key` (or `_file`); 14 keys plus the citation.
+2. artifact-verification.md, Configuration table: remove `verify.workers`; the bound is `async.kind_limits` `verify.reevaluate: 4`.
+3. auth.md, Design: a new "Configuration" subsection with a three-column key table: `auth.oidc.issuer`, `auth.oidc.client_id`, `auth.oidc.client_secret` (secret), `auth.oidc.redirect_url`, `auth.oidc.admin_identities` (list of {issuer, subject}), `auth.local_admin.keep` false, `auth.session.lifetime`, `auth.allow_plaintext` false (flag `--allow-plaintext-auth`).
+4. proxy-cache.md, Offline mode and AC5: name the key `proxy.offline` (instance-wide, default false).
+5. upstream-adapters.md, limits paragraph: a three-column key table with `upstream.default_concurrency` 10, `upstream.default_cooldown_cap` 1h, `upstream.connect_timeout` 10s; User-Agent is computed from `server.public_url`, not a key.
+6. storage-and-gc.md, Design: a `gc.` key table (sweep cadence, grace period, orphan-scan cadence, defaults as its prose fixes).
+7. supply-chain-policy.md: (a) a `policy.` key table (feed source URL, sync cadence); (b) Go net/http writes canonical `http.StatusText` with no custom reason-phrase API, so a format-specific phrase needs a hijacked HTTP/1.1 write in the shared refusal path; deployment guarantees only that HTTP/1.1 reaches the client (`server.http2: false`).
+8. replication.md: a `replication.` key table if any instance default exists (checkpoint interval), else state it has none.
+9. async-operations.md: (a) rolling upgrades: a claimed job of an unknown kind is skipped (left for a newer process), not failed; (b) take the leader lock through `internal/db/lock`'s `LockScheduler`; (c) align kind names `verify.revocation_refresh`/`verify.tuf_refresh` with artifact-verification's `verify.revocation.refresh`/`verify.sigstore.refresh`.
+10. storage-and-gc.md: take the sweep lock through `internal/db/lock.LockSweep`; the consistency checker's CLI is `stackweaver-registry storage check` with `--restore-dangling` restoring from bucket versions; bucket versioning is a deployment requirement it relies on.
+11. format-handler-interface.md, re-open inputs: host binding is `server.hosts` {hostname, repository} from configuration, passed at construction, reloadable on SIGHUP.
+12. conformance-harness.md: the `repositories` hostname binding is written through `server.hosts`' loader; `database.schema` and `storage.s3.prefix` are the isolation keys the seed subcommand receives.
+13. management-api.md, "Configuration and the CLI stance": add `migrate`, `config`, `keys`, `version` to the non-management operational subcommands beside `seed`.
+14. Tooling: `scripts/check-config-keys.js` (new, deployment Phase 1) joins `make verify` and CI's docs job; every spec key table keeps the `| \`key\` | default | meaning |` three-column shape.
