@@ -3,6 +3,9 @@
     "docs/internal/conformance/matrix.md",
     "docs/internal/plans/foundation/conformance-harness.md"
   ],
+  "conformance/alpine/**": [
+    "docs/internal/plans/formats/alpine.md"
+  ],
   "conformance/cargo/**": [
     "docs/internal/plans/formats/cargo.md"
   ],
@@ -57,6 +60,9 @@
   "internal/format/**": [
     "docs/internal/plans/formats/catalogue.md",
     "docs/internal/plans/foundation/format-handler-interface.md"
+  ],
+  "internal/format/alpine/**": [
+    "docs/internal/plans/formats/alpine.md"
   ],
   "internal/format/ansible/**": [
     "docs/internal/plans/formats/ansible-collections.md"

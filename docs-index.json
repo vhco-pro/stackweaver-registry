@@ -54,6 +54,17 @@
     "covers": []
   },
   {
+    "path": "docs/internal/plans/formats/alpine.md",
+    "description": "Spec for Alpine apk repositories served to apk-tools 2 and 3: repositories holding many trees with one APKINDEX.tar.gz per tree and architecture, generated and signed by the shared signing service with a prepended RSA signature segment, publisher-signed packages whose bytes the registry never alters and whose own signature no repository install checks, the two trust layers kept apart, a proxied path serving Alpine's signed indexes verbatim after verification, and virtual trees merged with per-name shadowing and re-signed.",
+    "internal": true,
+    "status": "draft",
+    "issue": "32",
+    "covers": [
+      "internal/format/alpine/**",
+      "conformance/alpine/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/ansible-collections.md",
     "description": "Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist.",
     "internal": true,

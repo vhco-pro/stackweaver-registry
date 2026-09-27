@@ -10,6 +10,7 @@ One spec per package format, each owning its own protocol surface and conformanc
 
 | Name | Description |
 |------|-------------|
+| [alpine.md](./alpine.md) | Spec for Alpine apk repositories served to apk-tools 2 and 3: repositories holding many trees with one APKINDEX.tar.gz per tree and architecture, generated and signed by the shared signing service with a prepended RSA signature segment, publisher-signed packages whose bytes the registry never alters and whose own signature no repository install checks, the two trust layers kept apart, a proxied path serving Alpine's signed indexes verbatim after verification, and virtual trees merged with per-name shadowing and re-signed. |
 | [ansible-collections.md](./ansible-collections.md) | Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist. |
 | [cargo.md](./cargo.md) | Spec for the Cargo (Rust) registry format: the sparse index protocol and the crates.io-style web API, hosted and proxied, with cargo as the conformance oracle for reads, publish and yank alike. |
 | [catalogue.md](./catalogue.md) | The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat. |
