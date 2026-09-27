@@ -497,6 +497,18 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/observability.md",
+    "description": "Spec for the observability baseline: one metric catalogue with a naming convention and mechanically enforced cardinality bounds, structured operational and request logs with credential redaction at the handler, a separate audit channel for security-relevant events with a closed event vocabulary, OpenTelemetry tracing across the request, Deps and storage boundaries with W3C propagation and X-Request-Id correlation, health and readiness endpoints, a named alert catalogue shipped as Prometheus rules, and the shared CI benchmark-gate mechanism the sibling specs' benchmark criteria run on.",
+    "internal": true,
+    "status": "draft",
+    "issue": "51",
+    "covers": [
+      "internal/telemetry/**",
+      "scripts/bench-gate.sh",
+      ".github/workflows/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/project-charter.md",
     "description": "The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work.",
     "internal": true,

@@ -1,4 +1,7 @@
 {
+  ".github/workflows/**": [
+    "docs/internal/plans/foundation/observability.md"
+  ],
   "cmd/stackweaver-registry/**": [
     "docs/internal/plans/foundation/management-api.md"
   ],
@@ -237,6 +240,9 @@
     "docs/internal/plans/foundation/data-model.md",
     "docs/internal/plans/foundation/storage-and-gc.md"
   ],
+  "internal/telemetry/**": [
+    "docs/internal/plans/foundation/observability.md"
+  ],
   "internal/upstream/**": [
     "docs/internal/plans/foundation/upstream-adapters.md"
   ],
@@ -245,6 +251,9 @@
   ],
   "scripts/**": [
     "docs/internal/guidelines/documentation/PLAN_AND_DOC_FRONTMATTER.md"
+  ],
+  "scripts/bench-gate.sh": [
+    "docs/internal/plans/foundation/observability.md"
   ],
   "scripts/build-docs-index.js": [
     "docs/internal/guidelines/documentation/PLAN_AND_DOC_FRONTMATTER.md"

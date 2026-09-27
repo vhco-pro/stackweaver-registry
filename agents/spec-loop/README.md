@@ -57,7 +57,7 @@ Nothing local remains unless a gate review asks for a fresh capture.
 2. **Foundation specs**, with `foundation-brief.md`, one at a time, most-cited first:
    ~~management-api~~ (done 2026-09-27, #44), ~~credential-management~~ (done 2026-09-27, #45) (must reach `planned` before OCI Phase 1),
    ~~artifact-verification~~ (done 2026-09-27, #46), ~~signing-service~~ (done 2026-09-27, #47), ~~upstream-adapters~~ (done 2026-09-27, #48), ~~async-operations~~ (done 2026-09-27, #49) (reconcile with the
-   `Operation` entity already in `data-model.md`), ~~repository-lifecycle~~ (done 2026-09-27, #50), observability, deployment,
+   `Operation` entity already in `data-model.md`), ~~repository-lifecycle~~ (done 2026-09-27, #50), ~~observability~~ (done 2026-09-27, #51), deployment,
    web-ui. Hints are each spec's line in `foundation.tsv`.
 3. **A reconciliation pass** over whatever those specs queue in `consequences.md`.
 4. **Gate reviews** (`agents/spec.md`, review mode): `storage-and-gc.md` first (un-planned by the

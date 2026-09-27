@@ -1,0 +1,1231 @@
+---
+status: draft
+status_description: "Authored 2026-09-27 at 677aa69 as a grounded first draft, not yet reviewed. Gathers every metric, alert, log line, audit line and X-Request-Id requirement the sibling specs placed on this file (the queued consequences from credential-management, signing-service, upstream-adapters and async-operations, the foundation.tsv hints for proxy-cache, storage-and-gc, supply-chain-policy and replication, auth.md's leak criterion and management-api.md's audit line) into one catalogue with a naming convention, cardinality rules, a redaction design, an audit channel, trace propagation, health endpoints and the shared benchmark-gate mechanism. Eight conflicts resolved under the standing delegation. Awaits /spec review."
+description: "Spec for the observability baseline: one metric catalogue with a naming convention and mechanically enforced cardinality bounds, structured operational and request logs with credential redaction at the handler, a separate audit channel for security-relevant events with a closed event vocabulary, OpenTelemetry tracing across the request, Deps and storage boundaries with W3C propagation and X-Request-Id correlation, health and readiness endpoints, a named alert catalogue shipped as Prometheus rules, and the shared CI benchmark-gate mechanism the sibling specs' benchmark criteria run on."
+author: michielvha
+goal: "Make every failure the constitution says has no client oracle visible to an operator before a user reports it: no metric without a bounded label set, no log line that can carry a credential, no security-relevant event outside the audit channel, no request without a correlation id, and no alert that is only a log line."
+priority: "critical"
+issue: 51
+created: 2026-09-27
+covers:
+  - "internal/telemetry/**"
+  - "scripts/bench-gate.sh"
+  - ".github/workflows/**"
+---
+
+# Plan: Observability
+
+One package, `internal/telemetry`, owns every signal this registry emits: the metric catalogue
+and the instruments behind it, the operational and request logs and the redaction that guards
+them, the audit channel, the tracer and its propagation, the health and readiness endpoints, the
+alert catalogue shipped as rules, and the benchmark-gate mechanism that turns the sibling
+specs' "CI fails on a regression" criteria into a job that can actually fail. Every other
+package receives typed instrument handles and a `*slog.Logger` from it and constructs nothing
+of its own, which is what lets one test hold the whole signal surface to one convention.
+
+## Context
+
+`project-charter.md` places the **observability baseline at build step 2**, with the generic
+format, the management surface core and the configuration and deployment baseline, and gives the
+reason in the step's row: "the fault-injection and benchmark evidence of steps 3 and 4 needs
+signals that exist before the components they observe, since concurrency, durability and
+performance have no client oracle (`CLAUDE.md`)". The charter's cost-line list names
+`shared:observability` as this subsystem's ledger line, and `agents/spec-loop/consequences.md`
+item 13 of the charter fold fixes the citation: baseline at step 2, packaging at step 4. That
+placement is the reason this spec is a foundation spec rather than a late addition: the
+constitution says concurrency and durability failures, architecture failures and performance
+failures are the three ways to ship something that passes every conformance case and is still
+broken, and each of them is discovered, if at all, through a signal this spec defines.
+
+The current tree has no `internal/` directory and a stub `cmd/stackweaver-registry/main.go`
+(`find . -name "*.go"` at 677aa69 lists only that file), so every claim below about code is a
+design claim, and every claim about a sibling's requirement cites the sibling.
+
+### Who depends on this spec, and for what
+
+The requirements below were gathered by grepping `docs/internal/plans` for `metric`, `gauge`,
+`alert`, `audit line`, `slog`, `X-Request-Id` and `observab`, and
+`agents/spec-loop/consequences.md` for lines naming this file. Each is asserted by a criterion
+in this spec; the table says which.
+
+| Citing spec | What it places on this spec | Where |
+|---|---|---|
+| `credential-management.md` (consequences item 14) | A gauge of credentials per state and owner kind; the token value in no log line, metric or error body (its AC4); one audit line per request on its routes carrying `event`, `request_id`, `principal`, `credential`, `owner`, `outcome`, `problem_type` (its AC18); `X-Request-Id` echoed (its AC15) | AC6, AC12, AC16, AC19 |
+| `signing-service.md` (consequences item 15) | Key expiry gauge, signing latency, lock wait, merge staleness; private material in no log line or metric label (its AC14); the `external` key expiry alert at the configured lead (its AC22) | AC6, AC12, AC18 |
+| `upstream-adapters.md` (consequences item 14) | Per-upstream request counters by outcome, rate-limit-remaining gauge, cool-down state, token-exchange failures; every log line and error passes its redactor (its AC20) | AC6, AC13 |
+| `async-operations.md` (consequences item 14, its AC20) | Queue depth and oldest-pending age per kind, lease expiries, retries, permanent failures, scheduler leadership, merge-staleness breaches; alerts on a failed job, a staleness breach and a schedule overdue by twice its period | AC6, AC18 |
+| `proxy-cache.md` (foundation.tsv hint; its AC13, AC14, AC10) | Quota utilisation observable without reading logs, cache thrash detectable from metrics; exactly one operator alert per condemnation; a mid-stream integrity failure recorded observably to the operator | AC6, AC18 |
+| `storage-and-gc.md` (foundation.tsv hint; its AC19) | GC progress and pinned-storage reporting: every pointer pinning an out-of-window snapshot is reported | AC6 |
+| `supply-chain-policy.md` (foundation.tsv hint; its AC5, AC6) | Refusal records; an artifact unscanned past the bound raises an operator alert; a degraded advisory channel alerts | AC6, AC18 |
+| `replication.md` (foundation.tsv hint; its AC10) | Lag: per-link position, last successful sync, and `failed`, `reseeding`, `diverged` as statuses a monitor can alert on, "never only as a log line" | AC6, AC18 |
+| `management-api.md` (its AC23; "Audit: the `Operation` record and the audit line") | The audit line as a structured `log/slog` record with a fixed attribute set, emitted through the request logger `Deps` carries, surviving the `Operation` prune, credential-free, sharing `request_id` with the `Operation`; `X-Request-Id` on every response, echoing the client's when sent | AC12, AC14, AC16 |
+| `auth.md` (its AC7, AC15) | A token or password never in logs, error responses or metrics, asserted on a real success and a real failure; the first-start admin credential emitted exactly once by design | AC9, AC10, AC11 |
+| `format-handler-interface.md` ("The pinned method set") | `Deps` carries "the request logger"; a handler holds no capability it was not handed; shared-layer routes need reserved mounts (its AC11) | AC3, AC15, AC22 |
+| `artifact-verification.md` (its AC27), `storage-and-gc.md` consequence (CAS read-path digest mismatch) | An operator alert on a failed verdict at ingest or commit; an alert on a digest mismatch on the read path | AC18 |
+| `conformance-harness.md` (its AC13) | Corpus redaction is an allowlist; the harness's server-log assertions are not protocol-observable and live in integration tests | Scope, AC9 |
+| Format specs (alpine, arch, cpan, hackage, homebrew, luarocks, opam, openvsx, puppet, rpm, terraform, vagrant) | "No credential appears in logs, error bodies or metrics" for path tokens, vendor headers and capability URLs; "the real failure reason is recorded observably to the operator" | AC9, AC11, AC18 |
+| `CLAUDE.md` ("Performance is invisible to conformance. Benchmarks are CI gates") and `project-charter.md` AC6 | A CI benchmark gate that fails the build on a regression beyond a stated threshold | AC24, AC25 |
+
+Two things nobody asked for are here because the constitution demands them: **every boundary
+rule needs a named mechanical enforcer** (this spec introduces four), and **acceptance criteria
+state the end state**, so "quota utilisation is observable" becomes a named gauge with a named
+label set that a test reads off `/metrics`.
+
+### Prior art, and what is taken from it
+
+Gathered in this run by fetching the sources named; nothing here rests on recollection.
+
+- **OpenTelemetry semantic conventions.** `http.server.request.duration` (histogram, seconds,
+  stable) with required `http.request.method` and `url.scheme`, conditionally required
+  `http.response.status_code`, `http.route` and `error.type`, and the rule that `http.route`
+  "MUST NOT be populated when this is not supported" and must be low-cardinality with dynamic
+  segments as placeholders; `http.client.request.duration` with required `server.address` and
+  `server.port`; unknown methods collapse to `_OTHER`. Database: `db.client.operation.duration`
+  (stable, seconds, required `db.system.name`, conditionally `db.operation.name`,
+  `db.collection.name`, `db.response.status_code`) and the connection-pool set
+  (`db.client.connection.count` with `pool.name` and `state`, `pending_requests`, `timeouts`,
+  `wait_time`, `use_time`). **Taken** wholesale for the HTTP server, HTTP client (upstream) and
+  database layers: these are the names every dashboard and collector already understands, and
+  inventing registry-flavoured synonyms buys nothing. The default HTTP bucket boundaries stop at
+  10 s, which is wrong for a server that streams multi-gigabyte blobs; **rejected** in favour of
+  an extended boundary set (Design, "Histogram boundaries").
+- **Prometheus naming.** An application prefix, one unit per metric in base units (seconds,
+  bytes), `_total` on counters, `_info` for metadata, timestamps as `_timestamp_seconds`, labels
+  for characteristics rather than for anything already in the name, and never a label whose
+  values are user ids or the like. **Taken** as the rendering convention for everything on
+  `/metrics`. The OTel Prometheus exporter performs this translation deterministically (dots to
+  underscores, unit suffix, `_total` on counters, `target_info` and `otel_scope_info` metadata),
+  which is why this spec can state both the OTel name and the Prometheus name for each metric
+  without them drifting.
+- **Harbor.** Exposes `harbor_project_quota_usage_byte` and `harbor_project_quota_byte` per
+  `project_name`, `harbor_up{component}`, `harbor_task_queue_size` and
+  `harbor_task_queue_latency` per job type, `harbor_jobservice_task_total{status,type}`, and
+  the distribution registry's `registry_http_requests_total{code,handler,method}` and
+  `registry_storage_action_seconds{action,driver}`; metrics live on a separate port and path
+  configured in `harbor.yml`. **Taken:** per-project (here per-repository) quota gauges are
+  exactly the "quota utilisation observable" `proxy-cache.md` asks for, and the component-up
+  gauge is the readiness mirror this spec ships; a separate metrics listener is taken too.
+  **Rejected:** the `registry_` prefix, because a Harbor installation beside this registry would
+  collide on it; and Harbor's summaries with quantile labels for latency, because summaries
+  cannot be aggregated across replicas and histograms can.
+- **Artifactory.** Open Metrics are off by default and enabled by a property
+  (`artifactory.metrics.enabled`), served on an authenticated API path
+  (`/artifactory/api/v1/metrics`), and JFrog's own Prometheus integration derives further series
+  from the request, access and audit log files. **Taken:** the separation of an access log, an
+  operational log and an audit log into distinct streams. **Rejected:** deriving metrics from log
+  files, which is a workaround for a server that did not export them, and metrics off by default,
+  which hides exactly the signals step 2 exists to provide.
+- **Nexus Repository.** `/service/rest/metrics/prometheus` (from 3.81; `/service/metrics/prometheus`
+  before) behind the `nx-metrics-all` privilege, plus `/service/metrics/healthcheck`. **Taken:**
+  a health endpoint distinct from the metrics endpoint. **Rejected:** privilege-gating the scrape
+  on the client-facing listener; this spec puts the scrape on a listener the operator does not
+  expose rather than on a route a registry token could reach (the resolved listener question).
+- **Gitea.** A `[metrics]` section with `ENABLED` and a bearer `TOKEN` for `/metrics`, an access
+  log template, and `REQUEST_ID_HEADERS` naming which request headers are copied into the access
+  log as the request id. **Taken:** an explicit request-id header policy. **Rejected:** trusting
+  any header the client names without validation; the request id this spec echoes is validated
+  or replaced (Design, "Request id and trace context").
+- **Pulp.** OpenTelemetry, disabled by default, exported over OTLP to a collector, recording API
+  latency by method, URL, status and worker, content-delivery latency, disk usage per domain and
+  artifact sizes served per domain; a `status` endpoint for health. **Taken:** OTLP export as the
+  trace path and traces off by default; content-delivery latency as its own histogram, separate
+  from API latency. **Rejected:** URL as a metric attribute, which is unbounded.
+- **Go `log/slog`.** `Handler` with `Enabled`, `Handle`, `WithAttrs`, `WithGroup`; `LogValuer`
+  whose documented use is exactly secret redaction (a `Token` type whose `LogValue` returns
+  `REDACTED_TOKEN`); `HandlerOptions.ReplaceAttr` to rewrite or drop attributes; `JSONHandler`
+  rendering groups as nested objects; the recommendation to pass a context to every output
+  method. The vendored `go` skill adds: never a package-level logger beyond `main`, pass
+  `*slog.Logger` as a dependency, log at the boundary and return the error through the stack.
+  **Taken** entirely; the redaction design is three `slog` mechanisms layered.
+- **W3C Trace Context.** `traceparent` as `version-trace-id-parent-id-trace-flags`, a missing or
+  invalid header meaning "start a new trace and drop `tracestate`", `tracestate` forwarded
+  unchanged unless deliberately mutated. **Taken** as the inbound propagation format and as the
+  outbound one for replication peers only (the resolved propagation question).
+
+## Scope
+
+**In scope**
+
+- The metric catalogue: every metric this registry exports, with OTel name, Prometheus rendering,
+  instrument type, unit, label set and the bound on each label, in one Go table that the
+  `/metrics` output is tested against, and the naming and cardinality rules that admit a new
+  entry.
+- Typed instrument handles per subsystem, constructed only in `internal/telemetry`, so that a
+  sibling package cannot create an instrument or pass an unbounded label value.
+- The operational log, the request log and the audit log as three `slog` streams with fixed
+  schemas; the redaction design (typed secrets, key denylist, per-request secret scrubbing, URL
+  redaction) and the single sanctioned disclosure (`auth.md` AC15).
+- The audit channel: its sink, its schema, the closed event vocabulary and the rule for adding an
+  event.
+- The alert mechanism (a named condition is a counter, an `Error`-level record and a shipped
+  Prometheus rule) and the alert catalogue gathered from the siblings.
+- Tracing: the request span, child spans at every `Deps` boundary and the database and blob
+  store, span linking across the async queue, sampling, OTLP export, and the propagation policy.
+- `X-Request-Id`: validation, generation, echo on every response of every listener, correlation
+  with the audit line and the `Operation` record.
+- `/healthz` and `/readyz`: what each checks, what each reveals, and on which listener.
+- Multi-replica semantics: which gauges are process-local and which are derived from shared state
+  and exported by the scheduler leader alone.
+- The `telemetry.*` configuration keys, as this subsystem's policy; `deployment.md` (owed)
+  documents them.
+- The shared benchmark-gate mechanism (`make bench`, checked-in baselines, comparison,
+  threshold, the CI job) and this package's own overhead budgets.
+- Four mechanical enforcers: the SDK-import boundary, the handler-import boundary, the
+  context-logging lint, and the `Deps` decorator completeness test.
+
+**Out of scope, with reasons that are not effort**
+
+- **A built-in notifier (email, webhook, chat).** Alertmanager, Grafana and every SIEM already
+  route alerts from rules and logs; a second router inside the registry would have to be
+  configured, secured and tested for delivery, and it would duplicate a solved problem while
+  adding a network egress path to a component the constitution wants to keep narrow. Alerts here
+  are conditions that a rules engine fires; the resolved alert-mechanism question records this.
+- **Log storage, rotation and retention.** Logs go to standard output and, for the audit channel,
+  optionally to a file; what collects, rotates and retains them is the deployment's, because the
+  right answer differs between a container platform and a systemd unit, and the registry cannot
+  know which it is in.
+- **Dashboards.** A Grafana dashboard has no oracle beyond JSON validity, so shipping one here
+  would add an untestable artefact to a spec whose whole point is testable signals. The rules
+  file ships here because its correctness is checkable against the catalogue; a dashboard that
+  reads the same catalogue belongs to `deployment.md`'s packaging.
+- **Per-user or per-principal metrics.** A principal is an unbounded label value (the Prometheus
+  guidance's own example), and per-principal accounting is a management-API listing over the
+  `Operation` record and the audit log, not a time series.
+- **Business metrics per package or per version** (downloads per package, most-pulled artifacts).
+  Package names are unbounded and are exactly the label the cardinality rule forbids; download
+  counts, where a format's protocol needs them (npm's download API is out of scope in `npm.md`
+  as well), are a metadata-document concern, not a metric. Harbor's `harbor_artifact_pulled` per
+  project is the bounded form and is covered by the per-repository request counter.
+- **Client-side telemetry** (what a real `docker` or `npm` reports). The client is the
+  specification; this registry observes only its own side of the exchange.
+- **The corpus redaction of the conformance harness** (`conformance-harness.md` AC13). It is an
+  allowlist at capture time over recorded traffic; the redaction here is over emitted logs. They
+  share the list of credential shapes (Design, "Redaction") and nothing else.
+
+## Design
+
+### Package shape and the four boundaries
+
+`internal/telemetry` is one package with one job: construct and hand out the signal surface.
+Its exported surface, small on purpose:
+
+- `New(cfg Config, build BuildInfo) (*Telemetry, error)`: builds the meter provider with the
+  Prometheus exporter, the tracer provider with the configured exporter, the three loggers, the
+  health registry and the alerts. `Telemetry.Shutdown(ctx)` flushes exporters; every goroutine
+  it starts (the state-gauge collector, the exporter batchers) exits on that call, which is its
+  stated shutdown path.
+- `Telemetry.Logger() *slog.Logger`: the operational logger. `Telemetry.Audit() *Auditor`: the
+  audit channel. `Telemetry.Metrics() *Metrics`: the typed instrument handles, one field per
+  subsystem (`Metrics.HTTP`, `Metrics.Cache`, `Metrics.Upstream`, `Metrics.Storage`,
+  `Metrics.GC`, `Metrics.Async`, `Metrics.Signing`, `Metrics.Auth`, `Metrics.Credentials`,
+  `Metrics.Policy`, `Metrics.Verify`, `Metrics.Replication`, `Metrics.Repositories`,
+  `Metrics.Manage`), each a struct of methods with typed parameters (Design, "Cardinality").
+- `Telemetry.Middleware(next http.Handler) http.Handler`: the request middleware, one per
+  listener, doing request id, span, request log, HTTP metrics and per-request secret scrubbing
+  in that order.
+- `Telemetry.Instrument(deps format.Deps) format.Deps`: wraps every consumer interface in
+  `Deps` with a tracing and metrics decorator (Design, "Tracing").
+- `Telemetry.Health() *Health`: the readiness registry; `Handler()` for the telemetry listener,
+  `Probe()` for the main listener.
+- `MarkSecret(ctx, value)`, `Secret(value)`, `Disclose(value)`, `RedactURL(*url.URL)`,
+  `Alert` (Design, "Redaction", "Alerts").
+
+The consumer interfaces this package decorates are the ones `format-handler-interface.md` says
+`Deps` carries (the blob store, the metadata store, fetch-and-cache, the authorizer, the request
+logger); their signatures belong to the specs that own the layers, and this spec adds no method
+to any of them. `Deps`'s "request logger" is a `*slog.Logger` whose handler reads the request
+attributes from the context (Design, "Structured logging"), so the interface `Deps` carries for
+logging is the standard library's.
+
+Four boundary rules, each with its enforcer, per the constitution's rule that a boundary held
+only by review is not enforced:
+
+| Rule | Enforcer |
+|---|---|
+| Only `internal/telemetry` imports the OpenTelemetry SDK and exporters (`go.opentelemetry.io/otel/sdk/**`, `go.opentelemetry.io/otel/exporters/**`), the OTel metric API (`go.opentelemetry.io/otel/metric`) and `github.com/prometheus/client_golang/**`. Every other package receives typed handles. | `internal/telemetry/boundary_test.go` walks `go list -deps` for every package under `internal/**` and `cmd/**`; plus a `depguard` rule in `.golangci.yml` so the failure is a lint failure before it is a test failure |
+| No handler package (`internal/format/**`) imports `internal/telemetry`, the OTel API or `client_golang`. A handler's signals come from the middleware and the `Deps` decorators, and its log lines from the `*slog.Logger` in `Deps`. | The same `boundary_test.go`, and the `depguard` rule; `format-handler-interface.md`'s `internal/format/arch_test.go` is the natural second home and is reported as a consequence |
+| Every `slog` call outside `main` passes a context, uses no global logger, and uses snake_case keys from the attribute vocabulary; no `fmt.Print*`, `log.Print*` or `println` outside `main` and tests. | `sloglint` in `.golangci.yml` with `context: all`, `no-global: all`, `key-naming-case: snake`, `static-msg: true`; `forbidigo` for the print families |
+| Every consumer interface `Deps` carries has a decorator in `internal/telemetry` covering every method (a new method on a `Deps` interface without a decorator method fails the build, not a review). | `internal/telemetry/decorator_test.go`, reflecting over each interface in `format.Deps` and asserting the decorator type implements it and that every method starts a span (a fake inner implementation records the span in the context it receives) |
+
+### Naming convention
+
+Two families of metric names, deliberately, so that standard dashboards keep working and
+registry-specific series are unmistakable:
+
+- **Semantic-convention metrics** keep their OpenTelemetry names unprefixed:
+  `http.server.request.duration`, `http.server.active_requests`,
+  `http.server.request.body.size`, `http.server.response.body.size`,
+  `http.client.request.duration`, `db.client.operation.duration`, `db.client.connection.count`
+  and the rest of the pool set. On `/metrics` the exporter renders them as
+  `http_server_request_duration_seconds` and so on. Go runtime and process metrics come from the
+  standard collectors (`go_*`, `process_*`) on the same registry.
+- **Registry-specific metrics** carry the OTel instrumentation scope `stackweaver.registry` and
+  the Prometheus namespace `stackweaver_registry_`, followed by `<subsystem>_<measure>[_<unit>]`
+  with the Prometheus unit and type suffixes. `registry_` alone is rejected because
+  `distribution/distribution`, which Harbor embeds, already exports `registry_http_*`, and an
+  operator running both would get a merged series. The subsystem word is one of the fourteen
+  `Metrics` fields above, lower-cased (`http` is never used for a registry-specific metric; the
+  semconv family owns it).
+- Units are base units in the name (`_seconds`, `_bytes`), never in a label. Counters end in
+  `_total`. Timestamps are `_timestamp_seconds` gauges (Unix seconds), never durations "since",
+  so that `time() - metric` is computed by the rules engine and the gauge does not need
+  re-exporting every second. State is one gauge per state value with a `state` label and value
+  0 or 1 (one-hot), never an integer-coded enum, because an enum cannot be summed or alerted on
+  by name. Metadata is an `_info` gauge with value 1.
+- Label names come from a closed attribute vocabulary shared with the log schema (below):
+  `format`, `repository`, `repository_kind`, `upstream`, `link`, `kind`, `schedule`, `outcome`,
+  `state`, `component`, `operation`, `backend`, `profile`, `scheme`, `condition`, `form`,
+  `decision`, `owner_kind`, `direction`, `alert`, `event`, `route` (as semconv `http.route`).
+  A metric introducing a label outside this list is a spec change to this table, not a code
+  change.
+
+Log attribute keys use the same vocabulary, snake_case, with the semconv keys (`http.request.method`
+and friends) rendered as `slog` groups (`http.request.method` is the `method` attribute inside the
+`request` group inside the `http` group), so that `JSONHandler` emits nested objects and a
+`TextHandler` emits the dotted semconv key.
+
+### Cardinality
+
+The rule, stated so a test can hold it: **no label may take a value that is chosen by a client or
+by content.** Package names, versions, digests, tags, blob sizes as labels, principals, client
+addresses, user agents, URLs and paths are all forbidden as label values. What remains falls into
+two classes:
+
+- **Enumerated labels**, whose values are a closed set fixed in code: `outcome`, `state`,
+  `component`, `operation`, `backend`, `profile`, `scheme`, `condition`, `form`, `decision`,
+  `owner_kind`, `direction`, `repository_kind`, `alert`, `event`, and `kind` (the registered job
+  kinds) and `format` (the registered handlers, at most 33). These are Go types with a fixed
+  value set, and the typed instrument methods take them as parameters, so an arbitrary string
+  cannot reach a label at all.
+- **Configuration-bounded labels**, whose values are operator-created names: `repository`,
+  `upstream`, `link`, `schedule`, and `route`. Their cardinality is the number of rows an
+  operator created, which is bounded in practice but not in principle, so each passes through a
+  `Bounded` limiter at emission: a per-label cap (`telemetry.metrics.repository_label_limit`,
+  default 1000, and 200 for `upstream`, `link` and `schedule`) past which every further distinct
+  value is emitted as `_other`, and a gauge `stackweaver_registry_telemetry_label_overflow_total{label}`
+  counts the collapses so the operator sees the cap bite instead of losing series silently. The
+  limiter is per process and resets on restart. `route` needs no cap because its values are
+  route patterns, bounded by the registered routes (below), but it goes through the same code
+  path so the rule has one implementation.
+
+The `repository` label is admitted only on metrics whose meaning is per repository (cache bytes
+and quota, pinned snapshots, merge staleness, repository request counts) and the catalogue marks
+each. Harbor labels its quota gauges by `project_name` and this spec follows that shape, with the
+cap Harbor lacks.
+
+**`http.route`.** Handlers receive the raw `*http.Request` and route inside their own package,
+so the server's mux knows only the mount. The semconv rule is that `http.route` is a
+low-cardinality pattern or is absent. `net/http`'s `ServeMux` (Go 1.22 and later) sets
+`Request.Pattern` on the request it dispatches, and the middleware reads it after the handler
+returns, so a handler that routes with a `ServeMux` gets its pattern as `http.route` for free;
+otelhttp documents the same two-phase read. A handler that routes by hand gets the mount as its
+route, which is truthful but useless; AC5 therefore asserts that, for every registered handler,
+the routes observed during its conformance suite are never the bare mount, which makes routing
+through `ServeMux` patterns (or an explicit `telemetry.SetRoute(r, pattern)` for a hand-written
+router) a conformance-visible obligation rather than a style preference. Placeholders in a
+pattern are the pattern's own (`/npm/{repository}/{package}`), which is what the semconv asks.
+
+### The metric catalogue
+
+The catalogue is a Go table, `internal/telemetry/catalogue.go`, one entry per instrument
+(OTel name, Prometheus name, type, unit, labels with their class and cap, description, owning
+spec). Instruments are constructed from the table, so an instrument that is not in the table
+cannot exist, and AC4 asserts the reverse: the set of series names and label keys on `/metrics`
+after a fixture exercise equals the table. A user-facing reference,
+`docs/operations/observability.md`, is generated from the table by `make docs` and checked in,
+in the pattern `management-api.md` uses for its OpenAPI document: a test regenerates it and fails
+on any difference.
+
+The initial table, grouped by subsystem. Prometheus names are given; the OTel name is the
+Prometheus name with dots for underscores and without the unit and `_total` suffixes. Labels in
+italics are configuration-bounded (capped); all others are enumerated.
+
+**HTTP (semconv, unprefixed)**
+
+| Metric | Type | Labels | Notes |
+|---|---|---|---|
+| `http_server_request_duration_seconds` | histogram | `http_request_method`, `url_scheme`, `http_response_status_code`, `http_route`, `error_type`, `format`, `listener` | `format` is the handler that served it or `api`, `replication`, `telemetry`; `listener` is `main` or `telemetry`. Extended boundaries (below) |
+| `http_server_active_requests` | up-down counter | `http_request_method`, `url_scheme`, `format` | |
+| `http_server_request_body_size_bytes`, `http_server_response_body_size_bytes` | histogram | as duration | Byte boundaries (below) |
+| `http_client_request_duration_seconds` | histogram | `http_request_method`, `server_address`, `server_port`, `http_response_status_code`, `error_type`, *`upstream`* | Emitted by the upstream adapter's decorated transport; `server_address` is the upstream host or an allowlisted off-origin host, bounded by the allowlists |
+| `db_client_operation_duration_seconds` | histogram | `db_system_name`, `db_operation_name`, `db_collection_name`, `db_response_status_code`, `error_type` | From the pgx `QueryTracer`; `db_collection_name` is the table, bounded by the schema; query text is never an attribute |
+| `db_client_connection_count`, `db_client_connection_pending_requests`, `db_client_connection_timeouts_total`, `db_client_connection_wait_time_seconds`, `db_client_connection_use_time_seconds` | per semconv | `db_client_connection_pool_name`, `db_client_connection_state` | From the pgx pool statistics |
+
+**Registry-specific (`stackweaver_registry_` prefix)**
+
+| Metric | Type | Labels | Owning requirement |
+|---|---|---|---|
+| `build_info` | gauge (1) | `version`, `commit`, `go_version` | Prometheus `_info` convention |
+| `component_up` | gauge (0/1) | `component` (`db`, `blob_store`, `schema`, `async`, `signing_backend`) | Mirrors readiness (Harbor `harbor_up`) |
+| `alerts_total` | counter | `alert` | Design, "Alerts" |
+| `telemetry_label_overflow_total` | counter | `label` | Cardinality cap |
+| `telemetry_log_records_total` | counter | `stream` (`operational`, `request`, `audit`), `level` | Lets a silent audit sink be alerted on |
+| `telemetry_redactions_total` | counter | `mechanism` (`typed`, `key`, `scrub`, `url`) | A non-zero `scrub` count in production is a finding: something reached the log as a plain string |
+| `repositories` | gauge | `format`, `repository_kind` (`local`, `remote`, `virtual`), `state` (`active`, `read_only`, `deleted`) | `repository-lifecycle.md`; state-derived, leader-exported |
+| `requests_total` | counter | `format`, *`repository`*, `operation` (`pull`, `push`, `delete`, `list`, `other`), `outcome` (`ok`, `refused`, `denied`, `not_found`, `error`) | The per-repository request count (Harbor `harbor_artifact_pulled` in bounded form); `operation` is the `Scope(r)` action |
+| `content_delivery_duration_seconds` | histogram | `format`, `outcome` | Time to first byte to last byte for a blob or document served, separate from API latency (Pulp's split) |
+| `storage_blob_operation_duration_seconds` | histogram | `operation` (`get`, `put`, `head`, `delete`, `list`), `backend`, `outcome` | Blob store decorator |
+| `storage_blob_bytes_total` | counter | `direction` (`in`, `out`) | |
+| `storage_blob_digest_mismatches_total` | counter | `format` | Read-path verification (`storage-and-gc.md` consequence from `artifact-verification.md`); feeds `BlobDigestMismatch` |
+| `storage_upload_sessions_active` | gauge | `format` | |
+| `storage_upload_sessions_expired_total`, `storage_upload_orphans_removed_total` | counter | `format` | `storage-and-gc.md` orphan cleanup |
+| `gc_sweep_state` | gauge (one-hot) | `state` (`idle`, `mark`, `intent`, `delete`, `prune`, `orphan_scan`) | GC progress |
+| `gc_sweep_duration_seconds` | histogram | `state` | Per phase |
+| `gc_last_sweep_completed_timestamp_seconds` | gauge | | Feeds `GCSweepStale` |
+| `gc_blobs_deleted_total`, `gc_bytes_reclaimed_total`, `gc_snapshots_pruned_total`, `gc_deletion_intents_recorded_total`, `gc_intents_cancelled_by_reference_total` | counter | | The last one is `storage-and-gc.md` AC9's race observed in production |
+| `gc_deletion_intents_pending` | gauge | | |
+| `gc_pinned_out_of_window_snapshots` | gauge | *`repository`* | `storage-and-gc.md` AC19: pointers pinning aged-out snapshots, per repository; the API lists which |
+| `gc_pinned_out_of_window_bytes` | gauge | | Registry-wide retained bytes attributable to out-of-window pins; not per repository because attribution of shared blobs is not additive |
+| `cache_requests_total` | counter | `format`, `outcome` (`hit`, `miss`, `revalidated`, `stale_served`, `refused`, `upstream_error`) | Hit ratio |
+| `cache_referenced_bytes`, `cache_quota_bytes` | gauge | *`repository`* | `proxy-cache.md` AC14: quota utilisation is the ratio |
+| `cache_evictions_total` | counter | *`repository`* | |
+| `cache_refetch_after_eviction_total` | counter | *`repository`* | Thrash: a refetch of something evicted earlier; the ratio of this to evictions is the thrash signal `proxy-cache.md` asks for |
+| `cache_coalesced_requests_total` | counter | `format` | Requests joined to an in-flight fetch (`proxy-cache.md` AC11) |
+| `cache_fetch_failures_total` | counter | `format`, `condition` (`digest_mismatch`, `truncated`, `stalled`, `size_mismatch`) | `proxy-cache.md` AC10 "recorded observably" |
+| `cache_condemnations_total` | counter | `format`, `condition` (`security_signal`, `advisory`) | One per condemnation (`proxy-cache.md` AC13) |
+| `cache_divergences_total` | counter | `format` | Author unpublish or yank without a signal |
+| `upstream_requests_total` | counter | *`upstream`*, `outcome` (`ok`, `not_found`, `rate_limited`, `error`, `timeout`, `truncated`, `stalled`, `refused_redirect`) | `upstream-adapters.md` |
+| `upstream_inflight_requests` | gauge | *`upstream`* | Against the concurrency bound |
+| `upstream_rate_limit_remaining` | gauge | *`upstream`* | From the provider's rate-limit headers; absent when the provider sends none |
+| `upstream_cooldown` | gauge (0/1) | *`upstream`* | Cool-down state |
+| `upstream_cooldown_until_timestamp_seconds` | gauge | *`upstream`* | |
+| `upstream_token_exchange_failures_total` | counter | *`upstream`*, `form` (credential kind) | |
+| `auth_attempts_total` | counter | `form` (`bearer`, `basic`, `token_scheme`, `path`, `header`, `signed`, `anonymous`), `outcome` (`ok`, `invalid`, `expired`, `revoked`, `plaintext_refused`, `malformed`) | Never the principal |
+| `auth_decisions_total` | counter | `format`, `decision` (`allow`, `deny`) | |
+| `credentials` | gauge | `state` (`active`, `expiring`, `expired`, `revoked`), `owner_kind` (`user`, `robot`, `admin`) | `credential-management.md` consequence 14; state-derived, leader-exported |
+| `async_jobs` | gauge | `kind`, `state` (`pending`, `running`) | Queue depth |
+| `async_oldest_pending_age_seconds` | gauge | `kind` | |
+| `async_job_duration_seconds` | histogram | `kind`, `outcome` (`completed`, `failed`, `cancelled`) | |
+| `async_jobs_total` | counter | `kind`, `outcome` | Permanent failures are `outcome=failed` |
+| `async_retries_total`, `async_lease_expiries_total` | counter | `kind` | |
+| `async_scheduler_leader` | gauge (0/1) | | Exactly one process reports 1 |
+| `async_schedule_last_run_timestamp_seconds`, `async_schedule_period_seconds` | gauge | *`schedule`* | Overdue is `time() - last_run > 2 * period` in the rule |
+| `async_worker_slots` | gauge | `state` (`busy`, `idle`) | |
+| `signing_operations_total` | counter | `profile`, `backend`, `outcome` | |
+| `signing_duration_seconds` | histogram | `backend` | Signing latency |
+| `signing_earliest_document_expiry_timestamp_seconds` | gauge | *`repository`* | The earliest expiry among the repository's signed documents; the `external` alert is `< time() + lead` |
+| `signing_keys` | gauge | `state` (`announced`, `active`, `retired`), `backend` | |
+| `index_lock_wait_seconds` | histogram | | `signing-service.md` lock wait |
+| `index_lock_timeouts_total`, `index_write_retries_total` | counter | | |
+| `index_virtual_merge_staleness_seconds` | gauge | *`repository`* | Age of the oldest member write not yet visible |
+| `index_virtual_merge_staleness_breaches_total`, `index_virtual_merges_total` | counter | `outcome` on the second | |
+| `policy_refusals_total` | counter | `format`, `condition` (`advisory`, `licence`, `security_signal`, `stale_feed`, `unscanned`, `verdict`) | `supply-chain-policy.md` AC5's records are the queryable side; this is the rate |
+| `policy_scans_total` | counter | `outcome` (`clean`, `violation`, `failed`) | |
+| `policy_unscanned_past_bound` | gauge | | Artifacts unscanned past the window (`supply-chain-policy.md` AC6) |
+| `policy_advisory_feed_last_sync_timestamp_seconds` | gauge | | |
+| `policy_advisory_feed_degraded` | gauge (0/1) | | |
+| `verify_verdicts_total` | counter | `scheme`, `state` (`verified`, `failed`, `absent`) | `artifact-verification.md` |
+| `verify_duration_seconds` | histogram | `scheme` | |
+| `verify_reevaluation_pending` | gauge | | |
+| `replication_link_state` | gauge (one-hot) | *`link`*, `state` (`syncing`, `idle`, `failed`, `reseeding`, `diverged`, `ended`) | `replication.md` AC10 |
+| `replication_last_sync_timestamp_seconds` | gauge | *`link`* | Lag is `time() - this` |
+| `replication_snapshots_behind` | gauge | *`link`* | Position gap to the leader as of the last contact |
+| `replication_bytes_transferred_total` | counter | *`link`*, `direction` | |
+| `manage_operations_total` | counter | `kind`, `outcome` (`completed`, `failed`, `refused`) | |
+| `manage_operations_pending` | gauge | `kind` | |
+| `audit_events_total` | counter | `event`, `outcome` | Bounded by the event vocabulary |
+
+The catalogue grows by one rule: a sibling spec that needs a metric names it in its own Design
+in this spec's convention, and the fold adds the row here and the entry in the Go table in the
+same commit. A metric that appears in code without a row fails AC4.
+
+**Histogram boundaries.** Three boundary sets, declared as SDK views by instrument name:
+durations of API requests and database operations use the semconv defaults; durations that can
+include a body transfer (`http_server_request_duration_seconds`, `content_delivery_duration_seconds`,
+`storage_blob_operation_duration_seconds`, `http_client_request_duration_seconds`,
+`async_job_duration_seconds`) extend them with `30, 60, 120, 300, 600, 1800`; byte sizes use
+powers of four from 1 KiB to 16 GiB. The sets are in the table beside each instrument so the
+generated reference states them.
+
+### Structured logging
+
+Three `slog` streams, one `slog.Handler` chain each, all JSON by default
+(`telemetry.log.format` admits `text` for a terminal), all to standard output except where the
+audit sink is configured otherwise:
+
+- **The operational log** is `Telemetry.Logger()` and the `*slog.Logger` in `Deps`. Its handler
+  chain is: the **context handler** (adds `request_id`, `trace_id`, `span_id`, `principal`,
+  `repository`, `format` from the request context when present, so a handler logging with
+  `InfoContext(ctx, ...)` gets correlation for free and never passes them by hand); the
+  **redaction handler** (below); the sink (`JSONHandler` or `TextHandler` at
+  `telemetry.log.level`, default `info`). Level guidance is the `go` skill's: `Debug` for
+  internal state, `Info` for lifecycle, `Warn` for recoverable problems, `Error` for what needs
+  attention; the alert mechanism reserves `Error` records with an `alert` attribute.
+- **The request log** is one `Info` record per request, emitted by the middleware when the
+  response completes, on its own logger so an operator can silence it (`telemetry.log.request`,
+  default `true`) without silencing lifecycle records. Its fixed schema, semconv keys as groups:
+  `http.request.method`, `http.route`, `url.path` **after redaction** (below), `url.scheme`,
+  `http.response.status_code`, `http.request.body.size`, `http.response.body.size`,
+  `duration_ms`, `client.address` (the connecting peer, or the last trusted proxy's
+  `X-Forwarded-For` hop when `telemetry.log.trusted_proxies` names it), `user_agent.original`
+  truncated to 256 bytes, `request_id`, `trace_id`, `principal` (the principal's id or name and
+  `anonymous`, never a credential), `format`, `repository`, `operation`, `outcome`. The query
+  string is never logged: too many ecosystems carry credentials in it (`vagrant.md`'s access
+  token parameter, presigned `X-Amz-*`), and no case in any format spec needs it.
+- **The audit log** (next section).
+
+**Redaction** is layered, because each layer catches what the others cannot, and `auth.md` AC7
+is the end-to-end proof for all of them:
+
+1. **Typed secrets.** `telemetry.Secret` is a string type implementing `slog.LogValuer` whose
+   `LogValue` returns `[redacted]` and whose `String` and `%v` renderings do the same, so a
+   secret that reaches a log, an error message or a problem body through the type is redacted
+   without anyone remembering to. The auth verifier, the credential store, the upstream
+   credential kinds and the signing backends hold material in this type or in their own
+   `LogValuer` types (the `go` skill's password example).
+2. **Key denylist.** The redaction handler's `ReplaceAttr` replaces the value of any attribute
+   whose key, at any group depth, matches the denylist (`authorization`, `proxy_authorization`,
+   `password`, `passwd`, `secret`, `token`, `access_token`, `id_token`, `refresh_token`,
+   `api_key`, `apikey`, `private_key`, `pin`, `cookie`, `set_cookie`, and every vendor header
+   name `auth.md` AC31 lists, lower-cased and snake-cased), whatever its type.
+3. **Per-request scrubbing.** `telemetry.MarkSecret(ctx, value)` registers a value on the
+   request context; the redaction handler replaces every occurrence of every marked value in
+   every string attribute and in the message of every record emitted under that context,
+   including the request log line and the audit line. The auth verifier marks every credential
+   it extracts (Bearer and Basic values, path-segment tokens, vendor header values, capability
+   tokens, Chef's signature headers) before it does anything else with it, and the upstream
+   adapter marks the credential it attaches to an outbound request. This is the backstop for the
+   path-token forms (`conda`, `luarocks`, Terraform's capability), where the secret is inside
+   `url.path` and no key or type can see it, and it is why `url.path` in the request log is
+   safe: the marked segment is scrubbed before the line is rendered. It costs a scan of each
+   record's strings against a per-request list that is almost always one entry long; AC26 holds
+   the budget.
+4. **URL redaction.** `telemetry.RedactURL` strips userinfo and replaces the values of the
+   query parameters `upstream-adapters.md`'s redactor names (`access_token`, `token`,
+   `X-Amz-Signature`, `X-Amz-Credential`, `X-Goog-Signature`) and any `*url.URL` or `url.URL`
+   attribute passes through it in the handler. `internal/upstream`'s own redactor, which knows
+   path-token templates, runs first inside that package (its AC20) and this handler is the
+   second pass, so the two lists are kept equal by a test that imports both.
+
+`telemetry_redactions_total{mechanism}` counts each layer's interventions. A rising `scrub`
+count in production means a plain string carried a secret to the log, which the typed and key
+layers should have prevented, and is a defect to chase rather than a success.
+
+**The one sanctioned disclosure.** `auth.md` AC15 has the first-start local admin credential
+appear in the log exactly once. `telemetry.Disclose(value)` wraps a value so that the redaction
+handler passes it through, records `telemetry_disclosures_total` and emits it only when the
+handler's `allow_disclosure` flag, set by the first-start path alone, is on for that one record.
+AC10 asserts exactly one call site exists (a test walks the module's AST for `telemetry.Disclose`
+and finds it only in the first-start path) and that the emitted record count is one across a
+first and a second start.
+
+### The audit log
+
+Security-relevant events go to a channel that is not the operational log, because the two have
+different readers, retention and failure modes: an operator tunes the operational log's level
+and volume, and a SIEM needs the audit stream complete, unfilterable and schema-stable
+(`management-api.md`'s "what ships to a SIEM"; Artifactory keeps a separate access log for the
+same reason). The resolved audit-channel question records the choice.
+
+- **Sink.** `telemetry.audit.sink` is `stdout` (default), `stderr` or `file` with
+  `telemetry.audit.file`; a file sink is opened append-only and reopened on `SIGHUP` so an
+  external rotator can work. Level is not configurable: every audit record is emitted. A write
+  failure on the audit sink is an `Error` on the operational log and an `AuditSinkFailing`
+  alert, and the request that produced the event still completes, because a registry that
+  refuses service when its audit file is full trades one incident for two; the choice is
+  recorded in the resolved audit-channel question with the alternative.
+- **Schema.** Every record has `time`, `msg` equal to the event name, and the fixed attribute
+  set `management-api.md` names: `event`, `request_id`, `trace_id`, `operation_id` (when an
+  `Operation` exists), `principal` and `principal_kind` (`user`, `robot`, `admin`, `anonymous`),
+  `client_address`, `repository` (name) and `repository_id` (the `rep_` identity, so a rename
+  or deletion leaves lines resolvable; `repository-lifecycle.md` AC27), `format`, `kind`,
+  `objects` (an array of coordinates or digests, bounded to 100 entries with a `truncated`
+  flag), `outcome` (`completed`, `failed`, `refused`), `problem_type` on a refusal, `snapshot`
+  on a completion. Event-specific attributes are admitted only from the event's registered
+  extension set, at top level, which is how `credential-management.md` AC18's `credential` (the
+  lookup prefix) and `owner` fit without a free-form bag.
+- **Emission.** `Auditor.Emit(ctx, event, attrs...)` is the only way to write to the channel.
+  It reads the correlation fields from the context (the same context handler as the
+  operational log), runs the redaction chain, checks the event against the vocabulary and the
+  attributes against the event's extension set, and rejects at test time (panics under the
+  race-enabled test build, drops with an operational `Error` in production) an unregistered
+  event or attribute. `management-api.md`'s "exactly one audit line per request" is enforced
+  where that spec puts it (its AC23 in `internal/manage/audit_test.go`) using the
+  `Auditor`'s test recorder; this spec provides the recorder.
+- **Vocabulary.** Event names are `<subsystem>.<object>.<action>`, a closed Go table
+  (`internal/telemetry/audit_events.go`) with each event's extension attributes. The initial
+  set, gathered from the siblings:
+
+| Event | Extension attributes | Source |
+|---|---|---|
+| `auth.credential.refused` (plaintext or malformed presentation), `auth.credential.invalid` (unknown, expired or revoked), `auth.access.denied` | `form`, `reason` | `auth.md` AC27, the existence oracle; rate-limited to one record per (`client_address`, minute) with a `suppressed` count so a brute-force attempt is visible but cannot flood the sink |
+| `admin.first_start.credential_issued` | none (the value itself is on the operational log, once) | `auth.md` AC15 |
+| `credential.token.create`, `.rotate`, `.revoke`, `.read`, `.list`; `credential.robot.create`, `.delete`; `credential.key.register`, `.delete`; `credential.exchange` | `credential`, `owner`, `owner_kind`, `multi_repository`, `issuer` (exchange) | `credential-management.md` AC18 |
+| `manage.operation` | `kind`, `idempotency_replay` | `management-api.md` AC23, every binding included |
+| `manage.grant.create`, `.delete`; `manage.upstream_credential.create`, `.update`, `.delete`; `manage.upstream.create`, `.update`, `.delete`; `manage.trust.update`, `.import` | `grant`, `credential`, `upstream`, `trust_revision` | `management-api.md`, `artifact-verification.md` |
+| `repository.create`, `.delete`, `.freeze`, `.thaw`, `.rename`, `.detach`, `.reclaim` | `previous_name`, `reclaim`, `detach` | `repository-lifecycle.md` AC27 |
+| `signing.key.create`, `.activate`, `.retire`, `.import`, `.submit_external` | `key_id`, `backend`, `profile` | `signing-service.md` AC15 |
+| `async.job.cancel`, `async.kind.pause`, `async.kind.resume`, `manage.operation.cancel` | `job_id`, `kind` | `async-operations.md` AC21 |
+| `policy.refusal`, `policy.condemnation`, `policy.rule.update` | `condition`, `rule`, `advisory`, `coordinate`, `digests` | `supply-chain-policy.md` AC5 |
+| `verify.verdict.failed`, `verify.trust.update` | `scheme`, `identity`, `reason` | `artifact-verification.md` AC27 |
+| `replication.link.create`, `.update`, `.delete`, `.takeover`, `replication.export`, `replication.import` | `link`, `leader` | `replication.md` |
+| `cache.purge` | `condition`, `coordinate`, `digests` | `proxy-cache.md` AC13 (one per condemnation) |
+
+Adding an event is a row here and a table entry in the same commit, with the sibling's Design
+naming it first. Ordinary reads and pulls are not audit events: they are the request log's, and
+the audit channel is for what changes state or is refused for a security reason.
+
+### Alerts
+
+Every sibling says "raises an operator alert" and none says what that is. Here it is one thing:
+**an alert is a named condition in the alert catalogue, and raising it does three things at
+once**: increments `stackweaver_registry_alerts_total{alert}`, emits an `Error` record on the
+operational log with `alert=<Name>` and the condition's attributes (redacted like any record),
+and, for state conditions, the underlying gauge already reflects it. The registry never sends
+notifications; the shipped rules file `deploy/observability/alerts.yaml` turns the catalogue
+into Prometheus alerting rules that Alertmanager or any compatible engine routes. The resolved
+alert-mechanism question records why no notifier is built in.
+
+`telemetry.Alert(ctx, name, attrs...)` is the only emission path, `name` is a value of a closed
+Go type, and the "exactly one alert per condemnation" shape `proxy-cache.md` AC13 requires is the
+caller's to honour and the caller's test to count; this spec provides the recorder that makes
+the count assertable.
+
+The catalogue, gathered from the siblings; each row is a rule in the shipped file and AC17
+asserts the file and the table agree in both directions:
+
+| Alert | Condition | Source |
+|---|---|---|
+| `JobFailed` | `increase(async_jobs_total{outcome="failed"}[5m]) > 0` | `async-operations.md` AC20 |
+| `ScheduleOverdue` | `time() - async_schedule_last_run_timestamp_seconds > 2 * async_schedule_period_seconds` | `async-operations.md` AC20 |
+| `SchedulerLeaderless` | `sum(async_scheduler_leader) != 1` for 5m | `async-operations.md` (leadership) |
+| `VirtualMergeStalenessBreach` | `increase(index_virtual_merge_staleness_breaches_total[5m]) > 0` | `async-operations.md` AC20, `signing-service.md` AC19 |
+| `VirtualMergeFailed` | `increase(index_virtual_merges_total{outcome="failed"}[5m]) > 0` | `signing-service.md` AC19 |
+| `SigningFailed` | `increase(signing_operations_total{outcome="failed"}[5m]) > 0` | `signing-service.md` AC17 |
+| `SigningDocumentExpiring` | `signing_earliest_document_expiry_timestamp_seconds - time() < <lead>` | `signing-service.md` AC22 (`signing.external_expiry_lead`); the rule's lead is templated from configuration at packaging |
+| `CachePurgedOnSignal` | `increase(cache_condemnations_total[5m]) > 0` | `proxy-cache.md` AC13, `supply-chain-policy.md` |
+| `UpstreamDivergence` | `increase(cache_divergences_total[1h]) > 0` | `proxy-cache.md` |
+| `FetchIntegrityFailure` | `increase(cache_fetch_failures_total{condition="digest_mismatch"}[5m]) > 0` | `proxy-cache.md` AC10 |
+| `BlobDigestMismatch` | `increase(storage_blob_digest_mismatches_total[5m]) > 0` | `storage-and-gc.md` read-path consequence |
+| `VerificationFailed` | `increase(verify_verdicts_total{state="failed"}[5m]) > 0` | `artifact-verification.md` AC27 |
+| `ArtifactUnscannedPastBound` | `policy_unscanned_past_bound > 0` | `supply-chain-policy.md` AC6 |
+| `AdvisoryFeedDegraded` | `policy_advisory_feed_degraded == 1` for 30m | `supply-chain-policy.md` |
+| `ReplicationLinkFailed`, `ReplicationReseeding`, `ReplicationDiverged` | `replication_link_state{state="failed"} == 1` (and the other two states) | `replication.md` AC10 |
+| `ReplicationLagHigh` | `time() - replication_last_sync_timestamp_seconds > 15m` | `replication.md` (foundation.tsv hint) |
+| `CacheQuotaNearFull` | `cache_referenced_bytes / cache_quota_bytes > 0.9` for 15m | `proxy-cache.md` AC14 |
+| `CacheThrash` | `increase(cache_refetch_after_eviction_total[1h]) / increase(cache_evictions_total[1h]) > 0.5` | `proxy-cache.md` (thrash detectable from metrics) |
+| `UpstreamRateLimitLow` | `upstream_rate_limit_remaining < 10% of its observed 24h maximum` | `upstream-adapters.md` |
+| `UpstreamCooldown` | `upstream_cooldown == 1` | `upstream-adapters.md` AC10 |
+| `GCSweepStale` | `time() - gc_last_sweep_completed_timestamp_seconds > 2 * <sweep interval>` | `storage-and-gc.md` |
+| `PinnedStorageOutOfWindow` | `gc_pinned_out_of_window_snapshots > 0` for 24h | `storage-and-gc.md` AC19 |
+| `CredentialsExpiring` | `credentials{state="expiring"} > 0` | `credential-management.md` AC5 (informational) |
+| `ComponentDown` | `component_up == 0` for 2m | Readiness |
+| `HighErrorRate` | 5xx share of `http_server_request_duration_seconds_count` over 5m above 5% | Baseline |
+| `AuditSinkFailing` | `increase(telemetry_audit_sink_failures_total[5m]) > 0` | This spec |
+| `LabelOverflow` | `increase(telemetry_label_overflow_total[1h]) > 0` | This spec |
+
+### Tracing, request id and propagation
+
+- **Request id.** The middleware reads `X-Request-Id`; a value of 1 to 128 bytes from
+  `[A-Za-z0-9._-]` is accepted and echoed, anything else is replaced by a generated id (128
+  random bits, base32 lower-case, no padding). Every response on every listener carries
+  `X-Request-Id`, which extends `management-api.md`'s rule from the API to format routes,
+  replication routes and the telemetry listener, so a client-reported failure on any route can be
+  found in the request log. The id is the `request_id` of the request log, the audit line and
+  the `Operation` record, so any one leads to the others. Validation exists because the value is
+  client-chosen and lands in a log: a newline or a control character in it is log injection.
+- **Trace context.** Inbound `traceparent` and `tracestate` are honoured per W3C: a valid header
+  makes the request span a child of the caller's, an invalid or missing one starts a new trace
+  and drops `tracestate`. The request span is named `{METHOD} {http.route}` per the semconv (the
+  route read after the handler returns, as otelhttp does), and carries the semconv HTTP
+  attributes, `format`, `repository`, `principal` (id or name, never a credential) and
+  `request_id`. `trace_id` and `span_id` go on every log record under the request so logs and
+  traces meet in either direction.
+- **Child spans** exist at every boundary the constitution names as a shared concern: the
+  authorizer (`auth.authorize`), the metadata store (`metadata.<method>`, with `db.*` spans
+  beneath it from the pgx tracer, `db.operation.name` and `db.collection.name` set and query text
+  never recorded), the blob store (`blob.<operation>` with `backend`), fetch-and-cache
+  (`proxy.fetch` with `outcome`), the upstream adapter's exchange (`upstream.request` as a client
+  span with `server.address`, `http.request.method`, `http.response.status_code` and `url.full`
+  after `RedactURL`), signing (`signing.sign` with `backend`, `profile`), verification
+  (`verify.<scheme>`), policy evaluation (`policy.evaluate`). The decorators in `Instrument`
+  produce them for everything `Deps` carries, which is the decorator-completeness enforcer's
+  scope; the others are produced inside their packages through the tracer handle
+  `Telemetry` gives them (the OTel trace API is not SDK and stays importable; the SDK is not).
+- **Across the queue.** Enqueueing a job records the current span context in the `Job` row
+  (a `trace_context` column holding the W3C `traceparent` string; a `data-model.md` consequence,
+  not an entity and not a mark root), and the runner starts the job's span with a **link** to
+  it, not as a child, since a job may run hours later and a parent span cannot stay open. A job
+  that emits an audit line carries the originating `request_id` from the same row, so the audit
+  trail of a deferred `manage.apply` still names the request that asked for it.
+- **Propagation policy** (the resolved propagation question): outbound requests to **upstreams
+  carry no `traceparent` or `tracestate`**, and outbound requests to **replication peers carry
+  both**. An upstream is a third party: propagating to it changes the captured traffic the
+  conformance corpus replays against, leaks that the fetch was part of a trace, and can carry
+  `tracestate` vendor entries the operator never meant to send outside. A replication peer is
+  the same operator's registry, where a cross-instance trace is exactly what a failed sync needs.
+  The `upstream` adapter's transport is constructed without the propagating round-tripper and a
+  test asserts the header set of an outbound upstream request against the adapter's declared set
+  (`upstream-adapters.md`'s request-hygiene section owns that set; this spec adds the two names
+  to its forbidden list as a consequence).
+- **Sampling and export.** Head sampling with a parent-based ratio sampler
+  (`telemetry.trace.sample_ratio`, default `0.05`); the request-id and log correlation exist
+  precisely so an unsampled request is still diagnosable. Export is `none` by default (Pulp's
+  choice, for the same reason: a registry with no collector should not buffer spans) or `otlp`
+  over gRPC or HTTP to `telemetry.trace.endpoint`, with the standard `OTEL_EXPORTER_OTLP_*`
+  environment variables honoured by the SDK for the exporter's own settings (TLS, headers,
+  timeouts), because collectors document those and re-spelling them helps nobody.
+
+### Health and readiness
+
+Two probes with Kubernetes semantics and Nexus's separation of health from metrics:
+
+- **`/healthz` (liveness)** answers `200` while the process can serve a request at all; it
+  touches no dependency, so a database outage never gets the process killed and restarted into
+  the same outage.
+- **`/readyz` (readiness)** runs the registered checks with a shared deadline
+  (`telemetry.health.timeout`, default `2s`) and answers `200` when all pass, `503` otherwise.
+  The checks, each a `component` value of `component_up`: `db` (a pool ping), `schema` (the
+  migration version equals the binary's expectation), `blob_store` (a cheap bucket-level
+  operation, not a listing), `async` (when `async.workers > 0`, the runner's last heartbeat is
+  within two poll intervals), `signing_backend` (when a `kms` or `pkcs11` backend is configured,
+  its last health probe succeeded). Results are cached for one second so a probe storm cannot
+  become a dependency storm.
+- **Two renderings.** On the **main listener** both probes are reserved root-anchored routes
+  answering status code only, with an empty body, unauthenticated: a load balancer needs the
+  code and nothing more, and a body listing components would make the main listener reveal
+  deployment details to anyone. On the **telemetry listener** `/readyz` returns a JSON body
+  `{status, checks: [{component, status, duration_ms, error}]}` with `error` passed through the
+  redaction chain, for the operator who is already inside the network. Neither rendering ever
+  names a repository, a principal or a client, which keeps `auth.md`'s existence oracle intact.
+- `healthz` and `readyz` are reserved first path segments on the main listener, added to the
+  registration layer's reserved list `format-handler-interface.md` AC11 holds; a handler named
+  `healthz` fails registration.
+
+### The telemetry listener
+
+`/metrics`, `/healthz`, `/readyz` (detailed) and `/debug/pprof/*` are served on a second
+listener, `telemetry.listen` (default `:9464`, the OTel Prometheus exporter's conventional
+port), unauthenticated, that the deployment does not expose publicly; this is Harbor's shape and
+the resolved listener question records why it beat Nexus's privilege-gated route on the main
+listener. `telemetry.metrics.on_main_listener` (default `false`) additionally mounts `/metrics`
+on the main listener under the reserved segment `metrics`, for the single-binary-behind-a-proxy
+deployment that cannot open a second port, and when it is on the route requires an admin registry
+token, because a client-facing `/metrics` reveals repository names through the `repository`
+label. The pprof routes exist because a registry that streams gigabytes needs its allocation and
+goroutine profiles reachable without a rebuild, and they are only ever on the telemetry
+listener.
+
+### Multi-replica semantics
+
+Counters and histograms are per process and Prometheus sums them; `build_info` and
+`component_up` are per process on purpose. **State-derived gauges** (`repositories`,
+`credentials`, `async_jobs`, `async_oldest_pending_age_seconds`, `gc_pinned_out_of_window_*`,
+`cache_referenced_bytes`, `cache_quota_bytes`, `signing_keys`,
+`signing_earliest_document_expiry_timestamp_seconds`, `index_virtual_merge_staleness_seconds`,
+`policy_unscanned_past_bound`, `verify_reevaluation_pending`, `replication_*`) describe shared
+state in PostgreSQL, and if every replica exported them a `sum()` would multiply them by the
+replica count. They are therefore computed on an interval (`telemetry.metrics.state_interval`,
+default `30s`) by **the process holding the async scheduler leadership** (`async-operations.md`'s
+leader) and by no other; a replica that loses leadership stops exporting them within one
+interval. A `workers: 0` web replica never leads and never exports them, which is the right
+answer since it has no worker to run the collector. The rules file's `sum()` expressions are
+therefore correct on any replica count, and AC7 asserts the property with two processes against
+one database.
+
+### Configuration
+
+Keys follow the cobra-viper skill as `management-api.md` and `async-operations.md` apply it: a
+typed `telemetry.Config` unmarshalled from Viper in the root command factory, every key with a
+default, bound to `STACKWEAVER_REGISTRY_TELEMETRY_*`, the package never importing Viper.
+`deployment.md` (owed) documents them; they are named here because they are this subsystem's
+policy.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `telemetry.listen` | `:9464` | The telemetry listener; empty disables it (then `/metrics` is reachable only through `on_main_listener`) |
+| `telemetry.metrics.enabled` | `true` | Serve `/metrics` |
+| `telemetry.metrics.on_main_listener` | `false` | Also mount `/metrics` on the main listener, admin token required |
+| `telemetry.metrics.repository_label_limit` | `1000` | Cap on distinct `repository` label values per process |
+| `telemetry.metrics.name_label_limit` | `200` | Cap on distinct `upstream`, `link` and `schedule` values |
+| `telemetry.metrics.state_interval` | `30s` | State-derived gauge collection interval on the leader |
+| `telemetry.log.level` | `info` | Operational log level |
+| `telemetry.log.format` | `json` | `json` or `text` |
+| `telemetry.log.request` | `true` | Emit the request log |
+| `telemetry.log.trusted_proxies` | none | CIDRs whose `X-Forwarded-For` is believed for `client.address` |
+| `telemetry.audit.sink` | `stdout` | `stdout`, `stderr` or `file` |
+| `telemetry.audit.file` | none | Path for the `file` sink; append-only, reopened on `SIGHUP` |
+| `telemetry.trace.exporter` | `none` | `none` or `otlp` |
+| `telemetry.trace.endpoint` | none | OTLP endpoint; `OTEL_EXPORTER_OTLP_*` variables refine the exporter |
+| `telemetry.trace.sample_ratio` | `0.05` | Parent-based head sampling ratio |
+| `telemetry.health.timeout` | `2s` | Shared deadline for readiness checks |
+| `telemetry.pprof` | `true` | Serve `/debug/pprof/*` on the telemetry listener |
+
+### Benchmark gates: what this spec owns and what it does not
+
+The constitution makes benchmarks CI gates and the charter's AC6 asserts one for blob throughput,
+but no spec owns the mechanism that compares a run against a baseline and fails. This spec does,
+because performance visibility is observability and because a gate every sibling reinvents is a
+gate that drifts:
+
+- **The mechanism.** `make bench` runs every `Benchmark*` in the module with `-count=6
+  -benchmem` and writes the result; `scripts/bench-gate.sh` compares it against the checked-in
+  baseline `benchmarks/baseline.txt` with `benchstat`, and fails when any benchmark's mean
+  regresses beyond the threshold its owning spec stated in a `// gate: <metric> <threshold>`
+  comment beside the benchmark (`benchstat`'s significance test guards against noise; a result
+  the test does not find significant is not a regression). Baselines are refreshed by a
+  deliberate commit that says so, never by the gate itself. The CI job runs on pushes to `main`
+  beside the conformance job (`.github/workflows/ci.yml`), not on pull requests, per the
+  CI-economy rule, on a runner class recorded in the baseline's header so a runner change is
+  visible as such.
+- **Owned here:** the mechanism, its CI job, and this package's own budgets: the middleware's
+  overhead per request (request id, span creation unsampled, metrics, request log with
+  redaction) and the redaction handler's cost with one, three and ten marked secrets, both as
+  p99 per-call latency and allocations per call (AC26).
+- **Owned elsewhere, run here:** `storage-and-gc.md` AC7 (blob throughput), `async-operations.md`
+  AC25 (claim latency and throughput), `artifact-verification.md` AC26 (ingest overhead),
+  `signing-service.md` AC28 (concurrent publishes under lock wait), the read-path digest
+  verification budget the `storage-and-gc.md` consequence adds, and `project-charter.md` AC6,
+  which is the storage gate seen from the charter. Each names its budget in its own benchmark
+  file; this spec supplies the job that makes the budget binding.
+
+### What the conformance harness can and cannot see
+
+`conformance-harness.md`'s observation rule (its AC10 discussion in
+`format-handler-interface.md`) is that a server-log assertion is not protocol-observable and
+cannot live in a conformance case. Everything in this spec is therefore verified by integration
+and unit tests in `internal/telemetry` and by the siblings' integration tests using the
+recorders this package exports (`telemetry.NewTestRecorder` captures metrics, log records, audit
+records and alerts in memory for assertion), with two exceptions that are protocol-visible and
+get conformance cases in `conformance/core/`: `X-Request-Id` on every response (AC14) and the
+absence of a credential in any response body (the format specs' criteria, through `auth.md`
+AC7's scan, which runs against a real client's traffic).
+
+## Acceptance Criteria
+
+Each criterion is independently testable, states an observable outcome, and is checked off
+during implementation with evidence.
+
+- [ ] AC1: Only `internal/telemetry` imports the OpenTelemetry SDK, the OpenTelemetry metric API,
+      the OpenTelemetry exporters and `client_golang`, asserted by an import walk over every
+      package under `internal/**` and `cmd/**` and by a `depguard` rule that fails `make verify`
+      on a violation.
+- [ ] AC2: No package under `internal/format/**` imports `internal/telemetry`, the OpenTelemetry
+      API or `client_golang`, and a fixture handler that does fails the same import walk.
+- [ ] AC3: Every consumer interface `format.Deps` carries has a decorator in `internal/telemetry`
+      that implements it, and every method of every decorator starts a span whose name is
+      `<layer>.<method>` and records the outcome, asserted by reflection over `Deps` and a fake
+      inner implementation; adding a method to a `Deps` interface without a decorator method
+      fails the test, not compilation alone.
+- [ ] AC4: The set of metric names and label keys rendered on `/metrics` after a fixture exercise
+      of every subsystem equals the catalogue table in `internal/telemetry/catalogue.go`, in both
+      directions (no unlisted series, no unexercised entry), and every label key is in the closed
+      attribute vocabulary; the semconv family renders unprefixed (`http_request_method`,
+      `url_scheme`, `http_response_status_code`, `error_type`, `server_address`,
+      `db_collection_name` as label keys; `http_client_request_duration_seconds` among the
+      names) and the registry family under `stackweaver_registry_` (`build_info` as an `_info`
+      gauge with `version`, `commit`, `go_version`; `content_delivery_duration_seconds`,
+      `storage_blob_operation_duration_seconds`, `async_job_duration_seconds`,
+      `verify_reevaluation_pending`, `component_up{component}` over `db`, `schema`, `blob_store`,
+      `async`, `signing_backend`, and `repositories{format,repository_kind,state}`);
+      `docs/operations/observability.md` regenerated from the table equals the checked-in copy.
+- [ ] AC5: For every enumerated label the instrument methods accept only the label's Go type, so
+      a string cannot reach the label; for every configuration-bounded label, the
+      (`repository_label_limit` + 1)th distinct value renders as `_other` and
+      `telemetry_label_overflow_total{label}` increments, with `telemetry.metrics.repository_label_limit`
+      and `telemetry.metrics.name_label_limit` as the caps; `http.route` is the `Request.Pattern`
+      a handler's `ServeMux` set, or the value an explicit `SetRoute` set, and after a format's
+      conformance suite runs no `http_route` value observed for that format equals its bare mount.
+- [ ] AC6: Each of the following is present on `/metrics` with the catalogue's labels and moves
+      under a driven scenario in the owning package's integration test using this package's
+      recorder: `credentials{state,owner_kind}`; `signing_earliest_document_expiry_timestamp_seconds`,
+      `signing_duration_seconds`, `index_lock_wait_seconds`, `index_virtual_merge_staleness_seconds`;
+      `upstream_requests_total{upstream,outcome}`, `upstream_rate_limit_remaining`,
+      `upstream_cooldown`, `upstream_token_exchange_failures_total`; `async_jobs{kind,state}`,
+      `async_oldest_pending_age_seconds`, `async_lease_expiries_total`, `async_retries_total`,
+      `async_jobs_total{outcome="failed"}`, `async_scheduler_leader`,
+      `index_virtual_merge_staleness_breaches_total`; `cache_referenced_bytes`, `cache_quota_bytes`,
+      `cache_evictions_total`, `cache_refetch_after_eviction_total`; `gc_sweep_state`,
+      `gc_last_sweep_completed_timestamp_seconds`, `gc_bytes_reclaimed_total`,
+      `gc_pinned_out_of_window_snapshots`; `policy_refusals_total{condition}`,
+      `policy_unscanned_past_bound`; `replication_link_state{link,state}`,
+      `replication_last_sync_timestamp_seconds`, `replication_snapshots_behind`;
+      `requests_total{format,repository,operation,outcome}` with `outcome` over `ok`, `refused`,
+      `denied`, `not_found`, `error`; `auth_attempts_total{form,outcome}` with `outcome` over
+      `ok`, `invalid`, `expired`, `revoked`, `plaintext_refused`, `malformed` and `form` including
+      `anonymous`; `signing_operations_total{profile,backend,outcome}` and `signing_keys{state,backend}`;
+      `cache_fetch_failures_total{condition}` over `digest_mismatch`, `truncated`, `stalled`,
+      `size_mismatch`; `cache_condemnations_total{condition}` over `security_signal`, `advisory`;
+      `credentials{state,owner_kind}` with `owner_kind` over `user`, `robot`, `admin`.
+- [ ] AC7: With two processes against one database, every state-derived gauge is exported by the
+      process holding scheduler leadership and by no other, and within one `state_interval` of a
+      leadership change the exporting process changes; `sum()` over both processes equals the
+      database's truth for `repositories`, `credentials` and `async_jobs`.
+- [ ] AC8: Every `slog` call outside `main` and tests passes a context, uses no global logger and
+      uses a snake_case key from the attribute vocabulary, and no `fmt.Print*`, `log.Print*` or
+      `println` call exists outside `main` and tests, enforced by `sloglint` and `forbidigo` in
+      `make verify`.
+- [ ] AC9: A credential presented in every form `auth.md` AC31 names (Bearer, Basic, `Token`
+      scheme, path segment, vendor header, URL capability, signed headers) on a real successful
+      and a real failed request, and an upstream credential of every `upstream-adapters.md` kind
+      on a real failed fetch, appears in no operational log record, no request log line, no audit
+      line, no span attribute, no metric label and no response body, asserted by capturing all
+      five outputs and scanning for the value and its hash preimage; a `telemetry.Secret`,
+      a denylisted key and a `MarkSecret` value each cause exactly one redaction counted under its
+      mechanism.
+- [ ] AC10: `telemetry.Disclose` has exactly one call site in the module, in the first-start
+      admin-credential path, asserted by an AST walk; across a first start and a second start the
+      credential appears in the log exactly once and `telemetry_disclosures_total` reads 1.
+- [ ] AC11: The request log emits exactly one record per request on every listener with the
+      fixed schema (method, route, redacted path, scheme, status, body sizes, duration,
+      client address, truncated user agent, request id, trace id, principal, format, repository,
+      operation, outcome) with `http.request.method`, `http.route`, `http.response.status_code`
+      rendered as nested groups by `JSONHandler` and as dotted keys by `TextHandler` according to
+      `telemetry.log.format`, and never a query string; a path-segment token in the path is
+      scrubbed in the recorded `url.path`; `client.address` is the peer unless the peer is in
+      `telemetry.log.trusted_proxies`, in which case it is the last `X-Forwarded-For` hop; and
+      `telemetry.log.request: false` silences the request log without silencing lifecycle records.
+- [ ] AC12: `Auditor.Emit` writes a record with the fixed attribute set (`event`, `request_id`,
+      `trace_id`, `operation_id`, `principal`, `principal_kind`, `client_address`, `repository`,
+      `repository_id`, `format`, `kind`, `objects`, `outcome`, `problem_type`, `snapshot`) plus only
+      the event's registered extension attributes; the vocabulary table holds every event the
+      audit-event table in Design lists, `.create`, `.update`, `.delete`, `.import` and the other
+      actions included, with the extension sets stated there (`credential`, `owner`, `reason`,
+      `coordinate`, `digests` among them); an unregistered event or attribute is rejected (panic
+      under test, dropped with an operational `Error` in production); `objects` truncates at 100
+      with a `truncated` flag; `auth.credential.*` events are rate-limited per client address per
+      minute with a `suppressed` count.
+- [ ] AC13: The audit sink is separate from the operational log: with `telemetry.log.level` at
+      `error` every audit record is still written; `telemetry.audit.sink` selects `stdout`
+      (default), `stderr` or `file`, and with `file` the path in `telemetry.audit.file` is opened
+      append-only and a `SIGHUP` reopens it; a write failure on the sink raises `AuditSinkFailing`,
+      increments `telemetry_audit_sink_failures_total` and does not fail the request.
+- [ ] AC14: Every response on the main, replication and telemetry listeners carries
+      `X-Request-Id`; a client value of 1 to 128 bytes from `[A-Za-z0-9._-]` is echoed and any
+      other value (including one with a control character) is replaced by a generated id; the
+      echoed id equals the `request_id` of the request log line, the audit line and the
+      `Operation` record for that request.
+- [ ] AC15: A handler compiled against `Deps` and logging with `InfoContext` on the `*slog.Logger`
+      `Deps` carries produces records carrying `request_id`, `trace_id`, `principal`,
+      `repository` and `format` it never set by hand, with `trace_id` and `span_id` present only
+      when the request is sampled; a request with a valid inbound `traceparent` produces a
+      request span named `{METHOD} {http.route}` that is its child, an invalid one starts a new
+      trace and drops `tracestate`, and each `Deps` call produces a child span named per AC3.
+- [ ] AC16: Enqueueing a job records the current `traceparent` and `request_id` on the `Job`; the
+      job's span carries a link to the enqueuing span (not a parent), and an audit line emitted by
+      the job carries the originating `request_id`.
+- [ ] AC17: `deploy/observability/alerts.yaml` parses as Prometheus rules, contains exactly one
+      rule per alert in the catalogue and no rule for an alert outside it, and every metric name
+      in every rule expression is in the metric catalogue; `telemetry.Alert` accepts only
+      catalogue names and each call increments `alerts_total{alert}` and emits one `Error` record
+      with `alert=<Name>`.
+- [ ] AC18: Each of the following alert conditions fires exactly once in its driving scenario,
+      asserted through the recorder in the owning package's test: `JobFailed`, `ScheduleOverdue`
+      (a schedule idle for twice its period), `VirtualMergeStalenessBreach`, `SigningDocumentExpiring`
+      (at the configured lead), `CachePurgedOnSignal` (once however many revalidations observe
+      the signal), `FetchIntegrityFailure`, `BlobDigestMismatch`, `VerificationFailed`,
+      `ArtifactUnscannedPastBound`, `AdvisoryFeedDegraded`, `ReplicationLinkFailed`,
+      `ReplicationReseeding`, `ReplicationDiverged`, `UpstreamCooldown`, `PinnedStorageOutOfWindow`.
+- [ ] AC19: A token minted through `credential-management.md`'s routes appears in the `201`
+      response and in no metric, span, log or audit record of the create, rotate, list, read,
+      replay or refusal that follows, asserted through this package's recorder in that spec's
+      `display_once_test`; the `credentials` gauge reflects a create, an expiry-window entry and a
+      revocation within one `state_interval`.
+- [ ] AC20: Outbound requests to an upstream carry neither `traceparent` nor `tracestate`
+      (asserted at a test upstream), and outbound requests to a replication peer carry both with
+      the current span's context, so a follower's request span is a child of the leader's
+      trace.
+- [ ] AC21: `/healthz` on the main listener answers `200` with an empty body while the database
+      and blob store are unreachable; `/readyz` answers `503` with an empty body in that state and
+      `200` once they are reachable and the schema version matches; the telemetry listener's
+      `/readyz` body names each `component` with its status and a redacted error, and no rendering
+      contains a repository name, a principal or a client address; `component_up` mirrors each
+      check; results are cached for one second under a probe storm.
+- [ ] AC22: `healthz`, `readyz` and `metrics` are reserved first path segments: a fixture handler
+      whose `Name()` is one of them fails registration before the server serves any request.
+- [ ] AC23: `/metrics` is served on the telemetry listener without authentication and is absent
+      from the main listener by default; with `on_main_listener: true` it is served on the main
+      listener only to a caller with an admin registry token and answers `not-found` to anyone
+      else; `/debug/pprof/*` is never served on the main listener.
+- [ ] AC24: `make bench` runs every benchmark in the module and `scripts/bench-gate.sh` fails
+      when any benchmark's mean regresses beyond the threshold in its `// gate:` comment against
+      `benchmarks/baseline.txt` with `benchstat` significance, passes on an insignificant change,
+      and fails on a benchmark with no `// gate:` comment; the CI job runs it on pushes to `main`
+      and not on pull requests.
+- [ ] AC25: `storage-and-gc.md` AC7's, `async-operations.md` AC25's, `artifact-verification.md`
+      AC26's and `signing-service.md` AC28's benchmarks carry `// gate:` comments and are
+      compared by the same job, so that a regression in any of them fails the `main` build.
+- [ ] AC26: The middleware adds at most 25 µs p99 and at most 12 allocations per request with
+      tracing unsampled, metrics on and the request log on, and the redaction handler processes
+      a ten-attribute record with three marked secrets in at most 5 µs p99, both as benchmark
+      gates under AC24.
+- [ ] AC27: Every `telemetry.*` key in the configuration table (`telemetry.listen` at `:9464`,
+      `telemetry.metrics.enabled`, `telemetry.metrics.on_main_listener` at `false`,
+      `telemetry.metrics.repository_label_limit`, `telemetry.metrics.name_label_limit`,
+      `telemetry.metrics.state_interval` at `30s`, `telemetry.log.level`, `telemetry.log.format`
+      at `json`, `telemetry.log.request`, `telemetry.log.trusted_proxies`, `telemetry.audit.sink`,
+      `telemetry.audit.file`, `telemetry.trace.exporter` at `none`, `telemetry.trace.endpoint`,
+      `telemetry.trace.sample_ratio` at `0.05`, `telemetry.health.timeout`, `telemetry.pprof`)
+      has the default the table states, binds to its `STACKWEAVER_REGISTRY_TELEMETRY_*` variable,
+      is settable by flag, environment variable and file in the cobra-viper precedence order; the
+      `OTEL_EXPORTER_OTLP_*` variables reach the OTLP exporter unchanged; and `internal/telemetry`
+      imports neither Viper nor Cobra.
+- [ ] AC28: `Telemetry.Shutdown(ctx)` flushes the OTLP exporter and stops the state-gauge
+      collector and every goroutine the package started within the context's deadline, asserted
+      under `goleak` after a full start, exercise and shutdown.
+- [ ] AC29: Histogram boundaries are those the catalogue states: `http_server_request_duration_seconds`
+      and the other transfer-bearing durations carry the extended set through `1800`, API and
+      database durations the semconv default, and byte histograms powers of four from 1 KiB to
+      16 GiB, read off `/metrics`.
+
+## Test Plan
+
+Every acceptance criterion maps to at least one test. "Manual" is allowed only with a written
+procedure.
+
+| Criterion | Test Type | Test Location |
+|-----------|-----------|---------------|
+| AC1 | architecture test + lint | `internal/telemetry/boundary_test.go` (import walk); `.golangci.yml` `depguard` rule, run by `make verify` |
+| AC2 | architecture test + lint | `internal/telemetry/boundary_test.go` (fixture handler under `internal/format/testdata`); the same `depguard` rule |
+| AC3 | unit (reflection) | `internal/telemetry/decorator_test.go` |
+| AC4 | integration | `internal/telemetry/catalogue_test.go` (fixture exercise, `/metrics` scrape, both-direction diff); `internal/telemetry/docgen_test.go` (regenerated reference equals checked-in) |
+| AC5 | unit + conformance | `internal/telemetry/labels_test.go` (typed labels, cap and `_other`, overflow counter); `conformance/core/route_label_test.go` (post-suite `http_route` values per format) |
+| AC6 | integration | `internal/telemetry/catalogue_test.go` (presence and labels); the owning packages' tests using `telemetry.NewTestRecorder`: `internal/credential/metrics_test.go`, `internal/signing/metrics_test.go`, `internal/upstream/metrics_test.go`, `internal/async/metrics_test.go`, `internal/proxy/metrics_test.go`, `internal/storage/gc_metrics_test.go`, `internal/policy/metrics_test.go`, `internal/replication/metrics_test.go` |
+| AC7 | integration | `internal/telemetry/state_gauges_test.go` (two processes, one database, leadership handover) |
+| AC8 | lint | `.golangci.yml` `sloglint` and `forbidigo` configuration, run by `make verify`; `internal/telemetry/lint_config_test.go` asserts the configuration is present with the stated options |
+| AC9 | integration | `internal/telemetry/redact_test.go` (typed, key, scrub, URL layers, one counter each); `internal/auth/leak_test.go` (`auth.md` AC7's scan extended to spans and audit records, every AC31 form); `internal/upstream/redact_test.go` (every kind through the handler) |
+| AC10 | unit + integration | `internal/telemetry/disclose_test.go` (AST walk); `cmd/stackweaver-registry/first_start_test.go` (two starts, one emission) |
+| AC11 | integration | `internal/telemetry/request_log_test.go` (schema, one record per request, no query string, scrubbed path token, trusted proxies) |
+| AC12 | unit | `internal/telemetry/audit_test.go` (schema, extension sets, rejection, truncation, rate limit) |
+| AC13 | integration | `internal/telemetry/audit_sink_test.go` (level independence, file append and `SIGHUP`, sink failure alert and request success) |
+| AC14 | integration + conformance | `internal/telemetry/request_id_test.go` (validation, generation, correlation with request log, audit line and `Operation`); `conformance/core/request_id_test.go` (every response of a real client's session carries the header) |
+| AC15 | integration | `internal/telemetry/context_handler_test.go` (fixture handler logging with `InfoContext`); `internal/telemetry/trace_test.go` (valid, invalid and missing `traceparent`; child spans per `Deps` call) |
+| AC16 | integration | `internal/async/trace_link_test.go` (enqueue, run, link, audit `request_id`) |
+| AC17 | unit | `internal/telemetry/alerts_test.go` (rules file parse, both-direction catalogue diff, metric names in expressions, `Alert` typing and effects) |
+| AC18 | integration | The owning packages' tests using the recorder: `internal/async/metrics_test.go`, `internal/index/virtual_merge_test.go`, `internal/signing/cadence_test.go`, `internal/proxy/upstream_removal_test.go`, `internal/proxy/integrity_test.go`, `internal/storage/read_verify_test.go`, `internal/verify/alert_test.go`, `internal/policy/scan_window_test.go`, `internal/policy/feed_test.go`, `internal/replication/status_test.go`, `internal/upstream/cooldown_test.go`, `internal/model/pointer_test.go` |
+| AC19 | integration | `internal/credential/display_once_test.go` (through the recorder); `internal/credential/metrics_test.go` |
+| AC20 | integration | `internal/upstream/hygiene_test.go` (header set at a test upstream); `internal/replication/trace_test.go` (two instances, one trace) |
+| AC21 | integration | `internal/telemetry/health_test.go` (unreachable dependencies, schema mismatch, both renderings, redaction, no repository or principal in any body, probe-storm cache) |
+| AC22 | unit | `internal/format/register_test.go` (reserved segments `healthz`, `readyz`, `metrics`; the test `format-handler-interface.md` AC11 names) |
+| AC23 | integration | `internal/telemetry/listener_test.go` (default absence on main, admin-only with the flag, existence-oracle refusal, pprof never on main) |
+| AC24 | integration (scripts) | `scripts/bench-gate_test.sh` (synthetic results: regression, insignificant change, missing gate comment); `.github/workflows/ci.yml` job trigger asserted by `internal/telemetry/ci_config_test.go` reading the workflow |
+| AC25 | integration (scripts) | `scripts/bench-gate_test.sh` (the four named benchmark files carry `// gate:` comments and appear in the comparison) |
+| AC26 | benchmark | `internal/telemetry/bench_test.go` (middleware per request; redaction handler with 1, 3 and 10 secrets), gated by AC24 |
+| AC27 | unit | `cmd/stackweaver-registry/serve_test.go` (in-process command with flag, env and file sources); `internal/telemetry/boundary_test.go` (no Viper or Cobra import) |
+| AC28 | integration | `internal/telemetry/shutdown_test.go` under `go.uber.org/goleak` |
+| AC29 | integration | `internal/telemetry/catalogue_test.go` (bucket boundaries read off `/metrics`) |
+
+## Implementation Phases
+
+### Phase 1: The baseline (charter step 2, with generic)
+- `internal/telemetry`: `Config`, `New`, `Shutdown`, the operational logger with the context and
+  redaction handlers, `Secret`, `MarkSecret`, `Disclose`, `RedactURL` (AC8, AC9, AC10, AC27, AC28)
+- The middleware: request id, request span, request log, HTTP semconv metrics (AC11, AC14, AC15)
+- The catalogue table, the typed instrument handles for `HTTP`, `Storage`, `Auth`, `Manage`,
+  `Repositories`, the Prometheus exporter, the telemetry listener, `/metrics` (AC4, AC5, AC23,
+  AC29)
+- `/healthz`, `/readyz`, `component_up`, the reserved segments (AC21, AC22)
+- The audit channel: `Auditor`, the event table with the `auth.*`, `admin.*`, `manage.*`,
+  `repository.*` and `credential.*` events, the sinks (AC12, AC13)
+- The alert mechanism, `alerts.yaml` with the baseline rules, the catalogue test (AC17)
+- The four enforcers (AC1, AC2, AC3, AC8)
+- The benchmark-gate mechanism, `make bench`, the CI job, this package's budgets (AC24, AC26)
+
+### Phase 2: Storage, GC and the proxy (charter steps 3 and 4)
+- `Metrics.GC`, `Metrics.Cache`, `Metrics.Upstream` handles and rows; the `Deps` decorators for
+  the blob store, metadata store and fetch-and-cache; the pgx tracer (AC3, AC6, AC7)
+- The propagation policy at the upstream adapter and the storage benchmark under the gate
+  (AC20, AC25)
+- The GC, cache, upstream and integrity alerts (AC18)
+
+### Phase 3: Verification, policy, async, signing (charter steps 4b to 7)
+- `Metrics.Verify`, `Metrics.Policy`, `Metrics.Async`, `Metrics.Signing`, `Metrics.Credentials`
+  handles and rows; state-derived gauges on the leader (AC6, AC7)
+- Queue span links and `Job.trace_context` (AC16); the remaining audit events (AC12)
+- The remaining alerts and the sibling benchmarks under the gate (AC18, AC19, AC25)
+
+### Phase 4: Replication (charter step 10)
+- `Metrics.Replication` rows, link-state gauges, peer propagation, the replication alerts
+  (AC6, AC18, AC20)
+
+## Tasks
+
+Left empty by `/spec`. Populated by `/tasks` once the spec reaches `planned`.
+
+## Open Questions
+
+None open. Eight decisions were needed where the citing specs left the shape open or pulled in
+different directions; each is recorded below in the template's decision shape and adopted under
+the owner's standing delegation, folded through Design, the criteria and the Test Plan in the
+same pass.
+
+### Resolved: one metrics API or two (was Q1)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: the OpenTelemetry
+metric API with the Prometheus exporter, and the OTel trace API for spans, so the module has one
+telemetry API and one SDK dependency. Accepted cost: the exporter's name translation means the
+catalogue must state both spellings, and the exporter's translation strategy is pinned so a
+library upgrade cannot silently rename a series; AC4 catches a rename as a catalogue diff.
+Option B lost because tracing needs the OTel SDK regardless, so `client_golang` would be a
+second metrics stack with its own registry, its own test helpers and its own naming rules to
+reconcile with the semconv metrics; Harbor's choice of `client_golang` predates a usable OTel
+metrics SDK.
+
+**Recommendation:** A. One API for metrics and traces, semconv names for free, one boundary to
+enforce.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. OTel API + Prometheus exporter** (adopted) | One SDK, semconv metrics and traces from one instrumentation, standard collectors interoperate | Name translation to pin; a heavier dependency than `client_golang` alone |
+| **B. `client_golang` for metrics, OTel for traces** | The most mature Prometheus client and its `testutil`; Harbor's shape | Two registries, two naming schemes, two test helpers, and semconv HTTP metrics re-implemented by hand |
+
+**Why this is yours:** a dependency choice at the foundation that every package inherits and that
+cannot be swapped without touching every instrument.
+
+### Resolved: how alerts exist (was Q2)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: an alert is a catalogue
+name, a counter, an `Error` record and a shipped Prometheus rule; the registry sends nothing.
+Accepted cost: an operator with no rules engine sees alerts only as log lines and a counter, and
+must install Alertmanager or equivalent to be paged. Option B lost because a notifier is a
+second delivery system with its own configuration, retries, secrets (SMTP, webhook tokens) and
+egress, duplicating what every monitoring stack already does, and its correctness cannot be
+tested without standing up the destinations. Option C lost because a gauge alone cannot express
+"exactly once per condemnation" and leaves no record when the condition clears.
+
+**Recommendation:** A. Alerts as rules over catalogue metrics, with a record for forensics.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Counter + `Error` record + shipped rules** (adopted) | Testable end to end from the catalogue; any engine routes it; one emission path | Needs an external rules engine to page anyone |
+| **B. Built-in notifier (webhook, email)** | Pages without a monitoring stack | A second delivery system to configure, secure and test; new egress from the registry |
+| **C. Gauges only** | Simplest | No once-only semantics, no record after the condition clears |
+
+**Why this is yours:** it fixes what "raises an operator alert" means in eleven sibling specs.
+
+### Resolved: the audit channel (was Q3)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: a separate `slog` stream
+with its own sink and no level filter, a closed event vocabulary with per-event extension
+attributes, and a sink failure that alerts but does not fail the request. Accepted cost: an
+operator can lose audit records if the sink fails and nobody acts on `AuditSinkFailing`. Option
+B lost because a level-filterable operational log lets one configuration change silence the
+audit trail, and a SIEM cannot tell an audit record from an operational one by anything but a
+field. Option C (fail the request when the audit write fails) lost because it turns a full disk
+into an outage of every state-changing route, which is the incident the audit log exists to
+explain, not to cause; the resolved question notes it is reversible by the owner if a
+compliance regime requires write-through auditing.
+
+**Recommendation:** A. A distinct, unfilterable stream that degrades loudly rather than
+blocking.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Separate stream, alert on sink failure** (adopted) | Complete by construction, SIEM-separable, requests unaffected by a full disk | Records can be lost if the alert is ignored |
+| **B. Operational log with an `audit=true` field** | One stream to ship | Silenceable by a level change; SIEM filtering by field |
+| **C. Separate stream, request fails on sink failure** | Never a missing record | A full disk is a registry outage |
+
+**Why this is yours:** it trades availability against audit completeness, which is a posture
+decision.
+
+### Resolved: trace propagation to upstreams (was Q4)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: no `traceparent` or
+`tracestate` on requests to upstreams; both on requests to replication peers. Accepted cost: an
+upstream-side trace (an operator who also runs the upstream Artifactory) cannot be joined to
+ours by trace id, only by time and URL. Option B lost because it changes the header set of
+recorded traffic the corpus replays against, can leak `tracestate` vendor entries to a third
+party, and gives the upstream a correlation handle across requests it has no need for.
+
+**Recommendation:** A. Propagate inside the operator's own estate, never outside it.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Peers yes, upstreams no** (adopted) | No third-party leakage; corpus header sets unchanged; cross-instance replication traces | An operator-owned upstream cannot join our trace |
+| **B. Propagate everywhere** | Every hop joinable | Header set changes under the corpus; `tracestate` leaks; a correlation handle handed to third parties |
+
+**Why this is yours:** what the registry sends to someone else's server is a privacy posture.
+
+### Resolved: where `/metrics` lives (was Q5)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: a second, unauthenticated
+listener for `/metrics`, detailed `/readyz` and pprof, not exposed publicly; the main listener
+carries status-only probes and, only by explicit flag, an admin-token-gated `/metrics`. Accepted
+cost: a second port to open in the deployment, and a single-port deployment must opt into the
+gated route. Option B lost because a `/metrics` on the client-facing listener is a route that
+reveals repository names through labels to anyone who obtains an admin token, and because
+scrape authentication on the main listener means the scraper holds a registry credential. Option
+C (Nexus's privilege-gated route only) lost for the same reason plus the operational one that
+Kubernetes probes and Prometheus scrapes would then share a listener with client traffic and its
+rate limits.
+
+**Recommendation:** A. Harbor's shape: operational routes on an operational port.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Separate listener, gated main-listener route optional** (adopted) | Scrapers hold no registry credential; operational traffic off the client port | A second port |
+| **B. `/metrics` on the main listener, admin token** | One port | A scraper with a registry credential; labels visible to any admin-token holder |
+| **C. Main listener, privilege-gated, no second port** | Nexus's shape | As B, plus probes and scrapes contend with client traffic |
+
+**Why this is yours:** a deployment-surface decision every packaging recipe inherits.
+
+### Resolved: per-repository labels (was Q6)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: `repository` is admitted
+on named per-repository metrics only, through a per-process cap that collapses to `_other` with
+an overflow counter. Accepted cost: an installation with more repositories than the cap sees
+per-repository detail for the first thousand it touches after start and `_other` for the rest,
+until the operator raises the cap. Option B lost because a registry whose quota utilisation is
+invisible per repository cannot answer `proxy-cache.md`'s "quota set too low presents as the
+proxy being slow", and Harbor's operators evidently want the per-project gauge. Option C
+(unbounded) lost because it is the cardinality failure the Prometheus guidance warns of and
+would be the first thing an operator of a large installation disables.
+
+**Recommendation:** A. Per-repository where the meaning is per repository, capped and counted.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Admitted on named metrics, capped** (adopted) | Quota, thrash, pins and staleness per repository; bounded series count | Detail beyond the cap collapses until raised |
+| **B. Never per repository** | Bounded by construction | Quota utilisation only in aggregate, which is useless for finding the one repository thrashing |
+| **C. Unbounded** | Full detail always | Series explosion on large installations |
+
+**Why this is yours:** a cost that lands on the operator's Prometheus, not on the registry.
+
+### Resolved: the benchmark-gate mechanism's home (was Q7)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: this spec owns `make
+bench`, `scripts/bench-gate.sh`, the checked-in baseline and the CI job, and the siblings own
+their budgets as `// gate:` comments. Accepted cost: a spec about signals also owns a build
+script, and the constitution's cost accounting charges the gate to `shared:observability`.
+Option B (each sibling builds its own comparison) lost because five specs would ship five ways
+to compare against five baselines and the first divergence in threshold semantics makes the word
+"regression" mean different things in the same CI run. Option C (`deployment.md` owns it) lost
+because deployment packages what runs, and a CI gate is evidence tooling that runs before
+anything is packaged.
+
+**Recommendation:** A. One gate, budgets beside the benchmarks they bound.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Mechanism here, budgets in each spec** (adopted) | One comparison, one baseline format, one job; budgets stay with the code they bound | This spec owns a script and a workflow |
+| **B. Each sibling its own gate** | No cross-spec dependency | Divergent semantics and duplicated tooling |
+| **C. `deployment.md` owns it** | Build tooling in one place | A CI gate is not a deployment artefact and would wait on that spec |
+
+**Why this is yours:** ownership of a cross-cutting piece of CI that the constitution names but
+no spec claimed.
+
+### Resolved: the query string in the request log (was Q8)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: never log the query
+string, in any form. Accepted cost: a request whose meaning is in its query (a search, a
+paginated listing's cursor) is logged as its path and route only, and diagnosing it needs the
+trace or the client's own record. Option B lost because the credential-bearing query forms
+(`vagrant.md`'s access token parameter, presigned `X-Amz-*` and `X-Goog-Signature` on redirected
+fetches, `access_token` on several OAuth-shaped upstreams) would each need a redaction entry
+kept current against every format, and one missed entry is a leak on every request; no format
+spec's criteria need the query logged.
+
+**Recommendation:** A. Absence is the only redaction that cannot fall behind.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Never logged** (adopted) | No query-borne credential can leak; nothing to keep current | Query-driven requests diagnosed by route and trace only |
+| **B. Logged with a redaction list** | Search and cursor values visible | A list that must be complete for every format forever |
+
+**Why this is yours:** a diagnosability-versus-leak trade the operator lives with.
+
+## Review Log
+
+| Date | HEAD sha | Reviewer lens | Outcome |
+|------|----------|---------------|---------|
+| 2026-09-27 | 677aa69 | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements of thirteen citing foundation specs and twelve format specs (grep over `docs/internal/plans` for `metric`, `gauge`, `alert`, `audit line`, `slog`, `X-Request-Id`, `observab`), the queued consequences naming this file (credential-management item 14, signing-service item 15, upstream-adapters item 14, async-operations item 14) and the foundation.tsv hints, and `project-charter.md`'s step 2 placement. Grounded the design in OpenTelemetry HTTP and database semantic conventions, Prometheus naming guidance, the OTel Prometheus exporter's translation, Harbor's exporter and registry metrics, Artifactory's Open Metrics enablement, Nexus's metrics and health endpoints, Gitea's metrics and request-id settings, Pulp's OTel telemetry, Go's `log/slog` and W3C Trace Context, all fetched this run. Wrote eight decisions in the template shape and adopted each under the standing delegation. 29 criteria, each with a Test Plan row. Tree claims are vacuous at this sha (stub `main.go` only) and are stated as design. Sibling consequences reported to the spec loop rather than applied. Stays `draft`. |
