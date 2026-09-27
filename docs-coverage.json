@@ -12,6 +12,9 @@
   "conformance/composer/**": [
     "docs/internal/plans/formats/composer.md"
   ],
+  "conformance/conan/**": [
+    "docs/internal/plans/formats/conan.md"
+  ],
   "conformance/conda/**": [
     "docs/internal/plans/formats/conda.md"
   ],
@@ -72,6 +75,9 @@
   ],
   "internal/format/composer/**": [
     "docs/internal/plans/formats/composer.md"
+  ],
+  "internal/format/conan/**": [
+    "docs/internal/plans/formats/conan.md"
   ],
   "internal/format/conda/**": [
     "docs/internal/plans/formats/conda.md"
