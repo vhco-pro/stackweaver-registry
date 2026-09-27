@@ -44,10 +44,10 @@ Each side appends to `consequences.md`; a conflict there is two lists to concate
 Format specs, grounded in captured traffic from the real client run in a container against a
 logging stub, as `cargo.md`, `helm.md` and `ansible-collections.md` were. In order:
 
-debian, alpine, conan,
+alpine, conan,
 vagrant, chef, puppet, luarocks, hackage, cpan, opam, homebrew, openvsx, arch.
 
-Done: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub, nuget, maven, hex, composer, conda, cran, julia, swift, terraform, rpm.
+Done: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub, nuget, maven, hex, composer, conda, cran, julia, swift, terraform, rpm, debian.
 
 ### Cloud: no containers needed (the owner's cloud credits)
 
