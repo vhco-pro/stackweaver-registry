@@ -66,6 +66,9 @@
   "conformance/opam/**": [
     "docs/internal/plans/formats/opam.md"
   ],
+  "conformance/openvsx/**": [
+    "docs/internal/plans/formats/openvsx.md"
+  ],
   "conformance/puppet/**": [
     "docs/internal/plans/formats/puppet.md"
   ],
@@ -156,6 +159,9 @@
   ],
   "internal/format/opam/**": [
     "docs/internal/plans/formats/opam.md"
+  ],
+  "internal/format/openvsx/**": [
+    "docs/internal/plans/formats/openvsx.md"
   ],
   "internal/format/pub/**": [
     "docs/internal/plans/formats/pub.md"
