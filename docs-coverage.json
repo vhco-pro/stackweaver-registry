@@ -231,6 +231,9 @@
     "docs/internal/plans/foundation/data-model.md",
     "docs/internal/plans/foundation/storage-and-gc.md"
   ],
+  "internal/upstream/**": [
+    "docs/internal/plans/foundation/upstream-adapters.md"
+  ],
   "internal/verify/**": [
     "docs/internal/plans/foundation/artifact-verification.md"
   ],

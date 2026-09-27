@@ -554,6 +554,16 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/upstream-adapters.md",
+    "description": "Spec for the upstream adapter axis: the seam between the proxy cache and every upstream it fetches from. Two transport adapters (a plain HTTPS adapter and an OCI distribution adapter) behind one small interface, a separate credential-kind axis (none, Basic, Bearer, vendor header, path token, distribution token exchange, AWS ECR, Google Cloud), a per-upstream off-origin host allowlist with per-host credential roles, redirect following that never reaches a client, typed rate-limit errors with a bounded cool-down, truthful body completion for the completion-only fetch mode, and credential redaction; with the preconfigured upstream profiles and the adapter half of the nightly real-upstream job.",
+    "internal": true,
+    "status": "draft",
+    "issue": "48",
+    "covers": [
+      "internal/upstream/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/write-triggered-services-prototype.md",
     "description": "Defines the write-triggered services prototype that format-handler-interface.md AC8 names as an input to the scheduled interface re-open: what it must demonstrate for both classes its deciding record named (signed indexes, with Debian as the vehicle, and asynchronous operations, with a Galaxy-shaped publish-and-poll), and how anyone would know it succeeded.",
     "internal": true,
