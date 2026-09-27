@@ -57,6 +57,9 @@
   "conformance/terraform/**": [
     "docs/internal/plans/formats/terraform.md"
   ],
+  "conformance/vagrant/**": [
+    "docs/internal/plans/formats/vagrant.md"
+  ],
   "internal/auth/**": [
     "docs/internal/plans/foundation/auth.md"
   ],
@@ -129,6 +132,9 @@
   ],
   "internal/format/terraform/**": [
     "docs/internal/plans/formats/terraform.md"
+  ],
+  "internal/format/vagrant/**": [
+    "docs/internal/plans/formats/vagrant.md"
   ],
   "internal/model/**": [
     "docs/internal/plans/foundation/data-model.md"
