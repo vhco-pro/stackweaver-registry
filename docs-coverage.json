@@ -33,6 +33,9 @@
   "conformance/go/**": [
     "docs/internal/plans/formats/go-modules.md"
   ],
+  "conformance/hackage/**": [
+    "docs/internal/plans/formats/hackage.md"
+  ],
   "conformance/helm/**": [
     "docs/internal/plans/formats/helm.md"
   ],
@@ -105,6 +108,9 @@
   ],
   "internal/format/go/**": [
     "docs/internal/plans/formats/go-modules.md"
+  ],
+  "internal/format/hackage/**": [
+    "docs/internal/plans/formats/hackage.md"
   ],
   "internal/format/helm/**": [
     "docs/internal/plans/formats/helm.md"
