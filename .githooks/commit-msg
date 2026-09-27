@@ -15,8 +15,9 @@ MSG_FILE="$1"
 RED='\033[0;31m'
 NC='\033[0m'
 
-# Case-insensitive patterns covering both default footer forms.
-PATTERN='(co-authored-by:[[:space:]]*.*(claude|anthropic))|noreply@anthropic\.com|generated with[[:space:]]*\[?claude|claude\.com/claude-code'
+# Case-insensitive patterns covering the default footer forms, including the Claude-Session
+# trailer and session link that cloud sessions append.
+PATTERN='(co-authored-by:[[:space:]]*.*(claude|anthropic))|noreply@anthropic\.com|generated with[[:space:]]*\[?claude|claude\.com/claude-code|^claude-session:|claude\.ai/code/session'
 
 if grep -qiE "$PATTERN" "$MSG_FILE"; then
     echo -e "${RED}✖ commit-msg blocked: self-credit / AI attribution is not allowed.${NC}"

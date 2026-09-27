@@ -3,7 +3,8 @@
   "includeCoAuthoredBy": false,
   "attribution": {
     "commit": "",
-    "pr": ""
+    "pr": "",
+    "sessionUrl": false
   },
   "worktree": {
     "baseRef": "fresh",
@@ -70,6 +71,19 @@
       "WebFetch(domain:web.archive.org)",
       "WebFetch(domain:wiki.debian.org)",
       "WebSearch"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && git config core.hooksPath .githooks 2>/dev/null || true",
+            "statusMessage": "Activating repo git hooks"
+          }
+        ]
+      }
     ]
   }
 }
