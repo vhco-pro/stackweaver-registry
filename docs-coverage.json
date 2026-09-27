@@ -9,6 +9,9 @@
   "conformance/cargo/**": [
     "docs/internal/plans/formats/cargo.md"
   ],
+  "conformance/chef/**": [
+    "docs/internal/plans/formats/chef.md"
+  ],
   "conformance/composer/**": [
     "docs/internal/plans/formats/composer.md"
   ],
@@ -75,6 +78,9 @@
   ],
   "internal/format/cargo/**": [
     "docs/internal/plans/formats/cargo.md"
+  ],
+  "internal/format/chef/**": [
+    "docs/internal/plans/formats/chef.md"
   ],
   "internal/format/composer/**": [
     "docs/internal/plans/formats/composer.md"

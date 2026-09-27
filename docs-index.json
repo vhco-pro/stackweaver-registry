@@ -96,6 +96,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/chef.md",
+    "description": "Spec for the Chef cookbook format (the Supermarket API): a write-triggered repository-wide /universe document, cookbook and version documents, tarball downloads, knife supermarket share and unshare authenticated by Chef's signed-header scheme against registered public keys, private reads through the one header every resolver sends, a verifying supermarket.chef.io cache, and per-name virtual repositories that close the dependency confusion Berkshelf's source union opens, with Berkshelf, Policyfile and knife on two generations as the oracles.",
+    "internal": true,
+    "status": "draft",
+    "issue": "35",
+    "covers": [
+      "internal/format/chef/**",
+      "conformance/chef/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/composer.md",
     "description": "Spec for the Composer (PHP) repository format: the packages.json root, the per-package p2 metadata files with their minification and ~dev split, dist archives, the in-band filter-list and security-advisory channels, hosted through the registry-owned management API and proxied against Packagist, with Composer as the conformance oracle.",
     "internal": true,
