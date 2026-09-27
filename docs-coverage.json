@@ -90,6 +90,9 @@
   "conformance/vagrant/**": [
     "docs/internal/plans/formats/vagrant.md"
   ],
+  "internal/async/**": [
+    "docs/internal/plans/foundation/async-operations.md"
+  ],
   "internal/auth/**": [
     "docs/internal/plans/foundation/auth.md"
   ],
