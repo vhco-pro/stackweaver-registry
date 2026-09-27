@@ -1,4 +1,7 @@
 {
+  "cmd/stackweaver-registry/**": [
+    "docs/internal/plans/foundation/management-api.md"
+  ],
   "conformance/**": [
     "docs/internal/conformance/matrix.md",
     "docs/internal/plans/foundation/conformance-harness.md"
@@ -89,6 +92,9 @@
   ],
   "internal/auth/**": [
     "docs/internal/plans/foundation/auth.md"
+  ],
+  "internal/format/*.go": [
+    "docs/internal/plans/foundation/management-api.md"
   ],
   "internal/format/**": [
     "docs/internal/plans/formats/catalogue.md",
@@ -189,6 +195,9 @@
   ],
   "internal/format/vagrant/**": [
     "docs/internal/plans/formats/vagrant.md"
+  ],
+  "internal/manage/**": [
+    "docs/internal/plans/foundation/management-api.md"
   ],
   "internal/model/**": [
     "docs/internal/plans/foundation/data-model.md"

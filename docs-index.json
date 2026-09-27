@@ -455,6 +455,18 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/management-api.md",
+    "description": "Spec for the registry-owned management API: the one surface through which hosted content is administered across every format (publish where no client publishes, withdraw and restore, annotate, delete, retire), repositories and pointers are administered, and every operation is one completed logical write with one audit record; client-native routes such as npm unpublish and cargo yank are bindings onto the same operations.",
+    "internal": true,
+    "status": "draft",
+    "issue": "44",
+    "covers": [
+      "internal/manage/**",
+      "internal/format/*.go",
+      "cmd/stackweaver-registry/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/project-charter.md",
     "description": "The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work.",
     "internal": true,

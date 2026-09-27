@@ -55,7 +55,7 @@ Nothing local remains unless a gate review asks for a fresh capture.
 1. ~~**The auth.md "Open items" (1-3) in `consequences.md`**~~ DONE 2026-09-27 (auth Q23,
    `descriptor` object kind). Its follow-ups (items 33-38) join the reconciliation pass, step 3.
 2. **Foundation specs**, with `foundation-brief.md`, one at a time, most-cited first:
-   management-api, credential-management (must reach `planned` before OCI Phase 1),
+   ~~management-api~~ (done 2026-09-27, #44), credential-management (must reach `planned` before OCI Phase 1),
    artifact-verification, signing-service, upstream-adapters, async-operations (reconcile with the
    `Operation` entity already in `data-model.md`), repository-lifecycle, observability, deployment,
    web-ui. Hints are each spec's line in `foundation.tsv`.
