@@ -39,15 +39,13 @@ owner's machine, one agent at a time; everything that only reads specs and publi
 a cloud session. Both push to the same repository, so always `git pull --rebase` before pushing.
 Each side appends to `consequences.md`; a conflict there is two lists to concatenate.
 
-### Local: needs podman or docker (one agent at a time)
+### Local: needs podman or docker - DONE 2026-09-27
 
-Format specs, grounded in captured traffic from the real client run in a container against a
-logging stub, as `cargo.md`, `helm.md` and `ansible-collections.md` were. In order:
-
-conan,
-arch.
-
-Done: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub, nuget, maven, hex, composer, conda, cran, julia, swift, terraform, rpm, debian, alpine, conan, vagrant, chef, puppet, hackage, luarocks, cpan, opam, homebrew, openvsx, arch.
+All 33 catalogue ecosystems are specced, each grounded in captured traffic from real clients run in
+containers: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub, nuget,
+maven, hex, composer, conda, cran, julia, swift, terraform, rpm, debian, alpine, conan, vagrant,
+chef, puppet, hackage, luarocks, cpan, opam, homebrew, openvsx, arch (plus the catalogue itself).
+Nothing local remains unless a gate review asks for a fresh capture.
 
 ### Cloud: no containers needed (the owner's cloud credits)
 

@@ -81,6 +81,44 @@ RESOLVED: the OCI credential contradiction (data-model+oci item 1) is met by aut
 10. Stale citations: go-modules.md (pypi Q1 ~l.136, ~892); helm.md (pypi Q1, ansible Q5, pypi Q3 ~702, ~744); pub.md (pypi Q1, npm Q2, npm Q3, ansible Q4, ansible Q5 at ~75, 359, 657-682, 715-731). SUBSTANTIVE: helm ~702 and pub ~673 must adopt the registry-owned management API, not Galaxy NG routes; pub's preconfigured-upstream option (~720-731) can ride the adopted ansible proxy-cache revision.
 11. pypi.md and npm.md must declare per-route addressed-object tables (auth requirement), like ansible does.
 
+## Start here: cross-cutting themes (read before the numbered items)
+
+The numbered open items below were raised format by format. Many are the same finding arriving
+from several formats; design each theme ONCE in its owning spec, then have every format cite it.
+
+1. **Forward-moving freshness scoped to the pointer or the cache** (items 20, 22, 26, 27, 28, 30,
+   32; seven formats). Clients ignore an older index, keep a newer cached revision, or drop any
+   response whose `Last-Modified` is not later than their own clock. Exact-match `304` is not
+   enough for curl-based clients (item 30). One data-model mechanism; debian's pointer-held signed
+   wrapper and hackage's per-pointer TUF versions are instances. Qualifies data-model AC22.
+2. **When a refusal actually binds** (items 16, 19, 21, 27, 28, 29, 31, 32, and the terraform,
+   conan and puppet notes). Per format: does the client fall back to another repository, a
+   mirror, or URLs inside our own metadata? The general answer from opam and openvsx: the registry
+   regenerates every served document and owns every URL in it. supply-chain-policy states the
+   per-format conditions.
+3. **Reason-phrase-only clients need HTTP/1.1 on refusal routes** (item 28). A deployment
+   constraint for the owed deployment spec.
+4. **Clients that verify nothing** (conan, chef, alpine package signatures, luarocks, cpm and
+   Carton, the editors). The registry's own verification is their only integrity check, which
+   raises artifact-verification's priority and argues for serve-time verification (item 28).
+5. **Advisory coverage gaps** (conda, terraform, conan, vagrant, chef, luarocks, cpan, puppet, arch
+   have no usable OSV data; CPANSA, the Arch tracker and Homebrew's database exist outside OSV).
+   Evidence for revisiting supply-chain-policy's single-feed decision.
+6. **Patterned `pull` cannot run formats with a repository-wide index** (Open item 3, plus cargo,
+   helm, dnf, zypper, conan). An addressed-object kind in auth.
+7. **Completion-only fetch mode** (go-modules, nuget, maven, composer, cran, luarocks, openvsx,
+   conan). One proxy-cache design with a verifier hook and an off-origin host allowlist.
+8. **New credential presentation forms** (path-segment tokens: conda, terraform's capability,
+   luarocks, openvsx; headers: X-NuGet-ApiKey, X-Jfrog-Art-Api, X-ApiKey, X-OpenVSX-Token;
+   RSA-signed requests: chef). Consolidate in auth AC31, with redaction and plaintext refusal,
+   inside AC10's external review scope.
+9. **Virtual repositories are impossible for Hex** (item 12). A per-format capability.
+10. **Dated**: HCP Vagrant shuts down 2026-12-31 (item 23).
+11. **Outside this repository**: four probable bugs in the owner's Stackweaver registry found by
+    terraform.md (module download 302 fails on all four clients; armored signatures accepted;
+    per-platform upload overwrites SHA256SUMS; versions sorted as strings). Owner decides whether
+    to file them there.
+
 ## Open items (raised by the format-side reconciliation, da0aecd)
 1. auth.md Pattern scopes, Cargo bullet: says cargo reports the registered spelling on every route; cargo.md now uses the folded crate key, with `{crate}/{version}` on version routes. Align auth.md to cargo.md.
 2. auth.md: records a "Cargo yank uses push" divergence for the management-api author; cargo Q6 (adopted) resolved it from the cargo side: yank and unyank are bindings onto the management API's yank operation and need `delete`, like PyPI. Update auth.md's note. OWNER NOTE: both adopted under the delegation.
