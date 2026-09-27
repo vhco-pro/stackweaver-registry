@@ -532,6 +532,16 @@
     ]
   },
   {
+    "path": "docs/internal/plans/foundation/repository-lifecycle.md",
+    "description": "Spec for the repository lifecycle: creation of local, remote and virtual repositories with their type-specific settings, configuration changes and which of them are completed writes, renaming and what it does to identities, tokens, grants, replication links and client URLs, the read-only state, deletion as a reference-ending write whose space returns only through pruning and the sweep, deletion's effect on pointers, snapshots, cached content, upload sessions, jobs, keys, trust sets, links and virtual membership, and the reuse of a name after deletion.",
+    "internal": true,
+    "status": "draft",
+    "issue": "50",
+    "covers": [
+      "internal/repository/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/foundation/signing-service.md",
     "description": "Spec for the shared signing and generated-index service: the production form of the write-triggered services prototype's signed-index half. It regenerates every repository-wide or version-scoped generated document inside the write that invalidates it, stores it as CAS-backed metadata, keeps signatures as records outside snapshot content so rotation and rollback never rewrite history, renders pointer-scoped freshness (dated envelopes, TUF versions, forward-moving Last-Modified), holds every signing key behind one custody seam (encrypted file, KMS, PKCS#11, operator-held) that no handler can reach, publishes public keys in each ecosystem's form, and runs virtual merges as deferred work. Twenty-two formats consume it; it produces and never verifies.",
     "internal": true,
