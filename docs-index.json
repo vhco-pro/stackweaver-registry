@@ -229,6 +229,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/homebrew.md",
+    "description": "Spec for Homebrew bottles served to brew: hosted bottles at a tap's root_url in the legacy flat layout, a verified cache of ghcr.io's homebrew/core bottles in both the flat layout HOMEBREW_BOTTLE_DOMAIN reads and the OCI-shaped layout HOMEBREW_ARTIFACT_DOMAIN reads, and a byte-for-byte cache of formulae.brew.sh's JWS-signed API documents that no registry can re-sign, with a cache-scoped Last-Modified that lets a new API generation reach a client whose curl discards anything not newer, taps left on Git, and every route back to Homebrew's own hosts named because a refusal holds only where that route is closed.",
+    "internal": true,
+    "status": "draft",
+    "issue": "41",
+    "covers": [
+      "internal/format/homebrew/**",
+      "conformance/homebrew/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/julia.md",
     "description": "Spec for the Julia format: the Pkg server protocol (the registries listing, registry, package and artifact tarballs addressed by git tree hash), hosted as a registry this registry generates from management-API publishes and proxied from pkg.julialang.org, with the tree hash verified as a coordinate rather than used as a storage key, and virtual repositories as the one way a client sees a private registry beside General.",
     "internal": true,

@@ -45,6 +45,9 @@
   "conformance/hex/**": [
     "docs/internal/plans/formats/hex.md"
   ],
+  "conformance/homebrew/**": [
+    "docs/internal/plans/formats/homebrew.md"
+  ],
   "conformance/julia/**": [
     "docs/internal/plans/formats/julia.md"
   ],
@@ -129,6 +132,9 @@
   ],
   "internal/format/hex/**": [
     "docs/internal/plans/formats/hex.md"
+  ],
+  "internal/format/homebrew/**": [
+    "docs/internal/plans/formats/homebrew.md"
   ],
   "internal/format/julia/**": [
     "docs/internal/plans/formats/julia.md"
