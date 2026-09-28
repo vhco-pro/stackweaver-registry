@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Sweep 2026-09-28 at 6e6d503 (not a review): replication link, sync, re-seed, takeover, export and import routes and the `replica` problem type (now 20 types) from replication.md, with AC33 and a Phase 5 at charter step 10; the `policy` and `advisory_ecosystem` PATCH fields refused `validation` per supply-chain-policy AC11 (AC19 extended); refresh also expires negative-cache entries (AC29, proxy-cache AC24); harness AC26, auth AC22 and data-model AC32 cited. 33 criteria. Reconciled 2026-09-28 at 9f53d20 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. The spec is now the single wire contract for every sibling that mounts under /api/v1: an exhaustive endpoint table with per-route authorization (repository lifecycle, trust and verdicts, signing keys, upstream credentials with kinds, job administration, the credential routes, the session, formats, search, recipes, refusals and refresh reads the UI needs), a closed problem-type table with statuses (19 types then, 20 with `replica`), the cancelled state and cancel route, X-Request-Id validation and the audit channel via telemetry.Auditor.Emit, and the session cookie with CSRF on unsafe methods. Twelve questions in decision shape adopted under the owner's standing delegation (Q11 deleted listing as a filter, Q12 refresh under push); zero open. 32 criteria, each with a Test Plan row. Awaits a /spec review pass."
+status_description: "Closing sweep 2026-09-28 at 97e5a5d on Opus (not a review): format batches 3 to 8 applied. Four questions adopted under the standing delegation and marked for a Fable recheck: Q13 a binding is never wider than its operation (route object among Authorize's, none, or a declared route-level object; Submit evaluates every pair; dput and cpan-upload, AC8); Q14 the retirement check compares a write's claimed coordinates, finer than its object for conda, Conan, PyPI and Open VSX, declared by Authorize or on the write transaction by a non-binding wire write, checked at declaration and at commit, a retiring kind's Outcome a subset or none (AC12); Q15 a declared unchanged publish completes with no snapshot beside Idempotency-Key (cran, puppet, hackage, cpan; AC5); Q16 the decision is central and the rendering the wire's (Open VSX 400, Swift 409 problem, Forge 409; AC7 scoped off pub's own 400). Reconciliation table re-read against every format spec: Galaxy publish binding, CRAN per-tree delete-file (unplace drops CRAN), Hex docs attach, Conan prune and delete-version, RPM out of the architecture set, Open VSX route, opam delete-package, Vagrant provider file as publish (attach drops it), generic retiring nothing, OCI declaring no kinds. 33 criteria. Earlier, sweep 2026-09-28 at 6e6d503 (not a review): replication link, sync, re-seed, takeover, export and import routes and the `replica` problem type (now 20 types) from replication.md, with AC33 and a Phase 5 at charter step 10; the `policy` and `advisory_ecosystem` PATCH fields refused `validation` per supply-chain-policy AC11 (AC19 extended); refresh also expires negative-cache entries (AC29, proxy-cache AC24); harness AC26, auth AC22 and data-model AC32 cited. 33 criteria. Reconciled 2026-09-28 at 9f53d20 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. The spec is now the single wire contract for every sibling that mounts under /api/v1: an exhaustive endpoint table with per-route authorization (repository lifecycle, trust and verdicts, signing keys, upstream credentials with kinds, job administration, the credential routes, the session, formats, search, recipes, refusals and refresh reads the UI needs), a closed problem-type table with statuses (19 types then, 20 with `replica`), the cancelled state and cancel route, X-Request-Id validation and the audit channel via telemetry.Auditor.Emit, and the session cookie with CSRF on unsafe methods. Twelve questions in decision shape adopted under the owner's standing delegation (Q11 deleted listing as a filter, Q12 refresh under push); zero open. 32 criteria, each with a Test Plan row. Awaits a /spec review pass."
 description: "Spec for the registry-owned management API: the one surface through which hosted content is administered across every format (publish where no client publishes, withdraw and restore, annotate, delete, retire), repositories and pointers are administered, and every operation is one completed logical write with one audit record; client-native routes such as npm unpublish and cargo yank are bindings onto the same operations."
 author: michielvha
 goal: "Give the 33 format handlers one management surface with one authorization rule per operation, one write-accounting rule, one audit record and one dispatch mechanism, so that a format's management half costs a table of bindings rather than a bespoke API, and so that no management write can ever bypass the snapshot model or the single blob deleter."
@@ -11,7 +11,7 @@ covers:
   - "internal/manage/**"
   - "internal/format/*.go"
   - "cmd/stackweaver-registry/**"
-fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate"
+fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate. Closing-sweep reconciliation on Opus, 2026-09-28, adopted Q13 (binding scope), Q14 (claimed coordinates for retirement), Q15 (unchanged publish) and Q16 (wire rendering of central refusals), which also need a Fable recheck"
 ---
 
 # Plan: Management API
@@ -327,13 +327,23 @@ breadth lives, so it gets the most words.
   within the operation retention window returns the original response with the original
   `Operation`; the same key with a different payload is refused `idempotency-key-reuse` (422);
   a repeat while the first is still running is refused `operation-outstanding` (409). The key is
-  stored on the `Operation` record, so nothing new is invented to hold it.
+  stored on the `Operation` record, so nothing new is invented to hold it. The key is the API's
+  retry mechanism for every kind; it is distinct from a format's **unchanged publish** ("Every
+  operation is one completed logical write"), which serves the clients that retry a publish with
+  no key at all (cpan-upload, puppet-blacksmith, `cabal upload`) by recognising identical bytes.
+  A format may offer either or both: `vagrant.md` relies on the key alone and refuses a keyless
+  republish `conflict`.
 - **Pagination** on every listing: `limit` and an opaque `cursor`, with `Link: rel="next"`.
-- **Refused on a `remote` or `virtual` repository.** Every content operation and every publish
-  is hosted-only and answers 405 with `repository-type`, the status the format specs adopted
-  for their bindings (`chef.md`, `conan.md`, `cran.md`, `swift.md`, `cpan.md`, `composer.md`,
-  `puppet.md`, `openvsx.md`, `luarocks.md`), so a binding and the endpoint answer identically
-  (the resolved remote-refusal decision, was Q10). A proxied repository's removals, yanks and
+- **Refused on a `remote` or `virtual` repository.** Every content operation and every
+  `publish` operation, whether it arrives through the API or through a binding, is hosted-only
+  and answers 405 with `repository-type`, the status the format specs adopted for their
+  bindings (`chef.md`, `conan.md`, `cran.md`, `swift.md`, `cpan.md`, `composer.md`,
+  `puppet.md`, `openvsx.md`, `luarocks.md`), so a binding and the endpoint answer with one
+  status (the resolved remote-refusal decision, was Q10). A handler's own wire publish that is
+  not a binding is outside that rule: it is refused before anything is written, in the status
+  and wording its format spec fixes from what its client prints (`pub.md` answers step 1 with
+  `400` and a code naming the repository type, which `dart pub` prints as an explanation, the
+  shape that spec chose from the client's source), per the resolved wire-rendering decision (was Q16). A proxied repository's removals, yanks and
   deprecations arrive from its upstream through `proxy-cache.md`'s removal table, never from
   here; the one write-shaped action a `remote` accepts is the cache refresh below, which is
   itself refused `repository-type` on a `local` or `virtual`.
@@ -419,20 +429,20 @@ management surface grow one format at a time. Each kind carries one action, and 
 follows the kind, never the format. A format's spec declares which kinds its handler implements
 and the object each reports; it never declares an action.
 
-| Kind | Meaning, stated by effect | Action | Retires |
+| Kind | Meaning, stated by effect | Action | May retire |
 |---|---|---|---|
-| `publish` | Adds a version, or files to a version, from committed blobs and a declared coordinate; a batch publish is one write | `push` on every object it adds; a publish naming no coordinate reports none, so only an unpatterned `push` authorizes it | no |
-| `attach` | Adds an auxiliary file to an existing version that no coordinate binds and no client verifies as the version's bytes (a Helm provenance file, a Vagrant provider file, Hex docs, a Galaxy detached signature); the handler's `Apply` runs the format's coherence check before anything is referenced (Helm: the `.prov` names the chart coordinate and its `files:` sum equals the archive's; Galaxy: the signature verifies over the stored `MANIFEST.json` through `Deps`' `Verifier`, `artifact-verification.md` AC9) and refuses a mismatch `validation` | `push` on the version | no |
+| `publish` | Adds a version, or files to a version, from committed blobs and a declared coordinate; a batch publish is one write; where the format declares it, a publish finding identical bytes at every coordinate it claims completes with no snapshot (the resolved unchanged-publish decision, was Q15) | `push` on every object it adds; a publish naming no coordinate reports none, so only an unpatterned `push` authorizes it | no |
+| `attach` | Adds an auxiliary file to an existing version that no coordinate binds and no client verifies as the version's bytes (a Helm provenance file, Hex docs, a Galaxy detached signature); the handler's `Apply` runs the format's coherence check before anything is referenced (Helm: the `.prov` names the chart coordinate and its `files:` sum equals the archive's; Galaxy: the signature verifies over the stored `MANIFEST.json` through `Deps`' `Verifier`, `artifact-verification.md` AC9) and refuses a mismatch `validation`; whether an existing attachment of the same kind is refused `conflict` (Helm's `.prov`) or replaced in the same write (Hex docs, `hex.md` AC8) is the handler's, stated in its format spec | `push` on the version | no |
 | `detach` | Removes an auxiliary file added by `attach`; the file may be attached again | `push` on the version | no |
 | `withdraw` | Marks a version as not for new resolution while its own routes keep serving, so an existing lock or exact pin still installs it: PyPI and Cargo yank, Julia yank, pub retraction, Swift unavailability, Puppet withdrawal, NuGet unlist, conda revocation | `delete` on the version (the resolved withdraw-action decision, was Q1) | no |
 | `restore` | Reverses `withdraw` | `delete` on the version | no |
 | `annotate` | Changes metadata that excludes nothing from resolution: deprecate and undeprecate (npm, NuGet, Chef, Puppet, Julia, Terraform), discontinue and abandon (pub, Composer), Hex retirement, Hackage preferred versions and metadata revisions, opam metadata revisions, conda record patches and channel notices, CPAN author records | `push` on the object; a repository-wide annotation (conda notices) reports none | no |
 | `place` | Adds an existing version to a tree, suite or component without new bytes (Debian copy into suite) | `push` on the version | no |
-| `unplace` | Removes a version from one tree, suite or component while other placements keep serving (Debian remove from suite, CRAN delete per tree) | `delete` on the version | no |
-| `delete-file` | Removes one file of a version from the head snapshot (PyPI file, Maven file, LuaRocks rock, Homebrew bottle, Vagrant provider file) | `delete` on the file | yes, the file coordinate |
-| `delete-version` | Removes a version and every file of it from the head snapshot | `delete` on the version | yes, the version and its files |
-| `delete-package` | Removes every version of a package as one write; the `Package` row and its document survive (`data-model.md` AC33) | `delete` on the package | yes, every version |
-| `prune` | Removes a computed set of versions or files by a rule the handler evaluates (Maven SNAPSHOT builds, Conan abandoned incomplete revisions) as one write | `delete` on each object removed | yes |
+| `unplace` | Removes a version from one tree, suite or component while other placements of the same bytes keep serving (Debian remove from suite) | `delete` on the version | no |
+| `delete-file` | Removes one file of a version from the head snapshot (PyPI file, Maven file, conda file, LuaRocks rock, Homebrew bottle, Vagrant provider file, a generic artifact, CRAN's one-tree deletion, where each tree holds distinct bytes) | `delete` on the file | yes: the coordinates the handler names, the file's (PyPI, Maven, conda, Vagrant), the version's (CRAN) or none (generic, LuaRocks) |
+| `delete-version` | Removes a version and every file of it from the head snapshot | `delete` on the version | yes: the version and its files at the handler's granularity, or a subset (Composer retires tagged versions only; Open VSX each removed `(version, target)` pair) |
+| `delete-package` | Removes every version of a package as one write; the `Package` row and its document survive (`data-model.md` AC33) | `delete` on the package | yes: every version, at the handler's granularity |
+| `prune` | Removes a computed set of versions or files by a rule the handler evaluates (Maven SNAPSHOT builds; Conan's package revisions, package IDs, a recipe revision's binaries, recipe revisions and abandoned incomplete revisions) as one write | `delete` on each object removed | yes: a subset, possibly empty (Conan retires only removed commit-id recipe revisions) |
 | `rebind` | Changes a binding between an external identity and a package (Swift's repository URL) | `push` on the object it binds to and `delete` on the object it displaces, both required | no |
 | `configure` | Changes repository-wide configuration the handler owns and may render into served documents: Debian suite settings, Alpine and Arch architecture sets, key rotation, Open VSX verified namespaces, CPAN ownership transfer, Hackage's offline root | admin role | no |
 
@@ -474,6 +484,7 @@ the format spec's change is a sibling consequence of this spec.
 | PyPI | delete file, delete release | `delete-file`, `delete-version` | `delete` | none |
 | npm | unpublish version, unpublish package | `delete-version`, `delete-package` | `delete` | the `-rev` routes |
 | npm | deprecate, undeprecate | `annotate` | `push` | the deprecate `PUT` |
+| Galaxy | publish (the import, deferred on the shared runner; `ansible-collections.md`'s resolved deferred-import decision, was its Q9) | `publish` | `push` | `POST {base}/v3/artifacts/collections/`, answered with the task URI |
 | Galaxy | delete version, delete collection | `delete-version`, `delete-package` | `delete` | none (Galaxy NG's routes not served) |
 | Galaxy | attach signature (verified over `MANIFEST.json` before storage, refused `validation`; `artifact-verification.md`'s resolved Galaxy-signatures decision, was its Q6) | `attach` | `push` | none |
 | Cargo | yank, unyank | `withdraw`, `restore` | `delete` | `DELETE .../yank`, `PUT .../unyank` |
@@ -489,7 +500,8 @@ the format spec's change is a sibling consequence of this spec.
 | Swift | delete release (410 problem afterwards) | `delete-version` | `delete` | none |
 | Swift | rebind repository URL | `rebind` | `push` and `delete` | none |
 | CRAN | publish into tree | `publish` | `push` | none |
-| CRAN | delete version (optionally per tree), delete package | `delete-version` or `unplace`, `delete-package` | `delete` | none |
+| CRAN | delete a version from one tree (retires `{package}/{canonical version}`) | `delete-file` | `delete` | none |
+| CRAN | delete version, delete package | `delete-version`, `delete-package` | `delete` | none |
 | conda | publish | `publish` | `push` | the two publish bindings `conda.md` records |
 | conda | patch record, set or clear notices | `annotate` | `push` | none |
 | conda | revoke, unrevoke | `withdraw`, `restore` | `delete` (was `push` in `conda.md`) | none |
@@ -497,7 +509,7 @@ the format spec's change is a sibling consequence of this spec.
 | Composer | publish, republish branch | `publish` | `push` | none |
 | Composer | delete version, delete package | `delete-version`, `delete-package` | `delete` | none |
 | Composer | mark abandoned, clear | `annotate` | `push` | none |
-| CPAN | publish (author and filename before the bytes) | `publish` | `push` | `POST pause/authenquery` |
+| CPAN | publish (author and filename before the bytes) | `publish` | `push` | `POST pause/authenquery`, whose route reports the object none, so it serves unpatterned `push` alone (the resolved binding-scope decision, was Q13) |
 | CPAN | delete | `delete-version` | `delete` | none |
 | CPAN | author record | `annotate` (object `{AUTHOR}`) | `push` | none |
 | CPAN | ownership transfer, key rotation | `configure` | admin | none |
@@ -505,7 +517,8 @@ the format spec's change is a sibling consequence of this spec.
 | Maven | prune SNAPSHOT builds | `prune` | `delete` | none |
 | Hex | retire, unretire | `annotate` | `push` | `POST`/`DELETE .../retire` |
 | Hex | revert | `delete-version` | `delete` | `DELETE .../releases/{version}` |
-| Hex | delete docs | `detach` | `push` | `DELETE .../docs` |
+| Hex | publish docs (replacing an existing docs file in the same write, `hex.md` AC8) | `attach` | `push` | `POST .../releases/{version}/docs` |
+| Hex | delete docs | `detach` | `push` | `DELETE .../releases/{version}/docs` |
 | Julia | publish (source tree, artifacts) | `publish` | `push` | none |
 | Julia | yank, unyank | `withdraw`, `restore` | `delete` | none |
 | Julia | deprecate, undeprecate | `annotate` | `push` | none |
@@ -516,35 +529,41 @@ the format spec's change is a sibling consequence of this spec.
 | Hackage | key rotation, offline root | `configure` | admin | none |
 | Chef | remove cookbook, remove version | `delete-package`, `delete-version` | `delete` | the two Supermarket `DELETE` routes |
 | Chef | deprecate, undeprecate | `annotate` | `push` | none |
-| Conan | the five removes | `delete-version`, `delete-package`, `prune` (per `conan.md`'s table) | `delete` | the client's `DELETE` routes |
-| Conan | drop abandoned incomplete revisions | `prune` | `delete` | none |
+| Conan | remove a package revision, a package ID, a recipe revision's binaries, a recipe revision | `prune` (retiring only a removed commit-id recipe revision, as `{ref}#{rrev}`) | `delete` | the client's and the reference server's `DELETE` routes, per `conan.md`'s table |
+| Conan | remove a reference (every revision) | `delete-version` | `delete` | `DELETE /v2/conans/{ref}` (reference-server route) |
+| Conan | drop abandoned incomplete revisions | `prune` (retiring nothing) | `delete` | none |
 | Puppet | publish | `publish` | `push` | `POST /v3/releases` |
 | Puppet | deprecate, undeprecate | `annotate` | `push` | `PATCH /v3/modules/{slug}` |
 | Puppet | withdraw, restore | `withdraw`, `restore` | `delete` | `DELETE /v3/releases/{slug}` |
 | Puppet | delete module (soft), hard-delete release | `withdraw` of every release, `delete-version` | `delete` | `DELETE /v3/modules/{slug}` |
-| Debian | publish binary or source | `publish` | `push` | dput's HTTP upload |
+| Debian | publish binary or source | `publish` | `push` on every object it adds | dput's `.changes` `PUT` (the per-file `PUT`s before it are uploads, not bindings); its route reports one object while `Authorize` reports every binary and the source, the case the resolved binding-scope decision (was Q13) states |
 | Debian | copy into suite | `place` | `push` | none |
 | Debian | remove from suite, delete version | `unplace`, `delete-version` | `delete` | none |
 | Debian | suite configuration, key rotation | `configure` | admin | none |
 | RPM, Alpine, Arch | batch publish (one write) | `publish` | `push` on every object | none |
 | RPM, Alpine, Arch | delete version, delete package | `delete-version`, `delete-package` | `delete` | none |
 | RPM | advisory, comps and module operations | `annotate` (object none) | `push` | none |
-| RPM, Alpine, Arch | architecture set, key rotation | `configure` | admin | none |
+| Alpine, Arch | architecture set, key rotation (Arch's announce, switch and retire phases) | `configure` | admin | none |
+| RPM | key rotation (no architecture set: `rpm.md` declares no `settings` document) | `configure` | admin | none |
 | LuaRocks | remove version, remove package, remove one rock | `delete-version`, `delete-package`, `delete-file` | `delete` | none |
-| Open VSX | remove packages (version and target lists), remove extension | `delete-version`, `delete-package` | `delete` | `ovsx unpublish` |
+| Open VSX | remove packages (version and target lists, each removed `(version, target)` pair retired), remove extension | `delete-version`, `delete-package` | `delete` | `api/{namespace}/{extension}/delete` from `ovsx unpublish`, with `allVersions=true` for the extension |
 | Open VSX | declare or withdraw verified namespace | `configure` | admin | none |
 | opam | publish, revise opam file | `publish`, `annotate` | `push` | none |
-| opam | delete | `delete-version` | `delete` | none |
+| opam | remove version, remove package | `delete-version`, `delete-package` | `delete` | none |
 | Terraform | publish module or provider (all platforms) | `publish` | `push` | none |
 | Terraform | delete version, delete package, deprecate | `delete-version`, `delete-package`, `annotate` | `delete`, `delete`, `push` | none |
 | Homebrew | publish bottle (archive plus its record) | `publish` | `push` | none |
 | Homebrew | delete (per file) | `delete-file` | `delete` | none |
-| Vagrant | publish version, add provider file, set default architecture | `publish`, `attach`, `annotate` | `push` | none |
+| Vagrant | publish version, add provider file to a version | `publish` (a provider file is a coordinate `(version, provider, architecture)` the client downloads and checksums, so not `attach`) | `push` | none |
+| Vagrant | set a provider's default architecture | `annotate` | `push` | none |
 | Vagrant | delete provider file, delete version, delete box | `delete-file`, `delete-version`, `delete-package` | `delete` | none |
-| generic | delete artifact | `delete-file` | `delete` | the format's own `DELETE`, which its spec already serves |
+| generic | delete artifact (retiring nothing, so the path accepts a new `PUT`) | `delete-file` | `delete` | the format's own `DELETE`, which its spec already serves |
 
 Cargo's owners mutations are not management operations: `cargo.md` refuses them before scope
-evaluation (its resolved owners decision), so there is nothing to bind.
+evaluation (its resolved owners decision), so there is nothing to bind. OCI declares no kinds at
+all: every write it has, tag and manifest deletion included, is on its own wire and retires
+nothing (`oci.md`, "This format declares no management operation kinds"), so the table carries no
+OCI row and AC24 asks no `script` case of it.
 
 ### Bindings: one operation, two ways in
 
@@ -560,15 +579,35 @@ rule for when a route may be one, drawn from the format specs' own decisions:
   no reference API documents is never a binding; it would be a per-format management surface
   with nothing but `curl` behind it, which is what `helm.md` and `pub.md` refused.
 - A binding **has no behaviour of its own**: no authorization rule, no write, no validation
-  beyond parsing the wire. Its `Scope(r)` reports exactly the operation's object and action, and
-  the handler's route implementation constructs the operation value and submits it through the
-  same entry point the API uses. `nuget.md` AC19's twin-package case is the model: one version
-  unlisted through the endpoint and one through the real client, and the served documents
-  compared.
+  beyond parsing the wire. The handler's route implementation constructs the operation value
+  and submits it through the same entry point the API uses. `nuget.md` AC19's twin-package case
+  is the model: one version unlisted through the endpoint and one through the real client, and
+  the served documents compared.
+- **A binding is never wider than its operation** (the resolved binding-scope decision, was
+  Q13). The route's `Scope(r)` carries the kind's action, and its object is one of the objects
+  the operation's `Authorize` reports, or none, or a route-level object the format spec records
+  with its reason; whichever it is, `Submit` then evaluates **every** (object, action) pair
+  `Authorize` reports, on the binding exactly as on the API, so the route's check is an extra
+  gate and never a substitute. A principal the API refuses is therefore refused through the
+  binding too, and a binding may only be stricter: CPAN's cpan-upload route reports none, because
+  its part order varies from run to run, so it serves unpatterned `push` alone while the API
+  accepts a patterned one (`cpan.md`, its resolved binding-object decision); dput's `.changes`
+  `PUT` reports `src:{source}/{version}/changes` while the publish it submits reports every
+  binary and the source coordinate, all of which must pass (`debian.md`, "The dput binding").
+  `Scope(r)` reports one object by the pin (`format-handler-interface.md`, "The pinned method
+  set"), and whether a route should report several is that spec's re-open's to judge, not this
+  spec's.
+- **A binding renders the operation's outcome in its wire's shape.** The status of every
+  central refusal is the API's (405 `repository-type`, 409 `retired`, 401, 404), and the body
+  is the wire's own error shape where it has one: the Forge's error document on Puppet's routes,
+  a reason phrase and a one-line `text/plain` body on cpan-upload's, the problem document where
+  the wire has no shape of its own (the resolved wire-rendering decision, was Q16).
 - Bindings are declared, not discovered. The optional interface below lists them, so the
   architecture test in "Mechanical enforcers" can verify, for every declared binding, that the
-  route's `Scope(r)` equals the operation's scope, and that submitting the operation through the
-  binding and through the API produces the same snapshot delta.
+  route's action is the kind's, that its object is one `Authorize` reports or none or the
+  route-level object its format declared, that a principal the API refuses is refused through
+  the binding, and that submitting the operation through the binding and through the API
+  produces the same snapshot delta.
 
 ### Dispatch: the optional `Operator` interface
 
@@ -584,17 +623,24 @@ object an operation addresses. The resolved dispatch decision (was Q2) answers t
   refusal: `Operation` (repository, kind, target coordinate as the handler's canonical string
   plus the structured package, version and file names the core can index, an opaque `args`
   JSON document the core never parses, the reason text, the declared blob digests for a
-  publish) and `Outcome` (the coordinates to retire, the objects and actions the operation
-  addressed, and a result document the handler writes for the `Operation` record). Values, not
-  interfaces: the core stores and logs them, and a handler needs nothing from them but fields.
+  publish), `Addressed` (the (object, action) pairs and the claimed coordinates `Authorize`
+  reports) and `Outcome` (the coordinates to retire, which the handler chooses at its own
+  granularity and which may be a subset of what the operation removed or none at all, the
+  objects and actions the operation addressed, whether a publish changed nothing, and a result
+  document the handler writes for the `Operation` record). Values, not interfaces: the core
+  stores and logs them, and a handler needs nothing from them but fields.
 - `internal/manage` declares the **consumer-side interface** where it is used, in the Go
   skill's sense, and asserts it at registration:
 
   `Operations() []format.Kind`, the kinds the handler implements;
-  `Bindings() []format.Binding`, each a route pattern and the kind it binds onto;
-  `Authorize(ctx, op) ([]format.Scope, error)`, the (object, action) pairs an operation
-  addresses, which may read committed blobs the operation names (a batch publish reports each
-  file's coordinate from a bounded peek at the archive);
+  `Bindings() []format.Binding`, each a route pattern, the kind it binds onto and, where the
+  route's `Scope(r)` reports an object `Authorize` does not (dput's `.changes`), a flag naming it
+  a route-level object, so the binding test knows which membership to assert;
+  `Authorize(ctx, op) (format.Addressed, error)`, the (object, action) pairs an operation
+  addresses and the coordinates it **claims** at the handler's retirement granularity, which may
+  read committed blobs the operation names (a batch publish reports each file's coordinate from a
+  bounded peek at the archive, a conda publish claims `{subdir}/{filename}` while its object is
+  `{name}/{version}/{build}`);
   `Apply(ctx, tx, op) (format.Outcome, error)`, the operation's effect inside the write
   transaction the core opened, through the same metadata-store and reference-creation calls a
   publish uses.
@@ -605,10 +651,12 @@ object an operation addresses. The resolved dispatch decision (was Q2) answers t
 - The core's side is one function, `Submit`, that every entry point calls: the API route, and
   every binding through `Deps`. `Submit` resolves the repository and refuses the type, checks
   the idempotency key, asks `Authorize` and evaluates every pair through the central authorizer,
-  checks the retirement set for a publish, opens the write transaction, calls `Apply`, records
-  the retirements and the `Operation`, commits the snapshot, and emits the audit line; a refusal
-  or an error at any step before commit leaves no snapshot, no retirement and no `Operation`
-  record other than a `failed` one for a handler-side refusal after authorization.
+  opens the write transaction and declares on it the coordinates `Authorize` claimed (which
+  refuses a retired one at once, before `Apply`, and again at commit), calls `Apply`, records
+  the retirements and the `Operation`, commits the snapshot (none for an unchanged publish), and
+  emits the audit line; a refusal or an error at any step before commit leaves no snapshot, no
+  retirement and no `Operation` record other than a `failed` one for a refusal after
+  authorization (in `Apply`, or a retirement committed concurrently and caught at commit).
 - **What this feeds the re-open.** Whether the four methods should fold into the pin is a
   question for `format-handler-interface.md`'s scheduled re-open. That spec has recorded this
   answer: `Operator` is one of three optional interfaces discovered at registration, beside
@@ -617,7 +665,12 @@ object an operation addresses. The resolved dispatch decision (was Q2) answers t
   Q10), and its re-open inputs name the three together with `async-operations.md`'s finding that
   a runner reaches a handler only through `Apply`. What remains for this spec to bring is the
   evidence: generic's `delete-file` and the write-triggered prototype's Debian-shaped `publish`
-  and `configure`, both built on the interface before any Tier 1 handler (AC27).
+  and `configure`, both built on the interface before any Tier 1 handler (AC27). Two findings of
+  the 2026-09-28 closing sweep ride with it as re-open inputs, neither changing the pin now:
+  whether `Scope(r)` should report several objects for a multi-object binding (dput's
+  `.changes`; the resolved binding-scope decision, was Q13, makes it unnecessary for
+  correctness), and the claim declaration a handler's own wire write makes on the write
+  transaction (was Q14), which is a `Deps`-level call rather than a method.
 - **What it rejects.** A sixth pinned method (amends the pin outside the re-open, for a
   capability half the handlers lack); dispatching over `ServeHTTP` with a synthetic request
   (hides the contract in a URL grammar and makes the object reporting a string parse); and a
@@ -634,13 +687,25 @@ The rules every format spec restated, stated once and held mechanically:
   conda `patch_instructions.json` import, a Maven SNAPSHOT prune and a Debian suite copy are
   each one write, per the bulk-operation rule `data-model.md` states and `generic.md` first
   applied.
+- **An unchanged publish completes with no snapshot** (the resolved unchanged-publish decision,
+  was Q15). A format may declare that a `publish` finding, at every coordinate it claims, a file
+  with identical bytes (equal CAS digests) is a completed no-op rather than a `conflict`: `Apply`
+  reports it in `Outcome`, the core commits nothing, and the `Operation` completes with no
+  snapshot reference and `unchanged: true` in its result document, so the client's retry
+  succeeds as the first attempt did and nothing downstream moves (no pointer, no freshness
+  signal, no index regeneration). `cran.md` AC4, `puppet.md` AC6, `hackage.md` AC12 and `cpan.md`
+  AC12 declare it, for publishers that retry with no `Idempotency-Key`; a publish with any new or
+  different byte is an ordinary write or an ordinary `conflict`; a retired claimed coordinate is
+  refused `retired` whatever the bytes, before identity is compared. It applies to `publish`
+  alone: every other completed content operation produces exactly one snapshot.
 - **A refused operation leaves nothing**: no snapshot, no partial document, no retirement, no
-  pointer move. Refusal before `Apply` (authentication, authorization, repository type, retired
-  coordinate, idempotency conflict, unknown kind) is a problem response and an audit line only.
-  A handler-side refusal inside `Apply` (an archive whose `DESCRIPTION` disagrees with the
-  declared coordinate, a provenance file where one exists) rolls the transaction back, records a
-  `failed` `Operation` so the caller can poll it if the operation was deferred, and answers the
-  problem the handler returned.
+  pointer move. Refusal before `Apply` (authentication, authorization, repository type, a
+  retired claimed coordinate, idempotency conflict, unknown kind) is a problem response and an
+  audit line only. A handler-side refusal inside `Apply` (an archive whose `DESCRIPTION`
+  disagrees with the declared coordinate, a provenance file where one exists), and a retirement
+  committed by a concurrent write and caught when this one commits, roll the transaction back,
+  record a `failed` `Operation` so the caller can poll it if the operation was deferred, and
+  answer the problem the refusal carries.
 - **No operation deletes a blob-store object.** `delete-*`, `prune`, `unplace` and repository
   deletion end references; the blobs return through snapshot pruning and the sweep
   (`storage-and-gc.md` AC11, AC14), and AC15's architecture test, which scans the whole module
@@ -685,21 +750,47 @@ record outside snapshot content:
   entity table, "A package outlives its versions" and AC35, which asserts the same-transaction
   write, absence from snapshots, survival across pruning and refusal through the shared write
   path); this spec added no entity by fiat.
-- **Refusal is central.** The shared write path refuses any write whose addressed object, or
-  any object the handler reports for it, is retired in that repository, with `retired` (409)
-  naming the coordinate. That covers a handler's own publish route (the object `Scope(r)`
-  reports) and a `publish` operation (the objects `Authorize` reports) with one check, and no
-  handler carries the set forward, renders it, or remembers it across a repoint, because a
+- **Refusal is central, and it compares what a write claims** (the resolved claimed-coordinate
+  decision, was Q14). The shared write path refuses any write that **claims** a coordinate
+  retired in that repository. A claim is the write's target at the handler's retirement
+  granularity, which is not always its authorization object: conda claims `{subdir}/{filename}`
+  under the object `{name}/{version}/{build}`, Conan `{ref}#{rrev}` under `{ref}`, PyPI a
+  filename under `{name}/{version}`, Open VSX `{namespace}/{extension}/{version}@{target}` under
+  its route's object. A `publish` operation's claims are the ones `Authorize` reports beside its
+  pairs; a handler's own wire write that is not a binding (Conan's `PUT` of a revision's files,
+  Open VSX's and npm's publish routes) declares its claims on the write transaction it opens
+  through `Deps` as soon as it knows them, from the URL before the body where the route carries
+  them (Conan, Swift) or from the ingested bytes otherwise (Open VSX, npm). The transaction
+  checks each claim when it is declared, so a refusal comes before the handler does further
+  work, and again at commit, where the check and the retiring write serialise on the
+  repository's head, so a deletion committed between the two cannot let a retired coordinate
+  through. No handler carries the set forward or remembers it across a repoint, because a
   repoint touches snapshot content and the set is not snapshot content. The trap
-  `data-model.md` named, a pointer moved backwards restoring a package document that predates
-  a retirement, cannot occur.
+  `data-model.md` named, a pointer moved backwards restoring a package document that predates a
+  retirement, cannot occur.
+- **The decision is central; the rendering is the wire's** (the resolved wire-rendering
+  decision, was Q16). The shared write path returns a typed `retired` refusal carrying the
+  coordinates. The API answers it as the `retired` problem (409); a binding answers 409 in its
+  wire's error shape (Puppet's Forge document, cpan-upload's reason phrase); and a handler's own
+  wire write renders it in the status and wording its format spec fixes from what its client
+  does with them: Open VSX answers `400` with the reference server's "is already published and
+  was removed" wording so that `ovsx --skip-duplicate` does not swallow it (`openvsx.md` AC7),
+  Swift a `409` problem document with `Content-Version: 1` (`swift.md` AC3). Whatever the
+  rendering, nothing is committed.
 - The `Package` row's survival ("A package outlives its versions") remains required, because a
   package with no versions is still addressable and its document still carries format state
   (npm dist-tags, Galaxy's namespace record); it is no longer what keeps a coordinate retired.
 - Granularity is the handler's: PyPI retires filenames, Maven retires file coordinates, npm
-  retires `name@version`, LuaRocks retires the version but not one rock's architecture. The
+  retires `name@version`, LuaRocks retires the version but not one rock's architecture, CRAN's
+  one-tree deletion retires the version, Open VSX each removed `(version, target)` pair. The
   handler returns the coordinates to retire in `Outcome`, and the kind table says which kinds
-  retire at all (`withdraw` never does, which is the point of it).
+  may retire at all (`withdraw` never does, which is the point of it). A retiring kind's
+  `Outcome` may name a subset of what it removed, or nothing: generic's `delete-file` and
+  LuaRocks' one-rock deletion retire nothing, Composer retires tagged versions and not branch
+  versions, and Conan's `prune` retires only removed commit-id recipe revisions, since a removed
+  revision whose identifier is its manifest's digest can only ever return with the same bytes.
+  The one invariant is the claim side: whatever a handler retires, it must claim at the same
+  granularity, or the refusal never matches.
 - Retirements are readable (`GET .../retirements`, `pull`) so a publisher refused with `retired`
   can see why, and seedable through the harness's `state` vocabulary so an effect case can start
   from a retired coordinate without running the deletion first.
@@ -721,8 +812,10 @@ resume) and by the declared-coordinate rule `cran.md` and `julia.md` adopted:
 2. **The publish operation** names committed digests, a declared coordinate (package, version
    and, where the format needs it, the tree, suite and component, author, or target), and the
    format's `args` document. The handler peeks the committed blobs to confirm the declaration
-   (a `DESCRIPTION`, a `.PKGINFO`, a `control` member, a `Project.toml`), reports the objects,
-   and refuses a disagreement with `validation` (422) before anything is referenced. A publish
+   (a `DESCRIPTION`, a `.PKGINFO`, a `control` member, a `Project.toml`), reports the objects and
+   the coordinates it claims, and refuses a disagreement with `validation` (422) before anything
+   is referenced; where the format declares the unchanged publish, identical bytes at every
+   claimed coordinate complete with no snapshot (was Q15). A publish
    naming no coordinate reports the object none, so only an unpatterned `push` authorizes it,
    which is `cran.md`'s and `julia.md`'s rule generalised. A committed-but-unreferenced blob
    that a refused publish leaves behind is the orphan `storage-and-gc.md` AC3 already collects.
@@ -867,11 +960,11 @@ grant promotes (the resolved pointer-action decision, was Q6). A repoint is not 
 never was; it emits an `Operation` record of kind `repoint` for the audit trail all the same,
 because "who promoted what to production and when" is the first question an operator asks.
 
-The cross-cutting freshness theme in `agents/spec-loop/consequences.md` (seven formats whose
-clients ignore an index older than the one they hold) means a repoint must also advance the
-pointer's forward-moving freshness signal; that mechanism is `data-model.md`'s to define and
-this spec requires only that a repoint through this API triggers it, which the formats' rollback
-cases will observe.
+The cross-cutting freshness theme (seven formats whose clients ignore an index older than the
+one they hold) means a repoint must also advance the pointer's forward-moving freshness signal;
+that mechanism is `data-model.md`'s per-pointer freshness record (`moved_at` and the generation
+counter, "Freshness scoped to the pointer", AC36), which a repoint through this API advances like
+every other pointer transition, and which the formats' rollback cases observe.
 
 ### Audit: the `Operation` record and the audit line
 
@@ -929,8 +1022,9 @@ stated so no case ever claims more than it proves:
   matrix untested; that validator rule is `conformance-harness.md` AC26, which asserts it from
   the harness side.
 - **The write accounting** is verified where conformance cannot see it: a property test over
-  every kind asserting one snapshot per completed operation and none per refused one, with a
-  fault injected between authorization and `Apply` and between `Apply` and commit.
+  every kind asserting one snapshot per completed operation, none per unchanged publish and none
+  per refused one, with a fault injected between authorization and `Apply` and between `Apply`
+  and commit.
 
 ### Configuration and the CLI stance
 
@@ -971,10 +1065,10 @@ that a boundary enforced only by review is not enforced:
 |---|---|
 | Every management route is mounted under the reserved `api` segment and mapped through the central authorizer; no code in `internal/manage` evaluates authorization itself | `internal/manage/arch_test.go`, the shape `replication.md` AC18 uses |
 | No handler package imports `internal/manage`; handlers reach `Submit` only through `Deps`; nothing in `internal/manage` imports the write-transaction entry point that waives `ErrReplica` | `internal/manage/arch_test.go` (import graph); `internal/storage/arch_test.go` (`storage-and-gc.md` AC25, the waiver's single importer) |
-| For every binding a handler declares, the route's `Scope(r)` equals the operation's `Authorize` result, and submitting through the binding and through the API yields the same snapshot delta | `internal/manage/binding_test.go`, table-driven over every registered handler's `Bindings()` |
-| One operation, one snapshot; a refused operation, none | `internal/manage/accounting_test.go`, property test with fault injection |
+| For every binding a handler declares, the route's action is the kind's, its object is one `Authorize` reports or none or the route-level object the `Binding` declares, every principal the API refuses is refused through the binding, and submitting through the binding and through the API yields the same snapshot delta | `internal/manage/binding_test.go`, table-driven over every registered handler's `Bindings()` and a principal table (unpatterned, in-pattern, partly out-of-pattern, wrong action) |
+| One operation, one snapshot; an unchanged publish, none; a refused operation, none | `internal/manage/accounting_test.go`, property test with fault injection |
 | No object deletion anywhere in `internal/manage` | `storage-and-gc.md` AC15's architecture test, module-wide |
-| A retired coordinate is refused on every write path | `internal/manage/retirement_test.go` (API publish, handler publish route, repoint interleavings) |
+| A retired coordinate is refused on every write path, compared on the write's claims, at declaration and again at commit | `internal/manage/retirement_test.go` (API publish, binding, a fixture handler's own wire write declaring a claim finer than its object, a deletion committed between declaration and commit, repoint interleavings) |
 | Every declared kind has a `script`-driven conformance case | `conformance/core/case_validate_test.go` (`conformance-harness.md` AC26's validator rule, asserted there from the harness side) |
 | The OpenAPI document matches the route table, including the routes `internal/credential`, `internal/signing`, `internal/repository`, `internal/async` and `internal/replication` contribute under `/api/v1`, and loses nothing between tags | `internal/manage/openapi/openapi_test.go` |
 | Every request to the API or a binding emits exactly one audit line through `telemetry.Auditor.Emit` and every completed one exactly one `Operation` | `internal/manage/audit_test.go` on `telemetry.NewTestRecorder` |
@@ -1000,22 +1094,35 @@ that a boundary enforced only by review is not enforced:
       and with a `rebind` whose displaced object is out of pattern.
 - [ ] AC5: Every completed content operation produces exactly one snapshot and advances the
       default pointer, however many versions or files it touches, proven for one kind of each
-      class and for a bulk `delete-package`, `prune` and batch `publish`; and every refused
-      operation, whether refused before `Apply` or inside it, produces no snapshot, no
-      retirement, no partial document and no `Operation` record other than a `failed` one for
-      an in-`Apply` refusal, proven with faults injected between authorization and `Apply` and
-      between `Apply` and commit.
+      class and for a bulk `delete-package`, `prune` and batch `publish`, the one exception being
+      an unchanged publish: on a fixture handler declaring it, a keyless `publish` whose every
+      claimed coordinate already holds identical bytes completes with no snapshot, no pointer
+      or freshness change and an `Operation` whose result carries `unchanged: true`, while one
+      differing byte makes it an ordinary write or `conflict` and a retired claimed coordinate
+      is refused `retired` with identical bytes; and every refused operation, whether refused
+      before `Apply`, inside it or at commit, produces no snapshot, no retirement, no partial
+      document and no `Operation` record other than a `failed` one for a refusal after
+      authorization, proven with faults injected between authorization and `Apply` and between
+      `Apply` and commit.
 - [ ] AC6: No code path in `internal/manage` or in any handler's management path deletes an
       object from the blob store; a `delete-version` of the only version referencing a blob
       leaves the object present until the snapshot that held it is pruned and the sweep runs,
       after which it is collected, on an injected clock.
-- [ ] AC7: Every content operation and every publish against a `remote` or `virtual`
-      repository answers 405 with problem type `repository-type` and creates nothing, identically
-      through the API and through every binding.
-- [ ] AC8: For every binding every registered handler declares, the route's `Scope(r)` equals
-      the operation's `Authorize` result in action and object, and the same operation submitted
-      through the binding and through the API produces byte-identical served documents and
-      snapshot deltas, proven by a table test that enumerates `Bindings()` of every handler.
+- [ ] AC7: Every content operation and every `publish` operation against a `remote` or
+      `virtual` repository answers 405 with problem type `repository-type` and creates nothing,
+      with that status through the API and through every binding, the body in the binding
+      wire's error shape where it has one; a handler's own wire publish that is not a binding is
+      outside this criterion, refused with nothing written in the status its format spec fixes
+      and asserts with its real client (`pub.md` AC14's `400` at step 1).
+- [ ] AC8: For every binding every registered handler declares, the route's `Scope(r)` carries
+      the kind's action and an object that is one of the operation's `Authorize` objects, or
+      none, or the route-level object the `Binding` declares; every principal the API refuses
+      the operation is refused it through the binding, including a principal holding the route's
+      object but not every object `Authorize` reports; a principal with an unpatterned grant of
+      the kind's action is accepted through both; and the same operation submitted through the
+      binding and through the API produces byte-identical served documents and snapshot deltas,
+      proven by a table test that enumerates `Bindings()` of every handler, with fixture
+      bindings of all three object shapes (the dput and cpan-upload shapes among them).
 - [ ] AC9: The `withdraw` and `restore` kinds require `delete` and the `annotate` kind requires
       `push` for every format that declares them, so a NuGet unlist, a conda revocation, a PyPI
       yank and a Cargo yank are each refused to a principal holding `push` alone and accepted
@@ -1035,12 +1142,20 @@ that a boundary enforced only by review is not enforced:
       document and excludes nothing; `configure` is refused to every non-admin principal; and
       each kind is then proven on the first real handler that declares it.
 - [ ] AC12: A coordinate retired by `delete-file`, `delete-version`, `delete-package` or `prune`
-      is refused with `retired` on every later write that claims it, through a handler's own
-      publish route and through the `publish` operation, for the life of the repository:
+      is refused on every later write that claims it, through a handler's own publish route,
+      through a binding and through the `publish` operation, for the life of the repository:
       including after every snapshot that ever held the coordinate is pruned, after the default
       pointer is repointed to a snapshot older than the retirement and back, and after the
-      package's last version is removed; and the `Retirement` record is never a GC mark root,
-      proven by a blob whose only mention is a retirement being collected.
+      package's last version is removed; the comparison is on the write's claimed coordinates,
+      so a fixture handler whose claim is finer than its authorization object (one file of a
+      version, one target of a version) is refused for the retired claim and accepted for a
+      sibling claim under the same object; a claim declared on a handler's own wire write is
+      refused at declaration, and a retirement committed between declaration and commit is
+      caught at commit with nothing committed; the API answers the `retired` problem (409), a
+      binding 409 in its wire's shape, and a handler's own wire route the status its format
+      spec fixes; a retiring kind whose `Outcome` names a subset or none writes exactly those
+      `Retirement` records; and the `Retirement` record is never a GC mark root, proven by a
+      blob whose only mention is a retirement being collected.
 - [ ] AC13: A `publish` operation naming committed digests and a declared coordinate is refused
       with `validation` and references nothing when the handler's peek disagrees with the
       declaration; a publish declaring no coordinate reports the object none and is accepted
@@ -1205,14 +1320,14 @@ that a boundary enforced only by review is not enforced:
 | AC2 | architecture | `internal/manage/arch_test.go` (route-to-scope mapping through the authorizer; import graph over every handler package) |
 | AC3 | integration | `internal/manage/authz_test.go` (per kind class: unauthenticated, wrong action, out-of-pattern, in-pattern, unpatterned; existence-oracle equality of the two `not-found` responses) |
 | AC4 | integration | `internal/manage/authz_test.go` (batch publish with one out-of-pattern object; `rebind` with an out-of-pattern displaced object; snapshot table unchanged) |
-| AC5 | property + fault injection | `internal/manage/accounting_test.go` (every kind; faults between authorization and `Apply`, and between `Apply` and commit) |
+| AC5 | property + fault injection | `internal/manage/accounting_test.go` (every kind; faults between authorization and `Apply`, and between `Apply` and commit; the unchanged publish on a declaring fixture handler with identical, one-byte-different and retired claims; the commit-time refusal's `failed` record) |
 | AC6 | architecture + integration | `internal/storage/gc/arch_test.go` (the module-wide deleter scan, `storage-and-gc.md` AC15); `internal/manage/reclaim_test.go` (delete, prune, sweep on an injected clock) |
-| AC7 | integration + conformance | `internal/manage/repository_type_test.go` (API and fixture binding against `remote` and `virtual`); each format's own binding case asserts the same 405 |
-| AC8 | table (architecture) | `internal/manage/binding_test.go` (enumerates every registered handler's `Bindings()`; scope equality; delta and document equality) |
+| AC7 | integration + conformance | `internal/manage/repository_type_test.go` (API and fixture binding against `remote` and `virtual`, the binding's status equal and its body in the fixture wire's shape); each format's own binding case asserts the same 405, and a format's own non-binding wire publish its own status (`conformance/pub/publish_test.go`, `pub.md` AC14) |
+| AC8 | table (architecture) | `internal/manage/binding_test.go` (enumerates every registered handler's `Bindings()`; action equality and object membership among `Authorize`'s objects, none, or the declared route-level object; a principal table in which every API refusal is a binding refusal, including a principal holding only the route's object; delta and document equality; fixture bindings in the dput and cpan-upload shapes) |
 | AC9 | integration | `internal/manage/action_table_test.go` (the kind table against `auth.md`'s vocabulary; per-format declared kinds checked against the reconciliation table) |
 | AC10 | unit | `internal/manage/register_test.go` (kind-less handler; declared-but-unimplemented kind) |
 | AC11 | integration | `internal/manage/kinds_test.go` (every kind on the fixture handler: `withdraw`, `restore`, `attach`, `detach`, `place`, `unplace`, `annotate`, `configure`; `args` byte equality at `Apply`; first real handler declaring each kind) |
-| AC12 | property + integration | `internal/manage/retirement_test.go` (handler route and `publish` operation; pruning of every holding snapshot; repoint interleavings; last-version removal; blob mentioned only by a retirement collected) |
+| AC12 | property + integration | `internal/manage/retirement_test.go` (handler route, binding and `publish` operation; claims finer than the authorization object with a sibling claim accepted; refusal at claim declaration and at commit after an interleaved retiring write; the three renderings on the API, a fixture binding and a fixture wire route; subset and empty `Outcome`s; pruning of every holding snapshot; repoint interleavings; last-version removal; blob mentioned only by a retirement collected) |
 | AC13 | integration | `internal/manage/publish_test.go` (declaration mismatch; undeclared coordinate under patterned and unpatterned `push`; orphan collection on an injected clock) |
 | AC14 | integration | `internal/manage/upload_session_test.go` (multi-gigabyte fixture streamed from a generator; dropped connection and resume; memory and disk ceilings asserted; publish latency independent of size) |
 | AC15 | integration | `internal/manage/publish_test.go` (multipart form versus sessions plus operation; delta and result-document equality) |
@@ -1295,10 +1410,11 @@ Left empty by `/spec`. Populated by `/tasks` once the spec reaches `planned`.
 
 ## Open Questions
 
-None open. Every question this authoring pass raised, and the two the 2026-09-28 reconciliation
-raised, is recorded below in decision shape and adopted at its own recommendation under the
-owner's standing delegation (`CLAUDE.md`, 2026-09-26); `grep -n "standing delegation"` is the
-review queue.
+None open. Every question this authoring pass raised, the two the 2026-09-28 reconciliation
+raised and the four the 2026-09-28 closing sweep raised (Q13 to Q16, adopted on Opus and marked
+for a Fable recheck), is recorded below in decision shape and adopted at its own recommendation
+under the owner's standing delegation (`CLAUDE.md`, 2026-09-26); `grep -n "standing delegation"`
+is the review queue.
 
 ### Resolved: which action the `withdraw` kind requires (was Q1)
 
@@ -1530,7 +1646,10 @@ strength of what their clients print, and the API and a binding must answer iden
 
 **Why this is yours:** it fixes a status code every format's conformance cases assert.
 
-Accepted cost: the semantic looseness.
+Accepted cost: the semantic looseness. Reconciled 2026-09-28: "identically" means one status
+through both ways in; the body of a binding's refusal is its wire's error shape where it has
+one, and a handler's own non-binding wire publish is outside this decision (the resolved
+wire-rendering decision, was Q16).
 
 ### Resolved: where the deleted-repository listing lives (was Q11)
 
@@ -1591,6 +1710,133 @@ demand.
 
 Accepted cost: upstream traffic under `push`, bounded by `upstream-adapters.md`'s limits.
 
+### Resolved: how a binding's route scope relates to its operation (was Q13)
+
+**Adopted 2026-09-28 under the owner's standing delegation, on Opus.** Option A: a binding is
+never wider than its operation. The route's `Scope(r)` carries the kind's action and an object
+that is one of `Authorize`'s objects, none, or a route-level object the `Binding` declares;
+`Submit` evaluates every pair `Authorize` reports on both ways in. Folded through Design
+("Bindings", "Dispatch"), the enforcer table, the reconciliation table's Debian and CPAN rows,
+AC8 and its Test Plan row.
+
+The conflict: this spec's binding rule and AC8 required a binding's `Scope(r)` to **equal** its
+operation's `Authorize` result, but two adopted format decisions cannot meet that. dput's
+`.changes` `PUT` publishes every binary and the source it names, while `Scope(r)` reports exactly
+one object by the pin (`debian.md`, "The dput binding", which reported the seam). cpan-upload's
+route reports none, because the client orders its multipart parts differently from run to run,
+while the `publish` it submits reports `{AUTHOR}/{distribution}/{version}` from a bounded peek
+(`cpan.md`, its resolved binding-object decision).
+
+**Recommendation:** A, because the property the equality was standing in for is that a binding
+can never authorize what the API refuses, and evaluating every `Authorize` pair on both paths
+gives exactly that while letting a route be stricter where its wire forces it.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Never wider: the route's object is among `Authorize`'s, none, or a declared route-level object; `Submit` evaluates every pair on both paths** | The safety property stated directly and tested with a principal table; dput and cpan-upload work as adopted | A binding may refuse a patterned principal the API accepts (cpan-upload serves unpatterned `push` alone); a `Binding` carries one more field |
+| **B. Keep equality and drop the two bindings** | The simplest rule | `dput` and cpan-upload stop working, reversing two adopted format decisions for a rule stronger than the property it protects |
+| **C. Let `Scope(r)` report several objects** | Equality restored | A pin amendment outside the re-open, for two routes; recorded instead as a question the re-open may take up |
+
+**Why this is yours:** it changes the stated contract every format's bindings are tested
+against.
+
+Accepted cost: bindings may be stricter than the API, and a format spec must say so when one is.
+
+### Resolved: what the retirement check compares, and how a wire write reports it (was Q14)
+
+**Adopted 2026-09-28 under the owner's standing delegation, on Opus.** Option A: the check
+compares a write's **claimed** coordinates, at the handler's retirement granularity; a `publish`
+operation's claims come from `Authorize` (which now returns `format.Addressed`, its pairs plus
+its claims), a handler's own wire write declares its claims on the write transaction it opens
+through `Deps`, and the transaction checks each claim when declared and again at commit. A
+retiring kind's `Outcome` may name a subset of what it removed, or nothing. Folded through
+Design ("Retirement is core-held", "Dispatch", "Every operation is one completed logical
+write"), the kind table's column, the enforcer table, AC5, AC12 and their Test Plan rows.
+
+The conflict: this spec's refusal compared "the addressed object", the object `Scope(r)` or
+`Authorize` reports, yet four formats retire at a granularity finer than their authorization
+object: conda retires `{subdir}/{filename}` under `{name}/{version}/{build}`, Conan
+`{ref}#{rrev}` under `{ref}`, PyPI filenames under `{name}/{version}`, Open VSX
+`(version, target)` pairs under the route's object. Conan's upload `PUT` is not a binding, so
+nothing in this spec said how it reports what it writes. And Conan retires only commit-id
+revisions, generic and LuaRocks' one-rock deletion nothing, which the kind table's flat "yes"
+did not admit.
+
+**Recommendation:** A, because it keeps authorization objects at the granularity patterns match
+while putting the retirement comparison where the retirement was recorded, one check on every
+path, and because a commit-time check is the only one a concurrent deletion cannot slip past.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Claims beside objects; declared on the transaction, checked at declaration and at commit** | One rule for operations, bindings and wire writes; early refusal where the claim is known early (Swift before `100 Continue`); race-free at commit | `Authorize` returns a struct rather than a slice; a handler must claim at the granularity it retires, which a fixture test holds |
+| **B. Make the authorization object the retirement granularity** | No new concept | Patterns then match filenames and revisions, which breaks every format's adopted object table and pattern examples |
+| **C. Handlers check the set themselves through a `Deps` read** | No transaction change | Thirty-three checks instead of one, each able to forget; no protection against the concurrent deletion |
+
+**Why this is yours:** it changes the shape of one `Operator` method and adds a declaration to
+the shared write transaction.
+
+Accepted cost: the claim-granularity invariant is a handler obligation, held by a test rather
+than by the type system.
+
+### Resolved: a publish that changes nothing (was Q15)
+
+**Adopted 2026-09-28 under the owner's standing delegation, on Opus.** Option A: a format may
+declare that a `publish` finding identical bytes at every coordinate it claims completes with no
+snapshot, its `Operation` completed with no snapshot reference and `unchanged: true`. Folded
+through Design ("Every operation is one completed logical write", "Mount, versioning and wire
+conventions" on `Idempotency-Key`, "Publish through the API"), the kind table, AC5 and its Test
+Plan row.
+
+The conflict: AC5 counted every completed operation as exactly one snapshot, while `cran.md`
+AC4, `puppet.md` AC6, `hackage.md` AC12 and `cpan.md` AC12 adopted an identical republish as a
+success with no snapshot, because cpan-upload, puppet-blacksmith and `cabal upload` retry a
+publish with no idempotency key and a `conflict` would fail a CI retry of a publish that in fact
+landed. `vagrant.md` chose the other answer, `Idempotency-Key` alone.
+
+**Recommendation:** A, because the key cannot help a client that never sends one, and an empty
+snapshot would move pointers and freshness signals for nothing.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. A declared unchanged publish, no snapshot** | Keyless retries succeed; nothing downstream moves | An exception to "one operation, one snapshot", scoped to `publish` and held by AC5 |
+| **B. `Idempotency-Key` only** | One retry mechanism | Four formats' adopted behaviour reversed and their clients' retries fail with `conflict` |
+| **C. An empty snapshot per identical republish** | The count rule unbroken | Every retry advances the pointer's freshness record, making clients refetch unchanged indexes |
+
+**Why this is yours:** it admits an exception to the write-accounting rule every format cites.
+
+Accepted cost: one exception in the accounting rule, and a byte comparison in each declaring
+handler.
+
+### Resolved: how a central refusal reaches a wire route (was Q16)
+
+**Adopted 2026-09-28 under the owner's standing delegation, on Opus.** Option A: the decision is
+central and the rendering is the wire's. A binding answers the API's status with its wire's error
+shape; a handler's own wire write that is not a binding renders a central refusal (`retired`, a
+repository-type refusal) in the status and wording its format spec fixes from what its client
+prints, and commits nothing. AC7 is scoped to operations and bindings. Folded through Design
+("Mount, versioning and wire conventions", "Bindings", "Retirement is core-held"), AC7, AC12 and
+their Test Plan rows, and a revision note under was-Q10.
+
+The conflict: the central `retired` refusal was specified as the API's 409 problem, yet Open VSX
+answers `400` with the reference server's wording so `ovsx --skip-duplicate` does not swallow a
+retired pair (`openvsx.md` AC7), Swift answers a `409` problem document with `Content-Version: 1`
+(`swift.md` AC3) and Puppet's Forge routes a `409` in the Forge's error shape (`puppet.md` AC6);
+and AC7's "every publish answers 405 `repository-type`" read as reaching `pub.md`'s own wire
+publish, which answers step 1 with `400` and a code naming the repository type because `dart pub` prints that explanation
+(`pub.md` AC14).
+
+**Recommendation:** A, because the property that matters is that the refusal is decided once and
+commits nothing, and the client is the specification for how it must be told.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Central decision, wire rendering; bindings keep the API's status** | Each client gets a refusal it acts on; one decision point | Renderings vary across formats and each format spec must assert its own with its real client |
+| **B. The API's status and problem document on every route** | Uniform | Each of those format specs chose its rendering from what its client was captured printing, and the uniform rendering discards those captures: `dart pub` would lose the explanation `pub.md` chose its `400` to carry, and Open VSX's refusal would no longer carry the reference wording its client's duplicate handling is written against; uniformity no user sees |
+
+**Why this is yours:** it decides what "answers identically" means across the two ways in.
+
+Accepted cost: the rendering is asserted per format rather than once.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1598,3 +1844,4 @@ Accepted cost: upstream traffic under `push`, bounded by `upstream-adapters.md`'
 | 2026-09-27 | 6ae6608 | authoring pass: grounded first draft, not a review | Gathered the requirements of all 32 format specs, `auth.md`, `data-model.md`, `storage-and-gc.md`, `format-handler-interface.md`, `project-charter.md` and `conformance-harness.md` from their citing sections and from `agents/spec-loop/consequences.md`; grounded prior art in Nexus, Harbor, Pulp and Gitea documentation, RFC 9457, the IETF Idempotency-Key draft and AIP-151/155 fetched this run (Artifactory unreachable, recorded). Fixed one API (reserved `api`, `/api/v1`, problem types, a closed kind vocabulary, one operations endpoint), reconciled every format's action onto `auth.md`'s vocabulary by the effect rule (two flips: NuGet unlist and conda revoke to `delete`), answered the dispatch question with an optional `Operator` interface, placed the retirement set in the core with central refusal, and made the `Operation` record the audit record. Ten questions written in decision shape and adopted under the standing delegation; zero open. 27 criteria, each with a Test Plan row. `node scripts/check-spec.js` run against this file with zero failures. |
 | 2026-09-28 | 9f53d20 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every queued item in `agents/spec-loop/consequences.md` targeting this file verified against the current text of its source spec before applying. New: an exhaustive endpoint table (every route any sibling assigns to `/api/v1`, once, with its authorization) and a closed problem-type table with statuses, gaining `read-only`, `in-use`, `capability-unsupported` (`repository-lifecycle.md`), `upstream-invalid` (`upstream-adapters.md`), `scope-exceeds-owner` and `lifetime-policy` (`credential-management.md`). Repository administration rewritten over `repository-lifecycle.md`: `rep_` identity in every response, `confirm` and `detach` on delete, freeze, thaw and rename routes, a `lifecycle` kind, the tombstone listing; `upstream.Validate` on create and `PATCH`; upstream credentials carry a `kind` and are refused `in-use` while referenced. Deferred operations admit `cancelled`, gain the cancel route and the `/api/v1/system/jobs` administration; `operation-outstanding` means "job not terminal" (`async-operations.md`). Trust, verdict and refusal routes (`artifact-verification.md`, `supply-chain-policy.md`); signing-key routes as `configure` operations (`signing-service.md`); Galaxy `attach` row and Helm's coherence check (Open item 4). `X-Request-Id` validation and the audit channel through `telemetry.Auditor.Emit` with registered `manage.*` events (`observability.md`); the credential precedent of audit line without `Operation`. Session cookie accepted on `/api/v1` with double-submit CSRF on unsafe methods, and the six reads `web-ui.md` needs (session, formats, search, recipes, refusals, refresh). Operational subcommands named (`deployment.md`). Wording: `Retirement` and the `Operation` widening are `data-model.md`'s (AC35, AC32); `storage-and-gc.md` AC15 and AC24 cited as applied; the re-open answer is recorded in `format-handler-interface.md` (was its Q10). Open items 8, 11, 15, 17 and 25 found already covered by the authoring pass; item 8's `push` for NuGet unlist superseded by the resolved withdraw-action decision (was Q1). Two questions adopted under the delegation: Q11 (the deleted listing is `?state=deleted`, since the name grammar admits `deleted`) and Q12 (refresh requires `push`, object none). AC16, AC18 to AC21, AC23, AC25 and AC27 amended; AC28 to AC32 added, each with a Test Plan row. `node scripts/check-spec.js` run against this file with zero failures. |
 | 2026-09-28 | 6e6d503 | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. Applied every item raised against this file by the reconciliations that ran after its own 2026-09-28 pass, each verified against the source spec's current text. From `replication.md` (its link section, AC11, AC16, AC19): the replication link, sync, re-seed, takeover, export and import routes join the endpoint table as `internal/replication`'s contribution, admin-only, audit-line-only like grants; `replica` (405, detail names the leader) joins the closed problem table, now 20 types; a "Refused on a replica" convention names the `ErrReplica` waiver as `internal/replication`'s alone; new AC33 with a Test Plan row and a Phase 5 at charter step 10; the reserved-segment list names `replication` and `t`. From `supply-chain-policy.md` (AC11, AC5): the `policy` document and `advisory_ecosystem` are `PATCH` fields validated by `internal/policy`, an unbindable rule or unlisted ecosystem refused `validation` naming the condition, `policy.rule.update` registered by that spec; AC19 extended, `internal/manage/repository_test.go` and `reads_test.go` shared. From `proxy-cache.md` (AC24): a refresh also marks negative-cache entries due, in the route, the administration bullet, AC29 and its shared tests. From `conformance-harness.md` (AC26): the per-kind validator rule is cited as that spec's criterion in Design, the enforcer table and AC24's row. From the charter reconciliation: the queue-core placement already read step 4b and 6a, nothing to change. From sweep 1: AC28's anonymous case shared with `auth.md` AC22, `refresh` cites `data-model.md` AC32. No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
+| 2026-09-28 | 97e5a5d | closing-sweep reconciliation pass on Opus (step 3): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied every item in `agents/spec-loop/consequences.md` targeting this file from format batch 1 through format batch 8 and the auth.md closing sweep (none there), each verified against the current text of the format spec it concerns, plus format batch 1 item 6, which the progress log did not show applied. Binding rule and AC8 (batch 3 item 4, batch 6 item 10): `debian.md`'s dput `.changes` route reports one object while its publish reports several, and `cpan.md`'s cpan-upload route reports none while `Authorize` reports a named object; Q13 raised and adopted: a binding is never wider than its operation (route object among `Authorize`'s, none, or a declared route-level object; `Submit` evaluates every pair on both paths), with a multi-object `Scope(r)` left to the interface re-open. Retirement (batch 4 item 4, batch 6 item 10, batch 8 item 6): Q14 raised and adopted: the check compares claimed coordinates, finer than the object for conda, Conan, PyPI and Open VSX, reported by `Authorize` (now returning `format.Addressed`) or declared on the write transaction by a non-binding wire write such as Conan's `PUT`, checked at declaration and at commit; a retiring kind's `Outcome` may be a subset or empty (Conan, Composer, generic, LuaRocks); Q16 raised and adopted: the decision central, the rendering the wire's (Open VSX `400`, Swift `409` problem with `Content-Version: 1`, Puppet's Forge `409`), with a revision note under was-Q10. AC5 (batch 8 item 4): Q15 raised and adopted: a declared unchanged publish completes with no snapshot (`cran.md` AC4, `puppet.md` AC6, `hackage.md` AC12, `cpan.md` AC12), distinct from `Idempotency-Key`, which `vagrant.md` relies on instead. AC7 (batch 8 item 5): scoped to operations and bindings; `pub.md`'s own wire publish keeps its `400`. Reconciliation table re-read row by row against all 32 format specs' management tables: RPM out of the architecture set (batch 3 item 5); Conan's `prune` rows and `delete-version` for a reference, no `delete-package` (batch 4 item 5); Hex publish docs as `attach` replacing an existing file (batch 5 item 3); CRAN per-tree deletion as `delete-file` retiring the version, dropped from `unplace` (batch 8 item 3); Vagrant provider file as `publish`, dropped from `attach` (batch 7 item 7); opam `delete-package` (batch 7 item 7); generic retiring nothing and OCI declaring no kinds (batch 1 item 6); found unlisted and added: Galaxy's publish binding (`ansible-collections.md` was-Q9), Hex's docs route paths, Open VSX's binding route. The pointer-freshness paragraph now cites `data-model.md` AC36 instead of treating the mechanism as owed. AC5, AC7, AC8 and AC12 amended with their Test Plan rows. `fable_recheck` extended, not removed. `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
