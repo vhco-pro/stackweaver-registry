@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-28 at 7c4d5bb with the foundation wave on Opus (not a review), this spec's first reconciliation: publish and deletion are management-api's publish and delete-file kinds through Operator, the record as args and the per-file root_url in the result document, validation 422, conflict and retired 409 through core-held Retirement, the identical-bytes 200 replaced by Idempotency-Key, unauthorized for out-of-pattern files, 405 repository-type (AC6, AC7, AC15, AC18, AC19); the API remote fetches in proxy-cache's completion-only mode with the JWS entry (artifact-verification AC16, a raw-keys trust set) as the verifier-hook integrity call, regressions not adopted by generated_at and, for legacy documents, by upstream Last-Modified (AC3, AC5); the bottle remote on upstream-adapters' distribution adapter with the anonymous exchange and the none-role redirect host (AC10); the served Last-Modified is proxy-cache AC22's adopted_at, keeping this spec's not-earlier 304 rule where AC22's exact-match clause leaves brew's later condition undefined (reported) (AC4); the virtual's served time derived from member and pointer records, a member-list change reported as a data-model gap (AC20); the verdict is repository-chain (AC21); homebrew advisories through a declared policy.feed.sources source per supply-chain was-Q9, its version ordering reported (AC22); oci was-Q8 cited; WriteRefusal with the client-setting row; harness stand-ins as hosts sub-entries and the signed API snapshot met; Capabilities with rename (AC28). No new question. Earlier: authored 2026-09-26 from captures of brew 7.0.6 and 4.6.20; fourteen questions adopted under the standing delegation; none open. Awaits a /spec review pass and a Fable recheck."
+status_description: "Data-loss fix, second wave, 2026-09-28 at 36a137d on Opus (not a review): Q15 adopted under the standing delegation: a rebuilt tag's old blob had been kept referenced by the flat-filename resolution record, a mention that keeps nothing alive, and the OCI-shaped route requests it by the digest a pre-rebuild API document names, so it is reachable; now a bottle remote caches a bottle as a File addressed by image and blob digest, held by its own cached reference until LRU eviction, while the flat route follows the current index; API documents and manifests are current-document bodies with a declared retained-revision count of zero, since no route requests a superseded one (proxy-cache was-Q19); AC13 and AC25 extended to sweeps with the grace lapsed. Also applied proxy-cache closing-sweep item 5: AC4 and the Freshness section cite the not-earlier rule of proxy-cache AC22. Earlier: Reconciled 2026-09-28 at 7c4d5bb with the foundation wave on Opus (not a review), this spec's first reconciliation: publish and deletion are management-api's publish and delete-file kinds through Operator, the record as args and the per-file root_url in the result document, validation 422, conflict and retired 409 through core-held Retirement, the identical-bytes 200 replaced by Idempotency-Key, unauthorized for out-of-pattern files, 405 repository-type (AC6, AC7, AC15, AC18, AC19); the API remote fetches in proxy-cache's completion-only mode with the JWS entry (artifact-verification AC16, a raw-keys trust set) as the verifier-hook integrity call, regressions not adopted by generated_at and, for legacy documents, by upstream Last-Modified (AC3, AC5); the bottle remote on upstream-adapters' distribution adapter with the anonymous exchange and the none-role redirect host (AC10); the served Last-Modified is proxy-cache AC22's adopted_at, keeping this spec's not-earlier 304 rule where AC22's exact-match clause leaves brew's later condition undefined (reported) (AC4); the virtual's served time derived from member and pointer records, a member-list change reported as a data-model gap (AC20); the verdict is repository-chain (AC21); homebrew advisories through a declared policy.feed.sources source per supply-chain was-Q9, its version ordering reported (AC22); oci was-Q8 cited; WriteRefusal with the client-setting row; harness stand-ins as hosts sub-entries and the signed API snapshot met; Capabilities with rename (AC28). No new question. Earlier: authored 2026-09-26 from captures of brew 7.0.6 and 4.6.20; fourteen questions adopted under the standing delegation; none open. Awaits a /spec review pass and a Fable recheck."
 description: "Spec for Homebrew bottles served to brew: hosted bottles at a tap's root_url in the legacy flat layout, a verified cache of ghcr.io's homebrew/core bottles in both the flat layout HOMEBREW_BOTTLE_DOMAIN reads and the OCI-shaped layout HOMEBREW_ARTIFACT_DOMAIN reads, and a byte-for-byte cache of formulae.brew.sh's JWS-signed API documents that no registry can re-sign, with a cache-scoped Last-Modified that lets a new API generation reach a client whose curl discards anything not newer, taps left on Git, and every route back to Homebrew's own hosts named because a refusal holds only where that route is closed."
 author: michielvha
 goal: "Serve Homebrew users a private bottle host their taps point at and a verified cache of Homebrew's bottles and signed API that stock brew (7.0.6 and 4.6.20) installs from on both paths, with the configuration that keeps brew from falling back to ghcr.io and formulae.brew.sh proven at the network layer rather than assumed."
@@ -10,7 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/homebrew/**"
   - "conformance/homebrew/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed"
+fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; the data-loss fix on Opus 2026-09-28 raised and adopted Q15 (a bottle remote caches bottles as Files addressed by image and blob digest, the flat route follows the current index after a rebuilt tag and the old blob keeps its own cached reference until eviction, no retained revision on either remote), which also needs a Fable recheck"
 ---
 
 # Plan: Homebrew bottles
@@ -383,8 +383,10 @@ The levels are exactly those `data-model.md` provides; no table is added.
 - **A `Version` is a `pkg_version`**: the formula version with `_{revision}` when the revision is
   positive. Its document holds, per file, the bottle tag, the rebuild, the cellar, the SHA-256 and size,
   the `brew bottle --json` record it was published with (including its `tab`), and the publish time.
-- **`File`**: one per bottle tag and rebuild, keyed by its served flat filename and stored by CAS
-  digest.
+- **`File`**: on a hosted repository, one per bottle tag and rebuild, keyed by its served flat
+  filename; on a bottle remote, one per image and blob digest, the coordinate the OCI-shaped blob
+  route names, which the flat route reaches through its resolution (the resolved rebuilt-tag
+  decision below, was Q15); stored by CAS digest either way.
 - **Deleted files are core-held `Retirement` records** at file granularity (`data-model.md` AC35;
   `management-api.md`, "Retirement is core-held"), not a set in any document.
 - **The repository-level document** of a bottle remote holds its namespace list (`homebrew/core` and
@@ -396,9 +398,30 @@ The levels are exactly those `data-model.md` provides; no table is added.
   verdicts (`artifact-verification.md`'s verdict records). A proxied repository creates no
   snapshots.
 
-The API documents are large (15 to 35 MB), far above any inline metadata threshold, so a remote holds
-them as CAS blobs referenced from its cache records and marked through them, as `proxy-cache.md`'s GC
-interaction requires for any cached metadata; AC25 proves they survive a sweep while current.
+What keeps each of these alive is exact, because a digest a record merely mentions keeps nothing
+alive (`storage-and-gc.md` AC16):
+
+- **An API document** is large (15 to 35 MB), far above any inline metadata threshold, so it is the
+  CAS-backed body of the API remote's current document for its path, marked by the fourth root's
+  current-document half for exactly as long as it is current. **A manifest** by tag is likewise the
+  bottle remote's current document for its tag, inline or CAS-backed by size.
+- **Neither remote retains a superseded revision.** Every API path and every manifest route names a
+  document and carries no generation and no digest, so no route can serve a superseded one, and a
+  regression or a failed verification keeps the adopted document current rather than falling back
+  to a retained one (Design, "The proxied path"). Under `proxy-cache.md`'s resolved
+  retained-revision decision (was its Q19) this handler declares a count of zero for both document
+  sets, as `cpan.md`'s remote keeps no superseded `CHECKSUMS`: the adoption that replaces a document
+  ends its old body's reference, and the old body is collectable at the next sweep past grace. So
+  nothing is on a declared blob-digest list of either remote.
+- **A cached bottle** is a `File` of the bottle remote addressed by its image and blob digest, the
+  coordinate the OCI-shaped blob route names, and it is held by its own cached reference, the second
+  root, ended only by LRU eviction under the quota or by a purge. The flat route reaches the same
+  `File` through its resolution. A flat-filename resolution, the digests an API document names and a
+  manifest's `sh.brew.bottle.digest` are metadata naming that digest, so none of them keeps a bottle
+  alive, and none needs to (the resolved rebuilt-tag decision below, was Q15).
+
+AC25 proves each half: the current documents and cached bottles survive a sweep run with the
+repository's grace lapsed, and a superseded body does not.
 
 ### The hosted publish path and what counts as a write
 
@@ -568,7 +591,7 @@ under the revision-bound class and under "Regression not adopted":
 | An API document failing verification, or a body truncated | An **integrity failure at fetch**: not committed, no negative entry, the cached document keeps serving; recorded and alerted |
 | A formula disappears from the API, or moves to another tap | An **ordinary metadata change**; cached bottles stay fetchable by digest |
 | A formula marked `disabled` or `deprecated` in the API | An **ordinary metadata change**; brew enforces it itself; no security signal |
-| A manifest tag's index changes digest (a rebuild under the same tag) | **Immutability violation, revision-bound**, in the cached-bytes-kept variant: a flat filename whose resolved blob digest changes is re-resolved, the new blob verified as a new blob, the old blob kept referenced by the record, recorded and alerted |
+| A manifest tag's index changes digest (a rebuild under the same tag) | **Immutability violation, revision-bound**, recorded and alerted with both digests, no purge (the resolved rebuilt-tag decision below, was Q15). The flat route follows the current index, since a flat filename carries no digest: after the adoption the filename is re-resolved, and the new blob is fetched and verified against the new `sh.brew.bottle.digest` as a new blob. The old blob is not released: it is a `File` addressed by its own digest and held by its own cached reference, which neither the adoption nor the re-resolution ends, because the OCI-shaped route requests a blob by the digest the client's API document names, so a client still holding the pre-rebuild API document is served the old bytes it verifies against. Its end is LRU eviction, after which a request for it by digest re-fetches from the upstream against the digest in the path and answers the upstream's `404` once the upstream no longer holds it |
 | A blob the cache holds answers `404` upstream | **Removal with no signal**: cached bytes keep serving, the divergence recorded and alerted |
 
 No upstream security signal exists on the Homebrew wire: nothing in the API, the manifest or the tag
@@ -594,20 +617,18 @@ consequences, from the captures:
 | Serving the upstream's own `Last-Modified` instead (never done) | A `304` or a discarded `200` for a generation newer than its last fetch but generated before it: a lag of one or more generations (both mechanisms captured) | Unaffected |
 | A virtual repository's API member changes | The virtual's served time moves forward (Design, "Virtual repositories") | Adopts on its next refresh |
 
-**The conditional rule, and a gap in the shared one.** brew's `If-Modified-Since` is its own clock at
+**The conditional rule, and the gap it closed in the shared one.** brew's `If-Modified-Since` is its own clock at
 its last successful download (captured), not a date this registry served, so it is almost never
 equal to the served `Last-Modified`. This spec answers `304` when `If-Modified-Since` is not earlier
 than the served `Last-Modified` (or `If-None-Match` equals its byte-derived `ETag`) and `200`
 otherwise, so a `200` always carries a `Last-Modified` later than the condition and curl never
-discards it. `proxy-cache.md` AC22 states two clauses: `304` only on an exact `If-Modified-Since`
-match, and no `200` whose `Last-Modified` is at or before the request's `If-Modified-Since`. For a
-brew revalidation made after the last adoption (the condition later than the record and unequal to
-it) the first clause forbids `304` and the second forbids `200`, so the shared rule leaves the answer
-undefined for exactly the client that found it. `304` is the only answer that satisfies the second
-clause and sends curl no body it would discard; the client in that case already holds a document at
-least as new as the record. This spec keeps its rule and reports the case to `proxy-cache.md` (and to
-`signing-service.md`, whose AC11 states the same exact-match clause for pointer-served documents);
-AC4 asserts the rule as written here.
+discards it. This is the `not-earlier` conditional rule of `proxy-cache.md` AC22, which this format
+declares for its API remote ("Freshness of what a remote serves" there), rendered by
+`signing-service.md`'s serving door under its resolved later-condition decision (was its Q12, its
+AC11). The case this spec first reported, a brew revalidation made after the last adoption (the
+condition later than the record and unequal to it), which the earlier exact-match clause left
+undefined, answers `304` under that rule; the client in that case already holds a document at least
+as new as the record. AC4 asserts it.
 
 The accepted cost is clock skew: `If-Modified-Since` is the client's clock, so a client whose clock runs
 ahead of the registry's by more than the gap since an adoption keeps its copy until the next one, which
@@ -896,7 +917,7 @@ paths and outside the namespace list, and `405` on remote writes.
       upstream's, no earlier than the time the remote began serving its bytes and later than any it
       served before on that route, including with the clock stepped backwards; a conditional request
       earlier than it answers `200` and one not earlier answers `304`, including one later than it
-      and unequal, the case `proxy-cache.md` AC22's exact-match clause leaves undefined; and no
+      and unequal, under the `not-earlier` rule `proxy-cache.md` AC22 lets this format declare; and no
       response is a `200` whose `Last-Modified` is not later than the request's
       `If-Modified-Since`.
 - [ ] AC5: When the upstream answers an `internal/packages.*` document whose `metadata.generated_at` is
@@ -939,8 +960,14 @@ paths and outside the namespace list, and `405` on remote writes.
       whose index child carries the matching `org.opencontainers.image.ref.name`, and a repeat request inside the
       TTL makes no manifest request; an unresolvable filename answers `404` and is negatively cached.
 - [ ] AC13: A stand-in presenting each removal-table event produces this format's classification in the
-      table, including a rebuilt tag whose re-resolved blob is verified as a new blob while the old blob
-      stays referenced.
+      table, including a rebuilt tag: after the adoption the flat route serves the new blob, verified
+      against the new `sh.brew.bottle.digest`, to both versions holding the new API document; both
+      versions holding the pre-rebuild API document (`HOMEBREW_NO_AUTO_UPDATE` set) on
+      `HOMEBREW_ARTIFACT_DOMAIN` are served the old blob by its digest and install, including after a sweep run with the repository's grace lapsed
+      while the new index is current; the divergence record names both digests; and once LRU
+      eviction ends the old blob's cached reference, the next sweep past grace collects it and a
+      request for its digest re-fetches from the stand-in, answering `404` when the stand-in no
+      longer holds it.
 - [ ] AC14: On a private repository over TLS, both versions install through `HOMEBREW_ARTIFACT_DOMAIN`
       with `HOMEBREW_DOCKER_REGISTRY_TOKEN` (sent as Bearer) and with
       `HOMEBREW_DOCKER_REGISTRY_BASIC_AUTH_TOKEN` (sent as Basic), and install a hosted tap bottle and
@@ -1004,8 +1031,14 @@ paths and outside the namespace list, and `405` on remote writes.
 - [ ] AC24: Replay-match passes against a corpus recorded from `formulae.brew.sh` and ghcr.io covering the
       recorded surface named in Design, with the `Authorization` header, netrc credentials, ghcr.io
       tokens and signed redirect URLs redacted.
-- [ ] AC25: A remote's cached API documents and bottles, and a hosted repository's bottles, survive a GC
-      sweep while current or retained and serve both clients afterwards.
+- [ ] AC25: A hosted repository's bottles survive a GC sweep while a retained snapshot or a pointer
+      holds them; an API remote's current documents (each above the inline threshold) and a bottle
+      remote's current manifests and cached bottles survive a sweep run with the repository's grace
+      lapsed, with no declared blob-digest list on either remote, and serve both clients afterwards;
+      after an adoption replaces an API document or a manifest, the next sweep past grace collects
+      the superseded body, which no route can request; and a digest that only a flat-filename
+      resolution or an API document names, with no cached reference of its own, is collected by
+      the first sweep past grace.
 - [ ] AC26: A hosted repository answers `404` on every API route and on `v2/` routes, and brew with
       `HOMEBREW_API_DOMAIN` pointed at it installs nothing from it when egress is closed, printing the
       failed fetch of the default domain, which is the documented reason a hosted repository is never an
@@ -1035,7 +1068,7 @@ paths and outside the namespace list, and `405` on remote writes.
 | AC10 | integration | `internal/format/homebrew/ghcr_adapter_test.go` (stand-in token endpoint and blob host, per-scope token reuse, no `Authorization` across the redirect, network-layer assertion; the adapter half being `upstream-adapters.md` AC16's and AC6's) |
 | AC11 | integration | `internal/format/homebrew/namespace_test.go` (outside and second listed namespace, no upstream request) |
 | AC12 | integration | `internal/format/homebrew/flat_resolution_test.go` (the five name shapes against a stand-in index, request counts inside the TTL, negative cache) |
-| AC13 | integration | `internal/format/homebrew/removal_test.go` (a stand-in presenting each removal-table event) |
+| AC13 | integration + conformance | `internal/format/homebrew/removal_test.go` (a stand-in presenting each removal-table event; a rebuilt tag with the flat route before and after the re-resolution, the old blob requested by digest across a sweep on an injected clock with the grace lapsed, the object store and the divergence record read afterwards, then the old blob evicted, swept and re-fetched against a stand-in that holds it and one that answers `404`); `conformance/homebrew/rebuilt_tag_test.go` (both versions with the pre-rebuild API document and `HOMEBREW_NO_AUTO_UPDATE` installing through `HOMEBREW_ARTIFACT_DOMAIN`, both versions with the new API document installing through the flat and OCI-shaped layouts) |
 | AC14 | conformance + integration | `conformance/homebrew/auth_test.go` (TLS private repository, Bearer and Basic on both versions, netrc for tap and API, anonymous, placeholder, `pull`-less and plain-HTTP cases); `internal/auth/leak_test.go` (redaction for this format) |
 | AC15 | conformance + unit | `conformance/homebrew/pattern_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, both modes, hosted and remote patterns, API refusal, patterned publish); `internal/format/homebrew/scope_object_test.go` (the object table per route, `format-handler-interface.md` AC12) |
 | AC16 | conformance + integration | `conformance/homebrew/policy_test.go` (hosted and proxied through the `policies` key, both versions, network-layer assertion); `internal/format/homebrew/refusal_record_test.go` (a record per refused request, both body shapes); `internal/format/refusal_writer_test.go` (`supply-chain-policy.md` AC18) |
@@ -1047,7 +1080,7 @@ paths and outside the namespace list, and `405` on remote writes.
 | AC22 | integration | `internal/format/homebrew/advisory_config_test.go` (rule refused with the default feed, no condemnation, a fixture second source listing Homebrew through `policy.feed.sources`; shared with `supply-chain-policy.md` AC21) |
 | AC23 | integration + conformance | `internal/format/homebrew/headers_test.go` (types, encodings, per-encoding `ETag`, ranges, caching, `HEAD`, no redirects); `conformance/homebrew/resume_test.go` (interrupted download resumed by brew) |
 | AC24 | conformance | `conformance/homebrew/replay_test.go` (corpus replay against the recorded surface with the named redactions) |
-| AC25 | integration | `internal/storage/metadata_root_test.go` (cached API documents, bottles and hosted bottles across a sweep, then serving) |
+| AC25 | integration + property | `internal/storage/metadata_root_test.go` (cached API documents, bottles and hosted bottles across a sweep, then serving); `internal/format/homebrew/proxied_gc_test.go` (a sweep on an injected clock with the grace lapsed after each adoption of an API document and of a manifest, the object store read afterwards: current bodies and cached bottles present, superseded bodies and digests only a resolution or an API document names collected); `internal/storage/gc_property_test.go` (supersession of a CAS-backed document interleaved with the sweep, `storage-and-gc.md` AC16) |
 | AC26 | conformance + integration | `conformance/homebrew/hosted_api_test.go` (brew against a hosted repository as API domain with egress closed); `internal/format/homebrew/routes_test.go` (`404` on API and `v2/` routes of a hosted repository) |
 | AC27 | integration + conformance | `internal/format/homebrew/names_test.go` (uppercase, unencoded `@`, wrong rebuild suffix); `conformance/homebrew/names_test.go` (the forms brew sends on both versions) |
 | AC28 | unit + conformance | `internal/format/homebrew/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/homebrew/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; both versions, old name `not-found`, a stale `root_url` failing) |
@@ -1070,7 +1103,8 @@ paths and outside the namespace list, and `405` on remote writes.
   mode and cache-scoped freshness, all now specified
 - The API remote with the JWS integrity call in the completion-only verifier hook, the regression
   guard and cache-scoped times; the bottle remote on the `distribution` adapter with namespaces,
-  manifest and blob gates, flat resolution and ghcr.io's token exchange; negative caching; the
+  manifest and blob gates, flat resolution and ghcr.io's token exchange, cached bottles addressed by
+  image and blob digest and no retained revision on either remote (was Q15); negative caching; the
   removal table; the `repository-chain` verdict; `405` `repository-type` on remote writes
 
 ### Phase 4: Virtual repositories and rename
@@ -1093,8 +1127,10 @@ and then adopted at their own recommendation under the owner's standing delegati
 the loop can continue; each is recorded below as adopted rather than decided, folded through Scope,
 Design, the criteria and the Test Plan in the same pass, and reversible by the owner at any time. The
 2026-09-28 reconciliation with the foundation specs adopted no new question; where a foundation
-decision changed what a record says, the record carries a dated note. `grep -rn "standing
-delegation"` is the owner's review queue.
+decision changed what a record says, the record carries a dated note. The data-loss fix of
+2026-09-28 raised and adopted one more the same way, on Opus (Q15, what a rebuilt bottle tag does
+to the old bottle and what keeps a remote's content alive), awaiting a Fable recheck. `grep -rn
+"standing delegation"` is the owner's review queue.
 
 ### Resolved: what a hosted repository serves (was Q1)
 
@@ -1195,8 +1231,10 @@ earlier, never a `200` curl would discard (Design, "Freshness"; AC4, AC20).
 
 Accepted cost: the revision and the clock-skew note. Reconciled 2026-09-28: the revision landed as
 `proxy-cache.md`'s "Freshness of what a remote serves" and its AC22, with the record in
-`data-model.md` AC44; its exact-match `304` clause leaves this record's later-condition case
-undefined, and this spec keeps the not-earlier rule and reports the case (Design, "Freshness").
+`data-model.md` AC44. Its first wording, an exact-match `304` clause, left this record's
+later-condition case undefined; the case was closed by `signing-service.md`'s resolved
+later-condition decision (was its Q12), which `proxy-cache.md` AC22 now states as the `not-earlier`
+rule this format declares for its API remote (Design, "Freshness").
 
 ### Resolved: an API regression upstream (was Q6)
 
@@ -1380,9 +1418,57 @@ Accepted cost: the configuration step. Reconciled 2026-09-28: publish and deleti
 `args` and the per-file response as its result document; the identical-bytes `200` became the API's
 `Idempotency-Key` replay, and the retirement set its core-held `Retirement` record.
 
+### Resolved: a rebuilt bottle tag on a remote, and what keeps a remote's content alive (was Q15, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation**, in the data-loss fix following
+`storage-and-gc.md`'s closing sweep, on Opus. Option A: a bottle remote caches a bottle as a `File`
+addressed by image and blob digest; after a rebuilt tag is adopted the flat route follows the
+current index, and the old blob keeps its own cached reference until LRU eviction ends it; neither
+remote retains a superseded document (Design, "Mapping onto the shared model", "The proxied path";
+AC13, AC25).
+
+The question: the removal table said a rebuilt tag's old blob was "kept referenced by the record",
+the flat-filename resolution. That record is metadata naming a digest, and a digest a record merely
+mentions keeps nothing alive (`storage-and-gc.md` AC16), so nothing the sweep follows held the old
+blob; the row also named the kept-bytes variant of `proxy-cache.md`'s revision-bound class while
+describing a re-resolution, which is the other variant. Before choosing a keep-alive it has to be
+asked who reads the old blob, the check `proxy-cache.md`'s resolved old-blob decision (was its Q20)
+made for five formats whose routes carry no digest. Here one route does: the OCI-shaped route
+requests `blobs/sha256:{digest}` with the digest built from the checksum the client's API document
+names (source: the bottle's blob URL is built from the formula's checksum, the digest brew then
+verifies the bottle against), so a client still holding
+the pre-rebuild API document, on the recipe configuration, requests the old bytes by their digest.
+The flat route carries no digest and follows the current index. The API documents, by contrast,
+were said to be "referenced from its cache records and marked through them"; they are current
+documents, and no route requests a superseded one.
+
+**Recommendation:** A, because the old bytes have a reader, the ordinary cached reference already
+holds a digest-addressed blob for as long as the cache holds it, and it matches the upstream, where
+ghcr.io serves a blob by its digest for as long as it holds it and a flat filename names one set of
+bytes at a time.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Digest-addressed `File`s; the flat route follows the current index; the old blob held by its own cached reference until eviction** | Both routes behave as the upstream does; no declared list, no retention count and no new mechanism, since a rebuild changes no coordinate the OCI-shaped route has; storage bounded by the quota like any cached bottle | A `HOMEBREW_BOTTLE_DOMAIN` client holding the pre-rebuild API document is served the new bytes and refuses them until its next API refresh (450 seconds for `install`), as against any flat mirror; after eviction the old digest is re-fetched, or answers the upstream's `404` once ghcr.io no longer holds it; `proxy-cache.md`'s table lists this format under kept bytes and has to move it |
+| **B. Kept bytes: the flat filename stays bound to its first-resolved blob** | A client holding the pre-rebuild API document keeps installing on the flat route | Every client that refreshes its API document (every 450 seconds on `install`) gets the new digest and refuses the kept bytes on the flat route, indefinitely, until an operator acts; the OCI-shaped route serves the new digest anyway, so the two layouts disagree |
+| **C. Release the old blob at the new blob's commit, as `proxy-cache.md` was-Q20 does** | The old bytes leave the store at the next sweep | A client holding the pre-rebuild API document on the recipe configuration gets a re-fetch, or the upstream's `404`, for bytes the cache held a moment before; the release needs a coordinate the OCI-shaped route does not have, so it would be a reference-ending path keyed on the resolution record; nothing gained that eviction does not already give |
+
+**Why this is yours:** it decides what a client sees across an upstream rebuild on each layout, and
+that a remote keeps bytes the upstream re-tagged away from for as long as its quota allows.
+
+Accepted cost: the flat-route refusal until the next API refresh, the re-fetch or `404` after
+eviction, and the move of this format's row in `proxy-cache.md`'s event-class table, reported to
+that spec rather than applied here. B lost to the indefinite refusal of every refreshed client; C
+to breaking a live reader for storage LRU already reclaims. The API remote and the bottle remote's
+manifests declare a retained-revision count of zero under `proxy-cache.md`'s resolved
+retained-revision decision (was its Q19), since no route requests a superseded document, so neither
+remote has a declared blob-digest list; `proxy-cache.md` says "one by default" and is reported the
+zero, as `cpan.md`'s remote already retains none.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 81e5062 | authoring pass: grounded first draft, not a review | Grounded five ways: captured traffic from brew 7.0.6 (ghcr.io image) and 4.6.20 (last docker.io image), both pinned by digest, on dedicated Podman networks against a logging stub serving the flat bottle layout, the OCI-shaped `HOMEBREW_ARTIFACT_DOMAIN` layout, two genuine signed generations of the internal API document and tampered, re-signed, wrong-kid and unsigned variants (all refused, no fallback), swapped bottle bytes (refused on both), missing manifests (7.0.6's relocation warning), `403` refusals (status-only rendering; fallback to ghcr.io and formulae.brew.sh captured with egress; closed only by `HOMEBREW_ARTIFACT_DOMAIN_NO_FALLBACK` on 7.0.6, absent on 4.6.20), Bearer, Basic and netrc credentials (the `Bearer QQ==` placeholder on 7.0.6's manifest; no header to a tap `root_url`), a hosted tap bottle, and rollback under three conditional-request policies (curl discarding an older `200`; an older generation adopted once its `Last-Modified` moved forward; 4.6.20 sending no condition); byte-for-byte pass-throughs to the live formulae.brew.sh and ghcr.io; both clients' sources; ghcr.io's `401`, anonymous token and any-bearer `307`; the live API documents, their JWS header and naming statistics; OSV (no export, name recognised), the Homebrew advisory database (13,023 records) and purl. Fourteen questions adopted: flat bottles only on hosted (AC6, AC26), taps left on Git, API and bottle remotes (AC1, AC11, AC20), flat resolution through the index (AC2, AC9, AC12), cache-scoped `Last-Modified` (AC4, AC20), no API regression (AC5), no placeholder special case (AC2, AC14), the OCI-shaped recipe (AC1, AC2, AC17), addressed objects (AC7, AC15), `403` rendering (AC16), the API-chain verdict (AC21), unmerged virtual repositories (AC20), data-driven OSV coverage (AC22), record-based publish and deletion (AC6, AC7, AC18). Twenty-seven criteria, each with a Test Plan row. Stays draft; awaits an independent review. |
 | 2026-09-28 | 7c4d5bb | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec and of this file (Open item 30's requests, now met or routed; themes 1, 2, 4, 5 and 7; management-api 11 and 12; upstream-adapters 12; signing-service 11; conformance-harness reconciliation 2; proxy-cache reconciliation 10; supply-chain reconciliation 10; format batch 1 item 3). Applied: publish and deletion as `management-api.md`'s `publish` and `delete-file` kinds through `Operator` with no bindings, upload sessions, the record as `args` and the per-file `root_url` in the result document, `validation`, `conflict`, `retired` through core-held `Retirement`, the identical-bytes `200` replaced by `Idempotency-Key`, `unauthorized` for out-of-pattern files, `405` `repository-type`, a `script` case per kind (AC6, AC7, AC15, AC18, AC19; the Q14 record); the API remote in `proxy-cache.md`'s completion-only mode with the JWS entry of `artifact-verification.md` (AC16, `raw-keys`, reached through `Verifier`) as the hook's integrity call (AC3), regressions not adopted by `generated_at` and, for legacy documents, by upstream `Last-Modified` per `proxy-cache.md` AC22 (AC5; the Q6 record, which no longer leaves them unguarded); the bottle remote on the `distribution` adapter (`upstream-adapters.md` AC16, AC6, AC8, AC23; `Docker-Content-Digest` as the declared digest, as `oci.md` reads it; AC10 row); the `oci.md` coverage table updated for its was-Q8 name split; the removal table mapped onto `proxy-cache.md`'s event classes; the served `Last-Modified` as `adopted_at` (`data-model.md` AC44) set by the shared helper (AC4, the Q5 record); the virtual's served time derived from its member's and its own pointer's records (AC20); the verdict as `repository-chain` with the publisher-rule outcome (AC21); advisories through a declared second source per `supply-chain-policy.md` was-Q9 (AC22, the Q13 record); `WriteRefusal` and the `client-setting` binding row; the `auth.md` universal forms cited; `Deps` restated against the pinned set and the import boundary (`format-handler-interface.md` AC15); harness stand-ins as `hosts` sub-entries, the signed API snapshot and the `trust` key cited; new AC28 (`Capabilities()`, rename, stale `root_url`). Mismatches found, resolved without a new question: `proxy-cache.md` AC22's exact-match `304` clause and its no-stale-`200` clause jointly leave brew's later-and-unequal `If-Modified-Since` undefined, so this spec keeps its adopted not-earlier rule (was Q5), the only answer satisfying the second clause, and reports the case to `proxy-cache.md` and `signing-service.md` AC11. Gaps reported, not queued: no virtual-scoped freshness record or member-list pointer transition in `data-model.md`; no on-request compression with a per-encoding `ETag` in the shared serving helper; no Homebrew version ordering behind `supply-chain-policy.md`'s coverage row; `auth.md` still has no `brew` client row. No new question; `fable_recheck` unchanged. Stays draft. |
+| 2026-09-28 | 36a137d | data-loss fix, second wave, on Opus (storage-and-gc closing-sweep item 0 and data-loss fix item 1): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 1 of "From the data-loss fix" in `agents/spec-loop/consequences.md`, verified against `proxy-cache.md`'s resolved retained-revision and old-blob decisions (was its Q19 and Q20, AC27, AC28) and `storage-and-gc.md` AC16: a digest a document merely mentions keeps nothing alive. The holes: the removal table kept a rebuilt tag's old blob "referenced by the record", the flat-filename resolution, which is metadata naming a digest and held nothing the sweep follows; the API documents were "referenced from its cache records and marked through them", a mention-shaped description of what is in fact a current document's body; and AC25 asserted survival "while current or retained" with no retained revision defined anywhere. Reachability checked first, and it differs from the first wave's five formats: the flat route carries no digest and follows the current index, but the OCI-shaped route, the recipe configuration, requests `blobs/sha256:{digest}` built from the checksum the client's API document names, so a client holding the pre-rebuild document requests the old bytes. Neither Q19 nor Q20 fits as written: Q20 would release bytes a live route reads, and there is no revision the bottle remote could count, since the revision the client holds is the API remote's. Q15 raised in decision shape and adopted under the standing delegation, `fable_recheck` extended: a bottle remote caches a bottle as a `File` addressed by image and blob digest, the coordinate the OCI-shaped route names, held by its own cached reference until LRU eviction, which no adoption and no re-resolution ends; the flat route follows the current index (B, kept bytes on the flat route, lost to indefinite refusal of every client that refreshes its API; C, Q20's release at the new commit, to breaking a live reader for storage eviction already reclaims). API documents and manifests: current-document bodies under the fourth root, a declared retained-revision count of zero because no route requests a superseded one, so neither remote has a declared list. Folded into the `File` mapping, a new keep-alive list under "Mapping onto the shared model", the removal row, AC13 and AC25 (a sweep with the grace lapsed while the new index is current, the old blob served by digest to both versions holding the pre-rebuild API document, collected only after eviction; superseded bodies and mention-only digests collected), their Test Plan rows (`internal/format/homebrew/proxied_gc_test.go` and `conformance/homebrew/rebuilt_tag_test.go` added, the shared `internal/storage/gc_property_test.go` named) and Phase 3. Also applied "From the proxy-cache.md closing sweep" item 5, verified against `proxy-cache.md` AC22 and `signing-service.md` was-Q12: AC4, the Freshness paragraph and the Q5 record now cite the `not-earlier` rule this format declares instead of calling the case undefined. Consequences for `proxy-cache.md` reported. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
