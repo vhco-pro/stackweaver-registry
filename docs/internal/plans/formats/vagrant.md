@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Data-loss fix, second wave, 2026-09-28 at 36a137d on Opus (not a review): a remote keeps the current and one superseded upstream revision per box (proxy-cache was-Q19's default count), read by the box route for a coordinate the current catalog no longer names; both upstream bodies, being no current document's body once the rendered catalog replaced every url, are on the declared blob-digest list of the remote's repository-level document above the inline threshold, where before they were named by nothing the sweep follows; a removed coordinate answers 404 once the adoption that drops its revision commits; the kept bytes of a changed checksum are held by their own cached reference, a re-fetch after eviction committing nothing; AC21 and AC24 extended to sweeps with the grace lapsed while a revision is retained. Earlier: Reconciled 2026-09-28 at 7c4d5bb with the foundation wave on Opus (not a review), this spec's first reconciliation: catalogs are this format's Indexer generator output (internal/format/vagrant/index), the service's named unsigned consumer (signing-service AC24), regenerated in the write by the runtime, served through ServeDocument with an ETag-only profile and serve-time URL expansion from server.public_url (the chef gap, second consumer) (AC4, AC8); management through Operator as publish (provider files too, not the attach the management-api table names), annotate, delete-file, delete-version and delete-package, upload sessions and Apply's archive peek, conflict and core-held Retirement, the CI retry moved to Idempotency-Key, 405 repository-type (AC6, AC9); WriteRefusal with the holds binding row (AC14); the proxied path on the https adapter with bearer or basic root credentials, the hosts allowlist for HCP's redirect chain, allow_http, no probe at configuration (AC19), catalogs through FromUpstream, boxes without an upstream checksum under the completion-only mode with a structural verifier and then digest-bound (AC17), removal rows mapped onto proxy-cache's classes; the HCP migration recipe gains the read_only step from replication was-Q11 and a catalog-read step (AC21); access_token redacted by observability's rules, not the handler; Q13 adopted: virtual catalogs resolved per name at request time, no stored merge, because a remote member cannot be enumerated (AC22); Capabilities with rename (AC26). Earlier: authored 2026-09-26 from captures of Vagrant 2.3.7 and 2.4.9; twelve questions adopted under the standing delegation. Thirteen resolved, none open. Awaits a /spec review pass and a Fable recheck."
+status_description: "Format closing sweep 2026-09-28 at 2740b05 on Opus (not a review): the current and retained upstream bodies per box move from the remote's repository-level declared list to that box's own package-level document (proxy-cache was-Q22), never evicted (was-Q21), so adoptions of different boxes never serialise (AC21, AC24 extended, including a concurrent two-box adoption and an over-quota eviction pass); the serve-time URL expansion is signing-service's Render stage (was-Q13, AC31), so the handler reads no base URL and the gap and fallback are gone (AC4 extended); management-api's table now places the provider file under publish; auth's vagrant row cited; management-api was-Q15 names this format as relying on Idempotency-Key; the hosted half recorded against a local reference reported as a conformance-harness AC28 row. No question adopted; 26 criteria. Earlier: Data-loss fix, second wave, 2026-09-28 at 36a137d on Opus (not a review): a remote keeps the current and one superseded upstream revision per box (proxy-cache was-Q19's default count), read by the box route for a coordinate the current catalog no longer names; both upstream bodies, being no current document's body once the rendered catalog replaced every url, are on the declared blob-digest list of the remote's repository-level document above the inline threshold, where before they were named by nothing the sweep follows; a removed coordinate answers 404 once the adoption that drops its revision commits; the kept bytes of a changed checksum are held by their own cached reference, a re-fetch after eviction committing nothing; AC21 and AC24 extended to sweeps with the grace lapsed while a revision is retained. Earlier: Reconciled 2026-09-28 at 7c4d5bb with the foundation wave on Opus (not a review), this spec's first reconciliation: catalogs are this format's Indexer generator output (internal/format/vagrant/index), the service's named unsigned consumer (signing-service AC24), regenerated in the write by the runtime, served through ServeDocument with an ETag-only profile and serve-time URL expansion from server.public_url (the chef gap, second consumer) (AC4, AC8); management through Operator as publish (provider files too, not the attach the management-api table names), annotate, delete-file, delete-version and delete-package, upload sessions and Apply's archive peek, conflict and core-held Retirement, the CI retry moved to Idempotency-Key, 405 repository-type (AC6, AC9); WriteRefusal with the holds binding row (AC14); the proxied path on the https adapter with bearer or basic root credentials, the hosts allowlist for HCP's redirect chain, allow_http, no probe at configuration (AC19), catalogs through FromUpstream, boxes without an upstream checksum under the completion-only mode with a structural verifier and then digest-bound (AC17), removal rows mapped onto proxy-cache's classes; the HCP migration recipe gains the read_only step from replication was-Q11 and a catalog-read step (AC21); access_token redacted by observability's rules, not the handler; Q13 adopted: virtual catalogs resolved per name at request time, no stored merge, because a remote member cannot be enumerated (AC22); Capabilities with rename (AC26). Earlier: authored 2026-09-26 from captures of Vagrant 2.3.7 and 2.4.9; twelve questions adopted under the standing delegation. Thirteen resolved, none open. Awaits a /spec review pass and a Fable recheck."
 description: "Spec for Vagrant boxes served to vagrant box add, update and outdated: a per-box catalog document generated by the shared index service on every write and rendered with absolute URLs at serve time, served identically at the explicit, shorthand and 2.4 API paths, provider entries ordered so pre-2.4 clients that take the last entry per provider receive the default architecture, immutable multi-gigabyte box files with byte ranges so interrupted downloads resume, a Bearer credential scoped by VAGRANT_SERVER_URL, a proxied path that rewrites every upstream box URL and verifies or records each box's digest, and per-name virtual repositories."
 author: michielvha
 goal: "Serve Vagrant users a private box registry and a verified cache of any box catalog, HCP Vagrant included until its end of operations, that stock Vagrant 2.3 and 2.4 add, update and resume multi-gigabyte downloads from with a token in VAGRANT_CLOUD_TOKEN, the registry in VAGRANT_SERVER_URL, and a network restricted to this registry."
@@ -10,7 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/vagrant/**"
   - "conformance/vagrant/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; reconciled on Opus 2026-09-28 with Q13 (virtual catalogs resolved per request) raised and adopted under the standing delegation; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q19 into the proxied path (the current and one retained upstream revision per box, their bodies on the remote's declared list, the box route their reader), which needs the same recheck"
+fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; reconciled on Opus 2026-09-28 with Q13 (virtual catalogs resolved per request) raised and adopted under the standing delegation; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q19 into the proxied path (the current and one retained upstream revision per box, their bodies on the remote's declared list, the box route their reader), which needs the same recheck; the format closing sweep on Opus 2026-09-28 moved that list to each box's package-level document under proxy-cache's adopted was-Q22"
 ---
 
 # Plan: Vagrant boxes
@@ -131,11 +131,14 @@ and the charter's breadth verdict (its AC9, build step 8) both precede it; the r
 recorded here anyway, from this side, because a gate enforced on one side only is enforced
 nowhere. This format adds no root-anchored mount: Vagrant takes a catalog URL with any path, and
 `VAGRANT_SERVER_URL` may carry a path (captured), so everything lives under
-`/vagrant/{repository}/`. It does need the externally visible base URL, as `npm.md` does, because
-the catalog's box URLs must be absolute (Design, "Every catalog is a generated per-box document"):
-`deployment.md`'s `server.public_url`, reached through `Deps`, which `format-handler-interface.md`'s
-re-open records as a named input beside its route-scoped credential declarations ("The scheduled
-re-open", naming this spec and `npm.md`).
+`/vagrant/{repository}/`. The catalog's box URLs must be absolute (Design, "Every catalog is a
+generated per-box document"), so the served bytes need `deployment.md`'s `server.public_url` and
+the repository's current name, but the handler package never reads either: the catalog is a
+generated document, and `signing-service.md`'s serve-time stage supplies both as inputs of the
+generator's `Render` (its resolved serve-time decision, was its Q13, AC31), which is how
+`format-handler-interface.md`'s re-open now records this spec and `chef.md` under its base-URL
+rider ("The scheduled re-open"), in contrast to `npm.md` and `cargo.md`, which read
+`server.public_url` through `Deps` because they render per request.
 
 **The shared index service must be `planned` before Phase 1 and built before the handler reaches
 `main`.** Every hosted box's catalog is a write-triggered generated document produced by
@@ -359,9 +362,17 @@ The levels are exactly those `data-model.md` provides; no table is added.
   current revision's and the retained one's, are no current document's body, since the rendered
   catalog has replaced every upstream `url`; so every such blob, and the route map built from
   either revision where the handler stores one as a blob, is on the declared blob-digest list of
-  the remote's repository-level document, rewritten by each adoption in its own transaction, a
-  map built after the adoption declared only while its revision still counts, because a digest a
-  document merely mentions keeps nothing alive (`storage-and-gc.md` AC16). A
+  **that box's own package-level document** on the remote, the current document holding its
+  rendered catalog, rewritten by each adoption of that box in its own transaction under the
+  document's revision token, a map built after the adoption declared only while its revision still
+  counts, because a digest a document merely mentions keeps nothing alive (`storage-and-gc.md`
+  AC16). The list sits at the set's own level, per box, under `proxy-cache.md`'s resolved
+  declaring-document decision (was its Q22), so adoptions of different boxes write different rows
+  and never serialise on one list, and the repository-level document declares nothing for this
+  format; the declaring document is never evicted, because a remote's current metadata documents
+  are current documents no LRU eviction reaches (its resolved metadata-eviction decision, was
+  Q21, AC29), and it is `proxy-cache.md`'s example of a current revision whose own upstream body
+  is a blob outside any document's body (its was-Q19 extension). A
   cached box is held by its own cached reference, the second root, which no adoption ends; the
   checksums a revision names and the digest a verification record binds are metadata and keep
   nothing alive.
@@ -392,15 +403,17 @@ enforced by `conformance-harness.md` AC26), and its effect by the real clients
 | Delete a version | `delete-version` | `{org}/{name}`, version | The version leaves the catalog; its box routes answer `404`; the version and every coordinate under it are retired | `delete` on `{org}/{name}/{version}` |
 | Delete a box | `delete-package` | `{org}/{name}` | Every version leaves and is retired; the catalog routes answer `404`; the `Package` row survives (`data-model.md`, "A package outlives its versions") | `delete` on `{org}/{name}` |
 
-Adding a provider file is `publish`, not `attach`, although `management-api.md`'s reconciliation
-table places it under `attach` and names "a Vagrant provider file" among that kind's examples.
-The kind table defines `attach` by effect as an auxiliary file "that no coordinate binds and no
-client verifies as the version's bytes", and a provider file is the opposite on both counts: its
-`(version, provider, architecture)` coordinate binds one set of bytes and is retired on deletion,
-and the client verifies it against the catalog's checksum and installs it. `publish` ("adds a
-version, or files to a version") is the kind whose definition fits, with the same `push` action,
-so nothing about authorization changes; the table row is reported for correction rather than
-followed against its own definitions.
+Adding a provider file is `publish`, not `attach`, and `management-api.md`'s reconciliation table
+now says so: its Vagrant rows place "publish version, add provider file to a version" under
+`publish` with no binding, "set a provider's default architecture" under `annotate`, and the three
+deletions under `delete-file`, `delete-version` and `delete-package`, and its `attach` row no
+longer names a Vagrant provider file among its examples (`delete-file` names it instead). The
+reason is the kind table's own definitions: `attach` is an auxiliary file "that no coordinate
+binds and no client verifies as the version's bytes", and a provider file is the opposite on both
+counts, its `(version, provider, architecture)` coordinate binding one set of bytes that is
+retired on deletion and that the client verifies against the catalog's checksum and installs;
+`publish` ("adds a version, or files to a version") is the kind whose definition fits, with the
+same `push` action.
 
 **Box files are multi-gigabyte, so the upload is the part that must be specified.** Vagrant's own
 publisher gives the scale: `vagrant cloud publish` abandons HCP's direct upload for files over
@@ -443,7 +456,9 @@ committed:
   resolved immutability decision below). The CI-retry case this spec first answered with an
   identical-bytes no-op is `management-api.md`'s `Idempotency-Key`: a retry carrying the first
   request's key and payload replays its outcome and creates no snapshot (its AC17), so the
-  handler needs no byte comparison of its own.
+  handler needs no byte comparison of its own and declares no unchanged publish; that spec's
+  resolved unchanged-publish decision (was its Q15) names this format as the one relying on the
+  key alone, where `puppet.md` and three others declare the unchanged publish.
 - **Exactly one default architecture per `(version, provider)`**: the first file published for a
   provider in a version is its default unless the publish marks another, following the
   architecture page's "the first provider in the configuration for a box version is the default
@@ -478,10 +493,14 @@ name, the transform `npm.md` applies to `dist.tarball` and `chef.md` to its univ
 `url` is not an option, because the client opens it as a local file ("Couldn't open file
 /boxes/...", captured). The document is served through `index.ServeDocument` (`signing-service.md`
 AC11), which sets the validators, so the handler package sets no `ETag` and no `Last-Modified`
-(`internal/format/freshness_boundary_test.go`). `signing-service.md` does not yet state a
-serve-time expansion a profile may declare for `ServeDocument` to apply, the gap `chef.md` raised
-for its universe; this format is its second consumer, and the fallback, should that spec decline,
-is write-time URLs regenerated when `server.public_url` or the repository name changes. Nothing
+(`internal/format/freshness_boundary_test.go`). The expansion is the generator's declared
+serve-time stage, `Render`, which `ServeDocument` calls under the serving repository's
+`server.public_url`, name and mount: `signing-service.md`'s resolved serve-time decision (was its
+Q13, AC31), which names this format beside `chef.md`. The `ETag` is derived from the stored body's
+digest and those inputs, never from rendering, so a matching `If-None-Match` costs no render, and
+a changed `server.public_url` or a rename changes the served URLs and the `ETag` with no write and
+no snapshot; the rendering is memoised under `index.render_memo_bytes` and a byte-changing stage is
+admissible because the catalog is unsigned. Nothing
 else in the stored document varies per request, and in particular **no per-caller credential or
 capability is ever written into a box URL** (the resolved credential-form decision below), because
 the client keys its resume file on the URL.
@@ -546,8 +565,8 @@ Stated so the dependency could not be lost, and now mapped item by item onto
 6. **No signature**, and no key: Vagrant verifies nothing but the checksum, so this format is the
    service's first unsigned consumer. Met by its AC24.
 
-Two items this format needs that the list above did not name: the serve-time URL expansion (the
-gap above) and `FromUpstream`, the proxied-path generation from a parsed upstream catalog (Design,
+Two items this format needs that the list above did not name, both now in that spec: the
+serve-time URL expansion (its `Render` stage, AC31, above) and `FromUpstream`, the proxied-path generation from a parsed upstream catalog (Design,
 "The proxied path"), for which `signing-service.md`'s "The proxied path" names CRAN, LuaRocks,
 Chef and opam and whose contract this format uses unchanged.
 
@@ -610,9 +629,10 @@ and the token in `VAGRANT_CLOUD_TOKEN`. How this meets `auth.md`, whose rules th
 bend:
 
 - `auth.md`'s verifier already accepts Bearer and the Basic password, both **universal** rows of
-  its "Presentation forms" table (its AC31), so nothing route-scoped is declared by this handler;
-  its client table still has no `vagrant` row, which this pass reports again (the auth half of the
-  consequences queue's Open item 23 was never applied).
+  its "Presentation forms" table (its AC31, whose Bearer row names vagrant), so nothing
+  route-scoped is declared by this handler; its client table carries the `vagrant` row this
+  spec's captures grounded, and it names Vagrant among the formats that declare a Bearer
+  challenge.
 - **Host scoping is the client's, so the token reaches every repository on the host.** A user
   adding boxes from two repositories of one registry sends one token to both, which a
   single-repository token cannot serve; such a user needs `auth.md`'s explicit multi-repository
@@ -897,7 +917,12 @@ range of its final object, recorded while HCP still operates. The reference impl
 the hosted side is the self-hosting shape HashiCorp's deprecation guidance points users to: a
 pinned static server over a hand-authored catalog and box files, so `Capabilities()` declares
 reference-implementation availability `available`. The write surface has no reference, an
-exception-list entry. Recording gates on the harness's redaction criterion
+exception-list entry. Because the hosted half is recorded against a local reference, it is
+legitimate only as a row of `conformance-harness.md`'s authoritative-reference exception list (its
+AC28), whose test fails an unlisted one; that row (the hosted half against the pinned static
+server, since vagrantcloud.com creates no boxes from 2026-10-01 and accepts no test upload) and a
+write row recording that no write corpus exists, as that list's RPM write row does, are reported to
+that spec in this pass, and AC25 cannot pass until they land. Recording gates on the harness's redaction criterion
 (`conformance-harness.md` AC13), whose rule for this format names the `Authorization` header, URL
 userinfo, the `access_token` parameter and presigned query strings. Deliberate divergences go on
 the exception list before their flow is expected to replay: the rewritten box URLs, the added
@@ -928,9 +953,11 @@ republish.
 - [ ] AC4: Every entry of every generated catalog carries `checksum_type: "sha256"` and the file's
       SHA-256, and a relative `url` that the generator package expands at serve time with
       `server.public_url` and the repository's current name, never the bind address or the
-      request's `Host`; changing `server.public_url` changes the served URLs with no write and no
-      snapshot; no served URL carries a credential or a per-request value, asserted by reading one
-      box's catalog as two different principals and comparing the bodies.
+      request's `Host`, through the generator's serve-time `Render` stage; changing
+      `server.public_url` or renaming the repository changes the served URLs and the `ETag` with no
+      write and no snapshot, and a matching `If-None-Match` answers `304` with no `Render` call;
+      no served URL carries a credential or a per-request value, asserted by reading one box's
+      catalog as two different principals and comparing the bodies.
 - [ ] AC5: With the 600 MB fixture box served at a throttled rate, a download interrupted by
       SIGINT and one cut by a dropped connection each resume on both lines on the next `vagrant
       box add`, the transcript showing `Range: bytes={n}-` answered `206` with `Content-Range`,
@@ -1045,7 +1072,9 @@ republish.
       exactly one request for the box and no ranged request.
 - [ ] AC21: A stand-in presenting each removal-table event produces this format's classification:
       a version leaving the catalog is followed by the rendered catalog while its cached box stays
-      fetchable at its route and the divergence is recorded and alerted, and after the next
+      fetchable at its route and the divergence is recorded and alerted, a sweep run with the
+      repository's grace lapsed while the retained revision still names the coordinate leaving
+      that revision's upstream body in the store and the route fetchable, and after the next
       adoption drops the revision naming it the route answers `404` with no upstream request; a
       changed checksum or URL for a cached coordinate keeps serving the cached bytes and records a
       violation, the cached bytes still served after a sweep run with the repository's grace
@@ -1072,14 +1101,18 @@ republish.
       and on a remote, a proxied box's rendered catalog and upstream revision above the threshold
       survive a sweep while current, and after the next adoption supersedes that revision a sweep
       run with the repository's grace lapsed leaves its upstream body in the store, declared on
-      the remote's repository-level document, while a box at a coordinate only that revision
+      that box's package-level document on the remote and on no repository-level document, while
+      a box at a coordinate only that revision
       names (the entry having left the upstream catalog, the cached box evicted before the sweep)
       is fetched from the upstream URL that revision names, verified against its checksum and
       added on both lines; after the adoption that drops it, the next sweep past grace collects
       that body and the coordinate answers `404` with no upstream request; and with the sweep
       paused after its mark and again after recording its deletion intents, an adoption
-      committing in each pause leaves the current and the retained revision's bodies in the store
-      (`proxy-cache.md` AC27).
+      committing in each pause leaves the current and the retained revision's bodies in the store;
+      adoptions of two different boxes committing concurrently both succeed with no revision-token
+      conflict on a shared row, each box's retained body released only by that box's own
+      adoptions; and an LRU eviction pass on the remote far over its quota leaves every box's
+      rendered catalog, upstream bodies and declared list unchanged (`proxy-cache.md` AC27, AC29).
 - [ ] AC25: Replay-match passes against a corpus recorded from vagrantcloud.com and from a pinned
       static server over a hand-authored catalog, covering the recorded surface named in Design,
       with the `Authorization` header, URL userinfo, `access_token` and presigned query strings
@@ -1097,7 +1130,7 @@ republish.
 | AC1 | conformance | `conformance/vagrant/hosted_add_test.go` (both pinned images, network-restricted client containers, transcript order and content types asserted, unpacked image compared) |
 | AC2 | conformance + integration | `conformance/vagrant/shorthand_test.go` (both lines with `VAGRANT_SERVER_URL` carrying the repository path; stored `metadata_url` read from the client's home); `internal/format/vagrant/catalog_paths_test.go` (both paths byte- and header-identical for four caller kinds, `HEAD` and `GET`) |
 | AC3 | conformance + integration | `conformance/vagrant/architecture_test.go` (both lines on `amd64`, default change between runs); `internal/format/vagrant/catalog_order_test.go` (default-last ordering and one default per version and provider across every fixture) |
-| AC4 | integration | `internal/format/vagrant/index/render_test.go` (checksum on every entry, expansion from a fixture `server.public_url` and the current name with a spoofed `Host` ignored, base URL change with snapshot count unchanged, two principals' bodies compared) |
+| AC4 | integration | `internal/format/vagrant/index/render_test.go` (checksum on every entry, expansion from a fixture `server.public_url` and the current name with a spoofed `Host` ignored, base URL change with snapshot count unchanged, two principals' bodies compared); `internal/index/render_test.go` (the serve-time stage, `Render` call counts on a `304` and on a memo hit, `signing-service.md` AC31) |
 | AC5 | conformance | `conformance/vagrant/resume_test.go` (600 MB fixture behind a throttling proxy in the harness; SIGINT and connection-drop variants on both lines; `Range` and `206` asserted in the transcript; `HEAD` headers) |
 | AC6 | integration | `internal/format/vagrant/ingest_test.go` (every `Apply` refusal with `validation` and nothing committed, `conflict` on an existing coordinate, `retired` on a retired one after pruning under an injected clock and after a backwards repoint, three-file publish snapshot count); `internal/manage/idempotency_test.go` (the keyed replay, `management-api.md` AC17) |
 | AC7 | integration + benchmark | `internal/format/vagrant/large_upload_test.go` (6 GiB generated stream with memory and temp-disk probes, dropped connection and session resume, digest-gated commit); `conformance/vagrant/large_box_test.go` (both lines add the result) |
@@ -1114,11 +1147,11 @@ republish.
 | AC18 | conformance + integration | `conformance/vagrant/proxied_ttl_test.go` (mutating stand-in with and without validators, network-level counts); `internal/format/vagrant/proxied_catalog_test.go` (unknown routes with no upstream request, name mismatch, omitted entries, `404`, `429` and `5xx`) |
 | AC19 | integration | `internal/format/vagrant/upstream_redirect_test.go` (allowlisted and refused redirect hosts, credential scope at the network layer, no cached redirect target); `internal/upstream/validate_test.go` (`http://` refusal and `allow_http`, the unreachable-but-well-formed acceptance, `upstream-adapters.md` AC22, AC23) |
 | AC20 | conformance | `conformance/vagrant/proxied_resume_test.go` (throttled stand-in, interrupted initiating client, resume as a waiter, stand-in request count) |
-| AC21 | integration + conformance | `internal/format/vagrant/removal_test.go` (stand-in presenting each event; a removed coordinate before and after the adoption that drops its revision, network-level request counts; a changed checksum kept across a sweep on an injected clock with the grace lapsed, the object store read afterwards, then the box evicted and the re-fetch refused; the shared-layer half is `proxy-cache.md`'s); `conformance/vagrant/migration_test.go` (catalog reads, `immediate` sync, `read_only` with the stand-in stopped, freeze into a local, adds on both lines at each step; the read-only half shares `internal/repository/readonly_remote_test.go` with `proxy-cache.md` AC23) |
+| AC21 | integration + conformance | `internal/format/vagrant/removal_test.go` (stand-in presenting each event; a removed coordinate before and after the adoption that drops its revision, with a sweep on an injected clock with the grace lapsed while the retained revision names it, network-level request counts; a changed checksum kept across a sweep on an injected clock with the grace lapsed, the object store read afterwards, then the box evicted and the re-fetch refused; the shared-layer half is `proxy-cache.md`'s); `conformance/vagrant/migration_test.go` (catalog reads, `immediate` sync, `read_only` with the stand-in stopped, freeze into a local, adds on both lines at each step; the read-only half shares `internal/repository/readonly_remote_test.go` with `proxy-cache.md` AC23) |
 | AC22 | conformance + integration | `conformance/vagrant/virtual_test.go` (shorthand through the virtual repository on both lines, shadowing with the network layer showing no upstream request for the shadowed name, a never-requested proxied box, `405` `repository-type`); `internal/format/vagrant/virtual_resolve_test.go` (first-member-per-name resolution at request time, a member publish visible at the next request, no `index.merge` job enqueued) |
 | AC23 | integration | `internal/format/vagrant/policy_config_test.go` (advisory rule refused at configuration, version-pattern rule on both paths through the `advisories` and `policies` keys, signature rule refusing with its reason) |
-| AC24 | integration + fault injection + property + conformance | `internal/storage/metadata_root_test.go` (threshold crossing with a generated catalog and a proxied revision, sweep, serve; `signing-service.md` AC5 and `storage-and-gc.md` AC16); `internal/format/vagrant/proxied_retention_gc_test.go` (a stand-in catalog above the threshold dropping a version across adoptions N+1 and N+2, a sweep on an injected clock with the grace lapsed after each, the object store and the remote's declared list read after each, the retained revision's evicted box fetched from its upstream URL and verified, the sweep paused after its mark and after intent recording while an adoption commits); `internal/storage/gc_property_test.go` (declared-list births and ends from adoptions interleaved with the sweep, shared with `proxy-cache.md` AC27 and `storage-and-gc.md` AC16); `conformance/vagrant/large_catalog_test.go` (both lines add after the sweep) |
-| AC25 | conformance | `conformance/vagrant/replay_test.go` (corpus replay against both recorded sources with the named redactions) |
+| AC24 | integration + fault injection + property + conformance | `internal/storage/metadata_root_test.go` (threshold crossing with a generated catalog and a proxied revision, sweep, serve; `signing-service.md` AC5 and `storage-and-gc.md` AC16); `internal/format/vagrant/proxied_retention_gc_test.go` (a stand-in catalog above the threshold dropping a version across adoptions N+1 and N+2, a sweep on an injected clock with the grace lapsed after each, the object store and the box's package-level declared list read after each and the repository-level document asserted to declare nothing, the retained revision's evicted box fetched from its upstream URL and verified, the sweep paused after its mark and after intent recording while an adoption commits, two boxes adopted concurrently with no revision-token retry, an eviction pass over quota leaving documents and lists unchanged); `internal/storage/gc_property_test.go` (declared-list births and ends from adoptions on package-level declaring documents interleaved with the sweep, shared with `proxy-cache.md` AC27 and `storage-and-gc.md` AC16); `internal/proxy/metadata_eviction_test.go` (`proxy-cache.md` AC29); `conformance/vagrant/large_catalog_test.go` (both lines add after the sweep) |
+| AC25 | conformance + unit | `conformance/vagrant/replay_test.go` (corpus replay against both recorded sources with the named redactions); `conformance/record/reference_exceptions_test.go` (this format's rows of the authoritative-reference exception list, `conformance-harness.md` AC28) |
 | AC26 | unit + conformance | `internal/format/vagrant/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/vagrant/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; both lines in both modes, old name `not-found`, a pre-rename `box update` failing until re-added) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
@@ -1160,8 +1193,8 @@ kind and the rename case, apply from the sibling specs and are not restated per 
 ### Phase 3: Proxied path
 - Waits on `upstream-adapters.md` and `artifact-verification.md` (Blocking preconditions)
 - Catalog revisions with TTL through `FromUpstream`, URL rewriting and the route map over the
-  current and one retained upstream revision, their bodies on the remote's declared blob-digest
-  list, the `hosts`
+  current and one retained upstream revision, their bodies on the declared blob-digest list of
+  that box's package-level document on the remote, the `hosts`
   allowlist for redirect chains, boxes verified against a declared digest set or through the
   completion-only mode with the structural verifier and then bound, resume as a waiter, negative
   caching, the removal table, the three-step migration recipe, `405` `repository-type` on remote
@@ -1497,8 +1530,12 @@ never-requested proxied box reachable and a member's publish visible without a m
 **Why this is yours:** it decides what a user sees through the one shorthand namespace a Vagrant
 virtual repository exists to provide.
 
-Accepted cost: the per-member lookup on each virtual catalog request, and the serve-time
-expansion under the virtual's name riding the same `ServeDocument` gap as the hosted catalog.
+Accepted cost: the per-member lookup on each virtual catalog request. The serve-time expansion
+under the virtual's name, once a gap shared with the hosted catalog, is met: `ServeDocument`'s
+reference names the serving repository apart from the source of the stored body, naming this
+format's virtual as its example ("Serving"), and the generator's `Render` stage expands under the
+serving repository's mount and name (`signing-service.md`'s resolved serve-time decision, was its
+Q13, AC31).
 
 ## Review Log
 
@@ -1507,3 +1544,4 @@ expansion under the virtual's name riding the same `ServeDocument` gap as the ho
 | 2026-09-26 | 34a974d | authoring pass: grounded first draft, not a review | Grounded four ways: captured traffic from Vagrant 2.3.7 and 2.4.9, installed from HashiCorp's checksum-verified packages into a digest-pinned Debian base, against a logging stub on dedicated Podman networks with 1 MB and 600 MB fixture boxes (`HEAD` content-type catalog detection, the shorthand's one and two paths and stored `metadata_url`, 2.3.7's last-entry-per-provider selection against 2.4.9's architecture matching, checksum types and silent skip, prereleases and `1.0`/`1.0.0` ambiguity, name mismatch, error rendering with no body and no retry, Bearer attached by host match over TLS and plain HTTP, dropped cross-host and forwarded under `--location-trusted`, userinfo on catalogs only and persisted in plain text, `access_token` query mode, resume after SIGINT and after a dropped connection with `Range`, restart when `Range` is ignored, spliced installs without a checksum, no fallback for catalog adds, fall-through between the 2.4 shorthand paths, fallback for direct URL lists on `GET` but not `HEAD`, `vagrant box update` and `outdated`, and `vagrant cloud publish`'s full HCP API sequence); the installed Vagrant and `vagrant_cloud` sources; HashiCorp's box format, versioning, architecture, API v2 and HCP deprecation pages; the live vagrantcloud.com (identical catalog paths, no checksums, no validators, case folding, the redirect chain to presigned S3 with ranges, both clients selecting `amd64` from bento); and OSV (no Vagrant ecosystem). Twelve questions written in decision shape and adopted under the standing delegation: default architecture last (AC3), Bearer via `VAGRANT_SERVER_URL` with stable box URLs (AC4, AC11, AC12), immutable coordinates (AC6), one version per write (AC6, AC8), `X.Y.Z` versions (AC6), exact names (AC10), `403` on `HEAD` and `GET` (AC14, AC15), rewritten proxied catalogs (AC16, AC18), SHA-256 filled once cached (AC17), HCP's API left to `management-api.md` (Scope), advisory rules refused (AC23), no preconfigured upstream and a migration recipe (AC21). Twenty-five criteria, each with a Test Plan row. Stays draft; awaits an independent review. |
 | 2026-09-28 | 7c4d5bb | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec and of this file (Open item 23's requests, now met or routed; themes 1, 2, 4, 5, 7 and 10; management-api 11, 12 and 13; upstream-adapters 12; signing-service 11; replication reconciliation 6; conformance-harness reconciliation 4; sweep 1 item 6). Applied: the catalog as the `Indexer` generator's output, the six index requirements mapped one by one onto `signing-service.md` (AC1, AC3, AC5, AC21, AC24), served through `ServeDocument` under an `ETag`-only profile with no pointer-scoped signal needed, the serve-time URL expansion in the generator package citing `chef.md`'s gap (AC4, AC8 and rows); the management table carrying kinds through `Operator`, publish from the API's upload sessions with `Apply`'s peek refusing `validation`, `conflict`, core-held `Retirement` with its granularity, the identical-bytes no-op replaced by `Idempotency-Key`, `405` `repository-type` (AC6, AC9, the Q3 and Q4 records); the box-integrity entry cited to `artifact-verification.md` (AC18, AC24 there); the `access_token` redaction reassigned to `observability.md` and the harness; `WriteRefusal`, curl showing only the code, the `holds` row (AC14); the proxied transport on `upstream-adapters.md` (credential kinds, `hosts` allowlist, `allow_http`, AC23's no-probe rule; AC19), catalogs through `FromUpstream`, the completion-only mode with a structural verifier for boxes with no upstream checksum and a declared-digest refetch after eviction (AC17), the removal table mapped onto `proxy-cache.md`'s event classes; the migration recipe's `read_only` step from `replication.md` was-Q11 and a catalog-read step the recipe needed because the wire lists no names (AC21, the Q12 record); the Q10 record citing `management-api.md` was-Q8; client confinement, harness-built images and seed-path generation cited; new AC26 (`Capabilities()`, rename). Mismatches found: `management-api.md` places "add provider file" under `attach`, whose own definition excludes it, so this spec declares it `publish` and reports the row; a stored virtual merge cannot cover a remote member that lists no names, raised as Q13 in decision shape and adopted (A: per-name resolution at request time, no `Merge`; AC22), which also agrees with `async-operations.md` recording this spec as asking nothing of the queue; `auth.md` still has no `vagrant` client row (reported again). `fable_recheck` extended (new question adopted on Opus). Stays draft. |
 | 2026-09-28 | 36a137d | data-loss fix, second wave, on Opus (storage-and-gc closing-sweep item 0 and data-loss fix item 1): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 1 of "From the data-loss fix" in `agents/spec-loop/consequences.md`, verified against `proxy-cache.md`'s resolved retained-revision and old-blob decisions (was its Q19 and Q20, AC27, AC28) and `storage-and-gc.md` AC16: a digest a document merely mentions keeps nothing alive. The hole: the remote's current documents held "the retained upstream revisions" with no count and no keep-alive, and the box route resolved through them; worse, the current upstream revision was held by nothing either, because the rendered catalog is the current document and it has replaced every upstream `url`, so the body the route map reads is a second blob no current document's body is. AC24 asserted survival "while current or retained" with no mechanism behind it. Reachability checked first: the catalog route serves the current revision only, but a client that read the older catalog and requests the box afterwards names a `(version, provider, architecture)` route only the retained revision may name, and the route, carrying the coordinate and no digest, reads that revision for the upstream URL and checksum, so the retained revision is reachable and Q19, not Q20, applies. Chosen: Q19 at its default count of one, both upstream bodies above the threshold on the remote's repository-level declared list, rewritten by each adoption; a removed coordinate answers `404` with no upstream request once the adoption that drops its revision commits. The kept-bytes row was not a hole but is now explicit: the kept bytes are held by the box's own cached reference, never by the checksum the rendered document keeps, and the eviction row now covers a changed-checksum coordinate as well as a checksum-less one. AC21 and AC24 extended (a sweep with the grace lapsed while the revision is retained, the retained revision's evicted box fetched and verified, its body collected after the dropping adoption, the sweep paused across an adoption); Test Plan rows (`internal/format/vagrant/proxied_retention_gc_test.go` added, the shared `internal/storage/gc_property_test.go` named) and Phase 3 updated. No new question adopted here; `fable_recheck` extended for the folded decision. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
+| 2026-09-28 | 2740b05 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Applied: eviction-contradiction item 2 (the declared list moved to the box's package-level document on the remote, the one holding its rendered catalog, `proxy-cache.md` was-Q22 and was-Q21, Design, AC21, AC24, their Test Plan rows and Phase 3; the one-retained-revision count confirmed as `proxy-cache.md` was-Q19's default, the current body declared too per its was-Q19 extension, with the GC criteria sweeping with the grace lapsed while a revision is retained, now in AC21 too); management-surfaces item 7 (the attach paragraph now cites `management-api.md`'s Vagrant rows under `publish`); signing-service closing-sweep item 6 (the serve-time expansion is its `Render` stage, was-Q13, AC31: Blocking preconditions, "Every catalog is a generated per-box document", item list, the Q13 record's accepted cost, AC4 and its row; no base URL through `Deps` for this handler, matching `format-handler-interface.md`'s re-open rider); auth closing-sweep item 3 (the `vagrant` row and the Bearer declaration exist); management-api was-Q15 cited beside `Idempotency-Key`; six-spec item 6 extended to this spec (the hosted half is recorded against a pinned static server, so AC25 needs `conformance-harness.md` AC28 rows, reported). Found already done: management-api item 13 (was-Q8 in the HCP record), replication item 6, the HANDOFF.md dated commitment. No question adopted, `fable_recheck` text extended for the moved list. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |

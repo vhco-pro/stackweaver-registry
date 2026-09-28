@@ -404,6 +404,11 @@ One target file per agent. A file listed here has had every item targeting it ap
 - proxy-cache.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. EnqueueRevalidation takes a transaction, RetryAt deferral, no import of index/signing; Obligation gains git location and advisory key (new AC30); deletion ends current documents beside cached references (AC23). 30 criteria; no question.
 - repository-lifecycle.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. Deletion step 5: a remote's current documents are ended alongside its cached references, not in the eviction shape (AC14, AC16). No question.
 - storage-and-gc.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. proxy.revalidate job-held grace bounded by max_attempts times the cool-down cap (AC23); AC30 row names data-model AC35. Roots stay five; no question.
+- puppet.md, FORMAT SWEEP: DONE 2026-09-28 at 2740b05 on Opus. Declared list on the module's package-level document (was-Q22, AC21, AC25); publish a client binding in Blocking preconditions and Design; ServeRendered and ServeFile (AC5, AC23); management-api was-Q13 to Q16 cited; rename unbound_hosts (AC27).
+- vagrant.md, FORMAT SWEEP: DONE 2026-09-28 at 2740b05 on Opus. Declared bodies on the box's package-level document (was-Q22, AC21, AC24); serve-time expansion is signing-service Render (was-Q13, AC31, AC4); provider file under publish per management-api; auth vagrant row.
+- swift.md, FORMAT SWEEP: DONE 2026-09-28 at 2740b05 on Opus. CHECK failed and fixed: proxied release metadata a cached File with a verification record surviving eviction (AC18, AC20); stored advisory key with rebind rewrite (was-Q11, data-model AC46, AC23); client resolves after restore and rebind (AC9, AC7); fable_recheck extended.
+- homebrew.md, FORMAT SWEEP: DONE 2026-09-28 at 2740b05 on Opus. Q15 accepted cost records proxy-cache's move (AC28, count zero); metadata never evicted (was-Q21, AC25); gzip and serving via signing-service was-Q13 and Q14; virtual member-list transition (AC20); PkgVersion vendored; auth brew row.
+- conformance-harness.md: swift and vagrant exception rows added 2026-09-28 (bookkeeping, from the batch 1 report).
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
 1. signing-service.md (~l.439, ~l.460): "`data-model.md`'s to add" -> "added in data-model.md (Design 'Freshness scoped to the pointer', AC36, AC37)"; ~l.437: "no retained snapshot holds" -> "no retained snapshot or pointer document holds" (data-model AC37).
@@ -773,3 +778,10 @@ Found while writing one row per format into `analysis/management-surfaces-and-th
 2. Every merging format spec names its member-input paths (signing-service AC35: a merging Profile declares, under the member's mount, each document the merge reads from a member; registration refuses one without): conda, arch, alpine, rpm, hackage, cpan, cran, debian, opam, luarocks, chef, maven, helm.
 3. data-model.md "Operations" (optional): the lifecycle rename result carries unbound_hosts (management-api AC31, repository-lifecycle was-Q10).
 4. question-triage.md: record signing-service Q19 (index imports proxy, never the reverse) as adopted on Opus, awaiting a Fable recheck.
+
+## From format closing sweep batch 1 (2026-09-28, on Opus)
+1. management-api.md Puppet rows: split so undeprecate, restore and hard-delete release (delete-version) have no binding; deprecate keeps PATCH /v3/modules/{slug}, withdraw keeps DELETE /v3/releases/{slug}, module soft-delete keeps DELETE /v3/modules/{slug}. In "Bindings: one operation, two ways in" list Puppet's POST /v3/releases (puppet-blacksmith, PDK) among client-driven routes. Supersedes management-surfaces item 2.
+2. proxy-cache.md was-Q19: add swift (release list and identifiers answers, retained count zero) to the zero-count examples beside homebrew and cpan; the "distinction that governs everything" paragraph may cite swift's per-version verification record as what makes re-fetch-after-eviction hold.
+3. supply-chain-policy.md Swift coverage row: the proxied advisory key is the upstream list's normalised canonical and alternate repository URLs.
+4. analysis/management-surfaces-and-the-oracle.md: strike the Swift half of the wire-only effects (AC7 and AC9 now assert client resolves after rebind and restore). Do after the RubyGems author hands back (it adds a row there).
+5. conan.md's exception row for conformance-harness (six-spec item 6) is still owed; its batch must report it.
