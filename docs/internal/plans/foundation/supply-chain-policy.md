@@ -1,11 +1,12 @@
 ---
 status: draft
-status_description: "Sweep 2026-09-28 at 6e6d503 (not a review): format-handler-interface AC14, data-model AC28, catalogue AC8 and conformance-harness AC26 cited where this spec had recorded consequences. Reconciled 2026-09-28 at 33679fb with the foundation authoring wave (not a review): artifact-verification's verdict shape (chain, revocation, superseded revision) consumed in AC15; scans and feed syncs as async-operations jobs and schedules; the policy. key table, the refusals route, rule administration through the repository PATCH, the lifecycle rule at tombstone, and observability's metrics, alerts and audit events all cited from their owners. Two Design sections built once for the format wave's findings: per-ecosystem OSV coverage with coordinate mapping and version ordering (Julia by UUID, Swift by URL, OS-package repositories by declared release, conda only through the cataloguer's pkg:conda PURLs) and per-format refusal binding with a closed Binds set and pending rows for uncaptured formats. Q9 adopted (one OSV schema, several sources; Homebrew's database becomes usable by configuration) and Q10 (a hijacked HTTP/1.1 status line naming the condition, canonical fallback on HTTP/2). 23 criteria, zero open questions; stays draft pending a gate review."
+status_description: "Closing sweep 2026-09-28 at f4a9246 on Opus (not a review): the coverage table re-read against every format spec (Helm and Ansible collections uncovered, no OSV ecosystem as of 2026-09-28; Open VSX across every VSCode variant; Hackage, R numeric_version, Homebrew PkgVersion, NuGet, Packagist and RubyGems orderings added to the vendored set, version.pm owed if a CPAN source appears) and the binding table likewise (Composer, Go, NuGet, Cargo, Pub, Hex, CRAN, Julia, Homebrew, Arch, LuaRocks rows from their captures; the union warning closed per format by its recipe; Composer, dotnet and the code-only clients in the rendering paragraph). Q11 adopted (the handler reports an advisory key, origin, source package, UUID or bound URLs, stored core-parsed on Package or Version and carried on fetch-and-cache; AC24) and Q12 (hosted repositories match public coordinates with operator coordinate_exemptions on local repositories, the advisory reader keyed by repository and applying them; AC25). 25 criteria, zero open questions; fable_recheck added. Sweep 2026-09-28 at 6e6d503 (not a review): format-handler-interface AC14, data-model AC28, catalogue AC8 and conformance-harness AC26 cited where this spec had recorded consequences. Reconciled 2026-09-28 at 33679fb with the foundation authoring wave (not a review): artifact-verification's verdict shape (chain, revocation, superseded revision) consumed in AC15; scans and feed syncs as async-operations jobs and schedules; the policy. key table, the refusals route, rule administration through the repository PATCH, the lifecycle rule at tombstone, and observability's metrics, alerts and audit events all cited from their owners. Two Design sections built once for the format wave's findings: per-ecosystem OSV coverage with coordinate mapping and version ordering (Julia by UUID, Swift by URL, OS-package repositories by declared release, conda only through the cataloguer's pkg:conda PURLs) and per-format refusal binding with a closed Binds set and pending rows for uncaptured formats. Q9 adopted (one OSV schema, several sources; Homebrew's database becomes usable by configuration) and Q10 (a hijacked HTTP/1.1 status line naming the condition, canonical fallback on HTTP/2). 23 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for scanning artifacts and enforcing supply-chain policy at the registry boundary - blocking by vulnerability, licence or signature state, on both hosted and proxied content."
 author: michielvha
 goal: "Make the registry a policy enforcement point rather than a passive store, so a rule about what may enter a build is applied where every artifact already passes."
 priority: "medium"
 issue: 15
+fable_recheck: "closing reconciliation sweep on Opus 2026-09-28 with Q11 (handler-reported advisory key stored core-parsed) and Q12 (hosted coordinate matching with operator exemptions, reader keyed by repository) raised and adopted under the standing delegation; the new judgement was never Fable-reviewed"
 created: 2026-09-23
 covers:
   - "internal/policy/**"
@@ -75,7 +76,10 @@ Every Tier 2 and Tier 3 format spec was authored in the same wave against captur
 traffic, and each reported to this spec what its clients do with a refusal and what OSV holds
 for its ecosystem. Those findings are folded into two Design sections, "What the feed covers,
 per ecosystem" and "When a refusal binds, per format", and into two decisions adopted under the
-standing delegation: advisory sources (was Q9) and the refusal status line (was Q10). Where a
+standing delegation: advisory sources (was Q9) and the refusal status line (was Q10). The
+closing sweep of that reconciliation added two more the format specs' findings forced: the
+advisory key a handler reports where an advisory does not name the package itself (was Q11), and
+coordinate matching on hosted repositories (was Q12). Where a
 format spec has not yet captured its clients' fallback behaviour the table says `pending`, and
 the format's policy conformance case (AC1 for the hosted path) is where the row gets filled,
 because the exact response shape and the client's reaction are checked against captured traffic
@@ -92,12 +96,19 @@ when that case is written, never assumed from another format's.
 - Per-ecosystem coverage decided from the sources' own ecosystem lists, the per-ecosystem
   coordinate mapping and version ordering the matcher needs, and a per-repository ecosystem
   declaration for OS-package formats whose OSV ecosystems are keyed by distribution release.
+- The advisory key: where an ecosystem's advisories name a package by something other than its
+  package name and version (an origin or source package, a UUID, a Git URL), the handler reports
+  that key when it records the version and the core stores it as core-parsed data, so the
+  matcher never parses a version document (the resolved advisory-key decision, was Q11).
+- Coordinate matching on hosted repositories, where a private package sharing a public name
+  inherits the public package's advisories unless the operator exempts the name, for rules and
+  the advisory reader alike (the resolved hosted-matching decision, was Q12).
 - Licence detection from the artifact bytes, and licence policy.
 - Signature and attestation state as a policy input, consumed as a verdict produced by
   `docs/internal/plans/foundation/artifact-verification.md` through a consumer interface this
   spec defines.
-- A read-only advisory and condemnation query reached through `Deps`, so a handler can render
-  its ecosystem's in-band advisory channel (NuGet `VulnerabilityInfo`, Hex advisory links,
+- A read-only advisory and condemnation query reached through `Deps`, keyed by the repository a
+  handler serves, so a handler can render its ecosystem's in-band advisory channel (NuGet `VulnerabilityInfo`, Hex advisory links,
   Composer's security-advisories route, Open VSX's control document) without importing the
   policy layer.
 - The rendering of a refusal at the transport level: the status line's reason phrase on HTTP/1.1
@@ -242,33 +253,53 @@ therefore carries a per-ecosystem table in `internal/policy`, which is core-owne
 the feed's key space, not format knowledge: it never parses an artifact or a request, and the
 cataloguer's PURL types are the same table's third column, so the coordinate tier and the
 inventory tier agree on what a package is called. Version ordering is taken from a vendored
-implementation per scheme (semver, PEP 440, Maven, RPM EVR, Debian, Alpine, opam, Cargo, Go), and
-a range under an ordering the matcher does not implement binds no rule: the ecosystem is treated
-as uncovered and the configuration refusal says why. AC17 asserts the mapping and the ordering
+implementation per scheme, and a range under an ordering the matcher does not implement binds no
+rule: the ecosystem is treated as uncovered and the configuration refusal says why. The vendored
+set is therefore exactly the orderings the covered rows below need, and a row is covered only
+if its ordering is in it:
+
+- semver (npm, Hex, Pub, Julia, `SwiftURL`, `VSCode`), Cargo's, PEP 440, Maven, NuGet's,
+  Composer's normalised versions (Packagist), RubyGems', Go's;
+- the OS-package orderings: RPM EVR with epoch, Debian, Alpine;
+- opam's, where `~` sorts before everything (`opam.md`);
+- Hackage's: dot-separated components compared as integers, left to right (`hackage.md`, which
+  also refuses at publish two versions differing only by trailing zeros);
+- R's `numeric_version`: components split on `.` or `-` and compared as integers, so `1.0-1`
+  equals `1.0.1`, `1.01` equals `1.1` and `1.0` is below `1.0.0` (`cran.md`);
+- Homebrew's `PkgVersion`: the version under Homebrew's tokenised comparison, then the `_revision`
+  suffix as an integer, absent meaning `0`, which the records of Homebrew's own OSV-format
+  database range over (`fixed` at `2.9.3_1`, `homebrew.md`), so declaring that database as a
+  source binds rules without a code change.
+
+`version.pm`'s ordering is not in the set: it is the only correct one for CPAN (`1.1` equals
+`1.10`, `0.9` is above `0.10`, `cpan.md`), and CPAN has no OSV-schema source anyone can declare
+today, so vendoring it is owed the moment one appears, and until it is vendored a declared CPAN
+source still leaves the CPAN row uncovered by this rule. AC17 asserts the mapping and the ordering
 per row.
 
 | Ecosystem | OSV data | Coordinate the matcher keys on | Grounded in |
 |---|---|---|---|
-| npm, PyPI, Maven, Go, crates.io, NuGet, Packagist, Pub, Hex | covered | name and version as the ecosystem spells them; Go's `GO-` advisories arrive through OSV; RustSec is OSV's crates.io data | `npm.md`, `pypi.md`, `maven.md`, `go-modules.md`, `cargo.md`, `nuget.md`, `composer.md`, `pub.md`, `hex.md` |
+| npm, PyPI, Maven, Go, crates.io, NuGet, Packagist, Pub, Hex | covered | name and version as the ecosystem spells them (Maven as `groupId:artifactId`, Packagist as `vendor/name`), each under its own ordering in the vendored set; Go's `GO-` advisories arrive through OSV; RustSec is OSV's crates.io data | `npm.md`, `pypi.md`, `maven.md`, `go-modules.md`, `cargo.md`, `nuget.md`, `composer.md`, `pub.md`, `hex.md` |
 | RubyGems | covered by OSV; no format spec yet | name and version | to be grounded by the RubyGems spec when authored |
 | OCI images, generic | no ecosystem, by construction | nothing at coordinate level; OCI is matched through the component inventory (AC10); generic has no ecosystem to match | `oci.md`, `generic.md` |
-| Helm charts, Ansible collections | `pending`: neither spec states whether `ecosystems.txt` lists it, and this spec does not assume | whatever the check at the format's policy case finds; until then an advisory rule on either is refused at configuration as uncovered, which is the safe default of the coverage rule | `helm.md`, `ansible-collections.md` (rows to fill) |
-| CRAN | covered (`CRAN`, RSEC advisories, `pkg:cran/`) | package name and version | `cran.md` |
-| Hackage | covered (`Hackage`, 32 HSEC advisories) | package name and version | `hackage.md` |
+| Helm charts | uncovered: OSV's `ecosystems.txt`, fetched 2026-09-28, lists no Helm or chart ecosystem | advisory rules refused at configuration unless a `policy.feed.sources` source declares one; coordinate and signature-verdict rules bind without it | `helm.md` |
+| Ansible collections | uncovered: OSV's `ecosystems.txt`, fetched 2026-09-28, lists no Ansible or Galaxy ecosystem | advisory rules refused at configuration unless a `policy.feed.sources` source declares one, when the matcher keys on `{namespace}.{name}` under semver | `ansible-collections.md` |
+| CRAN | covered (`CRAN`, RSEC advisories, `pkg:cran/`) | package name and canonical version under R's `numeric_version` ordering | `cran.md` |
+| Hackage | covered (`Hackage`, 32 HSEC advisories, none withdrawn or `MAL-`; OSV's separate `GHC` ecosystem concerns the compiler, which no repository of this format serves) | package name, matched byte for byte, and version under Hackage's component-wise integer ordering | `hackage.md` |
 | opam | covered (29 OSEC advisories over 18 packages, no `MAL-` entries) | package name and version under **opam's** version ordering, where `~` sorts before everything | `opam.md` |
-| Julia | covered (`Julia`, 1,717 JLSEC advisories, no `MAL-` entries) | the package **UUID**, `pkg:julia/{name}?uuid={uuid}`, never the name alone, because a name is unique only within one registry | `julia.md` |
-| Swift | covered only as `SwiftURL`, keyed by Git URL | the package's **bound repository URLs** (the identifiers binding `swift.md` adopted), not its scope and name | `swift.md` |
-| Open VSX | covered (`VSCode` and `VSCode:https://open-vsx.org`, 21 advisories, all `MAL-`) | `namespace.name` matched **case-insensitively** across both ecosystem spellings, semver ordering, PURL type `vscode-extension`; every entry is a security signal under the shared rule | `openvsx.md` |
-| Debian, Ubuntu | covered, keyed by **source** package and release (`Debian:12`, `Ubuntu:24.04`) | source package, source version and the repository's declared release qualifier (below) | `debian.md` |
+| Julia | covered (`Julia`, 1,717 JLSEC advisories, no `MAL-` entries) | the package **UUID** as the advisory key, `pkg:julia/{name}?uuid={uuid}`, never the name alone, because a name is unique only within one registry; semver ordering | `julia.md` |
+| Swift | covered only as `SwiftURL`, keyed by Git URL | the package's **bound repository URLs** in OSV's normalised `host/path` form as the advisory key (the identifiers binding `swift.md` adopted), not its scope and name | `swift.md` |
+| Open VSX | covered (`VSCode` and `VSCode:https://open-vsx.org` today, 21 advisories, all `MAL-`) | `namespace.name` matched **case-insensitively** across **every** `VSCode` ecosystem variant, the Marketplace's `VSCode` and any `VSCode:{url}`, including ones OSV adds later, semver ordering, PURL type `vscode-extension`; every entry is a security signal under the shared rule | `openvsx.md` (its resolved OSV-matching decision, was Q17) |
+| Debian, Ubuntu | covered, keyed by **source** package and release (`Debian:12`, `Ubuntu:24.04:LTS`) | the source package and source version as the advisory key, under the repository's declared release qualifier (below) | `debian.md` |
 | RPM distributions | covered for `Red Hat`, `Rocky Linux`, `AlmaLinux`, `SUSE`, `openSUSE`, each by release; **Fedora is not an OSV ecosystem** | package name and EVR under the repository's declared ecosystem (below) | `rpm.md` |
-| Alpine | covered (`Alpine:v3.N`, 4,679 records, no `MAL-` entries) | the **origin** (source) package under the repository's declared release (below) | `alpine.md` |
+| Alpine | covered (`Alpine:v3.N`, 4,679 records, no `MAL-` entries; none for edge) | the **origin** package as the advisory key, never the `pkgname` (in `Alpine:v3.22` `libssl3` matches nothing and its origin `openssl` 48 records), under the repository's declared release (below) | `alpine.md` |
 | Conda | no ecosystem in the OSV schema | nothing at coordinate level; the cataloguer must open `.conda` and `.tar.bz2` archives and emit `pkg:conda/` PURLs, which the Phase 1 library selection checks for; until it does, byte-dependent rules on conda are refused like any uncovered format | `conda.md` |
 | Terraform / OpenTofu | no ecosystem | advisory rules refused at configuration | `terraform.md` |
 | Conan | `ConanCenter` is defined and holds **no data** | advisory rules refused at configuration: a listed ecosystem with an empty export is uncovered | `conan.md` |
 | Vagrant, Chef, Puppet, LuaRocks | no ecosystem (Puppet also has no PURL type) | advisory rules refused at configuration | `vagrant.md`, `chef.md`, `puppet.md`, `luarocks.md` |
-| CPAN | no ecosystem; CPANSA publishes 2,117 advisories in its own schema | advisory rules refused at configuration until an OSV-schema export of CPANSA is declared as a source | `cpan.md` |
+| CPAN | no ecosystem; CPANSA publishes 2,117 advisories in its own schema | advisory rules refused at configuration until an OSV-schema export of CPANSA is declared as a source **and** `version.pm`'s ordering is vendored (above) | `cpan.md` |
 | Arch | no ecosystem; Arch's tracker publishes 2,444 records keyed by package base in its own schema | as CPAN | `arch.md` |
-| Homebrew | `Homebrew` is listed and serves no records; Homebrew's own OSV-format database holds 13,023 | uncovered by the default feed; covered the moment the operator declares Homebrew's database as a source, with no code change, which is the case the advisory-sources decision exists for | `homebrew.md` |
+| Homebrew | `Homebrew` is recognised by OSV's query API, absent from its exported `ecosystems.txt`, and `Homebrew/all.zip` answers `404`; Homebrew's own OSV-format database holds 13,023 records | uncovered by the default feed; covered the moment the operator declares Homebrew's database as a source, with no code change, which is the case the advisory-sources decision exists for: formula name (the PURL `brew` name) and version under Homebrew's `PkgVersion` ordering with its `_revision` suffix | `homebrew.md` |
 
 **OS-package repositories declare their ecosystem.** OSV keys the Debian, Ubuntu, RPM and Alpine
 ecosystems by distribution release, and a repository of one of those formats can serve any
@@ -281,6 +312,52 @@ declared ecosystem and nothing else. The setting is a core-parsed field of the r
 part of the handler's opaque `settings` document, because the core evaluates it and the handler
 never reads it (`data-model.md` AC28 stores it, and the `policy` document, beside the retention
 rules, absent from every snapshot and from any handler `settings`).
+
+**Where an advisory names something other than the package, the handler reports the key.** Four
+rows key their advisories on a value that is not the core's `Package.name` and version string:
+Alpine on the version's `origin` (from its `.PKGINFO`, the `o:` of its index entry), Debian and
+Ubuntu on the source package and source version (the stanza's `Source` field), Julia on the
+package UUID, and Swift on the package's bound repository URLs. The core never parses a version's
+opaque metadata document, so it cannot find these itself, and a key supplied only with a request
+would leave the feed sync blind to them, because re-matching a new advisory against stored
+content (AC7, AC14) happens with no request in flight. Per the resolved advisory-key decision (was
+Q11), the key is **reported by the handler and stored by the core**: an **advisory key** is one or
+more names and at most one version, core-parsed and never part of any metadata document, held on
+the `Package` for a key that is the package's (Julia's UUID, Swift's bound URLs, rewritten in the
+same write when a Swift `rebind` moves them) and on the `Version` for a key that is the version's
+(Alpine's origin, Debian's source package and source version), a version-level key replacing the
+package-level one. The handler supplies it in the same metadata-store write that records the
+package or version, on the hosted and the proxied path alike, and on a proxied miss it also rides
+the fetch-and-cache request, taken from the upstream document the handler already read, so the
+refusal before any upstream fetch (AC8) keys on it too. Absent a key, the matcher keys on the
+package name and the version string, which is every other row. The key is matched in the
+ecosystem the row or the repository's `advisory_ecosystem` names, and a handler that reports a
+wrong key mis-matches silently, which AC17's cases (one per covered row) and each format's
+policy conformance case are there to catch. How the key travels through `Deps` is `format-handler-interface.md`'s to record,
+as an input to its scheduled re-open, since it rides calls the pin already has and changes no
+method; where it is stored is `data-model.md`'s. AC24 asserts it.
+
+**Hosted repositories match public coordinates.** Coordinate matching keys on the ecosystem's
+name space, which a hosted repository shares with the public registry of its ecosystem: a
+private `acme/lib` on a hosted Composer repository and Packagist's `acme/lib` are one coordinate
+to the matcher (`composer.md`, its resolved hosted-channel decision, was Q11 there). Per the
+resolved hosted-matching decision (was Q12), a `local` repository whose policy carries an
+advisory-dependent rule matches its versions against the public advisories exactly as a remote
+does, so a private package that shares a public name inherits the public package's advisories.
+That is deliberate: the collision is the dependency-confusion shape, a refusal naming the advisory
+makes it visible, and over-refusal is the safe error. The remedy is an exemption the operator
+declares, not a silent default: the `policy` document of a `local` repository may carry
+`coordinate_exemptions`, a list of `{name, reason}` entries the operator asserts are not the
+public package of that name. An exempted name is matched at neither tier by its own coordinate (a
+catalogued component whose PURL is the exempted package itself is skipped too), while the
+components catalogued inside it still match, so a private package's vulnerable dependency is still
+found. An exemption on a `remote` repository is refused at configuration as `validation`, because a
+remote's names are its upstream's by construction, and on a `virtual`, which holds no versions of
+its own. Adding or removing one is a rule change and emits `policy.rule.update`. The OS-package
+formats already have the opt-in shape for hosted content: a hosted repository with no
+`advisory_ecosystem` matches nothing, as `debian.md` records. The advisory reader applies the same
+exemptions (below), so what a handler renders never disagrees with what the rules enforce. AC25
+asserts it.
 
 ### Configuration
 
@@ -406,19 +483,30 @@ VSX's control document carries a `malicious` list that is the only refusal an ed
 (`openvsx.md`). Without a shared read each handler would either invent its own advisory source or
 import `internal/policy`, and AC4 forbids the second. `Deps` therefore carries a fourth
 policy-layer consumer interface, the **advisory reader**, declared in `internal/format` beside the
-refusal type: given an ecosystem and a coordinate or a coordinate range, it returns the advisory
-records matching it and the condemnations standing against it (each with its sources), read from
-the same data the evaluator uses, and nothing else. It refuses nothing, evaluates no rule and
-reads no bytes, so it is not policy-enforcing and cannot be used to bypass the three
-policy-enforcing calls: it returns facts about coordinates, never content. A handler renders what
-it reads in its own document shape; under a stale feed it reads whatever the last sync stored,
-because a served advisory list is informational and the fail-closed rule belongs to the
-enforcing calls. The five pinned methods are unchanged, and `format-handler-interface.md` records
+refusal type: given the repository the handler is serving and a coordinate or a coordinate
+range, it returns the advisory records matching it and the condemnations standing against it
+(each with its sources), read from the same data the evaluator uses, and nothing else. It keys
+the question the way the evaluator does, which is why it takes the repository rather than an
+ecosystem string: the ecosystem is the format's row or the repository's `advisory_ecosystem`, the
+coordinate's stored advisory key replaces its name where one was reported, and a name the
+repository exempts (`coordinate_exemptions`, the resolved hosted-matching decision, was Q12)
+answers empty. A handler rendering an in-band channel for a hosted repository therefore never
+shows a private package the public package's advisories after the operator has exempted it, and
+before then shows exactly what the rules enforce; whether a format renders a channel on hosted
+repositories at all stays the format's decision (`composer.md` declines for its default-blocking
+client, its was-Q11). It refuses nothing, evaluates no rule and reads no bytes, so it is not
+policy-enforcing and cannot be used to bypass the three policy-enforcing calls: it returns facts
+about coordinates, never content. A handler renders what it reads in its own document shape;
+under a stale feed it reads whatever the last sync stored, because a served advisory list is
+informational and the fail-closed rule belongs to the enforcing calls. The five pinned methods are unchanged, and `format-handler-interface.md` records
 the interface beside `Verifier` and the refusal type, together with the refusal writer
 `WriteRefusal` as the module's only hand-written status line ("The pinned method set", its AC14);
 its `internal/format/refusal_writer_test.go` and `internal/policy/advisory_reader_test.go` are the
 same files AC18 and AC19 here name. AC19 proves the reader against a fixture handler holding only
-`Deps`.
+`Deps`. The reader's input changed from an ecosystem to a repository with the hosted-matching
+decision; `format-handler-interface.md` still describes it as taking an ecosystem, a wording
+reported to that spec (the signature is this spec's to own, per its rule that dependency
+interfaces' signatures belong to the layers' owners).
 
 ### Rendering a refusal: the status line, the phrase and the body
 
@@ -426,14 +514,25 @@ The format authoring wave captured what each client shows its user when this reg
 refusal, and the finding is uncomfortable: many clients print only the HTTP status line and
 never the body. Maven prints `status code: 403, reason phrase: Forbidden (403)` and Gradle
 `Received status code 403 from server: Forbidden` (`maven.md`); apt prints `403  Forbidden` and
-then blames the signature (`debian.md`); R and pak show the status line and renv not even the
-status (`cran.md`); the Chef clients, the CPAN clients, Hex's `mix` and `rebar3` and conda's four
-clients behave the same (`chef.md`, `cpan.md`, `hex.md`, `conda.md`). The counter-examples are
+then blames the signature (`debian.md`); both pinned Composer releases print the response's own
+status line verbatim, `could not be accessed (HTTP 403): HTTP/1.1 403 Forbidden`, taken from the
+status-line header itself, the plainest case of the phrase reaching a user (`composer.md`);
+`dotnet` reports `403 (Forbidden)` (`nuget.md`); R and pak show the status line (`cran.md`); the
+CPAN clients show the status and phrase (`cpan.md`); conda's four clients each print the status
+line (`conda.md`); Berkshelf and knife print a generic or misleading message without the body
+(`chef.md`); Hex's `mix` and `rebar3` print a generic message and never the body, and whether
+either shows the phrase is still to be captured (`hex.md`). A second group shows only the status
+code, so no phrase reaches its user either and the reason reaches only the operator, through the
+refusal record: dnf and zypper (`rpm.md`), brew and Vagrant through curl's `The requested URL
+returned error: 403` (`homebrew.md`, `vagrant.md`), opam (`opam.md`), cabal (`hackage.md`), and
+renv, which prints not even the status (`cran.md`). The counter-examples that show the body are
 few: SwiftPM prints a problem document's `detail`, but only on its JSON routes and never on the
-archive route (`swift.md`); pacman builds its own message from the status code (`arch.md`); brew
-prints curl's `(22) ... 403` (`homebrew.md`). For the first group the only text this registry
-can put in front of a user is the reason phrase, and HTTP/2 has no reason phrase (RFC 9113
-removes it). `deployment.md` settled the transport half: the main listener speaks HTTP/1.1 by
+archive route (`swift.md`); Conan prints it under a misleading "Permission denied" prefix
+(`conan.md`); Chef's Policyfile prints it (`chef.md`); the `go` command prints the status line and
+a `text/plain` body (`go-modules.md`); the Puppet agents print the message and the status line
+(`puppet.md`); pacman builds its own message from the status code (`arch.md`). For the first group
+the only text this registry can put in front of a user is the reason phrase, and HTTP/2 has no
+reason phrase (RFC 9113 removes it). `deployment.md` settled the transport half: the main listener speaks HTTP/1.1 by
 default (`server.http2: false`, its resolved HTTP-version decision), and behind a proxy the
 requirement is documented rather than enforced.
 
@@ -489,34 +588,42 @@ checks it lists every catalogue ecosystem.
 |---|---|---|---|
 | generic | pending | no ecosystem client; a plain HTTP error | `generic.md` |
 | OCI | pending | `DENIED` error under `403`; fallback behaviour of `docker`, `podman`, `oras` not yet captured | `oci.md` |
-| npm, PyPI, Ansible collections, Go modules, NuGet, Helm, Cargo, Pub, RubyGems | pending | rendering sections exist; fallback not yet captured | the format specs |
-| Maven | pending | Maven and Gradle print the status line only; multi-repository fallback not yet captured | `maven.md` |
+| npm, PyPI, Ansible collections, Helm, RubyGems | pending | rendering sections exist; whether the client prints the body or the phrase, and whether it falls back to another configured source (PyPI's `--extra-index-url`, Ansible's next `server_list` entry, a second Helm repository), is the format's policy case to capture: npm AC20, pypi AC16, ansible-collections AC14, helm AC17 | `npm.md`, `pypi.md`, `ansible-collections.md`, `helm.md`; RubyGems has no format spec yet |
+| Go modules | pending | `go` prints the status line and the `text/plain` body; the reference gives `403` the meaning "not on an approved list", on which the client is expected to stop rather than try the next proxy, and go-modules AC10's case captures that fallback before the row leaves `pending` | `go-modules.md` |
+| NuGet | pending | `dotnet` prints the status line only and retries a download six times; fallback to another configured source is nuget AC12's capture | `nuget.md` |
+| Cargo | pending | `cargo` prints `detail` verbatim on API refusals; index and download rendering and fallback to another source are cargo AC18's capture | `cargo.md` |
+| Pub | pending | the refusal's message rides the `WWW-Authenticate` challenge, never a `401` (the client deletes its token on one); whether it is printed on an archive fetch and whether a second hosted URL falls back is pub AC16's capture | `pub.md` |
+| Maven | pending | Maven and Gradle print the status line only; multi-repository fallback is maven AC13's capture, which is also AC18's proof that the phrase reaches both | `maven.md` |
 | Debian | package-level | apt prints the status line and phrase; a refused package leaks when a second source offers the identical version (apt installs it with exit 0), so the recipe is a single source | `debian.md` |
 | RPM | package-level | a refused package does not fall back; a refused `repomd.xml` makes dnf5 (`skip_if_unavailable` default) and zypper skip the repository and install from others; recipe is a single `baseurl` | `rpm.md` |
 | Alpine | package-level | a refused package does not fall back; a refused or untrusted index is skipped silently; apk installs the highest version across all configured repositories, so dependency confusion is the default and the recipe is a single repository | `alpine.md` |
-| Composer | pending | Packagist's malware list is a security signal; fallback not yet captured | `composer.md` |
-| Conda | pending | phrase-only on all four clients; fallback not yet captured | `conda.md` |
+| Composer | pending | a refused version is omitted from the package file, so it is absent to the solver, and its dist answers `403`; on a dist `403` Composer 2.10.3 stops (source fallback is off by default) while 2.2.30 clones the version's `source` URL, so on 2.2.30 the refusal holds only with egress restricted; both print the raw status line, so the phrase reaches the user; whether a second configured repository (Packagist left enabled) supplies an omitted version is not captured, and composer AC10's case settles it before the row leaves `pending` (`conformance-harness.md` AC26 refuses the case until then); Packagist's malware list is a security signal | `composer.md` |
+| Conda | pending | each of the four clients prints the status line, never the body, after solving from an index that still lists the refused record; fallback to a second channel is conda AC10's capture | `conda.md` |
 | Conan | holds | halts on `401`, `403` and `5xx`; falls through only on `404`, so a policy refusal is `403` | `conan.md` |
-| Swift | holds | on version routes: a `problem` entry in the release list makes 6.4 downgrade silently, so refusals never go there; detail shown on JSON routes only | `swift.md` |
-| Hex | pending | phrase-only on `mix` and `rebar3`; fallback not yet captured | `hex.md` |
-| CRAN | pending | R and pak show the status line, renv nothing; fallback not yet captured | `cran.md` |
+| Swift | holds | on version routes: a `problem` entry in the release list makes 6.4 downgrade silently, so refusals never go there; detail shown on JSON routes only; each pinned client has one registry per scope and no fallback host | `swift.md` |
+| Hex | pending | `mix` prints a generic message or `Request failed (403)` and `rebar3` a generic failure, never the body; whether either prints the phrase, and whether either falls back on a `403` (`rebar3` already asks each configured repository in order after a `404`), is hex AC12's capture | `hex.md` |
+| CRAN | pending | R and pak show the status line, renv nothing; one fallback is already known: pak adds `https://cran.r-project.org` for a repository not named `CRAN` in `options(repos)`, so the recipe names it `CRAN` and pak's value can be no better than `client-setting`; the rest is cran AC10's capture | `cran.md` |
 | Terraform / OpenTofu | holds | no client falls back to origin (captured with egress open); a provider `403` is misreported by the client as a credential rejection | `terraform.md` |
-| Vagrant | holds | direct URL lists fall back on a `GET` failure, so refusals answer `HEAD` and `GET` alike | `vagrant.md` |
+| Vagrant | holds | direct URL lists fall back on a `GET` failure, so refusals answer `HEAD` and `GET` alike; the client shows curl's rendering of the status code, never the body or the phrase | `vagrant.md` |
 | Chef | holds | Berkshelf halts on `403` and falls through on any other universe status, so `403` is the only refusal code | `chef.md` |
-| Puppet | holds | one Forge per client; `403` fails the run | `puppet.md` |
-| LuaRocks | restricted-egress | a refused manifest falls through to the next server group and luarocks.org stays behind any `--server`; the client unions servers and takes the highest version | `luarocks.md` |
+| Puppet | holds | one Forge per client; `403` fails the run with no other host contacted; both agent lines print the message and the status line, r10k the `errors` strings | `puppet.md` |
+| LuaRocks | restricted-egress | a refused manifest falls through to the next server group and luarocks.org stays behind any `--server`; the client unions servers and takes the highest version; a refused file halts the install even with a second server group holding it, so the refusal holds for a client configured with this registry alone (`--only-server`, or `rocks_servers` naming one virtual repository) or whose egress is restricted to it | `luarocks.md` |
 | Hackage | holds (hosted, virtual) / restricted-egress (remote) | hosted and virtual repositories sign an empty `mirrors.json`; a remote serves Hackage's own, and both cabal lines retry a refused request on every signed mirror | `hackage.md` |
 | CPAN | restricted-egress or client-setting | every client has a route back to public CPAN (Carton hard-codes cpan.metacpan.org and backpan; cpanm consults cpanmetadb and MetaCPAN; cpm never reads the mirror index by default; CPAN.pm 2.38 `pushy_https` ignores the mirror list); `cpanm --mirror-only` is the one captured setting that holds | `cpan.md` |
-| opam | holds | by rewrite: every source URL is ours, mirrors and `swhid` removed, the relative `archive-mirrors: "cache"` kept | `opam.md` |
-| Julia | restricted-egress | Pkg falls back to GitHub on any server failure: a `403` on a proxied General package installed from GitHub with exit 0 and no message on both clients | `julia.md` |
-| Homebrew | client-setting | `HOMEBREW_ARTIFACT_DOMAIN` with `HOMEBREW_ARTIFACT_DOMAIN_NO_FALLBACK` on 7.x keeps a bottle refusal; the API and bottle domains fall back on any other failure; brew prints `curl: (22) ... 403` | `homebrew.md` |
+| opam | holds | by rewrite: every source URL is ours, mirrors and `swhid` removed, the relative `archive-mirrors: "cache"` kept; the user sees only the status code | `opam.md` |
+| Julia | restricted-egress | Pkg falls back to GitHub on any server failure: a `403` on a proxied General package installed from GitHub with exit 0 and no message on both clients; a hosted package, which carries no `repo`, fails with no egress attempt | `julia.md` |
+| Homebrew | client-setting | holds under the recipe (`HOMEBREW_ARTIFACT_DOMAIN`, with `HOMEBREW_ARTIFACT_DOMAIN_NO_FALLBACK` on 7.x) and on hosted tap bottles; under `HOMEBREW_BOTTLE_DOMAIN` only with egress restricted, since brew falls back to `ghcr.io` with no switch; the API domain falls back to `formulae.brew.sh` on any failure; brew shows curl's rendering of the status code, never the phrase or the body | `homebrew.md` |
 | Open VSX | holds | by regeneration: editors retry at `fallbackAssetUri` and follow any `files.download` URL, so every URL is ours; a refused download is written out as a corrupt package, and whole-extension condemnations are rendered into the control document's `malicious` list, the only refusal an editor explains | `openvsx.md` |
-| Arch | client-setting | `SigLevel = DatabaseRequired` in the recipe: under the shipped `DatabaseOptional` a `.db.sig` answering `403` or `404` is silently accepted; a refused database fails the whole command; pacman builds its own message | `arch.md` |
+| Arch | client-setting | `SigLevel = Required DatabaseRequired` in the recipe: under the shipped `DatabaseOptional` a `.db.sig` answering `403` or `404` is silently accepted; a refused package fails the whole transaction with nothing installed; database routes never answer a policy refusal, since a refused database fails every sync; pacman builds its own message | `arch.md` |
 
-Two rows carry a warning beyond the refusal: Alpine and LuaRocks clients union every configured
-repository and take the highest version, and Chef's Berkshelf took a higher version from a
-second source (`chef.md`), so on those formats a refusal here never prevents an install from
-elsewhere, and the operator documentation says so beside the table. The security-signal rule's
+Three rows carry a warning beyond the refusal: apk and the LuaRocks client union every configured
+repository and take the highest version, and Chef's Berkshelf unions its sources the same way
+(`alpine.md`, `luarocks.md`, `chef.md`), so on those formats a second configured source can
+supply a higher version, or the refused one, whatever this registry answers. Each format spec
+closes it with the same recipe, this registry as the client's only source (a single repository
+for Alpine, `--only-server` or a `rocks_servers` naming one virtual repository for LuaRocks, a
+virtual repository as Berkshelf's only source for Chef), and the operator documentation says
+beside the table that the row holds only under that recipe. The security-signal rule's
 purge is unaffected by any row: content that is gone from the cache cannot be served whatever
 the client does next.
 
@@ -738,11 +845,16 @@ are fixed on this side and met on that one.
       advisory in that ecosystem's OSV key form condemns the artifact whose core coordinate maps
       onto it and nothing else: Julia by UUID and not by name, Swift by bound repository URL,
       Debian by source package and the repository's declared release, Alpine by origin package,
-      Open VSX case-insensitively across both ecosystem spellings, and version ranges evaluated
-      under the ecosystem's own ordering (opam's `~` sorting before every other version, RPM EVR
-      with epoch, Debian versions, PEP 440 pre-releases, semver); a range under an ordering the
-      matcher does not implement leaves the ecosystem uncovered with the refusal at configuration
-      naming the ordering.
+      Open VSX case-insensitively across every `VSCode` ecosystem variant (the bare `VSCode`,
+      `VSCode:https://open-vsx.org` and a fixture `VSCode:{url}` OSV does not hold today), and
+      version ranges evaluated under the ecosystem's own ordering (opam's `~` sorting before
+      every other version, RPM EVR with epoch, Debian versions, PEP 440 pre-releases, semver,
+      Hackage's component-wise integers, R's `numeric_version` with `1.0-1` equal to `1.0.1` and
+      `1.0` below `1.0.0`, and, with Homebrew's database declared as a source, Homebrew's
+      `PkgVersion` with `2.9.3_1` above `2.9.3`); a range under an ordering the matcher does not
+      implement leaves the ecosystem uncovered with the refusal at configuration naming the
+      ordering, and the Helm and Ansible collections rows are refused as uncovered while no
+      configured source lists their ecosystem.
 - [ ] AC18: A refusal served on an HTTP/1.1 connection carries the status line
       `HTTP/1.1 {code} Refused by policy: {condition}` observed on the raw socket, with the
       handler's headers and body intact and the connection's keep-alive state honoured; the same
@@ -752,10 +864,13 @@ are fixed on this side and met on that one.
       by hand; the first reason-phrase-only client to reach conformance shows the phrase to the
       user in its policy case.
 - [ ] AC19: A fixture handler constructed only with `Deps` reads, through the advisory reader, the
-      advisory records and standing condemnations (with sources) for an ecosystem and coordinate
-      or range, receives an empty answer for an uncovered ecosystem rather than an error, obtains
-      no content bytes through it, and imports nothing from `internal/policy`; under a stale feed
-      the reader answers from the last sync while the enforcing calls fail closed.
+      advisory records and standing condemnations (with sources) for the repository it serves and
+      a coordinate or range, keyed as the evaluator keys them (the format's ecosystem or the
+      repository's `advisory_ecosystem`, the stored advisory key in place of the name), receives
+      an empty answer for an uncovered ecosystem and for a name the repository exempts rather
+      than an error, obtains no content bytes through it, and imports nothing from
+      `internal/policy`; under a stale feed the reader answers from the last sync while the
+      enforcing calls fail closed.
 - [ ] AC20: "When a refusal binds, per format" lists every ecosystem of `catalogue.md` exactly
       once with a `Binds` value from the closed set, checked by `make verify`; `deployment.md`'s
       operator page is generated from it and never hand-copied; and a `pending` row is replaced
@@ -777,6 +892,24 @@ are fixed on this side and met on that one.
       `policy.feed.sync_interval` on the injected clock; the feed sync connects only to
       configured source roots, follows no redirect off a root and sends no credential, asserted
       at the network layer.
+- [ ] AC24: A version whose handler reported an advisory key differing from its package name
+      and version (an Alpine subpackage `swhello-doc` with origin `swhello`, a Debian binary
+      package whose `Source` names another source package and version, a Julia package by
+      UUID, a Swift release by its bound URLs) is condemned by an advisory naming the key and
+      not by one naming only the package name, both at resolution and at a feed sync with no
+      request in flight; the key is stored as core-parsed data on the `Package` or `Version`,
+      a version-level key replacing a package-level one, and never read from a metadata
+      document; a proxied miss whose fetch-and-cache request carries the key is refused before
+      any upstream request; a Swift `rebind` moves the matched URLs in the same write; and a
+      version reported with no key is matched on its package name and version string.
+- [ ] AC25: On a `local` repository whose policy carries an advisory-dependent rule, a version
+      whose package name equals a public advisory's coordinate is refused exactly as on a
+      `remote`; with that name in the policy's `coordinate_exemptions` it is served, it is no
+      longer matched by its own coordinate at either tier while a vulnerable component
+      catalogued inside it still refuses it, the advisory reader answers empty for the name on
+      that repository and not on another, and the change emits `policy.rule.update`;
+      `coordinate_exemptions` on a `remote` or `virtual` repository is refused at configuration
+      as `validation` naming the repository type, and nothing is stored.
 
 ## Test Plan
 
@@ -798,21 +931,24 @@ are fixed on this side and met on that one.
 | AC14 | integration | `internal/policy/security_signal_test.go` (unrequested cached coordinate, sync-driven) |
 | AC15 | integration | `internal/policy/signature_verdict_test.go` (fixture verdict source: chain, revocation, superseded revision, failed reason in the record; `artifact-verification.md` AC1 reruns it over `internal/verify`) |
 | AC16 | integration | `internal/policy/feed_import_test.go` (schedules disabled and network-level assertion under offline mode, old and fresh exports) |
-| AC17 | unit + integration | `internal/policy/ecosystem_mapping_test.go` (one case per covered row: key form, ordering, negative case; unimplemented ordering refused) |
+| AC17 | unit + integration | `internal/policy/ecosystem_mapping_test.go` (one case per covered row: key form, ordering, negative case; every `VSCode` variant including an unknown `{url}`; unimplemented ordering refused; Helm and Ansible refused as uncovered); `internal/policy/version_order_test.go` (each vendored ordering against a table generated by the ecosystem's own implementation, including Hackage, `numeric_version` and Homebrew `_revision` cases) |
 | AC18 | integration + architecture test + conformance | `internal/format/refusal_writer_test.go` (raw HTTP/1.1 socket status line, keep-alive, HTTP/2 canonical fallback, non-Hijacker fallback; shared with `format-handler-interface.md` AC14); `internal/format/arch_test.go` (single hand-written status line site, shared with the same); `conformance/maven/policy_test.go` (phrase visible in Maven's and Gradle's output) |
-| AC19 | integration | `internal/policy/advisory_reader_test.go` (fixture handler holding only `Deps`; uncovered ecosystem; stale feed; import assertion; shared with `format-handler-interface.md` AC14) |
+| AC19 | integration | `internal/policy/advisory_reader_test.go` (fixture handler holding only `Deps`; keyed by repository, `advisory_ecosystem` and stored advisory key; uncovered ecosystem; exempted name; stale feed; import assertion; shared with `format-handler-interface.md` AC14) |
 | AC20 | ci | structure check in `make verify` over this spec's binding table against `catalogue.md`'s rows and the closed `Binds` set (the same check `catalogue.md` AC8 names from its side, on its AC6 row parser); `deployment.md`'s docs build generating the operator page; the per-format policy case's validator refusing a `pending` row for its format (`conformance-harness.md` AC26) |
 | AC21 | integration | `internal/policy/feed_sources_test.go` (two stand-in sources, shared advisory, per-source staleness, unreadable list, non-OSV schema refused) |
 | AC22 | integration | `internal/storage/retention_test.go` (records readable at and after tombstone; rules dropped; recreated name clean; shared with `repository-lifecycle.md` AC24) |
 | AC23 | script + integration | `scripts/check-config-keys.js` under `make verify` (`deployment.md` AC5's fixtures); `internal/policy/feed_sync_test.go` (network-level: source roots only, no off-root redirect, no credential) |
+| AC24 | integration | `internal/policy/advisory_key_test.go` (the four key shapes at resolution and at a request-free sync, package-level and version-level keys, the fetch-and-cache key before any upstream request asserted at the network layer, a Swift `rebind`, the no-key default); `internal/model/advisory_key_test.go` (the key outside every metadata document) |
+| AC25 | integration | `internal/policy/hosted_match_test.go` (a colliding private name refused, then served once exempted, a vulnerable catalogued component still refusing it, the reader's empty answer on the exempting repository only, `policy.rule.update` through `telemetry.NewTestRecorder`); `internal/manage/repository_test.go` (`validation` on `PATCH` for an exemption on a remote and a virtual, nothing stored) |
 
 ## Implementation Phases
 
 ### Phase 1: Scanning
 OSV-schema source sync (the default feed and `policy.feed.sources`) as `policy.feed_sync`
 schedules, local bulk import, per-source freshness tracking against the staleness threshold, the
-per-ecosystem mapping and ordering table, the `advisory_ecosystem` repository setting, the
-coordinate index, the byte-level cataloguer (library selected here against the coverage table,
+per-ecosystem mapping and ordering table with the vendored orderings it lists, the
+`advisory_ecosystem` repository setting, the advisory key stored on `Package` and `Version` and
+carried on the fetch-and-cache request, the coordinate index, the byte-level cataloguer (library selected here against the coverage table,
 `pkg:conda/` included) and the component inventory index, `policy.scan` jobs from the ingest and
 cache-commit hooks, and re-matching stored coordinates and inventories whenever an advisory
 changes. The `policy.` keys land in the configuration schema here.
@@ -820,7 +956,8 @@ changes. The `policy.` keys land in the configuration schema here.
 ### Phase 2: Policy evaluation
 Per-repository rules administered through the management API with configuration-time rejection
 of rules that cannot bind, the policy-enforcing `Deps` implementations and the typed refusal, the
-refusal writer and its status line, the advisory reader in `Deps`, refusal recording and the
+refusal writer and its status line, the advisory reader in `Deps` keyed by repository,
+`coordinate_exemptions` on `local` repositories, refusal recording and the
 refusals read route, the metrics, alerts and audit events, fail-closed on stale advisory data,
 the verdict-source consumer interface with chain and revocation, and the feed as the
 security-signal rule's second channel on the proxy layer's condemnation record.
@@ -842,7 +979,10 @@ None remain open. Q1 to Q6 were adopted on 2026-09-26 under the owner's standing
 folding them raised Q7 and Q8, adopted the same way. The 2026-09-28 reconciliation with the
 foundation authoring wave raised Q9 (advisory sources, revising Q1's single-feed answer on the
 evidence of nine uncovered ecosystems) and Q10 (the refusal status line), both adopted the same
-way; all ten are folded into Scope, Design, the acceptance criteria and the Test Plan above. Q5
+way. The closing sweep of the same reconciliation pass raised Q11 (where the matcher learns an
+advisory key that differs from the package name) and Q12 (hosted repositories and public names),
+adopted the same way on Opus and awaiting a Fable recheck; all twelve are folded into Scope,
+Design, the acceptance criteria and the Test Plan above. Q5
 was adopted in a form other than its written recommendation, because that recommendation would
 have reversed a decision the owner made; the reason is recorded in its section. Every adopted
 answer is reversible by the owner.
@@ -1194,6 +1334,91 @@ channel exists.
 path in the security-facing part of the codebase, for a user-facing gain; pricing that is a
 posture call.
 
+### Resolved: where the matcher learns an advisory key that is not the package name (was Q11, raised by the closing sweep)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option A: the handler reports the
+advisory key (one or more names and at most one version) when it records the package or version,
+the core stores it as core-parsed data on `Package` or `Version`, and a proxied miss also carries
+it on the fetch-and-cache request. Folded into Scope, "What the feed covers, per ecosystem" (the
+coverage rows for Julia, Swift, Debian and Alpine, and "Where an advisory names something other
+than the package"), the reader section, Phase 1 and AC24.
+
+Accepted cost: two core-parsed fields beyond the version string, one on `Package` and one on
+`Version`, which `data-model.md` must add, and a key on a metadata-store write and on the
+fetch-and-cache request, which `format-handler-interface.md` records as a re-open input with no
+method change; a handler reporting the wrong key mis-matches without any error, bounded by AC17's
+per-row cases and each format's policy case. Option B lost because a key supplied only with a
+request leaves the feed sync blind: retroactive re-matching (AC7) and the request-free
+condemnation of cached content (AC14) run with no request in flight, so an advisory against
+`openssl` would never condemn a cached `libssl3` until someone asked for it. Option C lost because
+the cataloguer reads bytes, so it cannot key the refusal before any upstream fetch (AC8), it has no
+reliable source for a Julia UUID or a Swift binding, and it would move the coordinate tier's
+correctness onto the inventory tier's vendored library.
+
+The coverage table keys four rows on something other than `Package.name` and the version string:
+Alpine's origin, Debian's source package and source version, Julia's UUID and Swift's bound
+repository URLs. `alpine.md` and `debian.md` report the value from the handler, `julia.md` and
+`swift.md` say the handler supplies it "when it calls the shared resolution", and this spec's
+matcher never parses a version's opaque metadata document. Nothing said where the core learns the
+key, and a key present only at request time cannot serve the matching that happens without a
+request.
+
+**Recommendation:** A - the handler reports, the core stores, because it is the only option under
+which all three matching moments (resolution, the pre-fetch check on a miss, and the request-free
+feed sync) see the same key, and it keeps the core out of every version document.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Handler-reported, core-stored key on `Package` or `Version`, also on the fetch-and-cache request** | One key seen by resolution, the pre-fetch check and the feed sync; no document parsing by the core | Two core-parsed fields in `data-model.md` and a key on two `Deps` calls; a wrong report mis-matches silently |
+| **B. Supplied with each request to the enforcing calls, as `swift.md` and `julia.md` assumed** | No stored field | Retroactive and request-free matching (AC7, AC14) cannot see the key, so a new advisory condemns nothing until a client asks |
+| **C. Derived by the cataloguer from the bytes (an `upstream` PURL qualifier)** | No handler cooperation for stored content | Nothing before the fetch (AC8), no UUID or URL binding, and coordinate correctness depending on the inventory library |
+
+**Why this is yours:** it decides whether the core's model of a package grows fields that exist
+only for advisory matching, which is a shape the data model will carry for every format.
+
+### Resolved: hosted repositories and public names (was Q12, raised by the closing sweep)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option B: a `local` repository with
+an advisory-dependent rule matches public advisories by coordinate exactly as a remote does, so a
+private package sharing a public name inherits the public package's advisories, and the operator
+may exempt names through the `policy` document's `coordinate_exemptions`, accepted on `local`
+repositories only; the advisory reader is keyed by the repository and applies the same
+exemptions. Folded into Scope, "Hosted repositories match public coordinates", the reader
+section, Phase 2, AC19 and AC25.
+
+Accepted cost: an operator whose private names collide with public ones sees refusals until the
+names are exempted, and an exemption is a hole the operator owns, visible in the policy document
+and in the audit trail; the reader now takes a repository rather than an ecosystem string, a
+wording change for `format-handler-interface.md` and the formats that describe it. Option A lost
+because with no exemption the only remedies are renaming a private package or removing the
+advisory rule from the whole repository, and a rule operators must turn off to live with is an
+unenforced rule. Option C lost because it fails open for the common case, public packages
+republished into a hosted repository and names that collide on purpose, which is exactly the
+dependency-confusion shape the policy exists to catch; over-refusal is the safe error, as
+`openvsx.md` also chose for its variants.
+
+`composer.md`'s resolved hosted-channel decision (was Q11 there) found that coordinate matching
+treats a private `acme/lib` on a hosted repository and Packagist's `acme/lib` as one coordinate,
+so the private package inherits the public one's advisories, and it declined to render
+Composer's advisory channel on hosted repositories partly for that reason, reporting that this
+spec's own hosted matching has the same property. This spec had not said whether that is
+intended, for its rules or for its reader, which Open VSX's hosted control document and every
+future hosted rendering consume.
+
+**Recommendation:** B - match by coordinate on hosted repositories, with operator exemptions,
+because the collision is itself the risk the matcher should surface, and an exemption is the
+narrowest way for an operator to say "this name is ours" without disabling the rule.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Match hosted repositories by coordinate, no exemption** | Nothing new to build; collisions always surface | A false positive can be cleared only by renaming or by dropping the rule for the whole repository |
+| **B. Match by coordinate, with `coordinate_exemptions` on `local` repositories, applied by rules and reader alike** | Collisions surface by default; the operator clears a known-private name narrowly; rendered advisories agree with enforcement | An exemption list to validate and audit; the reader keyed by repository |
+| **C. No coordinate matching on hosted repositories unless the operator opts in** | No false positive on private names | Fails open for republished public packages and deliberate name collisions, the dependency-confusion shape |
+
+**Why this is yours:** it decides what the registry assumes about a name nobody has told it about,
+public by default or private by default, which is a security posture rather than a technical
+choice.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1204,3 +1429,4 @@ posture call.
 | 2026-09-23 | d078c46 | first review: adversarial + constitution + cross-spec (proxy-cache's settled stream-and-verify, single-flight, serve-stale and security-purge decisions; data-model's opaque metadata typing; format-handler-interface's pinned five methods and `Scope(r)` precedent; storage-and-gc's four mark roots and eviction; auth's client-not-artifact boundary) + go-spec-reviewer; claim verification vacuous pre-code (no `internal/policy/` exists). The reviewer terminated on a spend limit before writing this row; it is recorded here from the diff | Three of `proxy-cache.md`'s settled decisions were shown to collide with cache-then-scan and the collisions stated rather than left for implementation: refuse-until-scanned is incompatible with streaming to the initiating client, the scan lands inside the coalescing latency bound every waiter shares, and serve-stale needs the advisory feed as its independent signal. Evaluation order on a miss derived (coordinate-decidable rules refuse before any upstream request, giving AC8: condemned content is neither fetched nor cached). The auth precedent this spec invokes was shown to be unearned - central evaluation needs a request-to-coordinate mapping no pinned method provides - raising Q4. Component inventory named as the central tension (Q3): the flagship first format is the one coordinate matching cannot see into. Two settled specs shown to disagree on one real event (purge versus refuse-and-retain), raising Q5. Signature state confirmed to have no producer in any spec, raising Q6 and explaining the deliberately absent AC. Policy records placed against the GC root set as explicitly not a root, so a refusal outlives the blob it condemned (AC5, AC7) and eviction cannot launder a condemned artifact. Scan failure separated from scan result (AC6). AC1/AC3/AC7 extended across both paths. Stays draft on Q1-Q6. |
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and only a consequential update: neither decision is this spec's. The GC-and-eviction section now says five enumerated roots (pointer-targeted snapshots became the fifth on 2026-09-26) and states eviction correctly under proxy-cache's answer - it drops the cached reference and the sweep reclaims the bytes, eviction itself deleting nothing - which leaves the digest-independence argument behind AC7 intact and if anything longer-lived. Q5 is left open and unanswered; only its option C wording was corrected, since the mark root quarantine would add is now a sixth rather than a fifth. This spec's position that policy records are not a root is unchanged. |
 | 2026-09-28 | 6e6d503 | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. Applied sweep 1 item 3 and charter reconciliation 6, verified against the sources' current text: the advisory reader and refusal writer are cited to `format-handler-interface.md` ("The pinned method set", AC14) with `internal/format/refusal_writer_test.go` and `internal/policy/advisory_reader_test.go` recorded as shared in AC18's and AC19's rows; the `advisory_ecosystem` paragraph cites `data-model.md` AC28; AC20's row names `catalogue.md` AC8 as the same structure check from the catalogue's side and `conformance-harness.md` AC26 as the validator rule's home. No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
+| 2026-09-28 | f4a9246 | closing reconciliation sweep on Opus: cross-spec reconciliation of the format batches and closing sweeps. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the current text of its source spec and of this file. Found already done: sweep 1 item 3 and charter reconciliation 6 (at 6e6d503). Applied: format batch 2 item 3 (Ansible collections uncovered, keyed on `{namespace}.{name}` under semver if a source declares it; the NuGet, Maven, Go and Ansible binding rows stay `pending`, each naming the case that fills it); batch 3 item 9 (Helm uncovered, OSV `ecosystems.txt` of 2026-09-28 lists none); batch 4 item 9 (the advisory key, adopted as Q11); batch 6 item 8 (Hackage's component-wise integer ordering vendored; `version.pm` named as owed if a CPAN source is ever declared, the CPAN row needing both; Open VSX matched across every `VSCode` variant, AC17); batch 8 item 8 (R's `numeric_version` vendored); batch 7 item 9 (the Composer row from `composer.md`'s captures: omission from the package file, 2.10.3 holding on a dist `403`, 2.2.30 cloning `source` so holding only under restricted egress, the second-repository question still open, so `pending` under `conformance-harness.md` AC26; Composer placed in the rendering paragraph with the clients whose status line is printed verbatim, since it prints the raw status line and the phrase therefore reaches its user, rather than beside SwiftPM and pacman as the item worded it); batch 7 item 10 (hosted matching, adopted as Q12); batch 7 item 11 (Homebrew's `PkgVersion` with `_revision` vendored, so the database Q9 was adopted for binds). Every coverage and binding row re-read against its format spec: Go, NuGet, Cargo and Pub split out of the grouped pending row with their captured rendering; Hex, CRAN (pak's `cran.r-project.org` fallback), Conda, Swift, Vagrant, Puppet, opam, Julia (hosted packages fail with no egress), Homebrew (recipe, tap bottles, `HOMEBREW_BOTTLE_DOMAIN` under restricted egress), Arch (`SigLevel = Required DatabaseRequired`) and LuaRocks (`--only-server`) rows corrected; the union warning now names Alpine, LuaRocks and Chef, each closed by its single-source recipe. Gap found and fixed beyond the queue: NuGet, Packagist and RubyGems rows claimed covered with no vendored ordering, now in the set. The rendering paragraph re-sorted into status-line clients, code-only clients (dnf, zypper, brew, Vagrant, opam, cabal, renv) and body-showing counter-examples (SwiftPM, Conan, Policyfile, `go`, Puppet, pacman). Two questions raised and adopted on Opus under the standing delegation, in template shape: Q11 (A: the handler reports an advisory key, stored core-parsed on `Package` or `Version` and carried on the fetch-and-cache request, because a request-time key leaves the request-free feed sync blind; AC24) and Q12 (B: `local` repositories match public coordinates, `coordinate_exemptions` on `local` only, the advisory reader keyed by repository and applying them; AC25, AC19 amended). Two criteria added, two amended, each with a Test Plan row; phases updated; `fable_recheck` added. `node scripts/check-spec.js`: zero failures and no advisory on this file. Stays draft pending a gate review. |
