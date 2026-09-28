@@ -423,7 +423,7 @@ carries `fable_recheck`, which `node scripts/check-spec.js` lists as the live qu
 the spec off `planned` until a Fable review clears it. That output is authoritative; this table is a
 dated snapshot of the question-level subset, extracted from the resolved records' dates.
 
-**146 questions across 27 specs.** A spec authored whole on Opus (most format specs from alpine
+**148 questions across 29 specs** (146 at the first snapshot, plus rpm Q11 and arch Q13 from the format sweep). A spec authored whole on Opus (most format specs from alpine
 onwards) is marked for a full recheck, and its authoring-time adoptions are covered by that mark
 even where the table below omits them.
 
@@ -440,7 +440,16 @@ decision:
 2. **Revisions of earlier decisions.**
    - `supply-chain-policy.md` Q9 revised a delegation-adopted Q1.
    - `proxy-cache.md` Q17 extends the preconfigured upstreams a second time.
-3. **The authorizer surface.**
+3. **What a signed virtual may merge** (found by the format closing sweep, 2026-09-28).
+   - `signing-service.md` AC36 admits only verdict-carrying upstream documents into a signed
+     virtual repository.
+   - `arch.md` Q13 and `rpm.md` Q11 applied it honestly. As a result, the official Arch and
+     Manjaro mirrors, Fedora through metalink, and any TLS-only remote contribute nothing to a
+     signed virtual repository.
+   - This is a product limitation no owner chose. Batch 2 of the format sweep in
+     `agents/spec-loop/consequences.md` records the alternatives: record-level admission by
+     package signature, and a metalink match as admission.
+4. **The authorizer surface.**
    - `auth.md` Q23 to Q25: the descriptor object kind and the Conan exchange echo.
    - `management-api.md` Q13: a binding is never wider than its operation. It feeds auth AC10's
      review surface.
@@ -449,6 +458,8 @@ decision:
 
 | Spec | Questions adopted 2026-09-27 or 2026-09-28 |
 |---|---|
+| `formats/rpm.md` | Q11 |
+| `formats/arch.md` | Q13 |
 | `formats/cargo.md` | Q7 |
 | `formats/composer.md` | Q10, Q11 |
 | `formats/conan.md` | Q11 |
