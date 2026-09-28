@@ -1,12 +1,12 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-28 at 173da1b in the closing sweep of step 3, on Opus (not a review): the client table gained seventeen rows from the format batches, each checked against its format spec's own capture (go, apt, dput, conan, apk, pacman, mix/rebar3, cpanm, cpm/carton, CPAN.pm, cpan-upload, julia Pkg, SwiftPM, dart pub, vagrant, opam, brew), and the helm row was corrected from its captures (Basic only, preemptive, scheme-and-host confined; Bearer only from cm-push); the Bearer, Basic and scheme-less rows name every client that needs them; the uniform challenge names Swift, pub and Vagrant as declaring Bearer; Pattern scopes gained OCI's {image}/{tag} object and repository-less GET /v2/ descriptor authorized by authentication alone (AC32 extended), Galaxy discovery as a descriptor, and the descriptor and enumerating-none examples from the format specs. Q25 raised and adopted under the standing delegation: Conan's token-exchange echo is written by the shared layer on a declared route, never by the handler (AC35). No new presentation form; AC10 untouched, its review list extended. 35 criteria, zero open questions; stays draft pending a gate review and a Fable recheck of Q25. Earlier, 2026-09-28 at 95346bd: GET /api/v1/session answers an anonymous caller 200 (AC22). Earlier, 2026-09-27 at a72f8ef: fourteen client rows, the presentation-form table, Q24, AC33 and AC34. AC10 still requires external review of the implementation regardless of spec status."
+status_description: "Second closing-sweep pass 2026-09-28 at 1d6b1c8, on Opus (not a review): the revalidation replay entry (proxy-cache was-Q18, AC26; format-handler-interface was-Q11, AC18) is named in Authorization is central as the one handler entry that skips the authorizer, with the three properties that make it safe (no principal or credential, nothing returned to any caller, one asserted call site on a fixed GET-on-a-remote input), the conditions that would make it unsafe, and its enforcers adopted beside internal/auth/arch_test.go (AC36); it is ADDED to AC10's external review list, whose scope now names every authorizer-bypassing entry and reviews a surface landing after the first review before it reaches main. AC10 unchanged in force. 36 criteria, zero open questions, no new question. Earlier, reconciled 2026-09-28 at 173da1b in the closing sweep of step 3, on Opus (not a review): the client table gained seventeen rows from the format batches, each checked against its format spec's own capture (go, apt, dput, conan, apk, pacman, mix/rebar3, cpanm, cpm/carton, CPAN.pm, cpan-upload, julia Pkg, SwiftPM, dart pub, vagrant, opam, brew), and the helm row was corrected from its captures (Basic only, preemptive, scheme-and-host confined; Bearer only from cm-push); the Bearer, Basic and scheme-less rows name every client that needs them; the uniform challenge names Swift, pub and Vagrant as declaring Bearer; Pattern scopes gained OCI's {image}/{tag} object and repository-less GET /v2/ descriptor authorized by authentication alone (AC32 extended), Galaxy discovery as a descriptor, and the descriptor and enumerating-none examples from the format specs. Q25 raised and adopted under the standing delegation: Conan's token-exchange echo is written by the shared layer on a declared route, never by the handler (AC35). No new presentation form; AC10 untouched, its review list extended. 35 criteria, zero open questions; stays draft pending a gate review and a Fable recheck of Q25. Earlier, 2026-09-28 at 95346bd: GET /api/v1/session answers an anonymous caller 200 (AC22). Earlier, 2026-09-27 at a72f8ef: fourteen client rows, the presentation-form table, Q24, AC33 and AC34. AC10 still requires external review of the implementation regardless of spec status."
 description: "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present."
 author: michielvha
 goal: "Give every format one auth model that real package clients can use, while keeping user passwords, MFA, account recovery and federation outside our code."
 priority: "critical"
 issue: 13
-fable_recheck: "closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q25 (the shared layer writes Conan's token-exchange echo on a declared route, AC35) and added the repository-less descriptor rule for OCI's GET /v2/ (AC32); both need a Fable recheck"
+fable_recheck: "closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q25 (the shared layer writes Conan's token-exchange echo on a declared route, AC35) and added the repository-less descriptor rule for OCI's GET /v2/ (AC32); both need a Fable recheck. Second closing pass on Opus 2026-09-28 added AC36, bounding the revalidation replay that skips the authorizer (GET on a remote only, six unsafe conditions) and adding it to AC10 review surface: a security judgement, never Fable-reviewed"
 created: 2026-09-22
 covers:
   - "internal/auth/**"
@@ -133,6 +133,9 @@ Design).
   names. The central authorizer matches it against the addressed object each handler's
   `Scope(r)` reports, a field the pinned `Scope` type gained out of cycle for this purpose,
   under the grammar in Design ("Pattern scopes"). AC19 and AC24 through AC26 assert it.
+  Exactly one entry into a handler skips the authorizer, the proxy layer's revalidation replay,
+  and it is named, bounded and placed on AC10's review surface here (Design, "The one entry that
+  skips the authorizer"; AC36).
 - **Human grants**: the vocabulary between "nothing" and "administer the registry", which is
   per-repository grants in the machine vocabulary plus the single global admin role (Design,
   "Human grants").
@@ -572,6 +575,56 @@ this spec's pattern-evaluation decision.
 The accepted cost is that a handler declaring its mapping wrongly under-protects itself. That is
 exactly what AC7's unauthenticated and unauthorized cases catch, which is why they are
 runner-enforced rather than advisory.
+
+**The one entry that skips the authorizer: the revalidation replay.** Every request reaches a
+handler through the router, and the router runs this spec's authorizer over the handler's
+`Scope(r)` before the handler sees it; AC18 and the per-format cases above hold that path. There
+is exactly one other way into a handler, and this spec names it here because it is the boundary
+this section exists to keep single. `proxy-cache.md`'s resolved revalidation-replay decision (was
+Q18 there, its AC26) keeps a `remote` reached only through a `virtual` fresh with a
+`proxy.revalidate` job that replays the remote handler's own proxied route in process, below the
+authorizer, with the cached document's validators, a response writer that discards the body, a
+replay marker and no principal. `format-handler-interface.md`'s resolved replay-entry decision
+(was Q11 there, its AC18) gives that reach one shape, the **replay entry**: a function value built
+once in the server's composition root from the router's handler table and mount rules, injected
+into `internal/proxy` and nothing else, which dispatches by repository and recorded route without
+calling `Scope(r)`. Its mechanical enforcers are three architecture and unit tests owned by those
+two specs, and this spec adopts them as its own: `internal/server/arch_test.go` (the entry
+constructed only in the composition root and handed only to `internal/proxy`),
+`internal/server/replay_entry_test.go` (a fixture route denied through the router and served
+through the entry, so the router's own entry always authorizes), and `internal/proxy/arch_test.go`
+(the job's one call site). This spec's own enforcer is `internal/auth/arch_test.go`, which already
+holds AC9 and now also asserts that no package under `internal/auth/**` reads the replay marker,
+so no authorization decision on any request can turn on it (AC36).
+
+It is safe on three properties, each of which the enforcers above hold:
+
+- **No principal and no credential.** The replay carries neither, so this spec's authorizer has
+  nothing to decide: it is not an anonymous request (the anonymous rule of "Visibility and the
+  anonymous principal" is never applied to it), nothing it causes is attributed to an identity,
+  and there is no scope to widen. The upstream credential its fetch presents is the remote's own
+  (`upstream-adapters.md`), the one a direct client's fetch through the same remote would present.
+- **Nothing returned to any caller.** The response is discarded. Its only lasting effect is an
+  adoption into the remote's cache, the same effect a direct client's fetch would have, and every
+  byte of that cache reaches anyone only through a later request that the router authorizes on the
+  remote, or on a virtual whose membership an administrator configured.
+- **One asserted call site, one recipient, a fixed input.** The job's only argument is the remote;
+  the routes it replays are the ones recorded with each cached entry at its first fetch or, for a
+  never-adopted remote, the member-input paths the format's generator profile declares
+  (`signing-service.md`'s `Profile`), never a value taken from a request; and each replay is a
+  `GET` on that remote's document route.
+
+**What would make it unsafe**, each of which is therefore a change to this section, to AC36 and to
+AC10's review list, never an implementation detail: a second recipient of the entry or a second
+call site (any code path could then read private content below the authorizer); a route,
+repository or method chosen by a request rather than recorded or declared (a client could steer
+an unauthorized dispatch); a method other than `GET`, or a `local` or `virtual` target (a write,
+or a read of content that is not an upstream's); any part of the replayed response copied to a
+caller, a log line, an error body or a job result (a read without authorization); a principal or
+credential attached to the replay (something it causes would then be authorized or attributed as
+someone); or a handler branching on the marker, or the authorizer reading it (a marker that changes
+behaviour is a credential nobody verifies). The entry, its call site and its marker sit on AC10's
+external review surface for that reason.
 
 ### Scope vocabulary
 
@@ -1032,6 +1085,16 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
       its value; a valid token lacking `pull` receives the existence rule's `404`; a test
       handler registered for the route fails if it is ever invoked; and the echoed value appears
       in no log line, span attribute, metric label, error body or audit record.
+- [ ] AC36: The revalidation replay entry (`format-handler-interface.md` AC18, `proxy-cache.md`
+      AC26) is the only way into a handler that does not pass this spec's authorizer, and it
+      stays inside the three properties Design names: a replayed request carries no principal and
+      no credential, is a `GET` on a `remote` repository's recorded or profile-declared route
+      (the entry refuses any other method and any `local` or `virtual` repository before
+      dispatch), and its response reaches no caller; the replay marker is a context value only
+      the entry sets, so no request arriving through the router carries it, whatever its headers,
+      query or path; no package under `internal/auth/**` references the marker, so no
+      authorization decision depends on it; and every request through the router, including one
+      for a route the replay also serves, is authorized exactly as AC18 and AC17 require.
 
 ## Test Plan
 
@@ -1072,14 +1135,18 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
 | AC33 | integration + conformance | `internal/auth/capability_test.go` (claims, foreign object and repository, expiry and revocation under an injected clock, tampered value, anonymous-readable omission; the file `formats/terraform.md` AC4 names); `internal/auth/leak_test.go` (URL redaction); `conformance/terraform/capability_test.go` (the four real clients; `formats/terraform.md` AC4) |
 | AC34 | integration + conformance | `internal/auth/signed_request_test.go` (captured knife requests replayed under each protocol; each altered header, clock skew, expired and revoked key, unknown sign description, mismatched content hash aborting before commit); `internal/auth/arch_test.go` (AC9's allowed set covers the verifier); `conformance/chef/auth_test.go` (real `knife supermarket share` and `unshare`; `formats/chef.md` AC6) |
 | AC35 | integration + conformance | `internal/auth/exchange_echo_test.go` (valid, patterned, invalid, expired, revoked and `pull`-less tokens on both routes; response headers and body; a handler registered for the route that fails if invoked); `internal/auth/leak_test.go` (the echoed value scanned for, as AC7 does per form); `conformance/conan/auth_test.go` (the real Conan 2.32.0, 2.0.17 and 1.66.0 exchange followed by Bearer requests; `formats/conan.md` AC14) |
+| AC36 | architecture test + unit + integration | `internal/auth/arch_test.go` (no package under `internal/auth/**` references the replay marker, beside AC9's allowed-library assertion); `internal/server/replay_entry_test.go`, shared with `format-handler-interface.md` AC18 (no principal and no credential on the replayed request; a non-`GET` method and a `local` and a `virtual` repository refused before dispatch, cases reported to that spec; a wire request carrying a header, query parameter or path segment named like the marker reaches the handler without it; a fixture route denied through the router and served through the entry); `internal/server/arch_test.go`, shared with the same AC18 (one constructor, one recipient); `internal/proxy/arch_test.go` and `internal/proxy/revalidate_job_test.go`, shared with `proxy-cache.md` AC26 (the single call site; the discarding writer, so no replayed byte reaches a caller) |
 
 **AC10 procedure**: before the first auth code merges, a security review is performed by a party
 other than the implementing agent, covering token lifecycle, scope enforcement, the OIDC
 validation path and the OCI token service. The reviewer, date and outcome are recorded in the
 Review Log. A spec-level review does not satisfy this; it reviews the implementation. **The
-review's scope is every surface that verifies, mints or handles a credential**, and the sibling
-specs authored 2026-09-27 each placed part of theirs inside it by name, so the reviewer's list is
-recorded here rather than left to be assembled later:
+review's scope is every surface that verifies, mints or handles a credential, and every entry
+into a handler that bypasses the authorizer**, and the sibling specs each placed part of theirs
+inside it by name, so the reviewer's list is recorded here rather than left to be assembled
+later. A listed surface whose code lands after that first review (the replay entry, which lands
+with `proxy-cache.md`'s `proxy.revalidate` job) is reviewed the same way before it reaches
+`main`, and recorded the same way:
 
 - this spec's: the token store and constant-time lookup, every presentation form in the Design
   table with its extraction, redaction and plaintext refusal, the route-scoping declarations,
@@ -1097,7 +1164,18 @@ recorded here rather than left to be assembled later:
   and operate private material under admin authority;
 - `upstream-adapters.md`'s: the upstream credential kinds (Basic, Bearer, vendor header, path
   token, token exchange, AWS ECR and Google Cloud IAM material) and its redactor, auth-adjacent
-  because they are the registry's outward secrets.
+  because they are the registry's outward secrets;
+- `format-handler-interface.md`'s and `proxy-cache.md`'s: the **revalidation replay entry**, the
+  one way into a handler that does not pass the shared authorizer (the resolved replay-entry
+  decision there, was Q11, AC18; the resolved revalidation-replay decision in `proxy-cache.md`,
+  was Q18, AC26): its construction in the composition root, its sole recipient `internal/proxy`
+  and the `proxy.revalidate` job's single call site, the replay marker and every place that could
+  read it, the source of each replayed route (recorded at first fetch or declared by the generator
+  profile, never a request), the `GET`-on-a-`remote` bound, and the discarding writer. The
+  reviewer checks the implementation against the unsafe conditions Design lists ("The one entry
+  that skips the authorizer") and against AC36. This entry is inside the review because it
+  bypasses authorization, not because it handles a credential, and it is added here, not
+  exempted: the review covers it with the same force as every surface above.
 
 Adding to this list is free; removing from it is a change to this criterion.
 
@@ -1128,7 +1206,9 @@ product (AC33), landing with `formats/terraform.md`.
 Central authorization over the four addressed-object kinds, including the descriptor's
 `pull`-only allowance and the sentinel test behind it and the repository-less descriptor
 authorized by authentication alone (AC32), the runner-enforced per-format auth and
-pattern-refusal cases, architecture tests.
+pattern-refusal cases, architecture tests, including the marker assertion that keeps the
+revalidation replay entry outside every authorization decision (AC36), which lands with
+`proxy-cache.md`'s `proxy.revalidate` job and `format-handler-interface.md`'s replay entry.
 
 ## Tasks
 
@@ -1698,3 +1778,4 @@ world-readable until it matters.
 | 2026-09-28 | 95346bd | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. One item was raised against this spec after its own pass of 2026-09-27, by the observability, deployment and web-ui reconciliation, and it was verified against `management-api.md` AC28 and its endpoint table and against `web-ui.md`'s "Who am I" before applying: `GET /api/v1/session` answers a caller with no session `200` with `principal_kind: anonymous` and no grants, never `401`, so the UI's first paint needs no error branch. Design's session paragraph and AC22 rewritten; AC22 also states that an invalid or expired cookie on the route is refused `unauthenticated`, so the anonymous answer stays consistent with AC12's rule that anonymous applies only when no credential is presented at all; the Test Plan row shares the anonymous case with `management-api.md` AC28. Every other section of the consequences queue written after that pass was grepped for this file and carries no further item. AC10's external review untouched. Stays draft. |
 | 2026-09-27 | 94f86f3 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the three auth items of the format-side reconciliation, each verified against the current `formats/cargo.md`, `formats/helm.md`, `formats/rpm.md`, `formats/conan.md` and `format-handler-interface.md`. The Cargo addressed-object bullet under Pattern scopes now follows cargo.md's table: the folded crate key (lowercase, `_` to `-`) rather than the registered spelling, `{crate}` on the index file and owners routes, `{crate}/{version}` on download, publish, yank and unyank. The Scope-vocabulary note recording a Cargo `push` versus PyPI `delete` yank divergence for `management-api.md` is replaced by the settled rule: one operation carries one authorization rule whatever wire it arrives over, and Cargo's yank and unyank are bindings onto the management API's yank operation needing `delete` (cargo.md's resolved yank-binding decision, was Q6). Raised and adopted Q23 A, the "repository-wide but reveals no names" judgment call four format specs sent here: a fourth addressed-object kind, descriptor, which a patterned scope authorizes for `pull` only, defined by a sentinel test run in each handler's AC12 object table; folded through the object-kind table, the evaluation rules, the consumer declarations, the mechanical catch, Phase 4, and the new AC32 with its Test Plan row. Verification narrowed the ask: helm's `index.yaml` and rpm's `primary` enumerate names and stay none, so the kind makes cargo runnable under a patterned-only `pull`, passes Conan's probe and moves rpm's failure to `primary`, and Design says so exactly. Q19's record carries a dated refinement note. AC10's external review untouched. Stays draft. |
 | 2026-09-28 | 173da1b | cross-spec reconciliation of the Wave 1 folds, closing sweep of step 3, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from format batch 1 through format batch 8, plus the Open items whose auth half the progress log did not show applied (12, 16, 17, 20-23, 29, 30, 32), verified against the current text of its format spec before applying; each client row is written from that spec's own capture, never from the queue text. Client table: rows for `go` (format batch 2), `apt` and `dput` (batch 3, Open item 20), `conan`, `apk` and `pacman` (batch 4, Open items 22, 21, 32), `mix`/`rebar3` (batch 5, Open item 12), `cpanm`, `cpm`/`carton`, CPAN.pm, `cpan-upload` and julia Pkg (batch 6, Open item 16), `swift` and `dart pub` (batch 8, Open item 17), `vagrant`, `opam` and `brew` (batch 7, Open items 23, 29, 30); the `helm` row corrected from helm.md's captures (batch 3) and the least-certain caveat retired. Where queue and spec differed the spec won: the Pkg path is `{host}_{port}` as the capture shows, the `dart pub` row states it rests on client source rather than captured traffic, and Vagrant, which the queue did not name, is added beside Swift and pub as declaring a Bearer challenge because its spec declares one. Presentation forms: Bearer, Basic and scheme-less "Needed by" updated; no new form; Vagrant's `?access_token=` recorded as a non-form answered credential-less and redacted by observability's `RedactURL` (AC7 and its row extended). Uniform-challenge sentence names Swift, pub and Vagrant and lists the challenge-dependent clients the new rows add. Pattern scopes (batches 1, 2, 3, 5, 7): OCI's `{image}/{tag}` and the first-component repository (oci was-Q8), OCI's repository-less `GET /v2/` descriptor authorized by authentication alone with every other kind denied without a repository (AC32 extended, Test Plan row), Galaxy discovery a descriptor, the descriptor examples (Debian, Terraform, Hex, LuaRocks, Composer, NuGet, Swift) and enumerating none (Debian indexes, Chef universe, LuaRocks manifests). Raised and adopted Q25 A under the standing delegation: the `conan` row showed an exchange answering with the presented token, which the rule "a handler never reads a credential" forbids a handler to write, so the shared layer answers a declared exchange-echo route (Design, new AC35 with its Test Plan row, Phase 1). AC10 untouched; its procedure list extended with the repository-less rule, the exchange echo and the `access_token` redaction, no form outside it. `fable_recheck` added for Q25 and the repository-less rule. Stays draft. |
+| 2026-09-28 | 1d6b1c8 | cross-spec reconciliation second pass on Opus, after the proxy-cache, storage-and-gc, supply-chain-policy and format-handler-interface closing sweeps. Not a review | Not a review. Applied the one item queued against this file after its closing sweep (proxy-cache closing sweep item 4, repeated as format-handler-interface closing sweep item 1), verified against the settled text of `proxy-cache.md` (resolved revalidation-replay decision, was Q18, AC26, "Revalidation outside the request") and `format-handler-interface.md` (resolved replay-entry decision, was Q11, AC18, "A second dispatch, below the authorizer"). Design, "Authorization is central, never per-handler", gains "The one entry that skips the authorizer": the replay entry named, its three enforcers in `internal/server` and `internal/proxy` adopted as this spec's, `internal/auth/arch_test.go` extended to assert no `internal/auth` package reads the replay marker, why it is safe (no principal or credential, response discarded, one constructor, recipient and call site on a fixed input) and six conditions that would make it unsafe. New AC36 with its Test Plan row; Scope and Phase 4 cite it. AC10's review list gains the replay entry as its fifth bullet, and the procedure's scope sentence now names every authorizer-bypassing entry and requires a listed surface landing after the first review to be reviewed before it reaches `main`: AC10's requirement is unchanged in force, only extended. The GET-only and remote-only refusal at the entry and the marker cases in `internal/server/replay_entry_test.go` are reported to `format-handler-interface.md`. No question raised or adopted; the fable_recheck marker is unchanged. |
