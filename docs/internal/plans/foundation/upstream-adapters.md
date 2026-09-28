@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-27 at d9510af as a grounded first draft, not yet reviewed. Gathers the upstream requirements of 27 format specs, the queued consequences (Open items 7, 11, 13 and every line naming this file, cross-cutting themes 2 and 7), format-handler-interface.md's ownership gap for the adapter axis, proxy-cache.md's routing of provider quirks to adapters and management-api.md's administration of upstream credentials; grounds the design in Harbor's adapter package, the distribution token-auth specification, Docker Hub's pull-limit documentation, the ECR GetAuthorizationToken API, the GCE metadata server and Artifact Registry authentication pages, GitHub's rate-limit documentation, Pulp's Remote model and zot's sync configuration fetched this run (Nexus and Artifactory pages unreachable, recorded); fixes one transport seam (two adapters, a credential-kind axis, a per-upstream host allowlist, typed rate-limit errors, truthful completion) and states the split against proxy-cache.md line by line. Seven questions written in decision shape and adopted under the owner's standing delegation; zero open. 29 criteria, each with a Test Plan row. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at 9ebf6e9 with the foundation authoring wave (not a review): the Upstream row and UpstreamCredential store are cited as data-model.md's (AC40) instead of owed; a referenced credential's deletion is refused in-use and a changed remote binding keeps its cache with last-checked reset, with the Router resolving row and credential per fetch (AC30, shared with repository-lifecycle AC20 and AC25, management-api AC21); upstream-invalid is 422; traceparent and tracestate join the forbidden outbound set (AC4), MarkSecret precedes every credential use and the redaction list is held equal to telemetry.RedactURL's (AC20); the six upstream_* series and the two alerts under observability's names (AC31); the three upstream.* keys in the checked table shape with User-Agent computed from server.public_url (AC32); the nuget and maven profiles are shipped rows under proxy-cache's was-Q17. 32 criteria, each with a Test Plan row; zero open questions; stays draft pending a gate review. Earlier: authored 2026-09-27 at d9510af as a grounded first draft, not yet reviewed. Gathers the upstream requirements of 27 format specs, the queued consequences (Open items 7, 11, 13 and every line naming this file, cross-cutting themes 2 and 7), format-handler-interface.md's ownership gap for the adapter axis, proxy-cache.md's routing of provider quirks to adapters and management-api.md's administration of upstream credentials; grounds the design in Harbor's adapter package, the distribution token-auth specification, Docker Hub's pull-limit documentation, the ECR GetAuthorizationToken API, the GCE metadata server and Artifact Registry authentication pages, GitHub's rate-limit documentation, Pulp's Remote model and zot's sync configuration fetched this run (Nexus and Artifactory pages unreachable, recorded); fixes one transport seam (two adapters, a credential-kind axis, a per-upstream host allowlist, typed rate-limit errors, truthful completion) and states the split against proxy-cache.md line by line. Seven questions written in decision shape and adopted under the owner's standing delegation; zero open. 29 criteria, each with a Test Plan row. Awaits a /spec review pass."
 description: "Spec for the upstream adapter axis: the seam between the proxy cache and every upstream it fetches from. Two transport adapters (a plain HTTPS adapter and an OCI distribution adapter) behind one small interface, a separate credential-kind axis (none, Basic, Bearer, vendor header, path token, distribution token exchange, AWS ECR, Google Cloud), a per-upstream off-origin host allowlist with per-host credential roles, redirect following that never reaches a client, typed rate-limit errors with a bounded cool-down, truthful body completion for the completion-only fetch mode, and credential redaction; with the preconfigured upstream profiles and the adapter half of the nightly real-upstream job."
 author: michielvha
 goal: "Make every upstream a configuration row rather than a code change: one OCI handler serves Docker Hub, ECR, GCR, GHCR, Quay, Artifactory and Nexus because authentication, redirects, rate limits and transport quirks live behind one adapter seam that no handler and no proxy-core code can bypass, so that format N+1 adds an upstream profile and never an HTTP client."
@@ -40,7 +40,8 @@ layer: "Upstream adapters (per-upstream authentication, rate-limit handling, the
 upstream set) are built with it for the same reason: Docker Hub pull-through is the first real
 upstream and it already needs token exchange and rate-limit handling; each later format adds its
 own upstream's specifics through the adapter seam rather than inside its handler." The charter's
-consequence list (`agents/spec-loop/consequences.md`, charter fold item 13) fixes the step at 4.
+build order now cites this spec by phase: Phases 1 and 2 at step 4, Phase 3's profiles with their
+formats from step 5, and Phase 4 (the `git` adapter) at step 11 with Terraform (its AC12).
 
 **Harbor's lesson, and its trap.** Harbor is OCI-only and ships fifteen compile-time adapters
 behind one format: `aliacr`, `awsecr`, `azurecr`, `dockerhub`, `dtr`, `githubcr`, `gitlab`,
@@ -189,11 +190,14 @@ silently unbuilt.
 |---|---|---|
 | `format-handler-interface.md` (resolved upstream adapter axis, was Q4) | Define the adapter interface; one handler, many adapters; auth and quirks never in a handler | "The interface", AC1, AC2, AC3, AC29 |
 | `proxy-cache.md` "Negative caching", "Miss coalescing", resolved preconfigured upstreams (was Q3) and extension (was Q14) | Auth and throttling quirks of preconfigured upstreams live in adapters; `Retry-After` honoured; Docker Hub kept inside its limit; each preconfigured upstream needs cases against the real service | AC9, AC10, AC24, AC25, AC26 |
-| `data-model.md` `Upstream` ("adapter type") | Values of the adapter field; what else the row needs | "Selecting an adapter", "Configuration on the `Upstream` row"; sibling consequence |
-| `management-api.md` "Repository administration", AC21 | Credential kinds to administer; validation on create and update | "Credential kinds", AC19, AC21, AC23 |
+| `data-model.md` `Upstream` ("adapter type") | Values of the adapter field; what else the row needs | "Selecting an adapter", "Configuration on the `Upstream` row"; the row now carries every field (`data-model.md`, "Upstream configuration and upstream credentials", AC40) |
+| `management-api.md` "Repository administration", AC20, AC21 | Credential kinds to administer; validation on create and update; `upstream-invalid` (422) in its closed problem table; a referenced credential's deletion refused `in-use` | "Credential kinds", "Configuration-time validation", AC19, AC21, AC23, AC30 |
+| `repository-lifecycle.md` AC20, AC25 | Deleting a credential an `Upstream` or `ReplicationLink` references is refused `in-use`; changing a `remote`'s upstream keeps cached references and resets `RemoteFile.last-checked` | "Configuration on the `Upstream` row", "Lifecycle of an upstream binding", AC30 |
+| `observability.md` metric and alert catalogue (its AC6, AC18, AC20) | Per-upstream request counters, in-flight and rate-limit gauges, cool-down state, token-exchange failures; `UpstreamRateLimitLow` and `UpstreamCooldown`; no `traceparent` or `tracestate` upstream; `MarkSecret` on every attached credential; the redaction list equal to `telemetry.RedactURL`'s | "Rate limits and the cool-down", "Request hygiene", "Redaction", AC4, AC20, AC31 |
+| `deployment.md` key inventory ("Not keys, on purpose") | `upstream.default_concurrency`, `upstream.default_cooldown_cap`, `upstream.connect_timeout` as instance defaults; `User-Agent` computed from `server.public_url`, not a key; `HTTPS_PROXY`/`NO_PROXY` once instance-wide | "Configuration keys", AC5, AC32 |
 | `conformance-harness.md` AC19 | Adapter indifferent to stand-in versus real binding | AC25, AC26 |
 | Open item 13 (`composer.md`) | Fetch a dist from `api.github.com` with a `302` to `codeload.github.com`, no digest, 60/h limit; per-host credential; uncached forwarded `POST` | AC6, AC7, AC8, AC9, AC27; completion-only is `proxy-cache.md`'s |
-| Open items 7, 11 (`nuget.md`, `maven.md`) | `api.nuget.org` and `repo.maven.apache.org` preconfigured through `proxy-cache.md`'s extension mechanism; completion-only mode | "Preconfigured profiles" (queued rows), AC24; mode is `proxy-cache.md`'s |
+| Open items 7, 11 (`nuget.md`, `maven.md`) | `api.nuget.org` and `repo.maven.apache.org` preconfigured through `proxy-cache.md`'s extension mechanism; completion-only mode | "Preconfigured profiles" (both rows shipped: `proxy-cache.md`'s resolved second extension, was Q17, its AC19), AC24; the mode is `proxy-cache.md`'s AC20 |
 | Theme 7 (go-modules, nuget, maven, composer, cran, luarocks, openvsx, conan; `chef.md`, `homebrew.md`, `swift.md`) | Completion-only fetch with a verifier hook | AC13 (truthful completion); the mode is `proxy-cache.md`'s, "What is the adapter's" |
 | Theme 2 (opam, openvsx and the refusal-fallback notes) | The registry owns every URL it serves | AC8 (no upstream `Location` reaches a client), AC6 (no credential follows metadata to another host) |
 | `hex.md` (item 12) | Per-upstream public key; follow the `installs` `301` to `builds.hex.pm` | Trust set is `artifact-verification.md`'s (Scope); AC7, AC8 |
@@ -299,8 +303,8 @@ item 3's cache-scoped freshness). The split, so neither spec assumes the other b
 | Off-origin hosts | The allowlist and its enforcement before any connection | Passes the location the handler derived |
 | Rate limits | Interpretation into `RateLimitError{RetryAfter}`; the per-upstream cool-down | Never negatively caches one, never renders one as not-found (its AC9); serves stale metadata meanwhile (its AC12) |
 | Timeouts | Connect timeout; stall detection on the body reader | The stall value as coalescing policy; waiter semantics (its AC11, AC17) |
-| Completion | The body reader ends with `ErrTruncated` on a short or unterminated body, never a clean EOF | Commits nothing on error (its AC10); the completion-only mode and its verifier hook run after a clean end (theme 7, `artifact-verification.md` item 3) |
-| Declared digest and validators | Surfaced verbatim from headers (`Docker-Content-Digest`, `ETag`, `Last-Modified`, `Content-Length`) | Decides what to verify against (the handler's declared digest first), what to store, what freshness to serve; the cache-scoped forward-moving `Last-Modified` and never adopting an older revision (`signing-service.md` item 3) |
+| Completion | The body reader ends with `ErrTruncated` on a short or unterminated body, never a clean EOF | Commits nothing on error (its AC10); the completion-only mode and its verifier hook run after a clean end (its resolved completion-only decision, was Q15, and its AC20) |
+| Declared digest and validators | Surfaced verbatim from headers (`Docker-Content-Digest`, `ETag`, `Last-Modified`, `Content-Length`) | Decides what to verify against (the handler's declared digest first), what to store, what freshness to serve; the cache-scoped forward-moving `Last-Modified` and never adopting an older revision (its AC22) |
 | Encoding | Identity by default; opt-in per request; never transparently decompresses | Stores what arrived |
 | Credentials | Kinds, acquisition, refresh, scoping, redaction; decrypted material confined to this package | Its AC6 asserts encrypted at rest and absent from logs; the redactor here is what makes the second half true |
 | Preconfigured upstreams | The profile per entry (adapter, URL, credential kind, allowlist) | The set, enabled by default, seeded at fresh install (its AC19); the nightly job (its AC15) |
@@ -390,8 +394,9 @@ It is a concrete struct; the proxy layer's `Fetcher` interface is satisfied by `
 
 ### Configuration on the `Upstream` row
 
-What this spec needs `data-model.md`'s `Upstream` entity to carry (reported as a sibling
-consequence, never added by fiat; none of it is a mark root):
+What `data-model.md`'s `Upstream` entity carries for this spec, core-parsed and never inside a
+metadata document (its "Upstream configuration and upstream credentials", AC40; none of it is a
+mark root):
 
 - `adapter`: the registered name; default `https`.
 - `url`: the root. `https://` required; `http://` refused at configuration unless `allow_http` is
@@ -405,19 +410,46 @@ consequence, never added by fiat; none of it is a mark root):
   a single-label wildcard (`*.r2.cloudflarestorage.com`); no bare wildcard.
 - `tls`: an optional CA bundle reference, an optional client certificate and key reference, and
   `insecure_skip_verify`, refused unless set explicitly and named in the startup log.
-- `limits`: `concurrency` (default 10, Pulp's default) and `cooldown_cap` (default 1 hour).
+- `limits`: `concurrency` and `cooldown_cap`; a row that leaves either unset takes the instance
+  default (`upstream.default_concurrency` 10, Pulp's default; `upstream.default_cooldown_cap` 1
+  hour; "Configuration keys" below).
 - `http2`: default true; set false only when a capture shows an upstream misbehaving over h2.
 
-And the upstream-credential store `data-model.md` names but does not yet tabulate: an
+And the upstream-credential store, tabulated in the same `data-model.md` section: an
 `UpstreamCredential` record with `name`, `kind` (below), the kind's material encrypted at rest
-under the instance master key `proxy-cache.md` AC6 requires, `created`, `rotated_at`, `last_used`.
-`management-api.md` AC21 already asserts write-only values and one-row rotation against it.
+under the instance master key `proxy-cache.md` AC6 requires (`security.master_key`,
+`deployment.md`), `created`, `rotated_at`, `last_used`. Its credential references are shared
+with `replication.md`'s `ReplicationLink`, which authenticates a follower from the same store.
+`management-api.md` AC21 asserts write-only values and one-row rotation against it.
+
+### Lifecycle of an upstream binding
+
+Two rules `repository-lifecycle.md` fixed for the binding, and what the adapter does about each:
+
+- **A referenced credential cannot be deleted.** Deleting an `UpstreamCredential` that any
+  `Upstream` or `ReplicationLink` references is refused `409` `in-use` naming each remote
+  repository and link (`repository-lifecycle.md` AC20, its resolved in-use decision, was Q9
+  there; `management-api.md` AC21; `data-model.md` AC40). The refusal is the management
+  layer's; the adapter's part is that a credential it is asked to present always resolves, so
+  `Router` has no "credential vanished" branch and a fetch never silently downgrades to
+  anonymous.
+- **Changing a `remote`'s upstream keeps its cache.** A `PATCH` of the URL, adapter, hosts or
+  credential reference runs `Validate`, updates the `Upstream` row in place, keeps every cached
+  reference (cached content is content-addressed and its coordinates did not change) and resets
+  `RemoteFile.last-checked` so the next request revalidates against the new upstream
+  (`repository-lifecycle.md` AC25). The adapter's part is that nothing about a binding is
+  cached across fetches except the `distribution` adapter's exchanged tokens, which are keyed by
+  realm and so cannot be presented to a different upstream: `Router` reads the `Upstream` row
+  and resolves its credential on every fetch, so the fetch after the change goes to the new
+  root with the new credential and the cool-down state of the old upstream does not follow it
+  (AC30). A rotated credential is the same rule seen from the store: the next fetch carries the
+  new value (`management-api.md` AC21).
 
 ### Credential kinds
 
 The second axis. A kind is a way of turning stored material into what one request to one host
 carries, plus a refresh rule. Kinds are the registry's outward secrets; `auth.md` AC10's external
-review covers their handling (reported as a sibling consequence).
+review procedure lists them and the redactor below in its review surface.
 
 | Kind | Stores | Presents | Refresh |
 |---|---|---|---|
@@ -523,8 +555,18 @@ What keeps Docker Hub inside its budget is not the adapter: it is `proxy-cache.m
 coalescing (one fetch per cold-starting fleet) and the OCI handler revalidating tags by `HEAD`,
 which Docker documents as a version check that does not count. The adapter's contribution is to
 make the `HEAD` path possible (surfacing `Docker-Content-Digest`) and to observe the budget so an
-operator sees it fall rather than discovering it at zero (a per-upstream gauge, reported as a
-consequence for `observability.md`).
+operator sees it fall rather than discovering it at zero.
+
+What this package exports (AC31), by the names `observability.md`'s catalogue fixes: the
+counter `upstream_requests_total{upstream,outcome}` with `outcome` over `ok`, `not_found`,
+`rate_limited`, `error`, `timeout`, `truncated`, `stalled` and `refused_redirect`; the gauges
+`upstream_inflight_requests{upstream}` (against `limits.concurrency`),
+`upstream_rate_limit_remaining{upstream}` (from the provider's headers, absent when it sends
+none), `upstream_cooldown{upstream}` (0 or 1) and `upstream_cooldown_until_timestamp_seconds{upstream}`;
+and the counter `upstream_token_exchange_failures_total{upstream,form}`. Two alerts ride them
+through `telemetry.Alert`: `UpstreamRateLimitLow` and `UpstreamCooldown` (`observability.md`
+AC18 asserts the latter fires exactly once per cool-down). The `upstream` label is the
+configured upstream's name, never a URL, so a credential-bearing URL can never become a label.
 
 ### Request hygiene
 
@@ -533,12 +575,20 @@ headers were captured being forwarded by pass-throughs and would identify or fin
 registry's users to an upstream: `Julia-CI-Variables` (`julia.md`) and `X-Client-Anonymous-Id`
 (`conan.md`). They cannot be forwarded here because there is no path for them: the `Request` type
 has no header map from the inbound side, and a reflection test pins its field set so one cannot be
-added quietly.
+added quietly. Two more names are on the forbidden list for the same reason, from
+`observability.md`'s resolved propagation decision (its AC20): `traceparent` and `tracestate`
+are never sent to an upstream. An upstream is a third party; propagating to it changes the
+captured traffic the conformance corpus replays against and can carry `tracestate` vendor
+entries the operator never meant to send outside. The adapter's transport is therefore built
+without the propagating round-tripper, and AC4's stand-in asserts the outbound header set
+against the declared set, which is exactly the headers this section names and nothing else.
 
-- `User-Agent`: `stackweaver-registry/<version> (+https://<repository url>)` on every request,
+- `User-Agent`: `stackweaver-registry/<version> (+<server.public_url>)` on every request,
   overridable per request by the handler (Puppet asks for an identifying agent; CRAN needs a
   fixed non-R one because P3M serves different bytes to R by agent, and the default satisfies it)
-  (AC5).
+  (AC5). The value is computed from `deployment.md`'s `server.public_url` and is deliberately
+  not a configuration key, because a configurable agent string is how a registry ends up
+  impersonating a client.
 - `Accept-Encoding: identity` by default, with `http.Transport.DisableCompression` set so Go
   never adds `gzip` on its own or transparently decompresses. Stored bytes must be the bytes the
   upstream signed (`cpan.md`'s `CHECKSUMS`, Homebrew's JWS documents). A handler opts in per
@@ -555,7 +605,8 @@ added quietly.
 
 ### Timeouts, concurrency and completion
 
-- **Connect timeout**: per upstream, default 10 seconds, through the dialer.
+- **Connect timeout**: the instance's `upstream.connect_timeout` (default 10 seconds), a TCP
+  and TLS handshake deadline through the dialer on every upstream request.
 - **Stall detection**: the body reader fails with `ErrStalled` when no byte arrives for the stall
   period; the period is a value `proxy-cache.md` sets as coalescing policy and hands down in
   `Options`, since that spec measured its coalescing timeout as stall rather than duration. A
@@ -577,6 +628,25 @@ added quietly.
   supposed to be observing. `GET` and `HEAD` are safe to retry by callers; `POST` is never retried
   (AC27).
 
+### Configuration keys
+
+The instance-level defaults this package reads, in the three-column shape
+`scripts/check-config-keys.js` (`deployment.md`, its two-way spec check) parses; each is
+registered in the configuration schema with this default and reaches the package as a typed
+`upstream.Config` (AC32). Per-upstream values on the `Upstream` row override the first two.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `upstream.default_concurrency` | `10` | Instance default for an upstream record's `limits.concurrency` |
+| `upstream.default_cooldown_cap` | `1h` | Instance default for an upstream record's `limits.cooldown_cap` |
+| `upstream.connect_timeout` | `10s` | TCP and TLS handshake deadline for every upstream request |
+
+Not keys, on purpose: the `User-Agent` (computed from `server.public_url`, above) and the
+egress proxy (`HTTPS_PROXY`, `HTTP_PROXY`, `NO_PROXY`, read once by `http.ProxyFromEnvironment`
+in the single upstream transport, Scope), so neither can diverge per upstream. The stall period
+is not a key of this package either: it travels in `Options` as `proxy-cache.md`'s coalescing
+policy.
+
 ### Forwarded `POST`
 
 `composer.md` needs the Packagist advisories `POST` forwarded, uncached; the adapter side (AC27):
@@ -596,6 +666,16 @@ zero occurrences of the secret in the output. `proxy-cache.md` AC6's integration
 failed authenticated fetch leaves no credential in logs or the client-visible error) is the
 end-to-end proof; this redactor is what makes it pass for every kind rather than for Basic alone.
 
+`observability.md` runs a second pass behind it: every `*url.URL` attribute on a log record
+passes through `telemetry.RedactURL`, whose query-parameter list is this redactor's, and a test
+that imports both keeps the two lists equal so a parameter added here cannot be missed there
+(AC20). And before a credential is presented at all, the adapter registers its value with
+`telemetry.MarkSecret(ctx, value)`, the per-request scrubber that catches a secret reaching a
+log line by a path this redactor never saw (a wrapped error from the standard library, a span
+attribute); the credential-scope test asserts the call precedes the first use for every kind
+(AC20). The path-token template's segment is the one shape only this package knows, which is
+why this redactor runs first.
+
 ### Configuration-time validation
 
 `Validate(ctx, Upstream)` runs inside `management-api.md`'s create and `PATCH` of a `remote`'s
@@ -606,14 +686,16 @@ It does not probe the upstream: a protocol-level probe (conda's "one of `noarch/
 `noarch/repodata_shards.msgpack.zst` must parse") is the handler's `configure` operation
 (`management-api.md`'s `Operator`), which may call fetch-and-cache and therefore this adapter,
 and reachability is not a creation-time invariant (an operator configures a mirror before its
-firewall rule lands). The refusal is a `management-api.md` problem type, `upstream-invalid`,
-reported as a sibling consequence for its closed list.
+firewall rule lands). The refusal is `management-api.md`'s problem type `upstream-invalid`,
+status 422, in its closed problem table (its AC20); `repository-lifecycle.md` AC25 asserts the
+same refusal on a `PATCH` that changes an existing binding, with nothing changed.
 
 ### Preconfigured profiles
 
 `proxy-cache.md` decides which upstreams ship enabled (its resolved preconfigured-upstreams
-decision, was Q3, and the extension, was Q14: npm, PyPI, Docker Hub, galaxy.ansible.com) and
-seeds them at fresh install (its AC19). This spec owns what each entry *is*, as compile-time
+decision, was Q3; the extension, was Q14, adding galaxy.ansible.com; and the second extension,
+was Q17, adding api.nuget.org and repo.maven.apache.org: six upstreams, each enabled from the
+release its format ships in) and seeds them at fresh install (its AC19). This spec owns what each entry *is*, as compile-time
 profiles in `internal/upstream/preconfigured`, and a test holds the two tables equal (AC24) so
 neither spec can add an upstream the other does not know.
 
@@ -623,8 +705,8 @@ neither spec can add an upstream the other does not know.
 | npm | `https://registry.npmjs.org` | `https` | `none` | empty until npm's capture says otherwise |
 | pypi | `https://pypi.org/simple/` | `https` | `none` | `files.pythonhosted.org: none` (`pypi.md`: the index anchors point at a different host) |
 | ansible-collections | `https://galaxy.ansible.com` | `https` | `none` | as captured with the format |
-| nuget (queued: Open item 7, `nuget.md`'s adopted preconfigured decision, awaiting `proxy-cache.md`'s extension record) | `https://api.nuget.org/v3/index.json` | `https` | `none` | as captured |
-| maven (queued: Open item 11, `maven.md`'s adopted decision, same mechanism) | `https://repo.maven.apache.org/maven2/` | `https` | `none` | empty |
+| nuget | `https://api.nuget.org/v3/index.json` | `https` | `none` | as captured with the format |
+| maven | `https://repo.maven.apache.org/maven2/` | `https` | `none` | empty |
 
 Not preconfigured and not profiled here: pub.dev and crates.io (`proxy-cache.md` AC19 names them
 as excluded until their formats are authorized), ghcr.io (Homebrew's upstream is operator
@@ -709,10 +791,12 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       the rule's scope exclusion names every other package permitted egress.
 - [ ] AC4: The outbound request is built only from the `Request` fields: against a recording
       stand-in, a real client sending `Julia-CI-Variables`, `X-Client-Anonymous-Id`, a registry
-      `Authorization` and an arbitrary `X-Test-Leak` header through a remote repository produces
-      an upstream request containing none of them, and a reflection test pins `Request`'s exact
-      field set with no header map and no `*http.Request`.
-- [ ] AC5: Every upstream request carries `User-Agent: stackweaver-registry/<version> (+<url>)`
+      `Authorization`, a `traceparent` and `tracestate` pair and an arbitrary `X-Test-Leak`
+      header through a remote repository, under an active server span, produces an upstream
+      request containing none of them and no header outside the set "Request hygiene" declares;
+      and a reflection test pins `Request`'s exact field set with no header map and no
+      `*http.Request`.
+- [ ] AC5: Every upstream request carries `User-Agent: stackweaver-registry/<version> (+<server.public_url>)`
       unless the handler overrides it, and `Accept-Encoding: identity` unless the handler opts in;
       with the opt-in, a gzip-encoded upstream body reaches the caller still encoded with its
       `Content-Encoding` reported, never transparently decoded, proven against a stand-in that
@@ -787,7 +871,11 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       token, `access_token`, `token`, `X-Amz-Signature`, `X-Goog-Signature`, Basic and Bearer
       values, every `header`-kind header), a failing authenticated fetch produces log lines and an
       error chain in which the secret occurs zero times, by a table test plus a fuzz over URL
-      shapes; `proxy-cache.md` AC6's integration case passes through this redactor.
+      shapes; `proxy-cache.md` AC6's integration case passes through this redactor; the
+      redactor's query-parameter list equals `telemetry.RedactURL`'s, held by a test importing
+      both; and for every kind the adapter calls `telemetry.MarkSecret` on the credential value
+      before its first use, so a secret reaching a span attribute or a wrapped standard-library
+      error is scrubbed there too (`observability.md` AC9's recorder is the witness).
 - [ ] AC21: Decrypted credential material never leaves `internal/upstream`: its type and the
       store's decrypt function are unexported, no exported identifier carries the type, and a
       reflection walk over a `*Response` and the error chain of a failing authenticated fetch of
@@ -801,8 +889,8 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       and refuses an unregistered adapter, a non-`https` root without `allow_http`, a credential
       kind the adapter does not accept (`bearer` on `distribution`, `token-exchange` on `https`,
       anything but `none` on `git`), an `own` entry naming no credential and a bare-wildcard host,
-      each with problem type `upstream-invalid`; an unreachable but well-formed upstream is
-      accepted.
+      each with problem type `upstream-invalid` and status 422 and nothing committed; an
+      unreachable but well-formed upstream is accepted.
 - [ ] AC24: The preconfigured profile table in `internal/upstream/preconfigured` and the
       fresh-install seeding `proxy-cache.md` AC19 asserts name the same set of upstreams, format
       by format, proven by one test that reads both; every profile names its adapter, URL,
@@ -832,6 +920,30 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
 - [ ] AC29: `internal/upstream/**` imports nothing from `internal/format/**` or `internal/proxy/**`,
       and no `internal/format/**` package imports `internal/upstream`, proven by an import-graph
       test that fails on the first violation and names the edge.
+- [ ] AC30: `Router` resolves the `Upstream` row and its credential on every fetch: after a
+      `PATCH` changes a `remote`'s URL, adapter or credential reference, the next fetch reaches
+      the new root with the new credential at the network layer, no token exchanged under the
+      old upstream's realm is presented, the old upstream's cool-down does not apply to the new
+      one, and every cached reference is still served with `last-checked` reset
+      (`repository-lifecycle.md` AC25); after a credential is rotated the next fetch carries the
+      new value (`management-api.md` AC21); and deleting a credential referenced by an
+      `Upstream` or a `ReplicationLink` is refused `409` `in-use` naming each dependant
+      (`repository-lifecycle.md` AC20), so no fetch ever finds its credential reference
+      dangling.
+- [ ] AC31: The package exports exactly `upstream_requests_total{upstream,outcome}`,
+      `upstream_inflight_requests{upstream}`, `upstream_rate_limit_remaining{upstream}`,
+      `upstream_cooldown{upstream}`, `upstream_cooldown_until_timestamp_seconds{upstream}` and
+      `upstream_token_exchange_failures_total{upstream,form}` under the catalogue's names, with
+      `upstream` always the configured name and never a URL; a driven scenario against the
+      Docker-Hub-shaped stand-in moves `upstream_rate_limit_remaining` with the header, sets
+      `upstream_cooldown` to 1 for exactly the cool-down period, and raises `UpstreamCooldown`
+      once through `telemetry.Alert`; a failed exchange increments the failure counter under its
+      kind.
+- [ ] AC32: The keys `upstream.default_concurrency`, `upstream.default_cooldown_cap` and
+      `upstream.connect_timeout` are registered in the configuration schema with the defaults
+      tabled here, reach the package as a typed `upstream.Config`, are used by every `Upstream`
+      row that leaves `limits` unset, and are the only `upstream.` keys the schema knows, held by
+      `scripts/check-config-keys.js` under `make verify`.
 
 ## Test Plan
 
@@ -840,7 +952,7 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
 | AC1 | unit + integration | `internal/upstream/registry_test.go` (selection, unregistered refusal); `internal/upstream/router_test.go` (two remotes, one adapter, independent resolution) |
 | AC2 | unit | `internal/upstream/pin_test.go` (reflection over `Adapter` and `Validator` method sets) |
 | AC3 | lint + unit | `forbidigo` rule in `.golangci.yml` scoped to `internal/proxy/**` and `internal/format/**`; fixture behind the `lintfixture` build tag; `internal/upstream/egress_boundary_test.go` runs the pinned golangci-lint against it and asserts the exclusion list |
-| AC4 | integration + unit | `conformance/core/upstream_hygiene_test.go` (recording stand-in, real client with leak headers); `internal/upstream/request_shape_test.go` (pinned field set) |
+| AC4 | integration + unit | `conformance/core/upstream_hygiene_test.go` (recording stand-in, real client with leak headers, active server span; the outbound header set against the declared set, shared with `observability.md` AC20); `internal/upstream/request_shape_test.go` (pinned field set) |
 | AC5 | integration | `internal/upstream/hygiene_test.go` (header-recording stand-in, both encodings, override) |
 | AC6 | integration | `internal/upstream/credential_scope_test.go` (four-host stand-in chain, every kind, network-layer header capture) |
 | AC7 | integration + unit | `internal/upstream/allowlist_test.go` (connection-refusing stand-in on the excluded host, normalisation, wildcard refusal, `Host` and `X-Forwarded-Host` ignored) |
@@ -856,7 +968,7 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
 | AC17 | integration + lint | `internal/upstream/awsecr/token_test.go` (fake `GetAuthorizationToken` endpoint, refresh timing, static and ambient); depguard allowlist entry in `.golangci.yml` |
 | AC18 | integration + unit | `internal/upstream/gcp/token_test.go` (fake metadata server, fake token endpoint, JWT signature check, refresh timing); an import-list assertion in the same file |
 | AC19 | integration | `internal/upstream/credential_scope_test.go` (presentation per kind at the network layer) |
-| AC20 | unit + fuzz + integration | `internal/upstream/redact_test.go` (table over kinds and shapes, `FuzzRedact`); `internal/proxy/credentials_test.go` (`proxy-cache.md` AC6's case through the redactor) |
+| AC20 | unit + fuzz + integration | `internal/upstream/redact_test.go` (table over kinds and shapes, `FuzzRedact`; the parameter list equal to `telemetry.RedactURL`'s, importing both); `internal/upstream/credential_scope_test.go` (`MarkSecret` before first use per kind, through `telemetry.NewTestRecorder`); `internal/proxy/credentials_test.go` (`proxy-cache.md` AC6's case through the redactor) |
 | AC21 | unit | `internal/upstream/credential_boundary_test.go` (exported-identifier scan, reflection walk over `Response` and error chains) |
 | AC22 | integration + unit | `internal/upstream/tls_test.go` (private-CA stand-in with and without the bundle, client certificate in the handshake, startup-log naming); `internal/upstream/validate_test.go` (`http://` refusal and override) |
 | AC23 | integration | `internal/manage/upstream_validate_test.go` (create and `PATCH` through the management API, each refusal with `upstream-invalid`, unreachable accepted) |
@@ -866,6 +978,9 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
 | AC27 | integration + conformance | `internal/upstream/post_test.go` (single send, no retry, redirect is an error); `conformance/composer/audit_forward_test.go` (real client, stand-in counts one request) |
 | AC28 | integration + unit | `internal/upstream/git/fetch_test.go` (local smart-HTTP fixture repository, collision-detecting SHA-1 with a corrupted object, size bound, branch refusal); `internal/upstream/git/no_exec_test.go` (import scan) |
 | AC29 | unit | `internal/upstream/import_boundary_test.go` (`go/packages` walk, first violating edge named) |
+| AC30 | integration | `internal/upstream/router_test.go` (per-fetch resolution, realm-keyed token cache, cool-down not carried); `internal/repository/configure_remote_test.go` (shared with `repository-lifecycle.md` AC25: cache kept, `last-checked` reset); `internal/manage/upstream_credential_test.go` (shared with `management-api.md` AC21 and `repository-lifecycle.md` AC20: rotation at the network layer, `in-use` while referenced) |
+| AC31 | integration | `internal/upstream/metrics_test.go` (every series and label set through `telemetry.NewTestRecorder` against the Docker-Hub-shaped stand-in; `UpstreamCooldown` once; the `observability.md` AC6 and AC18 rows for this package) |
+| AC32 | unit + script | `internal/upstream/config_test.go` (defaults, typed struct, row-level override); `scripts/check-config-keys.js` under `make verify` (`deployment.md`'s two-way check) |
 
 ## Implementation Phases
 
@@ -877,7 +992,9 @@ an adapter.
 
 ### Phase 1: The seam and the two adapters (step 4, before OCI's proxied phase)
 - `internal/upstream`: `Adapter`, `Validator`, `Request`, `Response`, the typed errors, the
-  registry and the `Router` with the concurrency bound; the redactor; `Validate`
+  registry and the `Router` with the concurrency bound and per-fetch resolution (AC30); the
+  redactor with `MarkSecret` and the `RedactURL` list-equality test; `Validate`; the `upstream.`
+  keys (AC32)
 - The `https` adapter: credential kinds `none`, `basic`, `bearer`, `header`, `path-token`;
   allowlist and credential roles; redirects; conditional requests and `Range`; identity encoding
   and the fixed `User-Agent`; rate-limit interpretation; connect timeout and stall detection;
@@ -894,16 +1011,19 @@ an adapter.
 ### Phase 2: Cloud credential kinds and the nightly rows (step 4, after OCI conformance passes)
 - `aws-ecr` with the confined SDK import and the fake endpoint; `gcp` with the fake metadata
   server and token endpoint
-- `management-api.md`'s create and `PATCH` calling `Validate`; the `upstream-invalid` problem type
+- `management-api.md`'s create and `PATCH` calling `Validate`; the `upstream-invalid` (422)
+  problem type; the binding-change and credential rotation cases shared with
+  `repository-lifecycle.md` and `management-api.md` (AC30)
 - The nightly transport contract case for Docker Hub; the declared real-cloud rows and the
   unfunded table
-- The per-upstream metrics handed to `observability.md`
+- The per-upstream metrics and the two alerts (AC31), under `observability.md`'s catalogue names
 
 ### Phase 3: Profiles that ride their formats (steps 5 onward)
 - npm, PyPI and galaxy.ansible.com profiles with their formats' captures (the set is
   `proxy-cache.md`'s; each profile lands in the format's own commits under its cost line, per
   `project-charter.md`'s "Measuring per-format cost")
-- api.nuget.org and repo.maven.apache.org profiles once `proxy-cache.md` records their extension
+- api.nuget.org and repo.maven.apache.org profiles with their formats (`proxy-cache.md`'s
+  resolved second extension, was Q17)
 - The Packagist recipe (`own` credential on `api.github.com`) and the Composer conformance cases
   (AC25's second half, AC27)
 
@@ -1108,3 +1228,4 @@ Accepted cost: the second phase inside step 4.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-27 | d9510af | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements of 27 citing format specs from their "what this format requires of `upstream-adapters.md`" sections, `format-handler-interface.md`'s resolved adapter-axis record and its 2026-09-25 ownership note, `proxy-cache.md`'s Design and resolved records, `data-model.md`'s `Upstream` entity, `management-api.md`'s repository administration and AC21, `conformance-harness.md`'s upstream bindings, `project-charter.md`'s step 4, and `agents/spec-loop/consequences.md` (Open items 7, 11, 13 and every line naming this file; themes 2 and 7; the `artifact-verification.md` and `signing-service.md` requirements on `proxy-cache.md`). Grounded prior art in Harbor's adapter, model and ECR/GCR/native sources, the distribution token-auth specification, Docker Hub's pull-limit page, the ECR `GetAuthorizationToken` reference, the GCE metadata-server and Artifact Registry authentication pages, GitHub's rate-limit page, Pulp's `Remote` model and zot's sync example, all fetched this run; Nexus and Artifactory pages did not render and no claim about them is made. Fixed the design: two transport adapters plus a credential-kind axis, a one-method interface pin, an `Upstream`-held off-origin allowlist with per-host credential roles enforced at connect time, typed rate-limit errors with a capped cool-down, truthful body completion as the adapter's half of the completion-only mode, a redactor covering every credential shape, compile-time preconfigured profiles held equal to `proxy-cache.md`'s set by test, and the adapter half of the nightly job with an explicit unfunded-row table. Stated the adapter-versus-proxy-cache split as a table. Seven questions written in decision shape and adopted under the standing delegation; zero open. 29 criteria, each with a Test Plan row and a named enforcer for every boundary rule. `node scripts/check-spec.js` run against this file with zero failures; the unasserted-duty advisories acted on. |
+| 2026-09-28 | 9ebf6e9 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. From `repository-lifecycle.md` (authoring item 13; its AC20, AC25): a new Design section "Lifecycle of an upstream binding" - deleting a credential an `Upstream` or `ReplicationLink` references is refused `409` `in-use`, changing a `remote`'s upstream keeps every cached reference and resets `RemoteFile.last-checked`, and the adapter's half is per-fetch resolution of the row and its credential with realm-keyed tokens and no carried cool-down; AC30 added with rows shared with that spec and `management-api.md` AC21. From `observability.md` (item 7): `traceparent` and `tracestate` on the forbidden outbound set with the transport built without the propagating round-tripper (AC4 extended, its AC20 row shared); `telemetry.MarkSecret` before every credential use and the redactor's parameter list held equal to `telemetry.RedactURL`'s (AC20 extended); the six `upstream_*` series and the `UpstreamRateLimitLow` and `UpstreamCooldown` alerts by their catalogue names (AC31 added). From `deployment.md` (item 5): a "Configuration keys" section tabling `upstream.default_concurrency`, `upstream.default_cooldown_cap` and `upstream.connect_timeout` in the three-column shape `scripts/check-config-keys.js` parses, the `User-Agent` computed from `server.public_url` and stated as not a key (AC5, AC32 added), the row-level `limits` falling back to the instance defaults. From the `management-api.md` reconciliation (item 6): `upstream-invalid` is 422 (AC23, "Configuration-time validation"). From the `data-model.md` reconciliation (item 3): "Configuration on the `Upstream` row" and the credential store cite "Upstream configuration and upstream credentials" and AC40 instead of a consequence. From the `proxy-cache.md` reconciliation (item 5): the nuget and maven rows are shipped under its resolved second extension (was Q17), the split table cites its AC20 and AC22, Phase 3 follows. The charter's step citations and `auth.md` AC10's review surface cited as applied. Already done at authoring: every Open item and format line naming this file; the format specs' "to be authored" wording (authoring item 12) is still queued on their side. 32 criteria, each with a Test Plan row; `node scripts/check-spec.js` on this file: zero failures. Stays draft pending a gate review. |

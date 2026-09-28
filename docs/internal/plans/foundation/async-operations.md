@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-27 at 998b03a as a grounded first draft, not yet reviewed. Gathers the deferred-execution requirements management-api.md (deferred kinds, 202 plus Operation, poll route, idempotency), data-model.md (the Operation entity and its atomic terminal transition), signing-service.md (virtual merge contract and the cadence re-sign), artifact-verification.md (the re-evaluation worker), supply-chain-policy.md (scans, retries, feed sync), replication.md (resumable transfers), generic.md (the retention pass), the write-triggered services prototype (its questions 4 to 6 and AC8 to AC12) and the format specs placed on the step 6a subsystem, and fixes one PostgreSQL-backed job queue with leased, fenced, transactional completion that every deferred and scheduled activity in the registry runs on. Nine questions written in decision shape and adopted under the owner's standing delegation; zero open. 26 criteria, each with a Test Plan row. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at 9ebf6e9 with the foundation authoring wave (not a review): repository deletion cancels pending jobs in its transaction, cancels running ones cooperatively, disables repository-scoped schedules and a job meeting the deleted state ends itself, through CancelByRepository (AC28); a job of a kind this process has no worker for is skipped for a newer or older binary, never failed and never a refused start (Q10 adopted, AC26 rewritten); the scheduler lock is internal/db/lock.LockScheduler and the leader runs the state-gauge collector (AC14); the kind table is fixed by each owning spec (policy.feed_sync one schedule per source under feed_sync:{source}, replication.sync per link at replication.sync_interval, verify kinds distinct from their period keys on purpose, storage kinds at the gc.*_interval keys); the async_* series and four alerts under observability's names (AC20), trace_context and request_id at enqueue with a linked job span (AC27); Job and Schedule cited as data-model's (AC41) and cancelled as admitted (AC32); the eleven keys under scripts/check-config-keys.js (AC22); Context restated against the charter's 4b/6a placement and every sibling as it now stands. 28 criteria, each with a Test Plan row; ten questions resolved, zero open; stays draft pending a gate review. Earlier: authored 2026-09-27 at 998b03a as a grounded first draft, not yet reviewed. Gathers the deferred-execution requirements management-api.md (deferred kinds, 202 plus Operation, poll route, idempotency), data-model.md (the Operation entity and its atomic terminal transition), signing-service.md (virtual merge contract and the cadence re-sign), artifact-verification.md (the re-evaluation worker), supply-chain-policy.md (scans, retries, feed sync), replication.md (resumable transfers), generic.md (the retention pass), the write-triggered services prototype (its questions 4 to 6 and AC8 to AC12) and the format specs placed on the step 6a subsystem, and fixes one PostgreSQL-backed job queue with leased, fenced, transactional completion that every deferred and scheduled activity in the registry runs on. Nine questions written in decision shape and adopted under the owner's standing delegation; zero open. 26 criteria, each with a Test Plan row. Awaits a /spec review pass."
 description: "Spec for the shared asynchronous-operation subsystem: one PostgreSQL-backed job queue (SKIP LOCKED claims, leases with fencing tokens, transactional enqueue and completion, bounded retries, coalescing and exclusivity keys, cooperative cancellation, pause and resume, a leader-elected scheduler) that executes every deferred management operation behind data-model.md's Operation record and every scheduled or background activity the sibling specs name: virtual merges, cadence re-signing, verdict re-evaluation, scans and feed sync, replication transfers, retention passes and the GC sweep."
 author: michielvha
 goal: "Give every deferred or scheduled activity in the registry one runner with one durability story, so that a deferred write commits exactly once and atomically with its Operation and snapshot across crashes and multiple server processes, no handler or shared layer ever grows a goroutine, timer or queue of its own, and a pending import can never lose its bytes to the sweep."
@@ -25,72 +25,103 @@ record is `data-model.md`'s `Operation` and the wire is `management-api.md`'s.
 
 ## Context
 
-The charter builds this subsystem at step 6a, "immediately before" Ansible collections, "the first
-client-visible asynchronous operation in the build order", and says its shape "is a question for
-the step 4a re-open, which has Ansible's evidence in hand; only its production form is built
-here" (`project-charter.md`, build order, step 6a). The resolved build-placement question below
-moves the queue core earlier, to the start of step 4b, because two step 4b consumers need it.
+The charter builds the queue core (Phases 1 to 3) as the first item of build-order step 4b,
+"immediately after the re-open records its finding on the prototype's questions 4 to 6, because
+verification and policy are consumers of the one queue", and the deferred management operation
+(Phase 4) at step 6a, "immediately before" Ansible collections, whose publish "returns an import
+task the client polls, the first client-visible asynchronous operation in the build order"
+(`project-charter.md`, build order, steps 4b and 6a; its AC12). That is the resolved
+build-placement decision below (was Q9), now folded into the charter; the earlier step 6a
+placement of the whole subsystem was a reconciliation act, not an owner decision.
 
 The requirements already exist, scattered across the specs that cite this file:
 
-- **`data-model.md`, "Operations" and AC32**, owns the `Operation` entity: repository, format,
-  kind, an unguessable wire id, monotonic state (`pending`, `running`, then `completed` or
-  `failed`, a terminal state never changing), created and finished times, principal and
-  authorizing scope, a handler-written result document, and a produced-snapshot reference "set
-  only on `completed`, in the same transaction as the snapshot, so there is never a snapshot
-  whose operation reads unfinished or a completed operation with no snapshot". It is not
-  snapshot content, not a mark root, and pruned after a window. Its non-root table says a
-  pending operation's bytes "are protected only by the repository-scoped grace" and that
-  "whether a pending import can outlive that grace is the write-triggered services prototype's
-  question 5, and a gap it finds is a revision request to `storage-and-gc.md` and this set,
-  never an operation-side pin". `agents/spec-loop/consequences.md` (format-management fold, item
-  3) adds: "async-operations.md (foundation queue) must be consistent with this entity".
-- **`management-api.md`** owns the wire. Its Scope excludes "Execution of deferred operations.
-  The asynchronous-operation subsystem the charter builds at step 6a (`async-operations.md`,
-  owed) owns workers, retries and cancellation; this spec owns the operation's wire shape, its
-  `Operation` record and its poll route, so the two are one contract seen from two sides". Its
-  Design fixes: a handler "declares, per kind, whether `Apply` runs inline or is deferred; the
-  API answers 201 with a completed `Operation` for the former and 202 with a `pending` one and a
-  `Location` for the latter", the deferred path "commits the same way (one snapshot, atomic with
-  the terminal transition)", the poll route `GET /api/v1/operations/{id}` needs the originating
-  write's authorization, `Idempotency-Key` with `operation-outstanding` (409) "while the first
-  is still running", the `management.operation_retention` (90 days) and
-  `management.deferred_threshold` (10 s, AIP-151) keys, and AC16 and AC17 assert them. Its
-  consequences (items 2 and 14) widen `Operation` to every management operation with idempotency
-  key and request id fields and say this spec owns "deferred execution and key-operation
-  semantics; the wire shape (`Operation`, poll route, `configure` kind) is management-api.md's".
+- **`data-model.md`, "Operations", "Jobs and schedules", AC32 and AC41**, owns the `Operation`
+  entity and, since the 2026-09-27 reconciliation, the `Job` and `Schedule` records this spec
+  runs on. `Operation`: repository, format, kind, an unguessable wire id, monotonic state
+  (`pending`, `running`, then exactly one of `completed`, `failed`, `cancelled`, a terminal
+  state never changing), created and finished times, principal and authorizing scope, a
+  handler-written result document, and a produced-snapshot reference set only on `completed`,
+  in the same transaction as the snapshot, "so there is never a snapshot whose operation reads
+  unfinished or a completed operation with no snapshot"; not snapshot content, not a mark root,
+  pruned after a window. Its "Jobs and schedules" section transcribes the `Job` and `Schedule`
+  records specified below, field for field, including the partial unique indexes, the
+  `trace_context` and `request_id` columns `observability.md` AC16 asked for, and the rule that
+  "an unfinished job naming a repository holds that repository's grace open, exactly as an
+  unexpired upload session does", which replaced its earlier wording that a pending operation's
+  bytes are protected only by the repository-scoped grace and left the answer to the prototype's
+  question 5.
+- **`management-api.md`** owns the wire. Its Scope excludes "Execution of deferred operations":
+  this spec "owns workers, retries, leases", pausing and the cancellation mechanics; that spec
+  owns the operation's wire shape, its `Operation` record and its poll and cancel routes, so
+  the two are one contract seen from two sides. Its Design fixes: a handler "declares, per kind,
+  whether `Apply` runs inline or is deferred; the API answers 201 with a completed `Operation`
+  for the former and 202 with a `pending` one and a `Location` for the latter", the deferred
+  path "commits the same way (one snapshot, atomic with the terminal transition)", the poll
+  route `GET /api/v1/operations/{id}` needs the originating write's authorization,
+  `Idempotency-Key` with `operation-outstanding` (409) meaning "job not terminal", the
+  `management.operation_retention` (90 days) and `management.deferred_threshold` (10 s,
+  AIP-151) keys, and AC16 and AC17 assert them. Its endpoint table carries the routes this spec
+  asked for: `POST /api/v1/operations/{id}/cancel`, `GET /api/v1/system/jobs`,
+  `POST /api/v1/system/jobs/{id}/cancel` and `POST`/`DELETE /api/v1/system/jobs/kinds/{kind}/pause`
+  (its AC16, AC32).
 - **`signing-service.md`, "Virtual merges: deferred, coalesced, signed with the virtual's key"**,
-  fixes the merge contract and hands execution here: "A completed write on a member enqueues a
-  merge for every virtual that lists it; merges for one virtual within a coalescing window run
-  once; the window and a staleness bound ... are configuration", "the previous merged document
-  set serves until the new one commits atomically; a merge that fails leaves the previous set and
-  an alert", `index.virtual_merge_window` 5 s and `index.virtual_staleness_bound` 60 s, "run as
-  deferred work, never on a request's path", asserted by its AC19 "against a fixture runner
-  until that spec's runtime exists". Its cadence re-sign is "a scheduled production of pointer
-  documents under the current keys, creating no snapshot, durable across a restart (the schedule
-  derives from the stored documents' expiry, not from a timer in memory)" (AC22), and its
-  package shape says "Neither package starts a goroutine that outlives a request except the
-  cadence scheduler". Consequences item 15 queues both for this spec.
+  fixes the merge contract and executes it here as the `index.merge` kind: "A completed write on
+  a member enqueues a merge for every virtual that lists it; merges for one virtual within a
+  coalescing window run once; the window and a staleness bound ... are configuration", "the
+  previous merged document set serves until the new one commits atomically; a merge that fails
+  leaves the previous set and an alert", `index.virtual_merge_window` 5 s and
+  `index.virtual_staleness_bound` 60 s, "run as deferred work, never on a request's path",
+  asserted by its AC19 on the production runtime (`internal/async`), with a first merge enqueued
+  at a virtual's creation. Its cadence re-sign is the `signing.resign` `Schedule`, "a scheduled
+  production of pointer documents under the current keys, creating no snapshot, durable across
+  a restart (the schedule derives from the stored documents' expiry, not from a timer in
+  memory)" (its AC22, on the production scheduler); its package starts no goroutine that
+  outlives a request, the former cadence-scheduler exception having become a `Schedule` here.
 - **`artifact-verification.md`, "Re-evaluation when a trust set changes"**: a trust-set revision
   "marks the repository's verdicts under the previous revision as superseded and enqueues them
-  for re-evaluation", "a bounded worker (`verify.workers`, default 4) recomputes them oldest
-  first, under a context the server's shutdown cancels, and resumes from the superseded marks on
-  restart, so no verdict is ever lost to a crash and none is ever recomputed twice" (AC3); plus
-  `verify.sigstore.refresh` (24 h) and `verify.revocation.refresh` (12 h) periodic refreshes.
+  for re-evaluation" as a `verify.reevaluate` job with a checkpoint per page, so that "no
+  verdict is ever lost to a crash and none is ever recomputed twice" (its AC3), bounded by
+  `async.kind_limits` (`verify.reevaluate: 4`; there is no `verify.workers` key, per
+  `deployment.md`'s resolved worker-limit decision, was Q11 there); plus the
+  `verify.tuf_refresh` and `verify.revocation_refresh` schedules with periods
+  `verify.sigstore.refresh` (24 h) and `verify.revocation.refresh` (12 h), disabled under
+  `proxy.offline` (its AC22).
 - **`supply-chain-policy.md`, "Scanning is asynchronous; enforcement is synchronous"**: "An
-  artifact is scanned after ingest", "Scan failures retry, and an artifact that stays unscanned
-  past a bound raises an operator alert" (AC6), and the feed sync "re-matches each new or
-  changed advisory against the stored coordinates" on a schedule, suspended under offline mode
-  (AC16).
-- **`replication.md`**: "Interrupted transfer resumes from the last completed snapshot rather
-  than restarting" (AC3), "a transfer killed midway leaves every mirrored pointer on the most
-  recently completed target" (AC2), and a follower detects a gap "on the next sync".
+  artifact is scanned after ingest" as a `policy.scan` job with coalesce key `scan:{digest}`
+  and a kind-declared retry bound, an artifact unscanned past
+  `policy.scan.unscanned_alert_after` counting in `policy_unscanned_past_bound` (its AC6); and
+  the feed sync is a `policy.feed_sync` `Schedule`, one per OSV-schema source (the default feed
+  and each `policy.feed.sources` entry), period `policy.feed.sync_interval`, suspended under
+  offline mode (its AC16, AC21).
+- **`replication.md`**: each active link is a `Schedule` on `internal/async` enqueuing a
+  `replication.sync` job with exclusivity key `link:{id}` and a checkpoint per completed
+  snapshot, period `replication.sync_interval` unless the link sets its own, so that
+  "interrupted transfer resumes from the last completed snapshot rather than restarting" (its
+  AC3, AC23) and "a transfer killed midway leaves every mirrored pointer on the most recently
+  completed target" (its AC2).
 - **`formats/generic.md`, resolved retention-placement decision (was Q11 there)**: "an age rule
   must fire while nobody is writing, so retention cannot be handler code"; a retention pass is
   "one completed write" in `internal/retention` that runs "outside any request".
-- **`storage-and-gc.md`**: "At most one sweep runs at a time, enforced (a PostgreSQL advisory
-  lock suffices), and a sweep interrupted by a crash must be safe to rerun immediately from the
-  start"; snapshot pruning runs "on the schedule the retention default sets".
+- **`storage-and-gc.md`**: the sweep, orphan scan and pruning are the `storage.sweep`,
+  `storage.orphan_scan` and `storage.prune` kinds enqueued by this scheduler at
+  `gc.sweep_interval`, `gc.orphan_scan_interval` and `gc.prune_interval`, the sweep holding
+  `internal/db/lock.LockSweep` for its whole run as a second guard (its AC26); and an unfinished
+  job naming a repository holds that repository's grace open (its AC23).
+- **`repository-lifecycle.md`, "Deletion", AC21**: deleting a repository cancels every pending
+  job naming it in the deletion transaction, cooperatively cancels the running ones, disables
+  the repository-scoped `Schedule`s, and expects a job that observes the deleted state at its
+  next step to end itself without a write; the grace hold stands until the job is terminal.
+- **`observability.md`**, metric and alert catalogue, AC7 and AC16: the `async_*` series and
+  the `JobFailed`, `ScheduleOverdue`, `SchedulerLeaderless` and `VirtualMergeStalenessBreach`
+  alerts by name; state-derived gauges collected on the scheduler leader only; a job's span
+  linked to the enqueuing request's span and its audit line carrying that request's id.
+- **`deployment.md`**, "Upgrade and rollback policy", "Multi-replica constraints", key
+  inventory: during a rolling upgrade "a kind the old binary does not know is left unclaimed
+  until the rollout finishes"; the scheduler's leader lock is taken through
+  `internal/db/lock.LockScheduler`, the one constant block that may issue advisory-lock SQL;
+  the eleven `async.*` keys and the `async.workers: 0` web-replica recipe are in its inventory
+  and its "Roles" table.
 - **`write-triggered-services-prototype.md`**, whose asynchronous half asks questions 4 to 6
   (deferral through `Deps` or a callback, one snapshot on success and none on failure "across a
   process restart", whether "a pending import's blob need[s] GC protection the settled machinery
@@ -108,9 +139,9 @@ The requirements already exist, scattered across the specs that cite this file:
   indexes inside the write (no indexing delay is deferred), and `maven.md` declined a staging
   operation, so none of the "indexing delay" shapes the loop's hint named is a consumer.
 
-Nothing in the tree implements any of this: `internal/` does not exist at 998b03a, so every
-claim in this spec is design, verified against sibling specs and the prior art fetched this run
-rather than against code.
+Nothing in the tree implements any of this: `internal/` does not exist at 9ebf6e9, so every
+claim in this spec is design, verified against sibling specs and the prior art fetched at
+authoring rather than against code.
 
 ## Scope
 
@@ -135,16 +166,22 @@ rather than against code.
   grace-hold question below), answering the prototype's question 5 in design and leaving the
   prototype's AC11 to verify it.
 - Operator controls (list, cancel, pause, resume) as `management-api.md` routes, the runner's
-  configuration keys, metrics and alerts (their homes are `management-api.md` and the owed
-  `observability.md`; what they must say is fixed here).
+  configuration keys (`deployment.md`'s inventory), metrics and alerts (`observability.md`'s
+  catalogue); what each must say is fixed here.
+- What repository deletion does to the queue: pending jobs cancelled in the deletion
+  transaction, running ones cancelled cooperatively, repository-scoped schedules disabled, a job
+  that meets a deleted repository ending itself (`repository-lifecycle.md` AC21).
+- Rolling upgrades and rollbacks with mixed binaries: a job of a kind this process has no worker
+  for is never claimed by it and never failed.
 - Fault injection, property and benchmark tests, because concurrency and durability have no
   client oracle (`CLAUDE.md`).
 
 **Out of scope, with the reason:**
 
 - **The `Operation` entity and any new record.** `data-model.md` owns entities; the `Job` and
-  `Schedule` records this spec needs and the `cancelled` terminal state it adds to `Operation`
-  are specified precisely below and reported as sibling consequences, never added here.
+  `Schedule` records this spec needs and the `cancelled` terminal state it added to `Operation`
+  are specified precisely below and live there ("Jobs and schedules", AC41; "Operations",
+  AC32), never here.
 - **The wire shape of an operation**: the poll route, the 202 response, problem types, the
   `Idempotency-Key` header and the operator-control routes' paths. `management-api.md` owns the
   `api` mount; this spec fixes what those routes must do and reports the additions.
@@ -156,8 +193,8 @@ rather than against code.
 - **A separate worker deployment.** Pulp ships API and worker processes; Harbor a jobservice.
   Here every server process runs workers by default and `async.workers: 0` turns one into an
   enqueue-only replica (the resolved topology question below). Excluded because a second binary
-  is a second deployment story `deployment.md` (owed) would have to carry for a benefit
-  configuration already gives.
+  is a second deployment story `deployment.md` would have to carry for a benefit configuration
+  already gives; its "Roles" table and Helm chart carry the `workers: 0` recipe instead.
 - **Cross-instance replication of jobs.** A job belongs to the instance's database; a follower
   has its own queue (`replication.md`'s follower runs its own sync jobs). Excluded because a
   replicated queue is a distributed scheduler, and `replication.md` settled that followers pull.
@@ -239,18 +276,18 @@ scan retries, transfer resume), and four private implementations of one durabili
 constitution's "concurrency and durability have no client-level oracle" hazard multiplied by
 four. The consumers and their jobs:
 
-| Consumer | Kind (proposed; the owning spec fixes the name) | Trigger | Keys | Finish writes |
+| Consumer | Kind (as the owning spec now names it) | Trigger | Keys | Finish writes |
 |---|---|---|---|---|
 | `management-api.md` deferred `Apply` | `manage.apply` | `Submit` of a kind the handler declared deferred; enqueued in the transaction that inserts the `pending` `Operation` | none by default; a handler may declare an exclusivity key of the repository | the snapshot, the `Operation` terminal transition, retirements, the audit line |
-| `signing-service.md` virtual merge | `index.merge` | the metadata store's commit hook on a member write, in the member's write transaction | coalesce key `virtual:{repository}`; exclusivity key the same | the virtual's current-document swap (no snapshot) |
-| `signing-service.md` cadence re-sign | `signing.resign` | the scheduler, next run derived from the stored document's expiry and `signing.resign_at_fraction` | exclusivity key `pointer:{repository}/{pointer}` | `PointerDocument` and `Signature` records (no snapshot) |
-| `artifact-verification.md` re-evaluation | `verify.reevaluate` | the trust-set revision's transaction, one job per repository revision; the worker pages through superseded marks oldest first with a checkpoint | exclusivity key `verify:{repository}` | verdict rows and cleared superseded marks |
-| `artifact-verification.md` refreshes | `verify.tuf_refresh`, `verify.revocation_refresh` | the scheduler at `verify.sigstore.refresh` and `verify.revocation.refresh`; suspended under offline mode | exclusivity key the kind | the refreshed trust material |
-| `supply-chain-policy.md` scan | `policy.scan` | the ingest and cache-commit hooks, in the committing transaction | coalesce key `scan:{digest}` | scan result, component inventory |
-| `supply-chain-policy.md` feed sync | `policy.feed_sync` | the scheduler; suspended under offline mode | exclusivity key the kind | advisory rows and re-matched condemnations |
-| `replication.md` sync and transfer | `replication.sync` | the scheduler per active `ReplicationLink`, and on demand | exclusivity key `link:{id}`; checkpoint per completed snapshot | applied snapshot range, mirrored pointer moves |
-| `generic.md` retention | `retention.pass` | the scheduler per repository with rules | exclusivity key `repo:{repository}` | one snapshot per pass |
-| `storage-and-gc.md` sweep, orphan scan, pruning | `storage.sweep`, `storage.orphan_scan`, `storage.prune` | the scheduler | exclusivity key the kind | deletion intents, row deletes, pruned snapshots; the sweep keeps its own advisory lock as a second guard |
+| `signing-service.md` virtual merge (its AC19) | `index.merge` | the metadata store's commit hook on a member write, in the member's write transaction; once at a virtual's creation (`repository-lifecycle.md`) | coalesce key `virtual:{repository}`; exclusivity key the same | the virtual's current-document swap (no snapshot) |
+| `signing-service.md` cadence re-sign (its AC22) | `signing.resign` | a `Schedule` per signed pointer, next run derived from the stored document's expiry and `signing.resign_at_fraction`, written in `Finish` | exclusivity key `pointer:{repository}/{pointer}` | `PointerDocument` and `Signature` records (no snapshot) |
+| `artifact-verification.md` re-evaluation (its AC3) | `verify.reevaluate` | the trust-set revision's transaction, one job per repository revision; the worker pages through superseded marks oldest first with a checkpoint per page; bounded by `async.kind_limits` (`verify.reevaluate: 4`) | exclusivity key `verify:{repository}` | verdict rows and cleared superseded marks |
+| `artifact-verification.md` refreshes (its AC22) | `verify.tuf_refresh`, `verify.revocation_refresh` | `Schedule`s with periods `verify.sigstore.refresh` and `verify.revocation.refresh`; disabled under `proxy.offline`. The kind names and the key names differ on purpose: a kind is a worker's registered name, a key is a period an operator sets, and `deployment.md`'s two-way check reads only the keys | exclusivity key the kind | the refreshed trust material |
+| `supply-chain-policy.md` scan (its AC6) | `policy.scan` | the ingest and cache-commit hooks, in the committing transaction; the kind declares its own retry bound, and an artifact unscanned past `policy.scan.unscanned_alert_after` counts in `policy_unscanned_past_bound` | coalesce key `scan:{digest}` | scan result, component inventory |
+| `supply-chain-policy.md` feed sync (its AC16, AC21) | `policy.feed_sync` | one `Schedule` per OSV-schema source (the default feed and each `policy.feed.sources` entry), period `policy.feed.sync_interval`; disabled under `proxy.offline` | exclusivity key `feed_sync:{source}` | that source's advisory rows and re-matched condemnations |
+| `replication.md` sync and transfer (its AC23) | `replication.sync` | one `Schedule` per active `ReplicationLink`, period `replication.sync_interval` unless the link sets its own (never below the instance value), and on demand; disabled under `proxy.offline` | exclusivity key `link:{id}`; checkpoint per completed snapshot | applied snapshot range, mirrored pointer moves |
+| `generic.md` retention (its resolved retention placement, was Q11 there) | `retention.pass` | one `Schedule` per repository with rules; disabled while the repository is `read_only` or deleted | exclusivity key `repo:{repository}` | one snapshot per pass |
+| `storage-and-gc.md` sweep, orphan scan, pruning (its AC26) | `storage.sweep`, `storage.orphan_scan`, `storage.prune` | `Schedule`s at `gc.sweep_interval`, `gc.orphan_scan_interval`, `gc.prune_interval` | exclusivity key the kind | deletion intents, row deletes, pruned snapshots; the sweep additionally holds `internal/db/lock.LockSweep` for its whole run as a second guard |
 
 Two things the table makes visible. Only `manage.apply` backs an `Operation`: every other kind is
 system-initiated work with no principal, and `management-api.md` records `Operation`s for
@@ -264,8 +301,8 @@ new pinned method because the callback it needs, `Apply`, is the optional `Opera
 
 ### The `Job` record and the `Operation`
 
-The queue's unit is a `Job`, a core-owned record `data-model.md` must gain (sibling consequence;
-specified here so the amendment is a transcription):
+The queue's unit is a `Job`, a core-owned record of the shared model (`data-model.md`, "Jobs
+and schedules", its entity table, AC41; specified here and transcribed there):
 
 - **Identity and kind.** An id; a `kind` string from the registry of workers (below); an
   opaque `args` document the core stores and only the kind's worker parses, in the same spirit
@@ -283,8 +320,15 @@ specified here so the amendment is a transcription):
   unique indexes: one over `coalesce_key` where `state = 'pending'`, one over `exclusive_key`
   where `state = 'running'`.
 - **References**: an optional `operation` reference (the `Operation` this job executes), an
-  optional `repository` reference (the repository whose grace the job holds open), and a
-  `checkpoint` document the worker may write between attempts.
+  optional `repository` reference (the repository whose grace the job holds open, and the
+  repository whose deletion cancels it), and a `checkpoint` document the worker may write
+  between attempts.
+- **Correlation**, set at enqueue and never changed: `trace_context`, the W3C `traceparent` of
+  the enqueuing span as a string, nullable when there is none, and `request_id`, the enqueuing
+  request's id. The runner starts the job's span with a **link** to `trace_context`, not as a
+  child, because a job may run hours later and a parent span cannot stay open; an audit line
+  the job emits carries `request_id`, so the audit trail of a deferred `manage.apply` still
+  names the request that asked for it (`observability.md` AC16; AC27).
 - **Placement.** Not repository content: in no snapshot, untouched by repoint and rollback,
   never a mark root ("Records that are not mark roots" gains a row); pruned after
   `async.job_retention` from `finished_at`, but never before the `Operation` it references is
@@ -294,9 +338,9 @@ The `Operation` is the client's view and the `Job` the runner's, and they are ke
 construction rather than by reconciliation: the two records for one deferred operation are
 written in the same transaction at every transition (insert `pending` with `pending`, claim sets
 `running` on both, finish sets the terminal states on both). No code path updates one without
-the other; a test enumerates the transitions and asserts the pairing (AC5). `Operation` gains a
+the other; a test enumerates the transitions and asserts the pairing (AC5). `Operation` has a
 third terminal state, `cancelled` (the resolved cancellation question below), which
-`data-model.md` AC32 and `management-api.md` AC16 must admit.
+`data-model.md` AC32 and `management-api.md` AC16 admit.
 
 ### Enqueue is transactional
 
@@ -310,7 +354,9 @@ enqueues in it. After commit, the committing connection issues `NOTIFY async_wak
 kind as payload (PostgreSQL delivers a `NOTIFY` only when its transaction commits), so an idle
 worker wakes within milliseconds; a worker that missed the notification finds the job on its next
 poll, `async.poll_interval` later. `Enqueue` with a `coalesce_key` uses `INSERT ... ON CONFLICT
-DO NOTHING` against the pending-key index and reports whether a row was inserted.
+DO NOTHING` against the pending-key index and reports whether a row was inserted. `Enqueue`
+reads the current span context and request id from `ctx` and writes them to `trace_context`
+and `request_id`; a caller with neither (the scheduler's tick) leaves them null.
 
 ### Claim: SKIP LOCKED plus a lease
 
@@ -320,14 +366,17 @@ A worker claims in one short transaction:
 UPDATE job SET state='running', lease_owner=$me, lease_token=$fresh,
   lease_expires_at=now()+$lease, attempts=attempts+1
 WHERE id = (SELECT id FROM job
-  WHERE (state='pending' AND run_at <= now() AND kind = ANY($unpaused))
-     OR (state='running' AND lease_expires_at < now())
+  WHERE kind = ANY($claimable)
+    AND ((state='pending' AND run_at <= now())
+      OR (state='running' AND lease_expires_at < now()))
   ORDER BY run_at LIMIT 1 FOR UPDATE SKIP LOCKED)
 RETURNING *
 ```
 
 expressed in the store's query layer rather than as literal SQL in the spec's sense; the shape
-is what matters. Three properties follow:
+is what matters. `$claimable` is the set of kinds this process has a registered worker for,
+minus the kinds paused in the database (below): a process never claims a job it could not run.
+Four properties follow:
 
 - **One holder at a time.** Two workers cannot claim one row: the row lock excludes them and
   `SKIP LOCKED` sends the second to the next row. Across N server processes this is the whole
@@ -342,6 +391,15 @@ is what matters. Three properties follow:
   violation, leaves the row `pending` (the transaction rolled back) and takes the next row.
   Oldest `run_at` first keeps a key's waiters fair. Pulp derives the same effect with an unblock
   pass; the index does it with no pass.
+- **An unknown kind is skipped, never failed** (the resolved unknown-kind question below, was
+  Q10). During a rolling upgrade or a rollback two binaries share the table
+  (`deployment.md`, "Upgrade and rollback policy"): a job enqueued by the newer binary under a
+  kind the older one has no worker for is simply outside the older process's `$claimable` and
+  stays `pending` until a process that registers the kind claims it. The older process logs the
+  unknown kinds it sees at `Start` and whenever the set changes, at warning, and the jobs stay
+  visible in `async_jobs{kind,state}` and `async_oldest_pending_age_seconds{kind}`, so a kind
+  nobody will ever register surfaces as an aging queue and a `ScheduleOverdue` where it is
+  scheduled, not as a failed job and not as a process that refuses to start (AC26).
 
 Workers are `errgroup` goroutines bounded by `async.workers` under the server's context (the go
 skill's bounded-concurrency rule, no hand-rolled pool). A worker loop is: wait for `NOTIFY` or
@@ -429,8 +487,9 @@ failed one: the client that wants to retry sends a new key. The queue never re-r
 
 ### Cancellation, pause and resume
 
-- **Cancel** (`management-api.md` route, sibling consequence; authorized like the poll route,
-  admin for jobs without an `Operation`): a `pending` job becomes `cancelled` in one `UPDATE
+- **Cancel** (`management-api.md`'s `POST /api/v1/operations/{id}/cancel` and
+  `POST /api/v1/system/jobs/{id}/cancel`; authorized like the poll route, admin for jobs
+  without an `Operation`): a `pending` job becomes `cancelled` in one `UPDATE
   ... WHERE state='pending'` and never runs; a `running` job is marked `cancel_requested` and
   `NOTIFY async_cancel` carries its id, the holding worker cancels the job's context, and the
   outcome is whichever commits first: `Finish` (the job completes; the effect stands and the
@@ -440,10 +499,27 @@ failed one: the client that wants to retry sends a new key. The queue never re-r
   ignores its context is a bug the idempotence test surfaces (AC8 runs each kind under a
   cancelled context and asserts nothing committed). A `manage.apply` job's `Operation` ends
   `cancelled`.
-- **Pause and resume a kind** (admin routes, sibling consequence): a paused kind's jobs are
-  enqueued normally and never claimed (`kind = ANY($unpaused)` in the claim query, read from a
-  `paused_kinds` set in the database, not in memory, so every process agrees). Running jobs of a
-  paused kind finish. This is Harbor's queue pause and it is also how the conformance harness
+- **Repository deletion cancels the repository's jobs** (`repository-lifecycle.md`, "Deletion"
+  step 8, its AC21). The deletion transaction runs the pending-cancel `UPDATE` for every job
+  whose `repository` reference names the repository and marks every running one
+  `cancel_requested`; the `NOTIFY async_cancel` for each is delivered when the deletion
+  commits, exactly as an operator's cancel is. The deletion does not wait for running jobs. A
+  running job that reaches `Checkpoint` or `Finish` after the deletion committed finds the
+  write transaction refused by `repository.Writable`'s deleted state (the sole write-transaction
+  constructor, `storage-and-gc.md` AC25) and ends itself `cancelled` without a write; a job
+  whose external work notices the deleted state earlier may return `ctx.Err()` at once. Until
+  the job is terminal its grace hold stands (`storage-and-gc.md` AC23), so a half-imported
+  artifact's bytes are collected after the job ends, never under it. Every `Schedule` scoped to
+  the repository (its `retention.pass`, its `signing.resign` entries) is disabled in the same
+  transaction; a tick that runs before the disable commits enqueues a job the deletion's
+  pending-cancel then catches, because both are rows in one database and the tick's enqueue and
+  the deletion serialise on them. This is the only place outside `internal/async` that writes a
+  job's state, and it does so through the runner's `CancelByRepository(ctx, tx, repo)`, which
+  `internal/repository` calls inside its transaction (AC28).
+- **Pause and resume a kind** (admin routes in `management-api.md`'s endpoint table): a paused
+  kind's jobs are enqueued normally and never claimed (the kind is removed from `$claimable`,
+  read from a `paused_kinds` set in the database, not in memory, so every process agrees).
+  Running jobs of a paused kind finish. This is Harbor's queue pause and it is also how the conformance harness
   holds the Galaxy import for the prototype's AC8: the case `script` pauses `manage.apply`,
   publishes, polls once and sees unfinished, resumes, and polls to completion. No test-only
   hold exists in the server.
@@ -476,7 +552,8 @@ The grace interaction is the prototype's question 5, and this spec answers it in
 resolved grace-hold question below) so the prototype verifies rather than discovers: **an
 unfinished job that names a repository holds that repository's grace open**, the rule
 `storage-and-gc.md` already gives an unexpired upload session ("An unexpired upload session holds
-its repository's grace open"). The bytes a deferred import will reference were committed to the
+its repository's grace open") and now asserts for jobs too (its AC23, with the queued or
+retrying job in its property operation set). The bytes a deferred import will reference were committed to the
 CAS before the import ran; `storage-and-gc.md`'s repository-scoped grace protects
 committed-but-unreferenced blobs only while the repository is active; a queued import on a
 repository nobody else writes to is exactly the "active but silent" shape the session hold was
@@ -490,21 +567,35 @@ short.
 
 ### The scheduler
 
-Periodic work is a `Schedule` record (`data-model.md` amendment): `name`, `kind`, `args`,
-`interval` or `next_run_at` derived by the kind, `last_run_at`, `last_result`, `enabled`. One
-process at a time runs the scheduler tick, elected by `pg_try_advisory_lock` on a fixed key held
-for the process's life and re-acquired by another process when it dies (River's leader election
-without the table); every process with `async.scheduler: true` (the default) is a candidate.
+Periodic work is a `Schedule` record (`data-model.md`, "Jobs and schedules", AC41): `name`,
+`kind`, `args`, `interval` or `next_run_at` derived by the kind, `last_run_at`, `last_result`,
+`enabled`, and an optional repository reference for the schedules that belong to one repository
+(a `retention.pass`, a `signing.resign`, a `replication.sync`), which is what repository
+deletion disables. One process at a time runs the scheduler tick, elected by a session-level
+advisory lock on a dedicated connection, held for the process's life and re-acquired by another
+process within one tick of the holder's connection closing (River's leader election without the
+table). The lock is `internal/db/lock.LockScheduler`, from the one constant block
+`deployment.md` fixes so that this package and the sweep cannot pick colliding integers; only
+that package issues advisory-lock SQL, and its architecture test scans the module for
+`pg_advisory` and `pg_try_advisory` to hold it (`deployment.md`, "Multi-replica constraints",
+its AC19). Every process with `async.scheduler: true` (the default) is a candidate. The leader
+also runs `observability.md`'s state-derived gauge collector, so `async_jobs{kind,state}`,
+`async_oldest_pending_age_seconds{kind}` and the other state-derived series are exported by
+exactly one process and `sum()` across the fleet equals the database's truth (its AC7).
 The tick, every `async.scheduler_interval`, enqueues a job for each schedule whose `next_run_at`
 has passed, with `coalesce_key` the schedule name so a missed tick after an outage enqueues one
 job, not one per missed interval, and advances `next_run_at` in the same transaction. Kinds that
 derive their next run from stored state (the cadence re-sign: "the schedule derives from the
 stored documents' expiry, not from a timer in memory") compute it when the job finishes and
 write it to the schedule in `Finish`, so a restart mid-schedule loses nothing (AC14 covers
-`signing-service.md` AC22's restart case). Offline mode (`proxy-cache.md`'s instance switch)
-disables the schedules that reach the network (`policy.feed_sync`, the two verify refreshes,
-`replication.sync`) by a flag the tick reads; a disabled schedule still advances so it does not
-burst on re-enable.
+`signing-service.md` AC22's restart case). Offline mode (`proxy.offline`, `proxy-cache.md`'s
+instance switch) disables the schedules that reach the network (every `policy.feed_sync`, the
+two verify refreshes, every `replication.sync`) by a flag the tick reads; a disabled schedule
+still advances so it does not burst on re-enable. Schedules are per source and per link where
+the owning spec says so: `policy.feed_sync` has one `Schedule` per OSV-schema source with
+exclusivity key `feed_sync:{source}` (`supply-chain-policy.md` AC21), and `replication.sync`
+one per active link at `replication.sync_interval` or the link's own longer period
+(`replication.md` AC23).
 
 ### Topology and shutdown
 
@@ -526,9 +617,11 @@ AC12 asserts for the vehicle that the handler "starts no goroutine that outlives
 and imports no queue or scheduler package"; this spec generalises it to every package outside
 `internal/async`: no shared layer or handler starts a goroutine that outlives a request, owns a
 `time.Ticker` or `time.AfterFunc`, or opens a `LISTEN`. The one exception is the HTTP server's
-own accept loop. `signing-service.md`'s "except the cadence scheduler" therefore becomes a
-`Schedule` here (sibling consequence), and `artifact-verification.md`'s `verify.workers` becomes
-a per-kind concurrency limit (`async.kind_limits`) rather than a private pool.
+own accept loop. `signing-service.md`'s cadence scheduler is therefore the `signing.resign`
+`Schedule` here (its package shape says so, its AC22 asserts it on this scheduler), and
+`artifact-verification.md`'s re-evaluation bound is the per-kind concurrency limit
+`async.kind_limits` (`verify.reevaluate: 4`) rather than a private pool (`deployment.md`'s
+resolved worker-limit decision, was Q11 there).
 
 ### Both paths
 
@@ -544,12 +637,16 @@ covered by construction, and the architecture test that holds the import graph i
 
 Per the `cobra-viper` skill: keys under `async.` with defaults, bound to
 `STACKWEAVER_REGISTRY_ASYNC_*`, unmarshalled into a typed `async.Config` the package receives in
-its constructor; the `serve` command wires the runner and gains no flag or subcommand for it.
+its constructor; the `serve` command wires the runner. `deployment.md` carries the two root
+flags that touch this package (`--workers` for `async.workers`, `--no-scheduler` for
+`async.scheduler: false`) and no subcommand. The table is in the three-column shape its
+`scripts/check-config-keys.js` parses, and that check holds this table and the schema equal in
+both directions.
 
 | Key | Default | Meaning |
 |---|---|---|
 | `async.workers` | `8` | Worker goroutines in this process; `0` makes it enqueue-only |
-| `async.kind_limits` | `{verify.reevaluate: 4}` | Per-kind concurrency ceilings across this process's workers (the home of `verify.workers`) |
+| `async.kind_limits` | `{verify.reevaluate: 4}` | Per-kind concurrency ceilings across this process's workers (the re-evaluation bound `artifact-verification.md` once keyed separately) |
 | `async.poll_interval` | `5s` | Claim attempt cadence when no `NOTIFY` arrives |
 | `async.lease` | `60s` | Lease length; heartbeat at a third of it |
 | `async.max_attempts` | `8` | Default attempts before `failed`; a kind may override |
@@ -562,21 +659,26 @@ its constructor; the `serve` command wires the runner and gains no flag or subco
 
 `index.virtual_merge_window` and `index.virtual_staleness_bound` stay `signing-service.md`'s
 keys, read by that spec's enqueuing code; `management.operation_retention` stays
-`management-api.md`'s and bounds `async.job_retention` from below. The owed `deployment.md`
-documents the set.
+`management-api.md`'s and bounds `async.job_retention` from below. `deployment.md`'s key
+inventory carries the eleven keys, its "Roles" table the `workers: 0` web-replica recipe, and
+its chart a second Deployment of the same image for the worker role.
 
 ### Package shape
 
-`internal/async`: `Runner` (constructed with `Config`, a `*pgxpool.Pool` and the `slog.Logger`;
-`Start(ctx)`, `Enqueue(ctx, tx, Job)`, `Cancel`, `Pause`, `Resume`, `List`), `Job` with `Finish`
-and `Checkpoint`, the `Worker` interface (`Work(ctx, *Job) error`, one method, declared here
-because the runner is its only consumer), `Permanent(err)`, `ErrLeaseLost`, and `Schedule`.
-Kinds register in the server's constructor: `runner.Register(kind, worker)`, and `Start` refuses
-an unregistered kind found in the table rather than leaving it pending forever. `internal/manage`
-implements the `manage.apply` worker; each other consumer package implements its own worker
-against `async.Worker`. The queries live with the shared metadata store's schema, since the
-records are `data-model.md`'s. No third-party queue library (the resolved queue-implementation
-question below); `golang.org/x/sync/errgroup` and `pgx` are the dependencies.
+`internal/async`: `Runner` (constructed with `Config`, a `*pgxpool.Pool`, the `slog.Logger`
+and the `telemetry` handle; `Start(ctx)`, `Enqueue(ctx, tx, Job)`, `Cancel`,
+`CancelByRepository(ctx, tx, repo)`, `Pause`, `Resume`, `List`), `Job` with `Finish` and
+`Checkpoint`, the `Worker` interface (`Work(ctx, *Job) error`, one method, declared here because
+the runner is its only consumer), `Permanent(err)`, `ErrLeaseLost`, and `Schedule`. Kinds
+register in the server's constructor: `runner.Register(kind, worker)`; `Start` logs, at warning,
+every kind found in the table that no worker registered and claims none of them (the resolved
+unknown-kind decision, was Q10). The scheduler lock is taken through
+`internal/db/lock.LockScheduler`; this package issues no advisory-lock SQL of its own.
+`internal/manage` implements the `manage.apply` worker; each other consumer package implements
+its own worker against `async.Worker`. The queries live with the shared metadata store's
+schema, since the records are `data-model.md`'s. No third-party queue library (the resolved
+queue-implementation question below); `golang.org/x/sync/errgroup` and `pgx` are the
+dependencies.
 
 ### Mechanical enforcers
 
@@ -591,7 +693,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | The `Operation` and `Job` transition together | `internal/manage/deferred_test.go` (every transition, both records in one transaction, fault before commit leaves neither) |
 | Every registered kind is idempotent up to `Finish` and honours cancellation | `internal/async/kinds_test.go`, table-driven over the registry; an unregistered kind fails the test |
 | The runner has no repository-type branch and imports no handler or proxy package | `internal/async/arch_test.go` |
-| The sweep's grace computation reads unfinished jobs | `internal/storage/gc_property_test.go` (queued job in the operation set, `storage-and-gc.md` consequence) |
+| The sweep's grace computation reads unfinished jobs | `internal/storage/gc_property_test.go` (queued job in the operation set, `storage-and-gc.md` AC23) |
+| Only `internal/db/lock` issues advisory-lock SQL; this package takes `LockScheduler` through it | `internal/db/lock/arch_test.go` (`deployment.md` AC19), string scan of every `.go` and `.sql` file |
+| No package outside `internal/async` writes a job's state except through `CancelByRepository` inside the deletion transaction | `internal/async/arch_test.go` (no SQL against the job table outside the package; the one exported write path named) |
 
 ### Fault injection, property and benchmark tests
 
@@ -686,12 +790,17 @@ during implementation with evidence.
       and the collection installs (`write-triggered-services-prototype.md` AC11), and the hold
       releases when the job becomes terminal, with the mark-root set unchanged at five.
 - [ ] AC14: Exactly one process runs the scheduler tick (`async.scheduler_interval`) at any
-      instant across N processes, a new leader is elected within one tick of the old one dying, a
-      schedule whose `next_run_at` passed several times during an outage enqueues one job, the cadence re-sign's next run is derived
-      from the stored document's expiry and survives a restart mid-schedule with no re-sign lost
-      or duplicated (`signing-service.md` AC22 on the production scheduler), and offline mode
-      disables the network-reaching schedules (`policy.feed_sync`, the verify refreshes,
-      `replication.sync`) without bursting on re-enable.
+      instant across N processes, holding `internal/db/lock.LockScheduler` on a dedicated
+      connection, a new leader is elected within one tick of the old one's connection closing
+      and a process with `async.scheduler: false` is never elected, the leader and only the
+      leader exports the state-derived gauges (`observability.md` AC7), a schedule whose
+      `next_run_at` passed several times during an outage enqueues one job, the cadence re-sign's
+      next run is derived from the stored document's expiry and survives a restart mid-schedule
+      with no re-sign lost or duplicated (`signing-service.md` AC22 on the production scheduler),
+      `policy.feed_sync` runs one schedule per source under `feed_sync:{source}` and
+      `replication.sync` one per link at `replication.sync_interval` or the link's own period,
+      and `proxy.offline` disables every network-reaching schedule (each `policy.feed_sync`, the
+      verify refreshes, each `replication.sync`) without bursting on re-enable.
 - [ ] AC15: A `verify.reevaluate` job pages through superseded marks oldest first with a
       checkpoint per committed page, so after a kill and rescue no verdict is recomputed twice
       and none is skipped (`artifact-verification.md` AC3 on the production runner), bounded by
@@ -711,18 +820,27 @@ during implementation with evidence.
 - [ ] AC19: `Job` and `Schedule` are records of the shared model, and no consumer package
       creates a table, queue or schedule store of its own: the module has exactly one claim
       query, in `internal/async`.
-- [ ] AC20: Queue depth and oldest-pending age per kind, lease expiries, retries, permanent
-      failures, scheduler leadership and merge-staleness breaches are exported as metrics, and a
-      staleness breach, a job ending `failed` and a schedule that has not run for twice its
-      period each raise an operator alert, so that no job can fail silently.
+- [ ] AC20: The package exports, under `observability.md`'s catalogue names, `async_jobs{kind,state}`,
+      `async_oldest_pending_age_seconds{kind}`, `async_job_duration_seconds{kind,outcome}`,
+      `async_jobs_total{kind,outcome}`, `async_retries_total{kind}`,
+      `async_lease_expiries_total{kind}`, `async_scheduler_leader`,
+      `async_schedule_last_run_timestamp_seconds{schedule}`,
+      `async_schedule_period_seconds{schedule}` and `async_worker_slots{state}`, and the
+      merge worker `index_virtual_merge_staleness_breaches_total`; and through
+      `telemetry.Alert` a job ending `failed` raises `JobFailed`, a schedule idle for twice its
+      period raises `ScheduleOverdue`, a staleness breach raises `VirtualMergeStalenessBreach`,
+      and a fleet with no leader for five minutes shows on `SchedulerLeaderless`, each exactly
+      once per driving scenario, so that no job can fail silently.
 - [ ] AC21: Listing jobs (filterable by kind, state and repository), cancelling a job, and
       pausing and resuming a kind are admin routes under the `api` mount present in the OpenAPI
       document, refused `not-found` to non-admins under the existence oracle, and each leaves
       one audit line.
 - [ ] AC22: Every `async.*` key has a default, binds to its `STACKWEAVER_REGISTRY_ASYNC_*`
-      variable, and reaches the runner as a typed `Config`; `async.workers: 0` runs no worker in
-      that process while `Enqueue`, polls and the operator routes still work; and
-      `async.job_retention` shorter than `management.operation_retention` is refused at startup.
+      variable, and reaches the runner as a typed `Config`; the eleven keys tabled here and the
+      schema's `async.` keys are equal in both directions under `scripts/check-config-keys.js`;
+      `async.workers: 0` runs no worker in that process while `Enqueue`, polls and the operator
+      routes still work; and `async.job_retention` shorter than
+      `management.operation_retention` is refused at startup.
 - [ ] AC23: On shutdown every running job's context is cancelled, a job that calls `Finish`
       within `async.drain_timeout` commits whole, one that does not is left `running` and
       reclaimed elsewhere after its lease, and no goroutine of the runner outlives the server's
@@ -736,8 +854,25 @@ during implementation with evidence.
       on one process with eight workers against a local PostgreSQL, and the `job` table's
       dead-tuple count does not grow across an enqueue-and-prune run of 100,000 jobs, as
       benchmark gates.
-- [ ] AC26: `Start` refuses to run while the table holds a job of a kind no worker registered,
-      naming the kind, rather than leaving it `pending` forever.
+- [ ] AC26: A process never claims a job of a kind it has no registered worker for and never
+      fails one: with two processes on one database, one registering a kind the other does not,
+      every job of that kind is claimed only by the registering process, stays `pending` (never
+      `failed`, never `running` on the other) while only the non-registering process runs, is
+      counted in `async_jobs{kind}` and `async_oldest_pending_age_seconds{kind}` meanwhile, and
+      the non-registering process starts, logs the kind at warning, and serves everything else.
+- [ ] AC27: `Enqueue` under a request records that request's `traceparent` as `trace_context`
+      and its id as `request_id` on the `Job`, the scheduler's enqueues leave both null, the
+      job's span carries a link to the enqueuing span and is not its child, and an audit line
+      emitted from the job carries the originating `request_id` (`observability.md` AC16).
+- [ ] AC28: Deleting a repository, with a pending, a retrying and a running job naming it and a
+      `retention.pass` schedule scoped to it, moves the pending and retrying jobs to
+      `cancelled` in the deletion transaction (never run afterwards), delivers the cooperative
+      cancel to the running one, which ends `cancelled` with nothing committed at its next
+      `Checkpoint` or `Finish` because the write transaction is refused on the deleted state,
+      disables the schedule so no later tick enqueues for it, keeps the grace hold until the
+      running job is terminal and releases it then (`storage-and-gc.md` AC23), and the
+      deletion request returns without waiting for the running job (`repository-lifecycle.md`
+      AC21).
 
 ## Test Plan
 
@@ -757,20 +892,22 @@ Every acceptance criterion maps to at least one test.
 | AC10 | integration + conformance | `internal/async/pause_test.go` (multi-process pause visibility); `conformance/ansible/deferred_publish_test.go` (`script` pauses, polls, resumes) |
 | AC11 | integration | `internal/index/virtual_merge_test.go` on the production runner (coalescing count, running-then-write, staleness bound and breach alert, no merge on a request goroutine) |
 | AC12 | property | `internal/async/property_test.go` (exclusive-key invariant, fairness, liveness) |
-| AC13 | integration + property | `internal/storage/pending_operation_gc_test.go` (forced sweep past grace with a pending and a retrying import); `internal/storage/gc_property_test.go` (queued job in the operation set) |
-| AC14 | integration | `internal/async/scheduler_test.go` under `testing/synctest` (leader death and election, missed periods, restart mid-schedule, offline flag); `internal/signing/cadence_test.go` (expiry-derived next run) |
+| AC13 | integration + property | `internal/storage/pending_operation_gc_test.go` (forced sweep past grace with a pending and a retrying import; shared with `storage-and-gc.md` AC23); `internal/storage/gc_property_test.go` (queued job in the operation set) |
+| AC14 | integration | `internal/async/scheduler_test.go` under `testing/synctest` (leader death and election through `LockScheduler`, `scheduler: false` never elected, leader-only gauge export through `telemetry.NewTestRecorder`, missed periods, per-source and per-link schedules, restart mid-schedule, `proxy.offline` flag); `internal/db/lock/singleton_test.go` (shared with `deployment.md` AC19: holder kill and hand-over bound); `internal/signing/cadence_test.go` (expiry-derived next run); `internal/policy/feed_sync_test.go` and `internal/replication/sync_job_test.go` (the owning specs' schedule shapes) |
 | AC15 | integration + fault injection | `internal/verify/trust_revision_test.go` on the production runner (kill mid-page, rescue, no double recompute, kind limit) |
 | AC16 | architecture test | `internal/async/arch_test.go` (import graph); `internal/async/goroutine_test.go` (AST scan with allowlist and violation fixture) |
 | AC17 | architecture test + integration | `internal/async/arch_test.go`; `internal/async/crash_test.go` (same cases over `policy.scan` of a cached digest, `verify.reevaluate` of a proxied verdict, `index.merge` over remote members) |
 | AC18 | integration | `internal/async/prune_test.go` (injected clock; job and `Operation` retention ordering) |
 | AC19 | architecture test | `internal/async/arch_test.go` (one claim query site; no DDL or queue store outside the shared schema) |
-| AC20 | integration | `internal/async/metrics_test.go` (each metric and alert under a driven scenario) |
+| AC20 | integration | `internal/async/metrics_test.go` (each series by catalogue name and each alert once under a driven scenario, through `telemetry.NewTestRecorder`; the `observability.md` AC6 and AC18 rows for this package); `internal/index/virtual_merge_test.go` (the staleness-breach counter and alert) |
 | AC21 | integration | `internal/manage/jobs_routes_test.go` (admin and non-admin, OpenAPI presence, audit line) |
-| AC22 | unit + integration | `internal/async/config_test.go` (defaults, env binding, typed struct, `workers: 0` behaviour, retention refusal) |
+| AC22 | unit + integration + script | `internal/async/config_test.go` (defaults, env binding, typed struct, `workers: 0` behaviour, retention refusal); `scripts/check-config-keys.js` under `make verify` (`deployment.md`'s two-way check over this table) |
 | AC23 | integration | `internal/async/shutdown_test.go` under `testing/synctest` (drain, late job reclaimed, no leaked goroutine) |
 | AC24 | property | `internal/async/property_test.go`, run by `make verify` |
 | AC25 | benchmark | `internal/async/bench_test.go` (latency, throughput, dead tuples), gated in CI |
-| AC26 | unit | `internal/async/runner_test.go` (unregistered kind at `Start`) |
+| AC26 | integration | `internal/async/unknown_kind_test.go` (two processes with different registries: claim set, `pending` retained, gauges, warning log through `telemetry.NewTestRecorder`, `Start` succeeds) |
+| AC27 | integration | `internal/async/trace_link_test.go` (enqueue under a request and from the scheduler, span link, audit `request_id`; the `observability.md` AC16 row) |
+| AC28 | integration + fault injection | `internal/repository/delete_test.go` (shared with `repository-lifecycle.md` AC21: pending, retrying and running jobs, the scoped schedule, no wait); `internal/async/cancel_test.go` (`CancelByRepository` inside a transaction; running job refused at `Checkpoint` and `Finish` on the deleted state; grace hold released at terminal, shared with `storage-and-gc.md` AC23) |
 
 ## Implementation Phases
 
@@ -780,23 +917,26 @@ the deferred-operation consumer (Phase 4) at step 6a before Ansible collections;
 consumers with their own specs' steps (the resolved build-placement question below).
 
 ### Phase 1: The queue core
-- `Job` record in the shared schema (the `data-model.md` amendment landed first), transactional
-  `Enqueue`, SKIP LOCKED claim with lease and token, heartbeat, fenced `Finish` and
-  `Checkpoint`, retry classes and backoff, lease-expiry rescue, pruning (AC1 to AC4, AC7, AC18,
-  AC26)
+- `Job` record in the shared schema (`data-model.md` AC41, landed), transactional `Enqueue`
+  with `trace_context` and `request_id`, SKIP LOCKED claim over the registered kinds with lease
+  and token, heartbeat, fenced `Finish` and `Checkpoint`, retry classes and backoff,
+  lease-expiry rescue, pruning, unknown kinds skipped (AC1 to AC4, AC7, AC18, AC26, AC27)
 - `Runner` with bounded workers, `NOTIFY` wake-up and poll fallback, drain on shutdown (AC23)
 - Architecture tests and the goroutine scan (AC16, AC19), the fence and crash suites (AC3, AC6)
-- Configuration (AC22)
+- Configuration under `scripts/check-config-keys.js` (AC22)
 
 ### Phase 2: Keys, cancellation and operator controls
 - `coalesce_key` and `exclusive_key` indexes and claim behaviour (AC11's queue half, AC12)
-- Cancel, pause and resume with database-held state and `NOTIFY async_cancel` (AC9, AC10)
-- The admin routes through `management-api.md`'s mount (AC21), metrics and alerts (AC20)
+- Cancel, pause and resume with database-held state and `NOTIFY async_cancel` (AC9, AC10);
+  `CancelByRepository` (AC28) for `repository-lifecycle.md`'s deletion transaction
+- The admin routes through `management-api.md`'s mount (AC21), metrics and alerts under
+  `observability.md`'s names (AC20)
 - The property suite and benchmarks (AC24, AC25)
 
 ### Phase 3: The scheduler
-- `Schedule` record, leader election, tick with coalesced catch-up, offline flag, kind-derived
-  next run (AC14)
+- `Schedule` record, leader election through `internal/db/lock.LockScheduler`, the leader-only
+  gauge collector, tick with coalesced catch-up, the `proxy.offline` flag, kind-derived next
+  run, repository-scoped schedules disabled at deletion (AC14, AC28's schedule half)
 - The first schedules: `storage.sweep`, `storage.orphan_scan`, `storage.prune` (mechanics
   unchanged, `storage-and-gc.md`), `retention.pass`
 
@@ -804,15 +944,15 @@ consumers with their own specs' steps (the resolved build-placement question bel
 - `manage.apply` worker in `internal/manage`: paired transitions, `Apply` inside `Finish`,
   permanent-failure mapping to the `Operation` result document, idempotency semantics (AC5,
   AC8 for this kind)
-- The repository grace hold, with `storage-and-gc.md`'s amendment (AC13)
+- The repository grace hold, `storage-and-gc.md` AC23's sweep-side half (AC13)
 - The Galaxy conformance cases with pause-based hold (AC10)
 
 ### Phase 5: Sibling consumers as their steps arrive
-- `policy.scan`, `policy.feed_sync` (step 4b, with `supply-chain-policy.md`);
+- `policy.scan`, `policy.feed_sync` per source (step 4b, with `supply-chain-policy.md`);
   `verify.reevaluate`, `verify.tuf_refresh`, `verify.revocation_refresh` (step 4b, AC15);
   `index.merge` and `signing.resign` (step 7, AC11, AC14's cadence clause); `replication.sync`
-  (step 10). Each lands with its kind's row in `kinds_test.go` (AC8) and the proxied-path cases
-  where it has one (AC17)
+  per link (step 10). Each lands with its kind's row in `kinds_test.go` (AC8) and the
+  proxied-path cases where it has one (AC17)
 
 ## Tasks
 
@@ -820,9 +960,9 @@ Populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None open. Nine questions were written in decision shape and adopted under the owner's standing
-delegation; each is recorded below and folded through Scope, Design, the criteria and the Test
-Plan.
+None open. Ten questions were written in decision shape and adopted under the owner's standing
+delegation (nine at authoring, one at the 2026-09-28 reconciliation); each is recorded below
+and folded through Scope, Design, the criteria and the Test Plan.
 
 ### Resolved: one queue for every deferred and scheduled activity (was Q1)
 
@@ -1009,10 +1149,43 @@ this does not reverse one.
 
 **Why this is yours:** it edits the build order the charter fixes.
 
-Folded into Context, "Implementation Phases", and the `project-charter.md` consequence.
+Folded into Context, "Implementation Phases", and the `project-charter.md` consequence, which
+that spec applied on 2026-09-28 (its steps 4b and 6a, AC12).
+
+### Resolved: a job of an unknown kind is skipped, not refused (was Q10)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option A: the claim query names
+only the kinds this process has a registered worker for, so a job of a kind it does not know
+stays `pending` for a process that does; `Start` logs the unknown kinds at warning and starts;
+nothing fails the job. This replaces the authoring draft's AC26, which had `Start` refuse to run
+while the table held an unregistered kind.
+
+`deployment.md`'s rolling-upgrade rule ("old and new binaries coexist during the rollout ...
+a kind the old binary does not know is left unclaimed until the rollout finishes") and its
+rollback-by-redeploy rule both put two binaries with different kind registries on one table.
+Under the draft's AC26 the older binary would refuse to start the moment the newer one
+enqueued a new kind, which turns every rolling upgrade that adds a kind into an outage and
+every rollback into a database edit. What should a process do with a kind it cannot run?
+
+**Recommendation:** A. The claim query already filters by kind for pausing; adding the
+registered set to the same filter costs nothing, and "leave it for a process that can" is the
+only answer under which a mixed fleet keeps working in both directions.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Claim only registered kinds; unknown ones stay pending; warn at `Start`** (adopted) | Rolling upgrades and rollbacks work with no operator step; a job is never lost or failed for being new | A kind nobody will ever register ages silently unless watched: answered by the per-kind gauges and `ScheduleOverdue`, which is the shape the draft's AC26 wanted to prevent |
+| **B. Refuse to start (the draft's AC26)** | A misconfigured registry is loud at once | Every rolling upgrade that adds a kind stalls the old replicas; rollback needs the new kind's rows deleted by hand |
+| **C. Claim and fail the job `Permanent` with "unknown kind"** | The job is terminal quickly | A newer binary's job is destroyed by an older one during every rollout; `manage.apply` operations fail for the client for no reason of theirs |
+
+**Why this is yours:** it is the queue's behaviour under the deployment model the owner will
+run, and it retires a criterion this spec adopted the day before.
+
+Accepted cost: the silent-aging case, made visible by AC26's gauges and the warning log.
+Folded into "Claim: SKIP LOCKED plus a lease", "Package shape", AC26 and Phase 1.
 
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-27 | 998b03a | authoring pass: grounded first draft, not a review | Gathered the requirements `data-model.md` (the `Operation` entity, AC32, the non-root table's grace note), `management-api.md` (deferred kinds, 202 and poll, idempotency, `Operator` dispatch, retention keys), `signing-service.md` (merge contract, cadence re-sign, the goroutine exception), `artifact-verification.md` (re-evaluation worker, refreshes), `supply-chain-policy.md` (scans, retries, feed sync), `replication.md` (resumable transfers), `generic.md` (retention pass), `storage-and-gc.md` (sweep exclusivity, session grace hold), `write-triggered-services-prototype.md` (questions 4 to 6, AC8 to AC12) and the format specs placed on the step 6a subsystem, plus consequences items 3 (format-management fold), 2 and 14 (management-api), 15 (signing-service) and 9 (storage-and-gc). Grounded prior art fetched this run: River's docs (transactional enqueue, maintenance services, unique jobs, retries, cancellation) and brandur.org's argument, Pulp's `worker.py` (SKIP LOCKED claim, resource locking, wake-up and cancel channels, missing-worker rule), Harbor's jobservice README (kinds, statuses, retries, stop and cancel, limitations), Nexus's tasks page, Gitea's `[queue]` section, PostgreSQL's `SKIP LOCKED` documentation, AIP-151; Pulp's architecture page answered 403 and 404 and is recorded as silence beyond the source. Design: one PostgreSQL-backed queue with transactional enqueue, SKIP LOCKED claim, lease with fencing token, fenced transactional `Finish` carrying effect, `Operation` and job together, bounded retries, coalescing and exclusivity by partial unique index, cooperative cancel, pause and resume, a leader-elected scheduler with database-held schedules, a repository grace hold for unfinished jobs, and the enumerated crash-recovery table. Nine questions written in decision shape and adopted under the standing delegation. 26 criteria, each with a Test Plan row; `node scripts/check-spec.js` run against this file with zero failures. Stays draft; awaits an independent review. |
+| 2026-09-28 | 9ebf6e9 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. From `repository-lifecycle.md` (authoring item 12; its "Deletion" step 8 and AC21): a new bullet under "Cancellation, pause and resume" - the deletion transaction cancels every pending job naming the repository, requests cancel on running ones, disables the repository-scoped `Schedule`s, a job reaching `Checkpoint` or `Finish` on a deleted repository is refused by the write-transaction constructor and ends itself `cancelled`, the grace hold stands until terminal; `CancelByRepository(ctx, tx, repo)` added to the package shape as the one exported write path outside the package, with an enforcer row; AC28 added, its rows shared with that spec's AC21 and `storage-and-gc.md` AC23; `Schedule` gains an optional repository reference. From `deployment.md` (item 9): (a) unknown kinds skipped, not failed, which contradicted the draft's AC26 and is recorded as Q10, adopted under the standing delegation, with the claim query restricted to registered unpaused kinds, AC26 rewritten and Phase 1 following; (b) the leader lock is `internal/db/lock.LockScheduler` on a dedicated connection, with `deployment.md` AC19's enforcer cited (AC14, "The scheduler", "Package shape"); (c) no rename: the kind table now says why `verify.tuf_refresh`/`verify.revocation_refresh` (kinds) and `verify.sigstore.refresh`/`verify.revocation.refresh` (period keys) differ. From `observability.md` (item 8): the ten `async_*` series and the merge worker's breach counter by catalogue name, `JobFailed`, `ScheduleOverdue`, `VirtualMergeStalenessBreach` and `SchedulerLeaderless` through `telemetry.Alert` (AC20 rewritten), the leader-only state-gauge collector (AC14, its AC7), `trace_context` and `request_id` set at enqueue with a linked job span (the `Job` record, "Enqueue is transactional", AC27 added, its AC16 row). From the `data-model.md` reconciliation (item 2): `Job` and `Schedule` cited to "Jobs and schedules" and AC41, `cancelled` as admitted by AC32 and `management-api.md` AC16. From the `storage-and-gc.md` reconciliation (item 3): AC23 cited for the grace hold in Design, the enforcer table, AC13's row and Phase 4; the storage kinds run at the `gc.*_interval` keys with `LockSweep` as the second guard (its AC26). From the `supply-chain-policy.md` reconciliation (item 8): `policy.feed_sync` one schedule per source with exclusivity key `feed_sync:{source}`, the scan alert bound `policy.scan.unscanned_alert_after` (kind table, "The scheduler", AC14). From the `replication.md` reconciliation (item 7): `replication.sync` per link at `replication.sync_interval` or the link's own period, its AC23 cited. From the charter reconciliation (item 4): Context restated on the charter's step 4b queue core and step 6a deferred operation, "owed" dropped for `management-api.md`, `observability.md` and `deployment.md`. Context's sibling summaries rewritten to what each spec now says (`signing-service.md` AC19 and AC22 on the production runtime, `artifact-verification.md` on `async.kind_limits` with the `verify.workers` key retired under `deployment.md`'s was-Q11, `supply-chain-policy.md`'s `policy.scan` shape, `replication.md` AC23, `storage-and-gc.md` AC23 and AC26, plus new entries for `repository-lifecycle.md`, `observability.md` and `deployment.md`). The configuration table is in the three-column shape `scripts/check-config-keys.js` parses (AC22 extended). Already done at authoring: management-api items 2 and 14, signing-service item 15, debian item 20's deferred regeneration, format-management item 3's consistency note. 28 criteria, each with a Test Plan row; ten resolved questions, zero open. `node scripts/check-spec.js` on this file: zero failures. Stays draft pending a gate review. |
