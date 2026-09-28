@@ -1,11 +1,12 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-28 at 95346bd with the foundation wave's step-3 leftovers (not a review): GET /api/v1/session answers a caller with no session 200 with principal_kind anonymous and no grants, never 401 (management-api AC28; Design and AC22), stated as consistent with AC12's no-downgrade rule. Earlier, 2026-09-27 at a72f8ef, reconciled with the foundation authoring wave (not a review): the client table grew fourteen rows from captured traffic (dotnet, gradle/sbt/lein, composer, the conda family, rattler-build, R/renv/pak, terraform/tofu, dnf/dnf5/zypper, knife, berks/chef-cli, puppet/r10k, luarocks, ovsx and the editors, cabal/stack) and every presentation form they need is consolidated in one Design table (five Authorization schemes, three vendor headers, a query parameter, three path segments, the download capability, the signed request) with route-scoping declared by the handler; Q24 adopted under the standing delegation: an off-route presentation is an authentication failure, never anonymous. The token service gains Terraform's download capability as its second product (AC33); Chef's RSA-signed writes are verified against registered public keys with the standard library (AC34); AC7, AC17, AC22, AC27 and AC31 extended; AC10's procedure lists the review's full surface across credential-management, signing-service and upstream-adapters. New Configuration subsection tables the auth.* keys. Earlier the same day at 94f86f3: Q23 adopted (the descriptor kind, AC32). 34 criteria, zero open questions; stays draft pending a gate review. AC10 still requires external review of the implementation regardless of spec status."
+status_description: "Reconciled 2026-09-28 at 173da1b in the closing sweep of step 3, on Opus (not a review): the client table gained seventeen rows from the format batches, each checked against its format spec's own capture (go, apt, dput, conan, apk, pacman, mix/rebar3, cpanm, cpm/carton, CPAN.pm, cpan-upload, julia Pkg, SwiftPM, dart pub, vagrant, opam, brew), and the helm row was corrected from its captures (Basic only, preemptive, scheme-and-host confined; Bearer only from cm-push); the Bearer, Basic and scheme-less rows name every client that needs them; the uniform challenge names Swift, pub and Vagrant as declaring Bearer; Pattern scopes gained OCI's {image}/{tag} object and repository-less GET /v2/ descriptor authorized by authentication alone (AC32 extended), Galaxy discovery as a descriptor, and the descriptor and enumerating-none examples from the format specs. Q25 raised and adopted under the standing delegation: Conan's token-exchange echo is written by the shared layer on a declared route, never by the handler (AC35). No new presentation form; AC10 untouched, its review list extended. 35 criteria, zero open questions; stays draft pending a gate review and a Fable recheck of Q25. Earlier, 2026-09-28 at 95346bd: GET /api/v1/session answers an anonymous caller 200 (AC22). Earlier, 2026-09-27 at a72f8ef: fourteen client rows, the presentation-form table, Q24, AC33 and AC34. AC10 still requires external review of the implementation regardless of spec status."
 description: "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present."
 author: michielvha
 goal: "Give every format one auth model that real package clients can use, while keeping user passwords, MFA, account recovery and federation outside our code."
 priority: "critical"
 issue: 13
+fable_recheck: "closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q25 (the shared layer writes Conan's token-exchange echo on a declared route, AC35) and added the repository-less descriptor rule for OCI's GET /v2/ (AC32); both need a Fable recheck"
 created: 2026-09-22
 covers:
   - "internal/auth/**"
@@ -36,7 +37,7 @@ shared concern handlers must not implement.
 | `mvn` | HTTP Basic from `settings.xml`, in two modes: every read goes out anonymous and is retried with Basic after a `401` carrying `WWW-Authenticate: Basic`; every `PUT` carries Basic **preemptively**, before any challenge. Maven and Gradle print only the status line on a refusal (captured 2026-09-26 from Maven 3.8.8 and 3.9.11; `formats/maven.md`, "Authentication: Basic after a challenge, preemptive on PUT") |
 | `gradle` / `sbt` / `lein` | HTTP Basic, the same two modes as `mvn`: challenged on reads, preemptive on `PUT`, and preemptive on reads too when Gradle is given an explicit `BasicAuthentication` scheme. The credential comes from `credentials {}` (Gradle), `Credentials(...)` (sbt, through Coursier) and the `settings.xml` server password Leiningen reads through `:repositories` (captured 2026-09-26 from Gradle 8.14.5 and 9.1.0, sbt 1.13.0 and Leiningen 2.13.0; `formats/maven.md`) |
 | `dotnet` (NuGet) | Two forms. `X-NuGet-ApiKey: <token>` on the `PackagePublish` routes only, and only when `--api-key` was given (no header at all otherwise). Every route, publish included, goes out anonymous first and is retried with `Authorization: Basic` (token as the password, username not an input) after a `401` carrying `WWW-Authenticate: Basic`; a challenged push therefore arrives a second time carrying **both** headers, and a rejected retry is repeated a dozen times before `NU1301` (captured 2026-09-26 from NuGet 6.3.4 and 6.14.3; `formats/nuget.md`, "Authentication: an API key header, and Basic after a challenge") |
-| `helm` | Bearer or Basic depending on the endpoint |
+| `helm` | Classic repositories: HTTP Basic only, from `helm repo add --username --password`, sent **preemptively** on the index, chart and provenance fetches and **only to the repository's own scheme and host**: a chart URL on a second host receives no `Authorization` unless the repository was added with `--pass-credentials` (`passCredentialsAll \|\| (same scheme && same host)` in `httpgetter.go`). `helm repo add` has no bearer option; Bearer reaches the classic path only from the `cm-push` plugin's `--access-token`. `helm registry login` on the OCI path is the `docker` flow above (captured from Helm 3.20.0, 3.22.0 and 4.3.0 and `helm cm-push` 0.11.1; `formats/helm.md`, "The wire surface" and "Conformance, auth and the corpus") |
 | `ansible-galaxy` | `Authorization: Token <token>` on every request, including discovery; `Bearer` only under the separate Keycloak `auth_url` flow, Basic only with a configured username/password (captured 2026-09-25 from ansible-core 2.18.18rc1; see `formats/ansible-collections.md`, "The wire contract") |
 | `cargo` | The bare token string as the whole `Authorization` value, with no scheme. Sent on every authenticated web API request (publish, yank, unyank, owners). Sent on index and download requests only after the registry has signalled `auth-required`: a credential-less `config.json` fetch answered 401 with the challenge `WWW-Authenticate: Cargo login_url="<url>"`, then a retried fetch returning `auth-required: true`; only cargo 1.74 and later perform that retry. **Never sent on search**, even with a token configured, so search cannot authenticate (captured 2026-09-26 from cargo 1.70.0 and 1.98.1 against a logging stub; see `formats/cargo.md`, "Authentication: a bare token, and the challenge that unlocks it") |
 | `composer` | `Authorization: Basic` (token as the password) from `http-basic`, or `Authorization: Bearer` from `bearer`, in `auth.json` or `COMPOSER_AUTH`, sent **preemptively on every request** to the origin. The credential is keyed by origin **including the port**: a credential keyed by the bare host is silently not sent to a port-qualified origin. Non-interactively there is no challenge handling; a `401` ends the run (captured 2026-09-26 from Composer 2.10.3 and 2.2.30; `formats/composer.md`, "Authentication: preemptive Basic or Bearer, keyed by origin with its port") |
@@ -51,6 +52,23 @@ shared concern handlers must not implement.
 | `luarocks` | Downloads: Basic from userinfo or `.netrc`, preemptive on the curl path and only after a challenge on the wget path. Uploads: the API key as a **URL path segment**, `{server}/api/1/{key}/{route}`, and nowhere else; without LuaSec, 3.13.0 rewrites an `https://` upload server to `http://` and sends the key in the clear (captured 2026-09-26 from LuaRocks 3.13.0 and 3.8.0; `formats/luarocks.md`, "Uploads: a registry token as the {key} path segment") |
 | `ovsx` / VS Code-family editors (Open VSX) | Released ovsx sends the token **only as the `token` query parameter** on the publish routes (`POST .../api/-/publish?token=...`), never on reads; the repository head sends `Authorization: Bearer` to a registry reporting 1.3.0 or later; the reference also accepts `X-OpenVSX-Token`. No editor and no released ovsx read sends any credential: editors drop URL credentials and read a Basic challenge as "not found", so private reads use a `pull`-only token as a path segment under the format's mount, `{base}/-/t/{token}/...` (captured 2026-09-26 from ovsx 0.10.12 and 1.2.0, VSCodium 1.99 and 1.135 and code-server 4.139.1; `formats/openvsx.md`, "Authentication: the token in the query string, and reads that cannot authenticate") |
 | `cabal` / `stack` (Hackage) | cabal 3.16.1.0 downloads: every request goes out bare and is repeated with Basic after a `401` carrying `WWW-Authenticate: Basic` (curl `--anyauth`), and over plain HTTP it forces Digest and never sends Basic; `cabal upload --token` sends **`Authorization: X-ApiKey {token}`** preemptively, an `Authorization` scheme rather than a bare header; `--username` and `--password` answer a Basic challenge. cabal 3.8.1.0 sends no usable credential (Digest only). Stack 3.11.1 and 2.9.1 send userinfo as preemptive Basic on every request (captured 2026-09-26; `formats/hackage.md`) |
+| `go` | HTTP Basic from `.netrc` (the default `GOAUTH=netrc`; any username, the token as the password; a `machine` entry scopes it to the host, never a path) or from userinfo in the `GOPROXY` URL; or the headers a `GOAUTH` command prints per URL prefix (Go 1.24 and later), where `Authorization: Bearer <token>` is the one this registry accepts, and on a 4xx the command is re-run once with the URL and the response. Every form is **HTTPS only**: over `http://` the client sent no header at all with a matching `.netrc` or `GOAUTH`, and refused userinfo outright ("refusing to pass credentials to insecure URL") (observed on go1.25.5 against a probe, with `go help goauth`; `formats/go-modules.md`, "Non-interactive client auth") |
+| `apt` | HTTP Basic from a netrc-format entry in `/etc/apt/auth.conf.d/*.conf` or from userinfo in the `URIs:` value, sent **preemptively on every request** once an entry matches, with no challenge round. Over plain HTTP apt uses only an entry annotated `http://`, and otherwise warns "Credentials for ... match, but the protocol is not encrypted. Annotate with http:// to use." and takes the `401`. A `401` or `403` on `InRelease` is printed as "is not signed", which names the wrong cause (captured from apt 2.4.14, 2.6.1, 2.8.3 and 3.0.3; `formats/debian.md`, "Authentication: Basic, preemptive, as apt sends it") |
+| `dput` (Debian uploads) | One `PUT` per file, the `.changes` last. The first goes out bare; a `401` carrying `WWW-Authenticate: Basic` makes dput prompt for the password (so non-interactive uploads configure `login` and feed it the token) and repeat with Basic, after which every later file carries it preemptively. dput 1.2.4 drops the port from the upload host and reaches only the scheme's default port (captured from dput 1.1.3 and 1.2.4; `formats/debian.md`, "The wire surface, as captured") |
+| `conan` | A token exchange. A request goes out anonymous first; on a `401` the client sends HTTP Basic (any username, the registry token as the password) to `GET /v2/users/authenticate` (Conan 1.66.0: `/v1/users/authenticate`), which answers `200` with **the same token** as a `text/plain` body (the shared layer writes it: "One route echoes a credential" below), and every later request to that remote carries it as `Authorization: Bearer`. The client stores the token in plaintext in `$CONAN_HOME/.conan.db` and parses no `WWW-Authenticate` value; a valid token lacking `pull` answers `404` and the client silently tries its next remote (captured from Conan 2.32.0, 2.0.17 and 1.66.0; `formats/conan.md`, "Authentication: a token exchange that returns the token") |
+| `apk` | HTTP Basic in two modes: URL userinfo in the repository line **preemptively on every request**; `~/.netrc` (`machine {host} login __token__ password {token}`) and `HTTP_AUTH=basic:{realm}:{user}:{password}` **only after a `401` carrying `WWW-Authenticate: Basic`**, one retry per request, `HTTP_AUTH` being answered to any host that challenges because libfetch does not scope it by host. apk-tools 2.14.12's `apk policy` prints userinfo passwords in clear, and a `301` makes both lines print the redirect target with the password, which is why hosted routes never redirect; userinfo went over plain HTTP without complaint (captured from apk-tools 2.14 and 3.0; `formats/alpine.md`, "The wire surface, as captured" and "Authentication: preemptive userinfo, challenged netrc") |
+| `pacman` | HTTP Basic **only after a `401` carrying `WWW-Authenticate: Basic realm="..."`**, from URL userinfo in a `Server` line or from root's `~/.netrc`. Under Arch's pacman 7.1 configuration (`DownloadUser = alpm`) the privilege-dropped downloader cannot read root's `.netrc` and the request stays at `401`; a `Server` line with userinfo in a root-only file included from `pacman.conf` works on every pinned client, because pacman parses its configuration before dropping privileges. `pacman-conf` and `pacman --debug` print the password, and Basic went over plain HTTP without complaint (captured from pacman 7.1 and 6.0.2 on Arch Linux and 7.1 on Manjaro; `formats/arch.md`, "Authentication: challenged Basic, and where the credential may live") |
+| `mix` (Hex) / `rebar3` | The token string alone as the whole `Authorization` value, with no scheme, sent **preemptively**: on repository reads from `mix hex.repo add --auth-key` or rebar3's `repo_key` (or `HEX_REPOS_KEY`), on every package, tarball, docs and `public_key` request; on the API from `HEX_API_KEY` or the user-auth task. Neither parses a `WWW-Authenticate` value. Hex 2.5.1 exchanges a key for a hex.pm OAuth token whenever the repository is `hexpm` or an organization of it, and hangs against this registry, so a `hexpm`-named repository pointed here needs `mix hex.repo set hexpm --no-oauth-exchange`; under `HEX_MIRROR` (Hex) or `HEX_MIRROR_URL` (rebar3) neither client sends any key (captured from Hex 2.5.1 and 2.0.6 and rebar3 3.27.0; `formats/hex.md`, "Authentication: a bare token, on reads and on the API alike") |
+| `cpanm` | URL userinfo in `--mirror`, sent as Basic **only after a `401` carrying `WWW-Authenticate: Basic`** (its wget backend); a `401` without that header ends the run. No upload (captured from cpanm 1.7049 and 1.7044; `formats/cpan.md`, "Authentication") |
+| `cpm` / `carton` | URL userinfo in `--mirror` or the resolver URL (cpm) or in `PERL_CARTON_MIRROR` (Carton, through Menlo), sent as **preemptive** Basic. No upload (captured from cpm 1.1.5 and 0.997024 and Carton 1.0.35 and 1.0.34; `formats/cpan.md`, "Authentication") |
+| `cpan` (CPAN.pm) | URL userinfo in `urllist`: over HTTP, HTTP::Tiny sends **preemptive** Basic; over TLS both pinned lines fetch through wget, which sends it only after the challenge. The URL, password included, is printed on every "Fetching" line and stored in `~/.cpan/CPAN/MyConfig.pm`, so the recipe is a `pull`-only token (captured from CPAN.pm 2.38 and 2.22; `formats/cpan.md`, "Authentication") |
+| `cpan-upload` | **Preemptive** Basic, `-u` as the user and `-p` as the password: the registry token is the password and the user is free, which the publish binding reads as the author ID rather than as an authentication input (captured from cpan-upload 0.103019; `formats/cpan.md`, "Authentication") |
+| `julia` (Pkg) | `Authorization: Bearer` with the `access_token` from `{depot}/servers/{host}_{port}/auth.toml`, a file keyed by the server URL's host and port, never its path, so every repository on one host shares one token; sent only over `https://` or to a loopback host. Pkg reads no `WWW-Authenticate` value, prints no body and retries the listing four times, and on a server failure, a `401` included, it falls back silently to its origin for General unless its network is restricted. An `expires_at` in the file makes Pkg warn and keep sending; this registry offers no `refresh_url` (captured from Julia 1.10.12 (Pkg 1.10.0) and 1.13.0; `formats/julia.md`, "Authentication: a Bearer token from `auth.toml`") |
+| `swift` (SwiftPM) | Preemptive on every request to the host once configured, the archive and the publish included: `Authorization: Bearer` from `swift package-registry login --token` (or `--token-file`, or `SWIFTPM_REGISTRY_TOKEN` on 6.4 only), or Basic from `login --username --password`, a netrc entry whose `authentication` type is `basic`, or `SWIFTPM_REGISTRY_LOGIN` with `SWIFTPM_REGISTRY_PASSWORD` on 6.4 only. The credential is keyed per host (the `authentication` entry by host and port, netrc by host), so every repository on one host receives the same one, and 5.10 (6.1 by source) sends nothing without an `authentication` entry for the host in `registries.json`. A `401` carrying `WWW-Authenticate: Basic` **hangs 5.10 and 6.1 until killed**, while a Bearer challenge or none fails at once, so this format declares a Bearer challenge (captured from SwiftPM 5.10.1 and 6.4.0, with 6.1.3 corroborating; `formats/swift.md`, "Authentication: per host, Basic or Bearer, and never a Basic challenge") |
+| `dart pub` | `Authorization: Bearer` from the store `dart pub token add <hosted-url>` writes (non-interactive with `--env-var NAME`), attached **only to URLs under the hosted-URL prefix**, compared lowercased and slash-normalised, so every URL the registry hands the client lives under it. The client **deletes its stored token on any `401`** under that URL, so a valid token is never answered `401`; it refuses to store a token outside `^[a-zA-Z0-9._~+/=-]+$` (the `swr_` shape is inside it) and a plain-`http` hosted URL unless the host is loopback. The format declares the repository specification's mandated `WWW-Authenticate: Bearer realm="pub", message="..."`, whose message the client prints (grounded in the `dart-lang/pub` client source and the hosted repository specification v2, **not yet in captured traffic**, which `formats/pub.md` AC4 supplies; `formats/pub.md`, "Authentication: the token, the challenge, and the deletion trap") |
+| `vagrant` | Preemptive and never challenged. `Authorization: Bearer` from `VAGRANT_CLOUD_TOKEN` (else the token `vagrant cloud auth login` stored, else `ATLAS_TOKEN`) on the catalog `HEAD` and `GET` and the box `GET` whenever the URL's **host** equals `VAGRANT_SERVER_URL`'s, scheme and port ignored, so over plain HTTP as readily as TLS, and to a cross-host redirect target under `--location-trusted`; one token therefore reaches every repository on the host. URL userinfo is sent as Basic on the catalog requests only, never to the box URLs the catalog names, and is stored in plaintext as `metadata_url`. `VAGRANT_SERVER_ACCESS_TOKEN_BY_URL` sends `?access_token=<token>` and no header, which is not a presentation form here ("A parameter that is not a form" below) (captured from Vagrant 2.3.7 and 2.4.9; `formats/vagrant.md`, "Authentication: a Bearer the host decides") |
+| `opam` | No credential mechanism of its own: URL userinfo in the repository URL is sent as HTTP Basic **preemptively** on the index and every cache request, with no challenge, because the download tool is curl and the cache URL is built from the repository URL. Both clients print the token (in "retrieved ..." lines, `opam repository list` and "no changes from ...") and write it to `repo/repos-config` and the state cache, so the recipe is a `pull`-only token; the rewritten absolute source URL is fetched with no credential, which is why the served `repo` file keeps `archive-mirrors: "cache"` (captured from opam 2.1.6 and 2.6.0; `formats/opam.md`, "Authentication: Basic from URL userinfo") |
+| `brew` (Homebrew) | On the OCI-shaped routes under `HOMEBREW_ARTIFACT_DOMAIN`: `Bearer {HOMEBREW_DOCKER_REGISTRY_TOKEN}`, else `Basic {HOMEBREW_DOCKER_REGISTRY_BASIC_AUTH_TOKEN}`, else nothing. On a bottle manifest under `HOMEBREW_BOTTLE_DOMAIN`, 7.0.6 sends the same header or else the placeholder `Bearer QQ==` (nothing with `HOMEBREW_DOCKER_REGISTRY_BASIC_AUTH_TOKEN=none`), an invalid credential in a recognised form, answered `401` and never anonymous, with no special case. Flat routes, a tap's `root_url` and the API routes never carry a header; a netrc credential reaches them only when `HOMEBREW_CURLRC` names a curl config with `netrc-file`, as preemptive Basic, because brew's curl runs with `--disable`. Nothing else is sent, in answer to a challenge or otherwise (captured from brew 7.0.6 and 4.6.20; `formats/homebrew.md`, "Authentication") |
 
 No identity provider solves this, Zitadel included. It is not an IdP shortcoming: it is a
 protocol requirement of 33 separate client tools. **Registry tokens must be issued and verified
@@ -58,10 +76,12 @@ by us regardless of which IdP handles humans.**
 
 Per the constitution, the client is the specification and this table is working knowledge, not
 ground truth: each row must be confirmed against captured traffic from the real client before
-that format's auth conformance cases are written. The `helm` row is the least certain, since
-that ecosystem has changed header conventions across versions; every row that names a capture
-date and a format spec is grounded in captured traffic rather than recollection, and the `npm`
-and `pip` rows await theirs. The table is the input to the presentation-form table in Design
+that format's auth conformance cases are written. Every row that names its captured client
+versions (or a capture date) and a format spec is grounded in captured traffic rather than
+recollection, the `helm` row included since `formats/helm.md`'s captures replaced the
+"Bearer or Basic depending on the endpoint" guess it once carried. The `npm` and `pip` rows
+await their captures; the `dart pub` row is grounded in the client's source rather than its
+traffic, and says so; the `go` row in a probe of go1.25.5. The table is the input to the presentation-form table in Design
 (the machine surface): every form a row names appears there, and a form appears there only
 because a row needs it.
 
@@ -256,10 +276,10 @@ Q24, states how and what an off-route presentation means).
 
 | Form | Where the token sits | Accepted on | Needed by |
 |---|---|---|---|
-| `Bearer` | `Authorization: Bearer <token>` | universal | npm, helm, terraform and tofu, composer, puppet, r10k, mamba and pixi, rattler-build, ovsx head |
-| Basic password | `Authorization: Basic`, the token as the password, the username ignored; URL userinfo arrives in this form | universal | pip, twine, mvn, gradle, sbt, lein, dotnet, composer, conda family, R, renv, pak, dnf, zypper, knife, berks, luarocks, stack, cabal 3.16 |
+| `Bearer` | `Authorization: Bearer <token>` | universal | npm, helm (`cm-push --access-token` only), terraform and tofu, composer, puppet, r10k, mamba and pixi, rattler-build, ovsx head, go (a `GOAUTH` command), conan (after its exchange), julia Pkg, SwiftPM, dart pub, vagrant, brew |
+| Basic password | `Authorization: Basic`, the token as the password, the username ignored; URL userinfo arrives in this form | universal | pip, twine, mvn, gradle, sbt, lein, dotnet, composer, conda family, R, renv, pak, dnf, zypper, knife, berks, luarocks, stack, cabal 3.16, helm (classic repositories), go (`.netrc`, `GOPROXY` userinfo), apt, dput, conan (at its exchange), apk, pacman, cpanm, cpm, Carton, CPAN.pm, cpan-upload, SwiftPM, vagrant (catalog userinfo), opam, brew |
 | `Token` | `Authorization: Token <token>` | universal | ansible-galaxy |
-| scheme-less | the whole `Authorization` value is the token | universal | cargo, r10k with a non-hex token |
+| scheme-less | the whole `Authorization` value is the token | universal | cargo, r10k with a non-hex token, mix, rebar3 |
 | `X-ApiKey` scheme | `Authorization: X-ApiKey <token>` | universal | cabal 3.16 `upload --token` (an `Authorization` scheme in the capture, not a bare header) |
 | `X-NuGet-ApiKey` | a bare request header | route-scoped: NuGet's `PackagePublish` routes | dotnet |
 | `X-Jfrog-Art-Api` | a bare request header | route-scoped: Chef's read routes (universe, version documents, downloads) | berks and chef-cli with the `artifactory` source |
@@ -294,6 +314,29 @@ per format:
   refused before lookup exactly as a Bearer would be (AC27). A credential in a URL is the
   hardest case, because it also lands in client output, caches and the conformance corpus;
   `conformance-harness.md` AC13's redaction rule names each URL-borne form.
+
+**One route echoes a credential, and the shared layer writes it** (the resolved exchange-echo
+decision below, was Q25). Conan's `users/authenticate` exchange takes the registry token as the
+Basic password and answers `200` with that same token as its `text/plain` body
+(`formats/conan.md`, its resolved token-exchange decision, was Q6), which the "handler never
+reads a credential" rule above forbids a handler to produce. So the handler declares the route as
+an **exchange-echo route** beside its route-to-scope mapping, and the shared layer answers it:
+it verifies the Basic password and authorizes the route's declared scope exactly as for any
+request (Conan reports it a `pull` descriptor), then writes `200`, `Content-Type: text/plain`,
+`Cache-Control: no-store` and the verified value as the body, marked secret like every extracted
+value; a failed verification is the ordinary `401`, never anonymous, and a token lacking `pull`
+is the existence rule's `404`. The handler never runs for that route and never sees the value.
+No other format declares one, and a new one is a row here inside AC10's review scope. AC35
+asserts it.
+
+**A parameter that is not a form is not a credential, and is still redacted.** Vagrant's
+`VAGRANT_SERVER_ACCESS_TOKEN_BY_URL` mode sends `?access_token=<token>` and no header. The
+parameter is not a row of the table on any route, so the request is the credential-less request
+it presents itself as and is answered as such (`formats/vagrant.md`, "Authentication: a Bearer
+the host decides"); its value, which is a registry token, still never reaches output, because
+the request logger never records a query string and `telemetry.RedactURL` replaces the
+`access_token` value in any logged URL (`observability.md`, "Redaction", its AC9), and the
+conformance corpus redacts it under `conformance-harness.md` AC13.
 
 **A token's scopes bind to one repository by default** (the resolved multi-repository-token
 decision below). It may carry several actions on that repository, each optionally narrowed by a
@@ -496,12 +539,15 @@ a legitimate user with a typo is told "not found" when the real problem is permi
 
 **A credential-less request is challenged, and the challenge is uniform.** A request presenting
 no credential to a repository that is not anonymously readable answers `401` with the
-`WWW-Authenticate` challenge the format declares (`Basic realm="..."` for most, `Bearer` for
-OCI and Open VSX, Cargo's `login_url` form), byte-identical for a private, a missing and someone
+`WWW-Authenticate` challenge the format declares (`Basic realm="..."` for most; `Bearer` for
+OCI, Open VSX, Swift, pub and Vagrant, Swift's because a Basic challenge hangs SwiftPM 5.10 and
+6.1 until killed and pub's because its repository specification mandates `Bearer realm="pub",
+message="..."`; Cargo's `login_url` form), byte-identical for a private, a missing and someone
 else's repository, so the challenge is not an existence oracle either (AC17). The challenge is
-not decoration: zypper, NuGet, Maven and Gradle reads, pak and cabal 3.16 send **nothing** until
-a `401` carrying `WWW-Authenticate: Basic` arrives, so a format whose handler omitted the
-challenge would lock those clients out while passing every credentialed case. Which challenge a
+not decoration: zypper, NuGet, Maven and Gradle reads, pak, cabal 3.16, pacman, apk's `.netrc`
+and `HTTP_AUTH`, cpanm and CPAN.pm's wget path, and dput send **nothing** until a `401` carrying
+`WWW-Authenticate: Basic` arrives, so a format whose handler omitted the challenge would lock
+those clients out while passing every credentialed case. Which challenge a
 format declares is format knowledge, recorded in its spec; that it is emitted identically is
 this spec's rule.
 
@@ -515,8 +561,10 @@ enforced (`format-handler-interface.md` AC7).
 **How the shared layer learns what it is authorizing:** each handler declares a route-to-scope
 mapping, from its own routes to a `Scope` - the repository, the action, and the object the
 request addresses - and the shared layer evaluates that mapping and enforces the result. Format
-knowledge stays in the format - including OCI's slash-bearing repository names under `/v2/`,
-which would otherwise put per-format URL grammar into security-critical shared code. The
+knowledge stays in the format - including where the repository ends inside a slash-bearing OCI
+name under `/v2/` (the first component is the repository and the rest is the image,
+`formats/oci.md`'s resolved name-split decision, was Q8), which would otherwise put per-format
+URL grammar into security-critical shared code. The
 addressed object is what pattern scopes match against; it entered the pinned `Scope` type
 (`format-handler-interface.md`, "The pinned method set") as an out-of-cycle amendment made for
 this spec's pattern-evaluation decision.
@@ -581,10 +629,10 @@ handler can parse its URL grammar. The object has one of four kinds:
 
 | Kind | Meaning | Example routes |
 |---|---|---|
-| named | the handler's canonical name for the finest named thing the route addresses | a generic artifact path; an OCI manifest by tag; an npm package name |
+| named | the handler's canonical name for the finest named thing the route addresses | a generic artifact path; an OCI manifest by tag, `{image}/{tag}`; an npm package name |
 | content-addressed | the route reads or writes content identified by digest, or an upload bound to a digest when it commits | an OCI blob, a manifest by digest, an upload session |
-| descriptor | the route serves a repository-wide document whose body carries no name, version or digest of any object the repository holds: protocol configuration, a discovery probe, a signing-key document, an index of metadata files named by checksum and type | Cargo's `config.json`; Conan's capability probe; RPM's `repomd.xml`, its signature and key document; zypper's `media.1/media` |
-| none | the route addresses the repository as a whole and its response can name objects, including every route that enumerates names | a generic listing; an OCI tag list or catalog; Helm's `index.yaml`; RPM's `primary` |
+| descriptor | the route serves a repository-wide document whose body carries no name, version or digest of any object the repository holds: protocol configuration, a discovery probe, a signing-key document, an index of metadata files named by checksum and type | Cargo's `config.json`; Conan's capability probe; RPM's `repomd.xml`, its signature and key document; zypper's `media.1/media`; Debian's `InRelease` and `signing-key.asc`; OCI's `GET /v2/`, which names no repository at all |
+| none | the route addresses the repository as a whole and its response can name objects, including every route that enumerates names | a generic listing; an OCI tag list or catalog; Helm's `index.yaml`; RPM's `primary`; Chef's universe; every LuaRocks manifest |
 
 The descriptor kind exists for one reason (the resolved name-free-document decision below, was
 Q23): several clients open every command with a repository-wide document that reveals nothing,
@@ -602,8 +650,10 @@ consumers show the shape a declaration takes:
   and artifact download, and the same for a publish, taking the object from the multipart file
   part's declared filename, which precedes the artifact bytes, and refusing an artifact whose
   `collection_info` disagrees with it so a mislabelled part cannot evade the pattern. An import
-  poll reports the object of the publish its task records, and discovery reports none. A
-  namespace is therefore granted by a pattern such as `alpha/**`.
+  poll reports the object of the publish its task records, and discovery reports a descriptor,
+  since its available-versions document names API versions and nothing the repository holds
+  (`formats/ansible-collections.md`, "Namespaces"). A namespace is therefore granted by a
+  pattern such as `alpha/**`.
 - **Cargo** (`formats/cargo.md`, "Addressed objects and pattern scopes") canonicalises the
   crate name to the **folded key** its model stores, lowercase with `_` replaced by `-`, never
   the registered spelling, because a pattern matches byte for byte and the folded key is
@@ -614,11 +664,19 @@ consumers show the shape a declaration takes:
   is a descriptor, and search is none.
 - **The name-free documents** every client reads first are descriptors, not none: Cargo's
   `config.json`, Conan's capability probe and user routes, RPM's `repomd.xml` with its signature
-  and key document, and zypper's `media.1/media` and `content` probes. The enumerating indexes
-  stay none: Helm's `index.yaml` lists every version of every chart, and RPM's `primary` lists
-  every package in the tree, so a patterned `pull` is refused them and helm, dnf and zypper do
-  not run under a patterned-only `pull` on those formats (the resolved name-free-document
-  decision below, was Q23).
+  and key document, and zypper's `media.1/media` and `content` probes. Each format declares its
+  own in its spec; further examples are Debian's `InRelease`, `Release`, `Release.gpg` and
+  `signing-key.asc` (the envelope names index files by path and digest, never a package),
+  Terraform's `/.well-known/terraform.json`, Hex's `public_key`, `installs/hex-1.x.csv` and its
+  identity routes `api/users/me` and `api/auth`, LuaRocks' `api/tool_version`, Composer's
+  `packages.json` on a remote (rendered with no package list), Galaxy's discovery, NuGet's service
+  index, Swift's `availability` and login routes, and OCI's `GET /v2/`. The enumerating indexes
+  stay none: Helm's `index.yaml` lists every version of every chart, RPM's `primary` every
+  package in the tree, Debian's `Packages` and `Sources` (by path or by hash) every package of a
+  component, Chef's universe and every LuaRocks manifest every name, so a patterned `pull` is
+  refused them and helm, dnf, zypper, apt, Berkshelf, chef-cli and luarocks do not resolve under a
+  patterned-only `pull` on those formats (the resolved name-free-document decision below, was
+  Q23).
 
 **How a patterned scope evaluates** (the resolved requests-naming-no-object decision below). A
 scope with no pattern authorizes its action on every request to its repository, whatever the
@@ -640,6 +698,20 @@ Conan's probe, and reaches RPM's `repomd.xml`; it is still refused Helm's `index
 `primary`, Conan's search and every other enumerating document, so helm, dnf and zypper remain
 unrunnable under a patterned-only `pull`, and the standing recipe for those formats stays an
 unpatterned `pull` beside a patterned `push` and `delete`.
+
+**A descriptor that names no repository** is authorized by authentication alone. Every other
+object is evaluated against a scope on the repository the request addresses; OCI's `GET /v2/`,
+the distribution specification's version probe, addresses none, because under
+`formats/oci.md`'s name split the repository is the first component of a `<name>` the probe does
+not carry. It is declared a descriptor with an empty repository (`formats/oci.md`, "Addressed
+objects and pattern scopes"), and the authorizer answers it for **any verified credential**,
+whatever repositories, actions and patterns it holds; a credential-less request receives the
+format's challenge, and a credential that fails verification is rejected, never anonymous
+(AC12). It reveals nothing a scope protects: its body is empty, and whether a credential is
+valid is what every `401` already tells its presenter. Only a descriptor may name no
+repository; a named, content-addressed or none object reported without one is denied as
+unauthorized, the interface's settled failure mode for a request its mapping cannot classify.
+AC32 asserts both.
 
 The content-addressed allowance is the accepted cost. Without it a tag-scoped token could not
 pull the blobs its own tag references, and a multi-architecture pull resolves child manifests
@@ -790,7 +862,9 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
       presentation form the Design table lists** (header, Basic, query parameter, each path
       segment, the capability, Chef's signed headers) and scans the emitted output of each - a
       request logger that echoes Authorization material or the request path leaks on the success
-      path, which a failed-path-only scan never sees; and the verifier calls
+      path, which a failed-path-only scan never sees; a registry token carried in a query
+      parameter that is no form (Vagrant's `access_token`) is answered as a credential-less
+      request and is absent from the same output; and the verifier calls
       `telemetry.MarkSecret` on every extracted credential before any other use, asserted by a
       test that fails when a form's extraction skips the call. The single exception is the
       first-start local admin credential (AC15), emitted through `telemetry.Disclose` from its
@@ -919,7 +993,12 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
       token is refused Helm's `index.yaml` and RPM's `primary`, so `helm repo add` and a dnf
       refresh fail under it; and for every route a handler reports as a descriptor, the
       sentinel test finds no seeded object name, version or digest in the response body, a
-      route with any sentinel present failing the handler's object table.
+      route with any sentinel present failing the handler's object table; and a descriptor
+      reported with no repository (OCI's `GET /v2/`) is authorized for any verified credential
+      whatever its scopes, a token holding only a patterned `pull` on one repository included,
+      answers a credential-less request with the format's challenge and rejects a failing
+      credential with an authentication error, never anonymous, while a named,
+      content-addressed or none object reported with no repository is denied as unauthorized.
 - [ ] AC33: A download capability minted for an authenticated Terraform metadata response is
       signed with the token service's configured algorithm and `kid`-selected key, carries the
       repository, `pull`, the principal and the exact object of the byte route, never a scope or
@@ -943,6 +1022,16 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
       aborting the write before commit and leaving no version behind; and no verifier code
       outside the standard library's `crypto/rsa` and `crypto/sha*` performs the signature check,
       asserted by AC9's architecture test.
+- [ ] AC35: A route a handler declares as an exchange-echo route (Conan's
+      `/v2/users/authenticate` and `/v1/users/authenticate`) is answered by the shared layer and
+      never reaches the handler: a registry token presented as the Basic password with any
+      username, holding `pull` on the repository with or without a pattern, receives `200`,
+      `Content-Type: text/plain`, `Cache-Control: no-store` and a body equal to the presented
+      token, which the real Conan client then presents as Bearer; an invalid, expired or revoked
+      token is refused `401` with an authentication error, never anonymous, and no body carries
+      its value; a valid token lacking `pull` receives the existence rule's `404`; a test
+      handler registered for the route fails if it is ever invoked; and the echoed value appears
+      in no log line, span attribute, metric label, error body or audit record.
 
 ## Test Plan
 
@@ -954,7 +1043,7 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
 | AC4 | conformance | `conformance/<format>/auth_test.go` |
 | AC5 | integration | `internal/auth/revocation_test.go` |
 | AC6 | unit | `internal/auth/token_test.go` |
-| AC7 | integration + unit | `internal/auth/leak_test.go` (a failed and a successful authentication per presentation form, scanning log lines, error bodies, metric labels, span attributes and audit records; shared with `observability.md` AC9); `internal/auth/credential_form_test.go` (every extractor marks its value with `telemetry.MarkSecret` before use); the `telemetry.Disclose` single-call-site walk is `observability.md` AC10's |
+| AC7 | integration + unit | `internal/auth/leak_test.go` (a failed and a successful authentication per presentation form, scanning log lines, error bodies, metric labels, span attributes and audit records, plus a request carrying Vagrant's non-form `?access_token=`, answered credential-less and scanned the same way; shared with `observability.md` AC9); `internal/auth/credential_form_test.go` (every extractor marks its value with `telemetry.MarkSecret` before use); the `telemetry.Disclose` single-call-site walk is `observability.md` AC10's |
 | AC8 | unit | `conformance/core/case_validate_test.go` |
 | AC9 | architecture test | `internal/auth/arch_test.go` |
 | AC10 | manual | recorded in this spec's Review Log; procedure below |
@@ -979,9 +1068,10 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
 | AC29 | integration | `internal/auth/token_scope_test.go` (single-repository default, refused and accepted multi-repository creation, unnamed repository refused); the cross-repository mount under an opt-in token is also exercised by `formats/oci.md` AC1's suite run |
 | AC30 | integration | `internal/auth/token_owner_test.go` |
 | AC31 | unit + integration + conformance | `internal/auth/credential_form_test.go` (every form of the Design table resolving identically; unknown schemes, malformed values, off-route presentations and a write-capable token in the Open VSX read segment rejected, never anonymous; two forms on one request); the real clients per form in `conformance/nuget/auth_test.go` (`formats/nuget.md` AC10, both headers on a challenged push), `conformance/chef/auth_test.go` (`X-Jfrog-Art-Api`), `conformance/openvsx/auth_test.go` (`formats/openvsx.md` AC9), `conformance/conda/auth_test.go` (`formats/conda.md` AC8, the root path token), `conformance/luarocks/auth_test.go` (`formats/luarocks.md` AC5 and AC8) and `conformance/hackage/auth_test.go` (`formats/hackage.md` AC20) |
-| AC32 | unit + conformance | `internal/auth/pattern_test.go` (descriptor evaluation per action); `conformance/cargo/auth_test.go` (patterned-only `pull` running `cargo fetch` in both modes, refused another crate's index file; `formats/cargo.md` AC17); `conformance/helm/auth_test.go` and `conformance/rpm/pattern_test.go` (patterned-only `pull` refused `index.yaml` and `primary`; `formats/helm.md` AC16, `formats/rpm.md` AC14); the sentinel test in each handler's `internal/format/<name>/scope_object_test.go` through the shared helper `format-handler-interface.md` AC12 names |
+| AC32 | unit + conformance | `internal/auth/pattern_test.go` (descriptor evaluation per action); `conformance/cargo/auth_test.go` (patterned-only `pull` running `cargo fetch` in both modes, refused another crate's index file; `formats/cargo.md` AC17); `conformance/helm/auth_test.go` and `conformance/rpm/pattern_test.go` (patterned-only `pull` refused `index.yaml` and `primary`; `formats/helm.md` AC16, `formats/rpm.md` AC14); the sentinel test in each handler's `internal/format/<name>/scope_object_test.go` through the shared helper `format-handler-interface.md` AC12 names; `internal/auth/pattern_test.go` (a repository-less descriptor under a verified, a patterned, a failing and an absent credential; a repository-less object of each other kind denied); `conformance/oci/auth_test.go` (a patterned-only `pull` passing the `GET /v2/` probe with the real `docker`; `formats/oci.md` AC11) |
 | AC33 | integration + conformance | `internal/auth/capability_test.go` (claims, foreign object and repository, expiry and revocation under an injected clock, tampered value, anonymous-readable omission; the file `formats/terraform.md` AC4 names); `internal/auth/leak_test.go` (URL redaction); `conformance/terraform/capability_test.go` (the four real clients; `formats/terraform.md` AC4) |
 | AC34 | integration + conformance | `internal/auth/signed_request_test.go` (captured knife requests replayed under each protocol; each altered header, clock skew, expired and revoked key, unknown sign description, mismatched content hash aborting before commit); `internal/auth/arch_test.go` (AC9's allowed set covers the verifier); `conformance/chef/auth_test.go` (real `knife supermarket share` and `unshare`; `formats/chef.md` AC6) |
+| AC35 | integration + conformance | `internal/auth/exchange_echo_test.go` (valid, patterned, invalid, expired, revoked and `pull`-less tokens on both routes; response headers and body; a handler registered for the route that fails if invoked); `internal/auth/leak_test.go` (the echoed value scanned for, as AC7 does per form); `conformance/conan/auth_test.go` (the real Conan 2.32.0, 2.0.17 and 1.66.0 exchange followed by Bearer requests; `formats/conan.md` AC14) |
 
 **AC10 procedure**: before the first auth code merges, a security review is performed by a party
 other than the implementing agent, covering token lifecycle, scope enforcement, the OIDC
@@ -994,8 +1084,10 @@ recorded here rather than left to be assembled later:
 - this spec's: the token store and constant-time lookup, every presentation form in the Design
   table with its extraction, redaction and plaintext refusal, the route-scoping declarations,
   the OCI token service's claim set, pattern-claim encoding, key provenance and storage, the
-  download capability, the OIDC relying-party flow and session, the pattern matcher, and Chef's
-  canonical-string construction and signature check;
+  download capability, the OIDC relying-party flow and session, the pattern matcher and the
+  repository-less descriptor rule, Conan's exchange-echo route (the one response that carries a
+  presented credential back), the redaction of Vagrant's non-form `access_token` parameter, and
+  Chef's canonical-string construction and signature check;
 - `credential-management.md`'s: the token surface's display-once path, robot accounts, the
   registered public-key store, and the OIDC token exchange (`/api/v1/tokens/exchange`), which
   grows the auth surface with a second OIDC verification path and is off OCI's critical path but
@@ -1016,8 +1108,9 @@ Token model, one-way storage (per Q4's answer), single-repository scopes (severa
 repositories only by the explicit opt-in) with optional patterns validated against the grammar,
 the owner-intersection rule, revocation, the `swr_` token shape, every presentation form in the
 Design table with its route-scoping declaration, `telemetry.MarkSecret` on extraction and the
-plaintext refusal on every credential path (AC7, AC27, AC31), the uniform challenge (AC17), and
-the signed-request verifier for registered public keys (AC34). Ported from Stackweaver's
+plaintext refusal on every credential path (AC7, AC27, AC31), the uniform challenge (AC17), the
+signed-request verifier for registered public keys (AC34), and the exchange-echo route (AC35),
+which lands with `formats/conan.md`. Ported from Stackweaver's
 `apikey` service. The universal `Authorization` forms land with `generic`; each route-scoped
 form lands with the format that needs it, since its conformance case is that format's.
 
@@ -1033,7 +1126,8 @@ product (AC33), landing with `formats/terraform.md`.
 
 ### Phase 4: Enforcement
 Central authorization over the four addressed-object kinds, including the descriptor's
-`pull`-only allowance and the sentinel test behind it, the runner-enforced per-format auth and
+`pull`-only allowance and the sentinel test behind it and the repository-less descriptor
+authorized by authentication alone (AC32), the runner-enforced per-format auth and
 pattern-refusal cases, architecture tests.
 
 ## Tasks
@@ -1049,8 +1143,10 @@ adoptions in `formats/oci.md` landed on this spec that day. Q23 was raised by th
 reconciliation (cargo, helm, rpm and conan each found that a patterned-only `pull` could not run
 their client) and adopted 2026-09-27; Q24 was raised by the foundation-wave reconciliation of
 the same day, when eleven format specs' presentation forms were consolidated into one table and
-the off-route rule had to be one rule; each adopted record opens by saying so, and the owner may
-reverse any of them. Q1 through Q12 are all resolved (Q1-Q3 on
+the off-route rule had to be one rule; Q25 was raised by the closing reconciliation sweep of
+2026-09-28, when the `conan` client row showed a response that returns the presented credential,
+and was adopted on Opus, so it awaits a Fable recheck; each adopted record opens by saying so, and
+the owner may reverse any of them. Q1 through Q12 are all resolved (Q1-Q3 on
 2026-09-23 from the original draft, Q4-Q12 answered 2026-09-23 after the security review that
 raised them). The resolved records that follow are kept rather than deleted, so the reasoning
 survives the next time someone asks why it was done this way.
@@ -1232,6 +1328,40 @@ surface for nobody.
 
 **Why this is yours:** it decides what a credential in the wrong place does, which is a security
 posture, and it overrides a sibling spec's adopted wording.
+
+### Resolved: who writes a response that carries the presented credential back (was Q25, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation**, on Opus, so it carries a Fable
+recheck. Option A: a handler declares Conan's `users/authenticate` routes as exchange-echo
+routes, and the shared layer answers them, verifying and authorizing as for any request and
+writing the verified token back as a `text/plain` body with `Cache-Control: no-store`; the
+handler never runs for the route. Folded through Design ("One route echoes a credential, and the
+shared layer writes it"), the `conan` client row, AC35 and its Test Plan row, Phase 1 and AC10's
+procedure list.
+
+The judgment call it settles: the closing reconciliation sweep applied the `conan` client row
+that `formats/conan.md` asked for (consequences Open item 22 and format batch 4), and verifying
+it against that spec's resolved token-exchange decision (was Q6) found that the exchange answers
+with the presented token itself. This spec's presentation-form rules say the shared layer
+extracts, marks, verifies and redacts every credential "before the handler sees the request, so
+a handler never reads a credential", and a handler that echoes the token must read it. Conan's
+choice of what to return is settled there and not reopened here; only who writes it is.
+
+**Recommendation (adopted):** A, because it keeps the rule that confines credential handling to
+the reviewed shared layer unconditional, at the price of one declaration.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Declared exchange-echo route, answered by the shared layer** | The handler never touches a credential; the one response that carries a credential is written in one reviewed place, marked secret, uncacheable; a second format needing the shape adds a declaration, not code | A second kind of declaration beside the route-scoped forms, and a response body written by the shared layer on a format's route, both inside AC10's review; the declaration rides the same interface re-open input as the route-scoped forms |
+| **B. The handler reads the Basic password and writes it back** | No new declaration | Breaks "a handler never reads a credential", the property AC10's review scope depends on; any handler could then echo, log or forward a credential, and the architecture boundary has an exception |
+| **C. The shared layer mints a short-lived token for the body** | No long-lived value in the response | A third token-service product and a revocation window, the option `formats/conan.md` already rejected (its was-Q6 option B) because the client must hold the long-lived token regardless |
+
+Accepted cost: one more declaration kind and one more item on the external review. B lost
+because it makes the credential boundary conditional; C lost because it reopens a sibling's
+settled decision for no reduction in exposure.
+
+**Why this is yours:** it decides where the only response that returns a credential is written,
+which is part of the credential boundary the external review certifies.
 
 ### Resolved: a token's authority relative to its owner (was Q20, raised and adopted 2026-09-26)
 
@@ -1567,3 +1697,4 @@ world-readable until it matters.
 | 2026-09-27 | a72f8ef | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every queued item targeting this file verified against the current text of its source spec before applying. Client table: rows for `dotnet` (X-NuGet-ApiKey on PackagePublish, Basic after a challenge, both headers on a challenged push), `gradle`/`sbt`/`lein` and the two-mode note on `mvn`, `composer` (preemptive Basic or Bearer keyed by origin with port), the conda family and `rattler-build` (four forms including the `/t/{token}/` path token), `R`/`renv`/`pak`, `terraform`/`tofu` (no credential on byte URLs), `dnf`/`dnf5`/`zypper`, `knife` and `berks`/`chef-cli` (RSA-signed writes; X-Jfrog-Art-Api reads), `puppet`/`r10k`, `luarocks`, `ovsx` and the editors, `cabal`/`stack`, each from its format spec's captured traffic. Theme 8 consolidated: a presentation-form table in Design (five `Authorization` schemes, three vendor headers, a query parameter, three path segments, the capability, the signed request) with three cross-cutting rules (declared position, two forms both verified, redaction and plaintext refusal per form); AC31 and AC27 rewritten to enumerate it, AC7 extended to spans, audit records and `telemetry.MarkSecret`. Q24 raised and adopted A: route-scoped forms declared by the handler, an off-route presentation an authentication failure, never anonymous (overrides one sentence in `formats/openvsx.md`, reported). The token service gains its second product, Terraform's download capability (Design, AC33); Chef's signed-request verifier specced under "Nothing is invented" (Design, AC34) with canonical-string construction added to AC10's scope. AC10's procedure now lists the review's full surface, including credential-management's OIDC exchange, signing-service's custody backends and key routes, and upstream-adapters' credential kinds and redactor; AC10 itself untouched. Web UI: `/ui/auth/*` routes, double-submit CSRF, `SameSite=Lax`, `GET /api/v1/session` (Design, AC22). New "Configuration" subsection tabling the `auth.*` keys `deployment.md` carries, plus `auth.token_service.lifetime`. Scope vocabulary cites `management-api.md`'s reconciliation (NuGet unlist and conda revoke under `delete`; Hex retire, conda patch and NuGet deprecate under `push`; grant administration and pointer actions). Credential-management now cited for the robot account (Q20's cost), the expiry criterion (its AC5), the `swr_` token shape and the presentation-form boundary (its was-Q6); the uniform challenge rule stated (AC17). Old-fold items (replication 1, data-model+oci 2, auth+FHI, format-management 7) found already applied. 34 criteria. Stays draft. |
 | 2026-09-28 | 95346bd | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. One item was raised against this spec after its own pass of 2026-09-27, by the observability, deployment and web-ui reconciliation, and it was verified against `management-api.md` AC28 and its endpoint table and against `web-ui.md`'s "Who am I" before applying: `GET /api/v1/session` answers a caller with no session `200` with `principal_kind: anonymous` and no grants, never `401`, so the UI's first paint needs no error branch. Design's session paragraph and AC22 rewritten; AC22 also states that an invalid or expired cookie on the route is refused `unauthenticated`, so the anonymous answer stays consistent with AC12's rule that anonymous applies only when no credential is presented at all; the Test Plan row shares the anonymous case with `management-api.md` AC28. Every other section of the consequences queue written after that pass was grepped for this file and carries no further item. AC10's external review untouched. Stays draft. |
 | 2026-09-27 | 94f86f3 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the three auth items of the format-side reconciliation, each verified against the current `formats/cargo.md`, `formats/helm.md`, `formats/rpm.md`, `formats/conan.md` and `format-handler-interface.md`. The Cargo addressed-object bullet under Pattern scopes now follows cargo.md's table: the folded crate key (lowercase, `_` to `-`) rather than the registered spelling, `{crate}` on the index file and owners routes, `{crate}/{version}` on download, publish, yank and unyank. The Scope-vocabulary note recording a Cargo `push` versus PyPI `delete` yank divergence for `management-api.md` is replaced by the settled rule: one operation carries one authorization rule whatever wire it arrives over, and Cargo's yank and unyank are bindings onto the management API's yank operation needing `delete` (cargo.md's resolved yank-binding decision, was Q6). Raised and adopted Q23 A, the "repository-wide but reveals no names" judgment call four format specs sent here: a fourth addressed-object kind, descriptor, which a patterned scope authorizes for `pull` only, defined by a sentinel test run in each handler's AC12 object table; folded through the object-kind table, the evaluation rules, the consumer declarations, the mechanical catch, Phase 4, and the new AC32 with its Test Plan row. Verification narrowed the ask: helm's `index.yaml` and rpm's `primary` enumerate names and stay none, so the kind makes cargo runnable under a patterned-only `pull`, passes Conan's probe and moves rpm's failure to `primary`, and Design says so exactly. Q19's record carries a dated refinement note. AC10's external review untouched. Stays draft. |
+| 2026-09-28 | 173da1b | cross-spec reconciliation of the Wave 1 folds, closing sweep of step 3, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from format batch 1 through format batch 8, plus the Open items whose auth half the progress log did not show applied (12, 16, 17, 20-23, 29, 30, 32), verified against the current text of its format spec before applying; each client row is written from that spec's own capture, never from the queue text. Client table: rows for `go` (format batch 2), `apt` and `dput` (batch 3, Open item 20), `conan`, `apk` and `pacman` (batch 4, Open items 22, 21, 32), `mix`/`rebar3` (batch 5, Open item 12), `cpanm`, `cpm`/`carton`, CPAN.pm, `cpan-upload` and julia Pkg (batch 6, Open item 16), `swift` and `dart pub` (batch 8, Open item 17), `vagrant`, `opam` and `brew` (batch 7, Open items 23, 29, 30); the `helm` row corrected from helm.md's captures (batch 3) and the least-certain caveat retired. Where queue and spec differed the spec won: the Pkg path is `{host}_{port}` as the capture shows, the `dart pub` row states it rests on client source rather than captured traffic, and Vagrant, which the queue did not name, is added beside Swift and pub as declaring a Bearer challenge because its spec declares one. Presentation forms: Bearer, Basic and scheme-less "Needed by" updated; no new form; Vagrant's `?access_token=` recorded as a non-form answered credential-less and redacted by observability's `RedactURL` (AC7 and its row extended). Uniform-challenge sentence names Swift, pub and Vagrant and lists the challenge-dependent clients the new rows add. Pattern scopes (batches 1, 2, 3, 5, 7): OCI's `{image}/{tag}` and the first-component repository (oci was-Q8), OCI's repository-less `GET /v2/` descriptor authorized by authentication alone with every other kind denied without a repository (AC32 extended, Test Plan row), Galaxy discovery a descriptor, the descriptor examples (Debian, Terraform, Hex, LuaRocks, Composer, NuGet, Swift) and enumerating none (Debian indexes, Chef universe, LuaRocks manifests). Raised and adopted Q25 A under the standing delegation: the `conan` row showed an exchange answering with the presented token, which the rule "a handler never reads a credential" forbids a handler to write, so the shared layer answers a declared exchange-echo route (Design, new AC35 with its Test Plan row, Phase 1). AC10 untouched; its procedure list extended with the repository-less rule, the exchange echo and the `access_token` redaction, no form outside it. `fable_recheck` added for Q25 and the repository-less rule. Stays draft. |
