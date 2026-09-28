@@ -137,6 +137,13 @@ not satisfy it.
 
 ## Open commitments that are easy to lose
 
+- **Dated: record the vagrantcloud.com corpus before 2026-12-31.** HCP Vagrant stopped creating
+  boxes on 2026-10-01 and stops operating on 2026-12-31. After that there is no real upstream to
+  record the Vagrant proxied-path corpus against, and content hosted there is gone unless it was
+  mirrored first (`formats/vagrant.md`, the mirroring recipe; `replication.md` Q11 sequences it).
+- **Fable recheck queue.** Fable ran out of monthly credit mid-loop, so specs authored or
+  reviewed on another model carry `fable_recheck` frontmatter, listed by `make check-spec`. None
+  can reach `planned` until a Fable review clears the marker. Spend the next Fable credit there.
 - **Redaction ships before the first corpus is committed**, public repository or not. Recording
   real registry traffic into an in-repo corpus is a credential leak waiting for the repository to
   go public (`conformance-harness.md`, blocking precondition on recording).
