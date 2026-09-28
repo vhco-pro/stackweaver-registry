@@ -353,6 +353,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - storage-and-gc.md: DONE 2026-09-27. Applied artifact-verification 2 (read-path verification, AC21-22), async-operations 4 (AC23), signing-service 2 and Open items 20, 26, 28 (AC16), management-api 4 and format-management 9 (AC15), repository-lifecycle 3-4 (AC24-25), data-model reconciliation 7 (pre-commit hook, AC25), deployment 6 and 10 (gc. keys AC29, LockSweep, jobs AC26, checker AC27), observability 11 (AC28, AC7). Adopted Q11 (segment digests for range reads). Stays draft pending its gate review.
 - format-handler-interface.md: DONE 2026-09-27. Applied management-api 8, artifact-verification 6, signing-service 7, upstream-adapters 6, async-operations 12, repository-lifecycle 6, observability 2-3, deployment 11, web-ui 3, Open items 25 and 33. Adopted Q10 (three optional interfaces stay three; verdict at the re-open). Pin stays five (AC16). New ACs 15-16.
 - auth.md: DONE 2026-09-27. Applied Open items 6, 11, 13, 14, 15, 18, 19, 24, 25, 26, 27, 31 (client table), theme 8 (Presentation forms table, AC31, AC27, AC7), management-api 5, credential-management 2-5, signing-service 16, upstream-adapters 9 (AC10 review surface listed, AC10 not weakened), observability 6, deployment 3 (auth.* keys), web-ui 2. Adopted Q24 (off-route credential is an authentication failure). New AC33 (Terraform capability), AC34 (Chef signed requests).
+- management-api.md: DONE 2026-09-28. One exhaustive endpoint table and a closed 19-type problem table; applied credential-management 6-7, artifact-verification 5, signing-service 4, upstream-adapters 5, async-operations 3, repository-lifecycle 5, observability 4, deployment 13, web-ui 1, data-model 5, storage-and-gc 3, format-handler-interface 5. Adopted Q11 (deleted listing is `?state=deleted`), Q12 (remote refresh). New AC28-32.
 
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
@@ -385,4 +386,15 @@ Wording-only unless stated: each target now cites data-model.md instead of sayin
 4. nuget.md (~l.469-472), conda.md (~l.578-582), luarocks.md, openvsx.md, chef.md (~l.514), hackage.md (~l.535): drop "AC31 asserts four / must land there before"; the forms are in auth.md AC31 and its Design table.
 5. terraform.md: cite auth.md AC33 and `auth.token_service.lifetime` for the capability's lifetime.
 6. chef.md: cite auth.md AC34 beside its AC6; the canonical-string review scope is in auth.md's AC10 procedure.
+
+## From management-api.md reconciliation (2026-09-28)
+1. repository-lifecycle.md, state table "Listed" column: the deleted listing is `GET /api/v1/repositories?state=deleted` (admin); cite management-api's resolved deleted-listing decision (was Q11).
+2. web-ui.md, Repositories page: deleted listing via `?state=deleted`; "refresh now" is `POST /api/v1/repositories/{name}/refresh` (`push`) in the page table and AC10 row; `GET /api/v1/session` answers anonymous callers 200 with `principal_kind: anonymous`.
+3. proxy-cache.md, resolved metadata-TTL decision: the API half of "refresh now" is `POST .../refresh`, `push`, object none, kind `refresh`, marking cached metadata due for revalidation (management-api was Q12).
+4. data-model.md, "Operations" fields and "Kinds that are not writes": add `refresh` beside `repoint` and `lifecycle`.
+5. artifact-verification.md (~l.625): trust and verdict reads are `pull`; only `PUT`/`DELETE` trust and `import` are admin.
+6. upstream-adapters.md (~l.609, AC23): `upstream-invalid` is 422.
+7. credential-management.md (~l.269, AC15): `scope-exceeds-owner` and `lifetime-policy` are 422.
+8. helm.md (~l.421-422): attaching with an existing `.prov` is refused `conflict` (409); a coherence failure is `validation` (422).
+9. conformance-harness.md, "What sibling specs already require": `conformance/oci/refresh_test.go` (management-api AC29) and `conformance/generic/admin_test.go`.
 
