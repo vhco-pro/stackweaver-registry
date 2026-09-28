@@ -394,6 +394,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - repository-lifecycle.md, CLOSING SWEEP: DONE 2026-09-28 at 3135d95 on Opus. Q10 adopted (bind by name, rename announces unbound_hosts; AC28, AC27). fable_recheck extended.
 - artifact-verification.md, CLOSING SWEEP: DONE 2026-09-28 at 3135d95 on Opus. Raw RSA-SHA512 integrity entry for Hex Signed payloads, RSA raw-keys type, Hex "Nothing" qualified to artifacts (AC30).
 - credential-management.md, CLOSING SWEEP: DONE 2026-09-28 at 3135d95 on Opus. Binding table with PyPI (AC19) and Open VSX api/-/trusted-publishing/token (wire not yet captured); binding-is-pure-translation AC25.
+- EVICTION CONTRADICTION: SETTLED 2026-09-28 at f0bfe75 on Opus. proxy-cache Q21 adopted (a remote's current metadata documents at every level are never LRU-evicted: fourth-root current documents; the quota bounds cached files only; cache_metadata_bytes{repository} gauge beside it; accepted cost: metadata grows with names ever requested, visible not bounded) and Q22 adopted (a per-package revision set's declared list lives on its package-level document, so adoptions of different packages never serialise). Folded through data-model (non-root row, AC44, AC37) and storage-and-gc (fourth root, property eviction op, AC16). AC29 added. Roots stay five. fable_recheck on all three.
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
 1. signing-service.md (~l.439, ~l.460): "`data-model.md`'s to add" -> "added in data-model.md (Design 'Freshness scoped to the pointer', AC36, AC37)"; ~l.437: "no retained snapshot holds" -> "no retained snapshot or pointer document holds" (data-model AC37).
@@ -725,3 +726,13 @@ SECOND-PASS NEEDED: auth.md and data-model.md were swept BEFORE later sweeps que
 6. FORMAT CITATION UPDATES: conan.md cite upstream-adapters was-Q8/AC33, drop "raised there"; terraform.md git gap closed by was-Q9/AC34; terraform.md and puppet.md rename paragraphs cite repository-lifecycle was-Q10; swift.md, conan.md and any format recording a hosted half against a local reference must add a row to conformance-harness's exception table (AC28 fails otherwise).
 7. LOCAL CAPTURE OWED: ovsx 1.2.0 trusted-publishing wire shape (credential-management AC25, openvsx AC33): needs a container run.
 8. question-triage.md: record upstream-adapters Q8, Q9 and repository-lifecycle Q10 as adopted on Opus, awaiting Fable recheck.
+
+## From the eviction-contradiction settlement (2026-09-28, on Opus)
+1. observability.md: add cache_metadata_bytes{repository} to the catalogue and proxy-cache's source row; per-repository, so admitted under the cap rule.
+2. puppet.md and vagrant.md (SUBSTANTIVE): move each remote's declared list from the repository-level document to the module's or box's package-level document (proxy-cache was-Q22); update Design, puppet AC21/AC25, vagrant AC21/AC24 and their Test Plan rows.
+3. homebrew.md: proxy-cache moved its row to the new-blob variant as a digest-addressed file and made a count of zero valid; its Q15 accepted-cost note can say this is done.
+4. swift.md (CHECK): release metadata it classifies as immutable must be stored as a cached File, not a version-level document; its "re-fetched after eviction" removal rows only hold if it is.
+5. repository-lifecycle.md: step 5 calls a remote's "cached documents" cached references ended "in the eviction shape"; deletion ends the remote's current documents alongside its cached references; documents are not cached references.
+6. format-handler-interface.md: the proxied classification carries evictability (artifact vs metadata), a retention count where zero is valid, and the declaring level.
+7. conda.md and huge-index formats: the remote's repodata is outside the quota and shows in cache_metadata_bytes; worth a line.
+8. question-triage.md: record proxy-cache Q21 and Q22 as adopted on Opus, awaiting Fable recheck.
