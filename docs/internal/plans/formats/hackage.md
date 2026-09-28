@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-28 at 20ff418 with the foundation wave on Opus (not a review): the index and every TUF document generated through signing-service's Indexer and generator package internal/format/hackage/index on the pre-commit hook; timestamp and snapshot versions are data-model's per-pointer generation counter and expires is moved_at plus the window (AC6, AC36 there); the four TUF documents are PointerDocument records, root.json and mirrors.json identical on every pointer under adopted Q16 (AC34); segments declared through data-model's blob-digest list (AC28); ed25519 SigningKey roles, the root-chain rotation profile, the external backend for an operator-held root and the signing.resign cadence (AC9 to AC11, AC8); publish, annotate and delete-version on management-api with the POST upload binding and core-held retirement (AC12, AC17, AC18); X-ApiKey now in auth.md AC31 (AC20); TUF documents are descriptors so a patterned pull reads them and fails at the index (AC21); WriteRefusal and the holds/restricted-egress binding row (AC22, AC23); the tuf entry, tuf-root trust set and repository-chain verdict (AC25, AC29); paired revisions, regression not adopted and proxy-cache event classes (AC25, AC26); index.merge with a rising virtual version (AC27); Capabilities and the rename case (AC33). Earlier: authored 2026-09-26 from captures of cabal-install 3.16 and 3.8 and Stack 3.11 and 2.9; fifteen questions adopted under the standing delegation, a sixteenth at this reconciliation; none open. Awaits a /spec review pass."
+status_description: "Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a remote's previous revision is retained until the next adoption (was 'for the stale limit', a duration nothing enforced), its index chunks the current revision does not declare and any CAS-backed TUF document on the remote's declared blob-digest list (proxy-cache was-Q19, AC27); a changed SHA-256 for a cached release now ends the old blob's cached reference at the new commit, the route already following the current revision (proxy-cache was-Q20, AC28); the integrity-failure rows and AC25 say 'the adopted revision' so 'previous revision' means only the retained one; AC26 and AC28 extended. Earlier: Reconciled 2026-09-28 at 20ff418 with the foundation wave on Opus (not a review): the index and every TUF document generated through signing-service's Indexer and generator package internal/format/hackage/index on the pre-commit hook; timestamp and snapshot versions are data-model's per-pointer generation counter and expires is moved_at plus the window (AC6, AC36 there); the four TUF documents are PointerDocument records, root.json and mirrors.json identical on every pointer under adopted Q16 (AC34); segments declared through data-model's blob-digest list (AC28); ed25519 SigningKey roles, the root-chain rotation profile, the external backend for an operator-held root and the signing.resign cadence (AC9 to AC11, AC8); publish, annotate and delete-version on management-api with the POST upload binding and core-held retirement (AC12, AC17, AC18); X-ApiKey now in auth.md AC31 (AC20); TUF documents are descriptors so a patterned pull reads them and fails at the index (AC21); WriteRefusal and the holds/restricted-egress binding row (AC22, AC23); the tuf entry, tuf-root trust set and repository-chain verdict (AC25, AC29); paired revisions, regression not adopted and proxy-cache event classes (AC25, AC26); index.merge with a rising virtual version (AC27); Capabilities and the rename case (AC33). Earlier: authored 2026-09-26 from captures of cabal-install 3.16 and 3.8 and Stack 3.11 and 2.9; fifteen questions adopted under the standing delegation, a sixteenth at this reconciliation; none open. Awaits a /spec review pass."
 description: "Spec for Hackage (Haskell) repositories served to cabal-install and Stack through hackage-security: the only catalogue format with The Update Framework, so hosted and virtual repositories get root, snapshot, timestamp and mirrors metadata from the shared signing service with per-pointer version counters that make a rollback reach clients instead of failing them, an append-only 01-index.tar.gz built as appended gzip members so incremental Range updates survive every publish, uploads through cabal upload --publish, revisions, preferred-versions deprecation and rebasing deletion as registry-owned operations, a byte-for-byte proxied cache that never re-signs Hackage's metadata, and re-signed virtual repositories."
 author: michielvha
 goal: "Serve Haskell users a private Hackage and a verified cache of hackage.haskell.org that stock cabal-install (3.16 and 3.8) and Stack (3.11 and 2.9) update, verify end to end against root keys they hold, and install from, with a rollback that reaches every client and no refusal a signed mirror list can route around."
@@ -10,7 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/hackage/**"
   - "conformance/hackage/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed. Reconciled on Opus 2026-09-28 (format batch 6), adopting Q16 (root.json and mirrors.json as PointerDocument records identical on every pointer, re-rendered in one batch on any root or mirror change), which also needs a Fable recheck"
+fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed. Reconciled on Opus 2026-09-28 (format batch 6), adopting Q16 (root.json and mirrors.json as PointerDocument records identical on every pointer, re-rendered in one batch on any root or mirror change), which also needs a Fable recheck; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q19 and Q20 into the proxied path (the previous revision retained until the next adoption with its blobs on the remote's declared list, the old tarball blob released at the new commit), which needs the same recheck"
 ---
 
 # Plan: Hackage (hackage-security repositories)
@@ -342,8 +342,13 @@ The levels are exactly those `data-model.md` provides; no table is added.
   root or a lower version (next sections).
 - **A remote repository's current documents** are its adopted upstream revision, each carrying
   `proxy-cache.md`'s cache-scoped `adopted_at` and one paired-set id for the whole revision
-  (`data-model.md` AC44), with the retained previous revision for the stale bound (Design, "The
-  proxied path"); the verdict on each cached tarball is `artifact-verification.md`'s record, keyed by
+  (`data-model.md` AC44), with the previous revision retained until the next adoption drops it,
+  the default count of `proxy-cache.md`'s resolved retained-revision decision (was its Q19); every
+  blob kept for the retained revision (its index chunks the current revision does not also declare,
+  and any of its TUF documents stored CAS-backed) is on the declared blob-digest list of the remote's
+  repository-level document, the only way a document keeps another blob alive (`storage-and-gc.md`
+  AC16), because a digest the retained revision's `snapshot.json` or index merely names keeps
+  nothing alive (Design, "The proxied path"); the verdict on each cached tarball is `artifact-verification.md`'s record, keyed by
   the tarball's digest, outside the format entity model (`data-model.md`'s verification-records
   row). None of it is snapshot content.
 
@@ -356,7 +361,9 @@ contract"), `data-model.md` carries the declared blob-digest list (its "Freshnes
 pointer, and the documents that hang on it", AC37), and `storage-and-gc.md`'s fourth mark root
 marks through it, so a segment is live while any current or retained document declares it and
 collectable once none does (its AC16; `signing-service.md` AC5 asserts the survival). A remote's
-chunked upstream index declares its chunks the same way.
+chunked upstream index declares its chunks the same way, and the retained previous revision's
+chunks stay declared on the remote's repository-level document until the adoption that drops that
+revision (`proxy-cache.md` AC27).
 
 ### The hosted publish path and what counts as a write
 
@@ -799,7 +806,10 @@ TUF chain). The five documents are declared to the proxy layer as **one paired s
 together, verified together, committed in one transaction and served under one cache-scoped
 freshness record, the paired-set id `data-model.md` AC44 carries, so a client never meets a
 timestamp whose snapshot or index is not already cached (`proxy-cache.md`, "Freshness of what a
-remote serves", AC22); the previous revision is retained for the stale limit. Upstream `root.json`
+remote serves", AC22); the revision it supersedes is retained, its blobs declared on the remote's
+repository-level document, until the next adoption drops it (`proxy-cache.md`'s resolved
+retained-revision decision, was its Q19, AC27), so a tarball only that revision names can still be
+fetched and verified against its `package.json`. Upstream `root.json`
 changes are verified against the cached upstream root, exactly as the clients verify them. **A
 revision whose versions decrease is not adopted**: the TUF `version` is this format's revision
 ordering, which `proxy-cache.md` names ("a TUF `version`"), so the cached revision keeps serving,
@@ -824,7 +834,9 @@ asked of it is placed:
   through `data-model.md`'s declared blob-digest list (AC37), which `storage-and-gc.md`'s fourth
   root marks through for a remote's current documents as for hosted ones (its AC16), so a revision
   stores only the bytes the upstream changed and the hash state is resumed at the last unchanged
-  chunk.
+  chunk. A chunk only the retained previous revision still uses (the tail an upstream rebase
+  replaced) is declared on the remote's repository-level document until the adoption that drops
+  that revision, and is collectable at the next sweep past grace after it.
 - **Redirects followed inside the adapter**: the live Hackage answers `package/{id}.tar.gz` with `301`
   to `package/{id}/{id}.tar.gz` (captured), a same-host redirect the adapter follows, and no upstream
   `Location` ever reaches a client (its AC8).
@@ -840,7 +852,8 @@ Classification and behaviour:
   cache-scoped record in place of the pointer's (`proxy-cache.md`, "Freshness of what a remote
   serves"), and never re-dated, since the remote's documents are byte-identical to the upstream's.
 - **Tarballs are immutable artifacts**, fetched on a miss with a **declared digest**: the SHA-256 and
-  length of their `package.json` in the current or a retained revision, which the fetch-and-cache
+  length of their `package.json` in the current or the retained revision, the current one's where
+  both name the release, which the fetch-and-cache
   request carries so the bytes are verified while streaming (`proxy-cache.md`, "Completion-only mode
   and the verifier hook": a request carries a declared digest or a verifier, never neither, AC20).
   A tarball neither cached nor named by such a revision answers `404` with no upstream request, so
@@ -872,9 +885,9 @@ handler classifying and the layer responding, as this format's side of that cont
 |---|---|---|
 | A revision appends a `.cabal` or `preferred-versions` entry | Ordinary metadata change | Mirrored by serving the new revision |
 | A new revision's index does not extend the cached one (an upstream rebase) | Removal with no signal, for the entries that vanished | Served, since the upstream signed it; cached tarballs of vanished releases stay fetchable at their paths |
-| A new revision gives a cached release a different SHA-256 | Immutability violation, revision-bound | The new bytes are fetched and verified as a new blob and the old blob stays referenced while its revision is retained; because the tarball path carries no digest, the route serves the bytes the current revision names |
+| A new revision gives a cached release a different SHA-256 | Immutability violation, revision-bound, the new-blob variant | Because the tarball path carries no digest, the route serves the bytes the current revision names: the new bytes are fetched and verified as a new blob on the next request, and that commit ends the old blob's cached reference in the same transaction, so the sweep reclaims the old bytes, which no request can be served afterwards (`proxy-cache.md`'s resolved old-blob decision, was its Q20); the divergence record keeps both digests |
 | An indexed release's tarball answers `404` or `410` upstream | Removal with no signal | Cached bytes keep serving |
-| The upstream root rotates and fails verification against the cached root | Integrity failure at fetch | The previous revision serves within the stale bound |
+| The upstream root rotates and fails verification against the cached root | Integrity failure at fetch | The adopted revision keeps serving within the stale bound |
 | A revision's timestamp has expired, or its chain fails | Integrity failure at fetch | As above |
 | A revision's version decreases | Regression not adopted | The cached revision stands |
 
@@ -1161,7 +1174,7 @@ and legacy routes, and `405` on remote writes.
       upstream receives one incremental index request per upstream change, answered `206` and spliced, and
       a second install from fresh containers produces no upstream request.
 - [ ] AC25: For a proxied upstream revision whose snapshot hash, index hash, signature or root fails the
-      `tuf` entry's chain verification, or whose timestamp has expired, nothing is committed, the previous
+      `tuf` entry's chain verification, or whose timestamp has expired, nothing is committed, the adopted
       revision keeps serving within the stale bound, and the real reason reaches the operator record; a
       revision whose versions decrease is not adopted, the cached revision and its cache-scoped record
       standing and a divergence recorded; the five documents of a revision are committed and served as one
@@ -1173,8 +1186,11 @@ and legacy routes, and `405` on remote writes.
       with no upstream request, asserted at the network layer; an upstream tarball `404` is negatively
       cached while a `429` or `5xx` is neither cached as absence nor surfaced as not-found; an upstream
       redirect on the tarball route never reaches the client; a refresh through the management API makes
-      the next request revalidate the revision and the negative entries; and a stand-in presenting each
-      removal-table event produces the `proxy-cache.md` event class the table names.
+      the next request revalidate the revision and the negative entries; a stand-in presenting each
+      removal-table event produces the `proxy-cache.md` event class the table names; and a new revision
+      giving a cached release a different SHA-256 serves every client the current revision's bytes, and
+      after the next sweep past grace the old blob is gone from the store while the divergence record
+      naming both digests is still queryable (`proxy-cache.md` AC28).
 - [ ] AC27: A virtual repository over a hosted and a remote member serves a merged index signed with its
       own keys, which every client verifies with the virtual repository's key ids; a hosted `acme-base`
       placed first shadows the remote's `acme-base` so that no upstream release of it is listed or fetched,
@@ -1186,8 +1202,12 @@ and legacy routes, and `405` on remote writes.
       to the virtual repository answers `405`.
 - [ ] AC28: A proxied index stored as declared chunks, and a hosted index manifest whose segments are CAS
       blobs named in its declared blob-digest list, survive a GC sweep while current or retained and serve
-      every client afterwards, and a segment no current or retained document declares is collected; and a
-      hosted repository's storage grows by the appended segment, not by a whole index, per publish.
+      every client afterwards, and a segment no current or retained document declares is collected; on a
+      remote, after an upstream rebase, a chunk only the retained previous revision uses survives a sweep
+      run with the grace lapsed, a tarball only that revision names is then fetched, verified against its
+      `package.json` and installed, and the chunk is collected by the first sweep past grace after the
+      adoption that drops that revision (`proxy-cache.md` AC27); and a hosted repository's storage grows
+      by the appended segment, not by a whole index, per publish.
 - [ ] AC29: A policy rule depending on advisory data attached to a Hackage repository binds on both paths
       through the `Hackage` OSV ecosystem, refusing a release an advisory's range covers under the
       component-wise integer version order; a rule requiring any verified verdict serves a proxied tarball
@@ -1247,9 +1267,9 @@ and legacy routes, and `405` on remote writes.
 | AC23 | conformance | `conformance/hackage/mirror_fallback_test.go` (a second declared instance as the signed mirror, remote versus hosted and virtual, network-layer assertion) |
 | AC24 | conformance | `conformance/hackage/proxied_install_test.go` (prefixed stand-in, the remote's `tuf-root` through the `trust` key, byte comparison of every TUF document and the index, upstream request counts and `206` answers, second install with no upstream request); nightly `conformance/hackage/live_upstream_test.go` (hackage.haskell.org) |
 | AC25 | integration | `internal/format/hackage/proxied_chain_test.go` (each failing link, a decreasing version not adopted, the paired-set commit, stale bound, operator record, tarball mismatch and truncation, the recorded `repository-chain` verdict); `internal/proxy/freshness_test.go` (the paired set and the regression rule, shared with `proxy-cache.md` AC22) |
-| AC26 | integration | `internal/format/hackage/proxied_negative_test.go` (unnamed tarball, `404`, `429`, `5xx`, redirect, refresh); `internal/format/hackage/removal_test.go` (stand-in presenting each removal-table event, asserting the event class) |
+| AC26 | integration | `internal/format/hackage/proxied_negative_test.go` (unnamed tarball, `404`, `429`, `5xx`, redirect, refresh); `internal/format/hackage/removal_test.go` (stand-in presenting each removal-table event, asserting the event class; a changed SHA-256 served as the current bytes, a sweep on an injected clock past grace, the object store and the divergence record read afterwards) |
 | AC27 | conformance + integration | `conformance/hackage/virtual_test.go` (merged index on all four clients, shadowing and the rebase, `index-state`, non-monotonic merged times on both Stack lines, a member publish adopted after the merge, `405`); `internal/format/hackage/index/merge_test.go` (per-package member order, rising virtual version); the `index.merge` contract is `signing-service.md` AC19's `internal/index/merge_test.go` |
-| AC28 | integration | `internal/storage/metadata_blob_gc_test.go` (declared segment and chunk lists across a sweep, then serving; an undeclared segment collected; shared with `data-model.md` AC37); `internal/format/hackage/segment_growth_test.go` (storage delta per publish) |
+| AC28 | integration | `internal/storage/metadata_blob_gc_test.go` (declared segment and chunk lists across a sweep, then serving; an undeclared segment collected; shared with `data-model.md` AC37); `internal/format/hackage/proxied_retention_gc_test.go` (a rebasing stand-in, the retained revision's chunks declared on the remote's list, a sweep with the grace lapsed while retained, a tarball only the retained revision names fetched and verified, the chunks collected after the dropping adoption); `internal/format/hackage/segment_growth_test.go` (storage delta per publish) |
 | AC29 | integration | `internal/format/hackage/policy_config_test.go` (advisory rule through the `advisories` key on both paths, any-verified and publisher-identity signature rules against proxied and hosted releases) |
 | AC30 | conformance | `conformance/hackage/unsupported_routes_test.go` (candidate, docs and legacy answers, cabal 3.16.1.0 output) |
 | AC31 | conformance | `conformance/hackage/replay_test.go` (corpus replay against the recorded Hackage surface with the named redactions) |
@@ -1301,7 +1321,8 @@ kind and the shared rename case (`conformance-harness.md` AC26), apply from the 
 ### Phase 4: Proxied path
 - Waits on `upstream-adapters.md` and `artifact-verification.md` (its `tuf` entry, built here with this
   format in its Phase 4 at charter step 11) reaching `planned`
-- Verified upstream revisions as paired sets, incremental upstream index fetches, chunked storage,
+- Verified upstream revisions as paired sets, the previous revision retained until the next adoption
+  with its blobs on the remote's declared list, incremental upstream index fetches, chunked storage,
   verified tarball caching with declared digests and `repository-chain` verdicts, negative caching, the
   removal event classes, `405` on remote writes
 
@@ -1668,3 +1689,4 @@ reintroduces the rollback failure.
 |------|----------|---------------|---------|
 | 2026-09-26 | d31e54b | authoring pass: grounded first draft, not a review | Grounded five ways: captured traffic from cabal-install 3.16.1.0 and 3.8.1.0 and Stack 3.11.1 and 2.9.1, each from the upstream haskell image pinned by digest, on dedicated Podman networks against a logging stub (HTTP, TLS, and a second instance as a signed mirror) serving repositories built and signed with hackage-repo-tool 0.1.1.5 and crafted generations (bootstrap and every update path, the `Range` incremental index against a 505 KB index, a changed compressor failing twice then downloading whole, appended gzip members read whole and incrementally by all four, rollback as stored failing every client in a five-iteration verification loop and re-signed at a higher version adopted by all four, expiry checked only under cabal's inverted `--ignore-expiry` and Stack's `ignore-expiry: false`, fallback to a signed mirror on any `403`, online-key rotation followed and root rotation accepted only with retained old keys and cross-signatures, revisions and `preferred-versions` as appended entries, `index-state`, a malformed `.cabal`, tampered tarballs, the credential split between the cabal lines and between their uploads, Stack's two configuration keys, cabal's repository combining); the hackage-security, cabal-install, hackage-server and Stack sources and docs; the live hackage.haskell.org (TUF metadata and its signatures verified independently, index shape and 358,366 monotonic entries, headers, redirects, Digest-only upload challenges, a byte-for-byte pass-through that cabal 3.16.1.0 and Stack 3.11.1 verified with Hackage's own keys, and Stack 2.9.1's pre-rotation key ids failing against the live root); and OSV (32 `HSEC-` advisories under `Hackage`) and purl. Fifteen questions written in decision shape and adopted under the standing delegation: pointer-scoped timestamp and snapshot with a per-pointer counter (AC6, AC7, AC8), appended gzip members (AC3), segmented index storage with declared blob references (AC28), remotes byte for byte and never re-signed (AC24, AC25), re-signed per-package virtual merges (AC27), candidates refused (AC30), rebasing deletion (AC17), revisions checked for identity and sequence only (AC15), service-held roots with an operator-held option (AC11), Hackage's name rules (AC13, AC14), `403` at the tarball (AC22), the repository-chain signature verdict (AC29), `X-ApiKey` in the shared verifier (AC20), the publish object from the multipart filename (AC21), no preconfigured upstream. Thirty-two criteria, each with a Test Plan row. Stays draft; awaits an independent review. |
 | 2026-09-28 | 20ff418 | cross-spec reconciliation of the Wave 1 folds and the foundation wave, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying: format-management item 11 and management-api items 11 and 12 (retirement core-held, kinds `publish`, `annotate`, `delete-version`, `configure` with the `POST upload` binding, `Operator`, `repository-type` and `retired`; AC12, AC17, AC18); auth reconciliation item 4 (the `X-ApiKey` form is in `auth.md` AC31 and its Design table; the resolved scheme record discharged; AC20); signing-service item 11 (freshness is `data-model.md`'s generation counter and `moved_at`, generator contract and package, pre-commit dispatch, per-document lock, `root-chain` profile, `external` backend, `signing.resign`, `ServeDocument`; the ten-item list mapped onto the contract; AC6, AC8 to AC11); upstream-adapters item 12 (`https` adapter, `Range` and redirects AC8 and AC15, chunk storage placed on the declared blob list, credential kinds); conformance-harness reconciliation item 4 and client confinement (seed-path signing through the write-path hook, `signing` sub-entry, `trust` key, was-Q6 AC23; the Test Plan obligations paragraph discharged); supply-chain reconciliation item 10 and theme 2 (the `holds` / `restricted-egress` row, `WriteRefusal`, the refusals read route; AC22, AC23); auth was-Q23 (the four TUF documents are descriptors with the sentinel test; AC21); artifact-verification (the `tuf` entry, `tuf-root` trust set, `repository-chain` verdict and publisher-identity nuance; AC25, AC29); proxy-cache (paired revision sets, the TUF version as revision ordering with regression not adopted, declared tarball digests, event classes, refresh; AC25, AC26); data-model AC36 and AC37 and storage-and-gc AC16 (the two revisions this spec raised are made, Q1 and Q3 records discharged); async-operations (`index.merge`, queue core at step 4b; AC27); repository-lifecycle AC12 and FHI AC13 (Capabilities and lifecycle section, new AC33). Adopted Q16 (where `root.json` and `mirrors.json` live: pointer documents identical on every pointer), new AC34, `fable_recheck` extended. Found and reported rather than assumed: `signing-service.md` states no `Range` behaviour for `ServeDocument`, no repository-wide renewal of a pointer document, and no rising version for a virtual's signed documents at each merge; `data-model.md` does not list an accepted operator-held root as a pointer transition; `supply-chain-policy.md`'s vendored orderings omit Hackage's. Thirty-four criteria, each with a Test Plan row. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
+| 2026-09-28 | 93982ba | data-loss fix on Opus (storage-and-gc closing-sweep item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 0 of "From the storage-and-gc.md closing sweep" in `agents/spec-loop/consequences.md`, verified against `storage-and-gc.md`'s fourth mark root (its third reach, AC16) and `data-model.md` AC34, AC36 and AC45: a digest a document merely mentions keeps nothing alive, the declared blob-digest list is a document's only keep-alive, and a remote writes no content snapshot. The holes: the remote's previous revision, "retained for the stale bound", kept its blobs through nothing (its index chunks the current revision does not declare, such as the tail an upstream rebase replaced, were declared only by a non-current document), and the changed-SHA-256 row said the old blob "stays referenced while its revision is retained" through nothing the sweep follows, although the route already served the current revision's bytes so no request could reach it. Now: the previous revision retained until the next adoption drops it, its non-shared chunks and any CAS-backed TUF document on the remote's repository-level declared blob-digest list (proxy-cache was-Q19, AC27; the declared list chosen because the chunks are already declared-list citizens on the current revision and must live exactly as long as the revision authorises tarball fetches); the old tarball's cached reference ending at the new blob's commit (proxy-cache was-Q20, AC28). The integrity-failure row and AC25 now say "the adopted revision keeps serving", separating it from the retained one. AC26 and AC28 extended (a rebase leaving a chunk only the retained revision uses, a sweep with the grace lapsed, a tarball only that revision names fetched and verified; the old blob collected after a changed SHA-256); Test Plan rows (`internal/format/hackage/proxied_retention_gc_test.go` added) and Phase 4 updated. No new question adopted here; `fable_recheck` extended for the folded decisions. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |

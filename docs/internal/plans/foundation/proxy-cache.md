@@ -1,13 +1,13 @@
 ---
 status: draft
-status_description: "Closing reconciliation sweep 2026-09-28 at 181a63b on Opus (not a review), applying every format batch 4 to 8 and signing-service closing-sweep item placed here: AC22 and 'Freshness of what a remote serves' reworded into the two conditional rules signing-service adopted (exact by default, not-earlier declared per format, brew's API remote), rendered through its serving door with cached files through ServeFile; the adoption commit is one transaction with a hook the index runtime's Adopt registers on, fed by the handler's adoption check (ordering, event classes, parsed records) now in the fetch-and-cache request (AC25); Q18 adopted: a remote reached only through a virtual is revalidated by the proxy.revalidate job, coalesced per remote, enqueued by virtual reads past the TTL and by virtual creation or member addition, replaying the handler's own route below the authorizer at one asserted call site (AC26; AC18 qualified); the event-class table gains the conda, Vagrant, Hackage, CPAN, Composer, opam, Swift, pub, Hex, Terraform and LuaRocks rows, both revision-bound variants and the ordinary-change divergence (AC13 extended); Alpine and six other formats named as completion-only consumers. 26 criteria, zero open questions; stays draft pending a gate review, and carries fable_recheck. Earlier: sweep 2026-09-28 at 6e6d503 (not a review): the cache-scoped freshness record cited as data-model.md's (AC44), freshness_test.go shared. Reconciled 2026-09-28 at f6da6ad with the foundation authoring wave (not a review): Q15 (the completion-only fetch mode with a handler-supplied verifier hook, the client streaming with completion withheld until the verifier passes, verdicts after commit), Q16 (a per-fetch FirstByteWithin exception to the waiter rule for julia's captured deadline) and Q17 (api.nuget.org and repo.maven.apache.org preconfigured by the was-Q14 rule) adopted under the owner's standing delegation. Design gained the adapter seam over upstream-adapters.md, the cache-scoped half of forward-moving freshness (never adopt an older revision, db and signature as one revision), the removal event-class table with every reconciled format's rows, the read_only and deletion halves of repository-lifecycle.md, the proxy.offline key, the management-api refresh route and observability.md's metric names. AC20 to AC24 added; 24 criteria, zero open questions; stays draft pending a gate review. Earlier: Q14 adopted 2026-09-26; Q10, Q12 and Q13 adopted, Q11 answered by the owner."
+status_description: "Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a remote's retained revisions keep their blobs only on the declared blob-digest list of its repository-level document, for a handler-declared count of superseded revisions (one by default), rewritten by each adoption in its own transaction, a later map build a reference creation refused once its revision is dropped, cached files held by their own cached references (Q19 adopted, AC27); the old blob of the new-blob-beside-the-old variant is kept by its own cached reference only until the new blob's commit ends it, since every format in the variant serves a digest-less path from the current revision (Q20 adopted, AC28; AC13 and the event-class row rewritten). No mark root added. 28 criteria, zero open questions; stays draft pending a gate review, and carries fable_recheck. Earlier: Closing reconciliation sweep 2026-09-28 at 181a63b on Opus (not a review), applying every format batch 4 to 8 and signing-service closing-sweep item placed here: AC22 and 'Freshness of what a remote serves' reworded into the two conditional rules signing-service adopted (exact by default, not-earlier declared per format, brew's API remote), rendered through its serving door with cached files through ServeFile; the adoption commit is one transaction with a hook the index runtime's Adopt registers on, fed by the handler's adoption check (ordering, event classes, parsed records) now in the fetch-and-cache request (AC25); Q18 adopted: a remote reached only through a virtual is revalidated by the proxy.revalidate job, coalesced per remote, enqueued by virtual reads past the TTL and by virtual creation or member addition, replaying the handler's own route below the authorizer at one asserted call site (AC26; AC18 qualified); the event-class table gains the conda, Vagrant, Hackage, CPAN, Composer, opam, Swift, pub, Hex, Terraform and LuaRocks rows, both revision-bound variants and the ordinary-change divergence (AC13 extended); Alpine and six other formats named as completion-only consumers. 26 criteria, zero open questions; stays draft pending a gate review, and carries fable_recheck. Earlier: sweep 2026-09-28 at 6e6d503 (not a review): the cache-scoped freshness record cited as data-model.md's (AC44), freshness_test.go shared. Reconciled 2026-09-28 at f6da6ad with the foundation authoring wave (not a review): Q15 (the completion-only fetch mode with a handler-supplied verifier hook, the client streaming with completion withheld until the verifier passes, verdicts after commit), Q16 (a per-fetch FirstByteWithin exception to the waiter rule for julia's captured deadline) and Q17 (api.nuget.org and repo.maven.apache.org preconfigured by the was-Q14 rule) adopted under the owner's standing delegation. Design gained the adapter seam over upstream-adapters.md, the cache-scoped half of forward-moving freshness (never adopt an older revision, db and signature as one revision), the removal event-class table with every reconciled format's rows, the read_only and deletion halves of repository-lifecycle.md, the proxy.offline key, the management-api refresh route and observability.md's metric names. AC20 to AC24 added; 24 criteria, zero open questions; stays draft pending a gate review. Earlier: Q14 adopted 2026-09-26; Q10, Q12 and Q13 adopted, Q11 answered by the owner."
 description: "Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials."
 author: michielvha
 goal: "Deliver the one capability no free multi-format registry has, so the project is not a slower Gitea with fewer formats."
 priority: "high"
 issue: 5
 created: 2026-09-21
-fable_recheck: "closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q18 (a remote reached only through a virtual revalidated by a proxy.revalidate job replaying the handler's own route below the authorizer) under the standing delegation, and reworded AC22 to signing-service's adopted conditional rules; that judgement needs a Fable recheck"
+fable_recheck: "closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q18 (a remote reached only through a virtual revalidated by a proxy.revalidate job replaying the handler's own route below the authorizer) under the standing delegation, and reworded AC22 to signing-service's adopted conditional rules; that judgement needs a Fable recheck; the data-loss fix on Opus 2026-09-28 raised and adopted Q19 (a remote's retained revisions held on its repository-level document's declared blob-digest list for a handler-declared count) and Q20 (the old blob of a revision-bound violation released at the new blob's commit, the route following the current revision), which also need a Fable recheck"
 covers:
   - "internal/proxy/**"
 ---
@@ -80,6 +80,17 @@ build reliability, egress cost and supply-chain control.
   on which `signing-service.md`'s index runtime registers, so a remote's regenerated documents and
   the re-merge of every virtual listing it happen inside the adoption (its resolved remote-member
   decision, was its Q16).
+- What a remote keeps past its current revision, and what keeps it alive (the resolved
+  retained-revision decision below, was Q19): a handler declares how many superseded revisions of
+  a document set it retains (one unless its format needs more), every blob it keeps for a current
+  or retained revision is on the declared blob-digest list of the remote's repository-level
+  document, and the adoption that pushes a revision out drops its blobs from the list in the same
+  transaction. A checksum a kept document merely mentions keeps nothing alive
+  (`storage-and-gc.md` AC16), so nothing else holds such a blob.
+- The old blob of a revision-bound immutability violation: its cached reference ends in the
+  commit that creates the new blob's at that coordinate, because every format in that variant
+  serves a digest-less path from the current revision and no request can be served the old bytes
+  afterwards (the resolved old-blob decision below, was Q20).
 - Revalidation outside the request for a remote reached only through a `virtual`: a job kind,
   `proxy.revalidate`, coalesced per remote, enqueued when a virtual's read finds a merged input
   from the remote past its TTL and when a virtual's creation or member-list change adds a remote
@@ -406,7 +417,10 @@ pointer"):
   `.asc`, and `Release` with `Release.gpg`.
 - **An adoption is one transaction, and it has a hook.** Adopting a new upstream revision (a
   paired set counting as one) writes the new body or bodies as the remote's current documents,
-  advances `adopted_at`, and runs every hook registered on the **adoption commit** inside that
+  advances `adopted_at`, moves the revision it supersedes into the retained set, drops the
+  retained revision the handler's declared count pushes out, rewrites the remote's declared
+  blob-digest list to match (Interaction with GC, "What a remote keeps past its current
+  revision"), and runs every hook registered on the **adoption commit** inside that
   same transaction, so a failing hook commits nothing and the previous revision keeps serving,
   the shape of the write path's pre-commit hook (`data-model.md` AC37, `storage-and-gc.md` AC25).
   Adoption is cache materialisation, not a write, so the pre-commit hook never sees it; this hook
@@ -574,7 +588,7 @@ stays one table across formats rather than a per-format mechanism:
 |---|---|---|
 | **Explicit security signal** | The security-signal rule below: refuse, purge, one refusal record, one alert | npm's security-holding replacement; PyPI's PEP 792 `quarantined`; Packagist's malware list (`composer.md`); Open VSX's control-document `malicious` list (`openvsx.md`); a Cargo index file answering `451` (`cargo.md`); Go's checksum database disagreeing with served bytes (`go-modules.md`) |
 | **Immutability violation, coordinate-bound** | Treated as the explicit signal: purge the cached content and alert; a later request re-fetches and verifies against the new digest on demand. Chosen where the ecosystem's rule is that the coordinate implies its bytes and every client verifies against a digest the coordinate declares, so the old bytes would fail every consumer | `nuget.md` (a re-fetched `.nupkg` differs), `maven.md` (a release file or its sidecar disagrees), `cargo.md` (`cksum` changes), `cran.md` (`MD5sum` changes), `debian.md` (a pool file's bytes change), `hex.md` (`outer_checksum` or `inner_checksum` changes), `conda.md` (a record's `sha256` changes for the same filename, or a re-fetched file disagrees with it), `pub.md` (`archive_sha256` changes, pub.dev included) |
-| **Immutability violation, revision-bound** | Recorded and alerted, **no purge**, in one of two variants the format chooses. **New blob beside the old:** the new bytes are fetched and verified as a new blob, the old blob stays servable while a retained metadata revision names it, and the route serves the bytes matching the revision the handler resolves the request against (the one the client holds where the route can tell, the current one where the path carries no digest). **Kept bytes:** the cached bytes keep serving, the new upstream bytes are never committed under the old coordinate, and the divergence is recorded and alerted. Chosen where the client verifies against the metadata revision it was given, or where lock files recorded the old bytes, so serving other bytes fails every install (captured) | New blob beside the old: `rpm.md`, `alpine.md`, `arch.md` (a new revision lists a different checksum, `C:` or `S:` at a cached location); `hackage.md` (a new revision gives a cached release a different SHA-256, the route following the current revision); `cpan.md` (a `CHECKSUMS` entry names a different SHA-256, the route following the upstream `CHECKSUMS`). Kept bytes: `terraform.md` (a cached provider's `SHA256SUMS`, signature, keys or zip differ), `puppet.md`, `homebrew.md`, `swift.md` (an archive or release metadata re-fetched after eviction advertises another `checksum`), `vagrant.md` (a new catalog revision lists another checksum or URL for a cached box, or a digest-less box re-fetches as other bytes) |
+| **Immutability violation, revision-bound** | Recorded and alerted, **no purge**, in one of two variants the format chooses. **New blob beside the old:** the route resolves the coordinate against the **current** revision, since every format in this variant requests a path that carries no digest and names no revision, so no route can tell which revision the client holds; on the next request the new bytes are fetched and verified against the current revision's checksum as a new blob, and the commit that creates the new blob's cached reference at the coordinate ends the old blob's in the same transaction. Until that commit the old blob is kept by its own cached reference, untouched by the adoption; after it no request can be served the old bytes, so nothing keeps them and the sweep reclaims them after grace, while the divergence record keeps both digests as provenance (the resolved old-blob decision, was Q20). A client still holding the older revision receives the current bytes and fails its own check until its next metadata refresh, exactly as it does against the upstream. **Kept bytes:** the cached bytes keep serving, the new upstream bytes are never committed under the old coordinate, and the divergence is recorded and alerted. Chosen where the client verifies against the metadata revision it was given, or where lock files recorded the old bytes, so serving other bytes fails every install (captured) | New blob beside the old: `rpm.md`, `alpine.md`, `arch.md` (a new revision lists a different checksum, `C:` or `S:` at a cached location, the route following the current revision); `hackage.md` (a new revision gives a cached release a different SHA-256, the route following the current revision); `cpan.md` (a `CHECKSUMS` entry names a different SHA-256, the route following the upstream `CHECKSUMS`). Kept bytes: `terraform.md` (a cached provider's `SHA256SUMS`, signature, keys or zip differ), `puppet.md`, `homebrew.md`, `swift.md` (an archive or release metadata re-fetched after eviction advertises another `checksum`), `vagrant.md` (a new catalog revision lists another checksum or URL for a cached box, or a digest-less box re-fetches as other bytes) |
 | **Re-materialisation with a divergence** | The recorded digest is replaced and the divergence is operator-visible; no purge, because the ecosystem makes no byte promise for the file | `composer.md` (a dist whose upstream published an empty `shasum`) |
 | **Flag mirroring** | Keep serving, mirror the upstream's flag faithfully, record an operator-visible divergence; the client's own semantics exclude it from new resolutions | PyPI yank; Cargo `yanked` (`cargo.md`); NuGet `listed: false` (`nuget.md`); the Forge's `deleted_at` withdrawal (`puppet.md`); pub's `retracted: true` (`pub.md`). Hex `retired`, Julia `yanked`, conda `revoked` and Swift's `problem` are ordinary metadata changes on their wires |
 | **Removal with no signal** | Keep serving, record an operator-visible divergence and alert once; the backstop for a takedown that arrives without a detectable signal | An author unpublish; a version or package vanishing from the index or answering `404` or `410` where it existed, on every wire that carries no reason (Maven Central, nuget.org, crates.io, CRAN's archive, Debian suites, ConanCenter, General, Supermarket, opam-repository, the Forge, Packagist, hex.pm, luarocks.org, the Terraform registries, conda-forge (a filename moving to `removed`, a subdir answering `404`), Hackage (entries a rebased index drops, a tarball answering `404`), CPAN (a `CHECKSUMS` entry disappearing), a Vagrant catalog losing a version or provider (HCP Vagrant included), a Swift registry's list, and pub.dev, where a vanished version is always administrative moderation yet not machine-distinguishable). A coordinate that can no longer be re-materialised after eviction answers `404` with its cached metadata kept, so the removal stays visible (`swift.md`) |
@@ -584,7 +598,11 @@ stays one table across formats rather than a per-format mechanism:
 
 The two immutability classes are one decision per format, made in its spec from its client's
 captured verification behaviour, and the layer offers both because both are correct for the
-wires that chose them. The Maven, NuGet and Composer rows were requested by the consequences queue
+wires that chose them. A future format whose request carries the revision or the digest, so
+that its route could serve an older revision's bytes, would need the old blob held by a retained
+cached reference for as long as a retained revision names it; that is a revision of this class
+raised with that format, never a silent extension, because none of the five in the variant has
+such a route and a keep-alive no request reads is storage nothing can test. The Maven, NuGet and Composer rows were requested by the consequences queue
 (Open items 7, 11 and 13); the conda, Vagrant, Hackage, CPAN, Composer, opam, Swift, pub, Hex,
 Terraform and LuaRocks rows were added by the closing reconciliation sweep from each format's own
 removal table (format batches 4 to 8); the others are recorded here so that the class a format
@@ -702,6 +720,54 @@ Two behavioural consequences follow, and they are Design-level rather than bookk
   call. That is also the ordering answer against a concurrent fetch: the intent barrier already
   serialises it, with no eviction-specific mechanism.
 
+**What a remote keeps past its current revision** (the resolved retained-revision decision, was
+Q19). Several formats serve a client that holds an older metadata revision than the one the
+remote has adopted: a file only a superseded index names, which apk, pacman and dnf still request
+from the index they cached (`alpine.md`, `arch.md`, `rpm.md`); a tarball the previous Hackage
+revision authorises (`hackage.md`); a `by-hash` index one of the two previous Debian envelopes
+lists (`debian.md`). To serve it the handler keeps, per retained revision, blobs that are no
+current document: the superseded index body a map is built from, the per-revision filename or
+location map, a previous envelope, a retained revision's index chunks. **A digest a kept document
+merely mentions in its body is metadata and keeps nothing alive** (`storage-and-gc.md`, the fourth
+root's third reach, AC16; `data-model.md` AC34), and a remote writes no content snapshot, so
+without a keep-alive every such blob is collected by the first sweep past grace while its revision
+still serves. The rule:
+
+- **The count is the lifetime.** A handler declares, in its proxied classification, how many
+  superseded revisions of each revisioned document set it retains: one unless its format needs
+  more (`debian.md` retains two, the format's own rule that two previous versions of a `by-hash`
+  file should stay available). Nothing is retained by time, and nothing is retained by a revision
+  merely being mentioned.
+- **Every blob the handler keeps for the current revision or a retained one is on the declared
+  blob-digest list of the remote's repository-level document**, which is a current document, so
+  the fourth root marks the blob for exactly as long as its revision is current or retained,
+  whether that document's own body is inline or CAS-backed. The adoption rewrites the list in its
+  own transaction: the superseded revision's blobs stay, the blobs of the revision the count
+  pushes out leave, and a blob that has left the list is collectable at the next sweep past grace.
+- **A blob derived later is declared only while its revision still counts.** A map built on the
+  first package request under a revision is appended by a cache-materialisation write that
+  commits only while that revision is current or retained, checked under the document's revision
+  token, so a map finished after an adoption dropped its revision is discarded, never declared.
+- **Declaring is a reference creation.** Appending a digest goes through `storage-and-gc.md`'s
+  shared reference-creation call (its AC10), cancelling any standing deletion intent, and the
+  delete pass's re-check counts the list (its AC16), so a sweep interleaved with an adoption or a
+  map build never collects a blob a current or retained revision declares.
+- **Files are not on the list.** A cached file a retained revision names is held by its own cached
+  reference, the second root, which no adoption ends; its end is LRU eviction, as for any cached
+  file. Only the metadata a route consults to decide that a path is named and what it must hash
+  to rides the list. A file evicted while its revision is retained is re-fetched and verified
+  against that revision's checksum (the current revision's wherever both name the path), and answers the upstream's `404` once the upstream has removed
+  it; a path no current or retained revision names answers `404` with no upstream request, each
+  handler's open-relay rule.
+
+The declared list holds these blobs rather than a cached reference because they are metadata with
+no `File` row to hang a reference on, and because LRU eviction taking one retained revision's map
+while that revision's files are still requested would leave them unverifiable; the accepted cost
+is that retained metadata sits outside the quota's referenced bytes, bounded by the declared count
+(AC27). The old blob of a revision-bound immutability violation is a different case with a
+different answer, because it is a file and no route can serve it once the new blob is committed
+(the event-class table, AC28).
+
 ### Conformance against real upstreams
 
 The main conformance suite runs against local stand-ins; a separate nightly scheduled job runs
@@ -732,10 +798,14 @@ statement of it (the method set stays pinned; this is the entry's request, not a
 - for mutable metadata, the handler's **adoption check**: a function over a new upstream revision's
   complete body, run before anything is adopted, that returns the revision's ordering value where
   the format defines one, the event classes it observed against the cached revision (the
-  event-class table), and the records `FromUpstream` consumes where the format regenerates. The
-  layer applies the regression rule and the classes from what it returns and hands the records to
-  the adoption hook, so the handler reads its own wire and the layer decides what happens
-  (Freshness of what a remote serves);
+  event-class table), the records `FromUpstream` consumes where the format regenerates, and the
+  digests of the blobs it keeps for the revision. The layer applies the regression rule and the
+  classes from what it returns, hands the records to the adoption hook and writes the kept digests
+  onto the remote's declared blob-digest list, so the handler reads its own wire and the layer
+  decides what happens (Freshness of what a remote serves; Interaction with GC, "What a remote
+  keeps past its current revision");
+- for a revisioned document set, the number of superseded revisions the handler retains, one by
+  default (the resolved retained-revision decision, was Q19);
 - the upstream location, or an ordered list of candidate locations, each a path under the
   upstream root or an absolute URL the adapter's allowlist must admit;
 - the `upstream.Options` for the exchange (`Accept`, `Accept-Encoding` opt-in, `User-Agent`
@@ -822,9 +892,10 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       `UpstreamDivergence`). Every class of the event table under "Upstream removal or
       replacement" produces its stated response from a handler's classification, including a
       coordinate-bound immutability violation (purged as the signal), a revision-bound one in
-      each variant (recorded and alerted with no purge: both blobs servable and the route serving
-      the bytes matching the revision the handler resolves the request against; or the cached
-      bytes kept with the new bytes never committed under the old coordinate), a flag mirrored
+      each variant (recorded and alerted with no purge: the route serving the current
+      revision's bytes and the old blob's cached reference ending with the new blob's commit,
+      AC28; or the cached bytes kept with the new bytes never committed under the old
+      coordinate), a flag mirrored
       with a divergence, an ordinary change with and without a handler-recorded divergence, a
       regression not adopted, and a fetch-time integrity failure that commits nothing and
       creates no negative entry.
@@ -930,6 +1001,28 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       is enqueued and a pending one ends without an upstream request. The replay is the only
       call into a handler that does not pass the shared authorizer, and the job is never
       scheduled.
+- [ ] AC27: A remote's retained revisions keep their blobs for exactly their declared lifetime
+      and no longer. With a handler retaining one superseded revision and keeping, per revision,
+      an index body and a lazily built map both above the inline threshold: after revision N+1
+      is adopted, a sweep run with the repository's grace lapsed leaves N's body and map in the
+      store, and a request for a file only N names, its cached reference evicted before the
+      sweep, is re-fetched, verified against N's checksum and served; after N+2 is adopted, the
+      next sweep past grace collects N's body and map, and a request for a file only N names
+      answers `404` with no upstream request. A digest N's kept document only mentions in its
+      body, undeclared, is collected by the first sweep past grace. A map for N finished after
+      the adoption that dropped N is discarded and never declared. With the sweep paused after
+      its mark and again after recording its deletion intents, an adoption and a map build
+      committing in each pause leave every blob a current or retained revision declares in the
+      store. A handler retaining two superseded revisions keeps N's blobs through N+2's
+      adoption and releases them at N+3's.
+- [ ] AC28: In the new-blob-beside-the-old variant, the adoption that changes a cached
+      coordinate's checksum leaves the old blob's cached reference in place; the next request
+      for the coordinate, from a client of either revision, fetches, verifies and serves the
+      current revision's bytes, and the commit that creates the new blob's cached reference ends
+      the old blob's in the same transaction, so no interleaving with the sweep leaves the
+      coordinate with neither blob referenced or with both. The next sweep past grace collects
+      the old blob, unless a hosted reference or another remote still holds its digest, and the
+      divergence record naming both digests is still queryable afterwards.
 
 ## Test Plan
 
@@ -961,6 +1054,8 @@ one direction only is how a Phase 4 discovers it has no counterparty.
 | AC25 | integration + fault injection | `internal/proxy/adoption_test.go` (a registered hook's effects exist exactly when the adoption commits; an injected hook failure leaves the previous revision and record serving and no job enqueued; a regression and an integrity failure run no hook; the adoption check runs before commit and its records reach the hook); `internal/index/proxied_generation_test.go` (shared with `signing-service.md` AC20: `FromUpstream` inside the adoption through `Adopt`) |
 | AC26 | integration + architecture test + conformance | `internal/proxy/revalidate_job_test.go` (many virtual reads past the remote's TTL or after a refresh enqueue one job per window; the read path makes no upstream request; the replay's conditional requests and adoption counted at the network layer; creation and member addition enqueue a first fetch; `proxy.offline`, `read_only` and deletion enqueue nothing and end a pending job without a request; no `Schedule` of the kind exists), shared with `signing-service.md` AC35's `internal/index/virtual_remote_member_test.go`; `internal/proxy/arch_test.go` (the replay is the sole call into a handler below the shared authorizer); `conformance/opam/virtual_test.go` (shared with `opam.md` AC26 and `signing-service.md` AC35: the virtual lists a remote's packages with no request to the remote's own URL) |
 | AC24 | integration + conformance | `internal/manage/refresh_test.go` (shared with `management-api.md` AC29: metadata and negative entries marked due, no fetch, no snapshot); `conformance/oci/refresh_test.go` (a real client's next pull revalidates inside the TTL, and a negatively cached tag is looked up again, observed at the upstream stand-in) |
+| AC27 | integration + fault injection + property | `internal/proxy/retained_revision_test.go` (a fixture handler retaining one and then two superseded revisions, bodies and maps above the inline threshold, a stand-in counting upstream requests; a sweep on an injected clock with the grace lapsed after each adoption, the object store read after each; a retained revision's file evicted, re-fetched and verified against its checksum; an undeclared mentioned digest collected; a late map build discarded after its revision is dropped; the sweep paused after its mark and after intent recording while an adoption and a map build commit); `internal/storage/gc_property_test.go` (declared-list births and ends interleaved with the sweep, the operation `storage-and-gc.md` AC16 already generates, with the adoption and the map build as its producers) |
+| AC28 | integration + fault injection | `internal/proxy/upstream_removal_test.go` (the new-blob variant: the old reference through the adoption and a sweep past grace; clients of both revisions served the current bytes; the reference move in one transaction with the sweep paused between its mark and its delete pass across the commit; the old blob collected at the next sweep and kept while a hosted repository references the same digest; the divergence record read afterwards) |
 
 ## Implementation Phases
 
@@ -981,7 +1076,9 @@ is this layer's first proving ground, and npm at step 5 tests whether it general
   cache-scoped freshness record with paired document sets and never adopting an older revision,
   rendered through `signing-service.md`'s serving door under each document's declared
   conditional rule (AC22), the handler's adoption check and the adoption commit with its hook
-  (AC25), the `proxy.revalidate` job kind with `EnqueueRevalidation` and the replay of the
+  (AC25), the retained-revision set with its declared count and the remote's declared
+  blob-digest list rewritten by each adoption and appended by map builds (AC27), the
+  `proxy.revalidate` job kind with `EnqueueRevalidation` and the replay of the
   handler's route below the authorizer (AC26), the cache refresh's layer half (AC24). The job kind
   needs `async-operations.md`'s queue core, which lands at the start of charter step 4b; the
   replay has its first caller only when a format with a `Merge` builds its virtual phase, so
@@ -995,7 +1092,8 @@ is this layer's first proving ground, and npm at step 5 tests whether it general
   security-signal rule's upstream channel (the condemnation record, the purge as ending cached
   references, refusal before any upstream fetch, one alert per condemnation) with passive
   detection and its exposure stated in the operator documentation, the event-class table
-  executed from handler classifications (AC13), divergence flagging, the `observability.md`
+  executed from handler classifications (AC13) with the old blob's cached reference ending at
+  the new blob's commit in the new-blob variant (AC28), divergence flagging, the `observability.md`
   metric, alert and audit names (AC10, AC13, AC14), the preconfigured upstream set (AC19), the
   nightly real-upstream job with its NuGet and Maven Central rows
 
@@ -1005,7 +1103,14 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None remain open. Q18 was raised and adopted on 2026-09-28 by the closing reconciliation sweep,
+None remain open. Q19 and Q20 were raised and adopted on 2026-09-28 by the data-loss fix that
+followed `storage-and-gc.md`'s closing sweep, on Opus, under the owner's standing delegation: what
+keeps a remote's retained revisions alive and for how long (the remote's declared blob-digest list,
+for a handler-declared count of superseded revisions), and what happens to the old blob of a
+revision-bound violation (its cached reference ends at the new blob's commit, since no route in the
+variant can serve it). Both close the hole the sweep found, a blob kept "while a retained revision
+names it" through a checksum in a document body, which no mark root follows; the owner may reverse
+either, and both await a Fable recheck. Q18 was raised and adopted on 2026-09-28 by the closing reconciliation sweep,
 on Opus, under the owner's standing delegation: how a remote reached only through a virtual is
 revalidated outside a request (the `proxy.revalidate` job replaying the handler's own route),
 which `signing-service.md`'s adopted remote-member decision left to this spec; the owner may
@@ -1025,6 +1130,78 @@ acceptance criteria and the Test Plan above. All earlier questions (Q1-Q9) were 
 owner and are folded into Design, Scope and the acceptance criteria above.
 Resolved decisions are kept rather than deleted, so the reasoning survives the next time someone
 asks why it was done this way.
+
+### Resolved: what keeps a remote's retained revisions alive (was Q19, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation**, in the data-loss fix following
+`storage-and-gc.md`'s closing sweep, on Opus. Option A: every blob a handler keeps for a current or
+retained revision is on the declared blob-digest list of the remote's repository-level document,
+and the lifetime is a count of superseded revisions the handler declares, one by default, rewritten
+by each adoption in its own transaction. Folded into Scope, Design ("What a remote keeps past its
+current revision" under Interaction with GC, the adoption-commit bullet, the Obligation section),
+AC27 and Phase 2, and into `rpm.md`, `alpine.md`, `arch.md`, `hackage.md` and `debian.md`.
+
+The question: five formats keep a superseded upstream revision on a remote so that a client holding
+it is not broken (`rpm.md`, `alpine.md` and `arch.md` "retained revisions" with a per-revision
+filename or location map stored as CAS-backed metadata, `hackage.md`'s previous revision, and
+`debian.md`'s two previous envelopes), and each said the revision's blobs live "while the revision
+is retained". `storage-and-gc.md` settled that a digest a document merely mentions keeps nothing
+alive and that a remote has no snapshots, so nothing held them: the first sweep past grace would
+collect a map while a client's request still needs it. None of the five said how long a revision is
+retained either.
+
+**Recommendation:** A, because it uses the one keep-alive a document has, adds no mark root, and
+ties the lifetime to the adoption, the only moment the remote's view of its upstream changes.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Declared list on the remote's repository-level document, lifetime a handler-declared count (one by default)** | The fourth root's existing reach, no new root and no schema change; the lifetime set in the adoption's own transaction, so a sweep sees a revision's blobs either declared or not; storage bounded by the count; the sweep race covered by the declared-list operation the property suite already generates | Retained metadata sits outside the quota's referenced bytes, bounded by the count; a lazily built map becomes a reference creation through the shared call, refused once its revision is dropped; a client holding a revision older than every retained one gets `404` on a file only that revision names |
+| **B. Hold the blobs through cached references under LRU** | Retained metadata counted against the quota and evicted with everything else | A map or an index body is not a file, so it needs a `File`-shaped row for non-file metadata, a `data-model.md` change; eviction can take a retained revision's map while its files are still requested, leaving them unverifiable; the lifetime is whatever LRU gives, which no client can reason about |
+| **C. Retain by time, a `proxy.revision_retention` duration** | Behaviour independent of how often the upstream publishes | A job to drop expired revisions, a write outside the adoption, a new key in `deployment.md`'s table, and storage proportional to upstream churn over the window (Hackage's index changes with every upload) |
+
+**Why this is yours:** it sets how far back a client of a remote can lag and still install, and it
+decides whether a remote's metadata may grow outside its quota.
+
+Accepted cost: retained metadata outside the quota, bounded by the count; the map build's
+reference creation and its refusal after the drop; and a `404` for a client older than every
+retained revision, which is still gentler than the upstreams (Alpine's and Arch's mirrors answer
+`404` for a superseded build at once, live in `alpine.md` and `arch.md`). B lost to the missing row
+and to eviction breaking a revision it had not dropped; C to the job, the key and churn-scaled
+storage. `debian.md` declares two, its format's own `by-hash` rule; the other four declare one.
+
+### Resolved: the old blob of a revision-bound violation (was Q20, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation**, in the same fix, on Opus. Option A:
+in the new-blob-beside-the-old variant the route resolves a digest-less path against the current
+revision, and the commit that creates the new blob's cached reference at the coordinate ends the
+old blob's in the same transaction; the sweep then reclaims the old blob. Folded into Scope, the
+event-class table and the paragraph beneath it, AC13, AC28 and Phase 3, and into the removal tables
+and criteria of `rpm.md`, `alpine.md`, `arch.md`, `hackage.md` and `cpan.md`.
+
+The question: the variant said "the old blob stays servable while a retained metadata revision names
+it", held by nothing the sweep follows. Before choosing a keep-alive it has to be asked who reads the
+old blob. The class's own definition already said the route follows "the current one where the path
+carries no digest", and every format in the variant requests a digest-less path (an RPM `location
+href`, an apk `{P}-{V}.apk`, a pacman `%FILENAME%`, a Hackage tarball path, a CPAN author path), so
+no route can tell which revision the client holds, and the claim in three format specs that each
+revision's clients receive their own bytes could not be implemented.
+
+**Recommendation:** A, because it keeps nothing that nothing serves and states what the wire allows.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. End the old reference at the new commit; the route follows the current revision** | No storage held for bytes no request can reach; no schema change; a single reference per coordinate, moved in one transaction, so a sweep sees one blob or the other | A client still holding the older revision receives the current bytes and fails its own check until its next metadata refresh, exactly as against the upstream; `rpm.md`, `alpine.md` and `arch.md` withdraw the claim that each revision's clients get their own bytes |
+| **B. Keep the old blob through a second cached reference until no retained revision names it** | The old bytes stay in the store for as long as a revision names them | No request can be served them, so it is storage nothing reads and a criterion no client can exercise; a second `File` per filename in a remote's version, a `data-model.md` change |
+| **C. Put the old digest on the remote's declared list while a retained revision names it** | The same retention without a second `File` | As B, plus the bytes escape the quota and eviction |
+
+**Why this is yours:** it changes what three format specs promised their clients, and it decides that
+a remote does not preserve bytes the upstream replaced.
+
+Accepted cost: the older-revision client's failure until it refreshes, the withdrawn claim, and
+bytes the upstream replaced leaving the store at the next sweep; the divergence record keeps both
+digests, so the replacement stays explainable. B and C lost because the bytes they keep have no
+reader. A format whose request carries the revision or a digest would need B, raised as a revision
+of the class when it arrives.
 
 ### Resolved: revalidating a remote reached only through a virtual (was Q18, raised and adopted 2026-09-28)
 
@@ -1470,3 +1647,4 @@ What each entry is (adapter, URL, credential kind, allowlist) is a profile in
 | 2026-09-23 | 9c971d4 | cross-spec consistency (data model, generic exemption, GC roots) | AC8 now applies to proxy-capable formats, AC10 preserves pre-existing remote metadata on a failed fetch, the resolved cache-location text names all three GC roots, and cached files retain remote provenance; existing open questions still keep the spec draft. |
 | 2026-09-28 | 6e6d503 | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. Applied sweep 1 item 2, verified against `data-model.md`'s current text: the cache-scoped freshness record is cited as that spec's ("Freshness scoped to the pointer, and the documents that hang on it", AC44) instead of "reported as a sibling consequence", and AC22's Test Plan row records `internal/proxy/freshness_test.go` as shared with AC44. `management-api.md` reconciliation 3 and proxy-cache reconciliation 6 were already this spec's own text (AC24). No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
 | 2026-09-28 | 181a63b | closing reconciliation sweep of the format batch 3 to 8 items and the signing-service closing-sweep item, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through "From the signing-service.md closing sweep" verified against the current text of the spec that raised it and of the format spec each row concerns. Signing-service closing sweep item 1: AC22 and "Freshness of what a remote serves" reworded so its two clauses are the two conditional rules of `signing-service.md`'s resolved later-condition decision (was its Q12), matched to its Design text and AC11 (`exact` default, `not-earlier` declared, brew's API remote per `homebrew.md` AC4), rendered through its serving door, cached files through `ServeFile`; the adoption commit made one transaction with a hook `Adopt` registers on (its was-Q16), fed by a new adoption check in the fetch-and-cache request (AC25); the revalidation seam adopted as Q18 (the `proxy.revalidate` job, coalesced per remote, enqueued by virtual reads past the TTL and by creation or member addition, replaying the handler's route below the authorizer; Option B, a fourth optional interface, and C, layer-only revalidation, rejected), folded through Scope, Design, the passive-detection paragraph, the refresh paragraph, AC18, AC26 and Phase 2, with an extension note on the was-Q12 record. Batch 7 item 2 is the same rewording and batch 7 item 5 the same seam. Event-class table: batch 4 item 6 (conda), batch 5 item 9 (hex, terraform, luarocks; luarocks.org and the Terraform registries), batch 6 item 13 (hackage, cpan), batch 7 item 13 (vagrant, composer, opam), batch 8 item 11 (swift, pub, pub.dev), each row read from that format's own removal table; the revision-bound class now names its two variants and the ordinary class a handler-recorded divergence (cpan, opam), AC13 and its row extended; `cpan.md`'s signature-verdict row recorded as in no class. Batch 4 item 6's Alpine half: named as a completion-only verifier consumer with swift, vagrant, chef, julia, hex and homebrew. Earlier items found already done: every item before format batch 3 is in the progress log and verified in the text (Open items 12 to 32 rows and requests, theme 7, upstream-adapters 1 to 3, repository-lifecycle 14, sweep 1 item 2); puppet's per-module gating (Open item 25) is handler-local in `puppet.md` and needs nothing here. Consequences for `async-operations.md` (the new kind), `signing-service.md`, `format-handler-interface.md`, `auth.md` and `homebrew.md` reported, not applied. One question adopted on Opus, so `fable_recheck` added. `node scripts/check-spec.js`: zero failures on this file. Stays draft pending a gate review. |
+| 2026-09-28 | 93982ba | data-loss fix on Opus (storage-and-gc closing-sweep item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 0 of "From the storage-and-gc.md closing sweep" in `agents/spec-loop/consequences.md`, verified against `storage-and-gc.md`'s fourth mark root (its third reach, AC16) and `data-model.md` AC34, AC36 and AC45: a digest a document merely mentions keeps nothing alive, the declared blob-digest list is a document's only keep-alive, and a remote writes no content snapshot. The hole: the event-class row said the old blob "stays servable while a retained metadata revision names it", and five format specs kept retained revisions and per-revision maps as CAS-backed metadata named only inside a remote's document, so the sweep would collect them while clients could still request them. Two questions raised in decision shape and adopted under the standing delegation, `fable_recheck` extended. Q19: every blob a handler keeps for a current or retained revision is on the declared blob-digest list of the remote's repository-level document, the lifetime a handler-declared count of superseded revisions (one by default, `debian.md` two), rewritten by each adoption in its own transaction; a lazily built map is a reference creation through the shared call, discarded once its revision is dropped; files stay on their own cached references (B, cached references for metadata, lost to the missing `File` row and to eviction breaking a revision it had not dropped; C, time-based retention, to the job, the key and churn-scaled storage). Q20: in the new-blob variant the route follows the current revision, since every format in it requests a digest-less path, and the new blob's commit ends the old blob's cached reference in the same transaction (B and C kept bytes no request can reach). Folded into Scope, the event-class row and the paragraph beneath it, the adoption-commit bullet, a new "What a remote keeps past its current revision" under Interaction with GC, the Obligation section (kept digests from the adoption check, the retention count), AC13, Phases 2 and 3. AC27 (retained blobs survive a sweep with the grace lapsed and with the sweep paused after its mark and after intent recording across an adoption and a map build, and are collected after the dropping adoption) and AC28 (the reference move, both revisions' clients served the current bytes, the old blob collected, the divergence record kept) added with Test Plan rows naming `internal/proxy/retained_revision_test.go`, `internal/proxy/upstream_removal_test.go` and the shared `internal/storage/gc_property_test.go`. No mark root added; the set stays five. `node scripts/check-spec.js`: zero failures on this file. Stays draft pending a gate review. |
