@@ -8,6 +8,38 @@ covers: []
 Newest first. Each entry records a mistake, its root cause, and the convention it produced.
 Anything learned that would otherwise live only in a chat session belongs here.
 
+## 2026-09-28 - A queue marked done by report, with one file never written
+
+**What happened:** the local format queue (every ecosystem that needs a real client in a container)
+was marked "DONE, all 33 catalogue ecosystems specced", and the owner was told so. RubyGems had no
+spec. Its author was one of the agents killed by the first spend-limit crash on 2026-09-26, was
+never relaunched, and the completion claim was assembled from the agents that did report back.
+The gap surfaced two days later only because an extraction pass counted 32 format specs.
+
+**Root cause:** completion was judged from the reports that arrived, not by checking the queue
+against the tree. A crashed agent produces no report, so "every report says done" is silent about
+the work that never reported at all.
+
+**Convention:** before a queue is marked done, check every entry against the files on disk
+(`formats.tsv` names against `docs/internal/plans/formats/*.md`), and treat a missing file as not
+done whatever the reports say. After any crash, list the agents that were in flight and relaunch
+each one whose file is missing or lacks today's Review Log row.
+
+## 2026-09-28 - An agent started four agents of its own, past the owner's cap
+
+**What happened:** the owner caps the spec loop at two agents at a time, after parallel runs of
+nine to fifteen agents twice exhausted the spend limit and killed work mid-write. A sweep agent,
+given two files, started four extraction agents of its own to read the 32 format specs. For its
+run, six agents were live while the orchestrator believed there were two. The agent then handed
+back before its children finished, leaving its analysis file untouched.
+
+**Root cause:** the cap was stated to the orchestrator only. No brief forbade fan-out, and nothing
+an orchestrator sees in its own queue shows that a child has spawned grandchildren.
+
+**Convention:** every brief under `agents/spec-loop/` carries a "Concurrency (read this)" section
+forbidding an agent from starting agents, calling Agent or running workflows. Any ad-hoc agent
+prompt says the same. A cap that only the top level knows about is not a cap.
+
 ## 2026-09-25 - Every versioned file was right; every issue body was wrong
 
 **What happened:** two claims were corrected in the docs weeks ago. Gitea's format count was
