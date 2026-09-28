@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): Context now states the charter's placement (step 10, after Tier 1, not gated by the breadth verdict); this spec owns building the harness's replication setup provisioner (Phase 1, AC15 extended); the sibling amendments it asked for have landed in the specs (auth.md's pull widening, data-model.md's link, identity, freeze write kind and provenance, format-handler-interface.md's reserved non-colliding mount, AC18 extended), leaving only the server-side ingest hook pending at the interface re-open; freeze of a signed-index format is re-signed by the shared signing service. Earlier: all seven questions adopted under the owner's standing delegation plus Q8-Q10. 20 criteria, zero open questions; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-28 at 9f93794 with the foundation authoring wave (not a review): signing records travel with the pointer set and a linked follower signs nothing, takeover needs resolvable keys (AC21); sync runs as replication.sync jobs with per-snapshot checkpoints on the shared async runner (AC3, AC23); the link has a six-state vocabulary with terminal ended, an updatable leader name and composes with repository-lifecycle's Writable predicate, read_only and deletion (AC11, AC12, AC16, AC22); observability's replication metrics, alerts, audit events and peer trace propagation folded into AC10; a replication. key table (AC24); the reserved segment is named replication (AC18); freeze's dated HCP Vagrant consumer recorded with Q11 adopted. Earlier: Wave 1 reconciliation (charter step 10, harness provisioner, sibling amendments landed) and Q1-Q10 adopted under the owner's standing delegation. 24 criteria, zero open questions; the server-side ingest hook stays pending at the interface re-open; stays draft pending a gate review."
 description: "Spec for replicating content between registry instances - geo-distribution, disaster recovery and air-gapped mirroring - built on the content-addressed store and immutable snapshots."
 author: michielvha
 goal: "Let one logical registry span sites, so a build pulls locally and an air-gapped environment can be fed a verifiable snapshot."
@@ -80,6 +80,20 @@ state.
   consults no follower.
 - Replication authentication: a follower reads a leader with an ordinary machine token, whose
   `pull` scope on a repository authorizes that repository's replication read surface.
+- **Signed documents on a follower**: the leader's `Signature` and `PointerDocument` records
+  travel with the pointer set, a follower serves them verbatim and signs nothing while linked,
+  and takeover requires the repository's active signing keys to resolve on the follower
+  (`signing-service.md`'s resolved follower decision, was Q9 there).
+- **Sync as shared deferred work**: a link's sync and transfer run as `replication.sync` jobs
+  on the shared async runner (`async-operations.md`), with a checkpoint per completed snapshot,
+  so resume after a crash is the queue's rescue path rather than a replication-local mechanism.
+- **The link's own lifecycle**: its status vocabulary, including the terminal `ended`, its
+  updatable leader repository name, and how it composes with the repository lifecycle
+  (`repository-lifecycle.md`): deletion, rename, `read_only`, and the shared `Writable`
+  predicate.
+- **What a monitor sees**: the link-state metrics, alerts, audit events and peer trace
+  propagation `observability.md` catalogues for replication, and the `replication.`
+  configuration keys `deployment.md` registers.
 
 **Out of scope**
 
@@ -140,7 +154,31 @@ intent's commit gate like any other commit (the GC section below), never by a re
 rule.
 
 Interrupted transfer resumes from the last completed snapshot rather than restarting, because
-each snapshot is an independently valid stopping point.
+each snapshot is an independently valid stopping point. How that resume happens is not
+replication's own mechanism (the sync-as-jobs section below).
+
+### Sync runs on the shared async runner
+
+A link's sync and transfer are deferred work, and `async-operations.md` owns deferred work, so
+each active link is a `Schedule` on `internal/async` whose tick enqueues a `replication.sync`
+job (its consumer table names the kind), also enqueued on demand when an operator asks for a
+sync now. The job carries exclusivity key `link:{id}`, so two syncs of one link never run at
+once, and it calls `job.Checkpoint` after each completed snapshot - the applied position, the
+mirrored pointer moves so far - which is what makes "resumes from the last completed snapshot"
+(AC3) the queue's ordinary rescue path: a worker that dies mid-transfer loses its lease, any
+worker reclaims the job and its `Work` re-runs from the checkpoint. The transfer is idempotent
+up to the checkpoint by construction, because blob puts are content-addressed and a snapshot
+either applied whole or not at all (AC2). Replication therefore builds no resume state, no
+retry loop and no worker pool of its own; a follower runs its own queue and a leader never
+enqueues anything for a follower (`async-operations.md` excludes cross-instance jobs because
+followers pull).
+
+Two consequences of riding the runner are stated so nobody rediscovers them: the per-link
+`Schedule`'s period is the instance default `replication.sync_interval` unless the link sets its
+own (the configuration section below); and an instance in offline mode (`proxy.offline`) runs no
+`replication.sync` at all, since `async-operations.md` disables every network-reaching schedule
+under that switch. An offline instance's replicas therefore stay at their position and archive
+import is their only feed, which is exactly the air-gapped case (AC15).
 
 ### The pointer set is replicated, not only the head
 
@@ -163,6 +201,17 @@ follower holds one mirrored pointer per leader pointer, same name, same target s
 - **The follower's replication pointer is its mirrored default pointer.** That is the pointer
   `storage-and-gc.md` names as an instance of the fifth root; every mirrored environment pointer
   is one too, for the same reason (the GC section below).
+- **The pointer's signed and dated documents travel with it.** `signing-service.md` places
+  signatures and pointer-held documents (a Debian `InRelease`, a TUF `timestamp.json`, a
+  per-pointer freshness record) in `Signature` and `PointerDocument` records outside snapshot
+  content, so a follower that received only snapshots would have to sign envelopes it holds no
+  key for. Per that spec's resolved follower decision (was Q9 there), those records are part of
+  the replication read surface, transferred with the pointer set as opaque records, and a linked
+  follower **serves them verbatim and signs nothing**: its `Last-Modified` and its signed
+  indexes are the leader's, byte for byte, which is what "a follower must serve indexes it did
+  not sign" (`project-charter.md`, step 10) means in practice. A mirrored pointer's records move
+  with the pointer, under the same rule that the pointer moves only once its target is whole.
+  Signing on a follower begins only at takeover (the takeover section below).
 
 ### Snapshot identity makes a divergent history detectable
 
@@ -201,15 +250,76 @@ an explicit error naming the repository as a replica and naming its leader, so a
 misconfigured against the follower fails loudly instead of forking the history. Snapshot numbers
 on a replica are the leader's numbers, because nothing else ever writes there.
 
-The boundary is held in the shared write path, not by each handler: the shared call that commits
-a snapshot or moves a pointer refuses for a repository with an active replication link unless
-invoked by the replication applier, and an architecture test asserts the applier is the only
-package holding that capability (AC12). A handler therefore needs no knowledge that replicas
-exist.
+The boundary is held in the shared write path, not by each handler, and since
+`repository-lifecycle.md` it is one predicate rather than a replication-local check: the sole
+write-transaction constructor in `internal/storage` calls `repository.Writable`, which returns
+`ErrReplica` for a repository whose link is not `ended`, beside `ErrReadOnly` and `ErrDeleted`
+for the other two unwritable states (that spec's AC9). The API and every binding render
+`ErrReplica` as the same `405` a `read_only` refusal gets, with problem type `replica` whose
+detail names the leader, so a misconfigured CI job reads why in its own error output. The
+applier is the one caller allowed past `ErrReplica`, and only past that error: it opens its
+transactions through an entry point of the same constructor that waives the replica refusal and
+nothing else (a replica that is also `read_only` or `deleted` refuses the applier too), and the
+architecture test on the constructor asserts `internal/replication` is that entry point's only
+importer (AC12, shared with `repository-lifecycle.md` AC9 and `storage-and-gc.md` AC25). A
+handler therefore needs no knowledge that replicas exist.
 
 Replication is configured per repository, so an instance can be a follower for some
 repositories and a leader for others, and can host ordinary local repositories beside its
 replicas, without any repository having two writers.
+
+### The link has states of its own, and a life that ends
+
+A `ReplicationLink` (`data-model.md`, "Replication's records") is in exactly one state, and the
+state set is the one `observability.md`'s one-hot gauge reports:
+
+| State | Meaning | Reason carried |
+|---|---|---|
+| `syncing` | a `replication.sync` job holds the link's exclusivity key and is transferring | |
+| `idle` | the last sync completed and the follower is at the leader's position for every mirrored pointer | |
+| `failed` | the last sync could not complete and nothing was applied | `not-found` (the leader repository is gone or renamed), `unauthorized`, `unreachable`, `source-type` |
+| `reseeding` | a retention gap was detected and a checkpoint-based re-seed is in progress | `retention-gap` |
+| `diverged` | the identity check failed; nothing applies until an operator re-seed | the highest agreed snapshot number |
+| `ended` | terminal: the link no longer governs the repository | `takeover`, `deleted` |
+
+"An active link" anywhere in this spec means a link in any state but `ended`, and "at most one
+active link per repository" (`data-model.md` AC31) means at most one such link. A repository
+whose only link is `ended` is an ordinary local repository as far as `Writable` is concerned,
+which is what makes takeover a state change rather than a row deletion, and keeps the takeover
+record readable afterwards.
+
+The link composes with `repository-lifecycle.md`'s repository states as follows, each clause
+asserted by AC22:
+
+- **Deleting a replica ends its link** with reason `deleted`, in the deletion transaction (that
+  spec's AC22). Nothing reaches the leader, which does not know its followers.
+- **The leader repository being deleted or renamed** is observed, not announced: the follower's
+  next sync gets `not-found` and marks the link `failed` naming it, while the follower keeps
+  serving its last replicated position. The link's **leader repository name is updatable**
+  through the link's own configuration (the management surface below); after a leader-side
+  rename the operator updates the name and the next sync resumes on the identity check alone,
+  with no re-seed, because the history is unchanged. After a leader-side deletion the operator
+  takes the follower over or deletes it.
+- **A `read_only` replica stays read-only after takeover.** `read_only` is the repository's
+  state, the link is the link's; takeover changes only the latter. Thaw is the lifecycle
+  operation that makes such a repository writable again, and it is a separate, audited act.
+- **A deleted repository cannot be linked**, and neither can a `remote` or a `virtual` (the
+  source section above; refused `failed` at configuration time with reason `source-type` on the
+  leader side, or a type refusal on the follower side).
+- **The credential a link references cannot be deleted while it is referenced**: `409` `in-use`
+  naming the link, the same rule that protects an `Upstream`'s credential
+  (`repository-lifecycle.md` AC20; the store is `upstream-adapters.md`'s `UpstreamCredential`).
+
+The link's own management - create, update (leader URL, leader repository name, credential
+reference, sync interval), delete, an on-demand sync, the operator re-seed and takeover - is
+administration of a repository and therefore belongs on the registry-owned management API under
+the reserved `api` segment (`management-api.md`), admin-only like every other repository
+administration kind, implemented by `internal/replication` behind that API's conventions and
+audited as `replication.link.create`, `.update`, `.delete`, `.takeover` (the observability
+section below). The routes are a consequence for `management-api.md`'s endpoint table; this
+spec states the operations and their semantics. Export and import are operator actions on the
+same surface: export streams the archive and prints its manifest digest, import takes the
+archive and the digest.
 
 ### Only a local repository is a replication source
 
@@ -263,17 +373,33 @@ exactly like any other publish:
   excluded. Warming the cache on the connected side is the operator's workflow.
 - **A signed-index format is re-signed, by the shared service.** Because the target handler
   renders the frozen repository's metadata, a frozen Debian or RPM repository serves indexes
-  signed by the shared signing and index service (charter step 7) under this instance's key,
-  never by the handler and never with the upstream's signature. Freeze adds no signing of its
-  own, and archive signing, if the owner ever reverses the archive trust-root decision below,
-  belongs to that same service.
+  signed by `signing-service.md`'s write-path hook under the target repository's key, never by
+  the handler and never with the upstream's signature (that spec names freeze among its
+  consumers: "freeze re-signs through the target repository's key"). Freeze adds no signing of
+  its own, and archive signing, if the owner ever reverses the archive trust-root decision
+  below, lands on the `archive` key purpose `signing-service.md` reserves for it.
+- **The target must be writable.** A freeze is a completed write, so it consults
+  `repository.Writable` like every other (`repository-lifecycle.md` AC9): a `read_only` target,
+  a replica or a deleted repository refuses it with the corresponding typed error and nothing
+  committed.
 
 Freeze needs a way to drive a handler's hosted ingest from blobs already in the store, which the
 pinned five-method interface (`format-handler-interface.md`) does not offer: its hosted writes
 arrive over HTTP. The hook's shape is therefore an addition argued at that spec's scheduled
-re-open, and the freeze phase below is sequenced after it. The freeze write kind and its
-provenance record are likewise the shared data model's to define, and `data-model.md` now does
-(its "Replication's records" section and AC30); this spec states what they must do.
+re-open ("a server-side ingest hook ... which `replication.md`'s freeze needs and which blocks
+its freeze phase"), and the freeze phase below is sequenced after it. The freeze write kind and
+its provenance record are likewise the shared data model's to define, and `data-model.md` now
+does (its "Replication's records" section and AC30); this spec states what they must do.
+
+**Freeze has a dated first consumer.** `formats/vagrant.md` documents leaving HCP Vagrant, which
+stops operating on 2026-12-31, as an `immediate` sync of a `remote` followed by a freeze into a
+`local` (its resolved HCP decision, was Q12 there, and its AC21). Freeze sits in Phase 4 of a
+spec placed at charter step 10, behind the interface re-open, and this spec does not pretend the
+two dates will meet; the resolved sequencing decision below (was Q11) records how the content
+survives the gap: the `immediate` sync fetches every box before the deadline, the remote is then
+frozen `read_only` so it neither revalidates against a dead upstream nor evicts, and the freeze
+into a `local` runs whenever this phase lands, because a `read_only` remote serves cache-only
+indefinitely (`repository-lifecycle.md`, `proxy-cache.md` AC23).
 
 ### A follower's GC is the same GC, and replication is a second writer into its CAS
 
@@ -354,11 +480,22 @@ rather than a data-availability claim (resolved takeover question below). "Takeo
 deliberately rather than "promotion", which `data-model.md` already names for repointing an
 environment pointer.
 
-- **Takeover is an explicit operator command on the follower, per repository.** It ends the
-  replication link, records the leader, the snapshot number and identity it took over at, and
-  when, and makes the repository an ordinary writable local repository. The next write creates
-  snapshot N+1 on the replicated numbering, chained to N's identity, so the history is
-  continuous for anyone who followed the old leader up to N.
+- **Takeover is an explicit operator command on the follower, per repository.** It moves the
+  replication link to `ended` with reason `takeover`, records on it the leader, the snapshot
+  number and identity it took over at, and when, and thereby makes the repository an ordinary
+  local repository as far as `Writable` is concerned: writable if its own state is `active`,
+  still read-only if an operator had frozen it `read_only` (the link section above). The next
+  write creates snapshot N+1 on the replicated numbering, chained to N's identity, so the
+  history is continuous for anyone who followed the old leader up to N.
+- **Takeover needs the keys it is about to sign with.** A linked follower has signed nothing
+  (the pointer-set section above); the first write after takeover regenerates and re-signs the
+  repository's pointer documents. Takeover is therefore refused, with a problem naming each
+  missing key, unless every active signing key of the repository resolves on the follower - a
+  `kms` or `pkcs11` key reachable from both instances, or a `file` key created on the follower
+  and announced under the repository's rotation profile before the takeover
+  (`signing-service.md`'s resolved follower decision, was Q9 there, and its AC23; the
+  replicated-repository key recipe in `deployment.md` shows the working configuration). A
+  format that declares no signing has no keys to resolve and this check passes vacuously.
 - **Fencing the old leader is the operator's duty, and the command makes it an explicit
   acknowledgement.** Takeover refuses to run without an acknowledgement flag whose refusal
   message names the duty: the old leader must accept no further writes to that repository
@@ -383,8 +520,8 @@ logged (resolved instance-to-instance-authentication question below). There is n
 instance identity: the leader's authorizer sees a token like any other.
 
 - **`pull` on a repository authorizes that repository's replication read surface**: the pointer
-  set, the retained ranges, snapshot identities, deltas, checkpoints, and blobs by digest. The
-  action vocabulary stays `pull`/`push`/`delete`. A token lacking `pull` on the repository -
+  set, its `Signature` and `PointerDocument` records, the retained ranges, snapshot identities,
+  deltas, checkpoints, and blobs by digest. The action vocabulary stays `pull`/`push`/`delete`. A token lacking `pull` on the repository -
   including a push-only token, and a token scoped to a different repository - is refused on
   every replication route with the response an unauthorized caller receives.
 - **A `pull` grant narrowed below the whole repository does not authorize replication reads.**
@@ -397,9 +534,19 @@ instance identity: the leader's authorizer sees a token like any other.
   them. The replication package declares its own route-to-scope mapping, evaluated by the
   central authorizer, and an architecture test asserts that every replication route is mapped
   and that none evaluates authorization itself (AC18). This is the named enforcer the
-  constitution requires of a shared boundary. The routes mount under a first path segment
-  `format-handler-interface.md`'s registration layer holds as reserved, so no handler's
-  format-first mount or root-anchored claim can collide with them (its AC11).
+  constitution requires of a shared boundary. The routes mount under the first path segment
+  **`replication`**, which `format-handler-interface.md`'s registration layer holds as reserved
+  beside `api`, `ui`, `healthz`, `readyz` and `metrics`, so no handler may be named
+  `replication` or claim a root-anchored mount under `/replication/` (its AC11; the fixture pair
+  in `internal/format/register_test.go` is named `replication`, one handler declaring that
+  `Name()` and one claiming that root anchor, each refused at registration). The string matches
+  the `format` label value `observability.md` assigns these routes and the audit event prefix
+  below, so one word names the surface everywhere.
+- **The follower's credential is an `UpstreamCredential`** (`upstream-adapters.md`'s store),
+  referenced by the link, rotated in one row, never logged, and protected from deletion while
+  referenced (`repository-lifecycle.md` AC20). The follower's outbound requests to the leader
+  are not upstream fetches and use none of the upstream adapter seam; they do carry trace
+  context (the observability section below).
 
 The accepted cost is that `pull` widens: any pull-scoped CI token can enumerate snapshot history
 and read deltas, and so can reach content that a hosted delete removed from the head but that
@@ -443,18 +590,61 @@ An archive may be exported from a replica as well as from the leader, since the 
 the leader's numbers and identities. The trust root is then the digest the exporting instance
 printed.
 
+### What a monitor sees, and what an operator configures
+
+AC10's "an explicit status a monitor can alert on, never only as a log line" is met through
+`observability.md`'s shared instruments, not a replication-local endpoint, so the names below
+are that spec's catalogue and this spec's tests assert them through `telemetry.NewTestRecorder`
+(its AC6):
+
+- **Metrics**, all labelled by `link`: `replication_link_state{link,state}`, a one-hot gauge
+  over the six states in the link table above; `replication_last_sync_timestamp_seconds{link}`,
+  from which lag is `time() - value`; `replication_snapshots_behind{link}`, the position gap to
+  the leader as of the last contact; and `replication_bytes_transferred_total{link,direction}`.
+- **Alerts** in the packaged `alerts.yaml`: `ReplicationLinkFailed`, `ReplicationReseeding` and
+  `ReplicationDiverged` on the corresponding one-hot state, and `ReplicationLagHigh` when the
+  last successful sync is older than 15 minutes.
+- **Audit events**: `replication.link.create`, `.update`, `.delete`, `.takeover`,
+  `replication.export` and `replication.import`, each carrying `link` and `leader`, emitted
+  through `telemetry.Auditor.Emit`.
+- **Trace propagation**: a follower's requests to its leader carry `traceparent` and
+  `tracestate`, so a follower's sync span is a child of the leader's trace and one trace spans
+  both instances (`observability.md`'s resolved propagation decision, was Q4 there, and its
+  AC20). Requests to a replication peer are the one outbound path that propagates; upstream
+  fetches never do. The replication listener's responses carry `X-Request-Id` like every other
+  (its AC14).
+
+The instance configuration this spec owns, registered under the `replication.` prefix
+`deployment.md` reserves for it, in that spec's three-column shape:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `replication.sync_interval` | `60s` | Period of a link's `replication.sync` schedule when the link sets none of its own; the floor for a per-link value |
+| `replication.blob_concurrency` | `8` | Concurrent want-list blob fetches per running sync job |
+
+There is no checkpoint-interval key: the checkpoint is per completed snapshot by construction
+(the sync-as-jobs section above), and the leader's checkpoint cadence is `data-model.md`'s.
+Per-link settings (the leader, the credential reference, an optional sync interval) live on the
+`ReplicationLink` row, not in instance configuration, consistent with `repository-lifecycle.md`'s
+boundary between records and configuration.
+
 ## Acceptance Criteria
 
 - [ ] AC1: A follower replicating a leader repository serves byte-identical content for every
       artifact under every pointer the leader carries - the default pointer and each named
       environment pointer, including one targeting a snapshot outside the leader's retention
-      window - including metadata at all three levels.
+      window - including metadata at all three levels and, for a format whose pointers carry
+      signed or dated documents, the leader's `Signature` and `PointerDocument` records byte
+      for byte.
 - [ ] AC2: A follower's mirrored pointer moves only after the complete snapshot it will target
       has arrived and verified; a transfer killed midway leaves every mirrored pointer on the
       most recently completed target (its pre-transfer target if none completed), never a
       partially applied one.
 - [ ] AC3: An interrupted transfer resumes from the last completed snapshot rather than
-      restarting.
+      restarting: a `replication.sync` worker killed mid-transfer loses its lease, another worker
+      reclaims the job and its `Work` re-runs from the checkpoint written after the last
+      completed snapshot, transferring no blob and applying no snapshot the checkpoint already
+      covers.
 - [ ] AC4: A blob arriving with a digest that does not match is rejected and nothing is
       committed, proven by a fault-injection test that corrupts bytes in transit.
 - [ ] AC5: A snapshot range exported to an archive and imported into an isolated instance with no
@@ -488,14 +678,28 @@ printed.
 - [ ] AC10: A follower exposes, per replicated repository, its current position, each mirrored
       pointer's target, and the time of its last successful sync; a failed sync, a re-seed in
       progress and a detected divergence are each surfaced as an explicit status a monitor can
-      alert on (`failed`, `reseeding`, `diverged`), never only as a log line.
+      alert on (`failed`, `reseeding`, `diverged`), never only as a log line: the link's state
+      is exactly one of `syncing`, `idle`, `failed`, `reseeding`, `diverged`, `ended`, reported
+      one-hot as `replication_link_state{link,state}` beside
+      `replication_last_sync_timestamp_seconds{link}`, `replication_snapshots_behind{link}` and
+      `replication_bytes_transferred_total{link,direction}`; the packaged alerts
+      `ReplicationLinkFailed`, `ReplicationReseeding`, `ReplicationDiverged` and
+      `ReplicationLagHigh` fire on those series; every link create, update, delete and takeover
+      and every export and import emits its audit event (`replication.link.create`, `.update`,
+      `.delete`, `.takeover`, `replication.export`, `replication.import`) carrying `link` and
+      `leader`; and a follower's requests to its leader carry `traceparent` and `tracestate` so
+      the follower's sync span is a child of the leader's trace.
 - [ ] AC11: A replicated repository refuses a client publish, a hosted delete, a metadata-only
-      mutation, and every pointer create, repoint and delete, each with an explicit error naming
-      the repository as a replica and naming its leader, and its content is unchanged
+      mutation, and every pointer create, repoint and delete, each refused through
+      `repository.Writable`'s `ErrReplica` and rendered `405` with problem type `replica` whose
+      detail names the repository as a replica and names its leader, and its content is unchanged
       afterwards; on the same instance a local repository accepts writes, and one instance
       simultaneously follows a leader for one repository and serves as leader for another.
 - [ ] AC12: No package other than the replication applier can commit a snapshot or move a
-      pointer in a repository with an active replication link, enforced by an architecture test.
+      pointer in a repository with an active replication link: the sole write-transaction
+      constructor calls `repository.Writable`, the entry point that waives `ErrReplica` (and
+      only that error) is imported by `internal/replication` alone, and an architecture test on
+      the constructor asserts both.
 - [ ] AC13: Configuring replication from a `remote` or `virtual` source repository is refused
       with an error naming the repository type, and a virtual repository defined on the follower
       over its replicas and its own remote repositories resolves in member order.
@@ -515,10 +719,11 @@ printed.
       `setup` key, whose provisioner this spec builds, so the runner no longer rejects that key
       as not yet landed.
 - [ ] AC16: Takeover refuses to run without the operator's explicit fencing acknowledgement, with
-      a refusal naming the duty; with it, the repository stops replicating, accepts writes, its
-      next write creates the snapshot numbered one past the last replicated snapshot and chained
-      to its identity, and its status records the leader, snapshot number and time it took over
-      at.
+      a refusal naming the duty; with it, the link moves to `ended` with reason `takeover`, the
+      repository accepts writes, its next write creates the snapshot numbered one past the last
+      replicated snapshot and chained to its identity, and the link records the leader, snapshot
+      number and time it took over at; a repository that was `read_only` before takeover is
+      `read_only` after it, refusing writes with `ErrReadOnly` until thawed.
 - [ ] AC17: A follower whose position's identity differs from the leader's identity at the same
       number - produced by an old leader that kept writing after a takeover, and by a leader
       restored from an older backup - applies nothing, keeps serving, and reports `diverged`
@@ -531,7 +736,8 @@ printed.
       unauthorized caller receives; and an architecture test asserts every replication route
       is mapped to a scope evaluated by the central authorizer, that no replication route
       evaluates authorization itself, and that every replication route sits under the reserved
-      mount registration refuses to handlers.
+      `replication` first segment, which handler registration refuses to a handler named
+      `replication` and to a root-anchored claim under `/replication/`.
 - [ ] AC19: Export prints its manifest digest; import refuses to start without a manifest digest
       argument, refuses with nothing committed when the digest does not match the archive's
       manifest, and refuses an archive whose manifest was rewritten with every internal digest
@@ -541,61 +747,105 @@ printed.
       and deletion - are reflected on the follower after its next sync, and a pointer deleted on
       the leader is deleted on the follower, releasing its pin so its snapshot ages out under
       the follower's window.
+- [ ] AC21: A linked follower of a repository whose format declares signing serves the leader's
+      `Signature` and `PointerDocument` records verbatim, its `Last-Modified` and signed index
+      bytes equal to the leader's, and creates no `Signature` record and calls no signing
+      backend while the link is active; takeover of that repository is refused with a problem
+      naming each active key that does not resolve on the follower, and succeeds when every
+      active key resolves (a shared `kms` fixture key, and a `file` key created and announced on
+      the follower beforehand), after which the follower's first write re-signs under those keys.
+- [ ] AC22: Deleting a replica ends its link with reason `deleted` in the deletion transaction;
+      a leader-side rename or deletion of the leader repository makes the follower's next sync
+      mark the link `failed` with reason `not-found` while the follower keeps serving its last
+      replicated position; updating the link's leader repository name after a rename resumes
+      syncing with no re-seed; configuring a link on a deleted repository is refused, and a link
+      whose leader repository is a `remote` or `virtual` fails naming `source-type`; and
+      deleting the `UpstreamCredential` a link references is refused `409` `in-use` naming the
+      link until the link is deleted or rotated to another credential.
+- [ ] AC23: Each active link is a `Schedule` on `internal/async` that enqueues a
+      `replication.sync` job with exclusivity key `link:{id}`, so a second sync of the same link
+      never runs while one holds the key, an on-demand sync enqueues the same kind, the job
+      checkpoints after every completed snapshot, and an instance with `proxy.offline: true`
+      enqueues no `replication.sync` while its links keep their position and still accept an
+      archive import.
+- [ ] AC24: The configuration schema registers exactly `replication.sync_interval` (default
+      `60s`) and `replication.blob_concurrency` (default `8`) under the `replication.` prefix
+      and refuses any other key under it naming this spec; a link with no interval of its own
+      syncs at `replication.sync_interval`, a per-link interval below it is refused
+      `validation`, and a sync job runs at most `replication.blob_concurrency` want-list fetches
+      at once.
 
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
-| AC1 | integration | `internal/replication/content_test.go` (default and environment pointers, one pinned outside the leader's window) |
+| AC1 | integration | `internal/replication/content_test.go` (default and environment pointers, one pinned outside the leader's window; a signed-index fixture format's `Signature` and `PointerDocument` bytes) |
 | AC2 | fault injection | `internal/replication/atomicity_test.go` (kill mid-transfer) |
-| AC3 | fault injection | `internal/replication/resume_test.go` |
+| AC3 | fault injection | `internal/replication/resume_test.go` (worker killed mid-transfer, lease expiry, reclaim and re-run from the checkpoint; blob and snapshot accounting against the checkpoint) |
 | AC4 | fault injection | `internal/replication/verify_test.go` |
 | AC5 | integration | `internal/replication/airgap_test.go` (leader-exported and replica-exported archives) |
 | AC6 | integration | `internal/replication/retention_test.go` (leader prunes past an offline follower; follower detects, re-seeds and keeps serving) |
 | AC7 | property | `internal/storage/gc_property_test.go` (transfer-apply, mirrored pointer moves and freeze in the operation set) |
 | AC8 | integration | `internal/replication/seed_test.go` (leader with pruned early history; re-seed byte accounting against blobs already held) |
 | AC9 | fault injection | `internal/replication/airgap_test.go` (truncated, mutated, gapped and divergent archives) |
-| AC10 | integration | `internal/replication/status_test.go` |
-| AC11 | integration | `internal/replication/readonly_test.go` (every write kind against a replica; mixed-role instance) |
-| AC12 | architecture | `internal/replication/arch_test.go` (replica write capability held only by the applier) |
+| AC10 | integration | `internal/replication/status_test.go` (state per link); `internal/replication/metrics_test.go` through `telemetry.NewTestRecorder` (the four series, the four alerts' rules, the six `replication.*` audit events; shared with `observability.md` AC6); `internal/replication/trace_test.go` (two instances, one trace; shared with `observability.md` AC20) |
+| AC11 | integration | `internal/replication/readonly_test.go` (every write kind against a replica, `ErrReplica` and the `replica` problem naming the leader; mixed-role instance) |
+| AC12 | architecture | `internal/storage/arch_test.go` (sole write-transaction constructor calls `Writable`; the `ErrReplica`-waiving entry point imported only by `internal/replication`; shared with `repository-lifecycle.md` AC9 and `storage-and-gc.md` AC25) |
 | AC13 | integration | `internal/replication/source_test.go` (remote and virtual sources refused; follower-defined virtual resolution) |
 | AC14 | integration | `internal/replication/freeze_test.go` (table-driven over every handler declaring proxy support; network-level no-egress assertion; sweep-before-commit fault) |
 | AC15 | conformance | `conformance/replication/freeze_airgap_test.go` (two network-isolated instances, offline mode, real client, links through the `replication` key); `conformance/core/seed_test.go` (the `replication` provisioner reached through the seed path) |
-| AC16 | integration | `internal/replication/takeover_test.go` |
+| AC16 | integration | `internal/replication/takeover_test.go` (acknowledgement gate; link `ended` with reason `takeover`; numbering and identity continuation; a `read_only` replica stays read-only) |
 | AC17 | integration | `internal/replication/divergence_test.go` (post-takeover split brain; leader restored from backup) |
 | AC18 | integration | `internal/replication/auth_test.go` (pull, push-only, other-repository and pattern-narrowed tokens on every replication route) |
-| AC18 | architecture | `internal/replication/arch_test.go` (every replication route mapped through the central authorizer and mounted under the reserved segment) |
+| AC18 | architecture | `internal/replication/arch_test.go` (every replication route mapped through the central authorizer and mounted under `/replication/`); `internal/format/register_test.go` (the `replication` fixture pair refused at registration; shared with `format-handler-interface.md` AC11) |
 | AC19 | fault injection | `internal/replication/airgap_trust_test.go` (missing digest, wrong digest, rewritten self-consistent manifest) |
 | AC20 | integration | `internal/replication/pointers_test.go` (create, promote, rollback, delete; pin release on the follower) |
+| AC21 | integration | `internal/replication/signing_records_test.go` (records on the read surface; follower's bytes equal the leader's; no `Signature` created and no backend call while linked); `internal/replication/takeover_keys_test.go` (refused naming unresolvable keys; succeeds with a shared `kms` fixture key and with a pre-announced follower `file` key; first write re-signs); both shared with `signing-service.md` AC23 |
+| AC22 | integration | `internal/replication/lifecycle_test.go` (replica deletion ends the link; leader deletion observed as `failed` `not-found`, follower still serving; shared with `repository-lifecycle.md` AC22); `internal/replication/link_rename_test.go` (leader rename, name update, resume without re-seed; shared with `repository-lifecycle.md` AC13); `internal/replication/link_config_test.go` (deleted repository refused; credential `in-use`, shared with `repository-lifecycle.md` AC20) |
+| AC23 | integration | `internal/replication/sync_job_test.go` (schedule per link, kind and exclusivity key, on-demand enqueue, checkpoint per snapshot, offline instance enqueues nothing and still imports) |
+| AC24 | unit + integration | `internal/replication/config_test.go` (defaults, per-link floor, concurrency bound observed at a counting leader); `scripts/check-config-keys.js` over this spec's key table (shared with `deployment.md`) |
 
 ## Implementation Phases
 
 ### Phase 0: Sibling prerequisites
-Not work in this spec's package, but it gates Phase 1. Status at the 2026-09-26 reconciliation:
+Not work in this spec's package, but it gates Phase 1. Status at the 2026-09-28 reconciliation:
 `auth.md` records that `pull` authorizes the replication read surface and that a
 pattern-narrowed grant does not (its section "What `pull` also authorizes: replication reads",
 done); `data-model.md` defines the replication link, the retained snapshot identity, the freeze
 write kind and the provenance record (its AC29 to AC31, done in the spec, built in its Phase 5);
-`format-handler-interface.md` reserves a non-colliding mount for the replication routes (its
-AC11, done). Still pending: the server-side ingest hook, a named input to that spec's scheduled
-re-open, which Phase 4 waits on.
+`format-handler-interface.md` reserves the `replication` segment (its AC11, done; the string is
+named here); `repository-lifecycle.md` generalises the replica refusal into `repository.Writable`
+(its AC9); `async-operations.md` runs `replication.sync` (its consumer table); `signing-service.md`
+puts `Signature` and `PointerDocument` records on the read surface and states the takeover key
+precondition (its AC23, its Phase 5); `observability.md` catalogues the metrics, alerts, audit
+events and peer propagation (its Phase 4); `deployment.md` reserves the `replication.` prefix
+and carries the replicated-repository key recipe. Every one exists as a spec; the runtime
+each provides lands with its own phases, and this spec's Phase 1 waits on `internal/async`,
+`internal/repository` and `internal/telemetry` being built. Still pending as a design input:
+the server-side ingest hook, a named input to the interface's scheduled re-open, which Phase 4
+waits on.
 
 ### Phase 1: Pull replication
 The harness's `replication` `setup` provisioner on the seed path, including a taken-over starting
-state, so every later phase's conformance cases can be expressed. Snapshot-range transfer with want-list blob fetch, checkpoint-based seed and re-seed, snapshot
-identity and divergence refusal, pointer-set mirroring, digest verification, atomic pointer
-moves, resume, read-only enforcement on replicas with its architecture test, replication
-authentication with its route mapping and architecture test, source-type refusal, and the
-follower status surface (AC1-AC4, AC6-AC8, AC10-AC13, AC17 in part, AC18, AC20).
+state, so every later phase's conformance cases can be expressed. Snapshot-range transfer with
+want-list blob fetch as `replication.sync` jobs with per-snapshot checkpoints, the `replication.`
+configuration keys, checkpoint-based seed and re-seed, snapshot identity and divergence refusal,
+pointer-set mirroring including `Signature` and `PointerDocument` records, digest verification,
+atomic pointer moves, resume through the queue's rescue path, read-only enforcement on replicas
+through the shared `Writable` entry point and its architecture test, replication authentication
+with its route mapping and architecture test, source-type refusal, the link's management
+operations and lifecycle composition, and the follower status surface with its metrics, alerts,
+audit events and peer trace propagation (AC1-AC4, AC6-AC8, AC10-AC13, AC17 in part, AC18, AC20,
+AC21 in part, AC22-AC24).
 
 ### Phase 2: Air-gapped export and import
 The same transfer format serialised to an archive, with the out-of-band manifest digest, digest,
 contiguity, identity and atomicity checks on import, and export from replicas (AC5, AC9, AC19).
 
 ### Phase 3: Disaster-recovery takeover
-The takeover command with its fencing acknowledgement, numbering and identity continuation, the
-operator re-seed that lists discarded snapshots, and the operator guide's fencing runbook (AC16,
-AC17).
+The takeover command with its fencing acknowledgement, its signing-key precondition, numbering
+and identity continuation, the operator re-seed that lists discarded snapshots, and the operator
+guide's fencing runbook and replicated-repository key recipe (AC16, AC17, AC21 in full).
 
 ### Phase 4: Freeze of cached content
 Freeze into a local repository through the handler ingest hook, provenance recording and export,
@@ -609,7 +859,8 @@ Populated by `/tasks` once this spec reaches `planned`.
 
 No questions are open. The seven raised by the first review were adopted on 2026-09-26 under
 the owner's standing delegation, and folding them exposed three further judgment calls (Q8-Q10),
-which were raised and adopted in the same pass. Every adopted answer is reversible by the owner.
+which were raised and adopted in the same pass. The 2026-09-28 reconciliation raised and adopted
+one more (Q11). Every adopted answer is reversible by the owner.
 
 ### Resolved: retention-gap recovery (was Q1)
 
@@ -764,9 +1015,9 @@ manifest digest, and import requires it as a mandatory argument carried out of b
 cost: the root is only as strong as the operator's channel discipline, and a digest carried on
 the same medium as the archive verifies nothing, which the operator guide states plainly. B lost
 for v1 because it introduces a class of instance key - generation, rotation, pinning and
-distribution - that no spec owns yet. If the owner later reverses to B, the key belongs to the
-shared signing infrastructure that `write-triggered-services-prototype.md` is establishing for
-signed indexes and that a future signing-service spec will own, not to this package.
+distribution - that no spec owned at the time. If the owner later reverses to B, the key belongs
+to `signing-service.md`, which reserves the `archive` key purpose with instance scope for exactly
+that reversal and builds nothing for it, not to this package.
 
 Folded into: Scope (instance-key signing out of scope), Design (the export section's trust-root
 bullet), AC19, Phase 2.
@@ -839,9 +1090,9 @@ from the cached upstream documents.
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: freeze is a publish
 through the target repository's hosted ingest path, and its handler renders the local metadata.
 Accepted cost: upstream-signed indexes are not preserved byte for byte - a frozen Debian mirror
-serves a `Release` signed by this instance's signing service, so clients in the gap trust that key
-rather than the upstream's - and freeze waits for an ingest hook at `format-handler-interface.md`'s
-re-open. B lost because an upstream index lists everything upstream offers while a freeze holds
+serves a `Release` signed by `signing-service.md`'s write-path hook under the target repository's
+key, so clients in the gap trust that key rather than the upstream's - and freeze waits for an
+ingest hook at `format-handler-interface.md`'s re-open. B lost because an upstream index lists everything upstream offers while a freeze holds
 only what was cached, so a verbatim copy advertises files the repository cannot serve, and
 because it would put metadata into a local repository that its own handler never produced.
 
@@ -855,6 +1106,41 @@ Folded into: Design (the freeze section), AC14, Phases 0 and 4.
 **Why this is yours:** it decides whose signature an air-gapped client trusts for frozen content,
 and whether freeze waits on an interface re-open.
 
+### Resolved: the HCP Vagrant deadline against freeze's sequencing (was Q11)
+
+Raised and adopted in the 2026-09-28 reconciliation. `formats/vagrant.md` names freeze as the
+second half of the only recipe that keeps HCP Vagrant content past 2026-12-31 (its resolved HCP
+decision, was Q12 there), while freeze is Phase 4 of a spec at charter step 10, behind the
+interface re-open's ingest hook. Something must be said about the gap, or the recipe is a promise
+the schedule cannot keep.
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option A: keep freeze where it is
+and let a `read_only` remote carry the content across the gap. The recipe becomes three steps:
+`immediate` sync before the deadline, then freeze the remote `read_only` so it neither
+revalidates against a dead upstream nor evicts (`repository-lifecycle.md`'s read-only remote,
+`proxy-cache.md` AC23), then freeze into a `local` whenever Phase 4 lands. Accepted cost: until
+that day the content serves as a cache-only remote rather than as hosted content with generated
+catalogs, and it cannot be exported or replicated (a `remote` is not a source). B lost because it
+would move the ingest hook out of the re-open, which exists precisely so the pin grows on
+evidence rather than on a date; C lost because a verbatim copy of the cached catalog is the
+option the freeze-metadata decision (was Q10) rejected, and building it as a stopgap means two
+freeze paths.
+
+**Recommendation:** A. It keeps every settled decision and meets the dated need with a state
+`repository-lifecycle.md` already defines.
+
+Folded into: Design (the freeze section's dated-consumer paragraph). Consequence for
+`formats/vagrant.md`: its recipe and AC21 gain the `read_only` step.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Keep freeze at step 10; a `read_only` remote carries the content** | No settled decision moves; the content survives on machinery that exists before Tier 1 | The content is a cache, not hosted, until freeze lands; no export or replication of it meanwhile |
+| **B. Pull the ingest hook and freeze forward, before the re-open** | Hosted HCP content before the deadline | The pin grows on a date, not on evidence, which the re-open exists to prevent |
+| **C. An interim verbatim-copy freeze** | Hosted content early with no interface change | The path the freeze-metadata decision rejected, built anyway, then replaced |
+
+**Why this is yours:** it weighs a dated external commitment against the build order the charter
+owns.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -863,3 +1149,4 @@ and whether freeze waits on an interface re-open.
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and this spec is only a consequential update: the decision's home is `storage-and-gc.md`. Context, the follower-GC bullet and AC7 carried from four mark roots to five. The fifth root does cover a follower: a replication pointer targets a snapshot exactly as an environment pointer does, so the follower's served snapshot and its reconstruction chain are exempt from the follower's own pruning while targeted, which turns the previously replication-local 'the served snapshot is never pruned' rule into an instance of the shared root, released when replication advances the pointer. Scoped explicitly to the follower's store: what a leader may prune while a follower is behind is Q1, which the root set does not answer and which stays open along with Q2-Q7. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a gate review. Adopted Q1 A (leader prunes consulting no follower; follower detects the gap from the leader's advertised retained ranges and re-seeds, fetching blobs by want-list so held blobs are never re-sent), Q2 A (read-only replicas, per-repository roles, mixed-role instances; options table written first, the question had none), Q3 A (virtual and remote sources refused; followers compose their own virtuals), Q4 B (freeze: one publish of cached content into a local repository, provenance not as `RemoteFile`, never contacts upstream), Q5 A (per-repository takeover command gated on an explicit fencing acknowledgement, numbering and identity continue), Q6 A (ordinary machine token, `pull` authorizes the replication read surface; derived: a pattern-narrowed `pull` does not), Q7 A (mandatory out-of-band manifest digest at import). Folding exposed three judgment calls, raised and adopted as Q8 A (the whole pointer set replicates, not only the head, which the spec's single-number tracking had silently assumed), Q9 A (chained per-snapshot identity retained past pruning, so a split brain or restored leader is detected rather than applied) and Q10 A (freeze publishes through the hosted ingest path and the handler renders metadata). Body rewritten through Context (build order deferred to the charter), Scope, every Design section (new: pointer set, identity, read-only, freeze, takeover, authentication; retention section rewritten to the adopted option), and Phases (Phase 0 sibling prerequisites; Phase 3 is now takeover, Phase 4 freeze). AC1, AC2, AC5-AC10 rewritten to assert the adopted behaviour (AC6 no longer an either-or); AC11-AC20 added, each with a Test Plan row, AC18 with two. Sibling amendments needed in `auth.md`, `data-model.md`, `format-handler-interface.md` and, text only, `storage-and-gc.md`; none made here. Stays draft. |
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the charter fold: Context's claim that replication has no build-order step was stale; it now cites step 10, after Tier 1, not gated by the breadth verdict, with the charter's reason. From the harness and generic fold: this spec owns building the harness's `replication` provisioner, now Phase 1's first item and asserted through AC15, whose case declares its two instances network-isolated and offline. From the auth and interface fold: Phase 0 records the sibling amendments as landed (auth's replication-read widening; data-model's link, identity, freeze write kind and provenance, applied in the same reconciliation; the interface's reserved mount, now cited in the authentication section and asserted by AC18's architecture test), with the server-side ingest hook the one remaining prerequisite, pending at the interface re-open. From the replication fold's signing note: a frozen signed-index repository is re-signed by the shared signing and index service, and any future archive signing belongs there too. Freeze's metadata sentence updated now that `data-model.md` defines the write kind. |
+| 2026-09-28 | 9f93794 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. Already done from the old folds: charter step 10 placement, the `replication` provisioner (Phase 1, AC15), auth's `pull` widening. Applied: signing-service 5 (`Signature` and `PointerDocument` records travel with the pointer set, a linked follower serves verbatim and signs nothing, takeover refused unless every active key resolves; the two "future signing-service" sentences are now citations; AC1 extended, AC21 added); async-operations 8 (a new Design section: each link a `Schedule` enqueuing `replication.sync` with exclusivity key `link:{id}` and a checkpoint per completed snapshot, resume as the queue's rescue path, offline mode runs no sync; AC3 rewritten, AC23 added); repository-lifecycle 7 (a new Design section with the link's six-state table including terminal `ended` with reasons `takeover` and `deleted`, the updatable leader name, `failed` naming `not-found` on leader rename or deletion, `read_only` surviving takeover, `repository.Writable` with `ErrReplica` as the shared predicate and the applier's waiving entry point; AC11, AC12, AC16 rewritten, AC22 added); observability 13 (the four `replication_*` series, four alerts, six audit events and peer trace propagation, folded into AC10 with two new Test Plan rows); deployment 8 (a `replication.` key table: `sync_interval` 60s, `blob_concurrency` 8, no checkpoint-interval key; AC24); format-handler-interface reconciliation 1 (the reserved segment is the string `replication`, fixture pair `replication` in `register_test.go`; AC18 names it); Open item 23 (freeze's dated first consumer, the HCP Vagrant recipe, with Q11 raised and adopted: a `read_only` remote carries the content until Phase 4 lands). Phase 0 restated against the specs that now exist. 24 criteria, zero open questions, one new resolved question; stays draft pending a gate review. Consequences for other files reported to the queue. |
