@@ -176,7 +176,7 @@ write, not a management kind, unless the row says otherwise.
 
 **The frame of 2026-09-26 holds at full width.** Every one of the 32 specs gives each management
 kind an effect a real client observes, so the oracle owns the effect everywhere. Where no client
-
+drives the trigger, the trigger is verified by our integration tests, exactly as the section on
 what still needs deciding said.
 
 **Most formats have no client-driven trigger at all.** Fourteen of 32 have one: npm, Galaxy (publish),
