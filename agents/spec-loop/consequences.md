@@ -365,6 +365,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - observability.md, deployment.md, web-ui.md: DONE 2026-09-28. Applied storage-and-gc 2-3, data-model 9, auth 3, supply-chain 2 and 6, replication 4-5 and 8, management-api 2, conformance-harness 8-9, credential-management/lifecycle 1, upstream/async 3-4, FHI 4-5, web-ui authoring 6. Deployment inventory exhaustive (84 sibling keys, 14 prefixes, none reserved; new AC32 web UI build). Observability catalogue already held every sibling name; audit vocabulary +9 events.
 - SWEEP 1, data-model.md, auth.md, format-handler-interface.md: DONE 2026-09-28. data-model: storage-and-gc 1 (AC43), proxy-cache 1 (AC44), management-api 4, supply-chain 5, replication 1, upstream/async 1. auth: anonymous session answer (AC22). FHI: supply-chain 1 (advisory reader, WriteRefusal), replication 5, auth 2 (reserved `t`, credential-declaration re-open input), proxy-cache 9 (fetch request shape re-open input), plus Open items 17, 23, 24 FHI halves.
 - SWEEP 2, storage-and-gc, proxy-cache, supply-chain-policy, management-api, conformance-harness, replication, repository-lifecycle, conformance/matrix.md, tasks/experiment-log.md: DONE 2026-09-28. Includes replication link administration routes and the `replica` problem type in management-api (AC33), and the `ErrReplica` waiver in storage-and-gc (missing until this sweep). Left: observability audit vocabulary must confirm `replication.link.*`, `replication.export`, `replication.import`, `policy.rule.update`; web-ui replication routes if a page shows them.
+- FORMAT BATCH 1, oci.md, generic.md, npm.md, pypi.md: DONE 2026-09-28 (observability and web-ui leftovers confirmed, no edit needed). oci: descriptor `/v2/`, Cosign hand-off (AC14), Docker Hub adapter (AC16), lifecycle cases (AC15), name split (Q8, AC17). generic: delete-file binding retiring nothing, capabilities and lifecycle (AC16), `retention.pass` (AC17). npm: core-held retirement, kinds, signatures and attestations (AC22), capabilities (AC23). pypi: PEP 740 AC14 lifted, proxied re-host (AC18), trusted publishing binding (AC19), capabilities (AC20).
 
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
@@ -493,4 +494,18 @@ Wording only.
 4. management-api.md: AC28's `internal/manage/reads_test.go` shared with auth AC22's anonymous case; ~l.439 `refresh` may cite data-model AC32.
 5. replication.md: AC16/AC22 rows may cite data-model AC31.
 6. conda.md may cite FHI AC11 for the reserved `t` segment; chef.md, vagrant.md, npm.md, swift.md may cite FHI's "Route-scoped and URL-borne credential declarations" re-open input.
+
+## From format batch 1 reconciliation (2026-09-28)
+OWNER NOTE: oci.md Q8 (adopted) fixes where the registry repository ends inside an OCI name: the first path component is the repository and the rest is the image, so `docker push registry/nginx:tag` (one component) is refused `NAME_INVALID` and one remote covers a whole upstream registry as `{remote}/library/nginx`.
+1. auth.md, "Pattern scopes": the OCI named object is `{image}/{tag}` and the repository is the first component of the OCI name (oci was-Q8), replacing "an OCI manifest by tag" and "OCI's slash-bearing repository names under `/v2/`" (~l.518); add OCI's `GET /v2/` as a repository-less descriptor evaluated by authentication alone (auth's evaluation rules currently assume every scope names a repository).
+2. format-handler-interface.md, `Scope(r)` row (~l.124): OCI's `GET /v2/` is declared a descriptor with no repository; "OCI reports tags" -> `{image}/{tag}`; was-Q3 record (~l.773): "as the first component of the OCI name (oci.md was-Q8)".
+3. homebrew.md (~l.324): "an OCI name, slashes included, is one repository" -> specified by oci was-Q8; homebrew keeps its own bottle remote regardless.
+4. repository-lifecycle.md (~l.304): may cite oci was-Q8 as the consumer joining the one-component grammar to the OCI name.
+5. conformance-harness.md: `OCI_NAMESPACE` and `OCI_CROSSMOUNT_NAMESPACE` sit under two different registry repositories; the sibling list may add `conformance/oci/name_split_test.go`, `conformance/generic/manage_binding_test.go`, `conformance/npm/virtual_test.go`, `conformance/pypi/virtual_test.go`, `conformance/pypi/trusted_publishing_test.go` (fixture OIDC issuer container).
+6. management-api.md, reconciliation table: generic's `delete-file` retires nothing; OCI declares no kinds.
+7. artifact-verification.md (~l.45-47, ~l.550-551, ~l.563): applied, cite npm AC22, pypi AC14/AC18, oci AC14.
+8. credential-management.md, "OIDC exchange" (~l.442-445): may cite pypi AC19 as the first trusted-publishing binding.
+9. async-operations.md AC28 row: may share `internal/retention/schedule_test.go` with generic AC17.
+10. upstream-adapters.md, OCI profile row: CDN hosts are captured at oci.md's Phase 4 (its proxied phase), not "Phase 1".
+11. deployment.md: npm and pypi read the externally visible base URL from `server.public_url` through `Deps` until the re-open; confirm the key row says handlers read it.
 

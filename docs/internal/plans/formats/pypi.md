@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at da0aecd (not a review): per-route addressed objects with a coordinate-carrying file URL and a fail-safe upload object (AC15), the security-signal rule with refusal-before-fetch in AC11, the 403 policy rendering with its pip grounding risk named (AC16), and uv, Poetry and pdm as proven clients (AC17) added. Earlier: 2026-09-26 at 4d1aeb1: Q1-Q3 adopted under the owner's standing delegation and folded through the body. Hosted yank, unyank and deletion are registry-owned management endpoints homed in the to-be-authored management-api.md (AC12, AC13), deleted filenames are retired forever (AC13), and attestation-bearing uploads are refused pending the to-be-authored artifact-verification.md (AC14). No open questions; stays draft pending a gate review, with Phase 2 blocked on management-api.md."
+status_description: "Reconciled 2026-09-28 at a6d72b3 with the foundation wave (not a review): AC14 lifted to synchronous PEP 740 verification before commit with provenance served in both serializations (sharing artifact-verification AC7), upstream provenance re-hosted on the proxied path (AC18, sharing its AC8), the no-policy refusal kept as the default; trusted publishing as a binding onto credential-management's OIDC exchange (AC19); retirement is data-model's core-held Retirement record (management-api was-Q3); yank, unyank and deletion are the withdraw, restore, delete-file and delete-version kinds on the handler's Operator (AC12, AC13); the reason-phrase risk resolved by supply-chain's WriteRefusal status line (was Q10) and the pending binding-table row filled by AC16's capture; Capabilities with Virtual and Rename and the rename case (AC20). Earlier: reconciled 2026-09-26 at da0aecd (AC15-AC17 added); Q1-Q3 adopted 2026-09-26 at 4d1aeb1 under the owner's standing delegation. Zero open questions; 20 criteria, each with a Test Plan row; stays draft pending a gate review, with Phase 2 waiting on management-api.md reaching planned."
 description: "Spec for the PyPI format, scheduled as the experiment's generalisation test - does format N+1 cost less than format N?"
 author: michielvha
 goal: "Measure whether the harness and the format interface generalise, by building PyPI immediately after npm and comparing the cost."
@@ -64,12 +64,14 @@ procedure and the npm baseline entry, AC6 is unmeasurable and the headline findi
 unsupportable; with them, this spec is sufficient to produce the measurement - the procedure
 itself is the charter's to define, never this spec's.
 
-**The management API must be specced before Phase 2's management operations.** Hosted yank,
-unyank and deletion are registry-owned management endpoints whose shape, authorization and
-write accounting belong to `docs/internal/plans/foundation/management-api.md` (to be authored
-in the spec loop). AC12 and AC13 are untestable until that surface exists, the same reasoning
-`auth.md` applied to its expiry-warning criterion, so Phase 2 waits on that spec reaching
-`planned`. Phases 1, 3 and 4 do not.
+**The management API must reach `planned` before Phase 2's management operations.** Hosted
+yank, unyank and deletion are registry-owned management endpoints whose shape, authorization and
+write accounting are `docs/internal/plans/foundation/management-api.md`'s, which now exists as a
+draft with PyPI's operations on its kind vocabulary (`withdraw`, `restore`, `delete-file`,
+`delete-version`) and in its cross-format reconciliation table. AC12 and AC13 are untestable
+until that surface is built, the same reasoning `auth.md` applied to its expiry-warning
+criterion, so Phase 2 waits on that spec reaching `planned` and on its Phase 1 core (charter
+step 2). Phases 1, 3 and 4 do not.
 
 ## Scope
 
@@ -92,8 +94,16 @@ in the spec loop). AC12 and AC13 are untestable until that surface exists, the s
 - Hosted management operations: yank, unyank, file deletion and release deletion, each a
   registry-owned management endpoint rather than a PyPI-specific one (Design, "The management
   surface"), with every deleted filename retired permanently (AC13).
-- Refusal of an upload carrying PEP 740 attestations, loudly and with nothing committed
-  (AC14), until a verification producer exists.
+- PEP 740 attestations on both paths, as this format's half of `artifact-verification.md`'s
+  PyPI entry: an upload's attestations verified synchronously before commit against the
+  repository's identity policy, the verified attestation stored and served as PEP 740
+  provenance in both serializations (AC14); a proxied file's upstream provenance fetched,
+  verified and re-hosted from this registry, never passed through (AC18); and, with no identity
+  policy configured, every attestation-bearing upload refused loudly with nothing committed, as
+  the original refusal decision stated.
+- Trusted publishing as a binding: the format-shaped token-mint route PyPI's publishing clients
+  call, served as a binding onto `credential-management.md`'s OIDC exchange
+  (`POST /api/v1/tokens/exchange`), written with Phase 2 and after that spec's Phase 3 (AC19).
 - Bearer-of-record authentication per `foundation/auth.md`: pip and twine present HTTP Basic
   with the token as password (the token-as-password convention with the fixed placeholder
   username; the username is not an authentication input), and the per-route addressed objects
@@ -106,19 +116,18 @@ in the spec loop). AC12 and AC13 are untestable until that surface exists, the s
 **Out of scope for v1**, each with its reason, recorded because the interface spec's
 definition of done requires the deliberately unimplemented surface to be named:
 
-- **Attestation verification (PEP 740).** Verification belongs to a shared producer,
-  `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop),
-  per the verification-ownership decision adopted in `supply-chain-policy.md`. PEP 740 requires an index to
-  verify attestations before accepting them, so an index that cannot yet verify cannot honestly
-  accept them either. Since twine can send them and silence is not an available option, v1
-  refuses an attestation-bearing upload by name (Design, "The upload path"; AC14), and the
-  requirements this format places on the producer are recorded in the resolved
-  attestation-bearing-uploads decision below.
-- **Trusted Publishing** (OIDC-based upload token exchange). Credential issuance belongs to
-  `foundation/auth.md`, which outsources identity flows to the identity provider, and the
-  token-management product surface is homed by its resolved token-management decision (was
-  Q21) in `docs/internal/plans/foundation/credential-management.md` (to be authored in the spec
-  loop); building a PyPI-specific issuance flow here would pre-empt both.
+- **The verification itself, the trust model and the Sigstore client.** Those are
+  `docs/internal/plans/foundation/artifact-verification.md`'s (its Sigstore entry and "Per-format
+  positions", PyPI), per the verification-ownership decision adopted in `supply-chain-policy.md`;
+  every requirement the resolved attestation-bearing-uploads decision below placed on that
+  producer is met there, and this spec keeps only the wire half (Design, "The upload path" and
+  "The proxied path"). PEP 740 requires an index to verify attestations before accepting them,
+  which is exactly the shape the producer delivers: a synchronous verdict inside the upload.
+- **A PyPI-specific token issuance flow.** Credential issuance belongs to `foundation/auth.md`,
+  which outsources identity flows to the identity provider, and the OIDC exchange that
+  generalises PyPI's trusted publishing is `credential-management.md`'s (`POST
+  /api/v1/tokens/exchange`, its "OIDC exchange", Phase 3, after OCI). What this format serves is
+  a binding onto it (in scope above), never an issuer of its own.
 - **The pypi.org JSON API (`/pypi/{name}/json`) and XML-RPC API.** Neither is part of any
   packaging standard, no client in the install/publish conformance loop consumes them, and
   advertising a pypi.org-proprietary surface would put a claim in the matrix that no oracle
@@ -203,7 +212,11 @@ key) and `pypi:repository-version` (HTML meta tag) declare **1.1**, the highest 
 mandatory fields this registry fully serves - PEP 700's `versions` list, per-file `size` and
 `upload-time` all come from the model. The declaration rises only when the fields of a later
 version are actually served, never speculatively; an index that declares 1.4 without status
-markers is lying to resolvers that key on the version. Per-file attributes served in both
+markers is lying to resolvers that key on the version. The one rise this spec already commits
+to is **1.3 on a project with a verified attestation**: once a file carries a verified PEP 740
+attestation, its detail page serves `provenance` (JSON) and `data-provenance` (HTML) and only
+then declares 1.3 (`artifact-verification.md`, "Per-format positions", PyPI; AC14). A project
+with no verified attestation keeps declaring 1.1. Per-file attributes served in both
 forms: the sha256 hash (`#sha256=...` fragment in HTML, `hashes` dict in JSON - the CAS
 digest, computed server-side, so the index never advertises a hash the store did not verify),
 `requires-python` where the metadata declares it, yank marks, and the core-metadata
@@ -248,13 +261,20 @@ Upload semantics this registry enforces:
   The same bytes are refused too, because the rule is about the coordinate, not the content.
 - Success is a 2xx the client reports as success; refusals carry a body naming the reason,
   because twine surfaces the response body to the user.
-- **An upload carrying a PEP 740 `attestations` form field is refused** with a body naming
-  attestations as unsupported by this registry, before anything commits. PEP 740's
-  verify-before-accept obligation cannot be met without a verification producer, and
-  accepting the file while dropping or warehousing the attestations would each be a false
-  claim. The same upload without the field succeeds, so the cost to the uploader is a flag.
-  This diverges from pypi.org, which verifies and accepts, and goes on the recorded exception
-  list.
+- **An upload carrying a PEP 740 `attestations` form field is verified synchronously, before
+  anything commits**, through the `Verifier` consumer interface in `Deps`
+  (`format-handler-interface.md` AC14; the producer is `artifact-verification.md`, "Per-format
+  positions", PyPI, and its AC7): each statement's subject must name the uploaded file and its
+  `sha256`, the certificate identity must match the repository's identity policy for that
+  project, and `log-required` applies. Any failure refuses the whole upload with the reason in
+  the body, nothing committed; a verified attestation is stored as a file of the version and
+  the provenance object is rendered from it with the publisher derived from the certificate
+  identity, served under `provenance` and `data-provenance`. **A repository with no identity
+  policy configured refuses every attestation-bearing upload**, naming the missing policy: that
+  is the original refusal decision below kept as the default, because accepting an attestation
+  no policy can judge would be the false claim PEP 740's verify-before-accept exists to prevent.
+  The same upload without the field succeeds either way. The no-policy refusal diverges from
+  pypi.org and stays on the recorded exception list; the verified acceptance matches it.
 
 ### What counts as a write
 
@@ -269,7 +289,8 @@ makes metadata-only mutations snapshot-creating writes. PyPI's declaration:
 - A hosted yank or unyank is one metadata-only write, whether it marks one file or a whole
   release.
 - A file or release deletion is one write per management action, however many files it covers,
-  and records every removed filename in the project's retirement set within that same write.
+  and the core writes a `Retirement` record for every removed filename in that same
+  transaction (below).
 - A proxied repository creates no snapshots at all, per the model's settled rule; index
   arrival and revalidation are cache materialisation.
 
@@ -280,12 +301,19 @@ individual files - and the shared model deliberately has no per-file metadata do
 attributes live in the **version-level** metadata document as a filename-keyed map, which the
 index renderer joins against the version's `File` rows. No new model level is needed; if
 implementation finds otherwise, that is a data-model spec change, never a handler-side table.
-The package-level document holds the display-form name, the project's **retirement set** (every
-filename ever deleted from it) and future project-wide state; the root index and every detail
-page are rendered from snapshot state through the pointer the handler is given, never stored.
-The retirement set is carried forward by every later write because writes build on the newest
-snapshot, and it survives deletion of the project's last file: a project with no live files and
-a non-empty retirement set is served as absent but still refuses its retired filenames.
+The package-level document holds the display-form name and future project-wide state; the root
+index and every detail page are rendered from snapshot state through the pointer the handler is
+given, never stored. The project's **retirement set** (every filename ever deleted from it) is
+not in that document: it is the core-held `Retirement` record `management-api.md` moved it to
+("Retirement is core-held", its resolved retirement-placement decision, was Q3) and
+`data-model.md` owns (its entity table, AC35). The handler returns each deleted filename as
+`{normalized-name}/{version}/{filename}` in the operation's `Outcome`, the core writes the
+records in the deleting transaction, and the shared write path refuses a later upload of a
+retired filename with `retired` (409) before the handler's duplicate check runs, across a
+backwards repoint and after every snapshot that held the file has been pruned, with nothing
+for this handler to carry forward. The `Package` row survives the deletion of the project's
+last file (`data-model.md` AC33) so the project stays addressable: it is served as absent while
+its retired filenames stay refused.
 
 ### The management surface
 
@@ -297,12 +325,17 @@ Every effect, though, is standardised and client-observable.
 
 This spec follows the precedent shared by the Cluster 5 format specs (`npm.md`,
 `ansible-collections.md` and this one), whose common home is
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop):
+`docs/internal/plans/foundation/management-api.md`, which now fixes the vocabulary:
 
-- **The surface is registry-owned, not PyPI-shaped.** Each operation is an endpoint of the one
-  management API that spec defines, never a PyPI-specific route invented here. This spec defines
-  what each operation means and what pip sees afterwards; the shared spec defines URL shape,
-  request form, authorization and audit.
+- **The surface is registry-owned, not PyPI-shaped.** Each operation is a **kind** of the one
+  management API's closed vocabulary, never a PyPI-specific route invented here, and the action
+  follows the kind (its kind table and cross-format reconciliation table, which carry PyPI's
+  rows). The handler implements that spec's `Operator` interface, declaring `withdraw`,
+  `restore`, `delete-file` and `delete-version`, reporting each operation's object through
+  `Authorize` and applying it inside the write transaction the core opened through `Apply`. This
+  spec defines what each operation means and what pip sees afterwards; the shared spec defines
+  URL shape, request form, authorization and audit. No route is a binding: twine drives none of
+  these, so there is nothing to bind.
 - **Each operation is a completed logical write through the shared write path**: exactly one
   snapshot per operation, none for a refused one, and no blob-store object deleted directly.
   Space returns only through retention pruning, so the single-deleter boundary in
@@ -323,12 +356,12 @@ This spec follows the precedent shared by the Cluster 5 format specs (`npm.md`,
 
 The PyPI operations:
 
-| Operation | Effect a client sees | Write |
-|---|---|---|
-| Yank a file or a whole release, with an optional reason | `data-yanked` (carrying the reason, or empty) and the JSON `yanked` field on each affected file; pip skips them unless the requirement pins that exact version with `==` or `===` | One metadata-only write |
-| Unyank | The marks disappear and normal resolution returns | One metadata-only write |
-| Delete a file | The file leaves both serializations and is no longer served; its filename joins the retirement set | One write |
-| Delete a release | Every file of the version leaves the index; every filename joins the retirement set | One write, however many files |
+| Operation | Kind (`management-api.md`) | Effect a client sees | Write | Action |
+|---|---|---|---|---|
+| Yank a file or a whole release, with an optional reason | `withdraw` | `data-yanked` (carrying the reason, or empty) and the JSON `yanked` field on each affected file; pip skips them unless the requirement pins that exact version with `==` or `===` | One metadata-only write | `delete` on the version (its resolved withdraw-action decision, was Q1) |
+| Unyank | `restore` | The marks disappear and normal resolution returns | One metadata-only write | `delete` on the version |
+| Delete a file | `delete-file` | The file leaves both serializations and is no longer served; its filename is retired | One write | `delete` on the file |
+| Delete a release | `delete-version` | Every file of the version leaves the index; every filename is retired | One write, however many files | `delete` on the version |
 
 Hosted PEP 592 is therefore claimed in full on both paths: the proxied path mirrors the mark
 (AC7) and the hosted path creates it (AC12).
@@ -361,7 +394,21 @@ settled decisions in `proxy-cache.md`:
   an unrewritten proxied index sends clients straight past the cache and AC4's
   no-upstream-contact assertion would catch it. This is the same format-specific transform
   `format-handler-interface.md` canonicalises with npm's packument URLs, and it likewise
-  requires the handler to know the externally visible base URL rather than the bind address.
+  requires the handler to know the externally visible base URL rather than the bind address
+  (`server.public_url` through `Deps` until that spec's re-open places it; `npm.md` records the
+  same need).
+- **Upstream provenance is re-hosted, never passed through.** A proxied file whose upstream
+  detail page carries `provenance` has its attestations fetched with the file, verified through
+  `Deps`' `Verifier`, cached as content and served under this registry's own provenance URL;
+  an attestation that fails is not served and the file's verdict is `failed`; a file with no
+  upstream provenance serves none with the verdict `absent`; and no served provenance URL ever
+  points at the upstream (`artifact-verification.md`, "Provenance the registry vouches for",
+  its resolved provenance decision, was Q7, and AC8). Passing the upstream URL through would
+  tell pip this index vouches for material it never saw, and it would also send the client past
+  the cache, the same failure the file-URL rewrite above closes.
+- **Every fetch carries a declared digest** (the index's `sha256` for files and for `.metadata`
+  advertisements), so PyPI never uses `proxy-cache.md`'s completion-only mode (its resolved
+  completion-only decision, was Q15, AC20).
 
 Upstream removal maps onto the settled purge-or-flag table as PyPI's side of that contract:
 
@@ -418,10 +465,11 @@ Consequences: there is no implicit wildcard, so a credential for a family of pro
 `acme-*/**`, which admits the detail page, the files and the upload; a patterned credential
 cannot read the root project list, which pip never requests for an install; and it resolves
 only dependencies inside its pattern, so a build with public dependencies holds an unpatterned
-scope on the repository serving them. The management operations are endpoints of
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), whose
-object reporting this format requires to be the same: `{normalized-name}/{version}` for a
-release operation and `{normalized-name}/{version}/{filename}` for a file operation.
+scope on the repository serving them. The management operations are kinds of
+`docs/internal/plans/foundation/management-api.md`, and the handler's `Authorize` reports their
+objects in the same grammar: `{normalized-name}/{version}` for `withdraw`, `restore` and
+`delete-version`, and `{normalized-name}/{version}/{filename}` for `delete-file` and a file-level
+`withdraw`, so one pattern governs a project's routes and its management operations alike.
 
 ### Policy refusals on the wire
 
@@ -429,11 +477,47 @@ When a shared resolution call returns the typed refusal `supply-chain-policy.md`
 handler answers `403` with a `text/plain` body naming the policy and rule, or naming the signal
 for a coordinate condemned under the shared security-signal rule, on the detail page, file and
 metadata-file routes alike and on both paths. `403` rather than the existence rule's `404`,
-because the caller is authorized and the content is what is refused. One grounding risk is
-named rather than assumed away: pip may surface only the status line of a failed download and
-not its body, and Go's HTTP server writes the reason phrase from the status code alone. AC16's
-capture settles it; if pip shows only the status line, carrying the policy in the reason phrase
-is a finding for `supply-chain-policy.md`, not a quiet workaround here.
+because the caller is authorized and the content is what is refused. The grounding risk this
+spec first named, that pip may surface only the status line of a failed download while Go's
+HTTP server writes the reason phrase from the status code alone, was raised with
+`supply-chain-policy.md` and is resolved there (its resolved status-line decision, was Q10, and
+AC18): the handler writes the refusal through the shared writer `WriteRefusal` in
+`internal/format` (`format-handler-interface.md` AC14), which on an HTTP/1.1 connection hijacks
+the write and emits `HTTP/1.1 403 Refused by policy: {condition}` as the status line, the same
+phrase for every format, and `deployment.md` guarantees HTTP/1.1 reaches the client. The `403`
+and the `text/plain` body remain this format's. What AC16's capture still settles is whether pip
+shows the phrase, the body, or both; either way the user sees the policy. That spec's table "When
+a refusal binds, per format" carries PyPI as `pending` until that capture also records what pip
+does after the refusal (whether an `--extra-index-url` fallback installs the refused version from
+elsewhere), replacing the row in the same change (its AC20); the harness refuses to run the
+policy case before then (`conformance-harness.md` AC26).
+
+### Capabilities and lifecycle
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available`, `Virtual: supported` and `Rename: supported` (`format-handler-interface.md` AC13).
+A virtual PyPI repository resolves a project in its first member that holds it, which closes the
+dependency confusion `--extra-index-url` invites. `repository-lifecycle.md` AC12 requires
+`conformance/pypi/rename_test.go`, enforced by the harness's case-set validator
+(`conformance-harness.md` AC26); AC20 carries it with a real `pip install` from the renamed
+repository.
+
+### Trusted publishing is a binding onto the OIDC exchange
+
+PyPI's trusted publishing lets a CI job exchange its OIDC identity token for a short-lived upload
+token, with no stored secret. The exchange is `credential-management.md`'s
+(`POST /api/v1/tokens/exchange`: a robot's trust policy names the issuer and claim constraints,
+the minted token is scoped within the robot's grants and expires within
+`credentials.exchange_token_lifetime`; its AC13), and that spec names this format's binding as
+one of the two first consumers, written when this format's management surface is. What this
+spec adds is the wire: the format-shaped route PyPI's publishing clients call to mint an upload
+token is served as a binding that translates into that exchange and returns the minted token in
+the shape the client expects, and nothing else, so there is one exchange and two ways in. The
+route's exact shape is grounded in captured client traffic when the binding is written, not in
+pypi.org's documentation. One consequence binds on the upload that follows: an upload
+authenticated by an exchanged token must attest under the same robot's identity
+(`artifact-verification.md` AC28), which closes the hole where a job exchanges as one identity
+and attests as another.
 
 ### Conformance, auth and the corpus
 
@@ -447,9 +531,10 @@ twine uploading a wheel and an sdist, a duplicate-filename refusal, and a missin
 failure. This list is the review baseline for the recording script. Recording gates on the
 harness's redaction criterion (`conformance-harness.md` AC13), and every deliberate divergence
 from public-index behaviour goes on the recorded exception list **before** its flow is expected
-to replay. One divergence is known now: the refusal of an attestation-bearing upload, where
-pypi.org verifies and accepts. Filename retirement matches the public index, so a
-deleted-filename refusal replays. The hosted yank and deletion triggers have no public-index
+to replay. One divergence is known now: the refusal of an attestation-bearing upload on a
+repository with no identity policy, where pypi.org verifies and accepts; with a policy
+configured, the verified acceptance matches pypi.org and replays. Filename retirement matches
+the public index, so a deleted-filename refusal replays. The hosted yank and deletion triggers have no public-index
 flow to record at all, since pypi.org drives them from its web UI; their effects replay through
 the recorded yanked-release flow.
 
@@ -516,10 +601,17 @@ the recorded yanked-release flow.
       and a later upload of any deleted filename is refused as AC9 refuses a duplicate, with
       the same bytes or different ones, including after the deletion's snapshot has been
       pruned out of retention and after the project's last live file is gone.
-- [ ] AC14: An upload carrying a PEP 740 `attestations` form field, sent by the real
-      `twine upload --attestations`, is refused with a response body naming attestations as
-      unsupported, nothing is committed and no snapshot is created, and the same distribution
-      uploaded without the flag succeeds.
+- [ ] AC14: A real `twine upload --attestations` of a file whose attestation the fixture Sigstore
+      issued for an identity in the repository's identity policy is accepted, the attestation is
+      stored as a file of the version, and the simple index serves `provenance` in JSON with
+      `api-version` 1.3 and `data-provenance` in HTML, both pointing at a provenance object
+      `pypi-attestations verify` accepts, while a project without a verified attestation keeps
+      declaring 1.1; the same upload with a tampered attestation, an attestation whose subject
+      names another file, or an identity outside the policy is refused with the reason in the
+      body, nothing committed and no snapshot created; a repository with no identity policy
+      refuses every attestation-bearing upload naming the missing policy; and the same
+      distribution uploaded without the flag succeeds in every case (this format's half of
+      `artifact-verification.md` AC7).
 - [ ] AC15: A token holding `pull` and `push` under the pattern `acme-*/**` uploads `acme-tool`
       through the real `twine` and installs it through real `pip`, including its `.metadata`
       file and wheel, and a requirement spelled `Acme_Tool` installs under the same pattern
@@ -534,6 +626,24 @@ the recorded yanked-release flow.
       own publish command that a subsequent install retrieves with a matching hash, as the
       catalogue's client-reach criterion (its AC2) requires of every client its multiplier table
       names.
+- [ ] AC18: A proxied file whose upstream stand-in serves provenance has its attestations
+      fetched, verified and cached; a verified one is served from this registry's own provenance
+      URL in both serializations and `pypi-attestations verify` accepts it; a failed one is not
+      served and the file's verdict is `failed`; a file with no upstream provenance serves none
+      with the verdict `absent`; and no served provenance URL points at the upstream, asserted
+      over every detail page the case renders (this format's half of `artifact-verification.md`
+      AC8).
+- [ ] AC19: The format-shaped token-mint route, called with an identity token from the fixture
+      OIDC issuer matching a robot's trust policy, returns a token in the shape the real
+      publishing client accepts, and that client then uploads a wheel under the robot's grants
+      with the token expiring within `credentials.exchange_token_lifetime`; a token that matches
+      no trust policy is refused with nothing minted; and an upload under an exchanged token whose
+      attestation names another identity is refused before commit.
+- [ ] AC20: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
+      availability `available`, `Virtual: supported` and `Rename: supported`; a real `pip install`
+      from a renamed repository succeeds under the new name in both modes while the old name
+      answers 404 indistinguishably from a never-existing repository; and a virtual repository of
+      two members resolves a project present in both from the first member.
 
 ## Test Plan
 
@@ -552,32 +662,43 @@ the recorded yanked-release flow.
 | AC11 | integration + conformance | `internal/format/pypi/removal_test.go` (test upstream presenting each event class; the shared-layer half is `proxy-cache.md` AC13's); `conformance/pypi/security_signal_test.go` (post-purge install refused naming the signal; network-level assertion of no upstream fetch) |
 | AC12 | integration + conformance | trigger: `internal/format/pypi/manage_yank_test.go` (snapshot count per operation, `delete` authorization refusal, proxied-repository refusal); effect: `conformance/pypi/hosted_yank_test.go` (the `script` yanks through the management endpoint, then runs real pip unpinned, `==`-pinned, and again after an unyank; a second case seeds the yanked state through `setup`'s `state` key) |
 | AC13 | integration + conformance | trigger: `internal/format/pypi/manage_delete_test.go` (release delete as one snapshot; retired-filename refusal with same and different bytes, after pruning under an injected clock, and after the last live file is gone); effect: `conformance/pypi/hosted_delete_test.go` (the `script` deletes through the management endpoint, real pip then fails to resolve the deleted file, and a real twine re-upload is refused) |
-| AC14 | conformance + integration | `conformance/pypi/upload_test.go` (attestation case: real twine with a committed fixture distribution and an attestation generated for it once, then the same file without the flag); `internal/format/pypi/upload_attestation_test.go` (form-level refusal, nothing committed, snapshot count unchanged) |
+| AC14 | conformance + integration | `conformance/pypi/attestations_upload_test.go` (real twine with fixture bundles from the fixture Sigstore, `pypi-attestations verify` on the served provenance, the three refusals, the no-policy refusal, the same file without the flag; shared with `artifact-verification.md` AC7); `internal/format/pypi/upload_attestation_test.go` (synchronous verification through a fake `Verifier` before commit, nothing committed and snapshot count unchanged on refusal, `api-version` 1.3 only with a verified attestation) |
 | AC15 | conformance + unit | `conformance/pypi/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; a pattern-scoped token provisioned through the `credentials` key); `internal/format/pypi/scope_object_test.go` (the object table, per route, including the file-before-fields upload reporting none, `format-handler-interface.md` AC12) |
-| AC16 | conformance | `conformance/pypi/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`) |
+| AC16 | conformance | `conformance/pypi/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; the captured pip output and its `--extra-index-url` fallback behaviour replace the `pending` binding-table row in the same change, `supply-chain-policy.md` AC20) |
 | AC17 | conformance | `conformance/pypi/clients_test.go` (uv, Poetry and pdm pinned by digest, running the install and proxied cases and publishing through each) |
+| AC18 | conformance + integration | `conformance/pypi/attestations_proxied_test.go` (stand-in serving provenance: verified, failed, none; URL assertions over every rendered detail page; shared with `artifact-verification.md` AC8); `internal/format/pypi/provenance_rehost_test.go` (rewriting and the three verdict states against a fake `Verifier`) |
+| AC19 | conformance + integration | `conformance/pypi/trusted_publishing_test.go` (fixture OIDC issuer in a container, the real publishing client minting through the binding and uploading; no-match refusal); `internal/format/pypi/oidc_binding_test.go` (the binding translates into `POST /api/v1/tokens/exchange` and nothing else; shared with `credential-management.md` AC13's exchange fixture and `artifact-verification.md` AC28's robot-identity check) |
+| AC20 | unit + conformance | `internal/format/pypi/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/pypi/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26); `conformance/pypi/virtual_test.go` (first-member resolution through real `pip install`) |
 
 ## Implementation Phases
 
 ### Phase 1: Hosted core
 - Name normalisation and redirects, index rendering in both serializations with content
   negotiation, file serving, upload with digest and coherence validation, duplicate-filename
-  refusal, attestation-bearing upload refusal, metadata-file extraction and serving
+  refusal, metadata-file extraction and serving
+- Synchronous PEP 740 verification inside the upload through `Deps`' `Verifier`, provenance
+  served in both serializations with the 1.3 claim, the no-policy refusal (AC14;
+  `artifact-verification.md` Phase 2 is built with this format at charter step 6)
 - The coordinate-carrying file URL and the per-route addressed-object declaration; the `403`
-  rendering of the typed policy refusal
+  rendering of the typed policy refusal through `WriteRefusal`
+- `Capabilities()` declaring proxy, reference implementation, `Virtual` and `Rename`; the rename
+  and virtual cases (AC20)
 
 ### Phase 2: Mutation and metadata surface
 - Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
   preconditions)
 - The write-boundary declaration exercised end to end; yank representation; per-file
-  attributes through the version-level document; the hosted management operations (yank,
-  unyank, file and release deletion) through the registry-owned management API; the
-  retirement set in the package-level document and its consultation on every upload
+  attributes through the version-level document; the hosted management operations as the
+  `withdraw`, `restore`, `delete-file` and `delete-version` kinds on the handler's `Operator`;
+  the retired filenames returned in `Outcome` and refused centrally
+- The trusted-publishing binding onto `credential-management.md`'s OIDC exchange, after that
+  spec's Phase 3 (AC19)
 
 ### Phase 3: Proxied path
 - Classification and file-URL rewriting, conditional revalidation, negative caching, the
   removal table with quarantine detection and the refusal-before-fetch that follows it, yank
   mirroring, HTML-only-upstream parsing
+- Upstream provenance fetched, verified and re-hosted from this registry's URL (AC18)
 
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate), replay-match,
@@ -600,9 +721,10 @@ options and reasoning, so an owner reversing an adoption has the whole trade in 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: v1 exposes hosted yank
 and unyank, and with them file and release deletion, as registry-owned management endpoints.
 They are specified once, across formats, by
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop); this spec
-defines what each operation means and what pip sees afterwards (Design, "The management
-surface"; AC12, AC13).
+`docs/internal/plans/foundation/management-api.md` (since authored: the `withdraw`, `restore`,
+`delete-file` and `delete-version` kinds of its vocabulary, PyPI's rows in its reconciliation
+table); this spec defines what each operation means and what pip sees afterwards (Design, "The
+management surface"; AC12, AC13).
 
 Accepted cost: the endpoint is verified by this registry's own integration tests alone, because
 no client triggers a yank, and the first management surface sets a shape for every later one.
@@ -651,16 +773,27 @@ as the token-management surface question `formats/oci.md` owns.
 committed, and the refusal goes on the recorded exception list (Design, "The upload path";
 AC14).
 
+**Lifted 2026-09-28**, as this record said it would be once the producer existed:
+`artifact-verification.md` was authored on 2026-09-27 and meets every requirement listed below
+(synchronous verification inside the upload, a per-repository identity policy, the stored
+attestation served as provenance in both serializations with the 1.3 claim, re-hosting on the
+proxied path, and the criterion shape), so AC14 was rewritten from "refused as unsupported" to
+"valid accepted and served, tampered refused", exactly as the last requirement asked, and AC18
+added for the proxied half. The refusal survives as the default for a repository with no
+identity policy configured, because option A's reasoning still holds there: an attestation no
+policy can judge can be neither accepted nor warehoused honestly.
+
 Accepted cost: `twine upload --attestations` fails against this registry until verification
 lands, and a CI pipeline configured for pypi.org needs a flag change to publish here. Why the
 alternatives lost: B tells exactly the users who opted into provenance that it was published
 when it was discarded, and C violates PEP 740's verify-before-accept and warehouses material
 that invites a later false provenance claim.
 
-The producer this refusal waits on is
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop),
-the sibling verification spec `supply-chain-policy.md` adopted as the owner of verification. What PyPI requires of it,
-recorded here so the dependency cannot be lost:
+The producer this refusal waited on is
+`docs/internal/plans/foundation/artifact-verification.md`, the sibling verification spec
+`supply-chain-policy.md` adopted as the owner of verification. What PyPI required of it,
+recorded here so the dependency could not be lost, and now met by its "Per-format positions"
+(PyPI), its resolved provenance decision (was Q7) and its AC7 and AC8:
 
 - Verification of PEP 740 attestations inside the upload request, before anything commits,
   since twine expects a synchronous verdict on the upload response.
@@ -701,9 +834,12 @@ will be held to, not something the fleet can measure its way to.
 ### Resolved: filename retirement (was Q3)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a filename, once
-uploaded, is retired forever; deletion never frees it. The retirement set lives in the
-package-level metadata document and is consulted on every upload (Design, "The upload path"
-and "What counts as a write"; AC13).
+uploaded, is retired forever; deletion never frees it (Design, "The upload path" and "What
+counts as a write"; AC13). This adoption placed the retirement set in the package-level metadata
+document; `management-api.md`'s resolved retirement-placement decision (was Q3 there,
+2026-09-27) moved it to the core-held `Retirement` record `data-model.md` owns (AC35), refused
+by the shared write path on every upload. The semantics are unchanged; only where the set lives
+moved.
 
 Accepted cost: a botched upload cannot be fixed in place, so the operator bumps the version or
 the build number, and will occasionally resent it. Why B lost: it breaks every downstream cache
@@ -748,3 +884,4 @@ a product promise with a correctness edge, and the npm unpublish answer may pull
 | 2026-09-25 | 506c9e3 | first review: protocol grounding at published-contract level (the consolidated PyPA simple-repository spec, the wheel and PEP 625 filename grammars, PEP 592's installer and mirror rules, PEP 714's key rename, PEP 740's verify-before-accept obligation, PEP 792's status markers, and PyPI's upload docs - the one surface with no PEP behind it, grounded in prior art and flagged for re-grounding in captured traffic per the standing rule) + adversarial + cross-spec (interface AC8 re-open gate and the URL-shape opinionated-client check, charter Q3's before-npm obligation and npm AC14 as the baseline gate, data-model's write-boundary, snapshot and metadata-level rules, proxy-cache's settled classification, stream-and-verify, negative-caching and removal decisions and its AC13, harness `setup` vocabulary, corpus rules and redaction gate (AC13), auth's pip/twine Basic row, supply-chain-policy Q6, the catalogue's Simple-index family row) + constitution; code-claim verification vacuous pre-implementation (no `internal/format/pypi/`, no `conformance/pypi/`). Independence caveat, stated because it matters: this pass authored the Design it then reviewed, so its adversarial value on that Design is limited and a later independent pass should re-check it - the same caveat npm.md's first review carries | The spec was a stub wearing a spec's frontmatter: seven criteria, no Design, no Phases, no Tasks, and a frontmatter that had claimed all questions were owner-answered while the body said the opposite. Body built from grounded protocol facts: the wire surface including the honest statement that upload is unstandardised convention; the two normal forms (hyphen-joined for URLs, underscore-joined inside filenames) and the normalisation trap that serves 404s to correct clients; both index serializations rendered from one stored state with the exact media types, pip 22.2 as the JSON/HTML client watershed exploited so both paths get a real-client oracle, an honest api-version 1.1 claim, and the PEP 714 dual-key emission; the upload path with digest, coherence and duplicate-filename refusals; the write-boundary declaration data-model.md requires (per-file uploads are per-file writes, faithful to the ecosystem); the per-file-attribute mapping into the version-level metadata document, named as the generalisation test doing its job; the proxied classification with file-URL rewriting away from the upstream file host as the canonical transform, and PyPI's removal table where quarantine (PEP 792) is a standardised security signal rather than npm's heuristic; the pip client-cache trap folded into AC4; and the non-interactive auth path (token via `setup`, no new harness vocabulary). Scope gained normalisation, content negotiation, duplicate-filename refusal and PEP 658/714 metadata files (the stub's exclusion carried no reason and effort is not one; modern resolvers depend on them); each remaining out-of-scope item gained a non-effort reason. Four criteria added (AC8 normalisation, AC9 upload refusals, AC10 metadata files both paths, AC11 the removal table) and the original seven tightened: AC1 pins the client versions astride 22.2, AC3 covers root list, media types, api-version honesty and attribute agreement, AC4 asserts both directions against fresh client caches, AC6 is gated on npm's AC14 baseline and the settled attribution procedure (assessed sufficient to produce the headline measurement once charter Q3 is answered - which this pass did not answer), AC7 names the mirror-the-mark mechanism and the exact-pin path; AC7's integration row retargeted from `internal/proxy/` (which duplicated proxy-cache AC13's own test) to `internal/format/pypi/removal_test.go`, matching the npm correction. The check-spec unasserted-duty report acted on: digest verification and requires-python each gained a policing criterion. Both blocking preconditions recorded (the interface re-open, which binds PyPI as Tier 1 independently of npm; the charter-Q3-plus-npm-baseline gate for the N+1 comparison). Q1 (hosted yank surface, the first management-write-endpoint precedent), Q2 (attestation-bearing uploads: refuse vs drop vs store unverified), Q3 (filename retirement after deletion, where this registry's own cache-immutability assumption cuts against npm Q3's operator-control lean) raised for the owner, not decided. No sibling edit needed. Stays draft. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review: adoption and application of this spec's own recommendations, made consistent with the other Cluster 5 and Cluster 6 format specs. Q1 adopted as A, generalised to the Cluster 5 precedent: yank, unyank, file deletion and release deletion are registry-owned management endpoints specified once in `docs/internal/plans/foundation/management-api.md` (to be authored), each one completed write under `delete`, hosted only, the trigger verified by integration tests and the effect by real pip (new Design section "The management surface", AC12, a Phase 2 blocking precondition on that spec). Q2 adopted as A: attestation-bearing uploads refused by name with nothing committed (upload path, AC14, exception list), with the requirements PyPI places on `docs/internal/plans/foundation/artifact-verification.md` (to be authored) recorded in the resolved record. Q3 adopted as A: filenames retired forever through a retirement set in the package-level document that survives pruning and last-file deletion (AC13), consistent with the retirement rule npm and Galaxy adopted in the same pass. Scope, the write-boundary declaration, the corpus exception list and Phase 1 and 2 updated; Test Plan rows added for AC12 to AC14. The charter cost-attribution precondition reworded, since that question was resolved in its own spec during this pass. Stays draft. |
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Found already done: the harness item on hosted yank (the management-surface Design and the AC12 row already seed through `state` or call the endpoint from `script`). Applied: the addressed-object table (root list none, detail `{normalized-name}`, files `{normalized-name}/{version}/{filename}` via a file URL chosen to carry the coordinate, upload named from the form fields when they precede `content`, none otherwise) with AC15; the object reporting this format requires of `management-api.md`; the security-signal rule in the quarantine row and AC11's refusal-before-fetch; the policy rendering (AC16) with the reason-phrase risk recorded for supply-chain-policy; the catalogue's resolved client-reach decision applied to uv, Poetry and pdm (AC17); Trusted Publishing's exclusion re-cited to `credential-management.md`. Stays draft. |
+| 2026-09-28 | a6d72b3 | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the artifact-verification authoring (item 8): AC14 lifted from "refused as unsupported" to "valid accepted and served, tampered refused" exactly as the Q2 record's criterion shape asked (synchronous verification through `Deps`' `Verifier`, provenance in both serializations, `api-version` 1.3 only then, the no-policy refusal kept as the default), sharing `conformance/pypi/attestations_upload_test.go` with its AC7; the proxied re-host rule (its resolved provenance decision, was Q7) as a proxied-path bullet and AC18 sharing `attestations_proxied_test.go` with its AC8; the Q2 record carries a dated "Lifted" note and the out-of-scope items are rewritten. From the credential-management authoring (item 12): trusted publishing is a binding onto `POST /api/v1/tokens/exchange` (its "OIDC exchange", Phase 3, AC13), a new Design section and AC19 with `artifact-verification.md` AC28's same-robot rule. From the management-api authoring (items 11 and 12): the retirement set is the core-held `Retirement` record (`data-model.md` AC35; management-api's resolved retirement-placement decision, was Q3), returned per filename in `Outcome` and refused centrally, rewritten through "What counts as a write", Phase 2 and the Q3 record; the management table gains the kind column (`withdraw`, `restore`, `delete-file`, `delete-version`, all `delete`, the withdraw action citing its was-Q1) and the handler's `Operator` declaration; the addressed-object paragraph reports management objects through `Authorize`; every "(to be authored)" citation replaced. From the supply-chain reconciliation (item 11), Open item 5 and its resolved status-line decision (was Q10, AC18): the reason-phrase risk this spec raised is recorded as resolved by `WriteRefusal`'s HTTP/1.1 status line, and AC16's capture fills the `pending` binding-table row (its AC20, harness AC26). From the repository-lifecycle authoring (item 15) and format-handler-interface AC13: `Capabilities()` with `Virtual` and `Rename` and `conformance/pypi/rename_test.go` (AC20). `proxy-cache.md`'s completion-only mode (was Q15) recorded as unused because every fetch carries a declared digest. Found already done: the harness and generic fold's item 4 (AC12's `state` and `script` split, at da0aecd). No question raised. `node scripts/check-spec.js` zero failures for this file. Stays draft pending a gate review. |

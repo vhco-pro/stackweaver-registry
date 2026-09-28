@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at da0aecd (not a review): AC14 cites the charter's settled cost procedure and npm follows charter step 4b (AC12); the shared security-signal rule cited with refusal-before-fetch added to AC11; per-route addressed objects (AC19), the 403 policy rendering (AC20) and Yarn, pnpm and Bun as proven clients (AC21) added. Earlier: 2026-09-26 at 4d1aeb1: Q2 and Q3 adopted under the owner's standing delegation and folded, and Q4 raised and adopted in the same pass. Audit requests get an honest 404 (AC18); unpublish is authorization-only (AC15) and, with deprecation, is a registry-owned management operation homed in the to-be-authored management-api.md with npm's client routes bound onto it (AC17); unpublished versions are retired forever (AC16). No open questions; stays draft pending a gate review, with Phase 2 blocked on management-api.md."
+status_description: "Reconciled 2026-09-28 at a6d72b3 with the foundation wave (not a review): retirement is data-model's core-held Retirement record (management-api was-Q3), refused centrally; unpublish and deprecation are the delete-version, delete-package and annotate kinds on the handler's Operator with the client routes as bindings (AC17); proxied dist.signatures and dist.attestations verified and re-hosted, hosted _attestations verified before commit (AC22, sharing artifact-verification AC20); hosted registry signatures reserved for signing-service's ECDSA P-256 profile; Capabilities with Virtual and Rename and the rename case (AC23); WriteRefusal and the pending binding-table row filled by AC20's capture; the base URL cited to the interface re-open input. Earlier: reconciled 2026-09-26 at da0aecd (AC14 reworded, AC19-AC21 added); Q2-Q4 adopted 2026-09-26 at 4d1aeb1 under the owner's standing delegation. Zero open questions; 23 criteria, each with a Test Plan row; stays draft pending a gate review, with Phase 2 waiting on management-api.md reaching planned."
 description: "Spec for the npm registry format, where the caching proxy of the public registry is the primary use case rather than private publishing."
 author: michielvha
 goal: "Deliver the most-wanted upstream cache in real deployments, and be the first format where the proxy path is the point."
@@ -66,11 +66,12 @@ its first commit, and its AC12 forbids npm's handler reaching `main` before they
 criteria. This spec therefore renders the typed policy refusal from Phase 1 (Design, "Policy
 refusals on the wire") rather than retrofitting it.
 
-**The management API must be specced before Phase 2.** Unpublish and deprecation are
+**The management API must reach `planned` before Phase 2.** Unpublish and deprecation are
 registry-owned management operations that this format's client routes bind onto (Design, "The
-management surface"). Their shared shape, authorization and write accounting belong to
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), so
-Phase 2 waits on that spec reaching `planned`. Phases 1, 3 and 4 do not.
+management surface"). Their shared shape, authorization and write accounting are
+`docs/internal/plans/foundation/management-api.md`'s, which now exists as a draft with npm's
+operations on its kind vocabulary and its cross-format reconciliation table; Phase 2 waits on
+it reaching `planned` and on its Phase 1 core (charter step 2). Phases 1, 3 and 4 do not.
 
 ## Scope
 
@@ -81,8 +82,10 @@ management operations (authorization-only, with every unpublished version retire
 404 to the audit requests the client sends by default, bearer-token presentation per
 `foundation/auth.md`, the per-route addressed objects its pattern scopes evaluate, the wire
 rendering of a shared policy refusal, the catalogue's named npm-family clients (Yarn, pnpm and
-Bun), and the proxied path against the public registry including detection of npm's explicit
-security signal.
+Bun), the proxied path against the public registry including detection of npm's explicit
+security signal, and this format's half of `artifact-verification.md`'s npm entries: proxied
+`dist.signatures` and `dist.attestations` verified and re-hosted, hosted `_attestations`
+verified before commit (Design, "Signatures and attestations"; AC22).
 
 **Out of scope for v1**, each with its reason, and recorded here because the interface spec's
 definition of done requires the deliberately unimplemented surface to be named:
@@ -93,10 +96,15 @@ definition of done requires the deliberately unimplemented surface to be named:
   surface here first would duplicate it.
   The audit requests npm sends anyway during a default install still need an answer, because
   silence is not an available option: they get an honest 404 (Design, "Audit requests").
-- **Provenance attestation verification.** Verification belongs to the shared producer
-  `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop),
-  per the verification-ownership decision adopted in `supply-chain-policy.md`; npm provenance
-  lands there or in its consumer, not here.
+- **Hosted registry signatures.** `dist.signatures` on hosted packuments and a hosted
+  `/-/npm/v1/keys` document would be this registry signing with its own key, which is
+  `signing-service.md`'s ECDSA P-256 profile and keys document, reserved there for the day this
+  spec adopts it (its Phase 5, "reserved producers"). Until then a hosted packument carries no
+  `dist.signatures`, `npm audit signatures` reports the hosted package as unsigned, and the
+  keys document is not served. Verification of the public registry's signatures on the proxied
+  path is in scope (above); producing our own is not, because no client refuses an unsigned
+  hosted package and a second signing profile before the first consumer is exactly what that
+  spec's reservation exists to prevent.
 - **Search (`/-/v1/search`).** The endpoint shape is trivial but the ranking inputs (quality,
   popularity, maintenance scores) have no conformance oracle and no data source in this system;
   a stub that returns results without them would be a different product claim. Follow-on spec.
@@ -151,7 +159,11 @@ mandatory rather than polite.
 registry serves, hosted and proxied alike, carries tarball URLs pointing at this registry, which
 is the format-specific transform `format-handler-interface.md` names as the canonical proxied
 example, and it requires the handler to know the externally visible base URL rather than the
-bind address.
+bind address. The pin carries no such value today; that spec records npm's need, beside
+Vagrant's, as an input to its scheduled re-open ("Route-scoped and URL-borne credential
+declarations", the smaller requests riding it), and until the re-open answers, the handler takes
+the base URL from `server.public_url` through `Deps` (`deployment.md`), the same value
+`upstream-adapters.md` computes its User-Agent from.
 
 ### Scoped names and the encoded slash
 
@@ -170,10 +182,10 @@ dist-tag move). npm's declaration:
 - A publish `PUT` is **one** completed logical write, even though it carries a version, its
   files and a dist-tag update in one body.
 - Each dist-tag `PUT` or `DELETE` is one write.
-- The unpublish packument `PUT` at `-rev` is one write, and records the removed version in the
-  package's retirement set within that same write; the tarball `DELETE` that follows it in the
-  client's flow is a second write only if it changes head content, which after the `PUT` it
-  normally does not.
+- The unpublish packument `PUT` at `-rev` is one write, and the core writes a `Retirement`
+  record for the removed `name@version` in that same transaction (below); the tarball `DELETE`
+  that follows it in the client's flow is a second write only if it changes head content, which
+  after the `PUT` it normally does not.
 - A whole-package `DELETE` is one write, retiring every version it removes.
 - A deprecation, or its reversal with an empty message, is one metadata-only write.
 
@@ -185,10 +197,18 @@ the public registry refuses it; a registry that accepts it silently rewrites his
 lockfiles already pin. **Republishing an unpublished version is refused the same way**, as the
 public registry also refuses it: the `integrity` a lockfile pins and the tarball this registry's
 own proxy layer caches forever both bind bytes to `name@version`, so unpublishing ends a
-version's life without freeing its coordinate. The package-level document holds the retirement
-set, which every later write carries forward, and a package whose every version is gone is
-served as absent while still refusing its retired versions. The package name itself is not
-retired: a new version under it publishes normally. And the unpublish routes carry a trap: the npm client treats a 404 on
+version's life without freeing its coordinate. The retired coordinate is a **core-held
+`Retirement` record**, not part of the package-level document: `management-api.md` ("Retirement
+is core-held", its resolved retirement-placement decision, was Q3) moved the set out of snapshot
+content, and `data-model.md` owns the record (its entity table and AC35). The handler returns
+`name@version` as the coordinate to retire in the operation's `Outcome`, the core writes the
+record in the retiring transaction, and the shared write path refuses any later write naming
+that coordinate with `retired` (409) before the handler sees it, across a backwards repoint and
+after every snapshot that held the version has been pruned, with nothing for this handler to
+carry forward or remember. A package whose every version is gone keeps its `Package` row and
+package-level document (for its dist-tags; `data-model.md` AC33) and is served as absent while
+its retired versions stay refused. The package name itself is not retired: a new version under
+it publishes normally. And the unpublish routes carry a trap: the npm client treats a 404 on
 the `-rev` routes as "already gone" and exits 0, so an unrouted unpublish surface is a silent
 no-op with a green exit code. AC9's case therefore asserts through the transcript and a
 subsequent failed install, never through the client's exit code alone.
@@ -203,14 +223,19 @@ oracles the trigger as well as the effect, and the one weakness is the exit-code
 
 This spec follows the precedent shared by the Cluster 5 format specs (`pypi.md`,
 `ansible-collections.md` and this one), whose common home is
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop):
+`docs/internal/plans/foundation/management-api.md`, which now fixes the vocabulary:
 
 - **Each operation is a registry-owned management operation**, exposed through that one
-  management API. npm's own client routes (the `-rev` unpublish routes and the deprecate `PUT`)
-  are served as **bindings onto the same operations**, with identical semantics, authorization
-  and write accounting, because the client drives them and a registry npm users cannot
-  unpublish from with `npm unpublish` is not an npm registry. There is one operation and two
-  ways in, never two implementations.
+  management API as a **kind** of its closed vocabulary, and the action follows the kind, never
+  the format (its kind table and cross-format reconciliation table, which carry npm's rows).
+  The handler implements that spec's `Operator` interface, declaring `delete-version`,
+  `delete-package` and `annotate`, reporting the object of each through `Authorize`, and applying
+  it inside the write transaction the core opened through `Apply`. npm's own client routes (the
+  `-rev` unpublish routes and the deprecate `PUT`) are served as **bindings onto the same
+  operations**, translating the wire into `Submit` and the outcome back, with identical
+  semantics, authorization and write accounting, because the client drives them and a registry
+  npm users cannot unpublish from with `npm unpublish` is not an npm registry. There is one
+  operation and two ways in, never two implementations.
 - **Each operation is a completed logical write through the shared write path**: exactly one
   snapshot per operation as declared above, none for a refused one, and no blob-store object
   deleted directly, so space returns only through retention pruning and the single-deleter
@@ -228,11 +253,11 @@ This spec follows the precedent shared by the Cluster 5 format specs (`pypi.md`,
   the management endpoint, and by the real client through the bindings. The effect is verified
   by a real `npm install` in a conformance case.
 
-| Operation | Client binding | Effect a client sees | Action |
-|---|---|---|---|
-| Unpublish a version | `npm unpublish name@version` (`-rev` `PUT`, then tarball `DELETE`) | The version leaves the packument and no longer installs; its coordinate is retired | `delete` |
-| Unpublish a package | `npm unpublish name --force` (`-rev` `DELETE`) | The name no longer resolves; every removed version is retired | `delete` |
-| Deprecate or undeprecate a version | `npm deprecate` (the publish-route `PUT` without attachments) | Install prints the served message, or stops printing it | `push` |
+| Operation | Kind (`management-api.md`) | Client binding | Effect a client sees | Action |
+|---|---|---|---|---|
+| Unpublish a version | `delete-version` | `npm unpublish name@version` (`-rev` `PUT`, then tarball `DELETE`) | The version leaves the packument and no longer installs; its coordinate `name@version` is retired | `delete` on `{name}/{version}` |
+| Unpublish a package | `delete-package` | `npm unpublish name --force` (`-rev` `DELETE`) | The name no longer resolves; every removed version is retired; the `Package` row survives | `delete` on `{name}` |
+| Deprecate or undeprecate a version | `annotate` | `npm deprecate` (the publish-route `PUT` without attachments) | Install prints the served message, or stops printing it | `push` on `{name}` |
 
 ### Audit requests
 
@@ -329,7 +354,52 @@ under the shared security-signal rule. `403` rather than the existence rule's `4
 caller is authorized and the content is what is refused. The same rendering serves the hosted
 and the proxied path, and the shape follows OCI's first rendering (`oci.md`, "Policy refusals on
 the wire"); whether the real client prints the text is what AC20's case proves, and its capture
-re-grounds the body shape.
+re-grounds the body shape. The handler writes the refusal through the shared writer
+`WriteRefusal` in `internal/format` (`format-handler-interface.md` AC14), which carries
+`supply-chain-policy.md`'s status-line phrase on HTTP/1.1 (its resolved status-line decision,
+was Q10, and AC18) while the `403` and the JSON body stay this format's. That spec's table "When
+a refusal binds, per format" carries npm as `pending` until AC20's case captures what npm does
+after a refusal (whether it falls back to another configured registry or stops), replaces the
+row in the same change (its AC20), and the harness refuses to run the policy case before then
+(`conformance-harness.md` AC26).
+
+### Signatures and attestations
+
+The public registry signs every packument entry (`dist.signatures[]`, `keyid` and `sig` over
+`name@version:integrity`) and publishes provenance for packages built with `npm publish
+--provenance` (`dist.attestations`). Verifying either is `artifact-verification.md`'s ("Per-format
+positions", npm; its `npm-keys` and `sigstore` entries), reached through the `Verifier` consumer
+interface in `Deps`; this handler's half is where the material sits on the wire and what is
+served:
+
+- **Proxied.** `dist.signatures` are verified by `keyid` against the upstream keys document
+  pinned at remote configuration, as a `repository-chain` verdict; `dist.attestations` are
+  fetched with the tarball, verified, cached as content and **re-hosted** at
+  `/-/npm/v1/attestations/{name}@{version}` on this registry, with the served packument's
+  `dist.attestations.url` pointing there, never at the upstream. An attestation that fails is
+  not served and the version's verdict is `failed`; a package without one serves none with the
+  verdict `absent`. The rule is that spec's "Provenance the registry vouches for" (its resolved
+  provenance decision, was Q7): passing an upstream provenance URL through would tell the
+  client this index vouches for material it never saw.
+- **Hosted.** A publish carrying `_attestations` is verified before commit against the
+  repository's identity policy and refused on `failed` with nothing committed; a verified
+  attestation is stored as a file of the version and served under the same
+  `/-/npm/v1/attestations/` route; a publish without attestations commits with the verdict
+  `absent`. Hosted `dist.signatures` and `/-/npm/v1/keys` are not produced (Scope).
+
+The real client that oracles this is `npm audit signatures`, which verifies both against the
+registry's keys document and reports per package; AC22 is this format's half of
+`artifact-verification.md` AC20 and shares its case.
+
+### Capabilities and lifecycle
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available`, `Virtual: supported` and `Rename: supported` (`format-handler-interface.md` AC13).
+A virtual npm repository resolves a name in its first member that holds it, which is the
+dependency-confusion-closing order every format spec adopts. `repository-lifecycle.md` AC12
+requires `conformance/npm/rename_test.go`, enforced by the harness's case-set validator
+(`conformance-harness.md` AC26); AC23 carries it, with a real `npm install` from the renamed
+repository.
 
 ### Conformance, auth and the corpus
 
@@ -397,14 +467,18 @@ matches the public registry, so that flow replays.
       under an injected registry clock, both unpublish for a principal holding `delete`; a
       principal holding only `push` is refused with no snapshot created; and unpublish or
       deprecate against a proxied repository is refused.
-- [ ] AC16: Republishing an unpublished version, with the same tarball or a different one, is
-      refused as AC13 refuses a republish, including after the unpublish snapshot has been
-      pruned out of retention and after a whole-package unpublish, while a new version under
-      the same name publishes normally.
-- [ ] AC17: Unpublish and deprecate driven through the registry-owned management endpoint
-      produce the same served packument, exactly one snapshot each, and the same authorization
-      outcome as the same operation driven through `npm unpublish` and `npm deprecate`, with deprecation
-      permitted by `push` and unpublish requiring `delete`.
+- [ ] AC16: Republishing an unpublished `name@version`, with the same tarball or a different
+      one, is refused as AC13 refuses a republish, by the shared write path's `retired` refusal
+      on the core-held `Retirement` record, including after the unpublish snapshot has been
+      pruned out of retention, after the pointer is moved to a snapshot older than the
+      unpublish and back, and after a whole-package unpublish, while a new version under the
+      same name publishes normally.
+- [ ] AC17: Unpublish and deprecate driven through the registry-owned management endpoint, as
+      the `delete-version`, `delete-package` and `annotate` kinds, produce the same served
+      packument, exactly one snapshot each, and the same authorization outcome as the same
+      operation driven through `npm unpublish` and `npm deprecate`, with deprecation permitted by
+      `push` and unpublish requiring `delete`; and the handler declares exactly those three kinds
+      through `Operations()`.
 - [ ] AC18: Both audit endpoints answer 404 with no advisory document in hosted, proxied and
       virtual repositories, a default `npm install` against each succeeds, and no audit request
       reaches any upstream, asserted at the network layer.
@@ -423,6 +497,21 @@ matches the public registry, so that flow replays.
       publishes a package that a subsequent install retrieves with a matching integrity hash,
       as the catalogue's client-reach criterion (its AC2) requires of every client its
       multiplier table names.
+- [ ] AC22: On a proxied repository whose upstream stand-in serves recorded packuments, keys
+      and attestation bundles, `dist.signatures` verify by `keyid` against the pinned keys
+      document, `dist.attestations` are fetched, verified and served from
+      `/-/npm/v1/attestations/{name}@{version}` on this registry with the packument's attestation
+      URL pointing at this registry and never at the upstream, a real `npm audit signatures`
+      passes for a package whose bundle verified and reports the failure for one whose
+      attestation this registry refused to serve; and on a hosted repository a real `npm publish
+      --provenance`-shaped publish carrying `_attestations` is refused before commit when they
+      fail the identity policy, with no snapshot, and stored and served when they verify (this
+      format's half of `artifact-verification.md` AC20).
+- [ ] AC23: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
+      availability `available`, `Virtual: supported` and `Rename: supported`; a real `npm install`
+      from a renamed repository succeeds under the new name in both modes while the old name
+      answers 404 indistinguishably from a never-existing repository; and a virtual repository
+      of two members resolves a name present in both from the first member.
 
 ## Test Plan
 
@@ -447,8 +536,10 @@ matches the public registry, so that flow replays.
 | AC17 | conformance + integration | `conformance/npm/manage_binding_test.go` (twin packages in one `script`: one operated through the management endpoint, one through real `npm unpublish` and `npm deprecate`; served packuments compared); `internal/format/npm/manage_binding_test.go` (snapshot count per operation through each entry point, `push` and `delete` grants) |
 | AC18 | conformance | `conformance/npm/audit_test.go` (hosted, proxied and virtual cases; transcript shows both 404s, network layer shows no upstream audit request) |
 | AC19 | conformance + unit | `conformance/npm/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; a pattern-scoped token provisioned through the `credentials` key); `internal/format/npm/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
-| AC20 | conformance | `conformance/npm/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`) |
+| AC20 | conformance | `conformance/npm/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; npm's post-refusal behaviour captured here replaces the `pending` binding-table row in the same change, `supply-chain-policy.md` AC20) |
 | AC21 | conformance | `conformance/npm/clients_test.go` (Yarn, pnpm and Bun pinned by digest, running the install, lockfile and proxied cases, and publish where the client has a command) |
+| AC22 | conformance + integration | `conformance/npm/signatures_test.go` (stand-in with recorded bundles and keys document, `npm audit signatures`, hosted `_attestations` publish; shared with `artifact-verification.md` AC20); `internal/format/npm/attestations_test.go` (re-hosted URL rewriting, refused-before-commit with snapshot count unchanged, `absent` verdict on a plain publish, against a fake `Verifier`) |
+| AC23 | unit + conformance | `internal/format/npm/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/npm/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26); `conformance/npm/virtual_test.go` (first-member resolution through real `npm install`) |
 
 ## Implementation Phases
 
@@ -456,18 +547,25 @@ matches the public registry, so that flow replays.
 - Packument assembly and content negotiation, tarball serving, scoped names, publish with
   integrity verification and republish refusal, the audit endpoints' 404
 - The per-route addressed-object declaration and the pattern-scope cases; the `403` rendering
-  of the typed policy refusal
+  of the typed policy refusal through `WriteRefusal`
+- `Capabilities()` declaring proxy, reference implementation, `Virtual` and `Rename`; the rename
+  and virtual cases (AC23)
+- Hosted `_attestations` verified before commit through `Deps`' `Verifier` (AC22's hosted half;
+  `artifact-verification.md` Phase 2 is built with this format)
 
 ### Phase 2: Mutation surface
 - Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
   preconditions)
-- dist-tags; unpublish and deprecation as registry-owned management operations with the client
-  routes bound onto them; the retirement set; the write-boundary declaration exercised end to
-  end
+- dist-tags; unpublish and deprecation as the `delete-version`, `delete-package` and `annotate`
+  kinds on the handler's `Operator`, with the client routes bound onto them; the retirement
+  coordinates returned in `Outcome` and refused centrally; the write-boundary declaration
+  exercised end to end
 
 ### Phase 3: Proxied path
 - Classification and URL rewriting, conditional revalidation, negative caching, the removal
   table and security-signal detection, with the refusal-before-fetch that follows a signal
+- Proxied `dist.signatures` verification against the pinned keys document and `dist.attestations`
+  re-hosted at this registry's URL (AC22's proxied half)
 
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate), replay-match,
@@ -529,9 +627,10 @@ registry's time window and dependent-count restrictions are not enforced, and th
 sits on the recorded exception list (Design, "The management surface"; AC15).
 
 Made consistent with the other Cluster 5 answers: unpublish and deprecation are registry-owned
-management operations homed in `docs/internal/plans/foundation/management-api.md` (to be
-authored in the spec loop), with npm's client routes served as bindings onto them rather than
-as a separate implementation (AC17). This is the one Cluster 5 format where the real client
+management operations homed in `docs/internal/plans/foundation/management-api.md` (since
+authored: the `delete-version`, `delete-package` and `annotate` kinds of its vocabulary, npm's
+rows in its reconciliation table), with npm's client routes served as bindings onto them rather
+than as a separate implementation (AC17). This is the one Cluster 5 format where the real client
 oracles the trigger as well as the effect, which the analysis in
 `docs/internal/analysis/management-surfaces-and-the-oracle.md` records; the precedent is shared
 so that four specs do not answer one question four ways.
@@ -564,6 +663,10 @@ content, and whether fidelity to the public registry outranks operator control -
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: an unpublished
 `name@version` is retired and can never be republished, with the same bytes or different ones;
 the package name itself stays usable for new versions (Design, "What counts as a write"; AC16).
+The record's home moved once since: this adoption placed the retirement set in the package-level
+document, and `management-api.md`'s resolved retirement-placement decision (was Q3 there,
+2026-09-27) made it the core-held `Retirement` record `data-model.md` owns (AC35), refused by the
+shared write path. The semantics here are unchanged; only where the set lives moved.
 
 Raised and adopted in the same pass because folding Q3 exposed it: authorization-only unpublish
 says nothing about whether the removed coordinate is free again, and two readings of "operator
@@ -612,3 +715,4 @@ before its flow is expected to replay.
 | 2026-09-25 | 331ef25 | first review: protocol grounding at published-contract level (the `npm/registry` docs describe reads only, so the write half is grounded in prior-art implementations and flagged for re-grounding in captured traffic per the standing rule) + adversarial + cross-spec (interface AC8/Q9 re-open gate, charter Q3's before-npm obligation from `question-triage.md`, data-model's write-boundary and snapshot rules and its AC13, proxy-cache's settled classification/removal/serve-stale/negative-caching decisions and its AC13, harness `setup` vocabulary, corpus rules and redaction gate, auth AC4, supply-chain-policy Q6, the catalogue's npm family row) + constitution; code-claim verification vacuous pre-implementation (no `internal/format/npm/`, no `conformance/npm/`) | The spec was a stub wearing a reviewed spec's frontmatter: no summary, no Design, no Phases, no Tasks, and its one resolved decision claimed it was "folded into Design and Scope above" when no Design section existed and no accepted cost was recorded - both corrected. Body built out from grounded protocol facts: the wire surface including the `-rev` unpublish routes (where an unrouted surface is a silent no-op because the client exits 0 on 404), content negotiation and the corgi Accept header, the encoded-slash routing trap, tarball URL rewriting, the write-boundary declaration `data-model.md` requires of every format spec, the proxied classification and npm's side of the settled removal table (security-holding shape purges; author unpublish keeps and flags; deprecation is never a removal), the client-side-cache trap that made AC6 vacuously passable, and the non-interactive auth path (token via `setup`, no new harness vocabulary). Scope gained unpublish, deprecation, republish refusal, content negotiation and security-signal detection; out-of-scope items each gained a non-effort reason. Six criteria added (AC9 unpublish with transcript assertions, AC10 deprecation both paths, AC11 the removal table, AC12 content negotiation, AC13 republish refusal, AC14 the measurement baseline) with Test Plan rows; AC7's row retargeted from `internal/proxy/` (which duplicated proxy-cache AC2/AC3) to an npm-path conformance case. Both blocking preconditions now recorded: the interface re-open (with its Q9 noted as widening the evidence set, not moving the gate) and charter Q3 before npm starts. Q2 (audit-request disposition: 404 vs empty stub vs forwarding, a security-posture and privacy call) and Q3 (hosted unpublish policy vs public-registry emulation) raised for the owner, not decided. Stays draft. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review: adoption and application of this spec's own recommendations, made consistent with the other Cluster 5 format specs. Q2 adopted as A: both audit endpoints answer 404 in every mode with nothing forwarded (new Design section "Audit requests", wire-table row, Scope, corpus exception list, AC18). Q3 adopted as A, authorization-only unpublish with the public registry's restrictions unenforced (AC15), and made consistent with pypi and Galaxy: unpublish and deprecation are registry-owned management operations homed in `docs/internal/plans/foundation/management-api.md` (to be authored), with the `-rev` routes and the deprecate `PUT` served as bindings onto them, `delete` for unpublish and `push` for deprecation, hosted only (new Design section "The management surface", AC17, a Phase 2 blocking precondition). Folding Q3 exposed Q4 (may an unpublished version be republished), written in decision shape and adopted as A: retired forever through a package-level retirement set, the name staying usable (write-boundary section, AC16), matching pypi's filename retirement and Galaxy's version retirement. The provenance out-of-scope item now names `docs/internal/plans/foundation/artifact-verification.md` (to be authored) as the producer; the charter precondition records that charter's cost-attribution question was answered in its own spec during this pass; the proxy-cache security-signal citation updated to that spec's resolved passive-detection answer. Test Plan rows added for AC15 to AC18. Stays draft. |
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: AC14 reworded to the charter's settled 'Measuring per-format cost'; the step-4b precondition (charter AC12) added; the interface re-open's evidence set cited as resolved (was Q9); the audit out-of-scope reason updated to supply-chain's resolved OSV feed; the security-signal rule cited in the removal table and detection note, with AC11 extended to a post-purge install refused naming the signal and no upstream fetch; the addressed-object table (packument and routes by name `{name}`, version-addressed routes `{name}/{version}`, ping, whoami and audit none) with AC19 as the pattern-refusal case in both modes; the policy rendering (AC20); the catalogue's resolved client-reach decision applied to Yarn, pnpm and Bun (AC21). Nothing found already done. Stays draft. |
+| 2026-09-28 | a6d72b3 | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the management-api authoring (items 11 and 12): the retirement set is the core-held `Retirement` record (`data-model.md` AC35; management-api's resolved retirement-placement decision, was Q3), returned as `name@version` in the operation's `Outcome` and refused by the shared write path, rewritten through "What counts as a write", Phase 2 and the Q4 record; the management table gains the kind column (`delete-version`, `delete-package`, `annotate`) and the handler's `Operator` declaration, with AC17 asserting the kinds; every "(to be authored)" citation of management-api.md replaced. From the artifact-verification authoring (item 10): a new "Signatures and attestations" section (proxied `dist.signatures` by `keyid` as `repository-chain`, `dist.attestations` verified and re-hosted at `/-/npm/v1/attestations/{name}@{version}`, hosted `_attestations` verified before commit, its resolved provenance decision, was Q7) and AC22 sharing `conformance/npm/signatures_test.go` with its AC20; the provenance out-of-scope item replaced by hosted registry signatures, reserved for `signing-service.md`'s ECDSA P-256 profile (its Phase 5; signing-service item 13). From sweep 1 item 6: the externally visible base URL cited to `format-handler-interface.md`'s "Route-scoped and URL-borne credential declarations" re-open input, with `server.public_url` through `Deps` until then. From the supply-chain reconciliation (item 11) and Open item 5: the refusal goes through `WriteRefusal` with the shared status-line phrase (was Q10, AC18) and AC20's capture fills the `pending` binding-table row (its AC20, harness AC26). From the repository-lifecycle authoring (item 15) and format-handler-interface AC13: `Capabilities()` declared with `Virtual` and `Rename` supported and `conformance/npm/rename_test.go` (AC23). Found already done: the charter fold's AC14 rewording and the supply-chain fold's security-signal citation (both at da0aecd). No question raised. `node scripts/check-spec.js` zero failures for this file. Stays draft pending a gate review. |
