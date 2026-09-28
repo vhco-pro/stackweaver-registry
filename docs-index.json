@@ -382,6 +382,17 @@
     ]
   },
   {
+    "path": "docs/internal/plans/formats/rubygems.md",
+    "description": "Spec for the RubyGems format: the compact index (/versions, /info, /names) with its append-only, Range-fetched versions file, the legacy Marshal index, gem push and gem yank, hosted and proxied, with gem and bundle as the conformance oracle across three client generations.",
+    "internal": true,
+    "status": "draft",
+    "issue": "54",
+    "covers": [
+      "internal/format/rubygems/**",
+      "conformance/rubygems/**"
+    ]
+  },
+  {
     "path": "docs/internal/plans/formats/swift.md",
     "description": "Spec for the Swift package registry format (SE-0292): the per-package release list, release metadata, manifests with their version-specific alternates, source archives, the identifiers lookup that bridges Git dependencies, and the multipart publish with SE-0391 publisher signatures, hosted and proxied, with SwiftPM 5.10 and 6.4 as the conformance oracles.",
     "internal": true,

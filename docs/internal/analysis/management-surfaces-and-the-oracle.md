@@ -2,7 +2,7 @@
 description: "Context for the Cluster 5 decision: what management operations each ecosystem has, which of them a real client can drive, and the correction that the conformance oracle can test every one of their effects even where it cannot trigger them."
 covers: []
 status: complete
-status_description: "Written 2026-09-26 because the owner asked for more context before deciding Cluster 5. Corrects an overstatement in question-triage.md's framing of that cluster, made by the same author. Extended the same day by the cross-spec reconciliation: Cargo rows added (yank, unyank and owners are real client commands, so trigger and effect are both oracle-testable) and a dated note recording how Cluster 5 was adopted. Extended 2026-09-28 on Opus with a row per format re-read from all 32 current format specs (RubyGems not yet authored), four effects asserted only at the wire, and twelve spec defects found on the way."
+status_description: "Written 2026-09-26 because the owner asked for more context before deciding Cluster 5. Corrects an overstatement in question-triage.md's framing of that cluster, made by the same author. Extended the same day by the cross-spec reconciliation: Cargo rows added (yank, unyank and owners are real client commands, so trigger and effect are both oracle-testable) and a dated note recording how Cluster 5 was adopted. Extended 2026-09-28 on Opus with a row per format re-read from all 33 format specs (RubyGems added once authored), four effects asserted only at the wire (three since closed by the format sweep, OCI's kept by design), and twelve spec defects found on the way."
 author: michielvha
 goal: "Give the Cluster 5 decision an accurate frame, by separating the operation a client can trigger from the state a client can observe, and grounding both against the installed clients."
 ---
@@ -127,7 +127,7 @@ in each spec's resolved records; this analysis is not re-decided by them.
 
 ## Every format, re-read against its spec (2026-09-28)
 
-Written after every format spec except RubyGems (not yet authored) had adopted the management API.
+Written after every format spec had adopted the management API (RubyGems, the last authored, added the same day).
 The rows are extracted from each spec's current text, not from memory, and cross-checked against
 `management-api.md`'s cross-format reconciliation table. "Trigger" is the real client command
 that drives a binding onto the kind. "Client-less" kinds are reached only through the management
@@ -159,7 +159,7 @@ write, not a management kind, unless the row says otherwise.
 | Chef | `delete-package`, `delete-version`, `annotate` | `knife supermarket unshare` onto `delete-package` | version removal (a reference-API route, `curl` only), deprecation | the universe no longer names the version and a resolve falls back (AC8); deprecation in knife's output (AC9) |
 | LuaRocks | `delete-version`, `delete-package`, `delete-file` | none (`luarocks-admin remove` is rsync only) | all | manifests omit it, files 404, `luarocks install` takes the next lower version (AC13) |
 | Terraform | `publish`, `delete-version`, `delete-package`, `annotate` (providers only) | none: no Terraform wire writes | all | all four clients install a publish (AC7, AC8), print a provider deprecation, fail after delete (AC9) |
-| Hackage | `publish`, `annotate` (revision, preferred versions), `delete-version`, `configure` | `cabal upload --publish` onto `publish` | all but publish | `cabal info`/`get` use a revision (AC15); preferred versions are avoided (AC16); delete is 404 (AC17) |
+| Hackage | `publish`, `annotate` (revision, preferred versions), `delete-version`; key `configure` is on the signing-key routes, not in `Operations()` | `cabal upload --publish` onto `publish` | all but publish | `cabal info`/`get` use a revision (AC15); preferred versions are avoided (AC16); delete is 404 (AC17) |
 | Open VSX | `delete-version`, `delete-package`, `configure` | `ovsx unpublish` (1.2.0 only) | verified-namespace `configure` | removed packages leave the documents and `--force` installs the newest remaining (AC30); "(verified)" printed (AC12) |
 | CPAN | `publish`, `delete-version`, `annotate`, `configure` | `cpan-upload` onto `publish`, unpatterned `push` only | the rest, and the management-API publish a patterned token must use | the index falls back and every client installs the previous release (AC15); ownership transfer is integration-only (AC6) |
 | Julia | `publish`, `withdraw`, `restore`, `annotate`, `delete-version`, `delete-package` | none: Registrator targets git | all | `Pkg.add` installs (AC3); yanked excluded but pinned manifests install (AC5); 1.13 marks deprecated (AC6); pinned instantiate fails after delete (AC7) |
@@ -171,18 +171,19 @@ write, not a management kind, unless the row says otherwise.
 | Vagrant | `publish`, `annotate`, `delete-file`, `delete-version`, `delete-package` | none; `vagrant cloud publish` (HCP API v2) is not served and fails cleanly (AC9) | all five | `box add`, `outdated`, `update` see a publish (AC6-AC8); a default-architecture change splits 2.3.7 from 2.4.9 (AC3); deletes 404 (AC9) |
 | opam | `publish`, `annotate`, `delete-version`, `delete-package` | none; `opam publish` is a forge pull request, out of scope | all four | `opam update`/`install` pick up a publish (AC5); a revision changes resolution (AC8); `upgrade` downgrades or removes after delete (AC9) |
 | Homebrew | `publish` (bottles only), `delete-file` | none: `brew pr-upload` recognises only GitHub | both | a tap formula with the returned `root_url` installs on both brew lines (AC6); a deleted bottle 404s and the install fails with no source build (AC18) |
+| RubyGems | `publish` (unchanged publish declared), `delete-version`, `delete-package` | `gem push` onto `publish`; `gem yank` onto `delete-version`, which here is a deletion, not a `withdraw`: the entry leaves every index, its `.gem` is 404 and a lockfile pinning it fails (captured) | `delete-package` | `bundle install` and `gem install` install a push and an identical re-push changes nothing (AC2, AC3); after a yank the version is gone for fresh resolutions and lockfiles alike and a republish is refused (AC4); after `delete-package` installs fail and every version stays refused (AC24); binding parity AC23 |
 
 ### What the re-read found
 
-**The frame of 2026-09-26 holds at full width.** Every one of the 32 specs gives each management
+**The frame of 2026-09-26 holds at full width.** Every one of the 33 specs gives each management
 kind an effect a real client observes, so the oracle owns the effect everywhere. Where no client
 drives the trigger, the trigger is verified by our integration tests, exactly as the section on
 what still needs deciding said.
 
-**Most formats have no client-driven trigger at all.** Fourteen of 32 have one: npm, Galaxy (publish),
+**Most formats have no client-driven trigger at all.** Fifteen of 33 have one: npm, Galaxy (publish),
 Cargo, NuGet (unlist), generic, Debian (dput), conda (publish), Conan (revision removal), Hex,
-Chef (unshare), Hackage (publish), Open VSX (1.2.0 unpublish), CPAN (publish) and Puppet
-(publish), and in six of those only publish is bound. Management through our own API is the
+Chef (unshare), Hackage (publish), Open VSX (1.2.0 unpublish), CPAN (publish), Puppet
+(publish) and RubyGems (`gem push`, `gem yank`), and in six of those only publish is bound. Management through our own API is the
 norm, not the exception, which is the strongest argument that Cluster 5 was right to adopt one
 cross-format surface.
 
@@ -196,6 +197,11 @@ rest of the table and should be closed or recorded as a deliberate gap:
    ownership transfer is integration-only (AC6).
 4. OCI deletion is exercised by the distribution-spec suite, not by any real CLI, which is right
    for OCI (no mainstream CLI deletes by digest) but is not the client oracle.
+
+**Update, later on 2026-09-28.** The format closing sweep closed the first three: Swift AC7 and
+AC9 now resolve with a real client after `rebind` and `restore`, Alpine AC8 and Arch AC9 assert a
+client seeing an architecture-set change, and CPAN AC33 observes the author record through
+CPAN.pm's distribution report. Only OCI's remains, and it stays by design.
 
 **Spec defects found on the way**, queued in `agents/spec-loop/consequences.md`:
 

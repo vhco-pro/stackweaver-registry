@@ -96,6 +96,9 @@
   "conformance/rpm/**": [
     "docs/internal/plans/formats/rpm.md"
   ],
+  "conformance/rubygems/**": [
+    "docs/internal/plans/formats/rubygems.md"
+  ],
   "conformance/swift/**": [
     "docs/internal/plans/formats/swift.md"
   ],
@@ -219,6 +222,9 @@
   ],
   "internal/format/rpm/**": [
     "docs/internal/plans/formats/rpm.md"
+  ],
+  "internal/format/rubygems/**": [
+    "docs/internal/plans/formats/rubygems.md"
   ],
   "internal/format/swift/**": [
     "docs/internal/plans/formats/swift.md"

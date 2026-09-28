@@ -146,8 +146,9 @@ not satisfy it.
   can reach `planned` until a Fable review clears the marker. Spend the next Fable credit there.
   The question-level snapshot (146 adoptions across 27 specs, in a recheck-first order) is round
   six of `plans/foundation/question-triage.md`; start with `storage-and-gc.md`, the first gate.
-- **RubyGems is the 33rd format and the last one authored** (2026-09-28). Its author died in the
-  2026-09-26 crash and the queue was wrongly marked done in the meantime (`tasks/lessons.md`).
+- **RubyGems is the 33rd format and the last one authored** (2026-09-28, `plans/formats/rubygems.md`,
+  on Opus with twelve adopted questions). Its first author died in the 2026-09-26 crash and the
+  queue was wrongly marked done in the meantime (`tasks/lessons.md`).
 - **Redaction ships before the first corpus is committed**, public repository or not. Recording
   real registry traffic into an in-repo corpus is a credential leak waiting for the repository to
   go public (`conformance-harness.md`, blocking precondition on recording).

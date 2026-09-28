@@ -423,7 +423,7 @@ carries `fable_recheck`, which `node scripts/check-spec.js` lists as the live qu
 the spec off `planned` until a Fable review clears it. That output is authoritative; this table is a
 dated snapshot of the question-level subset, extracted from the resolved records' dates.
 
-**148 questions across 29 specs** (146 at the first snapshot, plus rpm Q11 and arch Q13 from the format sweep). A spec authored whole on Opus (most format specs from alpine
+**160 questions across 30 specs** (146 at the first snapshot, plus rpm Q11 and arch Q13 from the format sweep and rubygems Q1 to Q12 at its authoring). A spec authored whole on Opus (most format specs from alpine
 onwards) is marked for a full recheck, and its authoring-time adoptions are covered by that mark
 even where the table below omits them.
 
@@ -458,6 +458,7 @@ decision:
 
 | Spec | Questions adopted 2026-09-27 or 2026-09-28 |
 |---|---|
+| `formats/rubygems.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12 |
 | `formats/rpm.md` | Q11 |
 | `formats/arch.md` | Q13 |
 | `formats/cargo.md` | Q7 |

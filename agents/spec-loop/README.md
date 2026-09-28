@@ -44,17 +44,19 @@ Author `docs/internal/plans/<dir>/<name>.md`; your hints are its line in `<queue
 
 ## Resume point (2026-09-28, monthly spend limit)
 
-Stopped by the owner at the spend limit. Nothing is uncommitted. In order:
-1. RubyGems author (above).
-2. Format closing sweep, batches of four with reconcile-brief.md: batch 3 (hackage, cpan, cran,
-   debian) died before editing anything, so relaunch it with the prompt shape in the
-   consequences.md progress log. Batches 1 and 2 (puppet, vagrant, swift, homebrew; conda, rpm,
-   alpine, arch) are done. The remaining batches are luarocks, chef, maven, opam;
-   helm, conan, terraform, hex; pypi, npm, cargo, nuget; composer, openvsx, julia, pub; generic,
-   oci, go-modules, ansible-collections.
-3. The foundation items those batches and the closing sweeps queued, including management-api
-   Puppet rows, signing-service member-input templates, and async EnqueueRevalidation.
-4. A final check that every target absorbed the whole queue, then the Fable recheck queue
+Stopped by the owner at the spend limit, then the two interrupted items were finished the same
+day. Nothing is uncommitted. In order:
+1. Format closing sweep, batches of four with reconcile-brief.md (prompt shape: own exactly four
+   files, apply every open item from the whole of consequences.md, report foundation needs and
+   conformance-harness exception rows rather than editing them). Done: puppet, vagrant, swift,
+   homebrew; conda, rpm, alpine, arch; hackage, cpan, cran, debian. Remaining: luarocks, chef,
+   maven, opam; helm, conan, terraform, hex; pypi, npm, cargo, nuget; composer, openvsx, julia,
+   pub; generic, oci, go-modules, ansible-collections. Each batch audits every map, index and
+   merged generation for keep-alive by mention (batch 3 item 7).
+2. The foundation items those batches, the closing sweeps and rubygems.md queued (management-api
+   Puppet rows and RubyGems text, signing-service member-input templates and validators,
+   proxy-cache expected-validator, async EnqueueRevalidation, auth client rows).
+3. A final check that every target absorbed the whole queue, then the Fable recheck queue
    (question-triage.md round six) once Fable credit returns.
 
 ## Queue, split by where it runs
@@ -64,12 +66,12 @@ owner's machine, one agent at a time; everything that only reads specs and publi
 a cloud session. Both push to the same repository, so always `git pull --rebase` before pushing.
 Each side appends to `consequences.md`; a conflict there is two lists to concatenate.
 
-### Local: needs podman or docker - 32 of 33 DONE
+### Local: needs podman or docker - DONE 2026-09-28
 
-CORRECTION 2026-09-28: RubyGems was never specced. Its author died in the first spend-limit crash and was never relaunched, and the queue was then wrongly marked complete. A second author was stopped on 2026-09-28 (monthly spend limit) mid-capture, before writing any spec. Its captures and container images (gemstash, geminabox, localhost/gemcap-*) are on the owner's host under /tmp/gemcap; reuse them if they survive, otherwise re-capture. Relaunch with author-brief.md. The other 32 catalogue ecosystems are specced, each grounded in captured traffic from real clients run in
+CORRECTION 2026-09-28: RubyGems was never specced until 2026-09-28. Its first author died in the 2026-09-26 spend-limit crash and the queue was wrongly marked complete meanwhile (`docs/internal/tasks/lessons.md`). It is now authored (`formats/rubygems.md`), so all 33 are done. The catalogue ecosystems are specced, each grounded in captured traffic from real clients run in
 containers: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub, nuget,
 maven, hex, composer, conda, cran, julia, swift, terraform, rpm, debian, alpine, conan, vagrant,
-chef, puppet, hackage, luarocks, cpan, opam, homebrew, openvsx, arch (plus the catalogue itself).
+chef, puppet, hackage, luarocks, cpan, opam, homebrew, openvsx, arch, rubygems (plus the catalogue itself).
 Nothing local remains unless a gate review asks for a fresh capture.
 
 ### Cloud: no containers needed (the owner's cloud credits)

@@ -557,6 +557,9 @@ the format spec's change is a sibling consequence of this spec.
 | Vagrant | publish version, add provider file to a version | `publish` (a provider file is a coordinate `(version, provider, architecture)` the client downloads and checksums, so not `attach`) | `push` | none |
 | Vagrant | set a provider's default architecture | `annotate` | `push` | none |
 | Vagrant | delete provider file, delete version, delete box | `delete-file`, `delete-version`, `delete-package` | `delete` | none |
+| RubyGems | push (an identical re-push completes with no snapshot, the declared unchanged publish) | `publish` | `push` | `POST {base}/api/v1/gems` from `gem push`, whose route reports `{gem}/{version}` from a bounded peek at the first tar entry `metadata.gz`, else none (the stricter-binding case, was Q13) |
+| RubyGems | yank one version entry, number plus platform (a deletion: the entry leaves every index, its `.gem` is removed and a lockfile pinning it fails, so not `withdraw`; retires `{gem}/{version}`) | `delete-version` | `delete` | `DELETE {base}/api/v1/gems/yank` from `gem yank` |
+| RubyGems | delete gem | `delete-package` | `delete` | none |
 | generic | delete artifact (retiring nothing, so the path accepts a new `PUT`) | `delete-file` | `delete` | the format's own `DELETE`, which its spec already serves |
 
 Cargo's owners mutations are not management operations: `cargo.md` refuses them before scope
