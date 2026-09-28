@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-27 at 94f86f3 with the format-side folds (not a review): Q23 raised and adopted under the standing delegation, adding a fourth addressed-object kind, descriptor, for a repository-wide document that names no object (Cargo's config.json, Conan's probe, RPM's repomd.xml), which a patterned pull may read, held by a sentinel test in each handler's object table and asserted by the new AC32; Helm's index.yaml and RPM's primary stay none, so helm, dnf and zypper still need an unpatterned pull. The Cargo addressed-object bullet now follows cargo.md's folded crate key with {crate}/{version} on version routes, and the Cargo yank divergence is gone: yank and unyank are bindings onto the management API's yank operation and need delete. Earlier (2026-09-26): cargo and docker client rows, AC31 for the four presentation forms, Galaxy's declaration, management operations mapped onto pull/push/delete; Q13-Q22 adopted. 32 criteria, zero open questions; stays draft pending a gate review. AC10 still requires external review of the implementation regardless of spec status."
+status_description: "Reconciled 2026-09-27 at a72f8ef with the foundation authoring wave (not a review): the client table grew fourteen rows from captured traffic (dotnet, gradle/sbt/lein, composer, the conda family, rattler-build, R/renv/pak, terraform/tofu, dnf/dnf5/zypper, knife, berks/chef-cli, puppet/r10k, luarocks, ovsx and the editors, cabal/stack) and every presentation form they need is consolidated in one Design table (five Authorization schemes, three vendor headers, a query parameter, three path segments, the download capability, the signed request) with route-scoping declared by the handler; Q24 adopted under the standing delegation: an off-route presentation is an authentication failure, never anonymous. The token service gains Terraform's download capability as its second product (AC33); Chef's RSA-signed writes are verified against registered public keys with the standard library (AC34); AC7, AC17, AC22, AC27 and AC31 extended; AC10's procedure lists the review's full surface across credential-management, signing-service and upstream-adapters. New Configuration subsection tables the auth.* keys. Earlier the same day at 94f86f3: Q23 adopted (the descriptor kind, AC32). 34 criteria, zero open questions; stays draft pending a gate review. AC10 still requires external review of the implementation regardless of spec status."
 description: "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present."
 author: michielvha
 goal: "Give every format one auth model that real package clients can use, while keeping user passwords, MFA, account recovery and federation outside our code."
@@ -33,10 +33,24 @@ shared concern handlers must not implement.
 | `docker` / `podman` | The OCI token flow: a `WWW-Authenticate` challenge, then a bearer token from a token endpoint, scoped per repository and action. At the token endpoint the client presents the registry token as the Basic password (`docker login --password-stdin`); the username is not an authentication input, and the endpoint issues no refresh token, so a revoked registry token's reach ends with the already-issued access token's lifetime inside AC5's window (`formats/oci.md`, the resolved docker-login-credential decision) |
 | `npm` | `Authorization: Bearer <token>` from `.npmrc` |
 | `pip` / `twine` | HTTP Basic, conventionally username `__token__` with the token as password |
-| `mvn` | HTTP Basic from `settings.xml` |
+| `mvn` | HTTP Basic from `settings.xml`, in two modes: every read goes out anonymous and is retried with Basic after a `401` carrying `WWW-Authenticate: Basic`; every `PUT` carries Basic **preemptively**, before any challenge. Maven and Gradle print only the status line on a refusal (captured 2026-09-26 from Maven 3.8.8 and 3.9.11; `formats/maven.md`, "Authentication: Basic after a challenge, preemptive on PUT") |
+| `gradle` / `sbt` / `lein` | HTTP Basic, the same two modes as `mvn`: challenged on reads, preemptive on `PUT`, and preemptive on reads too when Gradle is given an explicit `BasicAuthentication` scheme. The credential comes from `credentials {}` (Gradle), `Credentials(...)` (sbt, through Coursier) and the `settings.xml` server password Leiningen reads through `:repositories` (captured 2026-09-26 from Gradle 8.14.5 and 9.1.0, sbt 1.13.0 and Leiningen 2.13.0; `formats/maven.md`) |
+| `dotnet` (NuGet) | Two forms. `X-NuGet-ApiKey: <token>` on the `PackagePublish` routes only, and only when `--api-key` was given (no header at all otherwise). Every route, publish included, goes out anonymous first and is retried with `Authorization: Basic` (token as the password, username not an input) after a `401` carrying `WWW-Authenticate: Basic`; a challenged push therefore arrives a second time carrying **both** headers, and a rejected retry is repeated a dozen times before `NU1301` (captured 2026-09-26 from NuGet 6.3.4 and 6.14.3; `formats/nuget.md`, "Authentication: an API key header, and Basic after a challenge") |
 | `helm` | Bearer or Basic depending on the endpoint |
 | `ansible-galaxy` | `Authorization: Token <token>` on every request, including discovery; `Bearer` only under the separate Keycloak `auth_url` flow, Basic only with a configured username/password (captured 2026-09-25 from ansible-core 2.18.18rc1; see `formats/ansible-collections.md`, "The wire contract") |
 | `cargo` | The bare token string as the whole `Authorization` value, with no scheme. Sent on every authenticated web API request (publish, yank, unyank, owners). Sent on index and download requests only after the registry has signalled `auth-required`: a credential-less `config.json` fetch answered 401 with the challenge `WWW-Authenticate: Cargo login_url="<url>"`, then a retried fetch returning `auth-required: true`; only cargo 1.74 and later perform that retry. **Never sent on search**, even with a token configured, so search cannot authenticate (captured 2026-09-26 from cargo 1.70.0 and 1.98.1 against a logging stub; see `formats/cargo.md`, "Authentication: a bare token, and the challenge that unlocks it") |
+| `composer` | `Authorization: Basic` (token as the password) from `http-basic`, or `Authorization: Bearer` from `bearer`, in `auth.json` or `COMPOSER_AUTH`, sent **preemptively on every request** to the origin. The credential is keyed by origin **including the port**: a credential keyed by the bare host is silently not sent to a port-qualified origin. Non-interactively there is no challenge handling; a `401` ends the run (captured 2026-09-26 from Composer 2.10.3 and 2.2.30; `formats/composer.md`, "Authentication: preemptive Basic or Bearer, keyed by origin with its port") |
+| `conda` / `mamba` / `micromamba` / `pixi` | Four forms, none of them answering a challenge: Basic from URL userinfo (token as the password) on every request (mamba 2.9.0 dropped it on the package request, a recorded client defect); Basic from a stored login (`mamba auth login` and `micromamba auth login`, keyed on `host:port`; `pixi auth login --username`, keyed on the host); `Authorization: Bearer` from `mamba auth login --bearer` (also micromamba) and `pixi auth login --token`; and the **path token**, the anaconda.org convention `/t/{token}/` inserted between the host and the channel path on every request, from `mamba auth login --token`, `micromamba auth login --token`, `pixi auth login --conda-token` or a channel URL written in that form, the only non-Basic form `conda` supports without a plugin (captured 2026-09-26 from conda 26.7.1 and 24.1.2, mamba 2.9.0, micromamba 2.3.3 and pixi 0.81.0; `formats/conda.md`, "Authentication") |
+| `rattler-build` | Basic (token as the password) under `upload artifactory`, Bearer under `upload prefix` (captured 2026-09-26 from rattler-build 0.76.1; `formats/conda.md`) |
+| `R` / `renv` / `pak` | HTTP Basic carried in the repository URL's userinfo, `https://__token__:{token}@host/...`, the one form all three share: base R and renv send it preemptively on every index and tarball request; pak sends the first request bare, takes the `401`, and retries with Basic, so the challenge must carry `WWW-Authenticate: Basic`. None reacts to any other challenge, and a wrong credential renders exactly as a missing index (captured 2026-09-26; `formats/cran.md`, "Authentication: URL userinfo, and clients that never see a challenge") |
+| `terraform` / `tofu` | `Authorization: Bearer` from the CLI configuration's `credentials` block or `TF_TOKEN_<host>` on discovery and every registry-protocol route, and **no credential at all on any byte URL** (module archives, `SHA256SUMS`, its signature, provider zips, mirror archives), on the same host or another. Private bytes are therefore fetched through the **download capability** in the URL path, minted by this spec's token service (Design, "The token service's two ephemeral products"). Both clients follow a redirect with the Bearer credential and then fail (captured 2026-09-26 from Terraform 1.5.7 and 1.16.4 and OpenTofu 1.6.3 and 1.12.6; `formats/terraform.md`) |
+| `dnf` / `dnf5` / `zypper` | HTTP Basic from `username` and `password` or URL userinfo. dnf 4 and dnf5 send it **preemptively on every request**; dnf5 sends **no credential** to a `gpgkey` URL and ignores `sslcacert` for it; zypper sends it **only after a `401` carrying `WWW-Authenticate: Basic realm="..."`**, on every request, so the challenge is mandatory. dnf 4 follows an `xml:base` to another host carrying the repository's credential, over plain HTTP if the metadata says so, which is why hosted trees never emit `xml:base` (captured 2026-09-26 from dnf5 5.4.3, dnf 4.7, 4.14 and 4.20, and zypper 1.14.94 and 1.14.101; `formats/rpm.md`, "Authentication: Basic, preemptive on dnf, challenged on zypper") |
+| `knife` (Chef) | Writes (`share`, `unshare`) are **RSA-signed requests**, not token-bearing: mixlib-authentication protocol 1.0 on share and 1.1 on unshare, the signature over a canonical string split across `X-Ops-Authorization-1..N`, with `X-Ops-Userid` (the key name), `X-Ops-Timestamp`, `X-Ops-Content-Hash` (the SHA-1 of the tarball part, not of the whole body) and `X-Ops-Sign`. There is no field a token could travel in. Reads with `-m https://u:{token}@host/...` send Basic on the cookbook and version documents, and the download URL goes out bare (captured 2026-09-26 from knife 19.3.2 and 17.10.0; `formats/chef.md`, "Writes: Chef's signed-header requests against registered public keys") |
+| `berks` / `chef-cli` (Chef) | With a `supermarket` source and userinfo, Basic on the universe **only**; every version document and download goes out bare. With the `artifactory` source type and `ARTIFACTORY_API_KEY`, `X-Jfrog-Art-Api: <token>` on the universe, every version document and every download, including a followed redirect, the only form these clients send to every URL (captured 2026-09-26 from Berkshelf 8.1.23 and 8.0.5 and chef-cli 6.1.39 and 5.6.9; `formats/chef.md`, "Reads: a registry token in X-Jfrog-Art-Api, or as Basic") |
+| `puppet` / `r10k` | Preemptive on every request, files included, and never a response to a challenge. The module tool sends `forge_authorization` **verbatim** as the `Authorization` value (so `Bearer {token}` is the form to configure) and userinfo as Basic when it is unset; r10k sends `forge.authorization_token` as `Bearer {token}` when the value is 64 lowercase hex and **verbatim otherwise**, so a bare token arrives scheme-less, and `forge.baseurl` userinfo as Basic; puppet-blacksmith and PDK send Bearer. Both clients drop `Authorization` on a cross-host redirect (captured 2026-09-26 from Puppet 7.20.0, OpenVox 8.28.1 and r10k 5.0.3; `formats/puppet.md`, "Authentication") |
+| `luarocks` | Downloads: Basic from userinfo or `.netrc`, preemptive on the curl path and only after a challenge on the wget path. Uploads: the API key as a **URL path segment**, `{server}/api/1/{key}/{route}`, and nowhere else; without LuaSec, 3.13.0 rewrites an `https://` upload server to `http://` and sends the key in the clear (captured 2026-09-26 from LuaRocks 3.13.0 and 3.8.0; `formats/luarocks.md`, "Uploads: a registry token as the {key} path segment") |
+| `ovsx` / VS Code-family editors (Open VSX) | Released ovsx sends the token **only as the `token` query parameter** on the publish routes (`POST .../api/-/publish?token=...`), never on reads; the repository head sends `Authorization: Bearer` to a registry reporting 1.3.0 or later; the reference also accepts `X-OpenVSX-Token`. No editor and no released ovsx read sends any credential: editors drop URL credentials and read a Basic challenge as "not found", so private reads use a `pull`-only token as a path segment under the format's mount, `{base}/-/t/{token}/...` (captured 2026-09-26 from ovsx 0.10.12 and 1.2.0, VSCodium 1.99 and 1.135 and code-server 4.139.1; `formats/openvsx.md`, "Authentication: the token in the query string, and reads that cannot authenticate") |
+| `cabal` / `stack` (Hackage) | cabal 3.16.1.0 downloads: every request goes out bare and is repeated with Basic after a `401` carrying `WWW-Authenticate: Basic` (curl `--anyauth`), and over plain HTTP it forces Digest and never sends Basic; `cabal upload --token` sends **`Authorization: X-ApiKey {token}`** preemptively, an `Authorization` scheme rather than a bare header; `--username` and `--password` answer a Basic challenge. cabal 3.8.1.0 sends no usable credential (Digest only). Stack 3.11.1 and 2.9.1 send userinfo as preemptive Basic on every request (captured 2026-09-26; `formats/hackage.md`) |
 
 No identity provider solves this, Zitadel included. It is not an IdP shortcoming: it is a
 protocol requirement of 33 separate client tools. **Registry tokens must be issued and verified
@@ -45,8 +59,11 @@ by us regardless of which IdP handles humans.**
 Per the constitution, the client is the specification and this table is working knowledge, not
 ground truth: each row must be confirmed against captured traffic from the real client before
 that format's auth conformance cases are written. The `helm` row is the least certain, since
-that ecosystem has changed header conventions across versions; the `ansible-galaxy` and `cargo`
-rows are grounded in captured traffic rather than recollection.
+that ecosystem has changed header conventions across versions; every row that names a capture
+date and a format spec is grounded in captured traffic rather than recollection, and the `npm`
+and `pip` rows await theirs. The table is the input to the presentation-form table in Design
+(the machine surface): every form a row names appears there, and a form appears there only
+because a row needs it.
 
 ### What is outsourced
 
@@ -68,9 +85,22 @@ Design).
   compliant provider - Zitadel, Keycloak, Authentik, Entra, Okta, Google. Provider-agnostic by
   construction.
 - **Local admin fallback**: a single bootstrap account so the server is usable without an IdP.
-- **Machine identity**: scoped, revocable registry tokens that the clients above can present.
-- **The OCI token service**: the `WWW-Authenticate` challenge, the token endpoint, and
-  short-lived scoped bearer tokens per the distribution spec.
+- **Machine identity**: scoped, revocable registry tokens that the clients above can present,
+  **in every presentation form the client table needs**: the `Authorization` schemes, the
+  vendor headers, the URL-borne segments and query parameter, each with its redaction and its
+  plaintext refusal (Design, "Presentation forms"; AC31). The verifier is one, whatever the
+  form; a new form is one verifier change inside AC10's review scope, never a second verifier
+  (the boundary `credential-management.md` settled in its resolved presentation-forms decision,
+  was Q6: stored and owned credentials there, presented, verified and ephemeral here).
+- **Signed-request verification** for the one client family that signs requests instead of
+  presenting a token: Chef's mixlib-authentication protocols 1.0, 1.1 and 1.3, verified with the
+  standard library against a registered RSA public key whose storage and lifecycle are
+  `credential-management.md`'s (its `/api/v1/keys` surface, AC12 there). AC34 asserts it.
+- **The token service and its two ephemeral products**: the OCI `WWW-Authenticate` challenge,
+  the token endpoint and short-lived scoped bearer tokens per the distribution spec; and the
+  **download capability** Terraform's byte routes need, minted from the same machinery, bound to
+  one object, carried in a path segment (Design, "The token service's two ephemeral products";
+  AC33).
 - **Authorization**: permissions evaluated centrally, never in a handler. Repository-scoped is
   the base unit, with **path and tag patterns** layered on it, brought into scope 2026-09-23 so a
   CI credential can be scoped to `prod/*` or to one tag rather than a whole repository.
@@ -94,12 +124,17 @@ Design).
 
 **Out of scope**
 
-- The token-management product surface (issue, list, revoke), the expiry-warning criterion it
-  must carry, and any robot-account principal. They belong to a dedicated sibling spec,
-  `foundation/credential-management.md`, which is owed and not yet written, and which must reach
-  `planned` before OCI's Phase 1 depends on it. This spec keeps the mechanism and the rules
-  that surface must obey (AC6, AC16, AC29, AC30); the obligation is stated in Design, "Token
-  expiry".
+- The token-management product surface (issue, list, rotate, revoke), the expiry-warning
+  criterion it carries, the robot-account principal, the stored side of registered public keys,
+  and the OIDC token exchange for CI. They belong to the dedicated sibling spec
+  `foundation/credential-management.md`, authored 2026-09-27, which must reach `planned` before
+  OCI's Phase 1 depends on it: its `/api/v1/tokens` surface, its AC5 (a token within the warning
+  window listed as `expiring` with its `expires_at`, before it fails), its "Robot accounts" (AC9
+  there: a robot's tokens survive the departure of whoever created them), its `/api/v1/keys`
+  (AC12 there) and its `/api/v1/tokens/exchange` (AC13 there). This spec keeps the mechanism and
+  the rules that surface must obey (AC6, AC16, AC29, AC30), and every credential it stores is
+  verified by this spec's verifier, so the exchange route and the key routes sit inside AC10's
+  external review scope even though their product shape is not specced here.
 - Delegated grant administration. In v1 only the global admin creates or revokes grants; a
   per-repository "may manage this repository's grants" right would be a fourth action this
   vocabulary does not have, raised as a change to it rather than stretched out of `admin`.
@@ -122,7 +157,13 @@ preference:
   no hand-parsed JWTs, no custom signature checking.**
 - Registry tokens are generated from `crypto/rand`, at least 256 bits, encoded with a
   non-secret prefix used only for lookup and display. The token string carries no structure
-  beyond that prefix: no embedded claims, no identifiers, nothing parseable.
+  beyond that prefix: no embedded claims, no identifiers, nothing parseable. Its concrete shape
+  is `swr_<lookup prefix><secret>`: the fixed brand marker `swr_`, then the lookup prefix, then
+  the secret, all base32 without padding so the whole value survives every client's
+  configuration file and a URL path segment (`credential-management.md`, "The token surface",
+  which fixes the shape because its surface displays it; AC1 there). The marker exists for the
+  reason PyPI's `pypi-` does, so secret-scanning tooling recognises a leaked value; it grants
+  nothing and parses to nothing.
 - Tokens are stored one-way as **SHA-256 with a constant-time comparison**, not bcrypt. Bcrypt's
   cost is a defence low-entropy passwords need against offline cracking; a 256-bit random token
   has no entropy problem, so the slowness buys nothing and is paid on every one of the hundreds
@@ -158,9 +199,22 @@ is an account-takeover primitive. Nor is validation left to library defaults: th
 verify the ID token's signature against the provider's published keys, its issuer, its audience
 (this client's ID) and its expiry, and must bind the authorization flow with `state`, `nonce`
 and the PKCE verifier. `coreos/go-oidc` covers the token checks when configured to; the flow
-bindings are relying-party code and belong to this spec's surface. The session the registry
-then issues uses the standard cookie protections (HttpOnly, Secure, SameSite) plus CSRF defense
-on state-changing UI routes.
+bindings are relying-party code and belong to this spec's surface. The browser routes are
+`/ui/auth/login` (starts the OIDC flow, or renders the local admin form when no provider is
+configured), `/ui/auth/callback` (the redirect target) and `/ui/auth/logout`, mounted by
+`internal/auth` under the reserved `ui` segment `web-ui.md` owns (`format-handler-interface.md`,
+the reserved-segment table); `web-ui.md` consumes them and adds nothing to the flow. The session
+the registry then issues is a server-side row referenced by a cookie set HttpOnly, Secure,
+`SameSite=Lax` and `Path=/`, with the lifetime `auth.session.lifetime` ("Configuration" below).
+CSRF defense on state-changing UI routes is the **double-submit** pattern: at session issue the
+server also sets a non-HttpOnly cookie `stackweaver_csrf` holding a random value bound to the
+session; the client sends it back as `X-CSRF-Token` on every `POST`, `PUT`, `PATCH` and
+`DELETE`, and a mismatch or absence is refused `unauthenticated`. `SameSite=Lax` is defense in
+depth, not the defense, because it does not cover a top-level `GET`-initiated navigation.
+`GET /api/v1/session` answers the signed-in principal, its kind and its grant summary, or `401`
+with no session, so the UI learns who it is without a second identity path (`web-ui.md`,
+"Sign-in" and "CSRF"; its AC13 asserts the header from the UI's side, AC22 here from the
+server's).
 
 **Zitadel is the intended provider for the managed service**, pointed at the same instance the
 managed Stackweaver uses, so a customer has one login across both products. That is a
@@ -175,16 +229,67 @@ identity arriving from the provider gets whatever the registry's own default-rol
 which is a separate decision from authentication. Conflating the two is how an SSO integration
 quietly becomes a privilege-escalation path.
 
-**Machine**: a token presented in whichever of four forms the client sends - as Bearer, as the
-Basic password, as Galaxy's `Token <token>`, or as Cargo's scheme-less value, where the whole
-`Authorization` header is the token. Verification resolves the token to the same principal and
-scopes whatever the form, and an `Authorization` value in no recognised form is an
-authentication failure, never the anonymous principal (AC31). The Basic-auth path exists
-because pip and Maven have no alternative, not because it is preferred. In the Basic form the
-password field carries the token and the username is not an authentication input, matching the
-pip `__token__` convention. A scope binds to the repository's identity, never its name: a
-deleted and recreated repository of the same name is a new repository, and tokens scoped to
-the old one grant nothing on it - name-bound scopes are how stale grants silently reattach.
+**Machine**: a token presented in whichever form the client sends, from the table below.
+Verification resolves the token to the same principal and scopes whatever the form, and an
+`Authorization` value in no recognised form is an authentication failure, never the anonymous
+principal (AC31). The Basic-auth path exists because pip and Maven have no alternative, not
+because it is preferred. In the Basic form the password field carries the token and the
+username is not an authentication input, matching the pip `__token__` convention. A scope
+binds to the repository's identity, never its name: a deleted and recreated repository of the
+same name is a new repository, and tokens scoped to the old one grant nothing on it -
+name-bound scopes are how stale grants silently reattach.
+
+#### Presentation forms
+
+One verifier, one lookup, one redaction rule, and this table of the places a registry token
+may arrive. The table is the whole list: a form not in it is not a credential, and a new client
+that needs one adds a row here, inside AC10's review scope, rather than a check in a handler
+(the resolved presentation-forms boundary in `credential-management.md`, was Q6, which leaves
+every form, its redaction and its plaintext refusal to this spec). Forms marked **universal**
+are accepted on every route of every format; a **route-scoped** form is accepted only on the
+routes the named format's handler declares for it (the resolved off-route decision below, was
+Q24, states how and what an off-route presentation means).
+
+| Form | Where the token sits | Accepted on | Needed by |
+|---|---|---|---|
+| `Bearer` | `Authorization: Bearer <token>` | universal | npm, helm, terraform and tofu, composer, puppet, r10k, mamba and pixi, rattler-build, ovsx head |
+| Basic password | `Authorization: Basic`, the token as the password, the username ignored; URL userinfo arrives in this form | universal | pip, twine, mvn, gradle, sbt, lein, dotnet, composer, conda family, R, renv, pak, dnf, zypper, knife, berks, luarocks, stack, cabal 3.16 |
+| `Token` | `Authorization: Token <token>` | universal | ansible-galaxy |
+| scheme-less | the whole `Authorization` value is the token | universal | cargo, r10k with a non-hex token |
+| `X-ApiKey` scheme | `Authorization: X-ApiKey <token>` | universal | cabal 3.16 `upload --token` (an `Authorization` scheme in the capture, not a bare header) |
+| `X-NuGet-ApiKey` | a bare request header | route-scoped: NuGet's `PackagePublish` routes | dotnet |
+| `X-Jfrog-Art-Api` | a bare request header | route-scoped: Chef's read routes (universe, version documents, downloads) | berks and chef-cli with the `artifactory` source |
+| `X-OpenVSX-Token` | a bare request header | route-scoped: Open VSX's four write routes | the Open VSX reference's clients |
+| `token` query parameter | `?token=<token>` | route-scoped: Open VSX's four write routes | released ovsx, which sends nothing else |
+| root path token | `/t/{token}/` between the host and the format mount, a root-anchored reserved segment the registration layer must hold beside its carve-outs, stripped by the shared authorizer before routing | universal, on every format mounted beneath it | conda, mamba, micromamba, pixi |
+| upload key segment | `api/1/{key}/` inside the LuaRocks mount | route-scoped: LuaRocks's upload routes | luarocks |
+| read token segment | `-/t/{token}/` inside the Open VSX mount, honoured **only for a token holding no action but `pull`**; a token holding `push` or `delete` presented there is refused | route-scoped: Open VSX's read routes | VS Code-family editors, which drop URL credentials and read a challenge as "not found" |
+| download capability | `/{format}/{repository}/-/c/{capability}/` on byte routes; not a registry token but the token service's second product, below | route-scoped: Terraform's byte routes | terraform, tofu |
+| signed request | Chef's `X-Ops-*` headers, a signature over a canonical string against a registered RSA public key; not a token at all, below | route-scoped: Chef's write routes | knife |
+
+Three rules hold across the table, and they are the reason it is one table rather than a note
+per format:
+
+- **Where the credential sits is declared, never guessed.** For a route-scoped form the handler
+  declares, beside its route-to-scope mapping, which routes accept the form and where in the
+  request it sits (a header name, a query parameter name, or the path position of a segment);
+  the shared layer extracts it, marks it secret, verifies it and redacts it before the handler
+  sees the request, so a handler never reads a credential. How the declaration reaches the
+  shared layer is the interface re-open input `format-handler-interface.md` already records for
+  URL-borne credentials; the root path token needs no declaration, because it precedes every
+  mount.
+- **Two forms on one request are both verified.** NuGet's challenged push carries
+  `X-NuGet-ApiKey` and Basic together: each is verified, a failure of either rejects the request
+  (never a downgrade to the one that passed, never anonymous), and the request's authority is
+  the intersection of the two.
+- **Redaction and plaintext refusal follow the form.** Every extracted value, header, segment,
+  parameter or signature header alike, is passed to `telemetry.MarkSecret(ctx, value)` before
+  any other use, so it cannot reach a log line, a span attribute, a metric label, an error body
+  or an audit record (AC7; `observability.md` AC9 asserts the scrubbing layer from its side),
+  and a request presenting any form over a connection the server did not terminate with TLS is
+  refused before lookup exactly as a Bearer would be (AC27). A credential in a URL is the
+  hardest case, because it also lands in client output, caches and the conformance corpus;
+  `conformance-harness.md` AC13's redaction rule names each URL-borne form.
 
 **A token's scopes bind to one repository by default** (the resolved multi-repository-token
 decision below). It may carry several actions on that repository, each optionally narrowed by a
@@ -206,10 +311,17 @@ OCI JWT keeps the scope it was minted with until its minutes-scale expiry. A tok
 administrative authority, since the scope vocabulary has no action for it; administering the
 registry takes a human session. The accepted cost is that a departing administrator's CI tokens
 lose their authority with them, so automation should be owned by a principal that outlives any
-one person.
+one person. That principal exists: the **robot account** of `credential-management.md` ("Robot
+accounts", `/api/v1/robots`), a principal kind that cannot log in, holds only the grants the
+admin gives it, and owns tokens whose intersection is with the robot's grants rather than the
+creator's, so they lose nothing when the person who created the robot leaves (its AC9). It
+changes no evaluation rule here: AC14 and AC30 apply to a robot exactly as to a human.
 
-**TLS is required on every credential-bearing path** - Bearer, Basic, the Galaxy `Token` form,
-Cargo's scheme-less form, and the OCI token endpoint - since Basic is plaintext without it. The server enforces this
+**TLS is required on every credential-bearing path** - every form in the presentation-form
+table, the OCI token endpoint, the capability-bearing byte routes, Chef's signed writes, and
+`credential-management.md`'s `/api/v1/tokens/exchange`, whose body carries an identity token -
+since Basic is plaintext without it and several clients (luarocks without LuaSec, puppet, stack,
+dnf following an `xml:base`) send a credential over plain HTTP as readily as over TLS. The server enforces this
 rather than documenting it (the resolved plaintext-credential decision below): a request that
 presents a credential over a connection the server did not itself terminate with TLS is refused
 before the credential is looked up, verified or logged, with an error stating that credentials
@@ -223,10 +335,35 @@ unaffected. Plaintext credential acceptance thereby sits behind the same explici
 every comparable risky state (anonymous read, non-expiring tokens, the kept break-glass
 account); the deployment documentation must still name the flag and what setting it asserts.
 
+#### The token service's two ephemeral products
+
 **OCI specifically** gets a third path because the distribution spec mandates it: an
 unauthenticated request receives a `WWW-Authenticate` challenge naming a realm and scope, the
 client exchanges its credential at the token endpoint, and receives a short-lived JWT carrying
 the granted scope. That flow is spec-defined, so the official conformance suite exercises it.
+
+**Terraform gets the same machinery under a different name.** No Terraform or OpenTofu client
+sends a credential to any byte URL, so `formats/terraform.md` (its resolved download-capability
+decision) has every metadata response to an authenticated caller name its byte URLs with a
+**download capability** as a path segment, `/terraform/{repository}/-/c/{capability}/...`,
+minted by this token service rather than by a scheme of that format's own: the same fixed
+algorithm, the same dedicated `kid`-selected key, the same minutes-scale expiry. It carries the
+repository, `pull`, the principal and **the exact object** the byte route addresses, so it
+fetches that version's bytes and nothing else, and it never carries more than the minting
+request's own scope, pattern included. The byte route's object must equal the one the
+capability names or the request is refused `401`; an expired or foreign capability is refused
+`401`, never served as anonymous (AC12); the check happens when the request starts, so a long
+download is not cut off mid-body; and a caller with no credential on an anonymously readable
+repository gets byte URLs with no capability segment. Its lifetime is its revocation window
+exactly as the OCI JWT's is (AC5): revoking the caller's credential stops new metadata responses
+at once and leaves already-minted capabilities valid until they expire. It is a credential in a
+URL, so it is redacted like every other URL-borne form (AC7). It is the one credential nobody
+can list or revoke, which `credential-management.md` accepts in its resolved boundary decision
+(was Q6) as the JWT's window under another name. AC33 asserts all of it; the format's own AC4
+runs the real clients against it.
+
+Both products are what "the token service" means below: everything said of the JWT's signing,
+verification, key and lifetime holds for the capability.
 
 The token service is where an implementer is most tempted to invent, so its obligations are
 stated: the JWT's signing algorithm is fixed by configuration and **never read from the token's
@@ -246,6 +383,46 @@ single-repository token is at most its own repository's; the endpoint grants the
 subset rather than failing the request. That the distribution clients handle a subset grant
 this way is working knowledge, to be confirmed against captured traffic before OCI's auth cases
 are written.
+
+#### Signed requests: the one client that carries no token
+
+knife signs `share` and `unshare` with the client's RSA private key (mixlib-authentication,
+protocol 1.0 on share and 1.1 on unshare, captured on both knife generations) and has no field a
+token could travel in, so `formats/chef.md` adopted **shares authenticated by registered RSA
+public keys verified centrally**. The credential is a public key a principal registers through
+`credential-management.md`'s `/api/v1/keys` (a PEM RSA key of at least 2048 bits, a unique
+non-secret key name that knife sends as `X-Ops-Userid`, scopes and expiry exactly as a token's,
+under the same four rules; its AC12). The registry never sees a private key and stores nothing
+secret, so "never stored recoverable" holds by construction. This spec owns the verifier:
+
+- **Standard library only.** For protocols 1.0 and 1.1 the signature is PKCS #1 v1.5 over the
+  raw canonical string, verified by `rsa.VerifyPKCS1v15` with `crypto.Hash(0)`; for 1.3 it is
+  PKCS #1 v1.5 over the SHA-256 of the canonical string. Building the canonical string
+  (`SignedHeaderAuth#canonicalize_request`: method, the hashed or raw canonical path, the content
+  hash, the timestamp, the user id, plus the sign description and `X-Ops-Server-Api-Version` in
+  1.3) is request parsing, not a cryptographic primitive, so AC9 holds; it is the ecosystem's
+  published scheme, not one this registry designs, so "Nothing is invented" holds; and because
+  a canonicalisation mistake is a signature bypass, **canonical-string construction joins AC10's
+  external review scope by name**.
+- **Every check runs before anything is written**: the sign description is one of `sha1;1.0`,
+  `sha1;1.1` or `sha256;1.3`; the timestamp is within 15 minutes of the server clock; the key
+  name resolves to an unexpired, unrevoked key whose scopes authorize the route's `(repository,
+  action, object)` like any token's; the signature verifies over the canonical string; and the
+  content hash equals the digest of the request's file part for a multipart request (mixlib's
+  `hashed_body` rule, confirmed by capture: `X-Ops-Content-Hash` equalled the SHA-1 of the
+  tarball part) and of the whole body otherwise. The signature and timestamp are checked when
+  the headers arrive; the content hash is known only at the end of the tarball part, so **the
+  shared layer checks it there**, as it checks a digest at the end of an upload, and a mismatch
+  aborts the write before commit. Every failure is an authentication error, never anonymous.
+- **The accepted costs are the ecosystem's**, named here so they are not discovered later:
+  protocols 1.0 and 1.1 hash with SHA-1 and knife uses them, so refusing them refuses the client;
+  the signature binds the tarball part and the path, not the host; and a captured request can
+  be replayed within the 15-minute window, which TLS bounds and which buys an attacker a `409`
+  on a share or a `404` on an already-executed unshare. The signed headers are credential
+  material for redaction (AC7) and a signed request over plaintext is refused before
+  verification (AC27).
+
+AC34 asserts the verifier; `formats/chef.md` AC6 runs the real `knife` against it.
 
 ### Bootstrap, first administrator, and what a new identity gets
 
@@ -284,10 +461,14 @@ acceptance criterion in this spec polices that obligation, by decision rather th
 as a product surface) is specced here, and an AC against an unspecced producer is untestable,
 the same reasoning `supply-chain-policy.md` applied to its absent signature AC. The criterion is
 an outbound dependency on `foundation/credential-management.md` (the resolved surface-placement
-decision below), owed and not yet written, whose token surface `formats/oci.md` made a Phase 1
-dependency when it adopted registry tokens as the `docker login` credential. That spec is
-incomplete without the criterion: on its surface a token's expiry must be visible, and a token
-nearing expiry distinguishable from a healthy one, before the token fails.
+decision below), whose token surface `formats/oci.md` made a Phase 1 dependency when it adopted
+registry tokens as the `docker login` credential. That spec, authored 2026-09-27, carries it as
+its AC5: every token row has a derived state, `active`, `expiring`, `expired` or `revoked`, a
+token within `credentials.expiry_warning_window` (14 days by default) is listed and read as
+`expiring` with its `expires_at` while still authenticating, and `expiring=true` filters the
+listing to what is about to break. That is exactly the obligation stated here, expiry visible
+and near-expiry distinguishable before the token fails, and this spec now cites it rather than
+owing it.
 
 ### Visibility and the anonymous principal
 
@@ -308,6 +489,17 @@ true under failure, and they are design, not implementation niceties:
 404. Private repository names are frequently guessable, and a distinct 403 confirms which guesses
 are right, enumerating the private namespace. The accepted cost is a confusing support case where
 a legitimate user with a typo is told "not found" when the real problem is permission.
+
+**A credential-less request is challenged, and the challenge is uniform.** A request presenting
+no credential to a repository that is not anonymously readable answers `401` with the
+`WWW-Authenticate` challenge the format declares (`Basic realm="..."` for most, `Bearer` for
+OCI and Open VSX, Cargo's `login_url` form), byte-identical for a private, a missing and someone
+else's repository, so the challenge is not an existence oracle either (AC17). The challenge is
+not decoration: zypper, NuGet, Maven and Gradle reads, pak and cabal 3.16 send **nothing** until
+a `401` carrying `WWW-Authenticate: Basic` arrives, so a format whose handler omitted the
+challenge would lock those clients out while passing every credentialed case. Which challenge a
+format declares is format knowledge, recorded in its spec; that it is emitted identically is
+this spec's rule.
 
 ### Authorization is central, never per-handler
 
@@ -354,6 +546,22 @@ API's yank operation and require `delete` exactly as PyPI's yank does (`formats/
 resolved yank-binding decision, was Q6), so a Cargo publisher holding `push` alone publishes but
 cannot yank. The divergence an earlier pass recorded here, Cargo yank under `push`, was settled
 from the Cargo side and no longer exists.
+
+**The reconciliation across all formats is `management-api.md`'s** ("Cross-format
+reconciliation", its kind table), and this spec cites it rather than repeating it: every
+operation is one of that spec's kinds, and each kind carries one action. The removal class
+(`withdraw`, `restore`, `delete-version`, `delete-package`, `delete-file`, `prune`) requires
+`delete`, so NuGet's unlist and relist and conda's revoke and unrevoke join it, both formats
+having recorded their own `push` reading as an input to that reconciliation and not a decision
+over it (the resolved withdraw-action decision there, was Q1). The metadata class (`annotate`,
+`attach`, `detach`) requires `push`, so Hex's retire, conda's patch and notices and NuGet's
+deprecate join npm's. `publish` requires `push` on the object the write names. `configure` and
+`rebind` are admin-only where they touch keys or ownership. Two more things live there and are
+only named here so the vocabulary reads as complete: **human-grant administration** (create,
+list, revoke a grant) is admin-only under AC28, and **pointer management** requires `push` to
+create or repoint a pointer and `delete` to delete one, both with the object none, so only an
+unpatterned grant promotes (the resolved pointer-action decision there, was Q6). No format may
+add an action outside that table.
 
 ### Pattern scopes
 
@@ -519,8 +727,36 @@ grants and token scopes at once because they share it.
 
 ### Tokens are never stored recoverable
 
-Only a SHA-256 hash plus a lookup prefix is persisted. A token is displayed once at creation and is unrecoverable
-afterwards. This is deliberately inconvenient.
+Only a SHA-256 hash plus a lookup prefix is persisted; the prefix is the part of
+`swr_<lookup prefix><secret>` after the marker ("Nothing is invented"), and it is the `id`
+`credential-management.md`'s listing shows, so the string in a CI secret and the row in the
+listing match by eye. A token is displayed once at creation and is unrecoverable afterwards.
+This is deliberately inconvenient. A registered public key is the one credential this rule does
+not need: it is stored whole because it is not secret.
+
+### Configuration
+
+The keys this spec owns, in the one configuration surface `deployment.md` defines (file,
+environment, the short flag set), registered under the `auth.` prefix so its two-way schema check
+holds this table against the schema. Defaults are this spec's; `deployment.md` carries them
+without restating their meaning.
+
+| Key | Default | Meaning |
+|---|---|---|
+| `auth.oidc.issuer` | none | The OIDC provider's issuer URL. Unset means no provider: the local admin authenticates (AC2). Setting it requires `auth.oidc.client_id` and `auth.oidc.admin_identities` |
+| `auth.oidc.client_id` | none | This relying party's client identifier at the provider, the ID token's expected audience (AC20) |
+| `auth.oidc.client_secret` | none, **secret** | The client secret for the Authorization Code exchange; accepts `auth.oidc.client_secret_file`; never a flag |
+| `auth.oidc.redirect_url` | `{public URL}/ui/auth/callback` | The redirect URI registered at the provider, derived from the public URL unless set |
+| `auth.oidc.admin_identities` | none | A list of `{issuer, subject}` pairs that hold the admin role. At least one is required whenever `auth.oidc.issuer` is set, or startup is refused (AC13) |
+| `auth.local_admin.keep` | `false` | Keeps the local admin account usable after OIDC is configured (the resolved break-glass decision, was Q1; AC2) |
+| `auth.session.lifetime` | `24h` | Absolute lifetime of a browser session from issue; logout invalidates earlier (AC22) |
+| `auth.allow_plaintext` | `false` | Accept credentials over a connection the server did not terminate with TLS; the behind-a-terminating-proxy declaration. Flag `--allow-plaintext-auth` (AC27) |
+| `auth.token_service.lifetime` | `5m` | Lifetime of the token service's two products, the OCI JWT and the download capability, which is also their revocation window (AC5, AC33). A value above `15m` is refused at startup, because the window is the exposure |
+
+The token service's signing key is not a configuration key: its provenance and storage are the
+implementation decisions AC10's review covers, and it is never a flag. The pattern grammar and
+the scope vocabulary are not configurable. Token lifetimes and the expiry warning window are
+`credentials.*` keys owned by `credential-management.md`.
 
 ## Acceptance Criteria
 
@@ -540,13 +776,22 @@ afterwards. This is deliberately inconvenient.
       revokes a credential and shows the OCI token failing once expired and no later.
 - [ ] AC6: Tokens are stored only as a SHA-256 hash plus a lookup prefix, compared in constant
       time; a database dump yields no usable credential, asserted by a test that reads the row
-      and fails to authenticate with it.
-- [ ] AC7: A token or password never appears in logs, error responses or metrics, asserted by an
-      integration test that exercises both a real failed authentication and a real successful
-      one and scans the emitted output of each - a request logger that echoes Authorization
-      material leaks on the success path, which a failed-path-only scan never sees.
-      The single exception is the first-start local admin credential (AC15), emitted once by
-      design; the test asserts that exactly one such emission occurs and that nothing else leaks.
+      and fails to authenticate with it; and an issued token has the shape
+      `swr_<lookup prefix><secret>`, base32 without padding, with the prefix equal to the row's
+      lookup prefix and the secret carrying at least 256 bits from `crypto/rand`.
+- [ ] AC7: Every log line, error response, metric label, span attribute and audit record the
+      server emits is free of any token, password, capability or signature header value and of
+      its hash preimage, asserted by an integration test that
+      exercises both a real failed authentication and a real successful one **in every
+      presentation form the Design table lists** (header, Basic, query parameter, each path
+      segment, the capability, Chef's signed headers) and scans the emitted output of each - a
+      request logger that echoes Authorization material or the request path leaks on the success
+      path, which a failed-path-only scan never sees; and the verifier calls
+      `telemetry.MarkSecret` on every extracted credential before any other use, asserted by a
+      test that fails when a form's extraction skips the call. The single exception is the
+      first-start local admin credential (AC15), emitted through `telemetry.Disclose` from its
+      one call site; the test asserts that exactly one such emission occurs and that nothing
+      else leaks.
 - [ ] AC8: Every format's conformance case set contains an unauthenticated, an unauthorized and
       a pattern-refusal case (a token patterned to one named object refused on another) in both
       modes (honouring a declared unsupported mode per `Capabilities()`), runner-enforced, and a
@@ -554,9 +799,10 @@ afterwards. This is deliberately inconvenient.
       `format-handler-interface.md` AC7 and the harness's case-set validation state.
 - [ ] AC9: No package under `internal/auth/**` implements a cryptographic primitive; verified by
       an architecture test asserting the allowed library set.
-- [ ] AC13: Configuring OIDC without naming at least one admin identity is rejected, and after
-      a successful OIDC configuration that named identity can administer the registry while the
-      local admin no longer authenticates.
+- [ ] AC13: Setting `auth.oidc.issuer` and `auth.oidc.client_id` without at least one entry in
+      `auth.oidc.admin_identities` is refused at startup with a message naming the missing key,
+      and after a successful OIDC configuration that named identity can administer the registry
+      while the local admin no longer authenticates unless `auth.local_admin.keep` is set.
 - [ ] AC14: A brand-new identity from the provider authenticates successfully and can perform no
       action on any repository until explicitly granted; once the admin grants it `pull` on one
       repository it can pull there and nothing else - not push there, and not pull elsewhere.
@@ -566,7 +812,10 @@ afterwards. This is deliberately inconvenient.
       rejected after it passes; a non-expiring token requires the deliberate flag.
 - [ ] AC17: A request for a private repository from a caller without read access is
       indistinguishable from a request for a repository that does not exist, including status
-      code, body and timing-insensitive headers.
+      code, body and timing-insensitive headers; and a credential-less request to either answers
+      `401` carrying the `WWW-Authenticate` challenge the format declares, byte-identical for the
+      two, so a client that sends nothing until challenged (zypper, pak, NuGet, cabal 3.16)
+      proceeds on a private repository it holds a credential for.
 - [ ] AC18: A handler's declared route-to-scope mapping is what the shared layer enforces; a
       handler whose mapping omits a route fails its unauthenticated and unauthorized conformance
       cases.
@@ -592,9 +841,13 @@ afterwards. This is deliberately inconvenient.
       an unchanged `(issuer, subject)` resolves to the same principal with its grants intact,
       and an identical email claim arriving from a different `(issuer, subject)` resolves to a
       distinct principal holding no grants.
-- [ ] AC22: The session cookie is issued with HttpOnly, Secure and SameSite set; a
-      state-changing UI request without a valid CSRF token is rejected; and logout invalidates
-      the session server-side, after which the old cookie no longer authenticates.
+- [ ] AC22: A completed `/ui/auth/callback` issues the session cookie with HttpOnly, Secure,
+      `SameSite=Lax` and `Path=/` and the `stackweaver_csrf` cookie bound to the session; a
+      `POST`, `PUT`, `PATCH` or `DELETE` UI request whose `X-CSRF-Token` is absent or does not
+      match that cookie is refused `unauthenticated` and changes nothing; `GET /api/v1/session`
+      answers the signed-in principal with a valid cookie and `401` without one; the session
+      expires at `auth.session.lifetime` from issue; and `/ui/auth/logout` invalidates the
+      session server-side, after which the old cookie no longer authenticates.
 - [ ] AC23: The OCI token service rejects a token whose header names any algorithm other than
       the configured one, including `none`, regardless of its signature; and a signing-key
       rotation leaves already-issued tokens verifiable via `kid` until their expiry while new
@@ -613,13 +866,15 @@ afterwards. This is deliberately inconvenient.
       outside the pattern exactly as the credential is; and a token request naming scopes the
       credential does not hold, including scopes on another repository, is answered with a JWT
       carrying only the credential's own scopes.
-- [ ] AC27: With the plaintext flag unset, a request presenting a Bearer, Basic, `Token` or
-      scheme-less credential over a connection the server did not terminate with TLS is refused with an
-      error stating that credentials require TLS, identically for a valid and an invalid
-      credential, without the credential being looked up or logged, and never answered as
-      anonymous; an `X-Forwarded-Proto: https` header does not change the outcome. With the
-      flag set the same request authenticates normally, and a request presenting no credential
-      is unaffected either way.
+- [ ] AC27: With the plaintext flag unset, a request presenting a credential in **any form the
+      Design table lists** (each `Authorization` scheme, each vendor header, the `token` query
+      parameter, the root path token, the LuaRocks key segment, the Open VSX read segment, a
+      download capability, Chef's signed headers) over a connection the server did not terminate
+      with TLS is refused with an error stating that credentials require TLS, identically for a
+      valid and an invalid credential, without the credential being looked up, verified or
+      logged, and never answered as anonymous; an `X-Forwarded-Proto: https` header does not
+      change the outcome. With the flag set the same request authenticates normally, and a
+      request presenting no credential is unaffected either way.
 - [ ] AC28: Human authorization uses the machine vocabulary: an identity granted only `push` on
       a repository can push there but not pull, and holds nothing on any other repository; a
       grant on a repository grants nothing on a recreated repository of the same name; and
@@ -637,12 +892,20 @@ afterwards. This is deliberately inconvenient.
       token's matching scope is refused on the next request on every path except an
       already-issued OCI JWT, which fails once expired and no later; and no token, including
       one owned by the admin, can perform an administrative action.
-- [ ] AC31: One registry token authenticates as the same principal with the same scopes when
-      presented as `Authorization: Bearer <token>`, as the Basic password with any username,
-      as `Authorization: Token <token>`, and as a scheme-less `Authorization: <token>`; an
-      `Authorization` value in none of these forms, or naming an unknown scheme, is rejected
-      with an authentication error and never treated as anonymous, including on a repository
-      with anonymous read enabled.
+- [ ] AC31: One registry token authenticates as the same principal with the same scopes in
+      every form the Design table lists: as `Authorization: Bearer <token>`, as the Basic
+      password with any username, as `Authorization: Token <token>`, as a scheme-less
+      `Authorization: <token>`, as `Authorization: X-ApiKey <token>`, as `X-NuGet-ApiKey` on a
+      NuGet `PackagePublish` route, as `X-Jfrog-Art-Api` on a Chef read route, as
+      `X-OpenVSX-Token` and as the `token` query parameter on an Open VSX write route, as the
+      root path token `/t/{token}/` on any route of any format, as the `api/1/{key}/` segment on a
+      LuaRocks upload route, and as the `-/t/{token}/` segment on an Open VSX read route when it
+      holds `pull` alone. An `Authorization` value in none of these forms or naming an unknown
+      scheme, a route-scoped form presented on a route that does not accept it, a `push`- or
+      `delete`-holding token in the Open VSX read segment, and a request carrying two forms of
+      which either fails, are each rejected with an authentication error and never treated as
+      anonymous, including on a repository with anonymous read enabled; a request carrying two
+      forms that both verify holds the intersection of their authority.
 - [ ] AC32: A patterned scope authorizes a descriptor object for `pull` and refuses it for `push`
       and `delete`; a token holding only `pull` patterned to one crate completes a real
       `cargo fetch` against a hosted and a proxied repository (`config.json`, the in-pattern
@@ -651,6 +914,29 @@ afterwards. This is deliberately inconvenient.
       refresh fail under it; and for every route a handler reports as a descriptor, the
       sentinel test finds no seeded object name, version or digest in the response body, a
       route with any sentinel present failing the handler's object table.
+- [ ] AC33: A download capability minted for an authenticated Terraform metadata response is
+      signed with the token service's configured algorithm and `kid`-selected key, carries the
+      repository, `pull`, the principal and the exact object of the byte route, never a scope or
+      object outside the minting request's own pattern-narrowed scope, and fetches that object's
+      bytes on a private repository; the same capability on another version's bytes, another
+      repository, after `auth.token_service.lifetime` has passed, or with one byte altered is
+      refused `401` at the start of the request and never served as anonymous; revoking the
+      minting credential stops new metadata responses on the next request while an
+      already-minted capability works until its expiry and no later, on an injected clock; a
+      credential-less request on an anonymously readable repository receives byte URLs with no
+      capability segment; and no capability value appears in any log line, span, metric, error
+      body or audit record.
+- [ ] AC34: A `knife supermarket share` signed with the private key matching a registered public
+      key and naming it in `X-Ops-Userid` succeeds against a hosted repository when the key's
+      scopes authorize `push` on the object the tarball part's filename names, under protocols
+      1.0, 1.1 and 1.3 alike; the same request is refused with an authentication error, never
+      anonymous, when the signature fails over the canonical string, when any signed header is
+      altered, when `X-Ops-Timestamp` is more than 15 minutes from the server clock, when the
+      key is expired or revoked, when the sign description is none of the three accepted, and
+      when `X-Ops-Content-Hash` differs from the digest of the tarball part, the last of these
+      aborting the write before commit and leaving no version behind; and no verifier code
+      outside the standard library's `crypto/rsa` and `crypto/sha*` performs the signature check,
+      asserted by AC9's architecture test.
 
 ## Test Plan
 
@@ -662,7 +948,7 @@ afterwards. This is deliberately inconvenient.
 | AC4 | conformance | `conformance/<format>/auth_test.go` |
 | AC5 | integration | `internal/auth/revocation_test.go` |
 | AC6 | unit | `internal/auth/token_test.go` |
-| AC7 | integration | `internal/auth/leak_test.go` |
+| AC7 | integration + unit | `internal/auth/leak_test.go` (a failed and a successful authentication per presentation form, scanning log lines, error bodies, metric labels, span attributes and audit records; shared with `observability.md` AC9); `internal/auth/credential_form_test.go` (every extractor marks its value with `telemetry.MarkSecret` before use); the `telemetry.Disclose` single-call-site walk is `observability.md` AC10's |
 | AC8 | unit | `conformance/core/case_validate_test.go` |
 | AC9 | architecture test | `internal/auth/arch_test.go` |
 | AC10 | manual | recorded in this spec's Review Log; procedure below |
@@ -672,43 +958,72 @@ afterwards. This is deliberately inconvenient.
 | AC14 | integration | `internal/auth/default_grant_test.go` |
 | AC15 | integration | `internal/auth/local_admin_test.go` |
 | AC16 | integration | `internal/auth/expiry_test.go` |
-| AC17 | conformance | `conformance/core/existence_oracle_test.go` |
+| AC17 | conformance | `conformance/core/existence_oracle_test.go` (private versus missing, credentialed and credential-less, the `WWW-Authenticate` value compared byte for byte per format) |
 | AC18 | unit + conformance | `internal/auth/scope_map_test.go`; per-format cases via `format-handler-interface.md` AC7 |
 | AC19 | unit + conformance | `internal/auth/pattern_test.go` (the matcher, with a `FuzzPatternMatch` target asserting a wildcard-free pattern matches only itself and `*` never matches across `/`); per-format pattern-refusal cases in both modes via `format-handler-interface.md` AC7 |
 | AC20 | integration | `internal/auth/oidc_test.go` (per-binding tamper cases) |
 | AC21 | integration | `internal/auth/principal_test.go` |
-| AC22 | integration | `internal/auth/session_test.go` |
+| AC22 | integration | `internal/auth/session_test.go` (cookie attributes, `stackweaver_csrf` issue, mismatched and absent `X-CSRF-Token`, `GET /api/v1/session` with and without a cookie, expiry under an injected clock, logout) |
 | AC23 | integration | `internal/auth/token_service_test.go` (algorithm confusion; mid-flight key rotation) |
 | AC24 | unit + conformance | `internal/auth/pattern_test.go` (evaluation per object kind and action); `conformance/oci/auth_test.go` (tag-scoped pull of a multi-architecture index; refused digest delete and tag list); `conformance/generic/auth_test.go` (refused listing) |
 | AC25 | unit | `internal/auth/pattern_test.go` (validation table over each refused form) |
 | AC26 | integration | `internal/auth/token_service_test.go` (patterned exchange; multi-repository token request) |
-| AC27 | integration | `internal/auth/plaintext_test.go` (flag unset and set, valid and invalid credential, spoofed forwarding header, no-credential request) |
+| AC27 | integration | `internal/auth/plaintext_test.go` (flag unset and set, valid and invalid credential in each presentation form of the Design table, spoofed forwarding header, no-credential request) |
 | AC28 | integration | `internal/auth/grant_test.go` |
 | AC29 | integration | `internal/auth/token_scope_test.go` (single-repository default, refused and accepted multi-repository creation, unnamed repository refused); the cross-repository mount under an opt-in token is also exercised by `formats/oci.md` AC1's suite run |
 | AC30 | integration | `internal/auth/token_owner_test.go` |
-| AC31 | unit + integration | `internal/auth/credential_form_test.go` (the four forms resolving identically; unknown schemes and malformed values rejected, never anonymous) |
+| AC31 | unit + integration + conformance | `internal/auth/credential_form_test.go` (every form of the Design table resolving identically; unknown schemes, malformed values, off-route presentations and a write-capable token in the Open VSX read segment rejected, never anonymous; two forms on one request); the real clients per form in `conformance/nuget/auth_test.go` (`formats/nuget.md` AC10, both headers on a challenged push), `conformance/chef/auth_test.go` (`X-Jfrog-Art-Api`), `conformance/openvsx/auth_test.go` (`formats/openvsx.md` AC9), `conformance/conda/auth_test.go` (`formats/conda.md` AC8, the root path token), `conformance/luarocks/auth_test.go` (`formats/luarocks.md` AC5 and AC8) and `conformance/hackage/auth_test.go` (`formats/hackage.md` AC20) |
 | AC32 | unit + conformance | `internal/auth/pattern_test.go` (descriptor evaluation per action); `conformance/cargo/auth_test.go` (patterned-only `pull` running `cargo fetch` in both modes, refused another crate's index file; `formats/cargo.md` AC17); `conformance/helm/auth_test.go` and `conformance/rpm/pattern_test.go` (patterned-only `pull` refused `index.yaml` and `primary`; `formats/helm.md` AC16, `formats/rpm.md` AC14); the sentinel test in each handler's `internal/format/<name>/scope_object_test.go` through the shared helper `format-handler-interface.md` AC12 names |
+| AC33 | integration + conformance | `internal/auth/capability_test.go` (claims, foreign object and repository, expiry and revocation under an injected clock, tampered value, anonymous-readable omission; the file `formats/terraform.md` AC4 names); `internal/auth/leak_test.go` (URL redaction); `conformance/terraform/capability_test.go` (the four real clients; `formats/terraform.md` AC4) |
+| AC34 | integration + conformance | `internal/auth/signed_request_test.go` (captured knife requests replayed under each protocol; each altered header, clock skew, expired and revoked key, unknown sign description, mismatched content hash aborting before commit); `internal/auth/arch_test.go` (AC9's allowed set covers the verifier); `conformance/chef/auth_test.go` (real `knife supermarket share` and `unshare`; `formats/chef.md` AC6) |
 
 **AC10 procedure**: before the first auth code merges, a security review is performed by a party
 other than the implementing agent, covering token lifecycle, scope enforcement, the OIDC
 validation path and the OCI token service. The reviewer, date and outcome are recorded in the
-Review Log. A spec-level review does not satisfy this; it reviews the implementation.
+Review Log. A spec-level review does not satisfy this; it reviews the implementation. **The
+review's scope is every surface that verifies, mints or handles a credential**, and the sibling
+specs authored 2026-09-27 each placed part of theirs inside it by name, so the reviewer's list is
+recorded here rather than left to be assembled later:
+
+- this spec's: the token store and constant-time lookup, every presentation form in the Design
+  table with its extraction, redaction and plaintext refusal, the route-scoping declarations,
+  the OCI token service's claim set, pattern-claim encoding, key provenance and storage, the
+  download capability, the OIDC relying-party flow and session, the pattern matcher, and Chef's
+  canonical-string construction and signature check;
+- `credential-management.md`'s: the token surface's display-once path, robot accounts, the
+  registered public-key store, and the OIDC token exchange (`/api/v1/tokens/exchange`), which
+  grows the auth surface with a second OIDC verification path and is off OCI's critical path but
+  not off this review's;
+- `signing-service.md`'s: the key custody backends (`file`, `kms`, `pkcs11`, `external`) and the
+  key routes under `/api/v1/repositories/{name}/signing-keys`, auth-adjacent because they hold
+  and operate private material under admin authority;
+- `upstream-adapters.md`'s: the upstream credential kinds (Basic, Bearer, vendor header, path
+  token, token exchange, AWS ECR and Google Cloud IAM material) and its redactor, auth-adjacent
+  because they are the registry's outward secrets.
+
+Adding to this list is free; removing from it is a change to this criterion.
 
 ## Implementation Phases
 
 ### Phase 1: Machine identity
 Token model, one-way storage (per Q4's answer), single-repository scopes (several
 repositories only by the explicit opt-in) with optional patterns validated against the grammar,
-the owner-intersection rule, revocation, the four presentation forms the client table needs
-(Bearer, Basic, Galaxy's `Token`, Cargo's scheme-less value; AC31), and the plaintext refusal
-on every credential path. Ported from Stackweaver's `apikey` service.
+the owner-intersection rule, revocation, the `swr_` token shape, every presentation form in the
+Design table with its route-scoping declaration, `telemetry.MarkSecret` on extraction and the
+plaintext refusal on every credential path (AC7, AC27, AC31), the uniform challenge (AC17), and
+the signed-request verifier for registered public keys (AC34). Ported from Stackweaver's
+`apikey` service. The universal `Authorization` forms land with `generic`; each route-scoped
+form lands with the format that needs it, since its conformance case is that format's.
 
 ### Phase 2: Human identity
-OIDC client, local admin fallback, session issuance, human grants and the admin role.
+OIDC client, the `/ui/auth/*` routes, local admin fallback, session issuance with the
+double-submit CSRF cookie and `GET /api/v1/session`, human grants and the admin role, the
+`auth.*` configuration table.
 
-### Phase 3: OCI token service
+### Phase 3: The token service
 Challenge, token endpoint, scoped JWTs carrying any pattern, subset grants for multi-repository
-requests. Gated by the official conformance suite.
+requests, gated by the official conformance suite; then the download capability as the second
+product (AC33), landing with `formats/terraform.md`.
 
 ### Phase 4: Enforcement
 Central authorization over the four addressed-object kinds, including the descriptor's
@@ -726,8 +1041,10 @@ None remain open. Q13 through Q17 were raised by the 2026-09-24 gate review and 
 adopted in the same pass: Q18 to Q20 because folding exposed them, Q21 and Q22 because sibling
 adoptions in `formats/oci.md` landed on this spec that day. Q23 was raised by the format-side
 reconciliation (cargo, helm, rpm and conan each found that a patterned-only `pull` could not run
-their client) and adopted 2026-09-27; each adopted record opens by
-saying so, and the owner may reverse any of them. Q1 through Q12 are all resolved (Q1-Q3 on
+their client) and adopted 2026-09-27; Q24 was raised by the foundation-wave reconciliation of
+the same day, when eleven format specs' presentation forms were consolidated into one table and
+the off-route rule had to be one rule; each adopted record opens by saying so, and the owner may
+reverse any of them. Q1 through Q12 are all resolved (Q1-Q3 on
 2026-09-23 from the original draft, Q4-Q12 answered 2026-09-23 after the security review that
 raised them). The resolved records that follow are kept rather than deleted, so the reasoning
 survives the next time someone asks why it was done this way.
@@ -874,6 +1191,42 @@ exists to make unnecessary.
 operators will read as a promise, and it settles the same question four format specs each
 raised to this one.
 
+### Resolved: route-scoped presentation forms and an off-route presentation (was Q24, raised and adopted 2026-09-27)
+
+**Adopted 2026-09-27 under the owner's standing delegation.** Option A: a route-scoped form is
+declared by the handler beside its route-to-scope mapping (which routes accept it and where the
+credential sits), the shared layer alone extracts, marks, verifies and redacts it, and a
+recognised form presented on a route that does not accept it is an **authentication failure,
+never anonymous**, its value redacted all the same. Folded through Scope, Design ("Presentation
+forms", the three rules), AC7, AC27 and AC31 with their Test Plan rows, and Phase 1.
+
+The judgment call it settles: consolidating the format-side folds gave this spec eight
+presentation forms beyond the universal `Authorization` schemes, five of them accepted only on
+some routes of one format (`X-NuGet-ApiKey`, `X-Jfrog-Art-Api`, `X-OpenVSX-Token`, the `token`
+query parameter, the LuaRocks key segment, the Open VSX read segment). Two questions followed:
+who says which routes accept a form, and what a form presented elsewhere means. `formats/openvsx.md`
+had answered the second for its query parameter one way ("served as credential-less, so a token
+pasted into a read URL grants nothing"), `formats/nuget.md` had left it open, and this spec's own
+AC12 rule ("anonymous applies only when no credential is presented at all") points the other way.
+
+**Recommendation (adopted):** A, because it is the only option that keeps AC12's rule
+unconditional and keeps the credential out of the handler.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Handler declares the routes and the position; off-route presentation is an authentication failure, never anonymous; always redacted** | One rule for every form, the same one AC12 and AC31 already state for an unknown `Authorization` scheme; a handler never touches a credential; a token pasted where it does not belong fails loudly instead of silently reading as anonymous | Each route-scoped form costs a declaration, and the declaration mechanism is an interface re-open input rather than something the pinned method set carries today; `formats/openvsx.md`'s one sentence on read-route query tokens changes |
+| **B. Off-route presentation ignored: the request is served credential-less** | Matches `formats/openvsx.md`'s wording; a stray token in a read URL is harmless to the request | A request that presented a credential is answered as the anonymous principal, the downgrade AC12 forbids, on an anonymously readable repository; a leaked-token probe learns nothing from the refusal but learns the anonymous view for free |
+| **C. Every form accepted on every route** | No declarations, no off-route case | A credential field a client never sends on a route becomes an attack surface there for no client's benefit, and a query-string token on a read URL, which editors cache and log, would authenticate |
+
+Accepted cost: the declaration, and one sentence in `formats/openvsx.md` (a sibling consequence).
+No pinned client is affected: released ovsx sends `?token=` only on the publish routes, dotnet
+sends `X-NuGet-ApiKey` only on `PackagePublish`, and the editors send no credential at all. B
+lost because it is the anonymous downgrade under another name; C lost because it widens the
+surface for nobody.
+
+**Why this is yours:** it decides what a credential in the wrong place does, which is a security
+posture, and it overrides a sibling spec's adopted wording.
+
 ### Resolved: a token's authority relative to its owner (was Q20, raised and adopted 2026-09-26)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a token's effective
@@ -893,10 +1246,12 @@ over time, or not at all.
 | **B. Bounded at minting only** | Cheap; tokens behave like independent deploy keys | An offboarding hole: a removed person's tokens keep working until expiry or manual revocation |
 | **C. No relation; ownership is metadata** | Maximum flexibility | Any principal allowed to mint tokens holds an escalation path |
 
-Accepted cost: the extra lookup, and CI that breaks when its owner is removed. This spec defines
-no robot-account principal; the credential-management surface spec is where one would arrive.
-B lost because the offboarding hole is the failure SSO exists to prevent; C lost because it is an
-escalation primitive.
+Accepted cost: the extra lookup, and CI that breaks when its owner is removed. The
+robot-account principal that answers the second cost arrived where this record said it would:
+`credential-management.md`, "Robot accounts", whose AC9 asserts that a robot's tokens survive its
+creator's removal (cited in Design since 2026-09-27; this spec defines no principal kind of its
+own). B lost because the offboarding hole is the failure SSO exists to prevent; C lost because it
+is an escalation primitive.
 
 **Why this is yours:** it trades offboarding safety against CI stability, and it decides what
 removing a person from the registry actually does.
@@ -905,8 +1260,9 @@ removing a person from the registry actually does.
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a dedicated sibling
 spec, `foundation/credential-management.md`, owns token issuance, listing and revocation as a
-product surface, the expiry-warning criterion, and any future robot-account principal. It is
-owed and not yet written, and must reach `planned` before OCI's Phase 1, which depends on it.
+product surface, the expiry-warning criterion, and any future robot-account principal. It was
+owed when this was adopted and was authored 2026-09-27, carrying the criterion as its AC5 and the
+robot as its "Robot accounts"; it must reach `planned` before OCI's Phase 1, which depends on it.
 This spec keeps the mechanism and the rules that surface must obey (AC6, AC16, AC29, AC30), and
 the new spec may not relax them. Folded through Scope (out of scope) and Design ("Token
 expiry").
@@ -998,7 +1354,7 @@ distinguishable on its surface before the token fails).
 Accepted cost: the settled obligation stays unpoliced until that spec exists. The OCI
 credential decision did not stall - `formats/oci.md` adopted it the same day - but it placed the
 surface's home back on this spec, so the spec the criterion lands in is named by the
-surface-placement record above (was Q21): `foundation/credential-management.md`, owed. B lost because it would quietly spec the first
+surface-placement record above (was Q21): `foundation/credential-management.md`, since authored, whose AC5 is the criterion. B lost because it would quietly spec the first
 slice of the token-management surface before its owning decision is made, pre-empting it; an AC
 here against a surface this spec does not define is the untestable-producer shape
 `supply-chain-policy.md` already refused.
@@ -1202,4 +1558,5 @@ world-readable until it matters.
 | 2026-09-25 | 331ef25 | cross-spec sync from the ansible-collections first review. Not a review | The `ansible-galaxy` client-table row said "Bearer or Basic depending on the endpoint"; captured traffic (ansible-core 2.18.18rc1 against a logging server) shows `Authorization: Token <token>` on every request, with Bearer only under the Keycloak `auth_url` flow. Row split from `helm` and corrected with provenance; the least-certain caveat now names `helm` alone. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation. Not a gate review | Adopted Q13 A (pinned `Scope` gains an addressed object, patterns narrow within one identity-bound repository; the amendment itself made in the interface spec), Q14 A (plaintext credential refused before lookup unless the explicit flag is set, no forwarding-header trust), Q15 A (expiry-warning AC owed by the credential-management surface spec; outbound dependency recorded), Q16 A (human grants `(principal, repository, action)` with optional pattern, plus the global admin role, which alone administers), Q17 A (single-repository tokens; the resolved token-scope-unit record's contradictory "one deliberately broad token" wording corrected with a dated note so one reading remains). Folding exposed three judgment calls, raised and adopted as Q18 A (segment-glob grammar: `*` within a segment, `**` across whole segments, nothing else special, validated at creation), Q19 A (a patterned scope authorizes content-addressed requests for pull and push, never delete, and never a repository-wide or name-enumerating request) and Q20 A (token authority is the per-request intersection with its owner's current grants; tokens carry no administrative authority). Two more were forced by `formats/oci.md` adopting its own questions in parallel, and were raised and adopted here: Q21 A (the token-management surface, expiry-warning criterion and any robot-account principal belong to a new sibling spec, `foundation/credential-management.md`, owed before OCI's Phase 1, because the OCI spec placed the surface's home on this spec while Q15 had placed it there) and Q22 B (multi-repository tokens exist only by explicit opt-in with repositories enumerated by identity, because oci.md's flagship AC1 needs one suite credential on two repositories; Q17's record amended to the single reading "one repository by default, several only by deliberate opt-in"). Body: Scope (in and out of scope), Design (machine surface, TLS paragraph, OCI token service subset grants and pattern-carrying JWTs, bootstrap forward reference, Token expiry, central authorization's `Scope` shape, new Pattern scopes and Human grants sections), and replication's settled `pull` widening absorbed into a rewritten section, which also cleared a stale citation of replication's question as open. Criteria: AC8, AC14 and AC19 rewritten; AC24-AC30 added (AC29 carrying the Q22 opt-in), each with a Test Plan row; Phases 1-4 updated. AC10's external implementation review untouched and unsatisfied by this pass. Stays draft. |
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Items found already done: replication's settled `pull` widening (the section "What `pull` also authorizes: replication reads" already carries the adopted Q6 answer, the pattern-narrowed refusal, the replication package's own mapping under the central authorizer and the accepted widening, and cites it as resolved), and the OCI two-repository credential contradiction, already met by the resolved two-repository credential decision (was Q22) and AC29. Applied: the `docker`/`podman` row now states the token-endpoint credential (`formats/oci.md`'s resolved docker-login decision: registry token as the Basic password, username not an input, no refresh token, revocation inside AC5's window) and AC3 asserts it; a `cargo` row from `formats/cargo.md`'s captured traffic (bare token as the whole `Authorization` value on authenticated API requests; on index and download only after a 401 with `WWW-Authenticate: Cargo login_url="..."` and a retried `config.json` showing `auth-required`, 1.74 and later; search never authenticates), with the machine-surface paragraph, the TLS paragraph and AC27 extended to the scheme-less form and AC31 added for the four presentation forms; under Pattern scopes, Galaxy's addressed-object mapping (`{namespace}/{name}`, `{namespace}/{name}/{version}`, the publish object from the multipart file part's declared filename checked against `collection_info`, the poll reporting its task's object) and Cargo's; under Scope vocabulary, management operations mapped onto `delete` and `push` with no new action, and the Cargo `push` versus PyPI `delete` yank divergence recorded for `management-api.md` to reconcile. Phase 1 updated. AC10's external review untouched. |
+| 2026-09-27 | a72f8ef | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every queued item targeting this file verified against the current text of its source spec before applying. Client table: rows for `dotnet` (X-NuGet-ApiKey on PackagePublish, Basic after a challenge, both headers on a challenged push), `gradle`/`sbt`/`lein` and the two-mode note on `mvn`, `composer` (preemptive Basic or Bearer keyed by origin with port), the conda family and `rattler-build` (four forms including the `/t/{token}/` path token), `R`/`renv`/`pak`, `terraform`/`tofu` (no credential on byte URLs), `dnf`/`dnf5`/`zypper`, `knife` and `berks`/`chef-cli` (RSA-signed writes; X-Jfrog-Art-Api reads), `puppet`/`r10k`, `luarocks`, `ovsx` and the editors, `cabal`/`stack`, each from its format spec's captured traffic. Theme 8 consolidated: a presentation-form table in Design (five `Authorization` schemes, three vendor headers, a query parameter, three path segments, the capability, the signed request) with three cross-cutting rules (declared position, two forms both verified, redaction and plaintext refusal per form); AC31 and AC27 rewritten to enumerate it, AC7 extended to spans, audit records and `telemetry.MarkSecret`. Q24 raised and adopted A: route-scoped forms declared by the handler, an off-route presentation an authentication failure, never anonymous (overrides one sentence in `formats/openvsx.md`, reported). The token service gains its second product, Terraform's download capability (Design, AC33); Chef's signed-request verifier specced under "Nothing is invented" (Design, AC34) with canonical-string construction added to AC10's scope. AC10's procedure now lists the review's full surface, including credential-management's OIDC exchange, signing-service's custody backends and key routes, and upstream-adapters' credential kinds and redactor; AC10 itself untouched. Web UI: `/ui/auth/*` routes, double-submit CSRF, `SameSite=Lax`, `GET /api/v1/session` (Design, AC22). New "Configuration" subsection tabling the `auth.*` keys `deployment.md` carries, plus `auth.token_service.lifetime`. Scope vocabulary cites `management-api.md`'s reconciliation (NuGet unlist and conda revoke under `delete`; Hex retire, conda patch and NuGet deprecate under `push`; grant administration and pointer actions). Credential-management now cited for the robot account (Q20's cost), the expiry criterion (its AC5), the `swr_` token shape and the presentation-form boundary (its was-Q6); the uniform challenge rule stated (AC17). Old-fold items (replication 1, data-model+oci 2, auth+FHI, format-management 7) found already applied. 34 criteria. Stays draft. |
 | 2026-09-27 | 94f86f3 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the three auth items of the format-side reconciliation, each verified against the current `formats/cargo.md`, `formats/helm.md`, `formats/rpm.md`, `formats/conan.md` and `format-handler-interface.md`. The Cargo addressed-object bullet under Pattern scopes now follows cargo.md's table: the folded crate key (lowercase, `_` to `-`) rather than the registered spelling, `{crate}` on the index file and owners routes, `{crate}/{version}` on download, publish, yank and unyank. The Scope-vocabulary note recording a Cargo `push` versus PyPI `delete` yank divergence for `management-api.md` is replaced by the settled rule: one operation carries one authorization rule whatever wire it arrives over, and Cargo's yank and unyank are bindings onto the management API's yank operation needing `delete` (cargo.md's resolved yank-binding decision, was Q6). Raised and adopted Q23 A, the "repository-wide but reveals no names" judgment call four format specs sent here: a fourth addressed-object kind, descriptor, which a patterned scope authorizes for `pull` only, defined by a sentinel test run in each handler's AC12 object table; folded through the object-kind table, the evaluation rules, the consumer declarations, the mechanical catch, Phase 4, and the new AC32 with its Test Plan row. Verification narrowed the ask: helm's `index.yaml` and rpm's `primary` enumerate names and stay none, so the kind makes cargo runnable under a patterned-only `pull`, passes Conan's probe and moves rpm's failure to `primary`, and Design says so exactly. Q19's record carries a dated refinement note. AC10's external review untouched. Stays draft. |

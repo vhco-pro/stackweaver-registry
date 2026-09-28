@@ -352,6 +352,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - data-model.md: DONE 2026-09-27. Applied management-api 1-3, credential-management 1, artifact-verification 1, signing-service 1 (closes theme 1 and Open items 20, 22, 26, 27, 28, 30, 32 on the data-model side), upstream-adapters 4, async-operations 1-2, repository-lifecycle 1-2 (plus theme 9 / Open item 12), observability 1, web-ui 8, Open item 16. Mark roots stay five. New ACs 35-42.
 - storage-and-gc.md: DONE 2026-09-27. Applied artifact-verification 2 (read-path verification, AC21-22), async-operations 4 (AC23), signing-service 2 and Open items 20, 26, 28 (AC16), management-api 4 and format-management 9 (AC15), repository-lifecycle 3-4 (AC24-25), data-model reconciliation 7 (pre-commit hook, AC25), deployment 6 and 10 (gc. keys AC29, LockSweep, jobs AC26, checker AC27), observability 11 (AC28, AC7). Adopted Q11 (segment digests for range reads). Stays draft pending its gate review.
 - format-handler-interface.md: DONE 2026-09-27. Applied management-api 8, artifact-verification 6, signing-service 7, upstream-adapters 6, async-operations 12, repository-lifecycle 6, observability 2-3, deployment 11, web-ui 3, Open items 25 and 33. Adopted Q10 (three optional interfaces stay three; verdict at the re-open). Pin stays five (AC16). New ACs 15-16.
+- auth.md: DONE 2026-09-27. Applied Open items 6, 11, 13, 14, 15, 18, 19, 24, 25, 26, 27, 31 (client table), theme 8 (Presentation forms table, AC31, AC27, AC7), management-api 5, credential-management 2-5, signing-service 16, upstream-adapters 9 (AC10 review surface listed, AC10 not weakened), observability 6, deployment 3 (auth.* keys), web-ui 2. Adopted Q24 (off-route credential is an authentication failure). New AC33 (Terraform capability), AC34 (Chef signed requests).
 
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
@@ -376,4 +377,12 @@ Wording-only unless stated: each target now cites data-model.md instead of sayin
 3. oci.md and generic.md: declare `Virtual: supported` and `Rename: supported` in `Capabilities()`; oci.md also declares whether `GET /v2/` reports `descriptor` or `none` (AC12's four kinds).
 4. deployment.md (~l.542): the host binding is now carried through `Deps`, its home named as a re-open input.
 5. management-api.md AC27, signing-service.md "What this feeds the re-open", web-ui.md: wording only, the answer is recorded in format-handler-interface.md ("Optional interfaces discovered at registration", resolved was-Q10).
+
+## From auth.md reconciliation (2026-09-27)
+1. openvsx.md, "Authentication": "A query-string token on any other route is not a credential: the route is served as credential-less..." -> "is an authentication failure, never anonymous, and redacted (auth.md AC31, resolved off-route decision, was Q24)".
+2. format-handler-interface.md, reserved-segment table and carve-outs: add the root-anchored `/t/` path-token mount (conda, Open item 14; owner auth.md, stripped by the shared authorizer before routing) with an AC11 fixture; confirm the re-open input on URL-borne credential position covers header, query and segment declarations for route-scoped forms (auth Q24).
+3. deployment.md, `auth.` row of "Owned by sibling specs": auth.md now tables its keys; move them into the inventory: `auth.oidc.redirect_url` `{public URL}/ui/auth/callback`, `auth.local_admin.keep` false, `auth.session.lifetime` 24h, `auth.allow_plaintext` false, `auth.token_service.lifetime` 5m (refused above 15m); `auth.oidc.client_secret` gets a `_file` sibling; count 9.
+4. nuget.md (~l.469-472), conda.md (~l.578-582), luarocks.md, openvsx.md, chef.md (~l.514), hackage.md (~l.535): drop "AC31 asserts four / must land there before"; the forms are in auth.md AC31 and its Design table.
+5. terraform.md: cite auth.md AC33 and `auth.token_service.lifetime` for the capability's lifetime.
+6. chef.md: cite auth.md AC34 beside its AC6; the canonical-string review scope is in auth.md's AC10 procedure.
 
