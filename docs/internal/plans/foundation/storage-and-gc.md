@@ -1,11 +1,12 @@
 ---
 status: draft
-status_description: "Sweep 2026-09-28 at 6e6d503 (not a review): the ErrReplica-waiving entry point of the sole write-transaction constructor, imported by internal/replication alone (AC25); the was-Q11 segment digests cited as data-model's Blob row and AC43. Reconciled 2026-09-27 at 1b33a04 with the foundation authoring wave (not a review), still draft after the 2026-09-26 un-planning. What changed: the CAS read path verifies the digest while streaming on every read, aborting with an operator alert on a mismatch, with range reads verified through fixed-size segment digests (one question adopted under the standing delegation) and a read-path benchmark budget (AC21, AC22); an unfinished job naming a repository holds its grace open as an unexpired upload session does (AC23); the fourth root's reach widens to pointer documents, virtual merged documents and declared blob-digest lists (AC16); management operations and repository deletion are reference-ending paths, never deleters, with the pruner dropping a deleted repository's final snapshot and default pointer, `reclaim: now` as a pruning input and read_only suspending retention passes but not pruning (AC15, AC24); the sole write-transaction constructor calls repository.Writable and exposes the pre-commit hook (AC25); the sweep lock comes from internal/db/lock.LockSweep and the sweep, orphan scan and prune run as async job kinds (AC26); the consistency checker is `stackweaver-registry storage check --restore-dangling` over bucket versions (AC27); metric and alert names fixed with observability.md (AC28); the `gc.` key table (AC29); AC7's benchmark carries a `// gate:` comment. Every new behaviour has property or fault-injection coverage. A gate review must re-judge the spec before it returns to planned."
+status_description: "Closing sweep 2026-09-28 at 1356a03 on Opus (not a review): the sole write-transaction constructor now carries the claim declaration and both checks (at declaration, and at commit inside a commit step that takes the repository default Pointer row lock before re-reading Retirement, the lock every retiring write holds until it commits), with the claim racing a retiring write in the property operation set (AC30); an unchanged publish runs the claim re-check and then commits only its Operation, no reference, snapshot, pointer or freshness move and no hook (AC31); one question adopted under the standing delegation and marked for a Fable recheck (Q12, the head is the default Pointer row). The fourth root's reach restated against data-model AC34, AC36 and AC45: pointer documents re-rendered on document-only transitions, repository-scoped pointer documents across a repository batch, merged documents until swap or virtual deletion with the input record non-root, and the declared list as the only way a document keeps another blob alive; mark roots still five. Range reads over declared-part documents and multi-range requests verified per part (AC21). Sweep 2026-09-28 at 6e6d503 (not a review): the ErrReplica-waiving entry point of the sole write-transaction constructor, imported by internal/replication alone (AC25); the was-Q11 segment digests cited as data-model's Blob row and AC43. Reconciled 2026-09-27 at 1b33a04 with the foundation authoring wave (not a review), still draft after the 2026-09-26 un-planning. What changed: the CAS read path verifies the digest while streaming on every read, aborting with an operator alert on a mismatch, with range reads verified through fixed-size segment digests (one question adopted under the standing delegation) and a read-path benchmark budget (AC21, AC22); an unfinished job naming a repository holds its grace open as an unexpired upload session does (AC23); the fourth root's reach widens to pointer documents, virtual merged documents and declared blob-digest lists (AC16); management operations and repository deletion are reference-ending paths, never deleters, with the pruner dropping a deleted repository's final snapshot and default pointer, `reclaim: now` as a pruning input and read_only suspending retention passes but not pruning (AC15, AC24); the sole write-transaction constructor calls repository.Writable and exposes the pre-commit hook (AC25); the sweep lock comes from internal/db/lock.LockSweep and the sweep, orphan scan and prune run as async job kinds (AC26); the consistency checker is `stackweaver-registry storage check --restore-dangling` over bucket versions (AC27); metric and alert names fixed with observability.md (AC28); the `gc.` key table (AC29); AC7's benchmark carries a `// gate:` comment. Every new behaviour has property or fault-injection coverage. A gate review must re-judge the spec before it returns to planned."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
 priority: "critical"
 issue: 3
+fable_recheck: "closing-sweep reconciliation on Opus, 2026-09-28: adopted Q12 (the commit-time claim check serialises on the repository default Pointer row lock, taken in the commit step after Apply and the pre-commit hook) and specified the claim declaration, the commit step and the unchanged publish's empty commit on the sole write-transaction constructor (AC30, AC31); needs a Fable recheck before any gate"
 created: 2026-09-21
 covers:
   - "internal/storage/**"
@@ -70,9 +71,12 @@ upload record that was never written.
   (`reclaim: now` sets it to zero), and the pruner's duty to drop a deleted repository's final
   snapshot and default pointer and leave the tombstone in its own cycle (AC24).
 - **The single door onto the write path.** One unexported constructor opens every write
-  transaction; it calls `repository.Writable` before the transaction begins and exposes the
-  pre-commit hook `data-model.md` defines, so writability and index regeneration are decided
-  in one place for every format (AC25).
+  transaction; it calls `repository.Writable` before the transaction begins, exposes the
+  pre-commit hook `data-model.md` defines, carries the write's **claim declarations** and checks
+  each against the repository's `Retirement` records when declared and again at commit, where
+  the check is serialised with any retiring write on the repository head, and commits nothing
+  for an unchanged publish, so writability, index regeneration, retired-coordinate refusal and
+  the no-op publish are decided in one place for every format (AC25, AC30, AC31).
 - Orphan cleanup for interrupted uploads.
 - The sweep, the orphan scan and pruning as scheduled job kinds on `async-operations.md`'s
   queue, the sweep's advisory lock taken through `internal/db/lock.LockSweep`, and the `gc.`
@@ -95,6 +99,12 @@ upload record that was never written.
 - Repository lifecycle semantics (which states admit which writes, what deletion removes, what
   the tombstone keeps): `repository-lifecycle.md`. This spec consumes its `Writable` predicate
   and its two pruning inputs, and adds its operations to the property suite.
+- What a coordinate's retirement means, which kinds retire, at what granularity a handler claims
+  and how a refusal renders on each wire: `management-api.md` (its resolved claimed-coordinate
+  and unchanged-publish decisions, was its Q14 and Q15), with the `Retirement` record
+  `data-model.md`'s (AC32, AC35). This spec carries the declaration and both checks on the write
+  transaction and says what the transaction commits, and adds the claim race to the property
+  suite.
 - The job runtime (claiming, leases, retries, cancellation): `async-operations.md`. This spec
   reads unfinished jobs as a grace input and registers three job kinds.
 - The metrics mechanism, the alert rules file and the benchmark gate script:
@@ -154,7 +164,12 @@ serve time, protects nothing a digest check does not, since every signature is o
   the segment size is a constant whose change is a spec revision like the algorithm's). A range
   read fetches the whole segments covering the requested window, verifies each against its
   recorded digest, and emits only the window. The cost is at most two extra segments of egress
-  per range read. The resolved range-read question below records the options that lost.
+  per range read. A range over a stored document that consists of declared blobs (Hackage's
+  incremental `01-index.tar.gz`) maps onto the part blobs covering it, each read through this
+  same segment-verified path without assembling the document, and a multi-range request
+  (`ServeFile`'s `multipart/byteranges`, `rpm.md`'s zchunk refresh) verifies each range the same
+  way (`signing-service.md` AC30). The resolved range-read question below records the options
+  that lost.
 - **The budget is a CI gate, not a hope.** Hashing is at memory bandwidth on current hardware,
   but "fast" is not an exit code: `internal/storage/bench_test.go` benchmarks a verified full
   read and a verified tail range read against their unverified equivalents, and each carries the
@@ -349,7 +364,16 @@ exercise:
   **module-wide**, and `internal/repository` and `internal/manage` are named in it so a
   "reclaim now" that reached for the store directly would fail the build. AC15's architecture
   test is what holds all three classes to that, and a later move to direct deletion from any
-  of them would be a revision of this constraint, never a silent exception.
+  of them would be a revision of this constraint, never a silent exception. The retirement
+  machinery `management-api.md` settled on 2026-09-28 (its resolved claimed-coordinate decision,
+  was its Q14) adds no deleter either. A **retiring write** is one of those snapshot-creating
+  management writes: it ends references, and it records a `Retirement` per retired coordinate in
+  its own transaction, a record that names a coordinate string and never a blob, so it is not a
+  root and a blob whose only mention is a retirement is collected (`data-model.md` AC34, AC35).
+  A **write refused on a claim**, at declaration or at commit, deletes nothing: it commits no row,
+  and the blobs its client committed before the transaction opened are grace-protected
+  unreferenced bytes the sweep collects, the same shape as a failing pre-commit hook and any
+  refused publish (AC3, AC30).
 - **Clocks and listings are not trustworthy inputs.** Grace comparisons mix object-store
   timestamps with PostgreSQL time; skew must be assumed and dwarfed by the grace period. The
   orphan scan (store listing versus rows) runs against "S3-compatible" stores whose LIST
@@ -382,15 +406,32 @@ exercise:
   every pointer move and lives outside snapshot content, on the pointer (`data-model.md`,
   "Freshness scoped to the pointer"). When CAS-backed its blob is referenced by no `File` row
   and by no snapshot; it is live while the record exists, and the record is dropped with its
-  pointer or at tombstone time. Second, a **virtual repository's merged documents**
+  pointer or at tombstone time. A pointer document is re-rendered at every transition of its
+  pointer, target-moving or document-only (a key switch, a cadence re-sign, and on a virtual
+  a merge commit or member-list change; `data-model.md` AC36), and each re-render is a
+  reference birth for the new body and an end for the old. A **repository-scoped** pointer
+  document (Hackage's `root.json` and `mirrors.json`, byte-identical on every pointer,
+  `formats/hackage.md`'s resolved root-placement decision, was its Q16) is one blob named by
+  every pointer's record, so it is live while any pointer's record names it, and the repository
+  batch that replaces it on every pointer in one transaction ends the old digest's references
+  and creates the new one's together. Second, a **virtual repository's merged documents**
   (`signing-service.md`, "Virtual merges"): a virtual has no content snapshots, so its
   merged index above the threshold is a current document protected only here, exactly as a
   proxied repository's cached index is, and the atomic swap that replaces a merged set ends
-  the old digest's reference the way supersession does. Third, **a document's declared
+  the old digest's reference the way supersession does, as does the virtual's deletion. The
+  merged set's **input record** (each member's identity and freshness value, `data-model.md`
+  AC45) is metadata on those documents that names no blob, so it widens nothing and a sweep
+  marks the same set with or without it. Third, **a document's declared
   blob-digest list**: a document that consists of several blobs (Hackage's append-only index,
   one gzip member per write; CPAN's `CHECKSUMS` per author directory) declares the digests of
   its parts in the document, and the root marks through the declared list, so a part is live
-  while any current or retained document declares it and collectable once none does. All three
+  while any current or retained document declares it and collectable once none does. The list
+  is the **only** way a document keeps another blob alive: a digest a document merely mentions
+  in its body (a format checksum, the index of a retained upstream revision a remote's document
+  keeps for its stale bound, a per-revision filename map stored as CAS-backed metadata) is
+  metadata like any format-level checksum ("Addressing"), never a reference, so a format that
+  needs such a blob servable must hold it through a cached reference or put it on the declared
+  list. All three
   are reference creations for the barrier: producing a pointer document, swapping a merged
   set and appending a declared segment each go through the shared reference-creation call
   (AC10), and the delete pass's re-check counts them (AC16; `data-model.md` AC34 proves the
@@ -504,7 +545,13 @@ exercise:
   foundation wave tested it again and added nothing: `async-operations.md`'s job-held grace is a
   timing input, `repository-lifecycle.md`'s deletion and `reclaim: now` are reference ends and a
   pruning input, and `signing-service.md`'s pointer documents, merged documents and declared
-  blob lists widen the fourth root's reach. Five roots, and every new record in
+  blob lists widen the fourth root's reach. The 2026-09-28 closing sweeps tested it once more
+  and added nothing: a claim and the `Retirement` it is checked against name coordinates, not
+  blobs; an unchanged publish writes no reference at all; a document-only pointer transition (a
+  repository batch, a virtual's merge commit or member-list change) changes no target, so the
+  fifth root reads nothing new; a repository-scoped pointer document is a pointer document
+  named by several records; and a virtual merged set's input record is non-root metadata
+  (`data-model.md` AC36, AC45). Five roots, and every new record in
   `data-model.md`'s non-root table tolerates a dangling digest by design.
 
 ### The write transaction has one door
@@ -512,7 +559,7 @@ exercise:
 Handlers receive raw `*http.Request`, so the compiler holds none of the write path's
 invariants; they hold only if every completed logical write passes through one place. That place
 is **the sole write-transaction constructor in `internal/storage`**, unexported, so a caller that
-tries to open a write transaction by any other route fails compilation rather than review. Three
+tries to open a write transaction by any other route fails compilation rather than review. Six
 things happen there and nowhere else:
 
 - **Writability is checked before the transaction opens.** The constructor calls
@@ -543,13 +590,70 @@ things happen there and nowhere else:
   the transaction are left as grace-protected unreferenced bytes for the sweep, which is the
   same shape as any refused publish (AC3). The hook is a seam of the write path, not a handler
   method, so the pinned method set is untouched.
+- **Claims are declared on the transaction and checked twice** (`management-api.md`, its
+  resolved claimed-coordinate decision, was its Q14; `data-model.md` "Snapshots, pointers and
+  what counts as a write", AC35). A write **claims** the coordinates it targets at the handler's
+  retirement granularity, which may be finer than its authorization object (conda's
+  `{subdir}/{filename}` under `{name}/{version}/{build}`, Conan's `{ref}#{rrev}` under `{ref}`).
+  The transaction the constructor returns carries the claim set: `Submit` declares a `publish`
+  operation's claims from what `Operator.Authorize` reported before it calls `Apply`, and a
+  handler's own wire write that is not a binding (Conan's `PUT`, Open VSX's and npm's publish
+  routes) declares its claims through `Deps` on the transaction it opened as soon as it knows
+  them. **At declaration** the transaction reads the repository's `Retirement` records for the
+  declared coordinates and refuses a retired one at once, so the handler does no further work.
+  **At commit** it checks them again inside the commit step below, so a retirement committed by
+  a concurrent write between the declaration and this commit refuses the write too. Either
+  refusal is the typed `retired` refusal the caller renders (`management-api.md`, its resolved
+  wire-rendering decision, was its Q16), and either way the transaction rolls back whole: no row,
+  no snapshot, no pointer or freshness move, and the blobs committed before it opened are left
+  grace-protected and unreferenced for the sweep (AC3, AC15). The claim set only grows during a
+  transaction; nothing the handler does removes a declared claim.
+- **The commit step is serialised on the repository head.** The repository head is the
+  repository's default `Pointer` row, which every completed write already updates when its
+  snapshot is sealed and the default pointer advances (`data-model.md`: every completed write
+  creates exactly one snapshot and advances the default pointer). The commit step of every write
+  that seals a snapshot or declared a claim (a pointer create, repoint or deletion does neither
+  and keeps the pointer-state serialisation AC18 describes), run after the handler's changes and
+  after the pre-commit hook, takes that row's lock first (`SELECT ... FOR UPDATE`), then
+  re-reads `Retirement` for every declared claim, then seals the snapshot and advances the
+  default pointer and its freshness record, then commits. A **retiring write**
+  (a `delete-file`, `delete-version`, `delete-package` or `prune` whose `Outcome` names
+  coordinates) writes its `Retirement` records in its own transaction and passes through the
+  same commit step, holding the head lock until it commits, so a claiming write and a retiring
+  write of one repository commit one after the other: whichever takes the lock second sees the
+  other's committed rows, and a claim can never commit beside a concurrent retirement of the
+  same coordinate. The lock is taken only for the commit step, never across `Apply` or the
+  pre-commit hook, so index regeneration keeps `signing-service.md`'s per-document locking (its
+  resolved contention decision, was its Q8, which rejected one writer per repository) and only
+  the short seal-and-advance runs in repository order. A wait for the lock is bounded by the
+  write's context deadline and ends as a retryable error with nothing committed. The resolved
+  head-serialisation question below (was Q12) records why this and not an isolation level or a
+  per-coordinate lock.
+- **An unchanged publish commits nothing** (`management-api.md`, its resolved unchanged-publish
+  decision, was its Q15; `data-model.md` AC32). When a handler whose format declares the rule
+  reports in `Outcome` that a `publish` found identical bytes (equal CAS digests) at every
+  coordinate it claims, the constructor still runs the commit step's claim re-check under the
+  head lock, because a retired claimed coordinate is refused `retired` whatever the bytes, and
+  then commits no content: no reference is written, so no intent is cancelled and no blob gains
+  a root; no document row, no snapshot, no default-pointer or freshness advance; and the
+  pre-commit hook does not run, so no index is regenerated. The only row that transaction
+  commits is the `Operation`'s terminal transition to `completed` with no snapshot reference and
+  `unchanged: true`, which `Submit` writes. A handler that reports an unchanged outcome over a
+  transaction in which it has already written a reference or a document row fails the write
+  with nothing committed, since committing those rows would break "commits nothing" and
+  discarding them silently would hide the handler's bug. For the collector an unchanged publish
+  is inert: the bytes its client uploaded hash to digests the head already references, so it
+  creates nothing to collect and ends nothing (AC31).
 - **Reference creation inside the transaction is the shared call** (AC10), so the intent check
   is unconditional here as everywhere.
 
 The architecture test in `internal/storage/arch_test.go` asserts all of it: the constructor is
 the only function that opens a write transaction, it calls `Writable` before `BeginTx`, it runs
-the registered hook between the handler's changes and `Commit`, and no package other than
-`internal/storage` reaches the transaction type's constructor (AC25). This is the named
+the registered hook between the handler's changes and the commit step, the commit step takes the
+head lock before it re-reads the declared claims and before it seals the snapshot, the claim
+declaration is a method of the transaction type and no other code path reads `Retirement` to
+decide a write, the only way to `Commit` is through that step, and no package other than
+`internal/storage` reaches the transaction type's constructor (AC25, AC30). This is the named
 mechanical enforcer the constitution requires for a shared concern; a door enforced by review is
 not a door.
 
@@ -667,7 +771,22 @@ This is the part of the spec that exists because the harness is blind here. Requ
   a repoint and dropping it with its pointer, **appending a declared segment** to a multi-blob
   document and superseding a document so a segment becomes undeclared, and **swapping a virtual
   repository's merged document set**, each of which is a reference birth and death that no
-  `File` row and no snapshot mediates (AC16). A generator limited to fresh-content pushes cannot reach the deadliest
+  `File` row and no snapshot mediates (AC16). Those births and deaths also arrive through the
+  document-only pointer transitions, so the set includes a **key switch or cadence re-sign**
+  re-rendering one pointer's documents, a **repository batch** replacing a repository-scoped
+  pointer document on every pointer at once, and a virtual's **member-list change**, with the
+  merged set's input record present on some swaps and absent on others so the suite can show it
+  changes no marked set (`data-model.md` AC36, AC45). The **retirement machinery** needs two
+  more (AC30, AC31): a **write declaring a claim on a coordinate that a concurrent retiring
+  write** (`delete-version`, `delete-file`, `prune`) **retires**, with the claim's declaration,
+  the retiring write's commit and the claiming write's commit step as schedulable interleaving
+  points, so the generator reaches the one order the declaration check cannot see (declared,
+  then retired, then committed) as well as the two it can; and an **unchanged publish**
+  interleaved with the sweep and with a non-retiring delete of the same coordinate, which must
+  leave the reference set, the snapshot table, every pointer and every freshness record exactly
+  as it found them. Without the first, the commit-time check is asserted by nothing and the
+  serialisation on the head is untested; without the second, the one completed operation that
+  writes nothing is never raced against a reference ending. A generator limited to fresh-content pushes cannot reach the deadliest
   race, and one that can create references but never end them - no eviction, no pruning, no
   expiry - can never race a reference's death against another's birth; both pass vacuously.
   Two more reachability conditions, for the same reason: the generator must operate over **at
@@ -762,11 +881,17 @@ accepts one as evidence has missed the point of the spec.
       Debian-scale index, that no `File` row references, including one in a proxied
       repository, which has no snapshots to protect it. The current-document half reaches a
       CAS-backed `PointerDocument` (live while its record exists, collected once the record is
-      dropped with its pointer or at tombstone time), a virtual repository's merged documents
-      (live until the atomic swap replaces them, then collected), and every blob a document's
-      declared blob-digest list names (live while any current or retained document declares
-      it, collected once none does), each proven in the property suite and by a fixture with
-      an append-only multi-segment index whose oldest segment becomes undeclared.
+      dropped with its pointer or at tombstone time, and re-rendered at every document-only
+      transition with the old body collected once no record names it), a repository-scoped
+      pointer document named by every pointer of its repository (live while any pointer's record
+      names it, its predecessor collected after the repository batch that replaced it on every
+      pointer), a virtual repository's merged documents (live until the atomic swap replaces
+      them or the virtual is deleted, then collected, with the sweep's marked set identical
+      whether or not the set's input record is present), and every blob a document's declared
+      blob-digest list names (live while any current or retained document declares it,
+      collected once none does), while a blob a document only mentions in its body and does not
+      declare is collected; each proven in the property suite and by a fixture with an
+      append-only multi-segment index whose oldest segment becomes undeclared.
 - [ ] AC13: A commit of a digest whose deletion intent is in its delete phase waits or fails
       retryably until the object delete completes, and the re-uploaded content is then
       retrievable; no interleaving of commit and sweep loses the new copy.
@@ -777,7 +902,9 @@ accepts one as evidence has missed the point of the spec.
       object from the blob store, enforced by a module-wide architecture test that fails on any
       other deletion call site - including cache eviction, which ends a cached reference and
       deletes nothing; management operations (`internal/manage`), which are snapshot-creating
-      writes; and repository deletion and `reclaim: now` (`internal/repository`), which end
+      writes, retiring writes among them, whose `Retirement` records name no blob; a write
+      refused on a claim, which commits nothing and leaves its blobs to grace and the sweep;
+      and repository deletion and `reclaim: now` (`internal/repository`), which end
       references, release pointers and set a pruning input, and are named in the scan.
 - [ ] AC17: A snapshot a pointer targets survives pruning however far outside the retention
       window it has aged: the snapshot, the checkpoint and deltas that reconstruct it, and
@@ -814,8 +941,10 @@ accepts one as evidence has missed the point of the spec.
       once per aborted read, the `BlobDigestMismatch` alert condition holds, the `Blob` row is
       marked as failing verification and the mark is visible from the API, and neither the object
       nor the row is deleted or rewritten by the read; an unaltered object reads bit-identically
-      whole and by any range, and a read resolved through in-flight upload records verifies
-      identically.
+      whole and by any range; a range over a stored document consisting of declared blobs, and
+      each range of a multi-range request, is verified through the segments of the part blobs
+      covering it and aborted the same way when one of them is altered; and a read resolved
+      through in-flight upload records verifies identically.
 - [ ] AC22: The verified read path is within budget: `internal/storage/bench_test.go`
       benchmarks a verified full read and a verified tail range read of a multi-gigabyte blob
       against their unverified equivalents, each with a `// gate:` comment, the verified full
@@ -888,6 +1017,37 @@ accepts one as evidence has missed the point of the spec.
       `gc.grace` lapses exactly then and a schedule fires at its interval), a repository's own
       retention setting overrides `gc.snapshot_retention`, and an unregistered key under the
       `gc.` prefix is refused at startup naming this spec.
+- [ ] AC30: The transaction the sole write-transaction constructor returns carries the write's
+      claim declarations and checks each against the repository's `Retirement` records when it
+      is declared and again in the commit step, which takes the repository's default `Pointer`
+      row lock before it re-reads the claims, seals the snapshot and advances the pointer, and
+      which every retiring write passes through holding that lock until it commits: a claim on
+      a coordinate already retired is refused at declaration before the handler writes anything
+      further; in the property suite, with a write claiming a coordinate and a concurrent
+      retiring write of the same coordinate interleaved at the declaration, the retiring
+      commit and the claiming commit step in every order, no run commits a claimed coordinate
+      beside or after its retirement, the order declared-then-retired-then-committed is refused
+      at commit, and a claim on a sibling coordinate under the same authorization object commits;
+      a write refused at either point commits no row, no snapshot, no pointer or freshness move
+      and no reference, and the blobs committed before it opened stay unreferenced, survive the
+      sweep while the repository's grace holds and are collected once it lapses, with no object
+      deleted outside the sweep's delete pass and the orphan scan; the head lock is not held
+      across `Apply` or the pre-commit hook; and the architecture test fails on a `Commit`
+      reached other than through the commit step, on a commit step that re-reads claims before
+      taking the head lock, and on any code path outside the transaction type that reads
+      `Retirement` to decide a write.
+- [ ] AC31: An unchanged publish commits nothing but its `Operation`: on a fixture handler
+      declaring the rule, a `publish` whose every claimed coordinate already holds identical
+      bytes still has its claims re-checked in the commit step (a retired claimed coordinate is
+      refused `retired` with identical bytes), and then writes no reference, cancels no
+      deletion intent, writes no document row, seals no snapshot, advances no pointer and no
+      freshness record and does not run the pre-commit hook, the transaction committing only the
+      `Operation`'s terminal transition with no snapshot reference and `unchanged: true`; a
+      fixture handler reporting an unchanged outcome after writing a reference or a document
+      row in the transaction fails the write with nothing committed; and in the property suite
+      an unchanged publish interleaved with the sweep and with a non-retiring delete of the same
+      coordinate leaves the reference set, the snapshot table, every pointer and every
+      freshness record unchanged and loses no blob reachable from any root.
 
 ## Test Plan
 
@@ -907,13 +1067,13 @@ accepts one as evidence has missed the point of the spec.
 | AC12 | fault injection | `internal/storage/gc_race_test.go` |
 | AC13 | fault injection | `internal/storage/intent_gate_test.go` (commit interleaved with delete pass) |
 | AC14 | integration | `internal/storage/retention_test.go` |
-| AC16 | property + integration | `internal/storage/gc_property_test.go` (metadata-document root, pointer documents, merged-set swap, declared segments); `internal/storage/metadata_blob_gc_test.go` (Debian-scale index; multi-segment index whose oldest segment becomes undeclared; dropped pointer document) |
+| AC16 | property + integration | `internal/storage/gc_property_test.go` (metadata-document root, pointer documents re-rendered on target-moving and document-only transitions, a repository batch over every pointer, merged-set swap and virtual deletion with and without the input record, declared segments; shared with `data-model.md` AC34 and AC45); `internal/storage/metadata_blob_gc_test.go` (Debian-scale index; multi-segment index whose oldest segment becomes undeclared; dropped pointer document; a repository-scoped pointer document's predecessor after a batch; a digest mentioned in a document's body but not declared collected) |
 | AC15 | architecture test | `internal/storage/arch_test.go` (module-wide deleter scan naming `internal/repository`, `internal/manage`, the proxy cache and the checker) |
 | AC17 | property + integration | `internal/storage/gc_property_test.go` (pointer-target root); `internal/storage/retention_test.go` (aged pointer target still serving) |
 | AC18 | property + integration | `internal/storage/gc_property_test.go` (repoint interleaved with the sweep and with pruning's phases); `internal/storage/retention_test.go` (release then prune) |
 | AC19 | integration | `internal/model/pointer_test.go` (out-of-window pin reporting); `internal/storage/gc_metrics_test.go` (the two pin gauges rise and fall with the report) |
 | AC20 | property | `internal/storage/gc_property_test.go` (open-session and session-abandonment operations on an injected clock that ages sessions past the idle period and the cap) |
-| AC21 | fault injection + integration | `internal/storage/read_verify_test.go` (altered object whole and by range; abort shape; mismatch mark; in-flight read; shared with `data-model.md` AC43, which asserts the `Blob` row's `segment_digests` and mark from the model side) |
+| AC21 | fault injection + integration | `internal/storage/read_verify_test.go` (altered object whole and by range; a range over a declared-parts document and a multi-range request with one covering part altered, shared with `signing-service.md` AC30; abort shape; mismatch mark; in-flight read; shared with `data-model.md` AC43, which asserts the `Blob` row's `segment_digests` and mark from the model side) |
 | AC22 | benchmark | `internal/storage/bench_test.go` (verified versus unverified full read and tail range read, `// gate:` comments; store egress counted by a recording backend) |
 | AC23 | property + integration | `internal/storage/gc_property_test.go` (queued-or-retrying job and its terminal transition in the operation set); `internal/storage/pending_operation_gc_test.go` (forced sweep past grace with a pending and a retrying job; release at terminal, not at deletion commit) |
 | AC24 | property + integration | `internal/storage/gc_property_test.go` (lifecycle operations in the operation set, interleaved with the sweep and pruning's phases); `internal/storage/retention_test.go` (age-out and `reclaim: now` on the injected clock; tombstone drop pairs pointer and snapshot; retention pass suspended on `read_only` while pruning continues) |
@@ -922,6 +1082,8 @@ accepts one as evidence has missed the point of the spec.
 | AC27 | integration | `internal/storage/restore_test.go` (dangling row on a versioned and an unversioned store; restore verified against the key; second run clean; checker in the AC15 scan) - the same file `deployment.md` AC21 runs |
 | AC28 | integration | `internal/storage/gc_metrics_test.go` (every named metric and label through `telemetry.NewTestRecorder`; alert conditions evaluated against recorded values) |
 | AC29 | integration | `internal/storage/config_test.go` (schema registration and defaults; each key read by its component on the injected clock; per-repository override; unregistered `gc.` key refused) |
+| AC30 | property + integration + architecture test | `internal/storage/gc_property_test.go` (a claim racing a retiring write of the same coordinate, with the declaration, the retiring commit and the claiming commit step as schedulable interleaving points, beside the sweep; refused writes' blobs collected after grace); `internal/storage/write_claim_test.go` (refusal at declaration; declared-then-retired-then-committed refused at commit with nothing committed; sibling claim under one object accepted; head lock taken before the re-check and not held across `Apply` or the hook; lock wait ending retryable at the context deadline); `internal/storage/arch_test.go` (the only `Commit` is the commit step; lock before re-check; no `Retirement` read outside the transaction type); shared with `data-model.md` AC35's `internal/model/retirement_test.go` and `management-api.md` AC12's `internal/manage/retirement_test.go` |
+| AC31 | property + integration | `internal/storage/gc_property_test.go` (the unchanged publish interleaved with the sweep and a non-retiring delete of the same coordinate; reference set, snapshots, pointers and freshness records unchanged); `internal/storage/write_claim_test.go` (claim re-check still run; retired claim refused with identical bytes; no reference, document, snapshot, pointer or freshness advance and no hook run; the `Operation`'s terminal transition the only committed row; an unchanged outcome over handler-written rows fails with nothing committed); shared with `data-model.md` AC32's `internal/model/operation_test.go` and `management-api.md` AC5's `internal/manage/accounting_test.go` |
 
 ## Implementation Phases
 
@@ -930,7 +1092,9 @@ accepts one as evidence has missed the point of the spec.
 - The verified read path: hashing reader on every read, segment digests at commit, range
   verification, the mismatch mark and metric (AC21)
 - The sole write-transaction constructor with `repository.Writable` and the pre-commit hook,
-  and its architecture test (AC25); the `gc.` keys registered in the schema (AC29)
+  and its architecture test (AC25); the claim declaration, the commit step under the head lock
+  with its claim re-check, and the unchanged publish's empty commit (AC30, AC31); the `gc.` keys
+  registered in the schema (AC29)
 
 ### Phase 2: Chunked upload
 - Resumable sessions under `data-model.md`'s upload-session definition and lifetime, digest
@@ -939,7 +1103,9 @@ accepts one as evidence has missed the point of the spec.
 ### Phase 3: GC
 - The chosen strategy, plus the property and fault-injection suites **written before it**,
   the open-session and job-held grace holds included (AC20, AC23), the lifecycle operations
-  in the operation set (AC24), and the fourth root's widened reach (AC16)
+  in the operation set (AC24), the fourth root's widened reach with the document-only
+  transitions (AC16), and the claim racing a retiring write and the unchanged publish (AC30,
+  AC31)
 - The three job kinds and their schedules, the sweep lock through `internal/db/lock.LockSweep`
   (AC26)
 - Retention pruning, including the pointer-target exemption, its release on repoint, the
@@ -961,10 +1127,52 @@ accepts one as evidence has missed the point of the spec.
 No questions are open. Ten were raised across this spec's reviews and answered by the owner,
 the last of them on 2026-09-26 (pointer targets versus the retention window, was Q10); an
 eleventh, raised by the 2026-09-27 reconciliation when read-path verification arrived from
-`artifact-verification.md`, was adopted under the owner's standing delegation. Each is folded
+`artifact-verification.md`, was adopted under the owner's standing delegation, and a twelfth,
+raised by the 2026-09-28 closing sweep when the claim declaration arrived from
+`management-api.md` and `data-model.md`, was adopted the same way on Opus and awaits a Fable
+recheck. Each is folded
 into Design, Scope, the acceptance criteria and the Test Plan above, with each decision's
 accepted cost recorded beside it under the Resolved headings, kept rather than deleted so the
 reasoning survives the next time someone asks why it was done this way.
+
+### Resolved: what the commit-time claim check serialises on (was Q12)
+
+**Adopted 2026-09-28 under the owner's standing delegation, on Opus.** Option A: the repository
+head is the repository's default `Pointer` row; the commit step of every write that seals a
+snapshot or declared a claim takes that row's lock after `Apply` and the pre-commit hook, re-reads
+`Retirement` for the declared claims under it, then seals the snapshot, advances the pointer and
+commits, and every retiring write holds the same lock from its own commit step to its commit.
+Folded into Scope, Design ("The write transaction has one door", the single-deleter bullet and
+the property operation set), AC30, AC31 and their Test Plan rows.
+
+`management-api.md` (its resolved claimed-coordinate decision, was its Q14) and `data-model.md`
+(AC35) settled that a claim is checked at declaration and again at commit, "where the check
+serialises with any retiring write on the repository head", and placed that seam on this spec's
+constructor. Neither says what the head is or what primitive does the serialising, and the
+answer is load-bearing: a commit-time re-check that reads `Retirement` without serialising with
+the retiring write is a check-then-act race of exactly the shape AC9 and AC18 close for intents
+and pointers, and a retired coordinate republished with different bytes is a supply-chain event
+no client-level test sees.
+
+**Recommendation:** A, because every completed write already updates the default pointer row
+when it advances the pointer, so ordering the re-check behind that row's lock adds no new lock,
+serialises only the short seal-and-advance, and leaves index regeneration on the per-document
+locks `signing-service.md` chose.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Lock the default `Pointer` row in the commit step, re-check claims under it** (adopted) | Race-free re-check with the lock completed writes already contend on; `Apply` and the hook stay parallel; a retiring and a claiming write commit in a definite order | Completed writes of one repository run their seal-and-advance one at a time; a commit refused at this point has already paid for its regeneration; an unchanged publish takes a lock it does not update behind |
+| **B. `SERIALIZABLE` isolation on every write transaction** | The database detects the conflict with no named lock | Serialisation failures and retries on unrelated writes that happen to read overlapping ranges, index regeneration included, which is the retry storm `signing-service.md`'s resolved contention decision (was its Q8) chose locks to avoid; GC's own check-then-act rules would then rest on two different concurrency models |
+| **C. A per-coordinate advisory lock taken by the claim and by the retirement** | Commits of different coordinates stay fully parallel | A new key family in `deployment.md`'s advisory-lock space, one lock per claim on a batch publish with a deadlock-avoiding order to hold, and the head still has to serialise for the snapshot sequence, so the parallelism bought is not usable |
+
+**Why this is yours:** it fixes the concurrency primitive the write path's retirement guarantee
+rests on and the order in which every completed write of a repository commits.
+
+Accepted cost: seal-and-advance is serial per repository, and a write refused at commit has
+already regenerated its index; the declaration-time check keeps that to the one order it cannot
+see. B lost because it trades one named lock for retries everywhere, including the regeneration
+the contention decision protected; C lost because it adds a lock family to buy parallelism the
+snapshot sequence cannot use.
 
 ### Resolved: verifying range reads on the read path (was Q11)
 
@@ -1182,3 +1390,4 @@ not by weakening the storage model.
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the queued sibling consequences from the data-model and replication folds, and set status back to draft because they are substantive and the 4548df3 gate review never saw them. Upload lifecycle: an unexpired upload session holds its repository's grace open and continuation requests are write activity, citing `data-model.md`'s one definition of an upload session and its lifetime rather than restating one (Scope, Design, Phases 2 and 3, extension notes on the was-Q9 and was-Q4 records). AC3's undefined session expiry now names that lifetime (idle period or absolute cap, one hour and 24 hours by default) and forbids collecting an orphan while any session in its repository is unexpired. The property generator's session operations now include a session held open inside its idle window alongside abandonment, and the injected clock must age a session past its idle period and cap. AC20 added (the open-session grace hold, mirroring `data-model.md` AC27) with a Test Plan row. Stale citations of `replication.md` Q1 rewritten to its adopted answer: the leader prunes consulting no follower, so no follower-position pin exists and the root set stays at five. The mark-root set is unchanged. Draft until a gate review re-judges it. |
 | 2026-09-27 | 1b33a04 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Applied every item in `agents/spec-loop/consequences.md` targeting this spec from the ten foundation specs authored 2026-09-27, each verified against the source spec's current text. From `artifact-verification.md` (its resolved serve-time decision): a new Design section, "The read path verifies what it serves" - every CAS read hashes while streaming and aborts with `BlobDigestMismatch` on a mismatch, the row is marked, and the read never deletes or repairs (AC21); the read-path benchmark budget with `// gate:` comments (AC22); and one question this raised, how a range read is verified, written in decision shape and adopted under the standing delegation (was Q11: fixed 4 MiB segment digests recorded at commit, a `Blob` column reported to `data-model.md`). From `async-operations.md` (its resolved grace-hold decision): an unfinished job naming a repository holds its grace open exactly as an unexpired session does, a timing input and not a root, with the queued-or-retrying job and its terminal transition in the property operation set (AC23; AC3 extended). From `signing-service.md` and the debian, hackage and cpan open items: the fourth root's current-document half reaches CAS-backed pointer documents, virtual merged documents and declared blob-digest lists, each bound to the barrier and to the property suite (AC16 extended). From `management-api.md` (its resolved repository-deletion decision) and `repository-lifecycle.md`: management operations and repository deletion are reference-ending paths, never deleters, AC15's scan is module-wide and names `internal/repository` and `internal/manage`; the pruner reads the effective retention override (`reclaim: now`), suspends retention passes but not pruning on `read_only`, and drops a deleted repository's final snapshot and default pointer together before leaving the tombstone, with the lifecycle operations in the property operation set (AC24); the sole write-transaction constructor calls `repository.Writable`, generalising replication's link-refusal test, and exposes `data-model.md`'s pre-commit hook, a failing hook committing nothing (AC25, from the data-model reconciliation item). From `deployment.md`: the sweep lock through `internal/db/lock.LockSweep`, the three job kinds scheduled by the async scheduler (AC26), the checker as `stackweaver-registry storage check --restore-dangling` relying on bucket versioning (AC27), and the `gc.` key table in the three-column shape with defaults fixed here for the first time (AC29). From `observability.md`: metric and alert names (AC28; AC19 exports its report as gauges; AC7 rewritten onto the gate script). Old items re-checked: replication item 2 and the data-model+oci upload-session item were already applied at fe54272; format-management item 9 and the two "no change" items needed nothing beyond the AC15 wording. Mark-root check: five roots, nothing added; the job hold is a timing input, the deletion paths end references, the three new reaches widen the fourth root. Every new behaviour has a criterion with property or fault-injection coverage; nine criteria added with Test Plan rows, six extended, Phases 1, 3 and 4 updated. `node scripts/check-spec.js` on this file: zero failures. Stays draft until a gate review re-judges it. |
 | 2026-09-28 | 6e6d503 | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. Applied the two items raised against this file after its 2026-09-27 pass, each verified against the source's current text. From `replication.md` reconciliation 3 (its AC12, `repository-lifecycle.md` AC9): the sole write-transaction constructor's second entry point that waives `ErrReplica` alone, imported by `internal/replication` and nothing else and still refusing `read_only` and `deleted`, in "The write transaction has one door", AC25 and its Test Plan row (shared with `repository-lifecycle.md` AC9 and `replication.md` AC12). From sweep 1 item 1: the resolved range-read record (was Q11) cites `data-model.md`'s `Blob` row, "A coordinate is not a storage key" and AC43 instead of reporting the column as owed, and AC21's row records `internal/storage/read_verify_test.go` as shared with AC43. No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
+| 2026-09-28 | 1356a03 | closing-sweep reconciliation pass on Opus (step 3): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through "From the data-model.md closing sweep", each verified against the current text of its source. Format batches 3 to 8, the auth, signing-service and proxy-cache closing sweeps name no item here; the two that do are the same request, management-api closing sweep item 2 and data-model closing sweep item 1, read against `management-api.md` was-Q14 and was-Q15 and `data-model.md` AC32 and AC35 as settled. "The write transaction has one door" now carries the claim declaration (from `Authorize` through `Submit`, or through `Deps` for a non-binding wire write), the declaration-time refusal, and a commit step that takes the repository head lock, re-reads `Retirement` for every claim, seals and advances, and through which every retiring write passes holding the lock until it commits; the lock is never held across `Apply` or the pre-commit hook, keeping `signing-service.md`'s per-document locking. An unchanged publish runs the re-check and then commits only its `Operation`'s terminal transition, with no reference, document, snapshot, pointer or freshness move and no hook, and an unchanged outcome over handler-written rows fails. Q12 raised and adopted under the standing delegation (the head is the default `Pointer` row, over `SERIALIZABLE` and per-coordinate advisory locks); `fable_recheck` added. The single-deleter bullet and AC15 name retiring writes and claim refusals as non-deleters. The property operation set gains a claim racing a retiring write of the same coordinate, with the declaration, the retiring commit and the claiming commit step as interleaving points, and the unchanged publish interleaved with the sweep and a non-retiring delete (AC30, AC31, each with a Test Plan row shared with data-model AC32 and AC35 and management-api AC5 and AC12). Fourth-root reach checked against `data-model.md` AC34, AC36 and AC45 and the pointer-held documents of `debian.md` and `hackage.md`: pointer documents re-rendered at document-only transitions, the repository-scoped `root.json` and `mirrors.json` across a repository batch, merged documents collected at swap or virtual deletion with the input record non-root, and the declared list stated as the only way a document keeps another blob alive (a digest merely mentioned in a body is metadata), with the op set and AC16 extended. Range reads over declared-part documents and multi-range requests verified per part (`signing-service.md` AC30; AC21). Mark roots still exactly five; nothing found that would add a sixth. `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
