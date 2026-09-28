@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 as a grounded first draft: the Forge API v3 contract captured from Puppet 7.20.0 and OpenVox 8.28.1 (puppet module install, upgrade) and r10k 5.0.3 (Puppetfile installs), each in its upstream image pinned by digest, plus the publish paths of puppet-blacksmith 9.1.0 and PDK 3.4.0 (its exact puppet_forge upload calls), on dedicated Podman networks against a logging Forge API stub with HTTP and TLS; checked against the installed client sources, the Forge's own OpenAPI document (v29), the live forgeapi.puppet.com (both agents and r10k run against it), OSV and the purl type list. Fourteen questions written in decision shape and adopted under the owner's standing delegation; none open. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at fe2a39f with the foundation wave on Opus (not a review), this spec's first reconciliation: the root-anchored /v3/ is format-handler-interface's host-bound claim on a hostname deployment's server.hosts binds (its was-Q8, AC12), 404 on unbound and other-format hostnames, the harness's hostname sub-entry expressing it (AC8); publish, deprecate, withdraw, restore, soft module delete and hard delete are management-api's publish, annotate, withdraw, restore and delete-version kinds with the Forge routes as bindings under its reference-API binding rule, core-held Retirement refused centrally (AC6, AC10 to AC12); the proxied path on the https adapter with a bearer Forge API key to the root host only, allowlisted absolute file_uri hosts, the registry User-Agent and cache-scoped Last-Modified (AC17, AC19, AC20); MD5-only files classified weak by artifact-verification's release-integrity entry; refusals through WriteRefusal, the phrase reaching the module tool's printed status line (AC16); hosted documents' Last-Modified from the pointer's moved_at (AC5); removal rows by proxy-cache event class; Capabilities and the rename case, including the server.hosts by-name binding after a rename (AC27). Earlier: authored 2026-09-26 from captures of Puppet 7.20.0, OpenVox 8.28.1, r10k 5.0.3, puppet-blacksmith 9.1.0 and PDK 3.4.0; fourteen questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for Puppet modules served to puppet module install and upgrade (Puppet 7 and OpenVox 8) and r10k: the Forge API v3 read surface under a format-first mount with every URI rendered relative to the configured base, whole-module release lists, SHA-256 and MD5 on every release, publish through the Forge's POST /v3/releases (path-respecting for puppet-blacksmith, root-anchored on a bound hostname for PDK), deprecation, withdrawal and hard deletion as bindings onto registry-owned management operations, a verifying Forge cache that handles premium and login-required modules explicitly, and per-module virtual repositories."
 author: michielvha
 goal: "Serve Puppet users a private Forge and a verified cache of forgeapi.puppet.com that stock puppet module install (Puppet 7 and OpenVox 8) and r10k resolve, verify and install from with a token in forge_authorization or r10k.yaml, the registry in module_repository or forge.baseurl, and a network restricted to this registry."
@@ -44,7 +44,8 @@ for reads, with two classes of gated module described in Design ("Gated upstream
 Grounding for this draft, stated up front because the constitution asks for evidence or silence:
 
 - **Captured client traffic.** `which puppet r10k` finds neither on this host, so every client ran
-  from its upstream image pinned by digest: `docker.io/puppet/puppet-agent@sha256:9223a40ef490ae331b41ff36edaaba3470caf02e984b4bf107c4184b99a32f0a`
+  from its upstream image pinned by digest:
+  `docker.io/puppet/puppet-agent@sha256:9223a40ef490ae331b41ff36edaaba3470caf02e984b4bf107c4184b99a32f0a`
   (Puppet 7.20.0, Ruby 2.7.6, `semantic_puppet` 1.0.4, Ubuntu 18.04),
   `ghcr.io/openvoxproject/openvoxagent@sha256:29407ad539b2ab0b465ff45b68fb8cc8e559a82cdbc728d524dc4fc0e1feae9e`
   (OpenVox 8.28.1, Ruby 3.2.11, `semantic_puppet` 1.1.1, Ubuntu 26.04) and
@@ -129,28 +130,38 @@ the charter's breadth verdict (its AC9, build step 8) both precede it, and it is
 the re-open is recorded here anyway, from this side, because a gate enforced on one side only is
 enforced nowhere. This format needs the format-first mount `/puppet/{repository}/` and, per the
 resolved PDK-publish decision below, one **root-anchored claim on `/v3/`** served only on hostnames
-bound to a Puppet repository: a carve-out `format-handler-interface.md`'s registration layer must
-list, in the same class as Terraform's root discovery document (`terraform.md`'s resolved
-host-binding decision, which this spec follows rather than re-deciding). It needs **no externally
+bound to a Puppet repository. That claim is recorded where it must be: `format-handler-interface.md`
+lists it as a **host-bound claim** beside Terraform's discovery document ("Routing and
+registration", its AC11: served only on a hostname `server.hosts` binds to a repository of the
+claiming format, `404` elsewhere), and the binding is `deployment.md`'s `server.hosts`, a list of
+`{hostname, repository}` in configuration, reloadable on `SIGHUP`, reaching the handler through
+`Deps` (its resolved host-binding decision, was Q8, and AC12), whose home is a named input to the
+scheduled re-open. `/v3/` falls under none of the reserved first segments that table holds (`api`,
+`ui`, `healthz`, `readyz`, `metrics`, `replication`, `t`). This format needs **no externally
 visible base URL**, because every URI it renders is base-relative (Design, "Base-relative URIs").
 
 **The management API must be `planned` before Phase 2.** Deprecation, withdrawal, restoration and
-deletion are operations of `docs/internal/plans/foundation/management-api.md` (to be authored in the
-spec loop), whose core the charter builds at step 2 and completes at step 9. Publish is a client
-binding this handler serves (Design, "Publish"); the Forge's own deprecate and delete routes are
-bindings onto the management operations (the resolved Forge-management-routes decision below).
-Phase 1's hosted reads are testable without it, because the harness's `state` vocabulary seeds
-modules through the shared write path.
+deletion are the `annotate`, `withdraw`, `restore` and `delete-version` kinds of
+`docs/internal/plans/foundation/management-api.md` (its operation vocabulary and the Puppet rows of
+its cross-format reconciliation table), whose core the charter builds at step 2 and completes at
+step 9, and publish is its `publish` kind. The Forge's `POST /v3/releases`, `PATCH
+/v3/modules/{slug}` and both `DELETE` routes are **bindings** onto those kinds, admitted under that
+spec's binding rule as routes of the ecosystem's published reference API ("Bindings: one operation,
+two ways in", which names Puppet's Forge routes; the resolved Forge-management-routes decision
+below). Phase 1's hosted reads are testable without it, because the harness's `state` vocabulary
+seeds modules through the shared write path.
 
-**The proxied path depends on shared services that are requested, not assumed**: the upstream
-adapter behaviour stated in Design ("The proxied path") of
-`docs/internal/plans/foundation/upstream-adapters.md` (to be authored in the spec loop, built at
-charter step 4), and the release-integrity entry requested of
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop, built at
-step 4b). This format serves no signed or generated index, so it needs nothing of
-`docs/internal/plans/foundation/signing-service.md` (to be authored in the spec loop, step 7), and
-publish is synchronous, so nothing of `docs/internal/plans/foundation/async-operations.md` (to be
-authored in the spec loop, step 6a).
+**The proxied path depends on shared services that now exist as specs.** The transport half is
+`docs/internal/plans/foundation/upstream-adapters.md`'s `https` adapter (its requirements table's
+Puppet row: base-relative resolution is the handler's derivation, an absolute `file_uri` is
+fetched only from an allowlisted host, the Forge API key is a `bearer` credential presented to the
+root host only, revalidation is conditional, and every request carries the registry's
+`User-Agent`; its AC5, AC6, AC7 and AC15), built at charter step 4; the release-integrity entry is
+`docs/internal/plans/foundation/artifact-verification.md`'s (its SHA-256 check with an MD5-only
+`weak` answer, AC18), built at step 4b. This format serves no signed or generated index, so
+`docs/internal/plans/foundation/signing-service.md` records it in its "Nothing, stated" row, and
+publish is synchronous, so `docs/internal/plans/foundation/async-operations.md` lists it among the
+formats asking nothing of it.
 
 ## Scope
 
@@ -171,7 +182,7 @@ authored in the spec loop, step 6a).
 - **Deprecation, withdrawal (the Forge's soft delete), restoration and hard deletion** as
   registry-owned management operations, with the Forge's `PATCH /v3/modules/{slug}`,
   `DELETE /v3/releases/{slug}` and `DELETE /v3/modules/{slug}` served as bindings onto them, each
-  with its write boundary and the retirement set.
+  with its write boundary and the core-held retirement set.
 - **Non-interactive authentication** in the forms the clients send: the module tool's
   `forge_authorization` header value and URL userinfo, r10k's `authorization_token` (Bearer, or
   scheme-less) and userinfo, and the publishers' Bearer.
@@ -181,7 +192,8 @@ authored in the spec loop, step 6a).
   endpoint with a path): module revisions as mutable metadata with a TTL, files as immutable
   artifacts verified against the upstream's SHA-256 (or MD5, recorded as weak), gated modules
   handled explicitly, negative caching, and this format's rows of the removal table.
-- **Virtual repositories**, resolved per module in member order.
+- **Virtual repositories**, resolved per module in member order, and the capabilities and rename
+  behaviour `format-handler-interface.md` AC13 and `repository-lifecycle.md` AC12 require.
 
 **Out of scope for v1**, each with its reason, recorded because the interface spec's definition of
 done requires the deliberately unimplemented surface to be named:
@@ -308,11 +320,13 @@ The levels are exactly those `data-model.md` provides; no table is added.
   tarball; the publish time; and, when withdrawn, `deleted_at` and `deleted_for`.
 - **`File`**: one per version, `{owner}-{name}-{version}.tar.gz`, keyed by CAS digest.
 - **The package-level document** holds the deprecation (`deprecated_at`, the reason, the replacement
-  slug), whether the module is deleted in the Forge's soft sense, and the retirement set of
-  hard-deleted versions.
+  slug) and whether the module is deleted in the Forge's soft sense. The retirement set of
+  hard-deleted versions is not in any document: it is the core-held `Retirement` record
+  (`data-model.md` AC35; `management-api.md`, "Retirement is core-held"), written in the deleting
+  operation's transaction, outside snapshot content, and refused centrally.
 - **The repository-level document** holds the case index of owners (the resolved name decision
-  below). A hostname binding is instance configuration, as in `terraform.md`, not repository
-  metadata.
+  below). A hostname binding is instance configuration, `deployment.md`'s `server.hosts`, as in
+  `terraform.md`, not repository metadata.
 - **A remote repository's document** holds, per module it has served, the current and retained
   upstream module revisions (below) and the verification record of each cached file; none of it is
   snapshot content.
@@ -352,35 +366,54 @@ selects.
 - `module_groups`, `with_html`, `with_pdk` and the other filters are accepted and ignored.
 
 Caching headers: JSON documents are served `Cache-Control: no-cache` with a byte-derived `ETag`
-and `Last-Modified`, and a matching `If-None-Match` or `If-Modified-Since` answers `304`; no client
-sends one (captured), so the headers serve intermediaries. Files are served
+and a `Last-Modified` taken from the serving pointer's forward-moving `moved_at` (`data-model.md`
+AC36) on a hosted repository and from the remote's cache-scoped record on a proxied one
+(`proxy-cache.md` AC22), so a rollback moves it forward rather than back; a matching
+`If-None-Match` or an exactly matching `If-Modified-Since` answers `304`; no client sends one
+(captured), so the headers serve intermediaries. These documents are assembled per request, not
+generated, so `signing-service.md`'s `ServeDocument` does not serve them; its AC11 architecture
+test, which as written forbids every handler package to set these headers, must be scoped to
+generated documents for this handler to set them, the scoping the format batch 6 reconciliation
+queued on that spec. Files are served
 `Content-Type: application/octet-stream`, `Content-Disposition: attachment; filename={file}`,
 `Cache-Control: public, max-age=31536000, immutable` and an `ETag`.
 
 ### Publish
 
 Publish is the one operation a client triggers, so, following `debian.md`'s resolved dput decision
-and `conan.md`'s bindings, **the Forge's `POST /v3/releases` is a client binding onto the publish
-operation of `docs/internal/plans/foundation/management-api.md`** (to be authored in the spec loop):
-one implementation behind two ways in, the binding verified by the real publishers and the
-management endpoint by integration tests.
+and `conan.md`'s bindings, **the Forge's `POST /v3/releases` is a client binding onto the `publish`
+kind of `docs/internal/plans/foundation/management-api.md`** (its reconciliation table's Puppet
+publish row): one implementation behind two ways in, the binding verified by the real publishers
+and the management endpoint by integration tests. Per that spec's binding rule the route has no
+behaviour of its own: it parses the wire, commits the tarball bytes to the CAS with their digest
+computed in the stream, constructs the operation naming the committed digest and the coordinate
+the multipart filename declares (or none, for the JSON form), and submits it through the same
+`Submit` the API uses, so ingest validation below runs in the handler's `Apply` and the route's
+`Scope(r)` equals the operation's `Authorize` (its AC8).
 
 - **puppet-blacksmith** posts to `{url}/v3/releases` under whatever path `url` carries (captured),
   so it publishes to `/puppet/{repository}/v3/releases` like any client of the mount.
 - **PDK** posts to `/v3/releases` at the host root whatever it is told (captured), so under the
   resolved PDK-publish decision below it publishes only on a **hostname bound to one Puppet
-  repository** by instance configuration, where the root-anchored `/v3/` serves that repository's
-  whole surface, reads included. On any other hostname the root `/v3/` answers `404` in the Forge's
-  error shape and nothing is stored. A bound hostname can also be the `module_repository` itself,
-  which is how a Puppet user gets the bare-host configuration the Forge's own documentation shows.
+  repository** by `server.hosts`, where the root-anchored `/v3/` serves that repository's whole
+  surface, reads included (`format-handler-interface.md`'s host-bound claim, AC11; `deployment.md`
+  AC12). On any other hostname, and on a hostname bound to a repository of another format, the root
+  `/v3/` answers `404` in the Forge's error shape and nothing is stored; a binding naming a
+  repository that does not exist is `deployment.md`'s startup warning and a `404` on that host. A
+  bound hostname can also be the `module_repository` itself, which is how a Puppet user gets the
+  bare-host configuration the Forge's own documentation shows.
 - **Both body forms are accepted**: `multipart/form-data` with the tarball in the part named `file`,
   and `application/json` with the tarball base64-encoded in `file`, the two forms the OpenAPI document
   names. The bytes are streamed into the CAS, their SHA-256 and MD5 computed in the stream, and
   committed only once ingest validation passes.
-- **Responses**: `201` with the release document; `400` with the Forge's error shape for content
-  that fails validation (the status the OpenAPI document and `puppet_forge`'s `ReleaseBadContent`
-  mapping expect); `409` for an existing or retired coordinate with different bytes; `401` and `403`
-  per `auth.md`; `405` against a remote or virtual repository.
+- **Responses**, each the binding's rendering of the operation's outcome in the Forge's wire:
+  `201` with the release document; `400` with the Forge's error shape for content that fails
+  validation (the operation's `validation` refusal, rendered as the status the OpenAPI document and
+  `puppet_forge`'s `ReleaseBadContent` mapping expect); `409` for an existing coordinate with
+  different bytes (`conflict`) and for a retired coordinate (the shared write path's central
+  `retired` refusal, rendered in the Forge's error shape, the wire rendering the format batch 6
+  reconciliation queued on `management-api.md`); `401` and `403` per `auth.md`; `405` against a
+  remote or virtual repository, before authorization (`management-api.md` AC7).
 
 What ingest enforces, each refusal naming the rule and committing nothing:
 
@@ -401,8 +434,10 @@ What ingest enforces, each refusal naming the rule and committing nothing:
   dependency" on the live Forge's `puppetlabs-mrepo` 0.1.1 and 0.1.2).
 - **Coordinates bind one set of bytes for the life of the repository.** A `(module, version)` that
   exists answers `409` unless the bytes are identical, which answers `201` with the existing release
-  and creates no snapshot (the CI-retry case, as in `vagrant.md`); a hard-deleted coordinate answers
-  `409` with any bytes, including after the deleting snapshot has been pruned; a withdrawn
+  and creates no snapshot (the CI-retry case, as in `vagrant.md`; that an identical republish
+  completes with no snapshot is a request on `management-api.md` AC5, reported); a hard-deleted
+  coordinate answers `409` with any bytes, including after the deleting snapshot has been pruned and
+  across a backwards repoint, by the central check (`management-api.md` AC12); a withdrawn
   coordinate is not free either, since its release still serves by slug.
 - **Owner case**: a publish whose owner differs only in case from an owner already present in the
   repository answers `409` (the resolved name decision below).
@@ -413,7 +448,8 @@ declaration:
 - **One publish is one completed logical write**: one release, one snapshot. The bytes streamed
   before validation are an upload in flight, not a write.
 - **A deprecation, an undeprecation, a withdrawal and a restoration are each one metadata-only
-  write**; a hard deletion of a release is one write that adds the coordinate to the retirement set;
+  write**; a hard deletion of a release is one write whose `Retirement` record is written in the same
+  transaction;
   the Forge's module delete is one write however many releases it withdraws; a retention pass over a
   repository is one write.
 - Two concurrent publishes of different versions of one module each read-modify-write the
@@ -428,34 +464,38 @@ Per the cross-format precedent (`pypi.md`'s resolved hosted-yank decision, with 
 `cargo.md`, `julia.md`, `vagrant.md` and `conan.md`), each operation is a completed logical write
 through the shared write path, authorized in the settled `(repository, action)` vocabulary with no
 new action, hosted only, its trigger verified by this registry's integration tests and its effect by
-the real clients (`docs/internal/analysis/management-surfaces-and-the-oracle.md`). **No client in the
-matrix triggers any of them**: neither agent line, r10k, puppet-blacksmith nor PDK has a deprecate or
-delete command (source). The Forge's own routes for them are documented in its OpenAPI document and
-are therefore served as **bindings** onto the management operations (the resolved
-Forge-management-routes decision below), so scripts written against the Forge keep working; they are
-driven in conformance by the case `script` as any HTTP client would, never claimed as a client
-trigger.
+the real clients (`docs/internal/analysis/management-surfaces-and-the-oracle.md`). The handler
+implements `management-api.md`'s `Operator` interface and declares the kinds below, each from that
+spec's closed vocabulary and matching its reconciliation table's Puppet rows. **No client in the
+matrix triggers any of them**: neither agent line, r10k, puppet-blacksmith nor PDK has a deprecate
+or delete command (source). The Forge's own routes for them are documented in its OpenAPI document
+and are therefore served as **bindings** onto the kinds (the resolved Forge-management-routes
+decision below; `management-api.md`'s binding rule admits a published reference API's routes and
+names Puppet's), so scripts written against the Forge keep working; they are driven in conformance
+by the case `script` as any HTTP client would, never claimed as a client trigger.
 
-| Operation | Forge binding | Effect a client sees | Action |
-|---|---|---|---|
-| Publish a release | `POST /v3/releases` (puppet-blacksmith, PDK) | The release appears in the list, module and release documents | `push` |
-| Deprecate a module, with an optional reason and replacement slug | `PATCH /v3/modules/{slug}` with `{"action": "deprecate", "params": {"reason", "replacement_slug"}}`, answered `204` | `deprecated_at`, `deprecated_for` and `superseded_by` on the module document and `module.deprecated_at` on every release: r10k warns "has been deprecated" and both agent lines print the author-deprecation warning, all installing as before (captured) | `push` |
-| Undeprecate a module | none (the Forge says deprecation is one-way; the management API is not bound by that) | The marks disappear | `push` |
-| Withdraw a release (the Forge's soft delete), with an optional reason | `DELETE /v3/releases/{slug}?reason=`, answered `204` | Omitted from release lists, `module.releases` keeps it with `deleted_at`, the release document and file keep answering `200`: the module tool can no longer select it ("No releases matching '1.1.0'", and a dependency range resolves to the next release) while r10k's pinned entry still installs it (captured on the stub and on the live Forge's `puppetlabs-stdlib-10.0.0`) | `delete` |
-| Restore a withdrawn release | none | Normal resolution returns | `delete` |
-| Delete a module (the Forge's soft delete) | `DELETE /v3/modules/{slug}?reason=`, answered `204` | Every release withdrawn and the module document answers `404`; release documents and files keep answering, as the OpenAPI document describes | `delete` |
-| Hard-delete a release | none | The release, its document and its file answer `404`; the coordinate joins the retirement set; r10k's pinned entry fails | `delete` |
+| Operation | Kind | Forge binding | Effect a client sees | Action |
+|---|---|---|---|---|
+| Publish a release | `publish` | `POST /v3/releases` (puppet-blacksmith, PDK) | The release appears in the list, module and release documents | `push` |
+| Deprecate a module, with an optional reason and replacement slug | `annotate` | `PATCH /v3/modules/{slug}` with `{"action": "deprecate", "params": {"reason", "replacement_slug"}}`, answered `204` | `deprecated_at`, `deprecated_for` and `superseded_by` on the module document and `module.deprecated_at` on every release: r10k warns "has been deprecated" and both agent lines print the author-deprecation warning, all installing as before (captured) | `push` |
+| Undeprecate a module | `annotate` | none (the Forge says deprecation is one-way; the management API is not bound by that) | The marks disappear | `push` |
+| Withdraw a release (the Forge's soft delete), with an optional reason | `withdraw` | `DELETE /v3/releases/{slug}?reason=`, answered `204` | Omitted from release lists, `module.releases` keeps it with `deleted_at`, the release document and file keep answering `200`: the module tool can no longer select it ("No releases matching '1.1.0'", and a dependency range resolves to the next release) while r10k's pinned entry still installs it (captured on the stub and on the live Forge's `puppetlabs-stdlib-10.0.0`) | `delete` |
+| Restore a withdrawn release | `restore` | none | Normal resolution returns | `delete` |
+| Delete a module (the Forge's soft delete) | `withdraw` of every release, the handler's `Apply` also marking the module deleted | `DELETE /v3/modules/{slug}?reason=`, answered `204` | Every release withdrawn and the module document answers `404`; release documents and files keep answering, as the OpenAPI document describes | `delete` |
+| Hard-delete a release | `delete-version` | none | The release, its document and its file answer `404`; the coordinate is retired; r10k's pinned entry fails | `delete` |
 
-Rules, applying the precedent rather than re-deciding it: every operation is one snapshot, none for
-a refused one, and no blob-store object is deleted directly, so space returns only through retention
-pruning and `storage-and-gc.md`'s single-deleter boundary (its AC15) holds; the retirement set is
-carried forward by every later write and preserved across a backwards repoint (`data-model.md`
-AC33's obligation on the management surface); the `Package` row outlives its versions; an operation
-against something absent answers `404`; and against a remote or virtual repository, `405`. What
-this format requires of `management-api.md`: the seven operations above on the objects in the
-addressed-object table, identical semantics and authorization from either entry point, and the
-note that this format's withdrawal is PyPI's yank in effect (hidden from resolution, still installed
-when pinned), so the `delete` action applies to it as `julia.md` settled for yank.
+Rules, applying `management-api.md` rather than re-deciding it: every operation is one snapshot and
+none for a refused one (its AC5), and no blob-store object is deleted directly, so space returns
+only through retention pruning and `storage-and-gc.md`'s single-deleter boundary (its AC15) holds
+(`management-api.md` AC6); `withdraw`, `restore` and `annotate` retire nothing, and
+`delete-version` returns `{owner}/{name}/{version}` to retire in its `Outcome`, which the core holds
+across every later write and every backwards repoint (its AC12; `data-model.md` AC35); the `Package`
+row outlives its versions (`data-model.md` AC33); an operation against something absent answers
+`404`; and against a remote or virtual repository, `405` `repository-type` before authorization
+(its AC7). Identical semantics and authorization from either entry point are the binding rule's
+table test (its AC8), and this format's withdrawal is PyPI's yank in effect (hidden from
+resolution, still installed when pinned), which is why `management-api.md` placed it, with every
+`withdraw`, under `delete` (its resolved withdraw-action decision, was Q1, and AC9).
 
 ### Names, versions and case
 
@@ -496,8 +536,10 @@ responds to a challenge (captured: a `401` with `WWW-Authenticate` ended the run
   route answers one.
 
 How this meets `auth.md`, whose rules this spec does not bend: its verifier accepts Bearer, the
-Basic password and the scheme-less value (its AC31), so every form above authenticates the same
-principal, and its client table needs a `puppet` row (sibling consequences). A credential-less
+Basic password and the scheme-less value, all universal rows of its "Presentation forms" table (its
+AC31, which names puppet and r10k as needing Bearer and r10k's non-hex token as needing the
+scheme-less form), so every form above authenticates the same principal, and its client table
+carries the `puppet` / `r10k` row this spec's captures grounded. A credential-less
 request to a repository that is not anonymously readable answers `401` identically for a private and
 a missing repository (`auth.md` AC17); a valid token lacking `pull` answers `404`; a rejected token
 answers `401` and is never served as anonymous (`auth.md` AC12). The clients send credentials over
@@ -541,17 +583,26 @@ dependencies holds an unpatterned `pull` on the repository serving them. **A pat
 answered as absence**, indistinguishable from a module that does not exist: `200` with no results on
 the list route ("No releases are available", captured shape), `404` in the Forge's error shape
 elsewhere ("does not exist on", captured shape on r10k). A patterned `push` publishes in-pattern
-releases through puppet-blacksmith and is refused out-of-pattern ones with no snapshot.
+releases through puppet-blacksmith and is refused out-of-pattern ones with no snapshot. No route
+of this format is a descriptor in `auth.md`'s sense (its resolved name-free-document decision, was
+Q23): every document it serves names a module, so a patterned `pull` needs none, and the
+out-of-scope routes stay none.
 
 ### Policy refusals on the wire
 
 When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines on the
 **file route** of either path, the handler answers `403` with
 `{"message": "403 Forbidden: refused by policy {policy}, rule {rule}", "errors": ["{policy}: {rule}: {detail}"]}`
-(or naming the signal, for a coordinate condemned under the shared security-signal rule). Per the
+(or naming the signal, for a coordinate condemned under the shared security-signal rule), written
+through `WriteRefusal`, the refusal writer `format-handler-interface.md` places beside `Deps` (its
+AC14), which on HTTP/1.1 also puts the condition in the status line's phrase
+(`supply-chain-policy.md`'s resolved refusal-status-line decision, was Q10, its AC18). Per the
 resolved refusal-rendering decision below and captured: both agent lines print the `message`
-("The message we received said ..."), r10k prints each `errors` string after "The following errors
-were returned from the server", and each exits 1 without contacting another host. `403` rather than
+("The message we received said ...") and the status line ("The HTTP response we received was
+'{status line}'", so the phrase reaches module-tool users too), r10k prints each `errors` string
+after "The following errors were returned from the server", and each exits 1 without contacting
+another host. `supply-chain-policy.md`'s "When a refusal binds, per format" table carries Puppet as
+`holds` from these captures (one Forge per client, a `403` fails the run; its AC20). `403` rather than
 the existence rule's `404`, because the caller is authorized and the content is what is refused. A
 refused file is requested once per run (no client retries, captured), so one refused install produces
 one refusal record.
@@ -569,18 +620,24 @@ check carries one (OpenAPI document, the clients' source), and a `checksums.json
 module holds per-file MD5s (the module tool's `Checksums` class) in the same archive it describes,
 which the install path never reads; only the checksummer behind `puppet module changes` compares an
 installed tree against it (source).
-So `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop) is
-asked for one thing, per `supply-chain-policy.md`'s resolved verification-ownership decision: **a
-release-integrity entry** taking a file, an expected SHA-256 and an optional MD5 and answering
-match, mismatch or weak (MD5 only), used by the proxied path. The verdict source
-`supply-chain-policy.md` consumes answers **absent** for every Puppet artifact, and a rule requiring
-a verified signature refuses every release (its AC15), which the operator documentation states.
+So `docs/internal/plans/foundation/artifact-verification.md` gives this format one thing, per
+`supply-chain-policy.md`'s resolved verification-ownership decision: **a release-integrity entry**
+answering `match`, `mismatch` or `weak` (an MD5-only match) for a file against an expected SHA-256
+and an optional MD5, synchronous and never stored as a verdict (its "Two products: integrity
+results and verdicts", AC18), used by the proxied path (below), which records `weak` in its own
+cached revision as that spec leaves to the caller. The verdict source `supply-chain-policy.md`
+consumes answers **absent** for every Puppet artifact (`artifact-verification.md`'s consumer table),
+and a rule requiring a verified signature refuses every release (`supply-chain-policy.md` AC15),
+which the operator documentation states.
 
 **Advisory coverage is absent.** OSV has no Puppet ecosystem, the schema defines none and purl has no
 `puppet` type (Context), so no coordinate can match an advisory, and per the resolved advisory
 decision below an advisory-dependent rule attached to a Puppet repository is refused at
 configuration, as `supply-chain-policy.md` requires of an ecosystem the feed does not cover (its
-AC11). Coordinate rules that need no advisory (a name or version pattern) bind on both paths.
+AC11; its coverage table's Vagrant, Chef, Puppet and LuaRocks row, "Puppet also has no PURL type").
+That spec's resolved advisory-sources decision (was Q9) would cover Puppet the moment an operator
+declares an OSV-schema source listing a Puppet ecosystem, with no code change; none is known.
+Coordinate rules that need no advisory (a name or version pattern) bind on both paths.
 Byte-level rules depend on the shared cataloguer's coverage of module tarballs, which that spec
 decides.
 
@@ -613,8 +670,9 @@ What that means for a proxied Forge, per the resolved gated-content decision bel
   message naming the upstream's authorization requirement and the module's gate, never `401` (which
   the client would read as its own credential failing), never a negative cache entry, and never a
   `404`.
-- **A remote with a Forge API key** fetches gated files with it, sent only to the upstream's host,
-  and records the gate on the cached module revision.
+- **A remote with a Forge API key** fetches gated files with it, the key held as an upstream
+  credential of kind `bearer` (`upstream-adapters.md`'s credential table names the Forge) and sent
+  only to the upstream's root host (its AC6), and records the gate on the cached module revision.
 - **A gated module is never served from a repository with anonymous read enabled**, remote or virtual
   over a remote: its file route answers `403` naming the gate, because the key holder's entitlement
   is not a licence to republish to the world. Beyond that, serving cached gated content only to
@@ -636,18 +694,28 @@ document, and each release document. Client queries are never forwarded upstream
 set of distinct query strings two clients send (the module tool's exclusions, r10k's none) does not
 multiply upstream traffic or cache entries.
 
-What this format requires of `docs/internal/plans/foundation/upstream-adapters.md` (to be authored in
-the spec loop):
+What this format asked of `docs/internal/plans/foundation/upstream-adapters.md`, and how that spec
+answers each (its requirements table's Puppet row):
 
 - **Base-relative resolution against the upstream's base**: `next` links and `file_uri` values are
-  resolved as the clients resolve them (appended to the base path), and an absolute `file_uri` from an
-  upstream is accepted when its host is on the remote's artifact allowlist.
-- **An optional upstream credential** sent as `Authorization: Bearer` to the upstream's host only,
-  over HTTPS unless an operator overrides it, never forwarded on a redirect to another host.
-- **Conditional revalidation**: `If-Modified-Since` with the revision's `Last-Modified` (the live
-  Forge answers `304`, captured); `If-None-Match` is sent where an upstream honours it (the live
-  Forge ignored it, captured).
-- **A `User-Agent`** identifying the registry, which the OpenAPI document asks every caller to send.
+  resolved as the clients resolve them (appended to the base path). This is the handler's own
+  derivation of the next upstream request, which that spec leaves to the handler ("Which upstream
+  URL to ask next" names resolving Puppet's `next` links); an absolute `file_uri` from an upstream
+  is fetched only when its host is on the upstream's host allowlist, and a host off the list makes
+  no connection and returns `HostNotAllowedError` (its AC7), which the handler omits from what is
+  served and records.
+- **An optional upstream credential** of kind `bearer`, presented to the upstream's root host only
+  and never on a redirect to another host (its AC6 and AC19), over HTTPS unless the upstream sets
+  `allow_http` (its AC23).
+- **Conditional revalidation**: the adapter sends the validators the proxy holds, `If-Modified-Since`
+  with the revision's `Last-Modified` (the live Forge answers `304`, captured) and `If-None-Match`
+  where an upstream offered an `ETag` (the live Forge ignored it, captured) (its AC15).
+- **A `User-Agent`** identifying the registry, which the OpenAPI document asks every caller to send:
+  the adapter's `stackweaver-registry/<version> (+<server.public_url>)` on every request (its AC5).
+
+The remote is created and updated under that spec's adapter validation alone, with no probe of the
+Forge inside the creation transaction (its AC23); this format never had a configuration-time
+probe, so nothing moves to the first request.
 
 Classification and behaviour:
 
@@ -658,9 +726,12 @@ Classification and behaviour:
   release's coordinate, which for a root-hosted upstream reproduces the upstream's own strings.
 - **Files are immutable artifacts.** A file request resolves its slug through the current or a
   retained revision; a slug no revision names triggers one module-revision fetch and then answers
-  `404` with no file request, so the remote is not an open relay. The fetch is verified under
-  stream-and-verify against the revision's `file_sha256`; when an upstream publishes only
-  `file_md5`, against that, recorded as weak, and the served release then carries this registry's
+  `404` with no file request, so the remote is not an open relay. The fetch declares the revision's
+  `file_sha256` to fetch-and-cache as its digest and is verified under stream-and-verify (the
+  declared-digest mode of `proxy-cache.md`'s "Completion-only mode and the verifier hook"); when an
+  upstream publishes only `file_md5`, against that, `artifact-verification.md`'s release-integrity
+  entry classifying the match `weak` (its AC18), recorded as weak, and the served release then
+  carries this registry's
   SHA-256 of the cached bytes beside the upstream's MD5 (the same rule `vagrant.md` adopted for
   missing checksums); an upstream release with neither is omitted from what is served and recorded.
   A truncated or mismatching body is never committed.
@@ -671,25 +742,36 @@ Classification and behaviour:
   upstream release list answering `200` with no results, which is the Forge's not-found shape
   (captured). A `429` or `5xx` is never cached as absence (`proxy-cache.md` AC9). An upstream `401`
   or `403` on a file is the gated-module case above, never absence.
-- **Publish and every management operation against a remote repository answer `405`.**
+- **Served documents carry the cache's freshness, never the upstream's.** A remote's module,
+  release-list and release documents carry its cache-scoped `Last-Modified`, forward-moving, and a
+  revalidated revision older by upstream `Last-Modified` than the adopted one is not adopted and is
+  recorded as a divergence (`proxy-cache.md` AC22; `data-model.md` AC44).
+- **Publish and every management operation against a remote repository answer `405`**
+  (`management-api.md` AC7).
+- **A cache refresh and a read-only remote behave as the shared layer defines**: "refresh now"
+  (`management-api.md` AC29) marks every cached revision and negative entry due
+  (`proxy-cache.md` AC24), and a `read_only` remote fetches nothing and serves its cache
+  (`proxy-cache.md` AC23).
 
-Upstream removal maps onto the settled purge-or-flag table as this format's side of that contract
-(`proxy-cache.md`, "Upstream removal or replacement"). Nothing on the Forge wire is an explicit
-security signal.
+Upstream removal maps onto `proxy-cache.md`'s event classes ("Upstream removal or replacement") as
+this format's side of that contract, each row naming its class; that table already names this
+format under "Flag mirroring", "Immutability violation, revision-bound" and "Removal with no
+signal". Nothing on the Forge wire is an explicit security signal.
 
 | Upstream event, as observed at revalidation or fetch | Classification |
 |---|---|
-| A release gains `deleted_at` (the Forge's soft delete) | Mirrored as a withdrawal: no purge, cached bytes keep serving by slug, the divergence recorded, as PyPI's yank row keeps serving |
-| A release leaves the list and its release document answers `404` | An author removal with no security signal: the cached file stays fetchable at its slug for clients that already resolved it, the served list follows the upstream, and the divergence is recorded and alerted |
-| The module gains `deprecated_at`, or loses it | Mirrored; no divergence |
-| The module document answers `404` (the Forge's module delete) | Served as a hosted module delete is: module document `404`, releases withdrawn, cached files still served; the divergence recorded and alerted |
-| A new revision lists a different `file_sha256` or `file_md5` for a cached release | An immutability violation recorded and alerted; the route keeps serving the cached bytes, whose digests the served documents keep, and the new bytes are never fetched under the old coordinate |
-| A file fails its upstream checksum, or a body is truncated | An integrity failure: nothing committed, no negative entry, the operator alerted with the real reason, the next request tries again |
-| The module becomes `premium` or `login_required` | The gate is recorded on the revision; uncached files follow the gated-module rules; cached files keep serving under the same rules |
-| A `malware_scan` reports `malicious` or `suspicious` above zero | Recorded and alerted; not a condemnation (Design, "Signing, provenance and policy") |
+| A release gains `deleted_at` (the Forge's soft delete) | **Flag mirroring**: mirrored as a withdrawal, no purge, cached bytes keep serving by slug, the divergence recorded, as PyPI's yank row keeps serving |
+| A release leaves the list and its release document answers `404` | **Removal with no signal**, an author removal: the cached file stays fetchable at its slug for clients that already resolved it, the served list follows the upstream, and the divergence is recorded and alerted |
+| The module gains `deprecated_at`, or loses it | **Ordinary metadata change**: mirrored; no divergence |
+| The module document answers `404` (the Forge's module delete) | **Removal with no signal**, served as a hosted module delete is: module document `404`, releases withdrawn, cached files still served; the divergence recorded and alerted |
+| A new revision lists a different `file_sha256` or `file_md5` for a cached release | **Immutability violation, revision-bound**: recorded and alerted, nothing purged; the route keeps serving the cached bytes, whose digests the served documents keep, and the new bytes are never fetched under the old coordinate |
+| A file fails its upstream checksum, or a body is truncated | **Integrity failure at fetch**: nothing committed, no negative entry, the operator alerted with the real reason, the next request tries again |
+| The module becomes `premium` or `login_required` | **Ordinary metadata change** carrying this format's gate: the gate is recorded on the revision; uncached files follow the gated-module rules; cached files keep serving under the same rules |
+| A `malware_scan` reports `malicious` or `suspicious` above zero | **Ordinary metadata change**, recorded and alerted; not the explicit security signal and not a condemnation (Design, "Signing, provenance and policy") |
 
-Per the resolved preconfigured-upstream decision below, no Puppet upstream is preconfigured; the
-operator documentation gives the one-line remote for `https://forgeapi.puppet.com`.
+Per the resolved preconfigured-upstream decision below, no Puppet upstream is preconfigured
+(`proxy-cache.md`'s set is six upstreams after its extensions, was Q14 and Q17, none of them the
+Forge); the operator documentation gives the one-line remote for `https://forgeapi.puppet.com`.
 
 ### Virtual repositories
 
@@ -708,6 +790,27 @@ below:
   `acme-base` from being resolved against a public squatter's releases.
 - Publish and management operations against a virtual repository answer `405`, and a virtual
   repository with anonymous read enabled applies the gated-module rule to every remote member.
+- Nothing here is a generated document, so the resolution runs per request through the members in
+  order and no `index.merge` job exists for it (`signing-service.md`'s merge obligations bind only
+  formats that declare an `Indexer`).
+
+### Capabilities and lifecycle
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available` (the live Forge for reads, below), `Virtual: supported` (the section above) and
+`Rename: supported`, the four fields `format-handler-interface.md` AC13 names. Rename is supported
+because nothing a client reads names the repository: every URI is base-relative, so a document is
+byte-identical under any base, and the retirement set and every record bind the repository's
+identity. A client on the format-first mount updates `module_repository` or `forge.baseurl` to the
+new path. A **host-bound** client is different: `deployment.md`'s `server.hosts` binds a hostname
+to a repository by name, so after a rename the binding names a repository that no longer exists,
+which that spec answers with a startup warning and a `404` on the host until the operator edits the
+binding to the new name and reloads it with `SIGHUP` (its AC12); the operator documentation states
+the step, and binding by identity instead is the change the format batch 5 reconciliation queued on
+`repository-lifecycle.md` for Terraform, which has the same shape. The old name answers
+`not-found` indistinguishably from a never-existing repository (`repository-lifecycle.md` AC12),
+which requires `conformance/puppet/rename_test.go`, enforced by the harness's case-set validator
+(`conformance-harness.md` AC26); AC27 carries it with the real clients.
 
 ### Conformance, the clients and the corpus
 
@@ -720,7 +823,12 @@ case runs on all three unless it names a client-specific behaviour. The catalogu
 ecosystem; the three clients appear in the matrix's Client column under the Puppet row.
 
 **Every case runs with the client's network restricted to this registry and its stand-ins**, except
-the recording session. The client images are the upstream images named in Context, pinned by digest
+the recording session; the harness makes that confinement the default for every client container
+(its resolved client-confinement decision, was Q6, AC23), and a case with a bound hostname declares it
+through its `repositories` entry's `hostname` sub-entry, which resolves inside the client container
+to the instance and is written into the instance's configuration through `server.hosts`' own
+loader (`conformance-harness.md` AC23; `deployment.md` AC12). The client images are the upstream
+images named in Context, pinned by digest
 (`conformance-harness.md` AC4); each case appends the harness CA to
 `/opt/puppetlabs/puppet/ssl/cert.pem` (the agents) or `/etc/ssl/certs/ca-certificates.crt` (r10k,
 run as root for that), writes `r10k.yaml` with `forge.baseurl`, and gives each client a fresh home
@@ -771,14 +879,20 @@ on remote writes.
       digests of the bytes the file route serves, asserted over every hosted fixture and every
       proxied cached release; hosted documents carry `downloads: 0`; files carry the immutable caching header, an
       `ETag` and `Content-Disposition`; JSON documents carry `Cache-Control: no-cache` and answer `304` to a
-      matching `If-None-Match` and `If-Modified-Since`; and bytes altered in storage by fault
-      injection are refused by all three clients with their checksum error.
+      matching `If-None-Match` and an exactly matching `If-Modified-Since`, their `Last-Modified`
+      moving forward, never back, across a repoint to an older snapshot; and bytes altered in
+      storage by fault injection never install on any of the three clients, the read path aborting
+      the response with an operator alert (`storage-and-gc.md` AC21) and each client failing with
+      its checksum error.
 - [ ] AC6: A multipart publish from puppet-blacksmith 9.1.0 to `https://{host}/puppet/{repo}/v3/releases`
       answers `201` with the release document, creates exactly one snapshot, and the release then
-      installs on all three clients; republishing identical bytes answers `201` and creates no
-      snapshot; different bytes at an existing coordinate, and a hard-deleted coordinate including
-      after the deleting snapshot was pruned, answer `409`; and puppet-blacksmith exits non-zero on
-      each refusal with the body printed.
+      installs on all three clients; the same release published through the management API's
+      `publish` produces a byte-identical snapshot delta and served documents (`management-api.md`
+      AC8); republishing identical bytes answers `201` and creates no snapshot; different bytes at
+      an existing coordinate, and a hard-deleted coordinate including after the deleting snapshot
+      was pruned and after a repoint to a snapshot older than the deletion, answer `409` in the
+      Forge's error shape; and puppet-blacksmith exits non-zero on each refusal with the body
+      printed.
 - [ ] AC7: Each of these publishes answers `400` in the Forge's error shape with nothing committed and
       no snapshot: an archive that is not gzip-compressed tar; more than one top-level directory; a
       top directory, `metadata.json` identity or multipart filename that disagree; a symlink, a hard
@@ -788,33 +902,39 @@ on remote writes.
 - [ ] AC8: On a hostname bound to a Puppet repository, the PDK 3.4.0 publish path through
       `puppet_forge` posts JSON with a base64 body to the root `/v3/releases` and publishes into the bound repository with one
       snapshot, and both agent lines and r10k install from that hostname's bare root as their base;
-      on an unbound hostname the same post answers `404` in the Forge's error shape and stores
-      nothing; and registration refuses a second repository bound to the same hostname.
+      on an unbound hostname, and on a hostname `server.hosts` binds to a repository of another
+      format, the same post answers `404` in the Forge's error shape and stores nothing; a
+      `server.hosts` entry naming a repository that does not exist logs a warning and answers `404`
+      on that host without failing startup; a configuration listing one hostname twice is refused
+      at load; and a binding added by editing the file takes effect on `SIGHUP` without restart.
 - [ ] AC9: With `AcmeCo-tool` published, `puppet module install acmeco-tool` fails on both agent lines
       with "No releases are available" and r10k naming `acmeco-tool` fails with "does not exist",
       while `AcmeCo-tool` and `AcmeCo/tool` install on both lines; a publish of `ACME-base` while
       `acme-base` exists answers `409` with no snapshot; and every response spells a module as
       `{owner}-{name}` exactly as published.
-- [ ] AC10: Deprecating `acme-base` through the management endpoint and, separately, through
-      `PATCH /v3/modules/acme-base` each creates one metadata-only snapshot, after which the module
+- [ ] AC10: Deprecating `acme-base` through the management endpoint's `annotate` kind and,
+      separately, through the `PATCH /v3/modules/acme-base` binding each creates one metadata-only
+      snapshot, the two producing identical served documents, after which the module
       document carries `deprecated_at`, `deprecated_for` and `superseded_by`, every release carries
       `module.deprecated_at` even when the request excludes `module`, both agent lines print the
       author-deprecation warning and install, r10k prints its deprecation warning and installs, and
       undeprecating removes the warnings in one further snapshot.
-- [ ] AC11: Withdrawing `acme-base` 1.1.0 through the management endpoint and, separately, through
-      `DELETE /v3/releases/acme-base-1.1.0?reason=broken` each creates one snapshot, after which
+- [ ] AC11: Withdrawing `acme-base` 1.1.0 through the management endpoint's `withdraw` kind and,
+      separately, through the `DELETE /v3/releases/acme-base-1.1.0?reason=broken` binding each
+      creates one snapshot, neither retiring anything, after which
       the release list omits it unless `show_deleted=true`, `puppet module install acme-app` resolves
       `acme-base` 1.0.0 and `--version 1.1.0` fails on both agent lines with "No releases matching",
       r10k's pinned entry installs 1.1.0, and the release document answers `200` carrying
       `deleted_at` and `deleted_for`; restoring it returns normal resolution in one snapshot; and
       `DELETE /v3/modules/acme-base` makes the module document answer `404` while every release
       document and file still answers `200`.
-- [ ] AC12: Hard-deleting a release through the management endpoint makes its release document and
-      file answer `404`, r10k's pinned entry fail, and the coordinate retired including after a
-      backwards repoint and after the deleting snapshot is pruned; the `Package` row survives
-      deleting its last release; every management operation and binding is refused with no snapshot
-      for a principal lacking its action (`push` for publish and deprecation, `delete` for
-      withdrawal, restoration and deletion) and answers `405` against a remote or virtual repository.
+- [ ] AC12: Hard-deleting a release through the management endpoint's `delete-version` kind makes
+      its release document and file answer `404`, r10k's pinned entry fail, and the coordinate
+      retired through a core-held `Retirement` record, including after a backwards repoint and after
+      the deleting snapshot is pruned; the `Package` row survives deleting its last release; every
+      management operation and binding is refused with no snapshot for a principal lacking its
+      action (`push` for publish and deprecation, `delete` for withdrawal, restoration and
+      deletion) and answers `405` against a remote or virtual repository before authorization.
 - [ ] AC13: After `acme-base` 2.0.0 is installed by all three clients and the repository's pointer is
       moved back to the snapshot before 2.0.0 was published, every document is served byte-identical
       to that snapshot's, r10k's next `:latest` run installs 1.1.0, `puppet module upgrade` on both agent
@@ -835,10 +955,12 @@ on remote writes.
       publishes `acme-newmod` through puppet-blacksmith and is refused `other-newmod` with no
       snapshot; and a JSON-body publish is refused for that patterned `push` and accepted for an
       unpatterned one.
-- [ ] AC16: A release the shared policy layer refuses answers `403` on its file route with the Forge
-      error body naming the policy in `message` and in `errors`, on the hosted and the proxied path,
-      while its list, module and release documents still answer `200` naming it; both agent lines
-      exit 1 printing the policy from `message`, r10k exits 1 printing the `errors` strings; no
+- [ ] AC16: A release the shared policy layer refuses answers `403` on its file route through
+      `WriteRefusal` with the Forge error body naming the policy in `message` and in `errors`, on the
+      hosted and the proxied path, the status line carrying the `Refused by policy:` phrase on
+      HTTP/1.1, while its list, module and release documents still answer `200` naming it; both
+      agent lines exit 1 printing the policy from `message` and the phrase in the status line they
+      print, r10k exits 1 printing the `errors` strings; no
       request reaches any other host, asserted at the network layer; and each refused install
       produces exactly one refusal record.
 - [ ] AC17: A remote repository over a stand-in Forge served under a path prefix, whose release lists
@@ -846,8 +968,10 @@ on remote writes.
       `acme-app` with its dependency on all three clients with only this registry reachable: served
       documents carry base-relative URIs to this registry, the installed files equal the stand-in's
       bytes, the stand-in receives one module document and one full paged list per module per TTL
-      whatever query strings the clients sent, and a second install from fresh containers produces
-      no stand-in request.
+      whatever query strings the clients sent, every request it receives carries the registry's
+      `User-Agent`, an absolute `file_uri` on a host the upstream's allowlist lacks is omitted and
+      recorded with no connection made to that host, and a second install from fresh containers
+      produces no stand-in request.
 - [ ] AC18: For a proxied release whose bytes do not match the upstream `file_sha256`, nothing is
       committed, the previous state keeps serving and the next request tries again; for an upstream
       carrying only `file_md5`, the matching file is cached, recorded as weakly verified, and served
@@ -855,7 +979,9 @@ on remote writes.
       omitted from what is served; a truncated body is never committed; and the real reason reaches
       the operator record in each case.
 - [ ] AC19: A proxied module revision is revalidated after its TTL and not before, with
-      `If-Modified-Since` against a stand-in that answers `304`; a release published upstream becomes
+      `If-Modified-Since` against a stand-in that answers `304`; every served document carries the
+      remote's cache-scoped `Last-Modified`, never the stand-in's, and a revision older than the
+      adopted one is not adopted and records a divergence; a release published upstream becomes
       installable after the TTL and not before absent an explicit refresh; a release whose `metadata.name` differs from the
       requested module is omitted from what is served and recorded; files are never revalidated; an upstream module `404` and an upstream empty release list are negatively
       cached, while a `429` or `5xx` is neither cached as absence nor surfaced as not-found; and a
@@ -867,7 +993,8 @@ on remote writes.
       print, and creates no negative entry; a remote holding a Forge API key fetches it, the key
       reaching only the upstream's host and not a redirect's other host, asserted at the network
       layer; and a remote or virtual repository with anonymous read enabled answers every gated
-      module's file `403` naming the gate.
+      module's file `403` naming the gate; the key is an upstream credential of kind `bearer`
+      whose value no response, log line or listing reveals.
 - [ ] AC21: A stand-in presenting each removal-table event produces this format's classification: a
       release gaining `deleted_at` is mirrored as a withdrawal with its cached file still served by
       slug; a release vanishing is followed by the served list while its cached file stays fetchable
@@ -893,6 +1020,13 @@ on remote writes.
 - [ ] AC26: Replay-match passes against a corpus recorded from forgeapi.puppet.com covering the
       recorded surface named in Design, with the `Authorization` header, URL userinfo and publish
       bodies redacted.
+- [ ] AC27: `Capabilities()` declares proxy `supported`, reference implementation `available`,
+      `Virtual: supported` and `Rename: supported`; after a rename, both agent lines and r10k
+      install from the new name on the format-first mount with byte-identical documents and files,
+      the old name answers `not-found` indistinguishably from a never-existing repository, a
+      coordinate retired before the rename is still refused, and a hostname `server.hosts` bound to
+      the old name answers `404` until the binding is edited to the new name and reloaded with
+      `SIGHUP`, after which the bare-host installs succeed again.
 
 ## Test Plan
 
@@ -902,38 +1036,41 @@ on remote writes.
 | AC2 | conformance | `conformance/puppet/r10k_install_test.go` (pinned and `:latest` entries, prerelease present, rerun and reinstall from the warm tarball cache with request counts asserted) |
 | AC3 | integration + conformance | `internal/format/puppet/uri_render_test.go` (every route's URIs over every fixture, two bases compared byte for byte, mount and bound hostname); `conformance/puppet/base_path_test.go` (all three clients through a base with a path) |
 | AC4 | integration + conformance | `internal/format/puppet/pagination_test.go` (whole-list page without `limit`, clamp, sort orders, unknown `sort_by`, a publish injected between page requests with the resolution result checked); `conformance/puppet/pagination_test.go` (150-release module, request counts on both agent lines, explicit-`limit` pages followed) |
-| AC5 | integration + conformance | `internal/format/puppet/digest_test.go` (both digests equal the served bytes on every hosted and cached release; header assertions; `304` answers); `conformance/puppet/checksum_test.go` (storage fault injection, all three clients refusing) |
-| AC6 | conformance + integration | `conformance/puppet/publish_blacksmith_test.go` (publish, install on all three, idempotent republish, `409` cases, the publisher's exit status and output); `internal/format/puppet/publish_snapshot_test.go` (snapshot counts, retired coordinate after pruning under an injected clock) |
+| AC5 | integration + conformance | `internal/format/puppet/digest_test.go` (both digests equal the served bytes on every hosted and cached release; header assertions; `304` answers; `Last-Modified` forward across a repoint under an injected clock); `conformance/puppet/checksum_test.go` (storage fault injection, the read-path abort sharing `internal/storage/read_verify_test.go`, `storage-and-gc.md` AC21, all three clients refusing) |
+| AC6 | conformance + integration | `conformance/puppet/publish_blacksmith_test.go` (publish, install on all three, idempotent republish, `409` cases, the publisher's exit status and output); `internal/format/puppet/publish_snapshot_test.go` (snapshot counts, the central `retired` refusal after pruning under an injected clock and across a repoint rendered in the Forge shape); the binding-versus-API equality is `internal/manage/binding_test.go`'s table over this handler's `Bindings()` (`management-api.md` AC8) |
 | AC7 | integration | `internal/format/puppet/ingest_test.go` (one hostile or malformed archive per rule, each refused `400` with the Forge error shape, CAS and snapshot unchanged) |
-| AC8 | conformance + integration | `conformance/puppet/publish_pdk_test.go` (the PDK 3.4.0 upload calls against a bound and an unbound hostname; installs from the bare root on all three clients); `internal/format/puppet/host_binding_test.go` (duplicate binding refused at registration) |
+| AC8 | conformance + integration | `conformance/puppet/publish_pdk_test.go` (the PDK 3.4.0 upload calls against a bound and an unbound hostname, the bound one through the `repositories` entry's `hostname` sub-entry; installs from the bare root on all three clients); `internal/server/hosts_test.go` (bound, unbound, other-format and missing-repository hostnames, a duplicate hostname refused at load, `SIGHUP` reload; shared with `deployment.md` AC12 and `format-handler-interface.md` AC11) |
 | AC9 | conformance + integration | `conformance/puppet/names_test.go` (case variants and separators on both agent lines and r10k); `internal/format/puppet/owner_case_test.go` (case-colliding owner refused, spelling of every response) |
-| AC10 | conformance + integration | `conformance/puppet/deprecate_test.go` (management endpoint and `PATCH` binding driven from the case `script`, warnings asserted on all three clients); `internal/format/puppet/deprecate_test.go` (snapshot counts, `module` present under exclusion) |
-| AC11 | conformance + integration | `conformance/puppet/withdraw_test.go` (management endpoint and `DELETE` binding, module tool resolution and `--version` failure, r10k pinned install, module delete); `internal/format/puppet/withdraw_test.go` (`show_deleted`, release and file answers, restore, snapshot counts) |
-| AC12 | conformance + integration | `conformance/puppet/hard_delete_test.go` (r10k pinned failure after hard delete); `internal/format/puppet/manage_auth_test.go` (action refusals per operation and binding with snapshot count unchanged, `405` on remote and virtual, retirement across a backwards repoint and after pruning, `Package` row survival) |
+| AC10 | conformance + integration | `conformance/puppet/deprecate_test.go` (the `annotate` kind through the management endpoint and the `PATCH` binding driven from the case `script`, warnings asserted on all three clients); `internal/format/puppet/deprecate_test.go` (snapshot counts, identical documents from both entry points, `module` present under exclusion) |
+| AC11 | conformance + integration | `conformance/puppet/withdraw_test.go` (the `withdraw` and `restore` kinds through the management endpoint and the `DELETE` bindings, module tool resolution and `--version` failure, r10k pinned install, module delete; the case-set validator requires a `script` case per declared kind, `conformance-harness.md` AC26); `internal/format/puppet/withdraw_test.go` (`show_deleted`, release and file answers, restore, snapshot counts, no `Retirement` record) |
+| AC12 | conformance + integration | `conformance/puppet/hard_delete_test.go` (r10k pinned failure after `delete-version`); `internal/format/puppet/manage_auth_test.go` (action refusals per operation and binding with snapshot count unchanged, sharing `management-api.md` AC9's action table; `405` `repository-type` on remote and virtual; retirement across a backwards repoint and after pruning, sharing `internal/manage/retirement_test.go`; `Package` row survival) |
 | AC13 | conformance | `conformance/puppet/rollback_test.go` (install on all three, repoint, r10k downgrade, `upgrade` and `install` messages on both agent lines, `--force`, served documents compared with the predecessor snapshot's) |
 | AC14 | conformance + integration | `conformance/puppet/auth_test.go` (private repository over TLS, every credential form on its clients, anonymous, `pull`-less and rejected tokens, plain-HTTP refusal, no redirect status on any hosted route); `internal/auth/leak_test.go` (redaction for this format) |
 | AC15 | conformance + unit | `conformance/puppet/pattern_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, both modes, all three clients, patterned `push` through puppet-blacksmith and the JSON path); `internal/format/puppet/scope_object_test.go` (the object table per route, `format-handler-interface.md` AC12) |
-| AC16 | conformance + integration | `conformance/puppet/policy_test.go` (hosted and proxied modes, rules through the `policies` key, exit status and printed text per client, documents still `200`, network-layer assertion of no other host); `internal/format/puppet/refusal_record_test.go` (one record per refused install) |
-| AC17 | conformance | `conformance/puppet/proxied_install_test.go` (prefixed paginated stand-in, all three clients, URI assertions, byte comparison, upstream request counts per module, second install with the network layer showing no stand-in request) |
+| AC16 | conformance + integration | `conformance/puppet/policy_test.go` (hosted and proxied modes, rules through the `policies` key, the raw status line read from the socket, exit status and printed text per client, documents still `200`, network-layer assertion of no other host); `internal/format/puppet/refusal_record_test.go` (one record per refused install); the phrase shares `internal/format/refusal_writer_test.go` (`supply-chain-policy.md` AC18) |
+| AC17 | conformance | `conformance/puppet/proxied_install_test.go` (prefixed paginated stand-in, all three clients, URI assertions, byte comparison, upstream request counts per module and the `User-Agent` per request, an off-allowlist `file_uri` host with no accepted socket, second install with the network layer showing no stand-in request) |
 | AC18 | integration | `internal/format/puppet/proxied_integrity_test.go` (SHA-256 mismatch, MD5-only with SHA-256 filled once cached, no checksum, truncated body; CAS and reference assertions; operator record) |
-| AC19 | conformance + integration | `conformance/puppet/proxied_ttl_test.go` (mutating stand-in answering `304`, network-level counts, publish visibility after the TTL); `internal/format/puppet/proxied_negative_test.go` (module `404`, empty list, `429`, `5xx`, unknown slug with no file fetch) |
-| AC20 | conformance + integration | `conformance/puppet/gated_test.go` (gated stand-in, printed messages on all three clients); `internal/format/puppet/gated_remote_test.go` (credential scope at the network layer, cross-host redirect, anonymous-read repositories, no negative entry) |
+| AC19 | conformance + integration | `conformance/puppet/proxied_ttl_test.go` (mutating stand-in answering `304`, network-level counts, publish visibility after the TTL); `internal/format/puppet/proxied_negative_test.go` (module `404`, empty list, `429`, `5xx`, unknown slug with no file fetch); `internal/format/puppet/proxied_freshness_test.go` (cache-scoped `Last-Modified`, the older revision not adopted; shares `internal/proxy/freshness_test.go`'s assertions, `proxy-cache.md` AC22) |
+| AC20 | conformance + integration | `conformance/puppet/gated_test.go` (gated stand-in, printed messages on all three clients; the key provisioned as the `upstreams` entry's `credential` sub-entry); `internal/format/puppet/gated_remote_test.go` (credential scope at the network layer sharing `upstream-adapters.md` AC6's chain, cross-host redirect, anonymous-read repositories, no negative entry) |
 | AC21 | integration | `internal/format/puppet/removal_test.go` (stand-in presenting each event; the shared-layer half is `proxy-cache.md`'s) |
 | AC22 | integration | `internal/format/puppet/policy_config_test.go` (advisory rule refused at configuration, pattern rule on both paths through the `advisories` and `policies` keys, signature rule refusing with its reason) |
 | AC23 | conformance + integration | `conformance/puppet/virtual_test.go` (cross-member dependency on all three clients, shadowing with the network layer showing no upstream request for the shadowed module, `405`); `internal/format/puppet/virtual_resolve_test.go` (first-member-per-module resolution) |
 | AC24 | conformance + unit | `conformance/puppet/prerelease_test.go` (default and exact-version installs on both agent lines, r10k `:latest` on a prerelease-only module); `internal/format/puppet/current_release_test.go` (the `current_release` rule over generated version sets) |
 | AC25 | integration + conformance | `internal/storage/metadata_root_test.go` (threshold crossing with a proxied module revision, sweep, serve); `conformance/puppet/large_module_test.go` (all three clients install after the sweep) |
 | AC26 | conformance | `conformance/puppet/replay_test.go` (corpus replay against the recorded Forge surface with the named redactions) |
+| AC27 | unit + conformance | `internal/format/capabilities_test.go` (this handler's four declarations, `format-handler-interface.md` AC13); `conformance/puppet/rename_test.go` (all three clients against the renamed repository on the mount, byte comparison, old name `not-found`, a pre-rename retirement still refused, and the bound hostname's `404` until the `server.hosts` edit and `SIGHUP`; required by `repository-lifecycle.md` AC12) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their type, virtual member order and hostname
 binding, `credentials` (patterned tokens included), `upstreams` (a Forge stand-in with variants for a
 path prefix, pagination, mutation, corruption, missing checksums, gating and removal), `state` for
-pre-published modules, and `advisories` and `policies` for AC16 and AC22. One obligation on the
-harness is recorded rather than assumed, and listed in the sibling consequences: a hostname binding
-is repository configuration the `repositories` key must be able to express, since AC8 needs a case
-with a bound hostname. The runner-enforced obligations, both modes and the unauthenticated,
-unauthorized and pattern-refusal cases in each, apply from the sibling specs and are not restated per
+pre-published modules (hard-deleted ones with their `Retirement` records), and `advisories` and
+`policies` for AC16 and AC22. The hostname binding AC8 needs is the `repositories` entry's
+`hostname` sub-entry, which the harness writes through `server.hosts`' loader
+(`conformance-harness.md` AC23), the obligation this spec first recorded on the harness. The
+runner-enforced obligations, both modes, the unauthenticated, unauthorized and pattern-refusal
+cases in each, a `script` case per declared management kind and `rename_test.go`
+(`conformance-harness.md` AC22, AC26), apply from the sibling specs and are not restated per
 criterion.
 
 ## Implementation Phases
@@ -947,19 +1084,23 @@ criterion.
 ### Phase 2: Publish and management
 - Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
   preconditions)
-- `POST /v3/releases` in both body forms with ingest validation, the hostname binding and its
-  root-anchored `/v3/`, deprecation, withdrawal, restoration, module delete and hard delete with the
-  Forge bindings and the retirement set, the write-boundary declaration exercised under concurrency
+- The `Operator` interface declaring `publish`, `annotate`, `withdraw`, `restore` and
+  `delete-version`, with `POST /v3/releases` in both body forms, the `PATCH` and both `DELETE`
+  routes as its bindings; ingest validation in `Apply`; the `server.hosts` host-bound `/v3/` claim;
+  retirement returned in `Outcome` and held by the core; the write-boundary declaration exercised
+  under concurrency
 
 ### Phase 3: Proxied path
 - Waits on `upstream-adapters.md` and `artifact-verification.md` (Blocking preconditions)
-- Module revisions with TTL and conditional revalidation, verified file caching with the MD5
-  fallback, gated modules, withdrawal mirroring, negative caching, the removal table, `405` on remote
-  writes
+- Module revisions with TTL, conditional revalidation and the cache-scoped `Last-Modified`,
+  verified file caching with the MD5 fallback classified `weak` by the release-integrity entry, the
+  host allowlist for absolute `file_uri` hosts, gated modules with a `bearer` upstream credential,
+  withdrawal mirroring, negative caching, the removal table by event class, `405` on remote writes
 
 ### Phase 4: Virtual repositories, corpus and gate
-- Per-module virtual resolution, the recorded corpus against forgeapi.puppet.com, all three clients
-  in the matrix, the exception-list entries named in Design
+- Per-module virtual resolution, `Capabilities()` with the rename case (AC27), the recorded corpus
+  against forgeapi.puppet.com, all three clients in the matrix, the exception-list entries named in
+  Design
 
 ## Tasks
 
@@ -997,7 +1138,11 @@ second mechanism, needs no routing by credential, and gives Puppet users the bar
 **Why this is yours:** it adds a root-anchored claim and a deployment-shape commitment.
 
 Accepted cost: the binding is instance configuration and an input to the interface re-open, and the
-operator documentation carries the recipe.
+operator documentation carries the recipe. Landed 2026-09-28: `format-handler-interface.md` lists
+`/v3/` as a host-bound claim (its "Routing
+and registration", AC11), `deployment.md` owns the binding as `server.hosts` (its resolved
+host-binding decision, was Q8, and AC12), and the conformance harness expresses it as the
+`repositories` entry's `hostname` sub-entry (its AC23).
 
 ### Resolved: what the Forge's "delete release" means here (was Q2)
 
@@ -1016,7 +1161,9 @@ the management API only (Design, "Deprecation, withdrawal and deletion"; AC11, A
 
 **Why this is yours:** it decides whether removing a release breaks existing deployments.
 
-Accepted cost: `management-api.md` carries both operations.
+Accepted cost: `management-api.md` carries both operations. It does: the Forge's release delete is
+the `withdraw` kind and the hard delete `delete-version`,
+both under `delete` (its reconciliation table's Puppet rows).
 
 ### Resolved: whether the module tool sees deprecation (was Q3)
 
@@ -1057,6 +1204,9 @@ Forge work unchanged, and one implementation behind two entry points is the prec
 **Why this is yours:** it adds client-shaped entry points to the management surface.
 
 Accepted cost: the trigger is not vouched for by any third-party client, which is stated.
+`management-api.md`'s binding rule admits exactly this case, a route of the ecosystem's published
+reference API that the format's spec records binding with its reason, and names Puppet's Forge
+routes ("Bindings: one operation, two ways in").
 
 ### Resolved: module name matching and owner case (was Q5)
 
@@ -1209,7 +1359,9 @@ removal signal the shared security-signal rule condemns on.
 
 **Why this is yours:** it states plainly that Puppet vulnerability policy is not offered yet.
 
-Accepted cost: recorded for `supply-chain-policy.md`.
+Accepted cost: recorded for `supply-chain-policy.md`. That spec's coverage table records it (Puppet
+has no OSV ecosystem and no PURL type; advisory
+rules refused at configuration), and its binding table carries Puppet as `holds`.
 
 ### Resolved: what a proxied module serves (was Q13)
 
@@ -1245,10 +1397,12 @@ real-upstream job covers them; adding a Tier 3 format there is a change to that 
 
 **Why this is yours:** it sets the first-run behaviour for Puppet users.
 
-Accepted cost: the configuration step.
+Accepted cost: the configuration step. `proxy-cache.md`'s set has since grown to six upstreams through its own
+extensions (was Q14 and Q17), none of them the Forge, so this record's footing is unchanged.
 
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 409d44e | authoring pass: grounded first draft, not a review | Grounded four ways: captured traffic from Puppet 7.20.0 and OpenVox 8.28.1 (`puppet module install`, `upgrade`) and r10k 5.0.3, each from its upstream image pinned by digest, plus puppet-blacksmith 9.1.0's and PDK 3.4.0's publish code paths, on dedicated Podman networks against a logging Forge API v3 stub over HTTP and TLS (the module tool's list-driven resolution with `sort_by=version` and `exclude_fields` excluding `module`, r10k's module-then-release-then-file reads with `current_release` for `:latest`, base-relative `file_uri` and `next` required under a path prefix, SHA-256 and MD5 verification on all three, prerelease selection, case sensitivity against a folding server, deprecation invisible to the module tool unless `module` is kept, soft-deleted releases unresolvable by the module tool and installed by r10k, rollback followed by r10k and ignored by the module tool, every credential form and cross-host redirects dropping it, error rendering and no retries, no fallback, symlinks and `..` paths, puppet-blacksmith's multipart publish under a path and PDK's JSON publish to the host root); the installed client and publisher sources; the Forge's OpenAPI document; the live forgeapi.puppet.com (soft deletion, gated `premium` and `login_required` modules answering `401`, `exclude_fields`, conditional answers, owner-case folding, not-found shapes, `malware_scan`, all three clients run against it); and OSV and purl (no Puppet ecosystem or type). Fourteen questions written in decision shape and adopted under the standing delegation: PDK via host binding (AC8), soft withdrawal plus hard delete (AC11, AC12), `module` kept for deprecation (AC10), Forge management routes as bindings (AC10, AC11), exact names with case-colliding owners refused (AC9), SemVer without build metadata (AC7), whole-list pages (AC4), publish object from the multipart filename (AC15), gated upstream modules (AC20), `403` on the file route (AC16), per-module virtual resolution (AC23), advisory rules refused and scans recorded (AC21, AC22), module revisions as the proxied unit (AC17, AC19), no preconfigured upstream. Twenty-six criteria, each with a Test Plan row. Stays draft; awaits an independent review. |
+| 2026-09-28 | fe2a39f | cross-spec reconciliation of the Wave 1 folds and the foundation wave, on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec and of this file. Applied: Open item 25's requests, now met (the root-anchored `/v3/` recorded as `format-handler-interface.md`'s host-bound claim, AC11, on `deployment.md`'s `server.hosts`, was-Q8 and AC12, not under any reserved segment; the harness's `hostname` sub-entry, conformance-harness reconciliation item 3; the `puppet` / `r10k` auth row found already done; management-api's seven operations as `publish`, `annotate`, `withdraw`, `restore` and `delete-version` with the Forge routes as bindings under its reference-API rule; artifact-verification's release-integrity entry with MD5-only `weak`, AC18; supply-chain's no-coverage and `holds` rows); management-api items 11 and 12 (retirement core-held, AC6, AC12; binding equality, its AC8); upstream-adapters item 12 (https adapter, `bearer` Forge key to the root host only, allowlisted absolute `file_uri` hosts, conditional revalidation, the registry `User-Agent`; no configuration probe existed, so nothing moved; AC17, AC20); proxy-cache (cache-scoped `Last-Modified`, refresh, read-only remotes, every removal row named by event class; AC19); supply-chain theme 3 (`WriteRefusal`, the phrase reaching the module tool's printed status line; AC16); theme 4 (storage-and-gc AC21 in AC5); hosted documents' `Last-Modified` from the pointer's `moved_at`, with the `ServeDocument` header rule's scoping to generated documents noted as queued; format batch 5 item 7 (a rename leaves a `server.hosts` binding naming a missing repository until edited; new AC27 with Capabilities). No question adopted, `fable_recheck` kept. Reported: `deployment.md` AC12 should assert a duplicate hostname is refused at load, which AC8 relies on; an identical republish completing with no snapshot against management-api AC5. Twenty-seven criteria, each with a Test Plan row. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |

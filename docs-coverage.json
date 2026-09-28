@@ -87,6 +87,9 @@
   "conformance/openvsx/**": [
     "docs/internal/plans/formats/openvsx.md"
   ],
+  "conformance/pub/**": [
+    "docs/internal/plans/formats/pub.md"
+  ],
   "conformance/puppet/**": [
     "docs/internal/plans/formats/puppet.md"
   ],

@@ -345,7 +345,8 @@
     "status": "draft",
     "issue": "20",
     "covers": [
-      "internal/format/pub/**"
+      "internal/format/pub/**",
+      "conformance/pub/**"
     ]
   },
   {
