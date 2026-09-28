@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): Context now places the build at charter step 4b, after artifact verification and the interface re-open and before npm (charter AC12); the stale claim that the harness needs a matching extension is replaced by the harness's existing policies and advisories keys, whose provisioners this spec builds (Phase 3; AC2 extended). Earlier: all six questions adopted under the owner's standing delegation plus Q7 and Q8; Q5 adopted as D, not its written B, to keep the owner's purge decision. 16 criteria, zero open questions; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-28 at 33679fb with the foundation authoring wave (not a review): artifact-verification's verdict shape (chain, revocation, superseded revision) consumed in AC15; scans and feed syncs as async-operations jobs and schedules; the policy. key table, the refusals route, rule administration through the repository PATCH, the lifecycle rule at tombstone, and observability's metrics, alerts and audit events all cited from their owners. Two Design sections built once for the format wave's findings: per-ecosystem OSV coverage with coordinate mapping and version ordering (Julia by UUID, Swift by URL, OS-package repositories by declared release, conda only through the cataloguer's pkg:conda PURLs) and per-format refusal binding with a closed Binds set and pending rows for uncaptured formats. Q9 adopted (one OSV schema, several sources; Homebrew's database becomes usable by configuration) and Q10 (a hijacked HTTP/1.1 status line naming the condition, canonical fallback on HTTP/2). 23 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for scanning artifacts and enforcing supply-chain policy at the registry boundary - blocking by vulnerability, licence or signature state, on both hosted and proxied content."
 author: michielvha
 goal: "Make the registry a policy enforcement point rather than a passive store, so a rule about what may enter a build is applied where every artifact already passes."
@@ -9,6 +9,7 @@ issue: 15
 created: 2026-09-23
 covers:
   - "internal/policy/**"
+  - "conformance/*/policy_test.go"
 ---
 
 # Plan: Supply-chain policy and scanning
@@ -52,21 +53,61 @@ else's publishing schedule.
 
 A third dependency is forward rather than backward: signature and attestation state is consumed
 here as a verdict and produced by a sibling spec,
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop). This
-spec defines the consumer interface that sibling implements, so the verdict's shape is pinned on
-the consuming side (the resolved verification-ownership question).
+`docs/internal/plans/foundation/artifact-verification.md`, authored 2026-09-27. This spec defines
+the consumer interface that sibling implements, so the verdict's shape is pinned on the consuming
+side (the resolved verification-ownership question); `artifact-verification.md` AC1 proves its
+`internal/verify` against this spec's AC15 rule in place of the fixture source.
+
+The foundation authoring wave of 2026-09-27 placed four more counterparties this spec now cites
+rather than owes. Scans and feed syncs run on the shared queue of `async-operations.md`, whose
+Q9 moved the queue core to the start of step 4b so that verification and policy consume it
+rather than each carrying a runner. Policy rules are administered and refusal records read
+through `management-api.md`, and `web-ui.md` renders those records on its Refusals tab. The
+`policy.` configuration keys are tabled here in the three-column shape `deployment.md`'s
+`scripts/check-config-keys.js` checks, and `deployment.md` also records two facts this spec acts
+on in "Rendering a refusal": Go's `net/http` writes only the canonical reason phrase, and the
+main listener speaks HTTP/1.1 by default so that a phrase reaches the clients that show nothing
+else. `observability.md` names this layer's metrics, alerts and audit events, which the Test
+Plan rows of AC5 and AC6 now assert. `repository-lifecycle.md` fixes what happens to this
+layer's records when a repository is deleted.
+
+Every Tier 2 and Tier 3 format spec was authored in the same wave against captured client
+traffic, and each reported to this spec what its clients do with a refusal and what OSV holds
+for its ecosystem. Those findings are folded into two Design sections, "What the feed covers,
+per ecosystem" and "When a refusal binds, per format", and into two decisions adopted under the
+standing delegation: advisory sources (was Q9) and the refusal status line (was Q10). Where a
+format spec has not yet captured its clients' fallback behaviour the table says `pending`, and
+the format's policy conformance case (AC1 for the hosted path) is where the row gets filled,
+because the exact response shape and the client's reaction are checked against captured traffic
+when that case is written, never assumed from another format's.
 
 ## Scope
 
 **In scope**
 
 - Vulnerability scanning of stored artifacts, on ingest and whenever advisories change, matching
-  both the artifact's coordinates and a component inventory catalogued from its bytes against a
-  single advisory feed, OSV.
+  both the artifact's coordinates and a component inventory catalogued from its bytes against
+  advisory data in one schema, OSV's: the OSV feed by default, plus operator-declared sources
+  in the same schema (the resolved advisory-sources decision, was Q9).
+- Per-ecosystem coverage decided from the sources' own ecosystem lists, the per-ecosystem
+  coordinate mapping and version ordering the matcher needs, and a per-repository ecosystem
+  declaration for OS-package formats whose OSV ecosystems are keyed by distribution release.
 - Licence detection from the artifact bytes, and licence policy.
 - Signature and attestation state as a policy input, consumed as a verdict produced by
-  `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop),
-  through a consumer interface this spec defines.
+  `docs/internal/plans/foundation/artifact-verification.md` through a consumer interface this
+  spec defines.
+- A read-only advisory and condemnation query reached through `Deps`, so a handler can render
+  its ecosystem's in-band advisory channel (NuGet `VulnerabilityInfo`, Hex advisory links,
+  Composer's security-advisories route, Open VSX's control document) without importing the
+  policy layer.
+- The rendering of a refusal at the transport level: the status line's reason phrase on HTTP/1.1
+  and the canonical fallback (the resolved refusal-status-line decision, was Q10); the body stays
+  the handler's, in its protocol's shape.
+- A per-format statement of when a refusal binds on the client, with the deployment precondition
+  each row carries, generated into the operator documentation by `deployment.md`.
+- The `policy.` configuration keys, scans and feed syncs as `internal/async` work, the
+  management API's rule administration and refusal read route, and this layer's metrics, alerts
+  and audit events, each cited from its owning spec.
 - Policy evaluation at the boundary: allow, warn, or refuse, per repository, evaluated inside the
   shared resolution calls every handler already depends on.
 - Enforcement on **both** paths, hosted and proxied, and retroactively: every resolution
@@ -85,6 +126,12 @@ the consuming side (the resolved verification-ownership question).
   signature envelopes belong to `artifact-verification.md`.
 - A quarantine content state. Condemned content is either purged or retained-and-refused (the
   resolved disposition question); no third state exists.
+- Advisory data in any schema but OSV's. CPANSA and the Arch security tracker publish their own
+  schemas and are not consumed until an OSV-schema export of them exists (the resolved
+  advisory-sources decision, was Q9, records why).
+- Restricting a client's egress. Where a refusal binds only with restricted egress, the control
+  is on the build fleet and `deployment.md` ("Refusal enforceability is a deployment
+  precondition") owns the operational half; this spec states the condition per format.
 
 ## Design
 
@@ -103,6 +150,20 @@ unreachable feed would otherwise leave an artifact unscanned and therefore refus
 with nothing telling the operator why. Scan failures retry, and an artifact that stays
 unscanned past a bound raises an operator alert rather than silently never serving.
 
+A scan is a job of kind `policy.scan` on the shared queue (`async-operations.md`, its kind
+table), enqueued by the ingest hook on the hosted path and by the cache-commit hook on the
+proxied path, in the committing transaction, so a committed artifact always has a scan queued
+and an aborted commit never does. Its coalesce key is `scan:{digest}`, so one blob reaching the
+store through two coordinates is scanned once. The kind declares its own retry bound and
+backoff rather than taking the runner's defaults, because under refuse-until-scanned a scan
+that gives up is a refusal with no finding behind it; past that bound the artifact is counted in
+the `policy_unscanned_past_bound` gauge, whose alert `ArtifactUnscannedPastBound`
+(`observability.md`) is the operator signal AC6 requires, and the job's `last_error` is what the
+operator reads. The bound is `policy.scan.unscanned_alert_after` (Configuration, below), measured
+from the commit that enqueued the scan, so a queue that never ran the job counts the same as one
+that ran it eight times and failed. This layer owns no runner, worker pool or ticker: the
+architecture test `async-operations.md` AC17 generalises holds `internal/policy` to that.
+
 Enforcement is **retroactive** (the resolved retroactivity question): every resolution evaluates
 the policy state the artifact has now, not the state it had when it was published or cached, so
 an advisory published this morning refuses content cached last year, on both paths. Applying a
@@ -115,18 +176,41 @@ the advisory is what makes that diagnosable.
 
 ### The advisory feed and its freshness
 
-OSV is the single advisory feed (the resolved feed question). It is format-aware across most of
-the catalogue's ecosystems, speaks the coordinate query shape the core can answer without
-parsing, and carries package URLs the component inventory can be matched against. One feed means
-no merge semantics for disagreeing advisories and no two severity scales. An ecosystem OSV does
-not cover has no advisory data, and a rule depending on it is refused at configuration like any
-other rule that cannot bind (the resolved enforcement-under-`streamed` question states the
-general rule).
+Advisory data comes in one schema, OSV's, from one feed by default (the resolved feed question,
+was Q1, as revised by the resolved advisory-sources decision, was Q9). OSV is format-aware across
+most of the catalogue's ecosystems, speaks the coordinate query shape the core can answer without
+parsing, and carries package URLs the component inventory can be matched against. One schema
+means no merge semantics for disagreeing advisories and no two severity scales, which is what the
+single-feed decision was bought for; the format authoring wave then showed that nine ecosystems
+have no OSV data while two of them have OSV-schema databases published elsewhere (Homebrew's, with
+13,023 records, `homebrew.md`), so the unit the decision protects is the **schema**, not the
+**host**. An operator may therefore declare additional sources in `policy.feed.sources`, each an
+OSV-schema bulk export (`ecosystems.txt` plus `{ecosystem}/all.zip` at a root URL) declaring the
+ecosystems it covers. Sources are a union, never a merge: an advisory is identified by its OSV
+`id` and `aliases`, the same advisory from two sources is one record with two sources, and
+records never contradict each other because a record is one source's statement, so a rule
+evaluates each record on its own fields. Freshness, sync and staleness (below) apply per source,
+and an ecosystem is covered when at least one configured source lists it. Data in any other
+schema is out of scope; CPANSA (2,117 advisories, `cpan.md`) and the Arch security tracker
+(2,444 records, `arch.md`) are named in the coverage table below as the reason a conversion would
+be worth having, and nothing here consumes them until one exists.
+
+An ecosystem no configured source covers has no advisory data, and a rule depending on it is
+refused at configuration like any other rule that cannot bind (the resolved
+enforcement-under-`streamed` question states the general rule). Coverage is decided from the
+sources' own ecosystem lists at sync time, never from a list compiled into the binary, because
+OSV adds ecosystems (it recognises `Homebrew` while serving no records for it, `homebrew.md`) and
+an ecosystem with a name and no records is uncovered: a rule binds when the ecosystem is listed
+**and** its export is non-empty, and the refusal at configuration names which of the two failed.
 
 Feed sync is on by default, alongside the preconfigured upstreams in `proxy-cache.md`, because
-the security-signal rule's feed channel is only a guarantee if it runs without configuration.
-Advisory data has a freshness time, and past an instance-level staleness threshold (configurable,
-defaulting to 24 hours) policy **fails closed**: a repository whose policy carries an
+the security-signal rule's feed channel is only a guarantee if it runs without configuration. It
+is a `Schedule` of kind `policy.feed_sync` on the shared scheduler (`async-operations.md`, "The
+scheduler"), one per source, with period `policy.feed.sync_interval` and exclusivity key the kind
+so two processes never sync the same source at once; under offline mode the schedule is disabled,
+which is how "suspends the feed's network sync" is implemented rather than a flag the sync
+checks. Advisory data has a freshness time, and past an instance-level staleness threshold
+(`policy.feed.staleness_threshold`, default 24 hours) policy **fails closed**: a repository whose policy carries an
 advisory-dependent rule (a vulnerability threshold or a malware rule) refuses resolutions with a
 refusal naming stale advisory data rather than any advisory, recorded like every other refusal,
 and the operator is alerted. Rules that do not read advisory data (licence, signature verdict)
@@ -145,7 +229,75 @@ across the air gap by the operator, and freshness is measured from the newest mo
 among the imported records, never from the time of the import, so carrying an old export in does
 not make stale data look fresh. The staleness threshold is not suspended offline (the resolved
 offline-freshness question): an air-gapped instance that enforces advisory policy imports on a
-cadence inside the threshold, or fails closed.
+cadence inside the threshold, or fails closed. Offline mode is the single key `proxy.offline`
+(`proxy-cache.md` AC5); this spec adds no second switch.
+
+### What the feed covers, per ecosystem
+
+Coordinate-level matching needs, per ecosystem, a coordinate the core knows mapped onto the
+coordinate OSV keys the ecosystem by, and a version ordering under which OSV's `ECOSYSTEM` ranges
+are evaluated. Both are ecosystem-specific and both were grounded by the format specs against
+OSV's `ecosystems.txt` and query API (each row names the spec that captured it). The matcher
+therefore carries a per-ecosystem table in `internal/policy`, which is core-owned knowledge about
+the feed's key space, not format knowledge: it never parses an artifact or a request, and the
+cataloguer's PURL types are the same table's third column, so the coordinate tier and the
+inventory tier agree on what a package is called. Version ordering is taken from a vendored
+implementation per scheme (semver, PEP 440, Maven, RPM EVR, Debian, Alpine, opam, Cargo, Go), and
+a range under an ordering the matcher does not implement binds no rule: the ecosystem is treated
+as uncovered and the configuration refusal says why. AC17 asserts the mapping and the ordering
+per row.
+
+| Ecosystem | OSV data | Coordinate the matcher keys on | Grounded in |
+|---|---|---|---|
+| npm, PyPI, Maven, Go, crates.io, NuGet, Packagist, Pub, Hex | covered | name and version as the ecosystem spells them; Go's `GO-` advisories arrive through OSV; RustSec is OSV's crates.io data | `npm.md`, `pypi.md`, `maven.md`, `go-modules.md`, `cargo.md`, `nuget.md`, `composer.md`, `pub.md`, `hex.md` |
+| RubyGems | covered by OSV; no format spec yet | name and version | to be grounded by the RubyGems spec when authored |
+| OCI images, generic | no ecosystem, by construction | nothing at coordinate level; OCI is matched through the component inventory (AC10); generic has no ecosystem to match | `oci.md`, `generic.md` |
+| Helm charts, Ansible collections | `pending`: neither spec states whether `ecosystems.txt` lists it, and this spec does not assume | whatever the check at the format's policy case finds; until then an advisory rule on either is refused at configuration as uncovered, which is the safe default of the coverage rule | `helm.md`, `ansible-collections.md` (rows to fill) |
+| CRAN | covered (`CRAN`, RSEC advisories, `pkg:cran/`) | package name and version | `cran.md` |
+| Hackage | covered (`Hackage`, 32 HSEC advisories) | package name and version | `hackage.md` |
+| opam | covered (29 OSEC advisories over 18 packages, no `MAL-` entries) | package name and version under **opam's** version ordering, where `~` sorts before everything | `opam.md` |
+| Julia | covered (`Julia`, 1,717 JLSEC advisories, no `MAL-` entries) | the package **UUID**, `pkg:julia/{name}?uuid={uuid}`, never the name alone, because a name is unique only within one registry | `julia.md` |
+| Swift | covered only as `SwiftURL`, keyed by Git URL | the package's **bound repository URLs** (the identifiers binding `swift.md` adopted), not its scope and name | `swift.md` |
+| Open VSX | covered (`VSCode` and `VSCode:https://open-vsx.org`, 21 advisories, all `MAL-`) | `namespace.name` matched **case-insensitively** across both ecosystem spellings, semver ordering, PURL type `vscode-extension`; every entry is a security signal under the shared rule | `openvsx.md` |
+| Debian, Ubuntu | covered, keyed by **source** package and release (`Debian:12`, `Ubuntu:24.04`) | source package, source version and the repository's declared release qualifier (below) | `debian.md` |
+| RPM distributions | covered for `Red Hat`, `Rocky Linux`, `AlmaLinux`, `SUSE`, `openSUSE`, each by release; **Fedora is not an OSV ecosystem** | package name and EVR under the repository's declared ecosystem (below) | `rpm.md` |
+| Alpine | covered (`Alpine:v3.N`, 4,679 records, no `MAL-` entries) | the **origin** (source) package under the repository's declared release (below) | `alpine.md` |
+| Conda | no ecosystem in the OSV schema | nothing at coordinate level; the cataloguer must open `.conda` and `.tar.bz2` archives and emit `pkg:conda/` PURLs, which the Phase 1 library selection checks for; until it does, byte-dependent rules on conda are refused like any uncovered format | `conda.md` |
+| Terraform / OpenTofu | no ecosystem | advisory rules refused at configuration | `terraform.md` |
+| Conan | `ConanCenter` is defined and holds **no data** | advisory rules refused at configuration: a listed ecosystem with an empty export is uncovered | `conan.md` |
+| Vagrant, Chef, Puppet, LuaRocks | no ecosystem (Puppet also has no PURL type) | advisory rules refused at configuration | `vagrant.md`, `chef.md`, `puppet.md`, `luarocks.md` |
+| CPAN | no ecosystem; CPANSA publishes 2,117 advisories in its own schema | advisory rules refused at configuration until an OSV-schema export of CPANSA is declared as a source | `cpan.md` |
+| Arch | no ecosystem; Arch's tracker publishes 2,444 records keyed by package base in its own schema | as CPAN | `arch.md` |
+| Homebrew | `Homebrew` is listed and serves no records; Homebrew's own OSV-format database holds 13,023 | uncovered by the default feed; covered the moment the operator declares Homebrew's database as a source, with no code change, which is the case the advisory-sources decision exists for | `homebrew.md` |
+
+**OS-package repositories declare their ecosystem.** OSV keys the Debian, Ubuntu, RPM and Alpine
+ecosystems by distribution release, and a repository of one of those formats can serve any
+release, so the core cannot infer which advisory set applies. A `local` or `remote` repository of
+a format in this class carries an `advisory_ecosystem` setting (`Alpine:v3.20`, `Debian:12`,
+`Rocky Linux:9`) validated at configuration against the sources' ecosystem lists and refused with
+the unknown value named; an advisory-dependent rule on such a repository with no declaration is
+refused at configuration as unbindable, and coordinate matching for the repository uses the
+declared ecosystem and nothing else. The setting is a core-parsed field of the repository, not
+part of the handler's opaque `settings` document, because the core evaluates it and the handler
+never reads it.
+
+### Configuration
+
+The keys this spec owns, in the three-column shape `scripts/check-config-keys.js` checks against
+`deployment.md`'s schema:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `policy.feed.url` | `https://osv-vulnerabilities.storage.googleapis.com` | Root of the default OSV bulk export: `ecosystems.txt` and `{ecosystem}/all.zip` under it |
+| `policy.feed.sources` | `[]` | Additional OSV-schema sources, each `{name, url, ecosystems}`; file-only; `ecosystems` restricts which of the source's listed ecosystems this instance consumes, empty meaning all |
+| `policy.feed.sync_interval` | `1h` | Period of each source's `policy.feed_sync` schedule |
+| `policy.feed.staleness_threshold` | `24h` | Age of a source's newest record past which advisory-dependent rules on its ecosystems fail closed |
+| `policy.scan.unscanned_alert_after` | `1h` | Time from commit after which an unscanned artifact counts in `policy_unscanned_past_bound` |
+
+The advisory feed's own request path is an egress the adapter layer does not own: it is not an
+upstream of any repository, so `upstream-adapters.md`'s allowlists do not apply, and the sync
+client follows no redirect off the configured root and sends no credential, which
+`internal/policy/feed_sync_test.go` asserts at the network layer alongside AC16.
 
 ### The proxied path is the hard one
 
@@ -222,10 +374,147 @@ fetch-and-cache entry evaluates coordinate-decidable rules before any upstream r
 The accepted cost is that evaluation happens mid-request rather than up front: a handler may
 have parsed and begun work before the refusal arrives, and every handler must render the typed
 refusal correctly. The refusal type is declared beside the `Deps` consumer interfaces in
-`internal/format`, so a handler recognises it without importing `internal/policy` (AC4), and
-renders it in its protocol's own error shape, because a policy refusal an OCI client shows as a
-malformed response is a refusal nobody can act on. AC1's conformance case polices that rendering
-per format, since only a real client can show whether the refusal surfaces as one.
+`internal/format`, so a handler recognises it without importing `internal/policy` (AC4;
+`format-handler-interface.md` AC14 holds the declaration from its side), and renders it in its
+protocol's own error shape, because a policy refusal an OCI client shows as a malformed response
+is a refusal nobody can act on. AC1's conformance case polices that rendering per format, since
+only a real client can show whether the refusal surfaces as one; the exact response shape each
+format's clients need is checked against that format's captured traffic when its policy case is
+written, and each format spec authored in the wave carries a section on rendering the shared
+refusal on its wire that AC1 tests against.
+
+Rules are administered through the management API: the repository's `policy` document is a
+field of `PATCH /api/v1/repositories/{name}` (admin, `management-api.md`'s repository
+administration), and a rule that cannot bind is refused there as `validation` (422) with the
+reason AC11 names, so an unenforceable policy never exists as a stored one. Each accepted change
+emits the `policy.rule.update` audit event (`observability.md`). Refusal records are read at
+`GET /api/v1/repositories/{name}/refusals` under `pull` (`management-api.md`'s endpoint table;
+`web-ui.md`'s Refusals tab renders the same route), which is the "queryable afterwards" of AC5
+made concrete: a principal who may pull the repository may learn why a pull was refused.
+`repository-lifecycle.md` fixes the records' fate on deletion: rules are dropped at tombstone
+time with the repository's other configuration, and condemnation and refusal records are never
+dropped, because a refusal record must explain a refusal after the repository as well as after
+the blob is gone (AC22).
+
+### A handler may read advisories, never evaluate them
+
+Four format specs need advisory data in a served document rather than as a refusal: NuGet's
+registration pages carry `VulnerabilityInfo` (`nuget.md`), Hex's package payload carries
+advisory links (`hex.md`), Composer serves a security-advisories route (`composer.md`), and Open
+VSX's control document carries a `malicious` list that is the only refusal an editor explains
+(`openvsx.md`). Without a shared read each handler would either invent its own advisory source or
+import `internal/policy`, and AC4 forbids the second. `Deps` therefore carries a fourth
+policy-layer consumer interface, the **advisory reader**, declared in `internal/format` beside the
+refusal type: given an ecosystem and a coordinate or a coordinate range, it returns the advisory
+records matching it and the condemnations standing against it (each with its sources), read from
+the same data the evaluator uses, and nothing else. It refuses nothing, evaluates no rule and
+reads no bytes, so it is not policy-enforcing and cannot be used to bypass the three
+policy-enforcing calls: it returns facts about coordinates, never content. A handler renders what
+it reads in its own document shape; under a stale feed it reads whatever the last sync stored,
+because a served advisory list is informational and the fail-closed rule belongs to the
+enforcing calls. The five pinned methods are unchanged, and `format-handler-interface.md` records
+the interface beside `Verifier` and the refusal type (a consequence recorded there). AC19 proves
+the reader against a fixture handler holding only `Deps`.
+
+### Rendering a refusal: the status line, the phrase and the body
+
+The format authoring wave captured what each client shows its user when this registry answers a
+refusal, and the finding is uncomfortable: many clients print only the HTTP status line and
+never the body. Maven prints `status code: 403, reason phrase: Forbidden (403)` and Gradle
+`Received status code 403 from server: Forbidden` (`maven.md`); apt prints `403  Forbidden` and
+then blames the signature (`debian.md`); R and pak show the status line and renv not even the
+status (`cran.md`); the Chef clients, the CPAN clients, Hex's `mix` and `rebar3` and conda's four
+clients behave the same (`chef.md`, `cpan.md`, `hex.md`, `conda.md`). The counter-examples are
+few: SwiftPM prints a problem document's `detail`, but only on its JSON routes and never on the
+archive route (`swift.md`); pacman builds its own message from the status code (`arch.md`); brew
+prints curl's `(22) ... 403` (`homebrew.md`). For the first group the only text this registry
+can put in front of a user is the reason phrase, and HTTP/2 has no reason phrase (RFC 9113
+removes it). `deployment.md` settled the transport half: the main listener speaks HTTP/1.1 by
+default (`server.http2: false`, its resolved HTTP-version decision), and behind a proxy the
+requirement is documented rather than enforced.
+
+The half this spec owns is the write. Go's `net/http` writes the canonical `http.StatusText` for
+every status and offers no API for another phrase, so a phrase naming the condition needs the
+shared refusal path to take the connection (`http.Hijacker`) and write the status line itself,
+which only works on HTTP/1.1 (the resolved refusal-status-line decision, was Q10). The refusal
+writer lives in `internal/format` beside the refusal type, as `WriteRefusal(w, r, refusal, body)`:
+the handler chooses the status code and the body in its protocol's shape and calls the writer;
+on an HTTP/1.1 connection the writer hijacks, writes the status line `HTTP/1.1 {code} {phrase}`
+with a phrase of the form `Refused by policy: {condition}` (ASCII, at most 120 bytes, the
+condition being the advisory or signal id, the licence, `stale advisory data` or `unscanned`,
+never a URL and never CR or LF), writes the handler's headers and body, and closes or returns
+the connection according to the request's keep-alive state; on HTTP/2, or wherever the
+`ResponseWriter` is not a `Hijacker`, it falls back to the standard write with the canonical
+phrase, and the body carries the same condition. The writer is the only place a status line is
+hand-written in this codebase, held by an architecture test (AC18), because a hand-written status
+line is a protocol bug waiting to happen and it must happen in exactly one place. The status code
+is the handler's choice within its protocol (OCI's `DENIED` error under `403`, Conan's `403`
+because its client falls through only on `404`, Chef's `403` because Berkshelf halts on nothing
+else), and the phrase is the same across formats so an operator recognises it in any client's
+output. AC18 asserts the raw status line on an HTTP/1.1 socket and the canonical fallback on
+HTTP/2; the first reason-phrase-only client to reach conformance (Maven, Tier 1) asserts that
+the phrase reaches the user, in that format's policy case.
+
+### When a refusal binds, per format
+
+A refusal is only a control if the client stops. The wave found three ways a client does not: it
+falls back to another configured repository or to the ecosystem's origin, it follows URLs inside
+the metadata this registry served, or it takes a refused index as "skip this repository" and
+installs from another. The general answer to the second, from `opam.md` and `openvsx.md`, is a
+rule every proxied format now follows: **the registry regenerates every served document and owns
+every URL in it**. An opam file's source URL is rewritten to this registry's archive route with
+mirrors and `swhid` removed; an Open VSX document is rendered from records, never relayed, so its
+`files.download` URL is ours. `upstream-adapters.md` holds the transport half of the same rule:
+no upstream `Location` reaches a client (its AC8) and no credential follows metadata to another
+host (its AC6). A document relayed as fetched can refuse nothing, because the client will fetch
+its URLs from wherever they point.
+
+The first and third have no registry-side fix, and the table below states per format what
+holds, under what condition, and what the client shows. The `Binds` column takes one of five
+values: `holds` (the client stops on the refusal with no setting); `client-setting` (holds only
+under a named client configuration, which the format spec's recipe sets); `restricted-egress`
+(holds only when the client's network egress is restricted to this registry, the deployment
+precondition `deployment.md` operationalises); `package-level` (a refused package holds but a
+refused index makes the client skip the repository, so refusals must stay at package
+granularity and the recipe configures a single source); `pending` (not yet captured; filled when
+the format's policy case is written). `deployment.md` generates its operator page "When a
+refusal actually blocks an install" from this table, so the table's shape is fixed and AC20
+checks it lists every catalogue ecosystem.
+
+| Format | Binds | Condition and what the client shows | Grounded in |
+|---|---|---|---|
+| generic | pending | no ecosystem client; a plain HTTP error | `generic.md` |
+| OCI | pending | `DENIED` error under `403`; fallback behaviour of `docker`, `podman`, `oras` not yet captured | `oci.md` |
+| npm, PyPI, Ansible collections, Go modules, NuGet, Helm, Cargo, Pub, RubyGems | pending | rendering sections exist; fallback not yet captured | the format specs |
+| Maven | pending | Maven and Gradle print the status line only; multi-repository fallback not yet captured | `maven.md` |
+| Debian | package-level | apt prints the status line and phrase; a refused package leaks when a second source offers the identical version (apt installs it with exit 0), so the recipe is a single source | `debian.md` |
+| RPM | package-level | a refused package does not fall back; a refused `repomd.xml` makes dnf5 (`skip_if_unavailable` default) and zypper skip the repository and install from others; recipe is a single `baseurl` | `rpm.md` |
+| Alpine | package-level | a refused package does not fall back; a refused or untrusted index is skipped silently; apk installs the highest version across all configured repositories, so dependency confusion is the default and the recipe is a single repository | `alpine.md` |
+| Composer | pending | Packagist's malware list is a security signal; fallback not yet captured | `composer.md` |
+| Conda | pending | phrase-only on all four clients; fallback not yet captured | `conda.md` |
+| Conan | holds | halts on `401`, `403` and `5xx`; falls through only on `404`, so a policy refusal is `403` | `conan.md` |
+| Swift | holds | on version routes: a `problem` entry in the release list makes 6.4 downgrade silently, so refusals never go there; detail shown on JSON routes only | `swift.md` |
+| Hex | pending | phrase-only on `mix` and `rebar3`; fallback not yet captured | `hex.md` |
+| CRAN | pending | R and pak show the status line, renv nothing; fallback not yet captured | `cran.md` |
+| Terraform / OpenTofu | holds | no client falls back to origin (captured with egress open); a provider `403` is misreported by the client as a credential rejection | `terraform.md` |
+| Vagrant | holds | direct URL lists fall back on a `GET` failure, so refusals answer `HEAD` and `GET` alike | `vagrant.md` |
+| Chef | holds | Berkshelf halts on `403` and falls through on any other universe status, so `403` is the only refusal code | `chef.md` |
+| Puppet | holds | one Forge per client; `403` fails the run | `puppet.md` |
+| LuaRocks | restricted-egress | a refused manifest falls through to the next server group and luarocks.org stays behind any `--server`; the client unions servers and takes the highest version | `luarocks.md` |
+| Hackage | holds (hosted, virtual) / restricted-egress (remote) | hosted and virtual repositories sign an empty `mirrors.json`; a remote serves Hackage's own, and both cabal lines retry a refused request on every signed mirror | `hackage.md` |
+| CPAN | restricted-egress or client-setting | every client has a route back to public CPAN (Carton hard-codes cpan.metacpan.org and backpan; cpanm consults cpanmetadb and MetaCPAN; cpm never reads the mirror index by default; CPAN.pm 2.38 `pushy_https` ignores the mirror list); `cpanm --mirror-only` is the one captured setting that holds | `cpan.md` |
+| opam | holds | by rewrite: every source URL is ours, mirrors and `swhid` removed, the relative `archive-mirrors: "cache"` kept | `opam.md` |
+| Julia | restricted-egress | Pkg falls back to GitHub on any server failure: a `403` on a proxied General package installed from GitHub with exit 0 and no message on both clients | `julia.md` |
+| Homebrew | client-setting | `HOMEBREW_ARTIFACT_DOMAIN` with `HOMEBREW_ARTIFACT_DOMAIN_NO_FALLBACK` on 7.x keeps a bottle refusal; the API and bottle domains fall back on any other failure; brew prints `curl: (22) ... 403` | `homebrew.md` |
+| Open VSX | holds | by regeneration: editors retry at `fallbackAssetUri` and follow any `files.download` URL, so every URL is ours; a refused download is written out as a corrupt package, and whole-extension condemnations are rendered into the control document's `malicious` list, the only refusal an editor explains | `openvsx.md` |
+| Arch | client-setting | `SigLevel = DatabaseRequired` in the recipe: under the shipped `DatabaseOptional` a `.db.sig` answering `403` or `404` is silently accepted; a refused database fails the whole command; pacman builds its own message | `arch.md` |
+
+Two rows carry a warning beyond the refusal: Alpine and LuaRocks clients union every configured
+repository and take the highest version, and Chef's Berkshelf took a higher version from a
+second source (`chef.md`), so on those formats a refusal here never prevents an install from
+elsewhere, and the operator documentation says so beside the table. The security-signal rule's
+purge is unaffected by any row: content that is gone from the cache cannot be served whatever
+the client does next.
 
 ### Where scanning gets its component inventory
 
@@ -240,9 +529,14 @@ cataloguer in the shared layer** (`internal/policy`) reads artifact bytes from t
 produces a component inventory - package URLs with versions and detected licences, including
 the OS packages and bundled libraries inside OCI layers. It is an embedded library of the Syft
 or OSV-SCALIBR class, selected in Phase 1 against Apache 2.0 compatibility and catalogue
-coverage. It catalogues only; matching is against the one OSV feed, so the inventory tier adds
-no second advisory source. Licences are detected from the bytes by the same pass, which is what
-AC3 enforces against.
+coverage, where coverage is checked row by row against the per-ecosystem table above: in
+particular the library must open `.conda` and `.tar.bz2` archives and emit `pkg:conda/` PURLs,
+because conda has no coordinate-level coverage at all (`conda.md`) and the inventory is the only
+tier that can condemn a conda package. The PURL types the cataloguer emits are the same table's
+column, so the inventory tier and the coordinate tier match against the same OSV keys. It
+catalogues only; matching is against the configured OSV-schema sources, so the inventory tier
+adds no advisory source of its own. Licences are detected from the bytes by the same pass, which
+is what AC3 enforces against.
 
 The opaque-metadata rule (`data-model.md`, the settled metadata typing) is untouched, because it
 governs the shared schema's metadata documents, and the cataloguer neither reads nor writes
@@ -325,16 +619,31 @@ on re-fetch.
 Verification is format-entangled - Cosign lives in OCI referrers, npm provenance in the
 packument, PyPI attestations in the simple index - and it has hard questions of its own (trust
 roots, key distribution, transparency-log checks). It is owned by a sibling spec,
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop), and
-this spec consumes its output (the resolved verification-ownership question).
+`docs/internal/plans/foundation/artifact-verification.md`, and this spec consumes its output (the
+resolved verification-ownership question).
 
 The consumer owns the interface, per the `go` skill: `internal/policy` defines a verdict source
 answering, per artifact digest, one of verified, failed or absent, with the identity a verified
-verdict was checked against. A repository rule may require a verified verdict, optionally from a
-named identity; an absent verdict is not a verified one. Until the producer exists there is no
-real verdict source, and a signature rule is refused at configuration like any rule that cannot
-bind. AC15 proves the consumer side against a fixture source, so the rule's semantics are fixed
-before the producer is written rather than shaped by it.
+verdict was checked against. The producer, `internal/verify`, implements it (its AC1) and fixed
+three things on the verdict this spec's rules now read. A verified verdict carries a **chain**,
+`publisher` when the artifact's own signature or attestation verified, or `repository-chain` when
+the artifact is vouched for by a verified signed index that names its digest (CPAN `CHECKSUMS`,
+Hackage's TUF chain, Homebrew's JWS documents, apk and Arch database entries, RPM `repomd.xml`,
+Terraform `SHA256SUMS`); a rule requiring a publisher identity binds only to `publisher`, and a
+rule requiring any verified verdict accepts both. A verdict carries a **revocation** field with
+the state the producer's revocation mode yielded, so a rule may be strict on revocation (refuse
+unless revocation was checked and clear) or accept a `cached`-mode answer. And a verdict computed
+under a **superseded trust-set revision** is answered `absent` until re-evaluation replaces it, so
+a trust change fails closed on this side without this spec doing anything. A repository rule may
+require a verified verdict, optionally with chain `publisher`, optionally from a named identity in
+the producer's canonical identity form, optionally strict on revocation; an absent verdict is not a
+verified one, and a `failed` reason from the producer's closed list is recorded in the refusal
+(AC5) as the condition. A signature rule on a format whose producer entry answers absent for every
+artifact (Puppet, Vagrant, `puppet.md` and `vagrant.md`) is not refused at configuration, because
+the verdict source exists and answers; it refuses every artifact, which is the rule's meaning and
+the operator's choice. AC15 proves the consumer side against a fixture source, and the producer's
+own AC1 runs the same test with `internal/verify` in the fixture's place, so the rule's semantics
+are fixed on this side and met on that one.
 
 ## Acceptance Criteria
 
@@ -354,21 +663,29 @@ before the producer is written rather than shaped by it.
       imports `internal/policy/**`, and `internal/policy/**`, the cataloguer included, imports
       no handler package.
 - [ ] AC5: Every refusal is recorded with the artifact, the rule that refused it and the
-      advisory, licence, security signal or stale-feed condition that triggered it, and is
-      queryable afterwards - including after the refused content's blob has been evicted,
-      purged or collected.
+      advisory, licence, security signal, verdict failure or stale-feed condition that triggered
+      it, and is queryable afterwards through `GET /api/v1/repositories/{name}/refusals` under
+      `pull` - including after the refused content's blob has been evicted, purged or collected;
+      each refusal increments `policy_refusals_total{format,condition}` and emits the
+      `policy.refusal` audit event, each condemnation the `policy.condemnation` event, and each
+      accepted rule change the `policy.rule.update` event, with the attributes
+      `observability.md` registers.
 - [ ] AC6: A repository configured to refuse-until-scanned refuses an unscanned artifact, and on
       a cache miss no byte reaches any client, the initiating one included, before the scan
       result lands; one configured to serve-pending-scan serves it and, when the scan finds a
-      violation, refuses from then on. A scan failure leaves the artifact observably unscanned
-      with an operator signal past the retry bound, never silently unservable.
+      violation, refuses from then on. Every committed artifact has exactly one `policy.scan` job
+      enqueued in its committing transaction (coalesced by digest), and an aborted commit
+      enqueues none. A scan failure leaves the artifact observably unscanned, never silently
+      unservable: past `policy.scan.unscanned_alert_after` it counts in
+      `policy_unscanned_past_bound`, which is the `ArtifactUnscannedPastBound` alert's input, and
+      the job's `last_error` names the failure.
 - [ ] AC7: A new advisory affecting already-stored content causes that content to be refused on
       the next resolution without re-ingest and without re-reading its bytes, on both paths,
       including content whose cached bytes have since been evicted.
 - [ ] AC8: A coordinate-refused artifact requested through a remote repository is refused
       without any upstream fetch, asserted at the network layer: condemned content is neither
       fetched nor cached.
-- [ ] AC9: When advisory data is older than the staleness threshold, a repository whose policy
+- [ ] AC9: When advisory data is older than `policy.feed.staleness_threshold`, a repository whose policy
       carries an advisory-dependent rule refuses resolutions with an error naming stale
       advisory data and the operator is alerted, while a repository with only licence rules and
       a remote repository with no policy keep serving; the first sync that restores freshness
@@ -379,9 +696,13 @@ before the producer is written rather than shaped by it.
       documents are byte-identical before and after the image was catalogued.
 - [ ] AC11: A byte-dependent rule (licence, component-level vulnerability) attached to a remote
       repository under the `streamed` download policy, or to a format the cataloguer does not
-      cover, and an advisory-dependent rule on an ecosystem the feed does not cover, are each
-      refused at configuration with an error naming why; coordinate-level rules on the same
-      repositories are accepted and enforced.
+      cover, and an advisory-dependent rule on an ecosystem no configured source covers (not
+      listed, or listed with an empty export, as Conan's `ConanCenter` is) or on an OS-package
+      repository with no `advisory_ecosystem` declaration, are each refused at configuration
+      through `PATCH /api/v1/repositories/{name}` as `validation` with an error naming which
+      condition failed; an `advisory_ecosystem` value absent from every source's list is refused
+      the same way; coordinate-level rules on the same repositories are accepted and enforced,
+      and no unbindable rule is ever stored.
 - [ ] AC12: No content resolves around the policy check: a fixture handler constructed only with
       `Deps` receives the typed refusal from the metadata-resolution, blob-read and
       fetch-and-cache calls for a condemned coordinate, and no call it holds returns the
@@ -397,13 +718,61 @@ before the producer is written rather than shaped by it.
       alert fires.
 - [ ] AC15: A repository rule requiring a verified signature refuses an artifact whose consumed
       verdict is failed or absent and serves one whose verdict is verified, proven against a
-      fixture implementation of this spec's verdict-source interface; with no verdict source
-      configured, the rule is refused at configuration.
-- [ ] AC16: With the instance in offline mode the advisory feed performs no network sync
-      (asserted at the network layer), a local import of an OSV bulk export updates advisory
-      data, and freshness after the import is the newest modification time among the imported
-      records, so importing an export older than the staleness threshold leaves advisory-
-      dependent policy failing closed.
+      fixture implementation of this spec's verdict-source interface; a rule requiring chain
+      `publisher` refuses a `repository-chain` verdict and a rule requiring any verified verdict
+      accepts it; a rule strict on revocation refuses a verdict whose revocation state is not
+      clear; a verdict under a superseded trust-set revision is treated as absent; the refusal
+      record carries the producer's `failed` reason as its condition; with no verdict source
+      configured, the rule is refused at configuration. `artifact-verification.md` AC1 runs the
+      same cases with `internal/verify` in the fixture's place.
+- [ ] AC16: With the instance in offline mode (`proxy.offline`) every `policy.feed_sync` schedule
+      is disabled and the advisory feed performs no network sync (asserted at the network layer),
+      a local import of an OSV bulk export updates advisory data, and freshness after the import
+      is the newest modification time among the imported records, so importing an export older
+      than the staleness threshold leaves advisory-dependent policy failing closed.
+- [ ] AC17: For every row of "What the feed covers, per ecosystem" that is covered, a fixture
+      advisory in that ecosystem's OSV key form condemns the artifact whose core coordinate maps
+      onto it and nothing else: Julia by UUID and not by name, Swift by bound repository URL,
+      Debian by source package and the repository's declared release, Alpine by origin package,
+      Open VSX case-insensitively across both ecosystem spellings, and version ranges evaluated
+      under the ecosystem's own ordering (opam's `~` sorting before every other version, RPM EVR
+      with epoch, Debian versions, PEP 440 pre-releases, semver); a range under an ordering the
+      matcher does not implement leaves the ecosystem uncovered with the refusal at configuration
+      naming the ordering.
+- [ ] AC18: A refusal served on an HTTP/1.1 connection carries the status line
+      `HTTP/1.1 {code} Refused by policy: {condition}` observed on the raw socket, with the
+      handler's headers and body intact and the connection's keep-alive state honoured; the same
+      refusal over HTTP/2, or through a `ResponseWriter` that is not a `Hijacker`, carries the
+      canonical phrase and the same condition in the body; an architecture test asserts that
+      `internal/format`'s refusal writer is the only site in the module that writes a status line
+      by hand; the first reason-phrase-only client to reach conformance shows the phrase to the
+      user in its policy case.
+- [ ] AC19: A fixture handler constructed only with `Deps` reads, through the advisory reader, the
+      advisory records and standing condemnations (with sources) for an ecosystem and coordinate
+      or range, receives an empty answer for an uncovered ecosystem rather than an error, obtains
+      no content bytes through it, and imports nothing from `internal/policy`; under a stale feed
+      the reader answers from the last sync while the enforcing calls fail closed.
+- [ ] AC20: "When a refusal binds, per format" lists every ecosystem of `catalogue.md` exactly
+      once with a `Binds` value from the closed set, checked by `make verify`; `deployment.md`'s
+      operator page is generated from it and never hand-copied; and a `pending` row is replaced
+      by a captured value in the same change that lands that format's policy conformance case, so
+      no format reaches its policy case with its row still `pending`.
+- [ ] AC21: Advisory data from a second OSV-schema source declared in `policy.feed.sources` covers
+      the ecosystems it lists and no others: an advisory present in both sources is one record
+      with two sources; an ecosystem covered only by the second source binds rules, and a stale
+      second source fails closed for that ecosystem alone while the default feed's ecosystems keep
+      evaluating; a source whose `ecosystems.txt` cannot be read is refused at configuration; a
+      source in any other schema is refused at configuration naming the schema.
+- [ ] AC22: Deleting a repository leaves every condemnation and refusal record it held readable
+      with its reason, through the tombstone at and after tombstone time, while its policy rules
+      are dropped at tombstone time; recreating a repository under the same name starts with no
+      rules and inherits no refusal record.
+- [ ] AC23: Every `policy.` key in the Configuration table exists in `deployment.md`'s schema with
+      the same default and no other spec tables it, checked by `scripts/check-config-keys.js`
+      under `make verify`; each source's `policy.feed_sync` schedule runs at
+      `policy.feed.sync_interval` on the injected clock; the feed sync connects only to
+      configured source roots, follows no redirect off a root and sends no credential, asserted
+      at the network layer.
 
 ## Test Plan
 
@@ -413,38 +782,51 @@ before the producer is written rather than shaped by it.
 | AC2 | conformance | `conformance/oci/policy_test.go` (proxied mode; rule and advisory through the `policies` and `advisories` keys); `conformance/core/seed_test.go` (both provisioners reached through the seed path) |
 | AC3 | integration | `internal/policy/licence_test.go` (both paths, licence detected by the cataloguer) |
 | AC4 | architecture test | `internal/policy/arch_test.go` (both import directions) |
-| AC5 | integration | `internal/policy/audit_test.go` (including post-eviction, post-purge and stale-feed records) |
-| AC6 | integration | `internal/policy/scan_window_test.go` (window states, no byte to the initiating client under refuse-until-scanned, scan-failure observability) |
+| AC5 | integration | `internal/policy/audit_test.go` (including post-eviction, post-purge, stale-feed and verdict-failure records; `policy_refusals_total`, `policy.refusal`, `policy.condemnation` and `policy.rule.update` through `telemetry.NewTestRecorder`); `internal/manage/reads_test.go` (the refusals route under `pull`, shared with `management-api.md` AC28) |
+| AC6 | integration | `internal/policy/scan_window_test.go` (window states, no byte to the initiating client under refuse-until-scanned; one `policy.scan` job per commit and none on abort against the fixture runner; scan failure past `policy.scan.unscanned_alert_after` observed as `policy_unscanned_past_bound` through `telemetry.NewTestRecorder` with `last_error` set) |
 | AC7 | integration | `internal/policy/advisory_update_test.go` (both paths, including evicted content; cataloguer instrumented to prove no re-read) |
 | AC8 | integration | `internal/policy/prefetch_refusal_test.go` (network-level assertion) |
 | AC9 | integration | `internal/policy/feed_staleness_test.go` (injected clock across the threshold, three repository shapes, recovery sync) |
 | AC10 | integration | `internal/policy/inventory_test.go` (fixture OCI image with a vulnerable OS package in a layer, metadata-document digest compared before and after) |
-| AC11 | unit + integration | `internal/policy/rule_binding_test.go` (configuration rejection for each unbindable case, enforcement of the accepted coordinate rules) |
+| AC11 | unit + integration | `internal/policy/rule_binding_test.go` (configuration rejection for each unbindable case, listed-but-empty ecosystem, missing and unknown `advisory_ecosystem`, enforcement of the accepted coordinate rules); `internal/manage/repository_test.go` (`validation` on `PATCH`, nothing stored) |
 | AC12 | integration | `internal/policy/deps_enforcement_test.go` (fixture handler holding only `Deps`) |
 | AC13 | integration | `internal/policy/security_signal_test.go` (both arrival orders, withdrawal of one then both sources, vulnerability withdrawal in place) |
 | AC14 | integration | `internal/policy/security_signal_test.go` (unrequested cached coordinate, sync-driven) |
-| AC15 | integration | `internal/policy/signature_verdict_test.go` (fixture verdict source) |
-| AC16 | integration | `internal/policy/feed_import_test.go` (network-level assertion under offline mode, old and fresh exports) |
+| AC15 | integration | `internal/policy/signature_verdict_test.go` (fixture verdict source: chain, revocation, superseded revision, failed reason in the record; `artifact-verification.md` AC1 reruns it over `internal/verify`) |
+| AC16 | integration | `internal/policy/feed_import_test.go` (schedules disabled and network-level assertion under offline mode, old and fresh exports) |
+| AC17 | unit + integration | `internal/policy/ecosystem_mapping_test.go` (one case per covered row: key form, ordering, negative case; unimplemented ordering refused) |
+| AC18 | integration + architecture test + conformance | `internal/format/refusal_writer_test.go` (raw HTTP/1.1 socket status line, keep-alive, HTTP/2 canonical fallback, non-Hijacker fallback); `internal/format/arch_test.go` (single hand-written status line site); `conformance/maven/policy_test.go` (phrase visible in Maven's and Gradle's output) |
+| AC19 | integration | `internal/policy/advisory_reader_test.go` (fixture handler holding only `Deps`; uncovered ecosystem; stale feed; import assertion) |
+| AC20 | ci | structure check in `make verify` over this spec's binding table against `catalogue.md`'s rows and the closed `Binds` set; `deployment.md`'s docs build generating the operator page; the per-format policy case's validator refusing a `pending` row for its format |
+| AC21 | integration | `internal/policy/feed_sources_test.go` (two stand-in sources, shared advisory, per-source staleness, unreadable list, non-OSV schema refused) |
+| AC22 | integration | `internal/storage/retention_test.go` (records readable at and after tombstone; rules dropped; recreated name clean; shared with `repository-lifecycle.md` AC24) |
+| AC23 | script + integration | `scripts/check-config-keys.js` under `make verify` (`deployment.md` AC5's fixtures); `internal/policy/feed_sync_test.go` (network-level: source roots only, no off-root redirect, no credential) |
 
 ## Implementation Phases
 
 ### Phase 1: Scanning
-OSV feed sync and local bulk import, freshness tracking against the staleness threshold, the
-coordinate index, the byte-level cataloguer (library selected here) and the component inventory
-index, ingest-time cataloguing, and re-matching stored coordinates and inventories whenever an
-advisory changes.
+OSV-schema source sync (the default feed and `policy.feed.sources`) as `policy.feed_sync`
+schedules, local bulk import, per-source freshness tracking against the staleness threshold, the
+per-ecosystem mapping and ordering table, the `advisory_ecosystem` repository setting, the
+coordinate index, the byte-level cataloguer (library selected here against the coverage table,
+`pkg:conda/` included) and the component inventory index, `policy.scan` jobs from the ingest and
+cache-commit hooks, and re-matching stored coordinates and inventories whenever an advisory
+changes. The `policy.` keys land in the configuration schema here.
 
 ### Phase 2: Policy evaluation
-Per-repository rules with configuration-time rejection of rules that cannot bind, the
-policy-enforcing `Deps` implementations and the typed refusal, refusal recording, fail-closed on
-stale advisory data, the verdict-source consumer interface, and the feed as the security-signal
-rule's second channel on the proxy layer's condemnation record.
+Per-repository rules administered through the management API with configuration-time rejection
+of rules that cannot bind, the policy-enforcing `Deps` implementations and the typed refusal, the
+refusal writer and its status line, the advisory reader in `Deps`, refusal recording and the
+refusals read route, the metrics, alerts and audit events, fail-closed on stale advisory data,
+the verdict-source consumer interface with chain and revocation, and the feed as the
+security-signal rule's second channel on the proxy layer's condemnation record.
 
 ### Phase 3: The proxied path
 Enforcement on cache misses and refusal before any upstream fetch, the scan-window setting on the
 proxy's waiter path, `streamed` rule rejection, the offline-mode feed behaviour, the
-`policies` and `advisories` provisioners on the harness's seed path, and conformance cases on
-both paths.
+`policies` and `advisories` provisioners on the harness's seed path, the binding-table structure
+check and the generated operator page, and conformance cases on both paths, each filling its
+format's `pending` row from captured traffic.
 
 ## Tasks
 
@@ -453,17 +835,22 @@ Populated by `/tasks` once this spec reaches `planned`.
 ## Open Questions
 
 None remain open. Q1 to Q6 were adopted on 2026-09-26 under the owner's standing delegation, and
-folding them raised Q7 and Q8, adopted the same way; all eight are folded into Scope, Design, the
-acceptance criteria and the Test Plan above. Q5 was adopted in a form other than its written
-recommendation, because that recommendation would have reversed a decision the owner made; the
-reason is recorded in its section. Every adopted answer is reversible by the owner.
+folding them raised Q7 and Q8, adopted the same way. The 2026-09-28 reconciliation with the
+foundation authoring wave raised Q9 (advisory sources, revising Q1's single-feed answer on the
+evidence of nine uncovered ecosystems) and Q10 (the refusal status line), both adopted the same
+way; all ten are folded into Scope, Design, the acceptance criteria and the Test Plan above. Q5
+was adopted in a form other than its written recommendation, because that recommendation would
+have reversed a decision the owner made; the reason is recorded in its section. Every adopted
+answer is reversible by the owner.
 
 ### Resolved: the advisory feed and its staleness (was Q1)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: OSV is the single feed,
 and policy that depends on advisory data fails closed when that data is stale beyond an
 instance-level threshold (default 24 hours). Folded into Scope, "The advisory feed and its
-freshness", AC9 and AC16.
+freshness", AC9 and AC16. **Revised 2026-09-28 by the resolved advisory-sources decision (was
+Q9)**: the single feed became the single schema, with operator-declared OSV-schema sources
+allowed; the fail-closed half stands unchanged and now applies per source.
 
 Accepted cost: an advisory-feed outage becomes a build outage for every repository whose policy
 enforces advisories. It is bounded to those repositories: licence and signature rules keep
@@ -634,10 +1021,10 @@ engineering one.
 ### Resolved: verification ownership (was Q6)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a sibling spec,
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop),
-owns signature and attestation verification, and this spec consumes its verdict through a
-verdict-source interface it defines. Folded into Context, Scope, "Signature and attestation
-state is a consumed verdict", Phase 2 and AC15.
+`docs/internal/plans/foundation/artifact-verification.md` (authored 2026-09-27, after this
+adoption), owns signature and attestation verification, and this spec consumes its verdict
+through a verdict-source interface it defines. Folded into Context, Scope, "Signature and
+attestation state is a consumed verdict", Phase 2 and AC15.
 
 Accepted cost: signature rules cannot be configured until the producer lands; AC15 fixes their
 semantics now against a fixture source. Option B lost because it would make this spec own trust
@@ -721,11 +1108,94 @@ makes must be one it can keep.
 **Why this is yours:** it sets whether configuration or enforcement is where a policy gap
 surfaces, which is a product promise about what "attached policy" means.
 
+### Resolved: advisory sources beyond the OSV feed (was Q9, raised by the format authoring wave)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option B: the unit Q1 fixed is the
+OSV **schema**, not the OSV **host**. The default feed stays OSV's bulk export, and an operator
+may declare additional sources in the same schema (`policy.feed.sources`), each covering the
+ecosystems its own `ecosystems.txt` lists; sources are a union keyed by advisory id, never a
+merge; freshness and fail-closed apply per source. Data in any other schema is not consumed.
+Folded into Scope, "The advisory feed and its freshness", "What the feed covers, per ecosystem",
+Configuration, AC11, AC21 and AC23. Q1's record carries the revision note. This revises an answer
+adopted under the delegation, not an owner decision.
+
+Accepted cost: a second source is a second thing that can go stale, and an ecosystem covered by
+two sources whose records disagree on severity gets two records, each evaluated on its own
+fields, so a threshold rule fires on the stricter. Option A lost because it leaves Homebrew
+uncovered while a 13,023-record OSV-format database of exactly its ecosystem exists, and because
+the argument for one feed (no merge semantics, one severity scale) is an argument about schema
+that a second host in the same schema does not weaken. Option C lost for the reason Q1 gave: a
+schema translation layer for CPANSA and the Arch tracker is merge semantics under another name,
+and it would put this project in the business of maintaining advisory conversions, which is the
+"being a vulnerability database" Scope rules out; the right place for those conversions is
+upstream, and the moment one exists it is option B's case.
+
+The format authoring wave found nine ecosystems with no usable OSV data (conda, Terraform,
+Conan, Vagrant, Chef, LuaRocks, CPAN, Puppet, Arch) and one more listed with no records
+(Homebrew), against three advisory databases that exist outside OSV: CPANSA (2,117 advisories,
+own schema), the Arch security tracker (2,444 records, own schema) and Homebrew's database
+(13,023 records, OSV schema). Q1 chose one feed to avoid merge semantics and two severity
+scales. The question is whether that reasoning also forbids a second host of the same schema.
+
+**Recommendation:** B - one schema, several sources - because it keeps everything Q1 bought
+(one record shape, one severity vocabulary, one matcher) while removing the one cost Q1 did not
+price, an ecosystem whose advisories exist in the right schema and cannot be used.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. OSV's feed alone, as adopted** | One host, one staleness clock, nothing to configure | Homebrew stays uncovered with its OSV-format database in plain sight, and any future OSV-schema database (an operator's private advisories, a vendor's) is unusable |
+| **B. One schema, several sources: the OSV feed plus operator-declared OSV-schema bulk exports** | Homebrew covered by configuration; private and vendor OSV-schema sources usable; the matcher, record shape and severity vocabulary unchanged; union by advisory id needs no merge rule | A staleness clock per source; two sources disagreeing on one advisory yield two records and the stricter wins a threshold rule |
+| **C. Several schemas, translated into OSV on import** | CPANSA and the Arch tracker covered today | A conversion per schema maintained here, which is merge semantics under another name and makes this project a vulnerability database, the thing Scope excludes; conversions belong upstream |
+
+**Why this is yours:** it decides whether the registry's advisory posture is "what OSV knows" or
+"what the operator can prove in OSV's shape", which is a product boundary, not a technical one.
+
+### Resolved: the refusal status line (was Q10, raised by the format authoring wave)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option B: on HTTP/1.1 the shared
+refusal writer in `internal/format` hijacks the connection and writes a status line whose phrase
+names the condition, `Refused by policy: {condition}`, then the handler's headers and body; on
+HTTP/2 or where the writer cannot hijack it writes the canonical phrase, with the condition in
+the body. The writer is the only hand-written status line in the module, held by an architecture
+test. Folded into Scope, "Rendering a refusal: the status line, the phrase and the body" and
+AC18, with the transport half cited from `deployment.md`'s resolved HTTP-version decision.
+
+Accepted cost: a hijacked write bypasses `net/http`'s response machinery, so the writer owns
+keep-alive handling, header serialisation and the content-length or chunked framing for that
+one response, and every future middleware that wraps the `ResponseWriter` must preserve
+`Hijacker` or lose the phrase (the architecture test catches the first, the fallback makes the
+second a degradation rather than a failure). Option A lost because it leaves Maven, Gradle, apt,
+R, Chef, CPAN, Hex and conda users with `403 Forbidden` and no way to learn which advisory
+refused them, which is the diagnosability AC5's record exists to provide and the exact reason
+`deployment.md` turned HTTP/2 off; option C lost because a status code cannot carry an advisory
+id and the registered codes that come closest (`451`) mean something else to several clients
+(Cargo treats `451` as a security signal, `cargo.md`).
+
+The format authoring wave confirmed for Maven, Gradle, apt, R, renv, Chef, the CPAN clients,
+`mix`, `rebar3` and conda's four clients that the user sees only the status line of a refusal,
+and `deployment.md` recorded that Go's `net/http` writes only the canonical phrase. The question
+is whether the shared refusal path takes the connection to write its own.
+
+**Recommendation:** B - hijack on HTTP/1.1, canonical fallback elsewhere - because the phrase is
+the only channel to those users and HTTP/1.1 is now the default transport precisely so that
+channel exists.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Canonical phrases only; the body carries the condition** | No hijacking, no hand-written protocol | The clients the whole transport decision was made for still see `403 Forbidden` and nothing else |
+| **B. Hijack on HTTP/1.1 and write `Refused by policy: {condition}`; canonical fallback on HTTP/2 or without a `Hijacker`** | The condition reaches every client that prints the status line; degrades to A, never fails | One hand-written status line, owned by one function under an architecture test; middleware must preserve `Hijacker` |
+| **C. Encode the condition in the status code** | Nothing hand-written | No code carries an advisory id, and the nearest registered code (`451`) is a security signal to Cargo |
+
+**Why this is yours:** it accepts a deliberate step outside the standard library's response
+path in the security-facing part of the codebase, for a user-facing gain; pricing that is a
+posture call.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review. Adopted Q1 (A: OSV, fail closed on stale data), Q2 (A: retroactive), Q3 (C: byte-level cataloguer in `internal/policy`, coordinate matching always on), Q4 (B: policy-enforcing `Deps` implementations returning a typed refusal) and Q6 (A: sibling `artifact-verification.md`, to be authored in the spec loop, with the verdict-source interface defined here). Q5 adopted as a new option D rather than its written recommendation B, recorded as such in its section: B would have narrowed `proxy-cache.md`'s owner-settled purge to refuse-and-retain, which the delegation may not reverse, so a security signal purges through either channel and every other condemnation is refused and retained; the security-signal rule is stated verbatim in both specs and adds no GC mark root, so `storage-and-gc.md` is untouched. Folding raised and adopted Q7 (no offline exemption from the staleness threshold; local OSV bulk import, freshness from the newest imported record) and Q8 (a rule that cannot bind is refused at configuration: `streamed` remotes, uncovered formats and ecosystems, signature rules before a verdict source). Body changes: Context gained the proxy-layer and verification dependencies; Scope and Out of scope rewritten; Design gained the advisory-feed section and the security-signal rule, and its evaluation-hook, inventory, GC and signature sections were rewritten from open tension to adopted design, including what each `Deps` call refuses. AC3, AC4, AC5, AC6 and AC7 rewritten; AC9-AC16 added with Test Plan rows; phases rewritten. |
+| 2026-09-28 | 33679fb | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source before applying. Charter item 9 and harness item 6 found already applied at fe54272. From the authoring sections: `artifact-verification.md` exists (the "to be authored" wording dropped in Context, Scope, Design and the Q6 record) and its verdict carries a chain, a revocation field and the superseded-revision-reads-absent rule, folded into the verdict section and AC15; `async-operations.md`'s `policy.scan` job (coalesce key `scan:{digest}`, kind-declared retry bound feeding AC6's alert) and `policy.feed_sync` schedule disabled under `proxy.offline`, folded into Design, AC6 and AC16; `repository-lifecycle.md`'s rule at tombstone (rules dropped, condemnation and refusal records never), folded with new AC22; `observability.md`'s metrics, alerts and audit events into AC5 and AC6 and their Test Plan rows; `deployment.md`'s two facts (the `policy.` key table, now five keys in the checked shape with AC23; Go's canonical-only reason phrase and HTTP/1.1 on the main listener) into a new Configuration section and a new rendering section; `web-ui.md`'s and `management-api.md`'s refusals route into AC5, and rule administration as the `policy` field of the repository `PATCH` refused `validation` (AC11); `upstream-adapters.md` AC6 and AC8 cited as the transport half of the ownership-of-URLs rule. From the Open items: 5 (rendering checked per format against captured traffic when its policy case is written), 9, 12, 13 and 31 (the advisory reader in `Deps`, a new Design section and AC19), 11, 12, 14, 15, 17 (reason-phrase and coverage findings), 14 (conda: no OSV ecosystem, cataloguer must emit `pkg:conda/`), 16 (Julia: restricted egress, match by UUID), 18 to 30 and 32 (per-ecosystem coverage, coordinate mapping, ordering, `advisory_ecosystem` for OS-package repositories, per-format binding conditions). Themes 2 and 5 designed once here: "When a refusal binds, per format" with a closed `Binds` set and `pending` rows (AC20) and "What the feed covers, per ecosystem" (AC17). Two questions adopted under the delegation: Q9 (one schema, several OSV-schema sources; revises Q1's delegation-adopted single feed, reverses no owner decision; AC21) and Q10 (hijacked HTTP/1.1 status line `Refused by policy: {condition}` with canonical fallback; AC18). Seven criteria added (AC17 to AC23), four amended (AC5, AC6, AC11, AC15), each with a Test Plan row; phases updated. `node scripts/check-spec.js` run against this file with zero failures. |
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the charter fold: Context's ordering paragraph now states the build at step 4b, after artifact verification and the step 4a re-open and before npm, per the charter's build order and AC12. From the harness and generic fold: the Context claim that `conformance-harness.md` provisions only repositories, tokens and upstreams and needs a matching extension was stale, since its closed vocabulary already defines `policies` and `advisories` as landing with this spec; rewritten, Phase 3 now builds both provisioners on the seed path, and AC2 asserts its case is provisioned through them. Found already consistent: the refusal type declared beside `Deps` in `internal/format` (now also stated in `format-handler-interface.md`), and no GC mark root added (now also placed in `data-model.md`'s non-root table). |
 | 2026-09-23 | d078c46 | first review: adversarial + constitution + cross-spec (proxy-cache's settled stream-and-verify, single-flight, serve-stale and security-purge decisions; data-model's opaque metadata typing; format-handler-interface's pinned five methods and `Scope(r)` precedent; storage-and-gc's four mark roots and eviction; auth's client-not-artifact boundary) + go-spec-reviewer; claim verification vacuous pre-code (no `internal/policy/` exists). The reviewer terminated on a spend limit before writing this row; it is recorded here from the diff | Three of `proxy-cache.md`'s settled decisions were shown to collide with cache-then-scan and the collisions stated rather than left for implementation: refuse-until-scanned is incompatible with streaming to the initiating client, the scan lands inside the coalescing latency bound every waiter shares, and serve-stale needs the advisory feed as its independent signal. Evaluation order on a miss derived (coordinate-decidable rules refuse before any upstream request, giving AC8: condemned content is neither fetched nor cached). The auth precedent this spec invokes was shown to be unearned - central evaluation needs a request-to-coordinate mapping no pinned method provides - raising Q4. Component inventory named as the central tension (Q3): the flagship first format is the one coordinate matching cannot see into. Two settled specs shown to disagree on one real event (purge versus refuse-and-retain), raising Q5. Signature state confirmed to have no producer in any spec, raising Q6 and explaining the deliberately absent AC. Policy records placed against the GC root set as explicitly not a root, so a refusal outlives the blob it condemned (AC5, AC7) and eviction cannot launder a condemned artifact. Scan failure separated from scan result (AC6). AC1/AC3/AC7 extended across both paths. Stays draft on Q1-Q6. |
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and only a consequential update: neither decision is this spec's. The GC-and-eviction section now says five enumerated roots (pointer-targeted snapshots became the fifth on 2026-09-26) and states eviction correctly under proxy-cache's answer - it drops the cached reference and the sweep reclaims the bytes, eviction itself deleting nothing - which leaves the digest-independence argument behind AC7 intact and if anything longer-lived. Q5 is left open and unanswered; only its option C wording was corrected, since the mark root quarantine would add is now a sixth rather than a fifth. This spec's position that policy records are not a root is unchanged. |

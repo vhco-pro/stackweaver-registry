@@ -597,7 +597,8 @@
     "status": "draft",
     "issue": "15",
     "covers": [
-      "internal/policy/**"
+      "internal/policy/**",
+      "conformance/*/policy_test.go"
     ]
   },
   {

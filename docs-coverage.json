@@ -12,6 +12,9 @@
     "docs/internal/conformance/matrix.md",
     "docs/internal/plans/foundation/conformance-harness.md"
   ],
+  "conformance/*/policy_test.go": [
+    "docs/internal/plans/foundation/supply-chain-policy.md"
+  ],
   "conformance/alpine/**": [
     "docs/internal/plans/formats/alpine.md"
   ],
