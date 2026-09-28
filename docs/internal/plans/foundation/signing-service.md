@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "First grounded draft, authored 2026-09-27 against 1fbf1e7 from the requirements twenty-two format specs, write-triggered-services-prototype.md, replication.md, artifact-verification.md, management-api.md and the consequences queue placed on this spec. Eleven questions raised in the template's decision shape and adopted under the owner's standing delegation: the write path dispatches regeneration, signatures are records keyed by body digest and key rather than snapshot content, renderers are per-format generator packages discovered by an optional interface, the freshness mechanism is split with data-model.md, verification stays artifact-verification.md's, keys are per repository, file custody is the default with KMS and PKCS#11 behind one crypto.Signer seam, contention is serialised per document, followers serve pointer documents verbatim, and Galaxy server-side signing is not built. Never gate-reviewed; awaits review."
+status_description: "Reconciled 2026-09-28 at 3a82b21 with the foundation authoring wave (not a review): the virtual merge is the index.merge kind and the cadence re-sign the signing.resign Schedule on internal/async, asserted on the production runtime with no fixture runner and no goroutine of its own (AC19, AC22); signing.master_key is gone, replaced by a citation of deployment's security.master_key (14 keys); keys retire in the deletion transaction, public forms resolve by digest until tombstone time and private material is destroyed then, rename changes nothing, and a virtual's first merge is enqueued at creation (AC29, AC19); the signing.key.* audit events, the signing_* and index_* metrics, the four alerts and LogValuer-typed private material named from observability's catalogue; the harness signing sub-entry's generate defined; every record and hook owed to a sibling (data-model AC36 and AC37, storage-and-gc AC16 and AC25, proxy-cache AC22, replication AC21, format-handler-interface was-Q10) cited as applied. 29 criteria, each with a Test Plan row; zero open questions. Earlier: first grounded draft, authored 2026-09-27 against 1fbf1e7 from the requirements twenty-two format specs, write-triggered-services-prototype.md, replication.md, artifact-verification.md, management-api.md and the consequences queue placed on this spec. Eleven questions raised in the template's decision shape and adopted under the owner's standing delegation: the write path dispatches regeneration, signatures are records keyed by body digest and key rather than snapshot content, renderers are per-format generator packages discovered by an optional interface, the freshness mechanism is split with data-model.md, verification stays artifact-verification.md's, keys are per repository, file custody is the default with KMS and PKCS#11 behind one crypto.Signer seam, contention is serialised per document, followers serve pointer documents verbatim, and Galaxy server-side signing is not built. Never gate-reviewed; awaits review."
 description: "Spec for the shared signing and generated-index service: the production form of the write-triggered services prototype's signed-index half. It regenerates every repository-wide or version-scoped generated document inside the write that invalidates it, stores it as CAS-backed metadata, keeps signatures as records outside snapshot content so rotation and rollback never rewrite history, renders pointer-scoped freshness (dated envelopes, TUF versions, forward-moving Last-Modified), holds every signing key behind one custody seam (encrypted file, KMS, PKCS#11, operator-held) that no handler can reach, publishes public keys in each ecosystem's form, and runs virtual merges as deferred work. Twenty-two formats consume it; it produces and never verifies."
 author: michielvha
 goal: "Make every signed or generated index in the registry the output of one shared service with one custody model, so that a format that only needs an index costs a generator function rather than a signing subsystem, and no handler ever holds a key."
@@ -237,13 +237,18 @@ rejected.
   `repo-add`, `conda-index`, `tools::write_PACKAGES`, `hackage-repo-tool`). This spec owns the
   contract a generator meets and the runtime that calls it, never the bytes. Excluded because a
   service holding twenty renderers is a second set of handlers wearing a shared layer's name.
-- **Deferred execution itself** (workers, retries, cancellation): `async-operations.md` (owed,
-  charter step 6a). The virtual merge is expressed as deferred work with a staleness bound; how
-  it runs is that spec's.
+- **Deferred execution itself** (workers, leases, retries, cancellation, the scheduler):
+  `async-operations.md`, whose queue core lands at the start of charter step 4b, before this
+  spec's Phase 1 at step 7. The virtual merge is the `index.merge` job kind and the cadence
+  re-sign the `signing.resign` kind on `internal/async`; this spec fixes their contract (enqueue,
+  coalescing window, atomic swap, staleness bound, expiry-derived next run) and that spec runs
+  them (its kind table, AC11, AC14).
 - **The cache-scoped `Last-Modified` of a remote repository** and the rule that a remote never
   adopts an older upstream revision (`homebrew.md`, `arch.md`, consequences items 30 and 32):
-  `proxy-cache.md`'s, because the record it derives from is the cache's, not a pointer's. Named
-  here so the split in theme 1 is complete.
+  `proxy-cache.md`'s, because the record it derives from is the cache's, not a pointer's; its
+  AC22 holds it (forward-moving cache-scoped `Last-Modified`, exact-match `304`, no adoption of
+  an older revision, a db and its signature as one paired set). Named here so the split in
+  theme 1 is complete.
 - **Galaxy server-side signing**: not built (the resolved Galaxy decision below);
   `artifact-verification.md` chose verified attachment and this spec finds no consumer that
   requires the registry's own signature on a collection.
@@ -349,9 +354,13 @@ import a signing library or reach a key.
 
 **What this feeds the re-open.** `format-handler-interface.md`'s scheduled re-open takes the
 prototype's finding as an input (its AC8). This spec's answer to question 1 is "no new pinned
-method: an optional `Indexer`, discovered like `Operator`"; if the prototype finds the callback
-needs request context a generator cannot be given, the contract here is revised before Phase 1,
-exactly as `helm.md` and `maven.md` committed to for their own index sections.
+method: an optional `Indexer`, discovered like `Operator`", and that spec records it as such in
+"Optional interfaces discovered at registration", where `Indexer` sits beside `Operator` and
+`surface.Declarer` as three separate type-asserted interfaces held apart until the re-open (its
+resolved optional-interfaces decision, was Q10 there; AC16 there holds the pin at five by
+reflection). If the prototype finds the callback needs request context a generator cannot be
+given, the contract here is revised before Phase 1, exactly as `helm.md` and `maven.md` committed
+to for their own index sections.
 
 ### The write path dispatches; the handler cannot forget
 
@@ -360,10 +369,19 @@ transaction the metadata store opens on a repository whose handler declared an `
 before commit, with the runtime computing the change from the transaction's recorded delta,
 asking the generator's `Affects` which keys it invalidates, calling `Generate` for them, signing
 what the profile signs, storing the results as part of the same delta, and only then committing.
-That holds for a handler's own wire write (a Hex publish `POST`, a LuaRocks upload, a Chef
-share), for a management operation (`Submit` opens the transaction and calls `Apply`, then the
-runtime runs), for the harness seed path (a `state` entry is a completed logical write through
-the same store, so seeded state comes out generated and signed with no seed-side code, AC21),
+The seam is the **pre-commit hook** the shared write path exposes: `data-model.md` defines it
+("The write transaction exposes a pre-commit hook", AC37: after the handler's changes, before
+commit, in the same transaction, with the snapshot's content set visible; a failing hook commits
+nothing) and `storage-and-gc.md`'s sole write-transaction constructor runs it (its AC25). This
+runtime is the hook's registered consumer. That holds for a handler's own wire write (a Hex
+publish `POST`, a LuaRocks upload, a Chef share), for a management operation (`Submit` opens
+the transaction and calls `Apply`, then the runtime runs), for the harness seed path (a `state`
+entry is a completed logical write through the same store, so seeded state comes out generated
+and signed with no seed-side code, AC21; `conformance-harness.md` AC24, whose `repositories`
+entry carries a `signing` sub-entry that is either a fixture private key file, imported through
+the `file` backend's import operation, or `generate`, meaning the service generates the
+repository's keys under the `file` backend at repository creation exactly as a production
+creation with `signing.default_backend: file` does),
 for a retention pass (`julia.md` item 4: "writes made by the shared retention pass, which
 removes versions like any deletion"), and for replication's freeze (a publish through the target
 repository's hosted ingest, `replication.md`'s resolved freeze decision, so the frozen mirror's
@@ -401,9 +419,10 @@ tree complete within it with a bounded retry count).
 ### Storage: bodies in the snapshot, signatures as records, envelopes on the pointer
 
 Three kinds of stored thing, each placed against `data-model.md`'s model and
-`storage-and-gc.md`'s root set, none of them a new mark root, and the two records this spec
-needs from the shared model specified precisely and reported as consequences rather than added
-here.
+`storage-and-gc.md`'s root set, none of them a new mark root. The records this spec needs from
+the shared model are in `data-model.md` (its "Freshness scoped to the pointer, and the documents
+that hang on it": `Signature`, `PointerDocument`, `SigningKey`, the pointer freshness record and
+the declared blob-digest list; AC36, AC37 there), specified here and held there.
 
 **Generated bodies are metadata documents in snapshot content.** A generator's output for a
 key at level `repository`, `package` or `version` is stored as that level's opaque document (or
@@ -411,9 +430,9 @@ a named member of it), inline below the size threshold and as a CAS blob above i
 the fourth mark root (`storage-and-gc.md` AC16), and restored by a repoint with everything else
 at its level (`data-model.md` AC13). A document that consists of several blobs (Hackage's index
 segments, each a gzip member; CPAN's generated-body manifest) declares its blob digests in the
-document, and the fourth root marks through the declared list: that extension of the root's
-reach is `hackage.md`'s and `cpan.md`'s request of `data-model.md` and `storage-and-gc.md`,
-restated here as a consequence (AC5 asserts the survival). Retention of every file a retained
+document, and the fourth root marks through the declared list: `data-model.md` carries the
+declared blob-digest list (AC37) and `storage-and-gc.md` AC16 widens the fourth root's reach to
+it, which was `hackage.md`'s and `cpan.md`'s request (AC5 asserts the survival). Retention of every file a retained
 snapshot's document names (`rpm.md` item 5, `alpine.md` item 6, `arch.md` item 7) needs nothing
 of this service: the files are snapshot content and the snapshot is retained, so a route that
 resolves a checksum-named file against every retained snapshot (their handlers' rule) finds it.
@@ -436,15 +455,17 @@ write (AC9), so a client never meets a signature by a retired key; the `ETag` of
 document derives from the assembled bytes, so a re-sign changes it and a `304` costs no signing
 (`hex.md` item 4's `ETag` requirement, `rpm.md` item 5). The record is not a mark root: its body
 digest is kept alive by the document that declares it, and a record whose body no retained
-snapshot holds is pruned with it. The `Signature` record is `data-model.md`'s to add (consequence
-below); AC6 gates code on it.
+snapshot or pointer document holds is pruned with it (`data-model.md` AC37). The `Signature`
+record is added in `data-model.md` (Design "Freshness scoped to the pointer", AC37); AC6 here
+asserts the behaviour on it.
 
 This changes the wording, not the effect, of four format specs that described rotation as "one
 write that re-signs every stored document" (`hex.md` item 4, `arch.md` item 6, `rpm.md` item 6,
 `alpine.md` item 5): the cutover is one atomic batch of signature records and creates no
 snapshot, which is what `debian.md` already says of its envelope ("No content changes and no
-snapshot is created") and what `data-model.md` requires of anything that is not content. Each is
-a sibling consequence.
+snapshot is created") and what `data-model.md` requires of anything that is not content. Each
+rewording is queued for that format spec (signing-service item 9 in
+`agents/spec-loop/consequences.md`).
 
 **Pointer documents are re-rendered bodies scoped to the pointer.** Where a client's freshness
 rule reads a field inside the signed bytes (apt's `Date`, TUF's `version` and `expires`), a
@@ -454,10 +475,10 @@ the counter value it carries): Debian's `InRelease`, `Release` and `Release.gpg`
 Hackage's `snapshot.json` and `timestamp.json`. It is produced inside the write for the default
 pointer, at every promotion and rollback (inside the repoint), on the expiry cadence and at a
 rotation; it is never snapshot content; it is protected by the fourth root's current-document
-half when CAS-backed (`storage-and-gc.md`'s consequence from `debian.md`, item 20); and a
-promoted environment's pointer document is by design not byte-identical to the source's, which
-qualifies `data-model.md` AC22 exactly as `debian.md` and `hackage.md` raised. The record is
-`data-model.md`'s to add; AC10 gates on it.
+half when CAS-backed (`storage-and-gc.md` AC16); and a promoted environment's pointer document is
+by design not byte-identical to the source's, which qualifies `data-model.md` AC22 exactly as
+`debian.md` and `hackage.md` raised, and as that spec now states ("AC22 is qualified, not
+weakened"). The record is added in `data-model.md` (AC36); AC10 here asserts the behaviour on it.
 
 ### Freshness scoped to the pointer: the split with `data-model.md`
 
@@ -469,7 +490,8 @@ is not newer than brew's own clock at its last fetch", so the signal must be **m
 forward-moving**, and "exact-match 304 is insufficient for curl-based clients". Per the resolved
 freshness-split decision below, the mechanism is one and it is split by ownership:
 
-**`data-model.md` owns the record**: a per-pointer **freshness record** on `Pointer`, carrying
+**`data-model.md` owns the record** (its "Freshness scoped to the pointer", AC36): a per-pointer
+**freshness record** on `Pointer`, carrying
 (a) `moved_at`, set at every pointer transition (a write advancing the default pointer, a
 promotion, a rollback, a key switch, a cadence re-sign) to the later of the transition time and
 one second after the previous value, so it never moves backwards whatever the clock does
@@ -500,7 +522,9 @@ in the profile.
 **`proxy-cache.md` owns the cache-scoped record** for `remote` repositories, which have no
 pointer: a remote's served `Last-Modified` is the cache's, never the upstream's, forward-moving,
 and a remote never adopts an older upstream revision; a db and its signature are adopted as one
-revision (items 30 and 32). Named here so the three owners are stated once.
+paired set (items 30 and 32; its AC22 asserts all of it; the cache-scoped record on the remote's
+current document is queued for `data-model.md` as proxy-cache reconciliation item 1). Named here
+so the three owners are stated once.
 
 ### Key custody
 
@@ -538,10 +562,23 @@ that prove a codec's bytes against a real client prove them for every backend.
 
 | Backend | What it is | Private material | Algorithm ceiling | Grounding |
 |---|---|---|---|---|
-| `file` (default) | Software keys generated by the service, stored in the shared database **encrypted at rest** under the instance master key the upstream-credential store already uses (`proxy-cache.md` AC6's "stored encrypted"), never on a filesystem path | Decrypted in process memory for the duration of a signing call | Any algorithm the standard library and go-crypto implement | Pulp and reprepro keep keys in a worker's gpg keyring; Nexus stores a pasted key; this backend is that class made encrypted, auditable and exportable never |
+| `file` (default) | Software keys generated by the service, stored in the shared database **encrypted at rest** under the one instance master key, `deployment.md`'s `security.master_key` (its resolved master-key decision, was Q5 there: envelope encryption through `internal/security`, the same key the upstream-credential store and the OIDC exchange use), never on a filesystem path | Decrypted in process memory for the duration of a signing call | Any algorithm the standard library and go-crypto implement | Pulp and reprepro keep keys in a worker's gpg keyring; Nexus stores a pasted key; this backend is that class made encrypted, auditable and exportable never |
 | `kms` | A key resolved by URI through `sigstore/sigstore`'s `kms.Get`: `awskms://`, `gcpkms://`, `azurekms://`, `hashivault://` | Never leaves the provider; the service holds a reference and a credential | What the provider offers for that key; checked at creation by signing a probe and verifying it | Sigstore's seam; Artifactory's Vault option |
 | `pkcs11` | A key on a PKCS #11 token through `crypto11` (`Path`, `TokenLabel`, PIN from the environment or a file, never a flag) | Never leaves the token | RSA and ECDSA; **no Ed25519**, so a Hackage role or an Ed25519 Arch or Open VSX key on this backend is refused at creation with a message naming the ceiling | `crypto11`'s documented algorithm set |
 | `external` | Public material only; signatures are produced off the server and submitted | The service never has it | Whatever the operator signs with; the submitted document is checked against the current one before it is served | TUF 6.1 offline root; `hackage.md` item 8 ("accepts a `root.json` the operator signed offline, verifies it against the current root, and serves it") |
+
+**Keys follow the repository's lifecycle** (`repository-lifecycle.md`, deletion step 10 and
+"Tombstone"). A rename changes nothing: `SigningKey` references the repository's identity, and
+the key name a client configures (Alpine's key filename, Hex's pinned key) is a public form the
+profile derives from the key, never from the repository name. Deleting a repository moves
+**every key of the repository to `retired` in the deletion transaction**, so no document can be
+signed under them afterwards; the keys' **public forms stay retrievable by digest until tombstone
+time**, because a client that fetched a signed
+document inside the retention window may still verify it against the key route; and the
+**private material is destroyed at tombstone time**, when the pruner drops the `SigningKey`
+material with the repository's last snapshot: a `file` key's encrypted row is deleted, a `kms`
+or `pkcs11` reference is dropped (the provider's key is the operator's to destroy, said in the
+operator guide), and an `external` key has nothing to destroy. AC29 asserts all three.
 
 A repository's keys may mix backends by purpose: a Hackage repository with an `external` root and
 `file` snapshot, timestamp and mirrors keys is TUF's intended shape (2.1.4). A backend that cannot
@@ -570,9 +607,13 @@ rotation profile), retire, import, and, for `external`, submit a signed document
 `/api/v1/repositories/{name}/signing-keys` inside the `api` reservation, are submitted through
 `Submit` as `configure` operations, and their `Apply` is this service's, not the handler's; the
 handler's generator is then called within the same transaction to produce whatever the rotation
-profile requires (the RPM key document, the dual-signed Alpine index). No repository-scoped
-token can perform any of them (`auth.md` AC30), and every one leaves an audit line and an
-`Operation` (AC15). The management surface lists a repository's keys with purpose, algorithm,
+profile requires (the RPM key document, the dual-signed Alpine index). `management-api.md`'s
+endpoint table carries the routes with that dispatch. No repository-scoped token can perform any
+of them (`auth.md` AC30), and every one leaves an audit line and an `Operation` (AC15): the
+audit events are `signing.key.create`, `.activate`, `.retire`, `.import` and `.submit_external`
+with `key_id`, `backend` and `profile` as extension attributes, registered in
+`observability.md`'s audit vocabulary and emitted through `telemetry.Auditor.Emit`. The
+management surface lists a repository's keys with purpose, algorithm,
 state, backend kind (never the URI's secret parts), created-at and the public forms with
 fingerprints (`debian.md` item 5, `rpm.md` item 3, `alpine.md` item 3, `arch.md` item 4,
 `hex.md` item 2, `hackage.md` item 9, `cpan.md` item 1).
@@ -607,10 +648,16 @@ and that a client which did what the documentation says notices nothing.
 **Re-signing on a cadence** (`debian.md` item 3: `Valid-Until` re-signed at half the window;
 `hackage.md` item 5: `timestamp.json` and `snapshot.json` at half their window, `root.json` and
 `mirrors.json` at half theirs, "for every pointer including idle environments") is a scheduled
-production of pointer documents under the current keys, creating no snapshot, durable across a
-restart (the schedule derives from the stored documents' expiry, not from a timer in memory), and
-for an `external` root it is an operator alert emitted well before expiry, at a configured lead
-(AC22).
+production of pointer documents under the current keys, creating no snapshot. It runs as a
+`Schedule` on `internal/async` of kind `signing.resign`, one per signed pointer, exclusivity key
+`pointer:{repository}/{pointer}`; its next run is not a timer in memory but is derived from the
+stored documents' expiry and `signing.resign_at_fraction` and written to the schedule in the
+job's `Finish`, so a restart mid-schedule loses nothing (`async-operations.md`, "The scheduler",
+its kind table and AC14). The gauge
+`signing_earliest_document_expiry_timestamp_seconds{repository}` exposes the earliest expiry
+among a repository's signed documents, and for an `external` root the `SigningDocumentExpiring`
+alert fires at the configured lead (`signing.external_expiry_lead`, templated into the packaged
+rule by `deployment.md`), well before expiry (AC22).
 
 ### Signing stored blobs, and the memory bound
 
@@ -665,7 +712,11 @@ write boundaries) and is re-run "when a member's document set changes" (`rpm.md`
 - **Trigger and coalescing.** A completed write on a member enqueues a merge for every virtual
   that lists it; merges for one virtual within a coalescing window run once; the window and a
   staleness bound (a member write is visible in the virtual within it) are configuration. This
-  is the one place the service coalesces, because no snapshot is at stake.
+  is the one place the service coalesces, because no snapshot is at stake. A `virtual` whose
+  format declares an `Indexer` also has its **first merge enqueued at creation**, and one per
+  member-list change, so its merged documents exist before the first client request rather than
+  being rendered on the first miss (`repository-lifecycle.md`, creation step and the member-list
+  row of its configuration table).
 - **Never a gap.** The previous merged document set serves until the new one commits atomically;
   a merge that fails leaves the previous set and an alert, never an empty index.
 - **Signed with the virtual repository's own key** under its format's profile, so a virtual is a
@@ -674,9 +725,16 @@ write boundaries) and is re-run "when a member's document set changes" (`rpm.md`
   (consequences item 12) is what the profile's absent `Merge` expresses.
 - **Storage** as the virtual's current documents, CAS-backed above the threshold, protected by the
   fourth root's current-document half (the `storage-and-gc.md` consequence from item 20).
-- **Execution** belongs to `async-operations.md`; this spec fixes the contract (enqueue on member
-  commit, coalesce, atomic swap, staleness bound) and AC19 asserts it against a fixture runner
-  until that spec's runtime exists.
+- **Execution** is the `index.merge` job kind on `internal/async`: the member's write transaction
+  enqueues it through the pre-commit hook with coalesce key `virtual:{repository}`, the same
+  exclusivity key and `run_at` of now plus `index.virtual_merge_window`, so a second member write
+  inside the window finds the pending row and enqueues nothing, a write during a running merge
+  yields exactly one more, and the staleness bound is measured as
+  `index_virtual_merge_staleness_seconds{repository}` with `VirtualMergeStalenessBreach` and
+  `VirtualMergeFailed` as the alerts (`async-operations.md`'s kind table and AC11;
+  `observability.md`'s catalogue). The queue core lands at the start of charter step 4b and this
+  spec at step 7, so there is no fixture runner: AC19 asserts the contract on the production
+  runtime.
 
 ### The proxied path
 
@@ -700,9 +758,11 @@ follower must sign: the takeover is refused with a problem naming the missing ke
 active key of the repository is resolvable on the follower, which means a `kms` or `pkcs11` key
 reachable from both instances, or a `file` key created on the follower and announced under the
 repository's rotation profile before the takeover, which the operator guide describes as the
-replicated-repository key recipe. AC23 asserts both halves. This is a consequence for
-`replication.md` (its read surface and its takeover preconditions) and is why a `file` key is
-the wrong choice for a replicated repository, which the documentation says.
+replicated-repository key recipe (`deployment.md`'s Recipes). AC23 asserts both halves, and
+`replication.md` carries the other side: its AC21 asserts the verbatim records, the equal bytes
+and `Last-Modified`, no signing while linked, and the takeover refusal naming each unresolvable
+key, with the link's state exposed by its AC10. This is why a `file` key is the wrong choice for
+a replicated repository, which the documentation says.
 
 ### Configuration and CLI stance
 
@@ -710,13 +770,14 @@ Following the vendored `cobra-viper` skill, `internal/signing` and `internal/ind
 a typed `Config` with a default for every key, import neither Viper nor Cobra, and every key is
 settable by flag, environment variable and configuration file in that skill's precedence order
 (AC26). There is no CLI in v1 beyond the server binary, matching `management-api.md`'s resolved
-API-first decision; key operations are API calls. The deployment spec (owed) documents the keys;
-they are named here because they are this service's policy:
+API-first decision; key operations are API calls (`deployment.md`'s `keys` subcommand manages
+the instance master key, not signing keys). `deployment.md`'s key inventory documents these
+fourteen keys and its two-way check holds the inventory equal to this table; they are named here
+because they are this service's policy:
 
 | Key | Default | Meaning |
 |---|---|---|
 | `signing.default_backend` | `file` | Backend for keys created with a repository |
-| `signing.master_key` | none; required when any `file` key exists | Reference to the instance master key that encrypts `file` keys at rest (the upstream-credential store's), from an environment variable or a file, never a flag value |
 | `signing.kms.allowed_schemes` | `awskms, gcpkms, azurekms, hashivault` | KMS URI schemes a key may reference |
 | `signing.pkcs11.module` | none | Path to the PKCS #11 library; enables the backend |
 | `signing.pkcs11.token_label` | none | The token's label |
@@ -730,23 +791,41 @@ they are named here because they are this service's policy:
 | `index.virtual_merge_window` | `5s` | Coalescing window for merges of one virtual |
 | `index.virtual_staleness_bound` | `60s` | Longest a member write may take to become visible in a virtual |
 
-The inline size threshold is `data-model.md`'s knob, not this spec's.
+There is no `signing.master_key`: the key that encrypts `file` keys at rest is
+`deployment.md`'s `security.master_key` (or `security.master_key_file`), the one instance master
+key, required at start, never a flag value, rotated by re-wrap (its resolved master-key decision,
+was Q5 there). The inline size threshold is `data-model.md`'s knob, not this spec's.
+
+**Observability.** The service emits, from `observability.md`'s catalogue,
+`signing_operations_total{profile,backend,outcome}`, `signing_duration_seconds{backend}`,
+`signing_keys{state,backend}`, `signing_earliest_document_expiry_timestamp_seconds{repository}`,
+`index_lock_wait_seconds`, `index_lock_timeouts_total`, `index_write_retries_total`,
+`index_virtual_merge_staleness_seconds{repository}`, `index_virtual_merge_staleness_breaches_total`
+and `index_virtual_merges_total{outcome}`; the alerts `SigningFailed` (AC17),
+`SigningDocumentExpiring` (AC22), `VirtualMergeFailed` and `VirtualMergeStalenessBreach` (AC19)
+through `telemetry.Alert`; and the `signing.key.*` audit events (AC15). Private material is held
+in types implementing `slog.LogValuer` (`telemetry.Secret` or the backend's own), so a key can
+never reach a log record by accident, which AC14's scan runs through `telemetry.NewTestRecorder`.
+The `component_up{component="signing_backend"}` gauge mirrors readiness when a `kms` or `pkcs11`
+backend is configured.
 
 ### Package shape
 
-`internal/index`: the runtime (`Runtime` with `Regenerate`, invoked by the metadata store's
-commit hook; `Transition`, invoked by the pointer store at a repoint; `Merge`, the deferred
-entry; `ServeDocument`), the value types a generator uses (`Generator`, `Profile`, `DocumentKey`,
-`Change`, `Input`, `Output`), and the freshness helper. `internal/signing`: `Service` with `Sign`,
-`SignBlob`, `PublicKeys`, and the key operations; backends in `internal/signing/filekey`,
+`internal/index`: the runtime (`Runtime` with `Regenerate`, registered on the write
+transaction's pre-commit hook; `Transition`, invoked by the pointer store at a repoint; `Merge`,
+the `index.merge` worker registered on `internal/async`; `ServeDocument`), the value types a
+generator uses (`Generator`, `Profile`, `DocumentKey`, `Change`, `Input`, `Output`), and the
+freshness helper. `internal/signing`: `Service` with `Sign`, `SignBlob`, `PublicKeys`, and the
+key operations; the `signing.resign` worker; backends in `internal/signing/filekey`,
 `internal/signing/kms`, `internal/signing/pkcs11` and `internal/signing/external`, each yielding
 a `crypto.Signer`; envelope codecs in `internal/signing/openpgp`, `internal/signing/tuf`,
 `internal/signing/raw` and `internal/signing/jws`; HTTP handlers for the key routes registered
 under the `api` mount. The consumer interfaces (`Indexer` and the `Signing` handle's interface)
 are declared in `internal/format` beside `Deps`, in the go skill's sense: the consumer owns the
 interface, the concrete types satisfy it. Each format's generator is `internal/format/<name>/index`.
-Neither package starts a goroutine that outlives a request except the cadence scheduler, whose
-shutdown is governed by the server's context and tested under `testing/synctest`.
+**Neither package starts a goroutine that outlives a request**, owns a `time.Ticker` or a
+`time.AfterFunc`: the cadence is a `Schedule` and the merge a job, both on `internal/async`,
+whose AC16 holds the rule for every package with an AST scan; the shutdown path is the queue's.
 
 ### Mechanical enforcers
 
@@ -843,8 +922,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
       are `configure` operations
       submitted through `Submit`, refused `unauthorized` for every repository-scoped token
       including an admin-owned one, mounted under `/api/v1/repositories/{name}/signing-keys`,
-      present in the OpenAPI document, and each leaves exactly one audit line and one
-      `Operation`.
+      present in the OpenAPI document, and each leaves exactly one audit line (the
+      `signing.key.create`, `.activate`, `.retire`, `.import` or `.submit_external` event with
+      `key_id`, `backend` and `profile`) and one `Operation`.
 - [ ] AC16: An `external` key's document (a `root.json` signed offline) is accepted only when it
       verifies against the current root under the format's rule, is refused otherwise with a
       problem naming the failing check, and is served afterwards; the service never holds the
@@ -856,11 +936,14 @@ Per the constitution, every boundary this spec introduces names the test that ho
       pure Ed25519 holds peak
       allocation to the blob's size plus a constant, under digest-then-sign schemes to a
       constant, both as benchmark gates; a blob above the maximum is refused at publish.
-- [ ] AC19: A completed write on a member of a virtual repository makes the member's change
-      visible in the virtual's documents within the staleness bound, merges for one virtual
-      inside the coalescing window run once, the previous merged set serves without a gap until
-      the new one commits, a failed merge leaves the previous set and alerts, the merged set is
-      signed with the virtual repository's own key, and no merge runs on a request's path.
+- [ ] AC19: On the production runtime (`internal/async`, the `index.merge` kind), a completed
+      write on a member of a virtual repository makes the member's change visible in the
+      virtual's documents within the staleness bound, merges for one virtual inside the
+      coalescing window run once, a virtual created with an `Indexer` format has its merged
+      documents before its first request, the previous merged set serves without a gap until the
+      new one commits, a failed merge leaves the previous set and fires `VirtualMergeFailed`, a
+      breach of the bound fires `VirtualMergeStalenessBreach`, the merged set is signed with the
+      virtual repository's own key, and no merge runs on a request's path.
 - [ ] AC20: A `remote` repository's regenerated documents (CRAN, LuaRocks, Chef, opam from
       upstream records) are produced through `FromUpstream` by the same generator as the hosted
       path and stored
@@ -868,10 +951,13 @@ Per the constitution, every boundary this spec introduces names the test that ho
 - [ ] AC21: A repository seeded through the harness's `state` entries serves generated and signed
       documents byte-identical to those a publish of the same content produces, and the case can
       read the repository's public keys from the server before its client runs.
-- [ ] AC22: A document with a validity window is re-signed at the configured fraction of its
-      window for every pointer including idle environment pointers, creating no snapshot, on a
-      schedule that survives a restart; an `external` key's document nearing expiry raises an
-      operator alert at the configured lead.
+- [ ] AC22: A document with a validity window is re-signed at `signing.resign_at_fraction` of its
+      window for every pointer including idle environment pointers, creating no snapshot, by the
+      `signing.resign` schedule on the production scheduler whose next run is derived from the
+      stored document's expiry and survives a restart mid-schedule with no re-sign lost or
+      duplicated; `signing_earliest_document_expiry_timestamp_seconds{repository}` reports the
+      earliest expiry, and an `external` key's document nearing expiry fires
+      `SigningDocumentExpiring` at `signing.external_expiry_lead` before it.
 - [ ] AC23: `Signature` and `PointerDocument` records travel with the pointer set to a
       follower, which serves them verbatim under the leader's freshness record and produces no
       signature while linked; a takeover is refused with a problem naming the unresolvable keys
@@ -885,8 +971,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
       determinism harness over every registered generator's golden fixtures.
 - [ ] AC26: Every configuration key in the table has a default, is settable by flag, environment
       variable and file in the documented precedence, and `internal/signing` and
-      `internal/index` import neither Viper nor Cobra; the PIN and master key are never
-      accepted as flag values.
+      `internal/index` import neither Viper nor Cobra; the PIN is never accepted as a flag value,
+      no `signing.master_key` key exists, and the `file` backend reads the master key only
+      through `internal/security` (`deployment.md` AC4 refuses `security.master_key` as a flag).
 - [ ] AC27: The runtime and the pointer store hold the split: the pointer's `moved_at` and
       generation counter are written only by `data-model.md`'s pointer transition, and every
       freshness value this service renders (`Date`, TUF version, `Last-Modified`) is read from
@@ -895,6 +982,12 @@ Per the constitution, every boundary this spec introduces names the test that ho
 - [ ] AC28: N concurrent publishes into one tree complete within the configured lock wait with a
       bounded retry count and no livelock, and a lock timeout fails the write with a problem
       rather than committing without regeneration, as benchmark and property gates.
+- [ ] AC29: A renamed repository keeps every `SigningKey`, signature record and served public
+      form byte-identical with no re-sign; deleting it moves every key of the repository to `retired`
+      in the deletion transaction so that a signing call under any of them is refused, its public
+      forms stay retrievable by digest until tombstone time, and at tombstone time the pruner
+      destroys the private material (the `file` row gone from a database dump, the `kms` and
+      `pkcs11` references dropped) while the public forms cease to resolve.
 
 ## Test Plan
 
@@ -913,37 +1006,41 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | AC11 | integration + architecture + conformance | `internal/index/freshness_test.go`; `internal/format/freshness_boundary_test.go`; `conformance/core/timecond_rollback_test.go` (curl `--time-cond` sees a rollback) |
 | AC12 | integration | `internal/signing/public_forms_test.go` (`gpg --import`, `ssh-keygen -lf`, `hackage-repo-tool` key ids in fixture containers; `npm audit signatures` against the keys document) |
 | AC13 | integration | `internal/signing/backends_test.go` (`file`; `kms` fixture provider registered through `AddProvider`; `pkcs11` against SoftHSM2 in CI; `external`); shared envelope vectors run per backend |
-| AC14 | integration | `internal/signing/never_display_test.go`; `internal/signing/at_rest_test.go` (database dump scan) |
+| AC14 | integration | `internal/signing/never_display_test.go` (responses, and log records, metric labels and audit records captured through `telemetry.NewTestRecorder`); `internal/signing/at_rest_test.go` (database dump scan) |
 | AC15 | integration | `internal/signing/operations_test.go` (through `Submit`; refusals per `auth.md` AC30; audit and `Operation` counts); `internal/manage/openapi/openapi_test.go` (routes present) |
 | AC16 | integration | `internal/signing/external_test.go` (offline-signed `root.json` fixtures: valid, under-threshold, unlisted signer) |
 | AC17 | integration + fault injection | `internal/signing/selfcheck_test.go` |
 | AC18 | benchmark | `internal/signing/bench_signblob_test.go` (peak allocation under `testing.AllocsPerRun` and a memory ceiling; refusal above maximum) |
-| AC19 | integration | `internal/index/virtual_merge_test.go` (fixture runner: staleness bound, coalescing count, atomic swap, failure keeps previous set, virtual key) |
+| AC19 | integration | `internal/index/virtual_merge_test.go` on the production runner, shared with `async-operations.md` AC11 (staleness bound, coalescing count, merge at creation, atomic swap, failure keeps previous set and alerts through `telemetry.NewTestRecorder`, virtual key, no merge on a request goroutine) |
 | AC20 | integration | `internal/index/proxied_generation_test.go` (same generator, unsigned; no `Signature` row, no key for a `remote`) |
 | AC21 | integration + conformance | `internal/index/seed_equivalence_test.go` (seeded versus published bytes); `conformance/core/seed_signed_state_test.go` (case reads public keys, real client installs) |
-| AC22 | integration | `internal/signing/cadence_test.go` under `testing/synctest` (injected clock; restart mid-schedule; idle pointers; `external` alert lead) |
-| AC23 | integration | `internal/replication/signing_records_test.go` (records in the read surface; follower signs nothing); `internal/replication/takeover_keys_test.go` (refused without resolvable keys, succeeds with a shared `kms` fixture key) |
+| AC22 | integration | `internal/signing/cadence_test.go` under `testing/synctest` on the production scheduler, shared with `async-operations.md` AC14 (injected clock; expiry-derived next run written in `Finish`; restart mid-schedule; idle pointers; the expiry gauge and `SigningDocumentExpiring` through `telemetry.NewTestRecorder`) |
+| AC23 | integration | `internal/replication/signing_records_test.go` (records in the read surface; follower signs nothing; shared with `replication.md` AC21); `internal/replication/takeover_keys_test.go` (refused without resolvable keys, succeeds with a shared `kms` fixture key; the link state of `replication.md` AC10 observed across the takeover) |
 | AC24 | integration | `internal/index/unsigned_consumer_test.go` (Vagrant-shaped and Terraform-shaped fixture profiles) |
 | AC25 | integration | `internal/index/determinism_test.go` (every registered generator's golden fixtures, two runs and a restart) |
 | AC26 | unit | `internal/signing/config_test.go`; `internal/index/config_test.go` (defaults, precedence, no Viper import, PIN and master key refused as flags) |
 | AC27 | integration | `internal/index/freshness_source_test.go` (injected service clock never appears in a header or document; only the pointer record's values do) |
-| AC28 | property + benchmark | `internal/index/contention_test.go`; `internal/index/bench_contention_test.go` |
+| AC28 | property + benchmark | `internal/index/contention_test.go`; `internal/index/bench_contention_test.go` (with a `// gate:` comment compared by `scripts/bench-gate.sh`, `observability.md` AC25) |
+| AC29 | integration | `internal/signing/lifecycle_test.go` (rename leaves keys, records and public forms unchanged; deletion retires every key in the transaction and refuses signing; public forms by digest until tombstone; tombstone destroys private material, checked by a database dump scan and dropped references) |
 
 ## Implementation Phases
 
 ### Phase 1: Runtime, file custody and the unsigned consumer (charter step 7, first item)
 - Entry: `write-triggered-services-prototype.md` AC7's finding recorded and the re-open complete
-  (`format-handler-interface.md` AC8); `data-model.md` carries the `Signature`,
-  `PointerDocument` and pointer freshness records (consequences below); `management-api.md`
-  Phase 1's `Submit` and `configure` exist.
+  (`format-handler-interface.md` AC8); `data-model.md`'s `Signature`, `PointerDocument`,
+  `SigningKey` and pointer freshness records and the pre-commit hook (its AC36, AC37) landed
+  with `storage-and-gc.md` AC25; `async-operations.md` Phases 1 to 3 (charter step 4b) running;
+  `management-api.md` Phase 1's `Submit` and `configure` exist; `deployment.md`'s
+  `security.master_key` in place.
 - `internal/index`: `Indexer` discovery, the write-path hook, `Affects`-scoped regeneration,
   per-document locking and retry, inline and CAS-backed storage with declared blob lists,
   `ServeDocument` with the pointer freshness rule, the determinism harness (AC1, AC2, AC3
   property half, AC4, AC5, AC11, AC25, AC26 index half, AC27, AC28).
 - `internal/signing`: the `file` backend under the master key, OpenPGP detached and armoured
   codecs, the `Signing` handle, signature records and assembly, the self-check, the key
-  operations through `Submit`, public forms for OpenPGP (AC6, AC12 OpenPGP forms, AC13 `file`,
-  AC14, AC15, AC17, AC26 signing half).
+  operations through `Submit`, public forms for OpenPGP, key retirement at repository deletion
+  and destruction at tombstone (AC6, AC12 OpenPGP forms, AC13 `file`, AC14, AC15, AC17, AC26
+  signing half, AC29).
 - The Maven generator consumes the index half before any signed consumer, per the charter's
   ordering inside step 7; the prototype's Debian generator is rebuilt as
   `internal/format/debian/index` on the production runtime (AC3 conformance half, AC24 for a
@@ -964,8 +1061,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
   profile complete for Hackage.
 
 ### Phase 4: Virtual merges and the proxied path
-- The merge contract on a fixture runner, then on `async-operations.md`'s runtime when it lands
-  (AC19); `FromUpstream` for the proxied consumers (AC20); the seed-path equivalence (AC21).
+- The `index.merge` worker on `internal/async`, which precedes this spec (AC19), including the
+  merge enqueued at virtual creation; `FromUpstream` for the proxied consumers (AC20); the
+  seed-path equivalence with the `signing` sub-entry's `generate` (AC21).
 
 ### Phase 5: Replication and reserved producers
 - Records on the replication read surface and the takeover precondition (AC23), with
@@ -1226,9 +1324,9 @@ in the registry.
 nothing while linked; takeover requires every active key to resolve on the follower (Design,
 "Replication"; AC23).
 
-Accepted cost: the replication read surface carries two more record kinds (a `replication.md`
-consequence), and a replicated repository on `file` keys needs a documented key recipe before
-takeover. Why the alternatives lost: B (the follower re-signs with its own key) makes every
+Accepted cost: the replication read surface carries two more record kinds (now `replication.md`
+AC21), and a replicated repository on `file` keys needs a documented key recipe before takeover
+(`deployment.md`'s Recipes). Why the alternatives lost: B (the follower re-signs with its own key) makes every
 client of a follower configure a second key and makes a follower's `Date` diverge from the
 leader's, so promotion across instances stops being byte-comparable; C (replicate the private
 key) moves private material over the wire, which AC14 forbids in every form.
@@ -1298,3 +1396,4 @@ settled in `data-model.md`.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-27 | 1fbf1e7 | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirement lists of the twenty-two format specs that cite this file, the prototype spec, `replication.md`, `artifact-verification.md`, `management-api.md`, `conformance-harness.md`, `data-model.md`, `storage-and-gc.md` and `format-handler-interface.md`, and the items the consequences queue placed here (replication item 6; Open items 9, 11, 12, 14 to 32; theme 1; management-api item 14; artifact-verification item 13). Grounded prior art by fetching Pulp's signing-service guides, reprepro(1), aptly's publish guide, Nexus's Yum and APT signing pages, Artifactory's GPG signing page, the TUF specification, the Debian repository format, and the Go seams (`sigstore/sigstore` `kms.Get`, `crypto11`, go-crypto's `NewSignerPrivateKey`), each cited with what is taken and rejected. Eleven questions written in the decision shape and adopted under the standing delegation: write-path dispatch, signature records outside snapshot content, per-format generator packages behind an optional `Indexer`, the freshness split with `data-model.md` and `proxy-cache.md`, the produce/verify boundary with a self-check, per-repository keys, `file` custody by default behind one `crypto.Signer` seam with KMS, PKCS #11 and operator-held keys, per-document locking, verbatim pointer documents on followers with a takeover precondition, no Galaxy server-side signing, and rotation as a snapshot-less operation. Twenty-eight criteria with Test Plan rows; ten mechanical enforcers named; five phases. Sibling consequences reported to the caller, not applied. `node scripts/check-spec.js` run on this file. Stays draft. |
+| 2026-09-28 | 3a82b21 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. From `async-operations.md` (item 5): "except the cadence scheduler" dropped, the cadence is the `signing.resign` `Schedule` with an expiry-derived next run written in `Finish` and the virtual merge the `index.merge` kind (coalesce and exclusivity key `virtual:{repository}`), both on `internal/async`, which lands at the start of charter step 4b and so precedes Phase 1: the "fixture runner until that spec's runtime exists" wording is gone and AC19 and AC22 are asserted on the production runtime, their rows shared with that spec's AC11 and AC14. From `deployment.md` (item 1): the `signing.master_key` row removed, the `file` backend encrypts under `security.master_key` (its resolved master-key decision, was Q5 there), fourteen keys plus the citation, AC26 reworded. From `repository-lifecycle.md` (item 9): keys retire in the deletion transaction, public forms resolve by digest until tombstone time, private material is destroyed then, rename changes nothing (new "Keys follow the repository's lifecycle" paragraph, AC29 with a Test Plan row), and a virtual's first merge is enqueued at creation (AC19). From `observability.md` (item 9): the `signing_*` and `index_*` metrics, `SigningFailed`, `SigningDocumentExpiring`, `VirtualMergeFailed` and `VirtualMergeStalenessBreach`, the `signing.key.*` audit events with their attributes (AC15), private material as `slog.LogValuer` and AC14's scan through `telemetry.NewTestRecorder`, `// gate:` on AC28's benchmark. From `conformance-harness.md`'s reconciliation (item 10): the `signing` sub-entry's `generate` defined as key generation under the `file` backend at repository creation (Design, AC21). From the `data-model.md` reconciliation (item 1): "`data-model.md`'s to add" became citations of its "Freshness scoped to the pointer", AC36 and AC37, and a record is pruned when no retained snapshot or pointer document holds its body; from the `storage-and-gc.md` reconciliation (items 3 and 7): the fourth root's widened reach cited as AC16 and the pre-commit hook the write path dispatches through cited as `data-model.md` AC37 and `storage-and-gc.md` AC25; from `format-handler-interface.md`'s (item 5): the re-open answer cited to "Optional interfaces discovered at registration" (was Q10 there); from `proxy-cache.md`'s (item 8): AC22 for the cache-scoped half; from `replication.md`'s (item 8): AC21 and AC10 in AC23's row. The four format specs' rotation rewording (item 9 of this spec's authoring) is still queued and cited as such. Already done at authoring: replication fold item 6, management-api item 14, artifact-verification item 13, the Open items and theme 1. `node scripts/check-spec.js` on this file: zero failures. Stays draft; awaits an independent review. |
