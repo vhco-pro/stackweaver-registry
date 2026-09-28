@@ -354,6 +354,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - format-handler-interface.md: DONE 2026-09-27. Applied management-api 8, artifact-verification 6, signing-service 7, upstream-adapters 6, async-operations 12, repository-lifecycle 6, observability 2-3, deployment 11, web-ui 3, Open items 25 and 33. Adopted Q10 (three optional interfaces stay three; verdict at the re-open). Pin stays five (AC16). New ACs 15-16.
 - auth.md: DONE 2026-09-27. Applied Open items 6, 11, 13, 14, 15, 18, 19, 24, 25, 26, 27, 31 (client table), theme 8 (Presentation forms table, AC31, AC27, AC7), management-api 5, credential-management 2-5, signing-service 16, upstream-adapters 9 (AC10 review surface listed, AC10 not weakened), observability 6, deployment 3 (auth.* keys), web-ui 2. Adopted Q24 (off-route credential is an authentication failure). New AC33 (Terraform capability), AC34 (Chef signed requests).
 - management-api.md: DONE 2026-09-28. One exhaustive endpoint table and a closed 19-type problem table; applied credential-management 6-7, artifact-verification 5, signing-service 4, upstream-adapters 5, async-operations 3, repository-lifecycle 5, observability 4, deployment 13, web-ui 1, data-model 5, storage-and-gc 3, format-handler-interface 5. Adopted Q11 (deleted listing is `?state=deleted`), Q12 (remote refresh). New AC28-32.
+- conformance-harness.md: DONE 2026-09-28. Applied artifact-verification 4, signing-service 6, credential-management 8, upstream-adapters 7, repository-lifecycle 15, deployment 12, management-api 9 and reconciliation 9, async-operations 13, observability 17, web-ui 4, Open items 10, 12, 14-16, 18-28, 30, 32 (harness halves). Adopted Q6 (every client container confined to the case network). New AC23-27. Stays draft pending its gate review.
 
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
@@ -397,4 +398,17 @@ Wording-only unless stated: each target now cites data-model.md instead of sayin
 7. credential-management.md (~l.269, AC15): `scope-exceeds-owner` and `lifetime-policy` are 422.
 8. helm.md (~l.421-422): attaching with an existing `.prov` is refused `conflict` (409); a coherence failure is `validation` (422).
 9. conformance-harness.md, "What sibling specs already require": `conformance/oci/refresh_test.go` (management-api AC29) and `conformance/generic/admin_test.go`.
+
+## From conformance-harness.md reconciliation (2026-09-28)
+Wording only unless stated.
+1. julia.md (~l.787): client container isolation is now inherited: cite conformance-harness's resolved client-confinement decision (was Q6) and AC23.
+2. cpan.md (~l.1082), homebrew.md (~l.751): the network provision is the `hosts` sub-entry of `upstreams`, conformance-harness AC23.
+3. terraform.md (~l.963), puppet.md (~l.932): the hostname binding is the `repositories` entry's `hostname` sub-entry (AC23), written through `server.hosts`.
+4. hex, conda, cran, julia, terraform, rpm, debian, alpine, vagrant, hackage, cpan, arch ("the seed path invokes the same signing/index service"): the write-path hook signs the seeded write; cite signing-service AC21 and conformance-harness AC24.
+5. debian.md AC8 Test Plan row: name the field `holds`, cite conformance-harness AC27.
+6. chef.md (~l.953): the registered key is a `credentials` sub-entry with the private half delivered as a file (AC25).
+7. credential-management.md AC5/AC12 Test Plan rows: the `expiring` token and public key are seeded through conformance-harness AC25.
+8. management-api.md (~l.886, ~l.934), web-ui.md (~l.381), repository-lifecycle.md (~l.818): the per-kind case validator rule is conformance-harness AC26.
+9. deployment.md (~l.563): the `podman --internal` network is the harness's resolved client-confinement decision (was Q6), AC23.
+10. signing-service.md: confirm `generate` for the `signing` sub-entry means key generation under the `file` backend at repository creation; name it if absent.
 

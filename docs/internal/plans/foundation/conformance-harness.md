@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): external-suite skips (the OCI suite's g.Skip) are improper unless they match the format spec's machine-readable exception list, with the issue-number, structural-partner and passing-entry rules (AC21); the per-format auth case-set rule now requires a pattern-refusal case in both modes and credentials entries express patterns and the multi-repository opt-in (AC22); instances can be declared network-isolated for replication's air-gap case and the replication key carries a taken-over starting state, its provisioner built by replication.md; management triggers come from script and effects from state or the trigger (no new keys). Earlier: Q4 and Q5 adopted under the owner's standing delegation. Zero open questions; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-28 at b5424a2 with the foundation authoring wave (not a review): the closed setup vocabulary gains the trust key (artifact-verification.md) and owner-assigned sub-entries on repositories (read_only state, recreated names, hostname binding through server.hosts, signing key material), credentials (robot-owned tokens, registered public keys, expiring tokens) and upstreams (adapter, credential, off-origin hosts), each validated and rejected as not yet landed exactly as a key is (AC17); seeded state on an Indexer handler comes out generated and signed through the write-path hook (AC24); the client block gains recipe and the case-set rules gain declared operation kinds, rename cases and recipes (AC26); Q6 adopted under the standing delegation: every client container is confined to the case network and resolves only declared names (AC23); holds on the inspecting proxy (AC27); redaction covers every credential position (AC13). Earlier (2026-09-26): AC21 and AC22 from the Wave 1 folds; Q4 and Q5 adopted. 27 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -83,12 +83,19 @@ The harness core knows nothing about any format. Per case it:
 2. Provisions whatever the case's `setup` declares, in the closed vocabulary and through the
    seed path defined below: repositories, credentials, upstream bindings, pre-provisioned
    content and state, and the configuration of subsystems a case depends on.
-3. Runs the client container with the case's script, the server URL and credentials injected.
+3. Runs the client container with the case's script, the server URL and credentials injected,
+   on a **case network** that holds only the case's instances and its declared stand-ins and
+   has no route anywhere else (the resolved client-confinement decision below); where the case's
+   `client` block names a `recipe`, the rendered recipe runs in the container before `script`.
 4. Captures exit code, stdout, stderr and the full HTTP transcript through an inspecting proxy.
 5. Evaluates the case's assertions against all four.
 
 Client containers are pinned by digest, never by tag. A case that passes because the tag moved
-is a case that will fail silently later.
+is a case that will fail silently later. Where no official image exists (`vagrant.md`,
+`luarocks.md`, `cpan.md`'s cpm, Carton and cpan-upload, `debian.md`'s Pop!_OS client), the
+harness builds the image itself from a digest-pinned base and a checksum-verified installer, with
+the build recipe in the format's case directory, and the case then pins the **built** image by
+its digest like any other; AC4 covers both origins.
 
 Two constraints on the capture path, named here because they shape every case:
 
@@ -99,20 +106,48 @@ Two constraints on the capture path, named here because they shape every case:
   deduplication, GC behaviour) are integration or property tests in the owning layer, not
   conformance cases; `generic.md` AC3 and `storage-and-gc.md` already follow this split.
 - **Transcript capture means TLS interception.** Several clients refuse plain HTTP (docker
-  without an insecure-registry flag, and any recording session against a public registry over
-  HTTPS), so both the inspecting proxy and the recording proxy must terminate TLS with a
-  harness CA injected into the client container's trust store. Trust-store injection is
-  per-client (docker's `certs.d`, npm's `cafile`, pip's `REQUESTS_CA_BUNDLE`) and is therefore
-  part of each format's client image or `script`, not of the harness core. It is deliberately
-  not a `setup` key: `setup` provisions server-side state only, and everything client-side
-  lives in the client container.
+  without an insecure-registry flag, NuGet 9.0's `push` and `delete` without
+  `allowInsecureConnections`, Terraform's discovery document which is always `https`, and any
+  recording session against a public registry over HTTPS), so both the inspecting proxy and the
+  recording proxy must terminate TLS with a harness CA injected into the client container's
+  trust store. Trust-store injection is per-client (docker's `certs.d`, npm's `cafile`, pip's
+  `REQUESTS_CA_BUNDLE`, the system store for apk, pacman's `trust anchor`, Vagrant's embedded
+  `cacert.pem`) and is therefore part of each format's client image or `script`, not of the
+  harness core. It is deliberately not a `setup` key: `setup` provisions server-side state only,
+  and everything client-side lives in the client container: a keyring import, an emptied
+  `/etc/apk/keys`, a rewritten `pacman.conf`, a second `sources.list` line, an `auth.toml` in the
+  depot, the private half of a registered key written to a file. The harness core hands the
+  script the material it needs (URLs, credentials, the root key ids or public keys it reads from
+  the server) and the script places it.
+- **The client sees only the case network.** Every hostname a case names resolves inside the
+  client container to something on the case network: an instance (by its harness name, or by a
+  hostname a `repositories` entry binds to a repository), or a stand-in (an `upstreams` entry, or
+  one of its `hosts`). Anything else fails at name resolution. This is what makes a refusal case
+  mean anything for a client that silently falls back to origin (`julia.md`'s Pkg, every CPAN
+  client, Homebrew, opam), what lets `cpan.md` AC22 and `homebrew.md` AC17 stand in for five and
+  four public hostnames respectively, and what keeps the main suite offline by construction
+  rather than by discipline. AC23 asserts it.
+- **A case may hold the client between two requests.** The inspecting proxy honours a `holds`
+  declaration: a request matching a declared pattern is held until the case's `script` releases
+  it (through a harness-provided release command) after performing a server-side write, so a
+  case can interleave a publish between a client's two requests and assert what the client does
+  with an envelope from before and indices from after (`debian.md` AC8's race case). The hold is
+  a proxy behaviour, never a server behaviour: no test-only pause exists in the binary under
+  test. AC27 asserts it.
 
 ### Case definition
 
 Cases are declarative, so a new case is data and an agent can add one without touching harness
 code. Roughly:
 
-- `format`, `name`, and the `client` image + digest + version label
+- `format`, `name`, and the `client` block: image + digest + version label, plus an optional
+  `recipe` naming a surface recipe id the format's handler declares (`web-ui.md`, its resolved
+  declaration-home decision, was Q1). The runner renders the recipe through `internal/surface`
+  with the case's registry URL and credential and runs the rendered steps in the client
+  container before `script`, so the snippet a user copies from the setup page is proven by a
+  real client. Two validator rules close that loop and AC26 asserts them: a case naming an
+  undeclared recipe id is rejected before any container starts, and every recipe a format
+  declares is named by at least one passing case of that format
 - `mode`: `hosted` or `proxied` - **every format must have cases in both**, unless the
   format's spec declares a mode unsupported; `generic` is the single current exemption
   (`format-handler-interface.md`, the proxy-path resolution), and the runner requires the
@@ -135,8 +170,11 @@ code. Roughly:
   vocabulary defined in the next section and nowhere else (the resolved decision that the
   vocabulary is closed, below)
 - `script`: the client command sequence
+- `holds`: optional; request patterns the inspecting proxy holds until the script releases them
+  (above)
 - `expect`: exit code, required and forbidden output patterns, resulting digests, and optionally
-  a required HTTP transcript shape
+  a required HTTP transcript shape, including network-layer assertions (a request that must
+  never leave the client, a name that must fail to resolve)
 - `skip`: when present, **must** carry an issue number. A bare skip is a silent regression and
   the runner rejects it.
 
@@ -167,35 +205,44 @@ input language grow wherever a consumer happens to need it.
 
 | Key | Provisions | Schema of an entry | Lands with |
 |---|---|---|---|
-| `repositories` | Repositories on an instance | The `Repository` entity of `data-model.md`: format, type (`local` / `remote` / `virtual`), visibility, virtual member order, the named upstream binding of a `remote`, and the repository metadata document verbatim | Phase 2 (with generic) |
-| `credentials` | The identities the script presents: none, a token scoped to a repository and actions, each scope optionally narrowed by a pattern, a token spanning several named repositories under `auth.md`'s explicit multi-repository opt-in, or a deliberately wrong scope | The token scope of `auth.md`, patterns and the multi-repository opt-in included | Phase 2 (with generic) |
-| `upstreams` | Named upstreams a `remote` repository binds to | A stand-in (an image by digest, or a harness fixture server) **and** the identity of the real service it stands in for; see "Upstream bindings" | Phase 2 (with generic) |
-| `state` | Content and state already on the server when the client starts: packages, versions and files with fixture bytes, plus the metadata documents at the levels the data model defines | Shared-model entities, with fixture bytes named by path inside the case directory and metadata documents carried verbatim | Phase 2 (with generic) |
+| `repositories` | Repositories on an instance | The `Repository` entity of `data-model.md`: format, type (`local` / `remote` / `virtual`), visibility, virtual member order, the named upstream binding of a `remote`, and the repository metadata document verbatim. Sub-entries: `state` (`active`, the default, or `read_only`), and an entry may recreate a name a previous entry of the same case created and deleted, so a case starts on a recreated repository (`repository-lifecycle.md`); `hostname`, binding the repository to a hostname the client resolves to the instance (`deployment.md`'s `server.hosts`; `terraform.md`, `puppet.md`); `signing`, the repository's key material for a format with an `Indexer`: a fixture private key file or `generate` (`signing-service.md`'s `file` backend) | Phase 2 (with generic) for the base entry; `state` with `repository-lifecycle.md`; `hostname` with `deployment.md`'s loader; `signing` with `signing-service.md` |
+| `credentials` | The identities the script presents: none, a token scoped to a repository and actions, each scope optionally narrowed by a pattern, a token spanning several named repositories under `auth.md`'s explicit multi-repository opt-in, or a deliberately wrong scope. Sub-entries from `credential-management.md`: a token owned by a named robot; a registered RSA public key under a key name, whose private half the harness hands to the client container as a file (`chef.md`); a token in expiry state `expiring` (its AC5) | The token scope of `auth.md`, patterns and the multi-repository opt-in included; the owner, `public-key` kind and expiry state of `credential-management.md` | Phase 2 (with generic) for tokens; the robot, public-key and expiry-state sub-entries with `credential-management.md` |
+| `upstreams` | Named upstreams a `remote` repository binds to | A stand-in (an image by digest, or a harness fixture server, serving recorded or fixture content) **and** the identity of the real service it stands in for; see "Upstream bindings". Sub-entries from `upstream-adapters.md`: `adapter` (default `https`), `credential` (a kind from its table plus fixture material), and `hosts`, the allowlisted off-origin hosts each given a stand-in and a name on the case network (a codeload stand-in, a presigned-redirect target, `homebrew.md`'s four public hosts, `cpan.md`'s five) | The upstream configuration of `upstream-adapters.md` | Phase 2 (with generic) for the base entry; `adapter`, `credential` and `hosts` with `upstream-adapters.md` |
+| `state` | Content and state already on the server when the client starts: packages, versions and files with fixture bytes, the metadata documents at the levels the data model defines, and the core-held records a management operation would have left (`Retirement`, `management-api.md`) | Shared-model entities, with fixture bytes named by path inside the case directory and metadata documents carried verbatim. On a repository whose handler declares an `Indexer`, the seeded write comes out generated and signed through the write-path hook, with no seed-side code (`signing-service.md` AC21) | Phase 2 (with generic); generated and signed output with `signing-service.md` |
 | `advisories` | A case-controlled advisory source, never the live feed | The advisory-source format of `supply-chain-policy.md` | `supply-chain-policy.md` |
 | `policies` | Supply-chain policy rules on named repositories | The policy-rule configuration of `supply-chain-policy.md` | `supply-chain-policy.md` |
+| `trust` | A repository's trust set, verbatim: keys, roots, identity policies, a `sigstore-root` file for the offline virtual Sigstore | The trust-set format of `artifact-verification.md` | `artifact-verification.md`, which builds this key's provisioner (its AC25) |
 | `replication` | Replication links between the case's named `instances`, and a replica's starting state: an active link, or a repository already taken over (its fencing acknowledgement given) so a post-takeover case starts there | The replication-link and takeover configuration of `replication.md`; the no-network pair its air-gap cases need is expressed by declaring those instances network-isolated, not by this key | `replication.md`, which builds this key's provisioner |
 
 Every entry may name the instance it targets; a case declaring a single instance omits it. The
-keys the siblings' provisioners have not yet landed are in the table now rather than added
-later, because each already has a named consumer (below): what waits on the sibling is the
-provisioner, not a revision of this schema.
+keys and sub-entries the siblings' provisioners have not yet landed are in the table now rather
+than added later, because each already has a named consumer (below): what waits on the sibling
+is the provisioner, not a revision of this schema. A sub-entry is part of the closed vocabulary
+exactly as a key is: a case may use only the sub-entries the table names, and a new one is a
+revision here.
 
 **Validation happens before anything runs, in two layers.** The runner rejects a case whose
-`setup` uses a key this table does not define, with an error naming the unknown key. A key the
-table defines but whose provisioner has not landed is rejected with a *different* error naming
-the key and the spec it lands with, so a typo is never indistinguishable from a subsystem that
-does not exist yet - which is the property an open vocabulary could not offer. Entry shapes
-whose schema another spec owns are then validated by the seed path's own dry run against the
-server's configuration validation, still before any server or client container starts. The
-harness core never interprets an entry: it hands entries to the seed path, which is how AC1's
-format-agnostic claim survives a vocabulary whose entries carry format-specific metadata.
+`setup` uses a key or sub-entry this table does not define, with an error naming the unknown
+one. A key or sub-entry the table defines but whose provisioner has not landed is rejected with
+a *different* error naming it and the spec it lands with, so a typo is never indistinguishable
+from a subsystem that does not exist yet - which is the property an open vocabulary could not
+offer. Entry shapes whose schema another spec owns are then validated by the seed path's own dry
+run against the server's configuration validation, still before any server or client container
+starts. The harness core never interprets an entry: it hands entries to the seed path, which is
+how AC1's format-agnostic claim survives a vocabulary whose entries carry format-specific
+metadata.
 
 **The seed path.** `setup` is applied by the server binary itself, through a seed subcommand
-run against the instance's isolated database schema and storage prefix, which writes through
-the same shared-layer calls a handler uses (the metadata store, the CAS commit and the shared
-reference-creation call) and never through a handler, a raw SQL statement or a direct object
-write (the resolved decision on how `setup` is applied, below). Three consequences follow, and each is why this
-path was chosen:
+run against the instance's isolated database schema and storage prefix, which it receives as
+the ordinary configuration keys `database.schema` and `storage.s3.prefix` (`deployment.md`, its
+key inventory), and which writes through the same shared-layer calls a handler uses (the
+metadata store, the CAS commit and the shared reference-creation call) and never through a
+handler, a raw SQL statement or a direct object write (the resolved decision on how `setup` is
+applied, below). A `hostname` sub-entry is the one thing the seed path does not write as a
+record: a hostname binding is configuration, so the seed path emits it into the instance's
+configuration through `server.hosts`' own loader, never through a second mechanism
+(`deployment.md`'s resolved host-binding decision). Three consequences follow, and each is why
+this path was chosen:
 
 - **State no client can trigger is provisionable.** A yanked PyPI file, a supply-chain policy
   rule or a replication link needs no management endpoint to exist, so a case can assert the
@@ -212,7 +259,14 @@ path was chosen:
   write in `data-model.md`'s sense and produces a snapshot the same way an upload does, and the
   seed path is a reference-creating writer that the deletion-intent barrier and
   `storage-and-gc.md` AC10's architecture test already cover. Seeding into a reused instance
-  is therefore just another concurrent writer, not a special case.
+  is therefore just another concurrent writer, not a special case. The same property answers
+  the twelve formats whose hosted state is servable only once generated and signed (`hex.md`,
+  `conda.md`, `cran.md`, `julia.md`, `terraform.md`, `rpm.md`, `debian.md`, `alpine.md`,
+  `vagrant.md`, `hackage.md`, `cpan.md`, `arch.md`): the index runtime of `signing-service.md`
+  runs before every commit on a repository whose handler declares an `Indexer`, the seed write
+  included, so seeded state comes out generated and signed with no seed-side code and no
+  per-format seeding path (its AC21; AC24 here). The seed path never calls a signing or index
+  service itself; the write path does.
 - **Metadata documents are carried verbatim.** The core never parses a metadata document, so a
   `state` entry carries the document exactly as the owning handler stores it, and the case
   lives in that format's own case directory beside the handler that defines the shape. A
@@ -270,6 +324,57 @@ implementation discovers it has no counterparty:
   through a `credentials` entry, and its AC11 binds its upstream to a stand-in fixture server
   serving a collection signed with a fixture key through `upstreams`, the keyring import being
   client-side in the `script`. Neither needs a new key.
+- **Every declared management operation has a `script`-driven case.** `management-api.md`
+  AC24 requires that every kind a handler declares through `Operations()` has at least one case
+  in its format's set whose `script` calls the operation and then runs the real client, and
+  maps that enforcement to this harness's case-set validation, which AC26 asserts from this side:
+  a case set missing such a case fails before the run, naming the kind. Effect-only cases seed
+  the operation's outcome through `state`, including the core-held `Retirement` record.
+- **The deferred Galaxy import is held through the admin pause routes.**
+  `async-operations.md` AC10 pauses a job kind; the Galaxy deferred case's `script` calls
+  `POST` and `DELETE /api/v1/system/jobs/kinds/{kind}/pause` around its publish and poll, so the
+  server carries no test-only hold. No new key.
+- **Repository lifecycle cases are a per-kind rule and a set of named cases.**
+  `repository-lifecycle.md` AC12 requires `conformance/<format>/rename_test.go` in every
+  format's set, validated by this harness's case-set rule (AC26); its AC1, AC10, AC11, AC15
+  and AC18 place `lifecycle_test.go`, `readonly_test.go` and `virtual_detach_test.go` under
+  `conformance/generic/` and `lifecycle_test.go` and `readonly_remote_test.go` under
+  `conformance/oci/`, provisioned through the `repositories` entry's `state` and recreated-name
+  sub-entries (AC24). Its AC4 has the matrix render a format whose `Capabilities()` declares
+  `Virtual: unsupported` as exempt in the virtual column, which AC20 asserts.
+- **Recipes are proven by cases.** `web-ui.md` AC17 requires every declared recipe to be named
+  by a passing case and an undeclared recipe id to be rejected before any container starts;
+  the `client` block's `recipe` field and AC26 are this side of it.
+- **Credential shapes beyond a plain token.** `credential-management.md` AC5's
+  `conformance/generic/expiring_token_test.go` needs a token seeded in state `expiring`; its
+  AC12's `conformance/chef/signed_publish_test.go` needs a registered RSA public key whose
+  private half reaches the client container as a file (`chef.md`'s signed requests); a robot-owned
+  token is what a case presenting automation's credential seeds. All three are `credentials`
+  sub-entries (AC25).
+- **Trust sets are provisioned, never fetched.** `artifact-verification.md` AC25 lands the
+  `trust` key's provisioner and provisions its AC6, AC7, AC9 and AC12 through it, including the
+  virtual Sigstore's `sigstore-root`; this harness validates the key and rejects it as not yet
+  landed until then (AC17).
+- **Signed formats seed through the write path.** `signing-service.md` AC21 requires a
+  repository seeded through `state` to serve documents byte-identical to a publish of the same
+  content, and the case to read the repository's public keys from the server before its client
+  runs (`hackage.md`'s root key ids, `debian.md`'s Release key). The `repositories` entry's
+  `signing` sub-entry and the write-path hook are how; AC24 asserts it.
+- **Off-origin hosts and hostname-bound formats need names on the case network.**
+  `upstream-adapters.md`'s allowlisted off-origin hosts, `homebrew.md` AC17's and `cpan.md`
+  AC22's public-host stand-ins, and the hostname a `terraform.md` or `puppet.md` repository is
+  bound to all resolve inside the client container to the case network (the `hosts` and
+  `hostname` sub-entries, AC23). Homebrew's API stand-in serves a recorded snapshot of genuinely
+  Homebrew-signed documents, because brew accepts no other key: a stand-in serving recorded
+  content is already what an `upstreams` entry is.
+- **Two protocol-visible observability rules get core cases.** `observability.md` AC14
+  (`X-Request-Id` on every response) and AC5 (no `http_route` label equal to a bare mount after
+  the suite) place `conformance/core/request_id_test.go` and `conformance/core/route_label_test.go`
+  in this harness's core set; they run over every format's traffic and need no key.
+- **Two management routes get real-client cases.** `management-api.md` AC29 places
+  `conformance/oci/refresh_test.go` (a `remote` refreshed from the API revalidates upstream
+  inside the TTL, observed at the stand-in) and its AC19 `conformance/generic/admin_test.go` (a
+  repository created through the API serves a real client); both call the API from `script`.
 
 ### The recording proxy, and why it is the real leverage
 
@@ -319,6 +424,21 @@ fails loudly as a replay mismatch you fix in minutes, while an under-redacted on
 into a repository intended to go public. The permitted list is per format and is a review item
 alongside the normalisation rules (AC13).
 
+Headers are not the only place a credential travels, and the format specs have now captured
+every other one: URL userinfo (`cran.md`'s R, `vagrant.md`, `luarocks.md`, `alpine.md`, `opam.md`),
+a path segment (`conda.md`'s `/t/{token}/`, `luarocks.md`'s `api/1/{key}/`, `terraform.md`'s
+download capability, `openvsx.md`'s `-/t/{token}`), a query parameter (`vagrant.md`'s
+`access_token`, `openvsx.md`'s `token`, the presigned `X-Amz-*` and `X-Goog-Signature` families
+an upstream redirect carries), a vendor header (`X-NuGet-ApiKey`, `X-Jfrog-Art-Api`, `X-ApiKey`,
+`X-OpenVSX-Token`), a signed-request header set (`chef.md`'s `X-Ops-*`), and a per-machine
+identifier that is not a credential but identifies the recording machine (`conan.md`'s
+`X-Client-Anonymous-Id`). The allowlist therefore applies to **every position**: userinfo is
+never permitted; a query parameter survives only if the format's list names it; a path segment
+survives only if it is not at a position the format's list marks as credential-bearing (the
+list names those positions by route template, the same forms `auth.md` AC31 enumerates), so a
+format whose list omits a declared form fails the list's review; and a header survives only if
+named. AC13's proof carries a credential in each position.
+
 Normalisation rules are per-format and are themselves reviewed: an over-eager normaliser hides
 real differences, and that failure is invisible because everything goes green. The same review
 obligation covers the per-format recording script, because the corpus closes the
@@ -362,7 +482,10 @@ an acceptance criterion rather than a design note.
       while the script still reaches both, demonstrated by a connection from one instance to
       the other failing in the same case.
 - [ ] AC4: Client containers are pinned by digest; a case referencing a mutable tag fails
-      validation before it runs.
+      validation before it runs; a harness-built client image (from a digest-pinned base and a
+      checksum-verified installer, its build recipe in the format's case directory) is pinned by
+      the built image's digest under the same rule, and a build whose installer checksum does
+      not match fails the build rather than producing an image.
 - [ ] AC5: The runner rejects any `skip` that does not carry an issue number.
 - [ ] AC6: The recording proxy captures a client session against a reference server and writes a
       replayable corpus.
@@ -392,16 +515,23 @@ an acceptance criterion rather than a design note.
       and opens an issue carrying the failing transcript when a case fails, demonstrated by a
       manual dispatch against a deliberately failing fixture.
 - [ ] AC13: A recorded corpus and an attached transcript contain no credential material:
-      redaction is allowlist-based, so a header or field the format's permitted list does not
-      name is redacted at capture time, and the runner rejects a corpus containing any
-      non-permitted field. Proven by a recording session carrying a credential in a header the
-      list does not name, which must arrive redacted.
+      redaction is allowlist-based over every position a credential can travel in, so a header,
+      body field or query parameter the format's permitted list does not name is redacted at
+      capture time, URL userinfo is always redacted, a path segment at a position the list marks
+      credential-bearing is redacted, and the runner rejects a corpus containing any
+      non-permitted field. Proven by a recording session carrying a credential in each of a
+      header, the userinfo, a path segment and a query parameter the list does not permit, each
+      of which must arrive redacted while the permitted path segments beside it survive.
 - [ ] AC17: The case `setup` vocabulary is closed: before any container starts, the runner
-      rejects a case whose `setup` uses a key the vocabulary table does not define, and rejects
-      a defined key whose provisioner has not landed (today `advisories`, `policies` and
-      `replication`) with a different error naming the key and the spec it lands with. Proven by three fixture cases (a misspelt key, a not-yet-landed
-      key, a valid case), where only the valid one reaches the seed path and the two rejections
-      are distinguishable by error alone.
+      rejects a case whose `setup` uses a key or sub-entry the vocabulary table does not define,
+      and rejects a defined key or sub-entry whose provisioner has not landed (today the keys
+      `advisories`, `policies`, `trust` and `replication`, and the sub-entries the table assigns
+      to `repository-lifecycle.md`, `deployment.md`, `signing-service.md`,
+      `credential-management.md` and `upstream-adapters.md`) with a different error naming it
+      and the spec it lands with. Proven by five fixture cases (a misspelt key, a misspelt
+      sub-entry, a not-yet-landed key, a not-yet-landed sub-entry, a valid case), where only the
+      valid one reaches the seed path and the two rejection classes are distinguishable by error
+      alone.
 - [ ] AC18: `setup` provisions state no client triggered, through the shared write path and
       nothing else. A generic artifact provisioned through `state` alone, with no upload ever
       issued, is fetched byte-identical by `curl` and appears in the listing; a version-level
@@ -417,8 +547,10 @@ an acceptance criterion rather than a design note.
 - [ ] AC20: The generated matrix renders every format's replay-match status from run results,
       and renders a format whose `Capabilities()` declares reference-implementation
       availability `none` as exempt, citing the format's spec, never as passing and never as missing; a format with no
-      corpus and no such declaration renders as missing. Proven by the matrix generator over
-      three fixture formats, one per outcome.
+      corpus and no such declaration renders as missing; and the virtual column renders a format
+      whose `Capabilities()` declares `Virtual: unsupported` as exempt, citing the format's
+      spec, never as passing. Proven by the matrix generator over four fixture formats, one per
+      outcome.
 - [ ] AC21: A skip reported from inside an external case source fails the run unless it matches
       an entry of the owning format's machine-readable exception list under
       `conformance/<format>/`; the run also fails when an entry lacks an issue number, when a
@@ -431,6 +563,42 @@ an acceptance criterion rather than a design note.
       token and a multi-repository opt-in token that are then authorized exactly as `auth.md`
       defines: the patterned token refused outside its pattern, the opt-in token honoured on
       both named repositories and refused on a third.
+- [ ] AC23: A client container reaches only the case network: a connection from the client to
+      a hostname the case does not declare fails at name resolution, observed in the same case
+      that succeeds against the instance; a hostname a `repositories` entry binds through its
+      `hostname` sub-entry resolves inside the client container to that instance, is written
+      into the instance's configuration through `server.hosts`' loader and serves that
+      repository at the host root; and every `hosts` stand-in of an `upstreams` entry resolves
+      by its declared name inside the client container, proven by a proxied case whose upstream
+      stand-in redirects to a second declared host which the real client then fetches from.
+- [ ] AC24: Lifecycle and signing state is provisioned, never triggered: a `repositories` entry
+      declaring `state: read_only` yields a repository a real client reads and is refused
+      writes on; an entry recreating a name the same case created and deleted yields a new
+      repository serving nothing of the old one; and on a fixture handler declaring an
+      `Indexer`, a `repositories` entry with a `signing` sub-entry plus a `state` entry serves
+      generated, signed documents byte-identical to those a publish of the same content through
+      the same instance produces, with the repository's public key readable by the script before
+      the client runs and no seed-specific code in the seed path (held by AC18's architecture
+      test).
+- [ ] AC25: A `credentials` entry provisions a token owned by a named robot, a registered RSA
+      public key whose private half the runner delivers to the client container as a file, and a
+      token in expiry state `expiring`; each is then authorized exactly as `auth.md` and
+      `credential-management.md` define, proven by a real client publishing with the robot's
+      token, a signed request verified against the registered key, and the `expiring` token
+      succeeding while its state is visible in the transcript of the listing route.
+- [ ] AC26: The runner rejects a format's case set, before any container starts and with an
+      error naming what is missing, when a kind its handler declares through `Operations()` has
+      no case whose `script` drives it, when the set lacks `rename_test.go`, when a case names a
+      recipe id the handler's surface does not declare, or when a declared recipe is named by no
+      case; and after the run, a declared recipe named only by failing cases fails the run.
+      Proven by fixture case sets and a fixture handler, one per rule, plus one complete set that
+      passes.
+- [ ] AC27: A `holds` declaration makes the inspecting proxy hold a matching client request
+      until the script releases it, so a server-side write performed by the script between the
+      hold and the release is observed by the client's later requests and not by the held one,
+      proven by a case whose script publishes between two requests and asserts the transcript
+      order; the server binary carries no pause path for it, held by an architecture test that
+      fails if a hold reaches the binary.
 
 ## Test Plan
 
@@ -439,7 +607,7 @@ an acceptance criterion rather than a design note.
 | AC1 | architecture test + manual | `conformance/core/arch_test.go` (the core package imports no format package); the adds-only-data half is checked per landing format by the experiment-log procedure in `format-handler-interface.md` (its AC5) |
 | AC2 | integration | `conformance/core/runner_test.go` (broken-handler fixture) |
 | AC3 | integration | `conformance/core/isolation_test.go` |
-| AC4 | unit | `conformance/core/case_validate_test.go` |
+| AC4 | unit + integration | `conformance/core/case_validate_test.go` (mutable tag, unpinned built image); `conformance/core/image_build_test.go` (checksum mismatch fails the build; the built image's digest is what the case pins) |
 | AC5 | unit | `conformance/core/case_validate_test.go` |
 | AC6 | integration | `conformance/record/proxy_test.go` |
 | AC7 | integration | `conformance/record/replay_test.go` (mutated-field fixture) |
@@ -448,35 +616,45 @@ an acceptance criterion rather than a design note.
 | AC10 | ci | `.github/workflows/ci.yml` docs job |
 | AC11 | unit | `conformance/core/case_validate_test.go` |
 | AC12 | ci | scheduled drift workflow, proven by a written manual-dispatch procedure |
-| AC13 | unit + integration | `conformance/record/redact_test.go` (allowlist, corpus rejection), plus a recording session in `conformance/record/proxy_test.go` carrying a credential in a non-permitted header, per the criterion's own proof |
+| AC13 | unit + integration | `conformance/record/redact_test.go` (allowlist per position: header, userinfo, path segment by route template, query parameter; corpus rejection), plus a recording session in `conformance/record/proxy_test.go` carrying a credential in each of the four positions, per the criterion's own proof |
 | AC14 | integration | `conformance/record/stateful_replay_test.go` (OCI chunked-upload corpus; a minimal chunked-upload fixture server stands in until the OCI handler exists, as AC2's broken-handler fixture already does) |
 | AC15 | integration | `conformance/record/seeded_replay_test.go` (pull-flow corpus; missing-declaration fixture) |
 | AC16 | integration | `conformance/core/topology_test.go` (including a network-isolated pair) |
-| AC17 | unit | `conformance/core/case_validate_test.go` (misspelt-key, not-yet-landed-key and valid fixtures) |
+| AC17 | unit | `conformance/core/case_validate_test.go` (misspelt key, misspelt sub-entry, not-yet-landed key, not-yet-landed sub-entry, valid fixture) |
 | AC18 | integration + architecture test | `conformance/core/seed_test.go` (a `state`-seeded generic artifact fetched by `curl`, and a fixture handler whose version metadata flag changes what the client receives); `conformance/core/arch_test.go` (seed-path imports) |
 | AC19 | integration | `conformance/core/upstream_binding_test.go` (one case file, two fixture upstream servers, plus the missing-stand-in rejection) |
-| AC20 | unit | `conformance/core/matrix_test.go` (passing, exempt and missing fixture formats); shared with `format-handler-interface.md` AC13, which asserts the same rendering from the `Capabilities()` side |
+| AC20 | unit | `conformance/core/matrix_test.go` (passing, replay-exempt, virtual-exempt and missing fixture formats); shared with `format-handler-interface.md` AC13 and `repository-lifecycle.md` AC4, which assert the same rendering from the `Capabilities()` side |
 | AC21 | unit | `conformance/core/external_skip_test.go` (fixture suite results: unlisted skip, entry without an issue, structural entry whose partner failed, listed case that passed, a fully matching run) |
 | AC22 | unit + integration | `conformance/core/case_validate_test.go` (case sets missing each auth case kind in each mode); `conformance/core/seed_test.go` (patterned and multi-repository `credentials` entries) |
+| AC23 | integration | `conformance/core/network_test.go` (undeclared hostname fails to resolve while the instance is reached; `hostname` sub-entry resolved in the container and present in the instance's effective `server.hosts`; a proxied case through a redirecting stand-in to a second declared `hosts` name) |
+| AC24 | integration + architecture test | `conformance/core/seed_test.go` (`read_only` entry against a real client; recreated name serves nothing of the old repository; fixture `Indexer` handler: seeded versus published bytes equal, public key readable first); `conformance/core/arch_test.go` (seed-path imports, shared with AC18) |
+| AC25 | integration | `conformance/core/seed_test.go` (robot-owned token, registered public key with the private half delivered as a file, `expiring` token; each authorized per `auth.md` and `credential-management.md`, the listing route's `state` in the transcript) |
+| AC26 | unit + integration | `conformance/core/case_validate_test.go` (fixture handler declaring two kinds and two recipes; case sets missing a kind's `script` case, missing `rename_test.go`, naming an undeclared recipe, leaving a recipe unnamed; a complete set); `conformance/core/runner_test.go` (a recipe named only by failing cases fails the run); shared with `management-api.md` AC24 and `web-ui.md` AC17, which assert the same rules from their side |
+| AC27 | integration + architecture test | `conformance/core/hold_test.go` (held request, script publish, release, transcript order); `conformance/core/arch_test.go` (no hold symbol reachable from `cmd/` or `internal/`) |
 
 ## Implementation Phases
 
 ### Phase 1: Core runner
-- Case schema (including the isolation declaration and multi-instance topology with
-  network-isolated instance sets), validation, digest pinning, skip-requires-issue, and the
-  per-format auth case-set rule (AC22)
-- The closed `setup` vocabulary and its first validation layer (unknown key versus
-  not-yet-landed key), and run-selected upstream bindings
-- Server lifecycle with per-case isolation
-- Client container execution and capture
+- Case schema (including the isolation declaration, multi-instance topology with
+  network-isolated instance sets, the `client` block's `recipe` field and `holds`), validation,
+  digest pinning including harness-built images (AC4), skip-requires-issue, and the case-set
+  rules: per-format auth cases (AC22), declared operation kinds, `rename_test.go` and recipes
+  (AC26)
+- The closed `setup` vocabulary and its first validation layer (unknown key or sub-entry versus
+  not-yet-landed key or sub-entry), and run-selected upstream bindings
+- Server lifecycle with per-case isolation; the case network with client confinement and
+  declared-name resolution (AC23); the inspecting proxy with holds (AC27)
+- Client container execution and capture, and the core cases every format's traffic runs under
+  (`request_id_test.go`, `route_label_test.go`)
 
 ### Phase 2: First subject
 - The generic format's hosted cases as the runner's proving ground, plus validation that its
   declared unsupported proxy capability exempts it from proxied-mode coverage
 - The seed subcommand and its dry-run validation, landing with the shared metadata store, CAS
   and auth that generic needs anyway, since the seed path writes through those layers and
-  cannot exist before them; the `repositories`, `credentials`, `upstreams` and `state`
-  provisioners, with the three sibling keys still rejected as not yet landed
+  cannot exist before them; the base `repositories`, `credentials`, `upstreams` and `state`
+  provisioners, with the four sibling keys and every sibling-owned sub-entry still rejected as
+  not yet landed
 
 ### Phase 3: Recording and replay
 - Recording proxy, corpus format, per-format normalisation rules
@@ -486,13 +664,19 @@ an acceptance criterion rather than a design note.
 ### Phase 4: Official suites and reporting
 - OCI distribution-spec suite as a case source, with external-suite skips matched against the
   format's machine-readable exception list (AC21)
-- Matrix generation, including the replay-match column and its declared exemption, and the CI
-  staleness gate
+- Matrix generation, including the replay-match column and its declared exemption, the virtual
+  column and its declared exemption, and the CI staleness gate
 - Scheduled latest-client drift job
 
-After these phases the `advisories`, `policies` and `replication` provisioners land with
-`supply-chain-policy.md` and `replication.md`, which own building them, each switching its key
-from "not yet landed" to provisioned. Any key beyond the table is a revision of this spec and its re-review, per the
+After these phases the sibling-owned parts of the vocabulary land with their owners, each
+switching its key or sub-entry from "not yet landed" to provisioned: `advisories` and
+`policies` with `supply-chain-policy.md`, `trust` with `artifact-verification.md`,
+`replication` with `replication.md`, the `repositories` entry's `state` and recreated-name
+shapes with `repository-lifecycle.md`, its `hostname` with `deployment.md`'s loader, its
+`signing` and the generated-and-signed `state` output with `signing-service.md`, the
+`credentials` entry's robot, public-key and expiry-state shapes with `credential-management.md`,
+and the `upstreams` entry's `adapter`, `credential` and `hosts` with `upstream-adapters.md`.
+Any key or sub-entry beyond the table is a revision of this spec and its re-review, per the
 resolved decision that the vocabulary is closed.
 
 ## Tasks
@@ -502,9 +686,39 @@ Populated by `/tasks` once this spec reaches `planned`.
 ## Open Questions
 
 None open. Q4 (raised by the 2026-09-23 gate review) and Q5 (exposed while folding Q4's answer)
-were adopted on 2026-09-26 under the owner's standing delegation, so the owner may reverse
-either. Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+were adopted on 2026-09-26, and Q6 (raised by the format specs' fallback findings) on
+2026-09-28, under the owner's standing delegation, so the owner may reverse any of them.
+Resolved decisions are kept rather than deleted, so the reasoning survives the next time
 someone asks why it was done this way.
+
+### Resolved: every client container is confined to the case network (was Q6)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Raised by the format authoring
+wave: `julia.md` captured Pkg installing from GitHub with exit 0 after a `403` from the registry,
+`cpan.md` found every CPAN client has a route back to public CPAN, `homebrew.md` and `opam.md`
+found the same shape, and `julia.md` asked that its cases run with the client's network
+restricted "as an obligation this format states rather than inherits". The question is whether
+confinement is a per-case declaration or the harness's default for every case.
+
+**Recommendation:** A - every client container sees only the case network, always, with no
+opt-out. A case that needs a public host names a stand-in for it, and the stand-in gets that
+name on the case network.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Confine every case; declared names only** (adopted) | A refusal case cannot pass by falling back to origin; the main suite is offline by construction, which the upstream-binding rule already promised by discipline; a forgotten restriction is impossible rather than a silent no-op | Every public host a client reaches during a case must have a declared stand-in, so the first case of a format with an off-origin fallback fails at name resolution until its author declares one |
+| **B. Confine only cases that declare it** | Formats without a fallback problem keep an unrestricted client | The formats with the problem are exactly the ones whose author may not know it yet; `julia.md`'s finding was captured, not documented, so the declaration would be missing where it matters most |
+| **C. No confinement; assert fallbacks in the transcript** | Nothing to build | The transcript sees only traffic through the inspecting proxy; a client resolving a public name directly bypasses it, which is the very failure being tested for |
+
+**Why this is yours:** it makes a network property the harness's rather than each format's, and
+the cost falls on every future format author.
+
+Accepted cost: a stand-in per public host a client reaches, declared through `upstreams` and its
+`hosts` sub-entry, with a name on the case network (AC23). The cost is already paid where it
+bites: `cpan.md` AC22 and `homebrew.md` AC17 name their stand-ins, and `upstream-adapters.md`'s
+transport stand-ins are the same mechanism. B lost because the declaration would be absent
+precisely where the fallback is unknown; C lost because the fallback bypasses the observation
+point.
 
 ### Resolved: the `setup` vocabulary is closed (was Q4)
 
@@ -649,3 +863,4 @@ question in `formats/npm.md`.**
 | 2026-09-23 | 9c971d4 | cross-spec consistency (generic proxy exemption) | Corrected Phase 2 to use generic's hosted cases and explicitly test its unsupported proxy declaration, matching AC11 and the format spec; status remains draft pending its existing gate review. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review: adoption and fold. Q4 adopted as option B (closed vocabulary owned here) with the known sibling needs pre-listed as keys (`repositories`, `credentials`, `upstreams`, `state` provisioned from Phase 2, since the seed path writes through shared layers that land with generic; `advisories`, `policies`, `replication` waiting only on their provisioners), two-layer pre-run validation that tells a typo from a not-yet-landed key, and entry shapes other specs own validated by the seed path's dry run. Folding exposed Q5 (how `setup` is applied), adopted as the server binary's seed subcommand writing through the shared-layer calls, which is what makes state no client can trigger (a yanked file, a policy rule, a replication link) provisionable with no management API, per `management-surfaces-and-the-oracle.md`. Design gained the vocabulary table, the seed path, run-selected upstream bindings (proxy-cache AC15) and the rule that a corpus's starting state uses the same vocabulary; the sibling-requirements list now maps each sibling to its key; trust-store injection moved out of `setup` to the client side. AC15 rewritten onto the vocabulary and seed path; AC17 (closed validation), AC18 (state no client triggered, through the shared write path, with an architecture test), AC19 (run-selected upstream binding) and AC20 (matrix renders a declared replay-match exemption as exempt, from generic's adopted replay-match exemption) added with Test Plan rows. `setup` is no longer unasserted. |
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the data-model and OCI fold: external-suite skips are improper under AC9 unless they match the owning format spec's exception list, read from its machine-readable copy under `conformance/<format>/`, with every entry needing an issue number, a structural entry holding only while its partner ran and passed in the same run, and an entry whose case passed failing the run (new Design paragraph, AC21). From the auth and interface fold: the per-format auth validator rule now names the pattern-refusal case in both modes, the `credentials` key's schema expresses a pattern and `auth.md`'s multi-repository opt-in (AC22 asserts both). From the replication fold: an air-gapped pair is declared by marking instances network-isolated and offline (AC16 extended), and the `replication` key carries a taken-over starting state; its provisioner is `replication.md`'s to build. From the format-management fold: the sibling-requirements list now says management triggers are called from `script` (pypi AC12 and AC13, npm AC17, ansible AC12), effect-only cases seed through `state`, ansible AC10 uses a pattern-scoped `credentials` entry and AC11 a signed fixture stand-in in `upstreams`; no new keys, and the stale sentence treating those management surfaces as undecided was rewritten. From the generic fold: AC20's Test Plan row records that `format-handler-interface.md` AC13 shares `conformance/core/matrix_test.go`. Phases 1 and 4 updated. |
+| 2026-09-28 | b5424a2 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every queued item in `agents/spec-loop/consequences.md` targeting this file verified against the current text of its source spec before applying; the four old-fold items (replication 5, data-model and OCI 5, auth and interface 4, format-management 8) found already applied at fe54272. The closed `setup` vocabulary gains the `trust` key (`artifact-verification.md` AC25 builds its provisioner) and sub-entries, each with an owner and a provisioner owner: `repositories` gains `state` (`read_only`) and recreated names (`repository-lifecycle.md`), `hostname` written through `server.hosts`' loader (`deployment.md`, `terraform.md`, `puppet.md`), and `signing` (`signing-service.md`); `credentials` gains robot-owned tokens, registered public keys with the private half delivered to the container as a file, and `expiring` tokens (`credential-management.md`, `chef.md`); `upstreams` gains `adapter`, `credential` and `hosts` (`upstream-adapters.md`); `state` may seed `Retirement` records (`management-api.md`) and comes out generated and signed on an `Indexer` handler through the write-path hook with no seed-side code (`signing-service.md` AC21), which answers the twelve formats that asked the seed path to "invoke the signing service". Sub-entries are closed and validated exactly as keys are (AC17 extended). The seed subcommand's isolation keys named as `database.schema` and `storage.s3.prefix`. The `client` block gains `recipe` with `web-ui.md` AC17's two validator rules; the case-set rules now also require a `script` case per declared `Operations()` kind (`management-api.md` AC24) and `rename_test.go` per format (`repository-lifecycle.md` AC12), all under AC26. Q6 raised in the decision shape and adopted: every client container is confined to the case network and resolves only declared names, which is what makes refusal cases mean anything for Pkg, the CPAN clients, brew and opam (AC23, with the `hosts` and `hostname` names). `holds` on the inspecting proxy for `debian.md` AC8's race case (AC27); harness-built images pinned by built digest (AC4 extended); TLS interception named mandatory for NuGet 9.0 and Terraform. Redaction extended from headers to every credential position the format specs captured (userinfo, path segment by route template, query parameter, vendor and signed headers, `X-Client-Anonymous-Id`), AC13 rewritten with a four-position proof. The virtual column renders `Virtual: unsupported` as exempt (AC20). The sibling-requirements list gains eleven entries (operations, pause routes, lifecycle cases, recipes, credential shapes, trust, signed seeding, off-origin names, the two `conformance/core/` observability cases, the two management-route cases). AC23 to AC27 added with Test Plan rows; Phases 1, 2 and 4 and the trailing provisioner paragraph updated. `node scripts/check-spec.js` run against this file with zero failures. |
