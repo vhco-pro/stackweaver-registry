@@ -42,6 +42,21 @@ the queues are empty.
 A task prompt is one line: "Read `agents/spec-loop/<brief>` and follow it exactly. HEAD sha: <sha>.
 Author `docs/internal/plans/<dir>/<name>.md`; your hints are its line in `<queue>.tsv`."
 
+## Resume point (2026-09-28, monthly spend limit)
+
+Stopped by the owner at the spend limit. Nothing is uncommitted. In order:
+1. RubyGems author (above).
+2. Format closing sweep, batches of four with reconcile-brief.md: batch 3 (hackage, cpan, cran,
+   debian) died before editing anything, so relaunch it with the prompt shape in the
+   consequences.md progress log. Batches 1 and 2 (puppet, vagrant, swift, homebrew; conda, rpm,
+   alpine, arch) are done. The remaining batches are luarocks, chef, maven, opam;
+   helm, conan, terraform, hex; pypi, npm, cargo, nuget; composer, openvsx, julia, pub; generic,
+   oci, go-modules, ansible-collections.
+3. The foundation items those batches and the closing sweeps queued, including management-api
+   Puppet rows, signing-service member-input templates, and async EnqueueRevalidation.
+4. A final check that every target absorbed the whole queue, then the Fable recheck queue
+   (question-triage.md round six) once Fable credit returns.
+
 ## Queue, split by where it runs
 
 Split by the owner on 2026-09-26: work that needs real package clients in containers runs on the
@@ -51,7 +66,7 @@ Each side appends to `consequences.md`; a conflict there is two lists to concate
 
 ### Local: needs podman or docker - 32 of 33 DONE
 
-CORRECTION 2026-09-28: RubyGems was never specced. Its author died in the first spend-limit crash and was never relaunched, and the queue was then wrongly marked complete. It is being authored now. The other 32 catalogue ecosystems are specced, each grounded in captured traffic from real clients run in
+CORRECTION 2026-09-28: RubyGems was never specced. Its author died in the first spend-limit crash and was never relaunched, and the queue was then wrongly marked complete. A second author was stopped on 2026-09-28 (monthly spend limit) mid-capture, before writing any spec. Its captures and container images (gemstash, geminabox, localhost/gemcap-*) are on the owner's host under /tmp/gemcap; reuse them if they survive, otherwise re-capture. Relaunch with author-brief.md. The other 32 catalogue ecosystems are specced, each grounded in captured traffic from real clients run in
 containers: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub, nuget,
 maven, hex, composer, conda, cran, julia, swift, terraform, rpm, debian, alpine, conan, vagrant,
 chef, puppet, hackage, luarocks, cpan, opam, homebrew, openvsx, arch (plus the catalogue itself).
