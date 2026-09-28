@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 as a grounded first draft: the bottle, manifest and JSON API contract captured from Homebrew 7.0.6 (ghcr.io/homebrew/brew, Ubuntu 24.04, curl 8.5.0) and Homebrew 4.6.20 (the last docker.io/homebrew/brew image, Ubuntu 22.04, curl 7.81.0), both pinned by digest, on dedicated Podman networks against a logging, rule-injecting stub serving the legacy flat bottle layout, the OCI-shaped layout HOMEBREW_ARTIFACT_DOMAIN produces, two genuine generations of the Homebrew-signed internal API document, tampered, re-signed, wrong-kid and unsigned variants of it, swapped bottle bytes, missing manifests, policy refusals, Bearer and Basic and netrc credentials, a hosted tap root_url, and three conditional-request policies; plus byte-for-byte pass-throughs to the live formulae.brew.sh and ghcr.io; checked against both clients' sources (api.rb, bottle.rb, the curl and GitHub Packages download strategies, brew.sh, env_config.rb, pr-upload), the live ghcr.io token and redirect behaviour, the live API documents and OSV, the OSV schema, the Homebrew advisory database and purl. Fourteen questions written in decision shape and adopted under the owner's standing delegation; none open. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at 7c4d5bb with the foundation wave on Opus (not a review), this spec's first reconciliation: publish and deletion are management-api's publish and delete-file kinds through Operator, the record as args and the per-file root_url in the result document, validation 422, conflict and retired 409 through core-held Retirement, the identical-bytes 200 replaced by Idempotency-Key, unauthorized for out-of-pattern files, 405 repository-type (AC6, AC7, AC15, AC18, AC19); the API remote fetches in proxy-cache's completion-only mode with the JWS entry (artifact-verification AC16, a raw-keys trust set) as the verifier-hook integrity call, regressions not adopted by generated_at and, for legacy documents, by upstream Last-Modified (AC3, AC5); the bottle remote on upstream-adapters' distribution adapter with the anonymous exchange and the none-role redirect host (AC10); the served Last-Modified is proxy-cache AC22's adopted_at, keeping this spec's not-earlier 304 rule where AC22's exact-match clause leaves brew's later condition undefined (reported) (AC4); the virtual's served time derived from member and pointer records, a member-list change reported as a data-model gap (AC20); the verdict is repository-chain (AC21); homebrew advisories through a declared policy.feed.sources source per supply-chain was-Q9, its version ordering reported (AC22); oci was-Q8 cited; WriteRefusal with the client-setting row; harness stand-ins as hosts sub-entries and the signed API snapshot met; Capabilities with rename (AC28). No new question. Earlier: authored 2026-09-26 from captures of brew 7.0.6 and 4.6.20; fourteen questions adopted under the standing delegation; none open. Awaits a /spec review pass and a Fable recheck."
 description: "Spec for Homebrew bottles served to brew: hosted bottles at a tap's root_url in the legacy flat layout, a verified cache of ghcr.io's homebrew/core bottles in both the flat layout HOMEBREW_BOTTLE_DOMAIN reads and the OCI-shaped layout HOMEBREW_ARTIFACT_DOMAIN reads, and a byte-for-byte cache of formulae.brew.sh's JWS-signed API documents that no registry can re-sign, with a cache-scoped Last-Modified that lets a new API generation reach a client whose curl discards anything not newer, taps left on Git, and every route back to Homebrew's own hosts named because a refusal holds only where that route is closed."
 author: michielvha
 goal: "Serve Homebrew users a private bottle host their taps point at and a verified cache of Homebrew's bottles and signed API that stock brew (7.0.6 and 4.6.20) installs from on both paths, with the configuration that keeps brew from falling back to ghcr.io and formulae.brew.sh proven at the network layer rather than assumed."
@@ -146,26 +146,29 @@ root-anchored claim is made. `HOMEBREW_ARTIFACT_DOMAIN` produces `{domain}/v2/{o
 under this mount never reaches the OCI handler's root-anchored `/v2/`.
 
 **The management API must be `planned` before Phase 2.** Publishing and deleting a hosted bottle are
-operations of `docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop),
-whose core the charter builds at step 2 and completes at step 9. No Homebrew client publishes to a
+operations of `management-api.md`, placed on its closed kind vocabulary (its reconciliation table's
+Homebrew rows: `publish` for a bottle with its record, `delete-file` per file) and reaching this
+handler through the optional `Operator` interface (its resolved dispatch decision, was Q2), whose
+core the charter builds at step 2 and completes at step 9. No Homebrew client publishes to a
 registry other than GitHub: `brew pr-upload` recognises GitHub Releases and GitHub Packages and
 otherwise stops with "Service specified by root_url is not recognized" (source), so there is no
 client binding to add.
 
-**The proxied path depends on shared services that are requested, not assumed**: the upstream adapter
-behaviour in Design ("The proxied path") of `docs/internal/plans/foundation/upstream-adapters.md` (to
-be authored in the spec loop, charter step 4), and the JWS verification requested of
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop, step 4b),
-both `planned` before Phase 3. **The proxy layer must serve a cache-scoped `Last-Modified`** on mutable
-metadata (Design, "Freshness"), a revision of `proxy-cache.md` this spec raises and lists among its
-sibling consequences.
+**The proxied path's shared services now exist**, each cited where Design uses it, all `planned`
+before Phase 3: `upstream-adapters.md` (its requirements row for this spec: ghcr.io's anonymous
+token exchange in the `distribution` adapter with no placeholder, its AC16; the `307` to
+`pkg-containers.githubusercontent.com` with no `Authorization`, its AC6; identity encoding, its
+AC5); `artifact-verification.md` (the JWS entry, its AC16, whose verdict chain is
+`repository-chain`); and `proxy-cache.md`, whose completion-only mode carries the post-receipt
+verifier hook the API documents need (its resolved completion-only decision, was Q15, AC20) and
+whose cache-scoped `Last-Modified` is the revision this spec asked for ("Freshness of what a
+remote serves", AC22, with `data-model.md` AC44 holding the record).
 
-**Two shared services are deliberately not needed.** The signing and index service
-(`docs/internal/plans/foundation/signing-service.md`, to be authored in the spec loop, step 7) is asked
-for nothing: this format generates no document and signs nothing, because the only signed documents on
-its wire are Homebrew's and cannot be re-signed (Design, "The signed API documents"). And
-`docs/internal/plans/foundation/async-operations.md` (to be authored in the spec loop, step 6a) is not
-needed, because a virtual repository merges nothing (Design, "Virtual repositories").
+**Two shared services are deliberately not needed.** `signing-service.md` lists this format under
+"Nothing, stated": it generates no document and signs nothing, because the only signed documents on
+its wire are Homebrew's and cannot be re-signed (Design, "The signed API documents"), so the handler
+declares no `Indexer`. And `async-operations.md` records this spec among those that ask nothing of
+the queue, because a virtual repository merges nothing (Design, "Virtual repositories").
 
 ## Scope
 
@@ -179,8 +182,10 @@ needed, because a virtual repository merges nothing (Design, "Virtual repositori
   `HOMEBREW_API_DOMAIN` reads, in both generations' names.
 - **Two clients as oracles on both paths**, brew 7.0.6 and brew 4.6.20, installing core formulae
   through a cache and tap formulae from a hosted repository.
-- **Hosted publish and deletion** through the management API, with ingest validation of the bottle
-  archive and its `brew bottle --json` record.
+- **Hosted publish and deletion** through the management API as the `publish` and `delete-file` kinds,
+  with ingest validation of the bottle archive and its `brew bottle --json` record, and retirement
+  through the core-held `Retirement` record.
+- **The handler's `Capabilities()` declaration and repository rename** (AC28).
 - **Non-interactive authentication** in the three forms brew sends (a Bearer or Basic header on the
   OCI-shaped routes, and a netrc credential through `HOMEBREW_CURLRC` everywhere), and the per-route
   addressed objects `auth.md`'s pattern scopes evaluate, including the pattern-refusal case its AC8
@@ -322,8 +327,8 @@ the wire grammar of a subset of these routes and none of the behaviour a brew cl
 |---|---|---|
 | Manifest by tag, blob by digest, the OCI image index and manifest media types, `application/vnd.oci.image.layer.v1.tar+gzip` | Specified, under the OCI handler's root-anchored `/v2/` | The same shapes as a read-only subset under `/homebrew/{repository}/v2/`, since handlers never call each other |
 | Authentication | The challenge, token endpoint and JWT flow | Not used: brew never follows a challenge; it sends a registry token directly as Bearer or Basic, or nothing (captured) |
-| One remote over an upstream namespace (`ghcr.io/homebrew/core/*`, 8,620 images) | Not specified: an OCI name, slashes included, is one repository | A bottle remote serving configured namespaces |
-| ghcr.io's anonymous token exchange | Deferred to the upstream adapter axis | Stated as a requirement of `upstream-adapters.md` |
+| One remote over an upstream namespace (`ghcr.io/homebrew/core/*`, 8,620 images) | Specified since its resolved name-split decision (was Q8): the first component of an OCI name is the registry repository and the rest is the image, so one OCI remote covers a whole upstream registry as `{remote}/homebrew/core/hello` | A bottle remote serving configured namespaces under `/homebrew/{repository}/v2/`, kept regardless, because brew's paths are this mount's and handlers never call each other |
+| ghcr.io's anonymous token exchange | The `distribution` adapter's (`upstream-adapters.md` AC16), which `oci.md` uses | The same adapter, with credential `none` for the anonymous exchange |
 | `sh.brew.*` annotations | Not read | Read: `sh.brew.bottle.digest` and `org.opencontainers.image.ref.name` resolve the flat layout |
 | Push, chunked upload, mount, tag list, referrers, deletion | Specified | Not served (Scope) |
 | The flat layout, the signed API documents, curl's time condition | Nothing | New |
@@ -357,16 +362,18 @@ That settles the two questions this format raises for signed documents:
   So this format asks `signing-service.md` for nothing, and a hosted or virtual repository never
   synthesises an API document (the resolved hosted-surface decision below).
 
-What this format requires of `docs/internal/plans/foundation/artifact-verification.md` (to be authored
-in the spec loop), which owns verification per `supply-chain-policy.md`'s resolved
-verification-ownership decision: **a JWS verification** taking a document in general JSON
-serialization, a `kid` and a configured public key, supporting PS512 with an unencoded payload and the
-`crit` header, and answering verified or failed with the reason (key not found, invalid algorithm,
-signature mismatch). The remote uses it to refuse to commit a document that would fail in the client
-(Design, "The proxied path"), and its verdict feeds the bottle verdict (Design, "Signing, provenance
-and policy"). The remote's configured key defaults to Homebrew's published `homebrew-1` key; how the
-verifier reaches the handler, through `Deps` at the re-open or through the fetch-and-cache integrity
-hook, is that spec's and the re-open's decision, not this one's.
+What this format asked of `artifact-verification.md`, which owns verification per
+`supply-chain-policy.md`'s resolved verification-ownership decision, is now its JWS entry (its
+requirements table's `homebrew.md` row and AC16): **a JWS verification** taking a document in general
+JSON serialization, a `kid` and a public key, supporting PS512 with an unencoded payload and the `crit`
+header, and answering verified or failed with the reason (unknown `kid`, wrong algorithm, signature
+mismatch). The key is a `raw-keys` entry of the API remote's trust set (its "RSA for JWS (Homebrew,
+`kid`)"), defaulting to Homebrew's published `homebrew-1` key. It reaches the handler through the
+`Verifier` consumer interface `Deps` carries (`format-handler-interface.md`, "The pinned method set"),
+and on the proxied path it runs as an **integrity call** inside the completion-only mode's post-receipt
+verifier hook, refusing the commit of a document that would fail in the client (its "When verification
+runs": "Homebrew's JWS document that 'would fail in the client'"; Design, "The proxied path"); its
+verdict, recorded afterwards, feeds the bottle verdict (Design, "Signing, provenance and policy").
 
 ### Mapping onto the shared model
 
@@ -378,14 +385,16 @@ The levels are exactly those `data-model.md` provides; no table is added.
   the `brew bottle --json` record it was published with (including its `tab`), and the publish time.
 - **`File`**: one per bottle tag and rebuild, keyed by its served flat filename and stored by CAS
   digest.
-- **The package-level document** holds the retirement set of deleted files.
+- **Deleted files are core-held `Retirement` records** at file granularity (`data-model.md` AC35;
+  `management-api.md`, "Retirement is core-held"), not a set in any document.
 - **The repository-level document** of a bottle remote holds its namespace list (`homebrew/core` and
   any operator-listed taps whose bottles live on ghcr.io), and of a virtual repository nothing beyond
   its members.
 - **Not snapshot content**: a remote's cached API documents, manifests and blobs, its flat-filename
-  resolutions (filename to manifest digest and blob digest), each cached document's served
-  `Last-Modified` and last adopted `generated_at`, and the JWS verdicts. A proxied repository creates
-  no snapshots.
+  resolutions (filename to manifest digest and blob digest), each cached document's cache-scoped
+  freshness record (`adopted_at`, `data-model.md` AC44) and last adopted `generated_at`, and the JWS
+  verdicts (`artifact-verification.md`'s verdict records). A proxied repository creates no
+  snapshots.
 
 The API documents are large (15 to 35 MB), far above any inline metadata threshold, so a remote holds
 them as CAS blobs referenced from its cache records and marked through them, as `proxy-cache.md`'s GC
@@ -393,18 +402,23 @@ interaction requires for any cached metadata; AC25 proves they survive a sweep w
 
 ### The hosted publish path and what counts as a write
 
-Publishing is an operation of `docs/internal/plans/foundation/management-api.md` (to be authored in the
-spec loop), per the resolved publish-input decision below: **one request carries one formula version's
-bottle archives with the JSON `brew bottle --json` wrote for them**, the pair Homebrew's own pipeline
-produces before `brew pr-upload`. `brew bottle` names the local file `{name}--{pkg_version}...` with a
-double hyphen and the URL uses a single one (source `Filename#to_str` and `#url_encode`); the registry
-serves the URL form whatever the part was called, and the response returns, per file, the served
-filename, its SHA-256, the cellar and the `root_url` the formula's `bottle do` block must carry.
-Responses: `201` for a new version's files, `200` with no snapshot for an identical republish, `400`,
-`409` and `401` per the rules below with a `text/plain` body naming the rule, `405` against a remote or
-virtual repository.
+Publishing is the `publish` kind of `management-api.md`, declared through `Operator`, per the resolved
+publish-input decision below: **one operation carries one formula version's bottle archives with the
+JSON `brew bottle --json` wrote for them**, the pair Homebrew's own pipeline produces before `brew
+pr-upload`, the archives committed through upload sessions (or in one request through the multipart
+convenience form, a binding onto the same operation) and the record as the operation's `args`
+(`management-api.md`, "Publish through the API"). `brew bottle` names the local file
+`{name}--{pkg_version}...` with a double hyphen and the URL uses a single one (source `Filename#to_str`
+and `#url_encode`); the registry serves the URL form whatever the part was called, and the operation's
+result document returns, per file, the served filename, its SHA-256, the cellar and the `root_url` the
+formula's `bottle do` block must carry, the response that spec names this format for. Refusals are
+`management-api.md`'s problem types: `validation` (422) for every ingest rule below, `conflict` (409)
+for an existing file, `retired` (409) for a deleted one, `unauthenticated` (401), and `405`
+`repository-type` against a remote or virtual repository before authorization. The CI-retry case this
+spec first answered with an identical-bytes `200` is `management-api.md`'s `Idempotency-Key`: a retry
+carrying the first request's key and payload replays its outcome and creates no snapshot (its AC17).
 
-What ingest enforces, each refusal naming the rule and committing nothing:
+What `Apply` enforces over the committed blobs, each refusal naming the rule and committing nothing:
 
 - **The formula name**: `[a-z0-9][a-z0-9+_.@-]*`, lowercase (no live formula name holds an uppercase
   letter, captured over 8,620), containing no hyphen directly followed by a digit, per the resolved
@@ -423,9 +437,10 @@ What ingest enforces, each refusal naming the rule and committing nothing:
   `sbom.spdx.json`.
 - **The record**: the JSON's formula name, version, bottle tag, rebuild and cellar agree with the
   archive and the request, and its SHA-256 equals the SHA-256 of the stored bytes.
-- **Coordinates bind one set of bytes for the life of the repository.** A file that exists answers
-  `409` unless the bytes are identical, which answers `200` and creates no snapshot; a deleted file
-  answers `409` with any bytes, including after the deleting snapshot is pruned.
+- **Coordinates bind one set of bytes for the life of the repository.** A file that exists is refused
+  `conflict`, and a deleted file `retired` by the shared write path with any bytes, including after
+  the deleting snapshot is pruned and after a backwards repoint, because its `Retirement` record is
+  not snapshot content.
 
 `data-model.md` requires each format spec to declare its ecosystem's write boundaries. Homebrew's
 declaration:
@@ -437,31 +452,32 @@ declaration:
   is one write however many versions it removes.
 - **Two concurrent publishes** of different files each read-modify-write the version document through
   the revision-token retry `data-model.md` makes mandatory (its AC20): both land. Two publishes of the
-  same file with different bytes land one and answer `409` to the other.
+  same file with different bytes land one and refuse the other `conflict`.
 - **A proxied repository creates no snapshots.**
 
 ### Deletion
 
-Per the cross-format precedent (`pypi.md`'s resolved hosted-yank decision, with `npm.md`, `cargo.md`,
-`puppet.md`, `hackage.md` and `cpan.md`), each operation is a completed logical write through the
-shared write path, authorized in the settled `(repository, action)` vocabulary with no new action,
-hosted only, its trigger verified by integration tests and its effect by the real client
+Each operation is a kind of `management-api.md`'s closed vocabulary (its reconciliation table's
+Homebrew rows), declared by this handler through `Operator` (`Operations()` returning `publish` and
+`delete-file`, `Bindings()` returning none), one completed logical write through the shared write path
+with an `Operation` completed in the request, hosted only, its trigger verified by integration tests
+and a `script`-driven conformance case per kind (`management-api.md` AC24, enforced by
+`conformance-harness.md` AC26), and its effect by the real client
 (`docs/internal/analysis/management-surfaces-and-the-oracle.md`). **No Homebrew client triggers either
 operation.**
 
-| Operation | Effect a client sees | Action |
-|---|---|---|
-| Publish a formula version's bottles | Each file served at its flat filename; the tap formula naming it installs | `push` |
-| Delete one or more bottle files of a version | Each answers `404`, so a formula naming it fails to install with a non-zero exit (brew never builds from source in its place, captured); the files join the retirement set | `delete` |
+| Operation | Kind | Effect a client sees | Action |
+|---|---|---|---|
+| Publish a formula version's bottles | `publish` | Each file served at its flat filename; the tap formula naming it installs | `push` on every file's `{name}/{pkg_version}/{bottle_tag}/{rebuild}` |
+| Delete one or more bottle files of a version | `delete-file` | Each answers `404`, so a formula naming it fails to install with a non-zero exit (brew never builds from source in its place, captured); each file's coordinate is retired | `delete` on each file |
 
 Rules, applying the precedent: every operation is one snapshot, none for a refused one, and no blob is
 deleted directly, so space returns only through retention pruning and `storage-and-gc.md`'s
-single-deleter boundary (its AC15) holds; the retirement set is carried forward by every later write
-and preserved across a backwards repoint; the `Package` row outlives its versions (`data-model.md`
+single-deleter boundary (its AC15) holds; `delete-file` returns each removed file's coordinate in its
+`Outcome` and `Submit` writes the `Retirement` records in the same transaction, so the retirement holds
+across a backwards repoint by construction; the `Package` row outlives its versions (`data-model.md`
 AC33). There is no yank: nothing in brew's model says "not for new installs", and a formula
-unpublishes a bottle by changing its own `bottle do` block in Git. What this format requires of
-`management-api.md`: the two operations above on the objects in the addressed-object table, and the
-publish response's per-file `root_url`, filename and SHA-256.
+unpublishes a bottle by changing its own `bottle do` block in Git.
 
 ### The proxied path
 
@@ -479,15 +495,24 @@ both behind one URL.
   `internal/{word}.{bottle_tag}.jws.json`, the shapes both versions request; every other path answers
   `404` without an upstream request.
 - **Mutable metadata**, revalidated under the proxy layer's TTL with the upstream's validators, fetched
-  with `Accept-Encoding: identity` so the stored bytes are the signed bytes, and **committed only after
-  the JWS verification** against the configured key succeeds. A document that fails is never cached or
-  served; the previously cached document keeps serving, and the failure is recorded and alerted,
-  because brew would stop dead on it with no fallback (captured).
-- **Never adopts a regression**, per the resolved regression decision below: a revalidated
-  `internal/packages.*` document whose `metadata.generated_at` is older than the cached one's is not
-  adopted, and is recorded and alerted, since the upstream CDN answered an older `Last-Modified` a
-  minute after a newer one (Context) and brew would accept the older document (captured). The legacy
-  documents carry no generation field, so they follow the upstream.
+  on the `https` adapter with its default `Accept-Encoding: identity` so the stored bytes are the
+  signed bytes (`upstream-adapters.md`, "Request hygiene", naming these documents), and fetched in
+  `proxy-cache.md`'s **completion-only mode**, since a JWS document cannot be verified as a stream:
+  the body is spooled, and the post-receipt verifier hook runs the JWS entry as an integrity call
+  (`artifact-verification.md` AC16) before anything is committed (`proxy-cache.md` AC20). A
+  document that fails is never cached or served and leaves no negative entry; the previously cached
+  document keeps serving, and the failure is recorded and alerted, because brew would stop dead on
+  it with no fallback (captured).
+- **Never adopts a regression**, per the resolved regression decision below and `proxy-cache.md`'s
+  rule that a remote never adopts an older upstream revision (its AC22): an `internal/packages.*`
+  document is ordered by its `metadata.generated_at`, the format's own ordering, so one older than the
+  cached one's is not adopted, and is recorded and alerted as a divergence, since the upstream CDN
+  answered an older `Last-Modified` a minute after a newer one (Context) and brew would accept the
+  older document (captured). The legacy documents carry no generation field, so they are ordered by
+  the upstream's `Last-Modified`, which the adapter returns verbatim, an earlier value included (its
+  AC14): a response dated earlier than the adopted revision is not adopted. The accepted cost is that
+  a genuinely newer legacy document served under a spuriously earlier CDN date waits for a later
+  revalidation that returns a later date.
 - **Serves a cache-scoped `Last-Modified`** (Design, "Freshness").
 
 **The bottle remote:**
@@ -496,11 +521,19 @@ both behind one URL.
   namespace list answers `404` without an upstream request, so the remote is not an open relay to every
   public image on ghcr.io. The flat and `{image}/manifests/{tag}` routes resolve in the first namespace,
   `homebrew/core`, which is what `HOMEBREW_BOTTLE_DOMAIN`'s default names.
+- **The upstream is fetched through `upstream-adapters.md`'s `distribution` adapter**, as `oci.md`'s
+  remote is: ghcr.io's anonymous token exchange with credential `none`, a token per
+  `(realm, service, scope)` cached for its lifetime and never a placeholder (its AC16), and the
+  `307` to `pkg-containers.githubusercontent.com` followed inside the adapter to an allowlist entry
+  with role `none`, so no `Authorization` follows it (its AC6, AC8; its "Preconfigured profiles"
+  names that entry as the recipe for an operator-configured ghcr.io).
 - **Manifests by tag are mutable metadata**, revalidated under the TTL, served byte for byte with the
   upstream's media type, and **committed only when their bytes hash to the upstream's
-  `Docker-Content-Digest`**, the one integrity check a manifest gets, since brew checks none.
+  `Docker-Content-Digest`**, which the `distribution` adapter reads as the declared digest, as it does
+  for `oci.md`; it is the one integrity check a manifest gets, since brew checks none.
 - **Blobs are immutable artifacts**, committed only when their bytes hash to the digest in the path,
-  under stream-and-verify (`proxy-cache.md` AC10); a truncated or mismatching body is never committed.
+  a declared digest under stream-and-verify (`proxy-cache.md` AC10); a truncated or mismatching body
+  is never committed.
 - **A flat filename resolves through the upstream index**, per the resolved flat-resolution decision
   below. The handler percent-decodes the filename, takes the bottle tag and rebuild from its suffix,
   and tries each split of `{name}-{pkg_version}` at a hyphen, rightmost first, as an image
@@ -513,35 +546,30 @@ both behind one URL.
   request makes no manifest request inside the TTL.
 - **Missing content is negatively cached** with the short TTL; a `429` or `5xx` is never cached as
   absence (`proxy-cache.md` AC9).
-- **Publish and every management operation against a remote answer `405`.**
+- **Publish and every management operation against a remote answer `405`** with problem type
+  `repository-type` (`management-api.md`, "Hosted only").
 
-What this format requires of `docs/internal/plans/foundation/upstream-adapters.md` (to be authored in
-the spec loop):
+Everything this format asked of `upstream-adapters.md` is in its requirements table's `homebrew.md` row
+and met: the anonymous exchange with no placeholder (AC16), the cross-host `307` with no
+`Authorization` (AC6), identity encoding (AC5), and the upstream's validators returned verbatim with an
+earlier `Last-Modified` reported rather than hidden (AC14); a private tap's packages take a
+`token-exchange` upstream credential for the same exchange. The post-receipt verifier hook is
+`proxy-cache.md`'s, as that row says. No request is made at configuration: a well-formed but
+unreachable upstream is accepted (`upstream-adapters.md` AC23).
 
-- **ghcr.io's anonymous token exchange**: on a `401` carrying a Bearer challenge, a token request to
-  the challenge's realm for `repository:{org}/{repo}/{image}:pull`, cached per scope for its lifetime,
-  and never a fixed placeholder, although ghcr.io accepts one today (captured), because that acceptance
-  is undocumented; and, for a private tap's packages, an optional upstream credential used for that
-  exchange.
-- **Cross-host redirects**: a blob answers `307` to `pkg-containers.githubusercontent.com`, which the
-  egress allowlist must admit and to which no `Authorization` header may follow (the pass-through
-  followed it without one, captured).
-- **Identity transfer encoding** on API documents, and conditional revalidation with the upstream's
-  `Last-Modified` and `ETag`, treating a `Last-Modified` that moves backwards as no change.
-- **A post-receipt verifier hook** for the API documents, which cannot be verified as a stream, the same
-  mode `go-modules.md` requests for its archives.
-
-Upstream removal maps onto the settled purge-or-flag table as this format's side of that contract
-(`proxy-cache.md`, "Upstream removal or replacement"):
+Upstream removal maps onto the event classes of `proxy-cache.md`'s "Upstream removal or replacement",
+as this format's side of that contract; each row names its class, and that table lists this format
+under the revision-bound class and under "Regression not adopted":
 
 | Upstream event, as observed at revalidation or fetch | Classification |
 |---|---|
-| A new API generation | An ordinary metadata change, adopted after verification |
-| An API document older by `generated_at`, or failing verification | Not adopted; the cached document keeps serving; recorded and alerted |
-| A formula disappears from the API, or moves to another tap | An ordinary metadata change; cached bottles stay fetchable by digest |
-| A formula marked `disabled` or `deprecated` in the API | An ordinary metadata change; brew enforces it itself; no security signal |
-| A manifest tag's index changes digest (a rebuild under the same tag) | An ordinary metadata change; a flat filename whose resolved blob digest changes is re-resolved, the new blob verified as a new blob, the old blob kept referenced by the record, recorded and alerted as an immutability violation |
-| A blob the cache holds answers `404` upstream | An author removal with no security signal: cached bytes keep serving, the divergence recorded and alerted |
+| A new API generation | An **ordinary metadata change**, adopted after verification |
+| An API document older by `generated_at` (or, for a legacy document, by upstream `Last-Modified`) | **Regression not adopted**: the cached document keeps serving under its unchanged record; recorded and alerted (`proxy-cache.md` AC22) |
+| An API document failing verification, or a body truncated | An **integrity failure at fetch**: not committed, no negative entry, the cached document keeps serving; recorded and alerted |
+| A formula disappears from the API, or moves to another tap | An **ordinary metadata change**; cached bottles stay fetchable by digest |
+| A formula marked `disabled` or `deprecated` in the API | An **ordinary metadata change**; brew enforces it itself; no security signal |
+| A manifest tag's index changes digest (a rebuild under the same tag) | **Immutability violation, revision-bound**, in the cached-bytes-kept variant: a flat filename whose resolved blob digest changes is re-resolved, the new blob verified as a new blob, the old blob kept referenced by the record, recorded and alerted |
+| A blob the cache holds answers `404` upstream | **Removal with no signal**: cached bytes keep serving, the divergence recorded and alerted |
 
 No upstream security signal exists on the Homebrew wire: nothing in the API, the manifest or the tag
 list marks a bottle malicious. Per the resolved preconfigured-upstream decision below, no Homebrew
@@ -550,33 +578,56 @@ upstream is preconfigured; the operator documentation gives both remotes.
 ### Freshness
 
 Per the resolved freshness decision below, **every mutable document a remote or virtual repository
-serves (API documents and bottle manifests) carries a cache-scoped `Last-Modified`**: the time the
-repository began serving those bytes on that route, set to the later of that time and one second after
-the previous value, so it never moves backwards whatever the clock does, and never the upstream's
-`Last-Modified`. A conditional request is answered `304` when `If-Modified-Since` is not earlier than
-the served `Last-Modified` (or `If-None-Match` equals its byte-derived `ETag`), and `200` otherwise, so
-the server never sends a `200` curl would discard. The consequences, from the captures:
+serves (API documents and bottle manifests) carries a cache-scoped `Last-Modified`**, never the
+upstream's. This spec raised it as a revision of `proxy-cache.md`, which now owns it ("Freshness of
+what a remote serves", its AC22): the value is the cached document's `adopted_at`, a record on the
+remote's current-document entry (`data-model.md` AC44), set when a new upstream revision is adopted
+to the later of the adoption time and one second after its previous value, so it never moves
+backwards whatever the clock or the upstream's own dates do. It is set by the shared serving helper
+`proxy-cache.md` names, never by the handler (`signing-service.md` AC11's freshness boundary). The
+consequences, from the captures:
 
 | Event | A 7.0.6 client that fetched before it | A 4.6.20 client |
 |---|---|---|
 | The remote adopts a new generation | Its next revalidation carries an earlier `If-Modified-Since`, gets `200`, and adopts | Adopts on its next refresh |
 | The upstream CDN regresses | Not adopted by the remote (Design, "The proxied path"); the client sees nothing | The same |
 | Serving the upstream's own `Last-Modified` instead (never done) | A `304` or a discarded `200` for a generation newer than its last fetch but generated before it: a lag of one or more generations (both mechanisms captured) | Unaffected |
-| A virtual repository's API member changes | The virtual's own cache-scoped time moves forward | Adopts on its next refresh |
+| A virtual repository's API member changes | The virtual's served time moves forward (Design, "Virtual repositories") | Adopts on its next refresh |
+
+**The conditional rule, and a gap in the shared one.** brew's `If-Modified-Since` is its own clock at
+its last successful download (captured), not a date this registry served, so it is almost never
+equal to the served `Last-Modified`. This spec answers `304` when `If-Modified-Since` is not earlier
+than the served `Last-Modified` (or `If-None-Match` equals its byte-derived `ETag`) and `200`
+otherwise, so a `200` always carries a `Last-Modified` later than the condition and curl never
+discards it. `proxy-cache.md` AC22 states two clauses: `304` only on an exact `If-Modified-Since`
+match, and no `200` whose `Last-Modified` is at or before the request's `If-Modified-Since`. For a
+brew revalidation made after the last adoption (the condition later than the record and unequal to
+it) the first clause forbids `304` and the second forbids `200`, so the shared rule leaves the answer
+undefined for exactly the client that found it. `304` is the only answer that satisfies the second
+clause and sends curl no body it would discard; the client in that case already holds a document at
+least as new as the record. This spec keeps its rule and reports the case to `proxy-cache.md` (and to
+`signing-service.md`, whose AC11 states the same exact-match clause for pointer-served documents);
+AC4 asserts the rule as written here.
 
 The accepted cost is clock skew: `If-Modified-Since` is the client's clock, so a client whose clock runs
 ahead of the registry's by more than the gap since an adoption keeps its copy until the next one, which
 the operator documentation states. This is the proxied-path counterpart of the pointer-scoped
-`Last-Modified` `cpan.md` settled for hosted indexes, and it is raised as a revision of `proxy-cache.md`,
-which today says nothing about the `Last-Modified` a cache serves.
+`Last-Modified` `data-model.md` holds for hosted indexes; a hosted Homebrew repository serves nothing
+mutable, so it needs no pointer-scoped signal.
 
 ### Virtual repositories
 
 **A virtual repository is possible, and merges nothing**, per the resolved virtual decision below:
 
 - **API routes are served byte for byte from the first member that serves them**, which is an API
-  remote, with the virtual's own cache-scoped `Last-Modified`; no document is merged or re-signed,
-  because none could be. A hosted member serves no API route.
+  remote; no document is merged or re-signed, because none could be, so the generator contract of
+  `signing-service.md` has no part here and no `index.merge` job runs. A hosted member serves no API
+  route. The served `Last-Modified` is the later of the supplying member's cache-scoped record and
+  the virtual's own pointer record, so it moves forward when the member adopts a generation. What
+  keeps it forward across a member-list change (a different API member supplying the route) is the
+  virtual's own record advancing at that change; `data-model.md` gives a virtual no record of its own
+  beyond its pointer's and does not list a member-list change among pointer transitions, a gap this
+  pass reports rather than fills.
 - **Flat bottle routes resolve in member order**, hosted members first, then bottle remotes. A flat
   filename carries no tap, so a hosted bottle named like a core one (`hello-2.12.3.x86_64_linux...`)
   shadows the core bottle for core installs too; brew then refuses the mismatched bytes against the
@@ -584,7 +635,8 @@ which today says nothing about the `Last-Modified` a cache serves.
   documentation recommends hosted formula names distinct from core ones.
 - **OCI-shaped and manifest routes resolve from the first bottle remote whose namespaces include the
   name.** Blobs are addressed by digest, so no member can substitute content.
-- **Publish and management operations against a virtual repository answer `405`.**
+- **Publish and management operations against a virtual repository answer `405`** with problem type
+  `repository-type`.
 
 Dependency confusion needs no reserved namespaces here, unlike `cpan.md`: every bottle brew installs is
 checked against a digest from the signed API or from the tap's own Git, neither of which this registry
@@ -624,8 +676,11 @@ non-ghcr `root_url` (captured: `401` with no header on both versions), so a priv
 needs the netrc recipe.
 
 How this meets `auth.md`, whose rules this spec does not bend: a registry token as Bearer, or as the
-Basic password with any username, authenticates as the same principal (its AC31), so both of brew's
-header forms and the netrc form carry a registry token. **The placeholder is not special**, per the
+Basic password with any username, authenticates as the same principal (both universal rows of its
+"Presentation forms" table, AC31), so both of brew's header forms and the netrc form carry a registry
+token and the handler declares no route-scoped form. `auth.md`'s client table still has no `brew` row,
+which this pass reports again (the auth half of the consequences queue's Open item 30 was never
+applied). **The placeholder is not special**, per the
 resolved placeholder decision below: `Bearer QQ==` is an invalid credential in a recognised form, so it
 answers `401` and is never served as anonymous (`auth.md` AC12), which on 7.0.6 makes the manifest fall
 back to ghcr.io, or, with egress closed, the install proceed with the warning "No bottle relocation
@@ -651,7 +706,7 @@ object depends on the repository kind, since a scope binds to one repository:
 | Remote `{image}/manifests/{tag}` (the flat namespace) | `homebrew/core/{image}/{tag}`, the same object as the OCI route | `pull` | named |
 | Remote `v2/.../blobs/sha256:{digest}` | - | `pull` | content-addressed |
 | Remote flat bottle (resolves only by an upstream lookup) | - | `pull` | none |
-| API routes (they enumerate every formula) | - | `pull` | none |
+| API routes (they enumerate every formula, so they are not descriptors under `auth.md`'s resolved name-free-document decision, was Q23) | - | `pull` | none |
 | Any other route | - (answered `404`) | `pull` | none |
 
 A virtual repository reports the object of the route shape it serves, so a pattern on a virtual
@@ -662,7 +717,9 @@ on a remote works through `HOMEBREW_ARTIFACT_DOMAIN`**, where `homebrew/core/hel
 manifest and its blob by digest and is refused `jq`'s manifest; **a patterned `pull` cannot read the API
 or the remote flat layout**, both reporting none, and brew then falls back to Homebrew's hosts unless
 egress is closed, which the operator documentation states; **a pattern refusal on a named route is
-answered as absence**, `404`; and **a patterned `push` publishes only inside its pattern**.
+answered as absence**, `404`; and **a patterned `push` publishes only inside its pattern**, an
+out-of-pattern file refusing the whole operation `unauthorized` (403) with no snapshot
+(`management-api.md` AC3, AC4).
 
 ### Policy refusals on the wire
 
@@ -671,9 +728,16 @@ route** (a flat file, an OCI-shaped blob or manifest) on either path, the handle
 resolved refusal-rendering decision below: on flat routes with `Content-Type: text/plain` and the body
 `refused by policy {policy}, rule {rule}: {detail}` (or naming the signal, for a coordinate condemned
 under the shared security-signal rule); on OCI-shaped routes in the distribution error envelope with
-code `DENIED` and that message, as `oci.md` renders it. Neither reaches a brew user, who sees the status
-(captured), so the refusal record is the channel that carries the reason; every refused request writes
-one naming the coordinate, and brew retries (a flat refusal drew five requests on 7.0.6, captured).
+code `DENIED` and that message, as `oci.md` renders it. Both are written through the shared refusal
+writer `WriteRefusal(w, r, refusal, body)` in `internal/format` (`format-handler-interface.md` AC14;
+`supply-chain-policy.md`, its resolved refusal-status-line decision, was Q10), which puts
+`Refused by policy: {condition}` in the status line on HTTP/1.1. Neither the phrase nor the body
+reaches a brew user, who sees curl's rendering of the status code (captured), which
+`supply-chain-policy.md` records as the reason nothing forces HTTP/1.1 for this format; the refusal
+record is the channel that carries the reason, every refused request writes one naming the
+coordinate, and brew retries (a flat refusal drew five requests on 7.0.6, captured). Where the
+refusal holds is `supply-chain-policy.md`'s `client-setting` row for this format, from the fallback
+table above.
 
 **The API keeps naming a refused bottle**, the no-elision precedent of `conan.md`, `debian.md`,
 `puppet.md`, `hackage.md` and `cpan.md`, and here without choice: the API is Homebrew's signed document.
@@ -684,29 +748,42 @@ for hosted tap bottles, and under `HOMEBREW_BOTTLE_DOMAIN` only with egress rest
 
 **Homebrew signs its index, not its bottles.** The API's JWS names each bottle's SHA-256, so per the
 resolved signature-verdict decision below the verdict source `supply-chain-policy.md` consumes answers
-**verified (Homebrew API)** for a remote bottle whose blob digest is named by the bottle entry of an API
-document the remote verified, with the verifying key's `kid`; **absent** for a remote bottle no verified
-document names (a third-party tap's ghcr.io bottle) and for every hosted bottle, whose digest comes from
-the customer's Git. A rule requiring a verified signature therefore refuses every hosted bottle
+**verified, with chain `repository-chain`** (`artifact-verification.md`'s "CPAN, Hackage, Homebrew"
+paragraph) for a remote bottle whose blob digest is named by the bottle entry of an API document the
+remote verified, with the verifying key's `kid`; **absent** for a remote bottle no verified document
+names (a third-party tap's ghcr.io bottle) and for every hosted bottle, whose digest comes from the
+customer's Git. A rule requiring a **publisher** identity does not accept a `repository-chain` verdict
+and one requiring any verified verdict does (`supply-chain-policy.md`, "Signature and attestation state
+is a consumed verdict"). A rule requiring a verified signature therefore refuses every hosted bottle
 (`supply-chain-policy.md` AC15), which the operator documentation states. GitHub's build-provenance
 attestations stay out of band (Scope); a cached bottle is byte-identical, so `gh attestation verify`
 still succeeds for a user who runs it.
 
-**Advisory coverage is absent from the feed, and exists beside it.** OSV's exported ecosystem list has
-no Homebrew entry and `Homebrew/all.zip` answers `404`, although the query API recognises the name and
-the OSV schema documents it (Context). Per the resolved advisory decision below, an advisory-dependent
-rule attached to a Homebrew repository is refused at configuration as `supply-chain-policy.md` requires
-of an ecosystem the feed does not cover, the feed channel of the shared security-signal rule never
-condemns a Homebrew coordinate, and coverage is determined from the feed's own ecosystem list, so it
-arrives without a change here once OSV exports the 13,023 records Homebrew already publishes in OSV
-format (keyed by formula name with `_revision` versions, the purl `brew` name). Byte-level rules depend
-on the shared cataloguer's reading of bottle archives, which that spec decides.
+**Advisory coverage is absent from the default feed, and exists beside it.** OSV's exported ecosystem
+list has no Homebrew entry and `Homebrew/all.zip` answers `404`, although the query API recognises the
+name and the OSV schema documents it (Context). Per the resolved advisory decision below, as revised by
+`supply-chain-policy.md`'s resolved advisory-sources decision (was Q9: one OSV schema, several
+sources), coverage is determined from the configured sources' own ecosystem lists: with the default
+feed alone an advisory-dependent rule attached to a Homebrew repository is refused at configuration
+and the feed channel of the shared security-signal rule never condemns a Homebrew coordinate, and the
+moment an operator declares Homebrew's own OSV-format database (13,023 records, keyed by formula name
+with `_revision` versions, the purl `brew` name) as a `policy.feed.sources` entry listing the
+`Homebrew` ecosystem, the same rule becomes configurable with no change here (its coverage table's
+Homebrew row). One condition that row does not state is reported rather than assumed: the records'
+`ECOSYSTEM` ranges (`fixed` at `2.9.3_1`) need Homebrew's version ordering with its `_revision`
+suffix, which is not among the orderings the matcher vendors, and a range under an ordering the
+matcher lacks binds no rule. Byte-level rules depend on the shared cataloguer's reading of bottle
+archives, which that spec decides.
 
 ### Content negotiation and headers
 
 - **API documents**: `Content-Type: application/json`; gzip-encoded when the request accepts it (brew
   always does, captured) with `Vary: Accept-Encoding` and an `ETag` that differs per encoding, since the
-  signature is inside the content; the cache-scoped `Last-Modified`; `Cache-Control: no-cache`.
+  signature is inside the content; the cache-scoped `Last-Modified`; `Cache-Control: no-cache`. The
+  validators come from the shared serving helper, never the handler; that helper states no on-request
+  compression with a per-encoding `ETag`, which `chef.md`'s gzip-encoded universe needs too, so the
+  requirement is reported beside the serve-time rendering gaps already raised against
+  `signing-service.md`.
 - **Bottles**, flat and blob: no `Content-Encoding`, since each is a `.tar.gz` hashed as served (brew
   sends `Accept: */*` and no `Accept-Encoding` for them, captured); `Content-Type: application/gzip` on
   flat routes and the OCI layer media type on blobs, never a `text/*` type (brew treats a `text/`
@@ -720,14 +797,18 @@ on the shared cataloguer's reading of bottle archives, which that spec decides.
 
 ### What it needs from Deps
 
-The pinned `Deps` (`format-handler-interface.md`): the CAS, the metadata store at all three levels with
-snapshot-pointer resolution, the fetch-and-cache entry point with classification as an argument, the
-central authorizer, and the request logger, with the policy-enforcing resolution calls returning the
-typed refusal. Beyond the pin, three things, each requested of a sibling rather than invented here: the
-JWS verification of `artifact-verification.md`, a post-receipt verifier mode of fetch-and-cache for
-documents that cannot be verified as a stream, and a cache-scoped `Last-Modified` on cached metadata
-from `proxy-cache.md`. The handler also reads a bottle remote's cached manifest while resolving a flat
-filename; that is the same handler reading its own repository's cache through `Deps`.
+The pinned `Deps` (`format-handler-interface.md`, "The pinned method set"): the CAS, the metadata store
+at all three levels with snapshot-pointer resolution, the fetch-and-cache entry point with
+classification and `upstream.Options` as arguments, the central authorizer, the `*slog.Logger` with
+request correlation, the policy-enforcing resolution calls returning the typed refusal and
+`WriteRefusal` beside it, and the `Verifier` consumer interface. The three things this spec first
+requested of siblings are now theirs and reached through that set: the JWS entry of
+`artifact-verification.md` through `Verifier`, the completion-only mode's post-receipt verifier hook
+of `proxy-cache.md` through fetch-and-cache, and the cache-scoped `Last-Modified` of `proxy-cache.md`
+through its serving helper. The handler also reads a bottle remote's cached manifest while resolving a
+flat filename; that is the same handler reading its own repository's cache through `Deps`. It imports
+none of `internal/verify`, `internal/upstream`, `internal/policy` or `internal/manage`
+(`format-handler-interface.md` AC15).
 
 ### Conformance, the clients and the corpus
 
@@ -744,19 +825,37 @@ both (a current `jq` bottle installed on 4.6.20's Ubuntu 22.04 and failed to run
 the recording session. The stand-ins answer as `ghcr.io` (with its token endpoint and a
 `pkg-containers.githubusercontent.com` blob host behind a `307`), `formulae.brew.sh`,
 `raw.githubusercontent.com` and a source host, on the case network with the harness CA installed in the
-image's system trust store, which brew's curl uses. Two harness obligations are recorded rather than
-assumed and listed among the sibling consequences: **the API stand-in must serve genuine
-Homebrew-signed documents**, since no other key is accepted, so the harness records a consistent
-fixture snapshot (the signed documents of two successive generations and the bottles and manifests they
-name for the matrix's formulae) and replays it; and the stand-ins need names on the case network the
-clients resolve, which the harness's upstream bindings (its AC19) must offer.
+image's system trust store, which brew's curl uses. Client containers reach only the case network
+(`conformance-harness.md` AC23, its resolved client-confinement decision, was Q6). The two harness
+obligations this spec first recorded are met there: **the API stand-in serves a recorded snapshot of
+genuinely Homebrew-signed documents**, since no other key is accepted (the signed documents of two
+successive generations and the bottles and manifests they name for the matrix's formulae; that spec's
+"Upstream bindings" states it for this format); and the stand-ins resolve by name inside the client
+container as `hosts` sub-entries of their `upstreams` entry (its AC23), which is what lets AC17 stand in
+for four public hosts.
 
 The case set needs only keys already in the harness's closed `setup` vocabulary: `repositories` with
 type, virtual member order and a bottle remote's namespace list in its repository document,
 `credentials` (patterned tokens included), `upstreams` (the stand-ins above, with variants for a
 regressed generation, a failing signature, a rebuilt tag, a removed blob, swapped bytes and a
-throttled answer), `state` for pre-published hosted bottles, and `advisories` and `policies`. The case
-`script` writes the tap formula, the `HOMEBREW_*` environment and the curl config.
+throttled answer), `trust` for the API remote's `homebrew-1` key (`artifact-verification.md` AC25),
+`state` for pre-published hosted bottles and the `Retirement` records a deletion would have left, and
+`advisories` and `policies`, the latter runnable because this format's binding row is not `pending`
+(`conformance-harness.md` AC26). The case `script` writes the tap formula, the `HOMEBREW_*` environment
+and the curl config, and drives each declared management kind through the operations endpoint.
+
+### Capabilities and rename
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability `available`,
+`Virtual: supported` and `Rename: supported` (`format-handler-interface.md` AC13). No document this
+format serves carries the repository's name: hosted bottles are archives and remote API documents are
+Homebrew's bytes, so a rename changes nothing the handler serves and needs no `configure` operation
+(`repository-lifecycle.md`, "Renaming"). The client-side cost is that spec's accepted one (its resolved
+rename-alias decision, was Q2), in Homebrew's shape: every tap formula's `bottle do` block carries a
+`root_url` naming the old repository, and every `HOMEBREW_*_DOMAIN` setting does too, so installs fail
+with the status code until the tap's formulae and the environment are updated. The case the harness
+requires of every format (`conformance/homebrew/rename_test.go`, `repository-lifecycle.md` AC12,
+presence enforced by `conformance-harness.md` AC26) proves both halves on both clients (AC28).
 
 The recorded surface for the replay corpus: against `formulae.brew.sh`, one internal and one legacy
 document; against ghcr.io, one index manifest, one blob request through its `307`, and an unknown tag.
@@ -786,27 +885,35 @@ paths and outside the namespace list, and `405` on remote writes.
 - [ ] AC3: An API remote serves every document byte-identical to the upstream's identity bytes, each
       upstream request carrying `Accept-Encoding: identity`; an upstream document whose payload was
       altered, re-signed with another key under `kid` `homebrew-1`, signed under another `kid`, or
-      stripped of its envelope is never cached or served, the previously cached document keeps serving
-      and brew keeps installing from it, and the reason reaches the operator record; and a path that is
-      not a signed-document shape answers `404` with no upstream request.
+      stripped of its envelope is never cached or served and leaves no negative entry, the JWS entry
+      running as an integrity call in the completion-only mode's verifier hook before any commit, the
+      previously cached document keeps serving and brew keeps installing from it, and the reason
+      reaches the operator record; and a path that is not a signed-document shape answers `404` with
+      no upstream request.
 - [ ] AC4: After the API remote adopts a newer generation, brew 7.0.6 continuing its cache revalidates,
       receives `200` and holds the newer document, and 4.6.20 holds it after its next refresh; every
-      cached document is served with a `Last-Modified` no earlier than the time the remote began serving
-      its bytes and later than any it served before on that route, including with the clock stepped
-      backwards; a conditional request earlier than it answers `200` and one not earlier answers `304`;
-      and no response is a `200` whose `Last-Modified` is not later than the request's
+      cached document is served with the `Last-Modified` of its cache-scoped `adopted_at`, never the
+      upstream's, no earlier than the time the remote began serving its bytes and later than any it
+      served before on that route, including with the clock stepped backwards; a conditional request
+      earlier than it answers `200` and one not earlier answers `304`, including one later than it
+      and unequal, the case `proxy-cache.md` AC22's exact-match clause leaves undefined; and no
+      response is a `200` whose `Last-Modified` is not later than the request's
       `If-Modified-Since`.
 - [ ] AC5: When the upstream answers an `internal/packages.*` document whose `metadata.generated_at` is
-      older than the cached one's, the remote keeps serving the cached document, records and alerts the
-      regression, and brew 7.0.6 continues with the newer document.
-- [ ] AC6: A publish through the management endpoint of a bottle archive with its `brew bottle --json`
-      record stores it in exactly one snapshot at its single-hyphen flat filename, including when the part
-      carries `brew bottle`'s local name `{name}--{pkg_version}...`, and returns the filename, SHA-256,
-      cellar and `root_url`; a tap formula whose `bottle do` block carries that `root_url` and SHA-256 then
-      installs on both versions with `HOMEBREW_CURLRC` naming a netrc credential; an identical republish
-      answers `200` with no snapshot; and different bytes at an existing or deleted file, including after
-      the deleting snapshot is pruned, answer `409`.
-- [ ] AC7: Each of these publishes answers `400` naming the rule, with nothing committed and no snapshot:
+      older than the cached one's, or a legacy document whose `Last-Modified` is earlier than the
+      adopted revision's, the remote keeps serving the cached document under its unchanged record,
+      records and alerts the regression, and brew 7.0.6 continues with the newer document.
+- [ ] AC6: A `publish` operation through the operations endpoint, naming a bottle archive committed
+      through an upload session with its `brew bottle --json` record, stores it in exactly one snapshot
+      at its single-hyphen flat filename, including when the part carries `brew bottle`'s local name
+      `{name}--{pkg_version}...`, and its result document returns the filename, SHA-256, cellar and
+      `root_url`; a tap formula whose `bottle do` block carries that `root_url` and SHA-256 then
+      installs on both versions with `HOMEBREW_CURLRC` naming a netrc credential; a retry carrying the
+      first request's `Idempotency-Key` and payload replays its outcome with no snapshot; a publish of
+      an existing file is refused `conflict` (409) with the same or different bytes; and a deleted file
+      is refused `retired` (409) with any bytes, including after the deleting snapshot is pruned.
+- [ ] AC7: Each of these publishes is refused `validation` (422) naming the rule, with nothing
+      committed and no snapshot:
       a formula name outside the grammar, with an uppercase letter, or with a hyphen followed by a digit;
       a version not starting with a digit; a bottle tag outside `[a-z0-9_]+`; an archive entry outside
       `{name}/{pkg_version}/`, an absolute or `..` path, a symbolic or hard link resolving outside that
@@ -847,8 +954,8 @@ paths and outside the namespace list, and `405` on remote writes.
       nonexistent file gets; a token holding `pull` patterned `homebrew/core/hello/**` on a bottle remote
       fetches `hello`'s manifest and blob through `HOMEBREW_ARTIFACT_DOMAIN` and is answered `404` for
       `jq`'s manifest; the same token is refused every API route and the remote flat route; and a token
-      holding `push` patterned `acme-cli/**` publishes `acme-cli` and is refused `acme-other` with no
-      snapshot.
+      holding `push` patterned `acme-cli/**` publishes `acme-cli` and is refused `unauthorized` (403)
+      on `acme-other` with no snapshot.
 - [ ] AC16: A bottle the shared policy layer refuses answers `403` on the hosted flat route and on the
       remote's flat and OCI-shaped routes, with a `text/plain` body naming the policy on flat routes and a
       `DENIED` error envelope on OCI-shaped routes, while the API keeps naming it; brew 7.0.6 with
@@ -862,27 +969,32 @@ paths and outside the namespace list, and `405` on remote writes.
       documentation names does reach its stand-in: a `HOMEBREW_BOTTLE_DOMAIN` refusal on both versions,
       a refused or missing API document on both, 7.0.6's `HOMEBREW_ARTIFACT_DOMAIN` without the switch,
       and a source build, so the documentation's warnings are true.
-- [ ] AC18: Deleting a hosted bottle file creates one snapshot after which it answers `404` and a tap
-      formula naming it fails to install on both versions with a non-zero exit and no source build; the
-      file stays retired after a backwards repoint and after the deleting snapshot is pruned; and after
-      every file of a formula is deleted the `Package` row survives.
-- [ ] AC19: Publish and deletion are refused with no snapshot for a principal lacking `push` or `delete`
-      respectively, and answer `405` against a remote or virtual repository.
+- [ ] AC18: Deleting a hosted bottle file through the `delete-file` kind creates one snapshot and one
+      `Retirement` record per file, after which it answers `404` and a tap formula naming it fails to
+      install on both versions with a non-zero exit and no source build; the file stays retired after
+      a backwards repoint and after the deleting snapshot is pruned; and after every file of a formula
+      is deleted the `Package` row survives.
+- [ ] AC19: The handler's `Operations()` declares exactly `publish` and `delete-file`, each driven by a
+      `script` case; publish and deletion are refused with no snapshot for a principal lacking `push`
+      or `delete` respectively, and answer `405` with problem type `repository-type` against a remote
+      or virtual repository.
 - [ ] AC20: A virtual repository over a hosted repository, a bottle remote and an API remote serves the
-      API remote's documents byte for byte with its own cache-scoped `Last-Modified`, a hosted flat
+      API remote's documents byte for byte with a `Last-Modified` that moves forward when the member
+      adopts a generation, a hosted flat
       bottle before a remote one, and OCI-shaped routes from the bottle remote; both versions install
       core and tap formulae from it with only this registry reachable; a hosted bottle whose flat
       filename equals a core bottle's makes brew refuse the core install with a checksum error rather
       than install the hosted bytes; a hosted member answers `404` on API routes; and publish to the
-      virtual repository answers `405`.
+      virtual repository answers `405` with problem type `repository-type`.
 - [ ] AC21: A remote bottle whose digest is named by a verified API document carries the verdict
-      verified with the key's `kid`, a remote bottle no verified document names and every hosted bottle
-      carry absent, and a policy rule requiring a verified signature serves the first and refuses the
-      others, naming the reason.
-- [ ] AC22: An advisory-dependent rule attached to a Homebrew repository is refused at configuration
-      naming the absent feed coverage, no Homebrew coordinate is condemned by the advisory feed, and a
-      fixture feed whose ecosystem list names Homebrew makes the same rule configurable with no change to
-      this handler.
+      verified with chain `repository-chain` and the key's `kid`, a remote bottle no verified document
+      names and every hosted bottle carry absent, a policy rule requiring any verified signature serves
+      the first and refuses the others naming the reason, and a rule requiring a publisher identity
+      refuses all three.
+- [ ] AC22: With only the default feed, an advisory-dependent rule attached to a Homebrew repository is
+      refused at configuration naming the absent coverage and no Homebrew coordinate is condemned by
+      the feed; and a fixture second source declared through `policy.feed.sources` whose ecosystem list
+      names Homebrew makes the same rule configurable with no change to this handler.
 - [ ] AC23: API documents answer `Content-Type: application/json`, gzip-encoded with
       `Vary: Accept-Encoding` when accepted and with an `ETag` distinct per encoding; bottles carry no
       `Content-Encoding` and no `text/*` type, advertise `Accept-Ranges: bytes`, answer one byte range
@@ -901,6 +1013,11 @@ paths and outside the namespace list, and `405` on remote writes.
 - [ ] AC27: Every name is matched exactly on every route: an uppercase formula name, an unencoded `@` in
       a flat filename brew never sends, and a manifest tag that differs only in its rebuild suffix each
       answer `404`, while the forms brew sends resolve.
+- [ ] AC28: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
+      `available`, `Virtual: supported` and `Rename: supported`; after a rename, both versions install a
+      tap bottle and a core formula from the new name once the tap's `root_url` and the `HOMEBREW_*`
+      settings name it, a request to the old name answers `not-found`, and a tap formula still naming
+      the old `root_url` fails to install with a non-zero exit.
 
 ## Test Plan
 
@@ -908,52 +1025,57 @@ paths and outside the namespace list, and `405` on remote writes.
 |-----------|-----------|---------------|
 | AC1 | conformance | `conformance/homebrew/artifact_domain_test.go` (both images, network-restricted client containers, API and bottle remotes over the stand-ins, transcript order per version, `hello` run) |
 | AC2 | conformance | `conformance/homebrew/bottle_domain_test.go` (flat layout on both versions, percent-encoded `openssl@3`, 7.0.6 manifest request and absence of the relocation warning with the `none` token, no manifest on 4.6.20) |
-| AC3 | integration + conformance | `internal/format/homebrew/api_verify_test.go` (the four failing variants against the JWS verifier, commit refused, previous document served, operator record, `404` shapes, identity encoding upstream); `conformance/homebrew/api_remote_test.go` (byte comparison, install from the retained document) |
-| AC4 | conformance + integration | `conformance/homebrew/freshness_test.go` (two recorded generations, 7.0.6 and 4.6.20 with persisted caches); `internal/format/homebrew/last_modified_test.go` (cache-scoped times, `304` rule, never a `200` older than the condition, injected clock stepped backwards) |
-| AC5 | integration + conformance | `internal/format/homebrew/regression_test.go` (older `generated_at` not adopted, alert); `conformance/homebrew/regression_test.go` (7.0.6 keeps the newer document) |
-| AC6 | integration + conformance | `internal/format/homebrew/publish_test.go` (snapshot count, served filename, response fields, idempotent republish, `409` cases after pruning); `conformance/homebrew/hosted_tap_test.go` (tap formula with `root_url`, netrc through `HOMEBREW_CURLRC`, both versions) |
-| AC7 | integration | `internal/format/homebrew/ingest_test.go` (one malformed or hostile archive or record per rule, CAS and snapshot unchanged) |
+| AC3 | integration + conformance | `internal/format/homebrew/api_verify_test.go` (the four failing variants against the JWS integrity call in the verifier hook, commit refused, no negative entry, previous document served, operator record, `404` shapes, identity encoding upstream; the layer half being `proxy-cache.md` AC20's `internal/proxy/completion_mode_test.go`, the entry `artifact-verification.md` AC16's `internal/verify/jws/jws_test.go`); `conformance/homebrew/api_remote_test.go` (byte comparison, install from the retained document) |
+| AC4 | conformance + integration | `conformance/homebrew/freshness_test.go` (two recorded generations, 7.0.6 and 4.6.20 with persisted caches; the proxied rollback case `proxy-cache.md` AC22 names under `conformance/homebrew/`); `internal/format/homebrew/last_modified_test.go` (the served value from `adopted_at`, the not-earlier `304` rule including a later unequal condition, never a `200` older than the condition, injected clock stepped backwards; the record half being `proxy-cache.md` AC22's and `data-model.md` AC44's `internal/proxy/freshness_test.go`) |
+| AC5 | integration + conformance | `internal/format/homebrew/regression_test.go` (older `generated_at`, and an earlier legacy `Last-Modified`, not adopted, alert); `conformance/homebrew/regression_test.go` (7.0.6 keeps the newer document) |
+| AC6 | integration + conformance | `internal/format/homebrew/publish_test.go` (snapshot count, served filename, result-document fields, `conflict` on an existing file, `retired` after deletion and pruning); `internal/manage/idempotency_test.go` (the keyed replay, `management-api.md` AC17); `conformance/homebrew/hosted_tap_test.go` (the `script` publishes through the operations endpoint; tap formula with `root_url`, netrc through `HOMEBREW_CURLRC`, both versions) |
+| AC7 | integration | `internal/format/homebrew/ingest_test.go` (one malformed or hostile archive or record per rule through `Apply`'s peek, `validation`, CAS and snapshot unchanged) |
 | AC8 | conformance | `conformance/homebrew/tamper_test.go` (storage fault injection, hosted and proxied, flat and OCI-shaped, both versions, exit status and text) |
 | AC9 | integration | `internal/format/homebrew/proxied_gate_test.go` (blob, manifest and flat-resolution mismatches, truncation, operator record); `internal/format/homebrew/proxied_negative_test.go` (`404`, `429`, `5xx`) |
-| AC10 | integration | `internal/format/homebrew/ghcr_adapter_test.go` (stand-in token endpoint and blob host, per-scope token reuse, no `Authorization` across the redirect, network-layer assertion) |
+| AC10 | integration | `internal/format/homebrew/ghcr_adapter_test.go` (stand-in token endpoint and blob host, per-scope token reuse, no `Authorization` across the redirect, network-layer assertion; the adapter half being `upstream-adapters.md` AC16's and AC6's) |
 | AC11 | integration | `internal/format/homebrew/namespace_test.go` (outside and second listed namespace, no upstream request) |
 | AC12 | integration | `internal/format/homebrew/flat_resolution_test.go` (the five name shapes against a stand-in index, request counts inside the TTL, negative cache) |
 | AC13 | integration | `internal/format/homebrew/removal_test.go` (a stand-in presenting each removal-table event) |
 | AC14 | conformance + integration | `conformance/homebrew/auth_test.go` (TLS private repository, Bearer and Basic on both versions, netrc for tap and API, anonymous, placeholder, `pull`-less and plain-HTTP cases); `internal/auth/leak_test.go` (redaction for this format) |
 | AC15 | conformance + unit | `conformance/homebrew/pattern_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, both modes, hosted and remote patterns, API refusal, patterned publish); `internal/format/homebrew/scope_object_test.go` (the object table per route, `format-handler-interface.md` AC12) |
-| AC16 | conformance + integration | `conformance/homebrew/policy_test.go` (hosted and proxied through the `policies` key, both versions, network-layer assertion); `internal/format/homebrew/refusal_record_test.go` (a record per refused request, both body shapes) |
+| AC16 | conformance + integration | `conformance/homebrew/policy_test.go` (hosted and proxied through the `policies` key, both versions, network-layer assertion); `internal/format/homebrew/refusal_record_test.go` (a record per refused request, both body shapes); `internal/format/refusal_writer_test.go` (`supply-chain-policy.md` AC18) |
 | AC17 | conformance | `conformance/homebrew/fallback_test.go` (stand-ins for the four public hosts with the harness CA, the recipe and each named exposure, network-layer assertions) |
-| AC18 | conformance + integration | `conformance/homebrew/delete_test.go` (tap install failing after deletion, both versions); `internal/format/homebrew/retirement_test.go` (backwards repoint, pruning, `Package` row survival) |
-| AC19 | integration | `internal/format/homebrew/manage_auth_test.go` (action refusals per operation, `405` on remote and virtual) |
+| AC18 | conformance + integration | `conformance/homebrew/delete_test.go` (the `script` deletes through the operations endpoint; tap install failing after deletion, both versions); `internal/format/homebrew/retirement_test.go` (`Retirement` rows, backwards repoint, pruning, `Package` row survival) |
+| AC19 | integration + conformance | `internal/format/homebrew/manage_auth_test.go` (the declared `Operations()` set, action refusals per operation, `405` `repository-type` on remote and virtual); the `script`-driven case per declared kind `management-api.md` AC24 requires, presence enforced by `conformance-harness.md` AC26, is the pair of conformance files in the AC6 and AC18 rows |
 | AC20 | conformance + integration | `conformance/homebrew/virtual_test.go` (installs from one URL on both versions, collision refused by brew, `405`); `internal/format/homebrew/virtual_resolution_test.go` (member order per route family, API pass-through and its own `Last-Modified`, hosted `404` on API) |
-| AC21 | integration | `internal/format/homebrew/signature_verdict_test.go` (verified, absent for an unnamed remote bottle and for hosted, policy rule outcomes) |
-| AC22 | integration | `internal/format/homebrew/advisory_config_test.go` (rule refused, no condemnation, fixture feed listing Homebrew) |
+| AC21 | integration | `internal/format/homebrew/signature_verdict_test.go` (verified with chain `repository-chain`, absent for an unnamed remote bottle and for hosted, outcomes under an any-verified and a publisher rule) |
+| AC22 | integration | `internal/format/homebrew/advisory_config_test.go` (rule refused with the default feed, no condemnation, a fixture second source listing Homebrew through `policy.feed.sources`; shared with `supply-chain-policy.md` AC21) |
 | AC23 | integration + conformance | `internal/format/homebrew/headers_test.go` (types, encodings, per-encoding `ETag`, ranges, caching, `HEAD`, no redirects); `conformance/homebrew/resume_test.go` (interrupted download resumed by brew) |
 | AC24 | conformance | `conformance/homebrew/replay_test.go` (corpus replay against the recorded surface with the named redactions) |
 | AC25 | integration | `internal/storage/metadata_root_test.go` (cached API documents, bottles and hosted bottles across a sweep, then serving) |
 | AC26 | conformance + integration | `conformance/homebrew/hosted_api_test.go` (brew against a hosted repository as API domain with egress closed); `internal/format/homebrew/routes_test.go` (`404` on API and `v2/` routes of a hosted repository) |
 | AC27 | integration + conformance | `internal/format/homebrew/names_test.go` (uppercase, unencoded `@`, wrong rebuild suffix); `conformance/homebrew/names_test.go` (the forms brew sends on both versions) |
+| AC28 | unit + conformance | `internal/format/homebrew/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/homebrew/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; both versions, old name `not-found`, a stale `root_url` failing) |
 
 ## Implementation Phases
 
 ### Phase 1: Hosted reads
 - The format-first mount, the hosted flat route, headers and ranges, seeded bottles through `state`,
-  the per-route addressed objects, the `403` rendering
+  the per-route addressed objects, the `403` rendering through `WriteRefusal`
 
 ### Phase 2: Publish and deletion
-- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned`
-- Ingest validation of archive and record, the served filename, deletion and the retirement set, the
-  write-boundary declaration under concurrency
+- Waits on `management-api.md` reaching `planned`
+- The `Operator` declaration (`publish`, `delete-file`), publish from upload sessions with `Apply`'s
+  ingest validation of archive and record, the served filename in the result document, deletion
+  with core-held `Retirement`, the write-boundary declaration under concurrency, a `script` case per
+  kind
 
 ### Phase 3: Proxied path
-- Waits on `upstream-adapters.md`, `artifact-verification.md` and the `proxy-cache.md` revision for a
-  cache-scoped `Last-Modified`
-- The API remote with JWS gating, the regression guard and cache-scoped times; the bottle remote with
-  namespaces, manifest and blob gates, flat resolution and ghcr.io's token exchange; negative caching;
-  the removal table; the signature verdict; `405` on remote writes
+- Waits on `upstream-adapters.md`, `artifact-verification.md` and `proxy-cache.md`'s completion-only
+  mode and cache-scoped freshness, all now specified
+- The API remote with the JWS integrity call in the completion-only verifier hook, the regression
+  guard and cache-scoped times; the bottle remote on the `distribution` adapter with namespaces,
+  manifest and blob gates, flat resolution and ghcr.io's token exchange; negative caching; the
+  removal table; the `repository-chain` verdict; `405` `repository-type` on remote writes
 
-### Phase 4: Virtual repositories
-- Per-route member resolution, API pass-through with the virtual's own times
+### Phase 4: Virtual repositories and rename
+- Per-route member resolution, API pass-through with the forward-moving served time,
+  `Capabilities()` with the rename case (AC28)
 
 ### Phase 5: Corpus, fallbacks and gate
 - The recorded signed fixture snapshot and the corpus against `formulae.brew.sh` and ghcr.io, the
@@ -969,8 +1091,10 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 None open. The fourteen questions this draft raised were each written in the template's decision shape
 and then adopted at their own recommendation under the owner's standing delegation of 2026-09-26, so
 the loop can continue; each is recorded below as adopted rather than decided, folded through Scope,
-Design, the criteria and the Test Plan in the same pass, and reversible by the owner at any time.
-`grep -rn "standing delegation"` is the owner's review queue.
+Design, the criteria and the Test Plan in the same pass, and reversible by the owner at any time. The
+2026-09-28 reconciliation with the foundation specs adopted no new question; where a foundation
+decision changed what a record says, the record carries a dated note. `grep -rn "standing
+delegation"` is the owner's review queue.
 
 ### Resolved: what a hosted repository serves (was Q1)
 
@@ -1069,7 +1193,10 @@ earlier, never a `200` curl would discard (Design, "Freshness"; AC4, AC20).
 
 **Why this is yours:** it asks the shared proxy layer for a rule on this format's account.
 
-Accepted cost: the revision and the clock-skew note.
+Accepted cost: the revision and the clock-skew note. Reconciled 2026-09-28: the revision landed as
+`proxy-cache.md`'s "Freshness of what a remote serves" and its AC22, with the record in
+`data-model.md` AC44; its exact-match `304` clause leaves this record's later-condition case
+undefined, and this spec keeps the not-earlier rule and reports the case (Design, "Freshness").
 
 ### Resolved: an API regression upstream (was Q6)
 
@@ -1088,7 +1215,10 @@ stopped.
 
 **Why this is yours:** it lets the cache overrule its upstream.
 
-Accepted cost: the override for a deliberate upstream rollback; the legacy documents stay unguarded.
+Accepted cost: the override for a deliberate upstream rollback (`management-api.md`'s remote refresh,
+`POST /api/v1/repositories/{name}/refresh`, after the divergence is read). Reconciled 2026-09-28: the
+legacy documents are no longer unguarded, because `proxy-cache.md` AC22 orders a revision with no
+format ordering by upstream `Last-Modified` and never adopts an older one.
 
 ### Resolved: the placeholder bearer token (was Q7)
 
@@ -1206,6 +1336,11 @@ Accepted cost: the collision note.
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: follow `supply-chain-policy.md`'s
 single OSV feed with coverage read from the feed's ecosystem list, so advisory rules are refused today
 and become available when OSV exports Homebrew (Design, "Signing, provenance and policy"; AC22).
+Reconciled 2026-09-28: `supply-chain-policy.md` revised its single-feed decision into one OSV schema
+from several sources (its resolved advisory-sources decision, was Q9), which is this record's option B
+made the policy spec's own: an operator who declares Homebrew's database as a `policy.feed.sources`
+entry has Homebrew coverage with no change to this handler, and coverage is still read from the
+configured sources' ecosystem lists, so this record's data-driven rule holds unchanged.
 
 **Recommendation:** A. Homebrew already publishes 13,023 OSV-format records that osv.dev recognises by
 name but does not serve (captured), so coverage is a matter of time, and a second feed is that spec's
@@ -1218,7 +1353,8 @@ decision.
 
 **Why this is yours:** it leaves Homebrew users without advisory enforcement until OSV exports it.
 
-Accepted cost: the sibling consequence for `supply-chain-policy.md`.
+Accepted cost: the sibling consequence for `supply-chain-policy.md`, met by its was-Q9 decision and its
+coverage table's Homebrew row; the Homebrew version ordering that row needs is reported.
 
 ### Resolved: publish input, deletion and preconfigured upstreams (was Q14)
 
@@ -1228,7 +1364,8 @@ removes files, retires them and answers `404`, with no yank; no Homebrew upstrea
 (Design, "The hosted publish path", "Deletion" and "The proxied path"; AC6, AC7, AC18).
 
 **Recommendation:** A. The record is what Homebrew's pipeline already produces, brew has no yank
-semantics, and `proxy-cache.md` AC19 names the preconfigured set.
+semantics, and `proxy-cache.md` AC19 names the preconfigured set (its extensions, was Q14 and was Q17,
+admitted no Tier 3 upstream).
 
 | Option | You get | It costs |
 |---|---|---|
@@ -1238,10 +1375,14 @@ semantics, and `proxy-cache.md` AC19 names the preconfigured set.
 
 **Why this is yours:** it sets the release workflow and the first-run behaviour.
 
-Accepted cost: the configuration step.
+Accepted cost: the configuration step. Reconciled 2026-09-28: publish and deletion are
+`management-api.md`'s `publish` and `delete-file` kinds, the record travelling as the operation's
+`args` and the per-file response as its result document; the identical-bytes `200` became the API's
+`Idempotency-Key` replay, and the retirement set its core-held `Retirement` record.
 
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 81e5062 | authoring pass: grounded first draft, not a review | Grounded five ways: captured traffic from brew 7.0.6 (ghcr.io image) and 4.6.20 (last docker.io image), both pinned by digest, on dedicated Podman networks against a logging stub serving the flat bottle layout, the OCI-shaped `HOMEBREW_ARTIFACT_DOMAIN` layout, two genuine signed generations of the internal API document and tampered, re-signed, wrong-kid and unsigned variants (all refused, no fallback), swapped bottle bytes (refused on both), missing manifests (7.0.6's relocation warning), `403` refusals (status-only rendering; fallback to ghcr.io and formulae.brew.sh captured with egress; closed only by `HOMEBREW_ARTIFACT_DOMAIN_NO_FALLBACK` on 7.0.6, absent on 4.6.20), Bearer, Basic and netrc credentials (the `Bearer QQ==` placeholder on 7.0.6's manifest; no header to a tap `root_url`), a hosted tap bottle, and rollback under three conditional-request policies (curl discarding an older `200`; an older generation adopted once its `Last-Modified` moved forward; 4.6.20 sending no condition); byte-for-byte pass-throughs to the live formulae.brew.sh and ghcr.io; both clients' sources; ghcr.io's `401`, anonymous token and any-bearer `307`; the live API documents, their JWS header and naming statistics; OSV (no export, name recognised), the Homebrew advisory database (13,023 records) and purl. Fourteen questions adopted: flat bottles only on hosted (AC6, AC26), taps left on Git, API and bottle remotes (AC1, AC11, AC20), flat resolution through the index (AC2, AC9, AC12), cache-scoped `Last-Modified` (AC4, AC20), no API regression (AC5), no placeholder special case (AC2, AC14), the OCI-shaped recipe (AC1, AC2, AC17), addressed objects (AC7, AC15), `403` rendering (AC16), the API-chain verdict (AC21), unmerged virtual repositories (AC20), data-driven OSV coverage (AC22), record-based publish and deletion (AC6, AC7, AC18). Twenty-seven criteria, each with a Test Plan row. Stays draft; awaits an independent review. |
+| 2026-09-28 | 7c4d5bb | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec and of this file (Open item 30's requests, now met or routed; themes 1, 2, 4, 5 and 7; management-api 11 and 12; upstream-adapters 12; signing-service 11; conformance-harness reconciliation 2; proxy-cache reconciliation 10; supply-chain reconciliation 10; format batch 1 item 3). Applied: publish and deletion as `management-api.md`'s `publish` and `delete-file` kinds through `Operator` with no bindings, upload sessions, the record as `args` and the per-file `root_url` in the result document, `validation`, `conflict`, `retired` through core-held `Retirement`, the identical-bytes `200` replaced by `Idempotency-Key`, `unauthorized` for out-of-pattern files, `405` `repository-type`, a `script` case per kind (AC6, AC7, AC15, AC18, AC19; the Q14 record); the API remote in `proxy-cache.md`'s completion-only mode with the JWS entry of `artifact-verification.md` (AC16, `raw-keys`, reached through `Verifier`) as the hook's integrity call (AC3), regressions not adopted by `generated_at` and, for legacy documents, by upstream `Last-Modified` per `proxy-cache.md` AC22 (AC5; the Q6 record, which no longer leaves them unguarded); the bottle remote on the `distribution` adapter (`upstream-adapters.md` AC16, AC6, AC8, AC23; `Docker-Content-Digest` as the declared digest, as `oci.md` reads it; AC10 row); the `oci.md` coverage table updated for its was-Q8 name split; the removal table mapped onto `proxy-cache.md`'s event classes; the served `Last-Modified` as `adopted_at` (`data-model.md` AC44) set by the shared helper (AC4, the Q5 record); the virtual's served time derived from its member's and its own pointer's records (AC20); the verdict as `repository-chain` with the publisher-rule outcome (AC21); advisories through a declared second source per `supply-chain-policy.md` was-Q9 (AC22, the Q13 record); `WriteRefusal` and the `client-setting` binding row; the `auth.md` universal forms cited; `Deps` restated against the pinned set and the import boundary (`format-handler-interface.md` AC15); harness stand-ins as `hosts` sub-entries, the signed API snapshot and the `trust` key cited; new AC28 (`Capabilities()`, rename, stale `root_url`). Mismatches found, resolved without a new question: `proxy-cache.md` AC22's exact-match `304` clause and its no-stale-`200` clause jointly leave brew's later-and-unequal `If-Modified-Since` undefined, so this spec keeps its adopted not-earlier rule (was Q5), the only answer satisfying the second clause, and reports the case to `proxy-cache.md` and `signing-service.md` AC11. Gaps reported, not queued: no virtual-scoped freshness record or member-list pointer transition in `data-model.md`; no on-request compression with a per-encoding `ETag` in the shared serving helper; no Homebrew version ordering behind `supply-chain-policy.md`'s coverage row; `auth.md` still has no `brew` client row. No new question; `fable_recheck` unchanged. Stays draft. |
