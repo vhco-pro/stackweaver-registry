@@ -81,6 +81,12 @@ The path rule decides the line, not the author: work under `internal/format/<nam
 `conformance/<name>/` or the format's own spec is `format:<name>`, and everything else is
 shared. A commit touching both kinds of path is refused.
 
+A spec that is one half of a listed subsystem shares its line rather than adding one (charter,
+"Measuring per-format cost"): `credential-management.md` and `repository-lifecycle.md` are the
+token and repository halves of the management surface core, so their work under
+`internal/credential/` and `internal/repository/` is charged to `shared:management`, never to a
+line of their own.
+
 ## The ledger
 
 One record per agent session, written at the session's end: the cost line, `triggered-by:
