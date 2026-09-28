@@ -395,6 +395,8 @@ One target file per agent. A file listed here has had every item targeting it ap
 - artifact-verification.md, CLOSING SWEEP: DONE 2026-09-28 at 3135d95 on Opus. Raw RSA-SHA512 integrity entry for Hex Signed payloads, RSA raw-keys type, Hex "Nothing" qualified to artifacts (AC30).
 - credential-management.md, CLOSING SWEEP: DONE 2026-09-28 at 3135d95 on Opus. Binding table with PyPI (AC19) and Open VSX api/-/trusted-publishing/token (wire not yet captured); binding-is-pure-translation AC25.
 - EVICTION CONTRADICTION: SETTLED 2026-09-28 at f0bfe75 on Opus. proxy-cache Q21 adopted (a remote's current metadata documents at every level are never LRU-evicted: fourth-root current documents; the quota bounds cached files only; cache_metadata_bytes{repository} gauge beside it; accepted cost: metadata grows with names ever requested, visible not bounded) and Q22 adopted (a per-package revision set's declared list lives on its package-level document, so adoptions of different packages never serialise). Folded through data-model (non-root row, AC44, AC37) and storage-and-gc (fourth root, property eviction op, AC16). AC29 added. Roots stay five. fable_recheck on all three.
+- observability.md, CLOSING SWEEP: DONE 2026-09-28 at 1848c7d on Opus. unbound_hosts in repository.rename's extension set (AC12); replication.link.*, replication.export, replication.import confirmed with emitting routes; policy.rule.update covers coordinate_exemptions. No question adopted.
+- management-surfaces-and-the-oracle.md: NOT DONE (agent handed back before writing rows).
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
 1. signing-service.md (~l.439, ~l.460): "`data-model.md`'s to add" -> "added in data-model.md (Design 'Freshness scoped to the pointer', AC36, AC37)"; ~l.437: "no retained snapshot holds" -> "no retained snapshot or pointer document holds" (data-model AC37).
@@ -736,3 +738,8 @@ SECOND-PASS NEEDED: auth.md and data-model.md were swept BEFORE later sweeps que
 6. format-handler-interface.md: the proxied classification carries evictability (artifact vs metadata), a retention count where zero is valid, and the declaring level.
 7. conda.md and huge-index formats: the remote's repodata is outside the quota and shows in cache_metadata_bytes; worth a line.
 8. question-triage.md: record proxy-cache Q21 and Q22 as adopted on Opus, awaiting Fable recheck.
+
+## From the observability.md closing sweep (2026-09-28, on Opus)
+1. replication.md and management-api.md: the replication sync and reseed POST routes and the link GET have no registered audit event, against management-api's rule that every request to its API emits one; the owner names them (e.g. replication.link.sync, .reseed), then observability adds them.
+2. management-api.md AC23: says every audit record is a manage.* event, but its own Design registers lifecycle, credential, replication and policy events under their owning specs; AC23 should say "a registered event".
+3. Early disagreements for the management-surfaces rows (confirm against the format specs): Chef's Supermarket DELETE routes (knife supermarket unshare) are bindings onto removal; Puppet's POST /v3/releases (PDK publish) is a binding, contrary to "no client trigger".

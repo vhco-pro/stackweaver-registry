@@ -42,3 +42,6 @@ If you are not Fable, add `fable_recheck: "<what you did> on <model>, <date>"` t
 frontmatter (reconciliation and folding need it only when you adopted a new question). Never remove
 an existing `fable_recheck` unless you are Fable performing that recheck. Never set `planned` on a
 spec that carries one.
+
+## Concurrency (read this)
+Do NOT start your own subagents, Agent calls or workflows. The owner caps the whole loop at two agents at a time to control spend, and an agent that fans out breaks that cap invisibly. Do all the work yourself, sequentially.

@@ -48,9 +48,9 @@ owner's machine, one agent at a time; everything that only reads specs and publi
 a cloud session. Both push to the same repository, so always `git pull --rebase` before pushing.
 Each side appends to `consequences.md`; a conflict there is two lists to concatenate.
 
-### Local: needs podman or docker - DONE 2026-09-27
+### Local: needs podman or docker - 32 of 33 DONE
 
-All 33 catalogue ecosystems are specced, each grounded in captured traffic from real clients run in
+CORRECTION 2026-09-28: RubyGems was never specced. Its author died in the first spend-limit crash and was never relaunched, and the queue was then wrongly marked complete. It is being authored now. The other 32 catalogue ecosystems are specced, each grounded in captured traffic from real clients run in
 containers: generic, oci, npm, pypi, ansible-collections, cargo, go-modules, helm, pub, nuget,
 maven, hex, composer, conda, cran, julia, swift, terraform, rpm, debian, alpine, conan, vagrant,
 chef, puppet, hackage, luarocks, cpan, opam, homebrew, openvsx, arch (plus the catalogue itself).
