@@ -80,10 +80,14 @@ experiment log, and `project-charter.md` AC9 forbids any Tier 2 handler code on 
 owner-recorded `continue` verdict (after `shrink`, this spec is `parked`). This spec exists now so the catalogue's AC1 (a spec before any code) holds and
 so the format's traps are on record before the gate, not to pull the format forward.
 
-**The management API must be specced before Phase 2's yank.** Yank and unyank are bindings onto
-operations of `docs/internal/plans/foundation/management-api.md` (to be authored in the spec
-loop), which owns their shared shape, authorization and write accounting, so the yank half of
-Phase 2 waits on that spec reaching `planned`.
+**The management API must reach `planned` before Phase 2's yank.** Yank and unyank are
+bindings onto the `withdraw` and `restore` kinds of
+`docs/internal/plans/foundation/management-api.md`'s closed operation vocabulary, whose kind
+table and cross-format reconciliation table carry Cargo's row (`DELETE .../yank` and
+`PUT .../unyank` as the bindings, `delete` as the action, the resolved withdraw-action decision,
+was Q1 there), and the handler declares them through that spec's optional `Operator` interface
+(its resolved dispatch decision, was Q2). That spec owns their shared shape, authorization and
+write accounting, so the yank half of Phase 2 waits on it reaching `planned`.
 
 ## Scope
 
@@ -109,6 +113,8 @@ Phase 2 waits on that spec reaching `planned`.
   `ETag`, negative caching, and Cargo's rows of the upstream-removal table.
 - The write-boundary declaration `data-model.md` requires, with yank and unyank as metadata-only
   writes.
+- The handler's `Capabilities()` declaration, repository rename and virtual aggregation
+  (Design, "Capabilities and lifecycle").
 
 **Out of scope for v1**, each with its reason, recorded because the interface spec's definition
 of done requires the deliberately unimplemented surface to be named:
@@ -134,11 +140,16 @@ of done requires the deliberately unimplemented surface to be named:
   and an owners mutation would be a second write path into grant state.
 - **Signatures and provenance.** Nothing on the Cargo wire carries a signature or an
   attestation: the index is unsigned, `.crate` files are unsigned, and the only integrity
-  primitive is the index `cksum`. There is nothing here for the artifact-verification sibling
-  that `supply-chain-policy.md` settled as the producer (its resolved verification-ownership
-  decision, was Q6) to verify, and nothing this spec must meet; advisory matching for crates is
-  the policy engine's coordinate-level path (OSV carries the RustSec ecosystem) and needs no
-  handler cooperation.
+  primitive is the index `cksum`. There is nothing here for
+  `docs/internal/plans/foundation/artifact-verification.md`, the producer
+  `supply-chain-policy.md` settled (its resolved verification-ownership decision, was Q6), to
+  verify: that spec's per-format table lists Cargo under "Nothing", so every Cargo digest
+  answers `absent` and the conformance matrix's verification column reads `none` with this spec
+  cited (its AC24; `catalogue.md` AC7). Nothing is asked of `signing-service.md` either (its
+  consumer table, "Nothing, stated"): the index is rendered on read, below. Advisory matching
+  for crates is the policy engine's coordinate-level path (`supply-chain-policy.md`, "What the
+  feed covers": crates.io is covered through OSV's RustSec data) and needs no handler
+  cooperation.
 - **The crates.io-only surfaces**: the `/api/v1/crates/{name}` JSON detail, download counts,
   categories, keywords and the web UI. No cargo command consumes them (`cargo info`, present in
   1.98.1 and absent in 1.70.0, reads the index only, captured), so a claim in the matrix would
@@ -298,10 +309,11 @@ How this meets `auth.md`, whose rules this spec does not bend:
   the field describes **this** repository's visibility; the upstream's own credential, if any,
   is the upstream adapter's business and never leaks into what clients are told.
 - **The token verifier accepts a scheme-less `Authorization` value.** This is a third credential
-  form beside Bearer and Basic, and `auth.md`'s client table has no `cargo` row; the row it
-  needs is listed in this spec's sibling consequences and must land there before this format's
-  auth cases are written, per that spec's rule that each row is confirmed against captured
-  traffic (it now is).
+  form beside Bearer and Basic, and `auth.md` now carries it: its presentation-forms table lists
+  the scheme-less form (the whole `Authorization` value is the token) and its client table has a
+  `cargo` row with the bare token and the `WWW-Authenticate: Cargo login_url` challenge, each
+  confirmed against this spec's captures as that spec requires before a format's auth cases are
+  written.
 - **Search cannot authenticate, by the client's own contract.** The captures show no
   `Authorization` on search even with a token configured, so on a private repository `cargo
   search` is refused like any other credential-less request. That is honest and unavoidable; a
@@ -337,7 +349,10 @@ metadata-only mutations snapshot-creating writes. Cargo's declaration:
   snapshot behind, matching the public registry. The `.crate` at a coordinate is the immutable
   artifact this registry's own proxy layer caches forever, and 1.98.1 refuses the duplicate
   client-side anyway, so accepting it would only ever be observed by old clients and downstream
-  caches, silently.
+  caches, silently. No operation on this format deletes a version, so no coordinate is ever
+  retired and no `Retirement` record is written: `withdraw` and `restore` retire nothing
+  (`management-api.md`'s kind table), and the existing-coordinate refusal is the handler's own
+  check against the head snapshot.
 - A proxied repository creates no snapshots at all; index arrival and revalidation are cache
   materialisation.
 
@@ -345,29 +360,36 @@ metadata-only mutations snapshot-creating writes. Cargo's declaration:
 
 The cross-format precedent (`pypi.md`'s resolved hosted-yank decision, was Q1, with `npm.md` and
 `ansible-collections.md`) makes every management operation an operation of one registry-owned
-management API, `docs/internal/plans/foundation/management-api.md` (to be authored in the spec
-loop), and where an ecosystem client drives an operation over its own wire, that route is served
-as a **binding onto the same operation**, as npm's `-rev` routes are. Cargo is that case: the
-`DELETE .../yank` and `PUT .../unyank` routes above are bindings onto the registry-owned yank
-operation, with one implementation behind two ways in (the resolved yank-binding decision
-below). What that fixes:
+management API, `docs/internal/plans/foundation/management-api.md`, and where an ecosystem
+client drives an operation over its own wire, that route is served as a **binding onto the same
+operation**, as npm's `-rev` routes are. Cargo is that case: the `DELETE .../yank` and
+`PUT .../unyank` routes above are bindings onto the `withdraw` and `restore` kinds, declared
+through the handler's `Operator` interface (`Operations()` and `Bindings()`), with one
+implementation behind two ways in (the resolved yank-binding decision below). A binding has no
+behaviour of its own (that spec's binding rule): its `Scope(r)` reports exactly the operation's
+object and action, and the binding and the API produce the same snapshot delta. What that fixes:
 
-- **Authorization is `delete`, the same as PyPI's yank.** One operation carries one
-  authorization rule, and yank is removal-class across formats. A principal holding `push`
-  alone publishes but cannot yank, which is more than crates.io asks of an owner, and is the
-  accepted cost.
-- **Hosted only.** A yank against a proxied repository is refused; its yanks arrive from the
-  upstream per the removal table below.
+- **Authorization is `delete`, the same as PyPI's yank.** The action follows the kind, never the
+  format (`management-api.md`'s kind table; its resolved withdraw-action decision, was Q1), and
+  `withdraw` sits on the `delete` side because its whole purpose is to take a version out of new
+  resolutions. A principal holding `push` alone publishes but cannot yank, which is more than
+  crates.io asks of an owner, and is the accepted cost. `auth.md` records the settlement in the
+  same words and no longer carries the "Cargo yank under `push`" divergence.
+- **Hosted only.** A yank against a proxied or virtual repository answers `405` with problem type
+  `repository-type`, identically through the API and through the binding (its AC7); its yanks
+  arrive from the upstream per the removal table below.
 - **Nothing is deleted.** Yank flips a flag in one snapshot, and the `.crate` stays served, as
-  the write-boundary declaration above states.
+  the write-boundary declaration above states; `withdraw` retires nothing.
 - **The owners mutations are not management operations.** They are refused before scope
   evaluation (the resolved owners decision below), so there is no operation for them to bind
-  onto, and the owners listing stays a `pull` read.
+  onto, and the owners listing stays a `pull` read; `management-api.md` records the same.
 
-What this format requires of `management-api.md`: a yank and an unyank operation on a version,
-reporting the object `{crate}/{version}` in the canonical form below, producing exactly one
-metadata-only snapshot, and reachable from cargo's own routes with identical semantics and
-authorization (AC19).
+What this format required of `management-api.md`, and what that spec provides: a `withdraw` and
+a `restore` operation on a version, `Authorize` reporting the object `{crate}/{version}` in the
+canonical form below, exactly one metadata-only snapshot per completed operation (its AC5), and
+the bindings above reaching the same `Apply` with identical semantics and authorization (AC19);
+the trigger is verified by this registry's integration tests plus the `script`-driven case its
+AC24 requires for every declared kind, and the effect by the real client.
 
 ### Addressed objects and pattern scopes
 
@@ -381,7 +403,7 @@ covers `Acme_Tool` however a request spells it.
 
 | Route | Object kind | Canonical object |
 |---|---|---|
-| `config.json` | none | - |
+| `config.json` | descriptor | - (protocol configuration: `dl`, `api` and `auth-required`; it names no crate, version or digest) |
 | Crate index file | named | `{crate}` |
 | Crate download | named | `{crate}/{version}` |
 | Publish | named | `{crate}/{version}`, from the metadata JSON, which the length-prefixed body carries before the `.crate` bytes, so no unauthorized crate is spooled; validation refuses a `.crate` whose manifest disagrees with it |
@@ -390,24 +412,40 @@ covers `Acme_Tool` however a request spells it.
 | Search | none | - |
 
 What that gives and costs, applying `auth.md`'s rules rather than re-deciding them. Every cargo
-command fetches `config.json` first, and `config.json` addresses the repository as a whole, so
-a credential holding **only** a patterned `pull` is refused at the first request and no cargo
-command works under it. Pattern narrowing on this format is therefore practical for writes: a
-CI credential confined to its own crates holds an unpatterned `pull` beside a `push` and a
-`delete` patterned `acme-*/**`, and publishes and yanks only those crates. A patterned `pull`
-still narrows direct index and download requests, which AC17 asserts rather than leaving
-implied. Search is refused to a patterned credential as it already is to any credential-less
-request.
+command fetches `config.json` first. Under the three original object kinds that document
+addressed the repository as a whole and a credential holding **only** a patterned `pull` was
+refused at the first request, so no cargo command worked under it; `auth.md`'s resolved
+name-free-document decision (was Q23) added the fourth kind for exactly this document, and Cargo
+was the case that raised it. `config.json` reports **descriptor**: a repository-wide document
+whose body carries no name, version or digest of any object the repository holds, which a
+patterned `pull` may read, held by the sentinel test `format-handler-interface.md` AC12 runs on
+every descriptor route (a sentinel crate seeded, `config.json` fetched, any sentinel in the body
+failing the table). A patterned-only `pull` therefore **runs cargo end to end**: it reads
+`config.json`, fetches the index files and downloads of in-pattern crates and is refused another
+crate's index file, in both modes, which AC17 asserts. Search stays `none`, since it enumerates
+names, and is refused to a patterned credential as it already is to any credential-less request.
+Pattern narrowing is therefore practical on both sides of this format: a CI credential confined
+to its own crates holds `pull`, `push` and `delete` all patterned `acme-*/**`, and fetches,
+publishes and yanks only those crates; where helm, dnf and zypper still need an unpatterned
+`pull` because their first document enumerates names, cargo does not.
 
 ### Policy refusals on the wire
 
 When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on an
 index-file or download route of either path, the handler answers `403` with the `errors` body
 this format uses for every refusal, its `detail` naming the policy and rule, or naming the
-signal for a coordinate condemned under the shared security-signal rule. `403` rather than the
-existence rule's `404`, because the caller is authorized and the content is what is refused.
-The client prints `detail` verbatim on API refusals (captured); whether it does so on an index
-or download refusal is what AC18's case proves.
+signal for a coordinate condemned under the shared security-signal rule, written through the
+shared refusal writer `WriteRefusal` in `internal/format` (`format-handler-interface.md` AC14),
+which on an HTTP/1.1 connection also writes the status line
+`HTTP/1.1 403 Refused by policy: {condition}` (`supply-chain-policy.md`'s resolved
+refusal-status-line decision, was Q10, and AC18). `403` rather than the existence rule's `404`,
+because the caller is authorized and the content is what is refused; `451` is never used for a
+policy refusal, because cargo treats it as a security signal (the removal table below). The
+client prints `detail` verbatim on API refusals (captured); whether it does so on an index or
+download refusal is what AC18's case proves, and the same case captures whether `cargo` falls
+back to another configured source on the refusal, filling Cargo's `pending` row of
+`supply-chain-policy.md`'s "When a refusal binds, per format" table in the same change (its AC20;
+the harness refuses a policy case while the row is `pending`, `conformance-harness.md` AC26).
 
 ### The proxied path
 
@@ -422,14 +460,19 @@ settled decisions in `proxy-cache.md`:
   upstream's redirects (crates.io's `api` download path answers 302 to `static.crates.io`).
   This is the same format-specific transform `format-handler-interface.md` canonicalises with
   npm's packument URLs, and it likewise needs the externally visible base URL, not the bind
-  address. Without it every proxied download goes straight past the cache.
+  address: the handler reads it as `deployment.md`'s `server.public_url` through `Deps`, as npm
+  and PyPI do, until the re-open settles its home. Without it every proxied download goes
+  straight past the cache.
 - **Per-crate index files are mutable metadata with a TTL**, revalidated conditionally: the live
   `index.crates.io` serves `ETag` and `Last-Modified` and answered 304 to `If-None-Match`, so an
   unchanged file costs a 304, not a re-download. The cached document is served to clients under
-  this registry's own `ETag`, and clients' own `If-None-Match` refreshes are answered 304 from
-  the cache without touching the upstream inside the TTL. Index lines pass through unmodified
-  except for one field: a `registry` value equal to the upstream's own index URL is normalised
-  to null, so that "this registry" keeps meaning the repository the client is talking to.
+  this registry's own `ETag` and the cache-scoped `Last-Modified` of `proxy-cache.md`'s
+  freshness record (its AC22: forward-moving on every adopted revision, `304` only on an exact
+  match, an older upstream revision never adopted), and clients' own `If-None-Match` refreshes
+  are answered 304 from the cache without touching the upstream inside the TTL. Index lines pass
+  through unmodified except for one field: a `registry` value equal to the upstream's own index
+  URL is normalised to null, so that "this registry" keeps meaning the repository the client is
+  talking to.
 - **`.crate` files are immutable artifacts**: cached indefinitely (crates.io itself serves them
   `immutable` with a one-year max-age), fetched stream-and-verify against the `cksum` of the
   index line this registry served, never committed on a mismatch or truncation.
@@ -451,15 +494,19 @@ without changing lockfile identity, so the recipe is documentation plus a confor
 a transform. The same field is why a `virtual` repository cannot fold a crates.io dependency
 into a local member: only source replacement can.
 
-Upstream removal maps onto the settled purge-or-flag table as Cargo's side of that contract:
+Upstream removal maps onto the settled purge-or-flag table as Cargo's side of that contract: the
+handler classifies each observed event into one of `proxy-cache.md`'s event classes ("Upstream
+removal or replacement", which names Cargo in the rows below) and the layer executes the
+response:
 
 | Upstream event, as observed at revalidation | Classification |
 |---|---|
-| A version's `yanked` flag flips to true | **Mirror the flag**, keep the cached `.crate`, and record an operator-visible divergence: the same class as the PyPI-yank row of `proxy-cache.md` AC13, because Cargo yank means "not for new resolutions, existing lockfiles keep working" (the Cargo book, and captured). New resolutions then exclude the version because the client refuses yanked versions; that exclusion is the client's half, and ours is serving the flag faithfully |
-| The index file answers 404 or 410 where it previously existed, or a version's line vanishes | Keep serving, record an operator-visible divergence. crates.io lets owners delete young, undownloaded crates and its admins delete others, and neither case is distinguishable on the wire from the other; a deletion with no signal falls through to keep-and-flag by the settled rule |
-| The index file answers 451 | The **explicit signal**: a legal takedown is an unambiguous, deliberate removal by the upstream operator; purge the cached content and alert the operator |
-| A version's `cksum` changes | An **immutability violation** treated as the explicit signal: purge the cached `.crate` for that version and alert. The Cargo book says index objects are never modified except `yanked`, cargo verifies every download against the index's `cksum`, and a registry that keeps serving the old bytes under a line advertising the new digest makes every client download fail with a checksum error against us |
-| Any other field change (`rust_version`, `features`, a new line appended) | An ordinary metadata change, propagated at the next revalidation |
+| A version's `yanked` flag flips to true | **Flag mirroring**: keep the cached `.crate`, mirror the flag, and record an operator-visible divergence, the same class as the PyPI-yank row of `proxy-cache.md` AC13, because Cargo yank means "not for new resolutions, existing lockfiles keep working" (the Cargo book, and captured). New resolutions then exclude the version because the client refuses yanked versions; that exclusion is the client's half, and ours is serving the flag faithfully |
+| The index file answers 404 or 410 where it previously existed, or a version's line vanishes | **Removal with no signal**: keep serving, record an operator-visible divergence and alert once. crates.io lets owners delete young, undownloaded crates and its admins delete others, and neither case is distinguishable on the wire from the other; a deletion with no signal falls through to keep-and-flag by the settled rule |
+| The index file answers 451 | The **explicit security signal**: a legal takedown is an unambiguous, deliberate removal by the upstream operator; purge the cached content, one refusal record, one alert |
+| A version's `cksum` changes | A **coordinate-bound immutability violation**, treated as the explicit signal: purge the cached `.crate` for that version and alert, the next request re-fetching and verifying against the new digest. The Cargo book says index objects are never modified except `yanked`, cargo verifies every download against the index's `cksum`, and a registry that keeps serving the old bytes under a line advertising the new digest makes every client download fail with a checksum error against us |
+| An upstream index file older than the adopted one (a lagging or rolled-back upstream) | **Regression not adopted**: the cached revision stands and a divergence is recorded (`proxy-cache.md` AC22) |
+| Any other field change (`rust_version`, `features`, a new line appended) | An **ordinary metadata change**, propagated at the next revalidation |
 
 Detection happens at revalidation, passively, per the resolved security-signal detection
 decision in `proxy-cache.md` (was Q12); the active channel is the policy engine's advisory feed,
@@ -477,6 +524,28 @@ download). A second-install case that proves the registry served from cache must
 start from a fresh `CARGO_HOME/registry` (captured: with it removed, the downloads reached the
 stub again), and assert both directions: the client reached this registry, and this registry
 did not contact the upstream, at the network layer.
+
+### Capabilities and lifecycle
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available`, `Virtual: supported` and `Rename: supported` (`format-handler-interface.md` AC13).
+Virtual aggregation is possible here because nothing on this wire is signed with or names the
+repository: a virtual Cargo repository serves its own `config.json`, and renders a crate's index
+file from the first member in member order whose head holds any version of that folded key,
+omitting later members' versions of it, the dependency-confusion-closing rule every format spec
+adopts; downloads resolve through the member that supplied the line, and the `registry` field
+stays a client-side routing directive exactly as above, so a virtual cannot fold a crates.io
+dependency into a local member either (only source replacement can). A rename changes no stored
+byte: `config.json`'s `dl` and `api` derive from the base URL at request time, index lines carry
+no registry name, and every grant, retirement and snapshot resolves to the repository by
+identity (`repository-lifecycle.md` AC12); the old name answers exactly what a never-existing
+repository answers. The cost is the ecosystem's, stated for operators: the index URL is lockfile
+identity (the resolved git-protocol decision), so a renamed repository is a new source to every
+`Cargo.lock` that named the old one, and `repository-lifecycle.md`'s resolved alias decision
+(was Q2 there) provides no redirect. `repository-lifecycle.md` AC12 requires
+`conformance/cargo/rename_test.go`, enforced by the harness's case-set validator
+(`conformance-harness.md` AC26); AC20 carries it with a real `cargo fetch` from the renamed
+repository.
 
 ### Conformance, the two clients and the corpus
 

@@ -59,7 +59,12 @@ Nothing local remains unless a gate review asks for a fresh capture.
    ~~artifact-verification~~ (done 2026-09-27, #46), ~~signing-service~~ (done 2026-09-27, #47), ~~upstream-adapters~~ (done 2026-09-27, #48), ~~async-operations~~ (done 2026-09-27, #49) (reconcile with the
    `Operation` entity already in `data-model.md`), ~~repository-lifecycle~~ (done 2026-09-27, #50), ~~observability~~ (done 2026-09-27, #51), ~~deployment~~ (done 2026-09-27, #52),
    ~~web-ui~~ (done 2026-09-27, #53). Hints are each spec's line in `foundation.tsv`.
-3. **A reconciliation pass** over whatever those specs queue in `consequences.md`.
+3. **A reconciliation pass** over whatever those specs queue in `consequences.md`. IN PROGRESS: every
+   foundation spec is done, and format batches 1-2 are done; batch 3 was interrupted (see the progress log
+   in `consequences.md`). Remaining format batches, four files per agent: cargo (redo), debian, rpm;
+   conda, conan, arch, alpine; luarocks, chef, terraform, hex; hackage, openvsx, cpan, julia; composer,
+   vagrant, opam, homebrew; cran, puppet, swift, pub. Then a last sweep of items raised against files
+   already passed, then `HANDOFF.md` and `question-triage.md`.
 4. **Gate reviews** (`agents/spec.md`, review mode): `storage-and-gc.md` first (un-planned by the
    Wave 1 reconciliation), then `credential-management.md`, `conformance-harness.md` and
    `generic.md`, which are the build-step 1 and 2 specs.
