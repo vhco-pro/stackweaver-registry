@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Metadata-eviction reconciliation 2026-09-28 at f0bfe75 on Opus (not a review): Q21 adopted, a remote's current metadata documents at every level are fourth-root current documents LRU eviction never reaches, changed only by an adoption and ended only by the remote's deletion, outside the quota and reported as cache_metadata_bytes (AC29 added, AC14 files only); Q22 adopted, a per-package revision set declares its blobs on its package-level document so adoptions of different packages do not serialise (AC27 extended); a declared count of zero valid, puppet and vagrant as Q19 examples; homebrew moved from kept bytes to the new-blob variant as a digest-addressed file kept until eviction (AC28 extended, was-Q20 extension note). No mark root added. 29 criteria, zero open questions; stays draft, carries fable_recheck. Earlier: Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a remote's retained revisions keep their blobs only on the declared blob-digest list of its repository-level document, for a handler-declared count of superseded revisions (one by default), rewritten by each adoption in its own transaction, a later map build a reference creation refused once its revision is dropped, cached files held by their own cached references (Q19 adopted, AC27); the old blob of the new-blob-beside-the-old variant is kept by its own cached reference only until the new blob's commit ends it, since every format in the variant serves a digest-less path from the current revision (Q20 adopted, AC28; AC13 and the event-class row rewritten). No mark root added. 28 criteria, zero open questions; stays draft pending a gate review, and carries fable_recheck. Earlier: Closing reconciliation sweep 2026-09-28 at 181a63b on Opus (not a review), applying every format batch 4 to 8 and signing-service closing-sweep item placed here: AC22 and 'Freshness of what a remote serves' reworded into the two conditional rules signing-service adopted (exact by default, not-earlier declared per format, brew's API remote), rendered through its serving door with cached files through ServeFile; the adoption commit is one transaction with a hook the index runtime's Adopt registers on, fed by the handler's adoption check (ordering, event classes, parsed records) now in the fetch-and-cache request (AC25); Q18 adopted: a remote reached only through a virtual is revalidated by the proxy.revalidate job, coalesced per remote, enqueued by virtual reads past the TTL and by virtual creation or member addition, replaying the handler's own route below the authorizer at one asserted call site (AC26; AC18 qualified); the event-class table gains the conda, Vagrant, Hackage, CPAN, Composer, opam, Swift, pub, Hex, Terraform and LuaRocks rows, both revision-bound variants and the ordinary-change divergence (AC13 extended); Alpine and six other formats named as completion-only consumers. 26 criteria, zero open questions; stays draft pending a gate review, and carries fable_recheck. Earlier: sweep 2026-09-28 at 6e6d503 (not a review): the cache-scoped freshness record cited as data-model.md's (AC44), freshness_test.go shared. Reconciled 2026-09-28 at f6da6ad with the foundation authoring wave (not a review): Q15 (the completion-only fetch mode with a handler-supplied verifier hook, the client streaming with completion withheld until the verifier passes, verdicts after commit), Q16 (a per-fetch FirstByteWithin exception to the waiter rule for julia's captured deadline) and Q17 (api.nuget.org and repo.maven.apache.org preconfigured by the was-Q14 rule) adopted under the owner's standing delegation. Design gained the adapter seam over upstream-adapters.md, the cache-scoped half of forward-moving freshness (never adopt an older revision, db and signature as one revision), the removal event-class table with every reconciled format's rows, the read_only and deletion halves of repository-lifecycle.md, the proxy.offline key, the management-api refresh route and observability.md's metric names. AC20 to AC24 added; 24 criteria, zero open questions; stays draft pending a gate review. Earlier: Q14 adopted 2026-09-26; Q10, Q12 and Q13 adopted, Q11 answered by the owner."
+status_description: "Leftovers pass of the closing sweep 2026-09-28 at 4278ce0 on Opus (not a review): EnqueueRevalidation takes the caller's transaction (creation and member change enqueue in theirs, the read path in an enqueue-only one it opens), with run_at now and the rate-limit deferral through async-operations' RetryAt counted as an attempt (its was-Q11); internal/proxy imports neither internal/index nor internal/signing, the member-input paths arriving through an interface it declares (signing-service was-Q19); AC26 extended and its rows shared with async AC29, AC30 and auth AC36; the Obligation list gains the git location {url, commit} (upstream-adapters was-Q9) and the advisory key (supply-chain was-Q11), asserted by the new AC30; the replay cites auth AC36 and format-handler-interface was-Q11 and AC18, and a dated note on was-Q18 records every counterpart landed; a remote's deletion ends its current documents beside its cached references, not in eviction's shape (Scope, the eviction paragraph, AC23). No new question; 30 criteria. Earlier, metadata-eviction reconciliation 2026-09-28 at f0bfe75 on Opus (not a review): Q21 adopted, a remote's current metadata documents at every level are fourth-root current documents LRU eviction never reaches, changed only by an adoption and ended only by the remote's deletion, outside the quota and reported as cache_metadata_bytes (AC29 added, AC14 files only); Q22 adopted, a per-package revision set declares its blobs on its package-level document so adoptions of different packages do not serialise (AC27 extended); a declared count of zero valid, puppet and vagrant as Q19 examples; homebrew moved from kept bytes to the new-blob variant as a digest-addressed file kept until eviction (AC28 extended, was-Q20 extension note). No mark root added. 29 criteria, zero open questions; stays draft, carries fable_recheck. Earlier: Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a remote's retained revisions keep their blobs only on the declared blob-digest list of its repository-level document, for a handler-declared count of superseded revisions (one by default), rewritten by each adoption in its own transaction, a later map build a reference creation refused once its revision is dropped, cached files held by their own cached references (Q19 adopted, AC27); the old blob of the new-blob-beside-the-old variant is kept by its own cached reference only until the new blob's commit ends it, since every format in the variant serves a digest-less path from the current revision (Q20 adopted, AC28; AC13 and the event-class row rewritten). No mark root added. 28 criteria, zero open questions; stays draft pending a gate review, and carries fable_recheck. Earlier: Closing reconciliation sweep 2026-09-28 at 181a63b on Opus (not a review), applying every format batch 4 to 8 and signing-service closing-sweep item placed here: AC22 and 'Freshness of what a remote serves' reworded into the two conditional rules signing-service adopted (exact by default, not-earlier declared per format, brew's API remote), rendered through its serving door with cached files through ServeFile; the adoption commit is one transaction with a hook the index runtime's Adopt registers on, fed by the handler's adoption check (ordering, event classes, parsed records) now in the fetch-and-cache request (AC25); Q18 adopted: a remote reached only through a virtual is revalidated by the proxy.revalidate job, coalesced per remote, enqueued by virtual reads past the TTL and by virtual creation or member addition, replaying the handler's own route below the authorizer at one asserted call site (AC26; AC18 qualified); the event-class table gains the conda, Vagrant, Hackage, CPAN, Composer, opam, Swift, pub, Hex, Terraform and LuaRocks rows, both revision-bound variants and the ordinary-change divergence (AC13 extended); Alpine and six other formats named as completion-only consumers. 26 criteria, zero open questions; stays draft pending a gate review, and carries fable_recheck. Earlier: sweep 2026-09-28 at 6e6d503 (not a review): the cache-scoped freshness record cited as data-model.md's (AC44), freshness_test.go shared. Reconciled 2026-09-28 at f6da6ad with the foundation authoring wave (not a review): Q15 (the completion-only fetch mode with a handler-supplied verifier hook, the client streaming with completion withheld until the verifier passes, verdicts after commit), Q16 (a per-fetch FirstByteWithin exception to the waiter rule for julia's captured deadline) and Q17 (api.nuget.org and repo.maven.apache.org preconfigured by the was-Q14 rule) adopted under the owner's standing delegation. Design gained the adapter seam over upstream-adapters.md, the cache-scoped half of forward-moving freshness (never adopt an older revision, db and signature as one revision), the removal event-class table with every reconciled format's rows, the read_only and deletion halves of repository-lifecycle.md, the proxy.offline key, the management-api refresh route and observability.md's metric names. AC20 to AC24 added; 24 criteria, zero open questions; stays draft pending a gate review. Earlier: Q14 adopted 2026-09-26; Q10, Q12 and Q13 adopted, Q11 answered by the owner."
 description: "Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials."
 author: michielvha
 goal: "Deliver the one capability no free multi-format registry has, so the project is not a slower Gitea with fewer formats."
@@ -104,7 +104,9 @@ build reliability, egress cost and supply-chain control.
 - The `read_only` state of a `remote` and the deletion of one, as `repository-lifecycle.md`
   defines them (its resolved read-only-remote decision, was its Q7, and its deletion table):
   this layer's half is no fetch, no revalidation and no eviction while read-only, and deletion
-  ending every cached reference in eviction's shape.
+  ending every cached reference in eviction's shape and, beside them, the remote's current
+  metadata documents, which are not cached references and which only the deletion ends
+  (`repository-lifecycle.md`, "Deletion" step 5).
 - The "refresh now" action of the resolved metadata-TTL decision, realised as
   `management-api.md`'s `POST /api/v1/repositories/{name}/refresh` (its AC29): this layer marks
   every cached metadata document and every negative entry of the remote due for revalidation.
@@ -491,14 +493,20 @@ demand (its resolved remote-member decision, was its Q16, AC35) and left the sea
 the resolved revalidation-replay decision below (was Q18) fixes it:
 
 - **A job kind, `proxy.revalidate`, owned here and run by `async-operations.md`.** Its only
-  argument is the remote. It is enqueued through `EnqueueRevalidation(ctx, remote)`, which this
-  layer exports, with coalesce key and exclusivity key `revalidate:{repository}`, so any number of
-  virtual reads inside one pending window enqueue one job per remote and a read during a running
-  job yields at most one more. Three callers enqueue it: `signing-service.md`'s `ServeDocument`
-  when it serves a virtual's merged document whose input record names this remote at a freshness
-  value past the remote's metadata TTL (the read is then served the current merged set, never
-  delayed); a virtual's creation; and a member-list change adding a remote whose documents were
-  never adopted, the last two inside the transaction that makes the change.
+  argument is the remote. It is enqueued through `EnqueueRevalidation(ctx, tx, remote)`, which
+  this layer exports, with `run_at` now and coalesce key and exclusivity key
+  `revalidate:{repository}`, so any number of virtual reads inside one pending window enqueue one
+  job per remote and a read during a running job yields at most one more. It takes the caller's
+  transaction and inserts the row in it through `Enqueue(ctx, tx, Job)`, because the queue has no
+  enqueue without one (`async-operations.md`, "Enqueue is transactional"). Three callers enqueue
+  it: a virtual's creation and a member-list change adding a remote whose documents were never
+  adopted, each inside the transaction that makes the change, so the job exists exactly when the
+  change commits; and `signing-service.md`'s `ServeDocument` when it serves a virtual's merged
+  document whose input record names this remote at a freshness value past the remote's metadata
+  TTL. That read commits nothing else, so it opens a transaction holding only the job row and is
+  served the current merged set whether or not that transaction commits, never delayed.
+  `internal/index` imports this layer for the call and for the adoption hook's registration,
+  never the reverse (`signing-service.md`'s resolved proxy-import decision, was its Q19).
 - **The job replays the handler's own proxied route; it is not a second revalidation path.** For
   each metadata document of the remote that some virtual's merged input record names and that is
   past its TTL, the job dispatches an in-process `GET` for the document's route on the remote to
@@ -508,18 +516,28 @@ the resolved revalidation-replay decision below (was Q18) fixes it:
   with its classification, its adoption check, its event classification, and a `304` from the
   serving door when nothing changed. An adoption the replay produces commits through the adoption
   hook above, so the re-merge follows with no further mechanism. For a remote never adopted, the
-  routes replayed are the paths at which the format's generator profile declares the documents a
-  `Merge` reads from a member (`signing-service.md`'s `Profile`, reported to it), which is the
-  first fetch that lets a fresh remote contribute before the first client asks. The route of each
+  routes replayed are the member-input paths the format's generator profile declares for the
+  documents a `Merge` reads from a member (`signing-service.md`'s `Profile`, its AC35), which is
+  the first fetch that lets a fresh remote contribute before the first client asks. The paths
+  reach the job through a one-method interface this layer declares and the index runtime
+  satisfies, handed here by the composition root at construction beside the replay entry, so
+  `internal/proxy` imports neither `internal/index` nor `internal/signing`. The route of each
   cached document is recorded with its entry at first fetch, so a later replay needs no
   declaration.
 - **The replay is marked and bounded.** Its request context carries a revalidation-replay marker
-  and no principal, so nothing it causes is attributed to a caller; it is the only entry into a
-  handler that does not pass the shared authorizer, and `internal/proxy/arch_test.go` holds it to
-  that one call site. Access times are updated as for any read, since a virtual really did read
-  the content. A `*upstream.RateLimitError` ends the job with its `run_at` moved past
-  `RetryAfter`; any other failure ends it under the queue's ordinary retry policy, and the virtual
-  keeps serving its previous merged set in both cases (`signing-service.md`, "Never a gap").
+  and no principal, so nothing it causes is attributed to a caller (the queue gives no job a
+  principal in the first place, `async-operations.md` AC30); it is the only entry into a handler
+  that does not pass the shared authorizer, and `internal/proxy/arch_test.go` holds it to that one
+  call site. `auth.md` names the entry as the one that skips its authorizer, bounds it to a `GET`
+  on a `remote` with nothing returned to any caller, and places it on AC10's external review
+  surface (its "The one entry that skips the authorizer", AC36); `format-handler-interface.md`
+  builds it (its resolved replay-entry decision, was Q11 there, AC18). Access times are updated as
+  for any read, since a virtual really did read the content. A `*upstream.RateLimitError` returns
+  the job to `pending` through `async.RetryAt(err, RetryAfter)`, so its `run_at` is the later of
+  `RetryAfter` and the ordinary backoff and the attempt counts toward `max_attempts`
+  (`async-operations.md`'s resolved retry-time decision, was Q11 there, AC7); any other failure
+  ends it under the queue's ordinary retry policy, and the virtual keeps serving its previous
+  merged set in both cases (`signing-service.md`, "Never a gap").
 - **Nothing here polls.** The job is never scheduled: it runs only because a virtual was read or
   created or changed, which is demand, so the resolved signal-detection decision (was Q12) holds
   and a signal on a remote reached only through a virtual is noticed when the virtual's reads
@@ -727,8 +745,12 @@ Two repository states interact with eviction and are this layer's to honour
 (`repository-lifecycle.md`): a `read_only` remote is skipped by the eviction pass, since a
 frozen cache that shrinks is not what read-only means to anyone (its resolved read-only-remote
 decision, was its Q7), and a deleted remote's every cached reference ends through the same
-reference-ending call eviction uses, so deletion is eviction's shape and adds no deleter (its
-deletion table, `storage-and-gc.md` AC15).
+reference-ending call eviction uses, so for cached files deletion is eviction's shape and adds no
+deleter (its deletion table, `storage-and-gc.md` AC15). The remote's current metadata documents
+end in the same transaction, but not in eviction's shape, since they are current documents no
+eviction reaches (the resolved metadata-eviction decision, was Q21): they are removed with their
+freshness records and declared lists as a `local`'s head documents are, and the fourth root stops
+seeing them at that commit.
 
 **Eviction ends the reference and deletes nothing** (the resolved eviction-mechanics question).
 It removes the cached reference; the blob is reclaimed by the deletion-intent sweep like any
@@ -891,7 +913,16 @@ statement of it (the method set stays pinned; this is the entry's request, not a
   document that declares the set's blobs, repository or package (the resolved declaring-document
   decision, was Q22);
 - the upstream location, or an ordered list of candidate locations, each a path under the
-  upstream root or an absolute URL the adapter's allowlist must admit;
+  upstream root, an absolute URL the adapter's allowlist must admit, or a **git location**
+  `{url, commit}` (an `https://` repository URL and a 40-digit commit id), which the `Router` sends
+  to the `git` adapter under the same row's allowlist, bound and cool-down with no credential, and
+  only on a remote whose row names `https` (`upstream-adapters.md`'s resolved git-location
+  decision, was Q9 there, AC34; `terraform.md`'s commit-pinned module sources are the consumer);
+- where the handler reported one, the **advisory key** of the package or version being fetched
+  (an origin or source package, a UUID, bound Git URLs), taken from the upstream document the
+  handler already read, so the coordinate-decidable refusal before any upstream request keys on
+  it as resolution does (`supply-chain-policy.md`'s resolved advisory-key decision, was Q11
+  there, AC24);
 - the `upstream.Options` for the exchange (`Accept`, `Accept-Encoding` opt-in, `User-Agent`
   override, `Range`, a forwarded `POST` body), with the stall timeout set by this layer;
 - exactly one of a declared digest set and a handler-supplied verifier (Completion-only mode);
@@ -1056,8 +1087,10 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       however far over quota it is, the freshness record is unchanged across the read-only
       window, and `thaw` restores all three (asserted at the network layer, sharing
       `repository-lifecycle.md` AC11's case). Deleting a remote ends every cached reference
-      through the reference-ending call eviction uses, deletes no object, and the bytes leave
-      the store only at the next sweep after grace.
+      through the reference-ending call eviction uses and removes every current metadata
+      document with its freshness record and declared blob-digest list in the same
+      transaction, deletes no object, and the bytes leave the store only at the next sweep after
+      grace.
 - [ ] AC24: A cache refresh marks every cached metadata document and every negative entry of the
       remote due for revalidation, fetches nothing itself and creates no snapshot: the next real
       client request revalidates upstream inside the metadata TTL and a name negatively cached
@@ -1081,10 +1114,18 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       so the change is visible in the virtual within the merge's staleness bound. A virtual's
       creation and a member-list change adding a never-adopted remote enqueue that remote's
       first fetch, so the virtual lists the remote's content with no request ever made to the
-      remote's own URL. Under `proxy.offline`, or with the remote `read_only` or deleted, no job
-      is enqueued and a pending one ends without an upstream request. The replay is the only
-      call into a handler that does not pass the shared authorizer, and the job is never
-      scheduled.
+      remote's own URL. `EnqueueRevalidation` takes the caller's transaction: the creation and
+      member-change enqueues exist exactly when their transaction commits and not after a
+      rollback, and the read path's enqueue runs in a transaction holding only the job row, the
+      read being served when that transaction fails. A replay meeting a
+      `*upstream.RateLimitError` returns the job to `pending` with `run_at` no earlier than its
+      `RetryAfter`, counted as an attempt, and no upstream request is made for the remote before
+      then. Under `proxy.offline`, or with the remote `read_only` or deleted, no job is enqueued
+      and a pending one ends without an upstream request. The replay is the only call into a
+      handler that does not pass the shared authorizer, and the job is never scheduled; and
+      `internal/proxy` imports neither `internal/index` nor `internal/signing`, the member-input
+      paths of a never-adopted remote reaching the job through the interface this layer
+      declares.
 - [ ] AC27: A remote's retained revisions keep their blobs for exactly their declared lifetime
       and no longer. With a handler retaining one superseded revision and keeping, per revision,
       an index body and a lazily built map both above the inline threshold: after revision N+1
@@ -1132,6 +1173,15 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       the remote's deletion, each followed by a sweep past grace. `cache_metadata_bytes{repository}`
       equals the inline bodies, CAS-backed bodies and declared blobs of the remote's current and
       retained metadata, and `cache_referenced_bytes{repository}` counts none of them.
+- [ ] AC30: The fetch-and-cache entry carries the two request fields its Obligation section
+      gained from sibling specs, on a fixture handler through this layer's entry: a git location
+      `{url, commit}` on a remote whose row names `https` is fetched through the `git` adapter
+      under that row's allowlist with no credential presented to the git host, and is refused
+      before any connection on a remote whose row names `distribution` or when its host is not
+      on the row's allowlist (`upstream-adapters.md` AC34); and a request carrying an advisory
+      key for a coordinate a rule condemns by that key is refused before any upstream request
+      while the same request under the package name alone is not (`supply-chain-policy.md`
+      AC24).
 
 ## Test Plan
 
@@ -1159,13 +1209,14 @@ one direction only is how a Phase 4 discovers it has no counterparty.
 | AC20 | integration + fault injection + architecture test | `internal/proxy/completion_mode_test.go` (neither-digest-nor-verifier refusal at the network layer; truncated, stalled and verifier-refused bodies against stand-ins; no `Blob` row and no negative entry; per-client byte timeline showing first byte before completion and completion after the verifier; short-close observed by `go`, `dotnet`, `mvn`, `composer` and `luarocks` in `conformance/<format>/proxied_test.go`; verdict recorded after commit with the client timeline unchanged; ordered candidates with an off-allowlist stand-in that fails on any connection) |
 | AC21 | integration + conformance | `internal/proxy/singleflight_test.go` (waiter timelines with and without `FirstByteWithin`; short-close of attached waiters on a failing body); `conformance/julia/proxied_slow_test.go` (`julia.md` AC19's case: forty-second stand-in, two cold clients, one upstream fetch); a table test asserting which handlers declare the deadline |
 | AC22 | integration + conformance | `internal/proxy/freshness_test.go` (record monotonic under a backwards clock and a backwards upstream date; under `exact`, equal, earlier and later-unequal conditions; under `not-earlier`, the same three with no `200` at or before the condition; older revision not adopted and divergence recorded; paired set committed atomically under concurrent reads; regenerated document has no `Signature` row, shared with `signing-service.md` AC20's assertion; the record's fields shared with `data-model.md` AC44; the rendering half is `signing-service.md` AC11's `internal/index/freshness_test.go` with the cache-scoped source); `conformance/debian/`, `conformance/arch/` and `conformance/luarocks/` proxied rollback cases with the real clients; `conformance/homebrew/freshness_test.go` (shared with `homebrew.md` AC4 and `signing-service.md` AC11: brew 7.0.6 against the API remote under `not-earlier`) |
-| AC23 | integration | `internal/repository/readonly_remote_test.go` (shared with `repository-lifecycle.md` AC11: network-level assertion, eviction pass skipped over quota, record unchanged, `thaw`); `internal/proxy/eviction_test.go` (remote deletion ends references through the eviction call, object-store delete assertion, blob gone only after the sweep) |
+| AC23 | integration | `internal/repository/readonly_remote_test.go` (shared with `repository-lifecycle.md` AC11: network-level assertion, eviction pass skipped over quota, record unchanged, `thaw`); `internal/proxy/eviction_test.go` (remote deletion ends references through the eviction call and removes current documents, records and declared lists in the same transaction, object-store delete assertion, blobs and document bodies gone only after the sweep; shared with `repository-lifecycle.md` AC16's `internal/repository/delete_remote_test.go`) |
 | AC25 | integration + fault injection | `internal/proxy/adoption_test.go` (a registered hook's effects exist exactly when the adoption commits; an injected hook failure leaves the previous revision and record serving and no job enqueued; a regression and an integrity failure run no hook; the adoption check runs before commit and its records reach the hook); `internal/index/proxied_generation_test.go` (shared with `signing-service.md` AC20: `FromUpstream` inside the adoption through `Adopt`) |
-| AC26 | integration + architecture test + conformance | `internal/proxy/revalidate_job_test.go` (many virtual reads past the remote's TTL or after a refresh enqueue one job per window; the read path makes no upstream request; the replay's conditional requests and adoption counted at the network layer; creation and member addition enqueue a first fetch; `proxy.offline`, `read_only` and deletion enqueue nothing and end a pending job without a request; no `Schedule` of the kind exists), shared with `signing-service.md` AC35's `internal/index/virtual_remote_member_test.go`; `internal/proxy/arch_test.go` (the replay is the sole call into a handler below the shared authorizer); `conformance/opam/virtual_test.go` (shared with `opam.md` AC26 and `signing-service.md` AC35: the virtual lists a remote's packages with no request to the remote's own URL) |
+| AC26 | integration + architecture test + conformance | `internal/proxy/revalidate_job_test.go` (many virtual reads past the remote's TTL or after a refresh enqueue one job per window; the read path makes no upstream request; the replay's conditional requests and adoption counted at the network layer; creation and member addition enqueue a first fetch in their transaction, absent after a rollback; the read-path enqueue in an enqueue-only transaction, a failed one still serving the read; a rate-limited replay deferred past `RetryAfter` as a counted attempt with no upstream request before it; `proxy.offline`, `read_only` and deletion enqueue nothing and end a pending job without a request; no `Schedule` of the kind exists; the discarding writer), shared with `signing-service.md` AC35's `internal/index/virtual_remote_member_test.go`, with `async-operations.md` AC29 (the kind on the production runner) and AC30 (no principal, the marker kept out of `last_error` and logs), and with `auth.md` AC36 (the discarding-writer case); `internal/proxy/arch_test.go` (the replay is the sole call into a handler below the shared authorizer, shared with `auth.md` AC36; no import of `internal/index` or `internal/signing`, shared with `signing-service.md` AC35); `conformance/opam/virtual_test.go` (shared with `opam.md` AC26 and `signing-service.md` AC35: the virtual lists a remote's packages with no request to the remote's own URL) |
 | AC24 | integration + conformance | `internal/manage/refresh_test.go` (shared with `management-api.md` AC29: metadata and negative entries marked due, no fetch, no snapshot); `conformance/oci/refresh_test.go` (a real client's next pull revalidates inside the TTL, and a negatively cached tag is looked up again, observed at the upstream stand-in) |
 | AC27 | integration + fault injection + property | `internal/proxy/retained_revision_test.go` (a fixture handler retaining one and then two superseded revisions, bodies and maps above the inline threshold, a stand-in counting upstream requests; a sweep on an injected clock with the grace lapsed after each adoption, the object store read after each; a retained revision's file evicted, re-fetched and verified against its checksum; an undeclared mentioned digest collected; a late map build discarded after its revision is dropped; the sweep paused after its mark and after intent recording while an adoption and a map build commit; a fixture handler declaring zero, the old body collected after N+1; a per-package set declared on package-level documents, two adoptions of different packages committed concurrently with no revision-token retry counted, each package's retained blobs released on its own adoptions); `internal/storage/gc_property_test.go` (declared-list births and ends interleaved with the sweep, the operation `storage-and-gc.md` AC16 already generates, with the adoption and the map build as its producers, on repository-level and package-level declaring documents) |
 | AC28 | integration + fault injection | `internal/proxy/upstream_removal_test.go` (the new-blob variant: the old reference through the adoption and a sweep past grace; clients of both revisions served the current bytes; the reference move in one transaction with the sweep paused between its mark and its delete pass across the commit; the old blob collected at the next sweep and kept while a hosted repository references the same digest; the divergence record read afterwards; the digest-addressed case: the old digest served from the store across the new commit and a sweep past grace with no upstream request, then released only by an eviction and the following sweep), shared with `homebrew.md` AC13's `internal/format/homebrew/removal_test.go` |
 | AC29 | integration + property | `internal/proxy/metadata_eviction_test.go` (a remote over quota holding documents at all three levels, inline and CAS-backed, a paired set, a declared retained revision and cached files; an eviction pass ends file references only, documents, records and paired set compared before and after; a sweep with the grace lapsed and the object store read; each document requested inside its TTL at the network layer, with and without `proxy.offline`; the next adoption on an injected clock stepped backwards and an older upstream revision refused; the `index.merge` and `proxy.revalidate` queues empty after the pass; supersession beyond the count and remote deletion each followed by a sweep; `cache_metadata_bytes` and `cache_referenced_bytes` read through `telemetry.NewTestRecorder`); `internal/storage/gc_property_test.go` (the eviction operation run over a remote holding current and retained documents, which must end no document reference, shared with `storage-and-gc.md` AC16) |
+| AC30 | integration | `internal/proxy/fetch_request_test.go` (fixture handler: a git location on an `https` row fetched through the `git` adapter with no credential at the git host, refused before connect on a `distribution` row and for an unlisted host, each asserted at the network layer, the adapter half shared with `upstream-adapters.md` AC34's `internal/upstream/router_git_test.go`; an advisory-keyed request refused before any upstream request and the name-only request fetched, shared with `supply-chain-policy.md` AC24's `internal/policy/advisory_key_test.go`) |
 
 ## Implementation Phases
 
@@ -1179,7 +1230,10 @@ is this layer's first proving ground, and npm at step 5 tests whether it general
   miss coalescing with a stall timeout and waiters served from the CAS after the verified
   commit, stream-and-verify with commit on digest match for the initiating client, the
   completion-only mode with the post-receipt verifier hook, withheld completion and ordered
-  candidates (AC20), and the `FirstByteWithin` waiter exception (AC21)
+  candidates (AC20), and the `FirstByteWithin` waiter exception (AC21); the git location and
+  advisory-key request fields (AC30), each exercised when its first consumer lands (the git
+  location with `terraform.md`'s proxied phase and `upstream-adapters.md` Phase 4, the advisory
+  key with `supply-chain-policy.md`'s matcher)
 
 ### Phase 2: Policy
 - TTLs, conditional revalidation, negative caching, serve-stale bounded and marked, the
@@ -1189,8 +1243,9 @@ is this layer's first proving ground, and npm at step 5 tests whether it general
   (AC25), the retained-revision set with its declared count (zero valid) and the declared
   blob-digest list of the set's declaring document, repository-level or package-level, rewritten
   by each adoption and appended by map builds (AC27), the
-  `proxy.revalidate` job kind with `EnqueueRevalidation` and the replay of the
-  handler's route below the authorizer (AC26), the cache refresh's layer half (AC24). The job kind
+  `proxy.revalidate` job kind with `EnqueueRevalidation` taking the caller's transaction, the
+  `RetryAt` deferral on a rate limit, and the replay of the handler's route below the authorizer
+  (AC26), the cache refresh's layer half (AC24). The job kind
   needs `async-operations.md`'s queue core, which lands at the start of charter step 4b; the
   replay has its first caller only when a format with a `Merge` builds its virtual phase, so
   AC26's conformance half waits on that format
@@ -1465,6 +1520,16 @@ in `internal/proxy/arch_test.go`, nothing returned to anyone), the recorded rout
 declaration reported to `signing-service.md`, and discarded rendering when a document changed. B
 lost to the duplicated path it creates in every merging format; C to the signals and regressions it
 cannot see.
+
+Later note (2026-09-28, the closing sweep's leftovers pass): every counterpart this record reported
+has landed. `format-handler-interface.md` builds the entry in the composition root and injects it
+into `internal/proxy` alone (its resolved replay-entry decision, was Q11 there, AC18); `auth.md`
+names it the one entry that skips its authorizer and puts it on AC10's review surface (its AC36);
+`async-operations.md` runs the kind and gives it no principal (its AC29, AC30, and its resolved
+retry-time decision, was Q11 there, for the rate-limit deferral); and `signing-service.md` declares
+the member-input paths in its `Profile` and fixed the import direction between the two packages
+(its AC35 and its resolved proxy-import decision, was Q19 there). `EnqueueRevalidation` takes the
+caller's transaction as the queue requires.
 
 ### Resolved: the completion-only fetch mode and its verifier hook (was Q15, raised and adopted 2026-09-28)
 
@@ -1801,7 +1866,8 @@ over `cache_quota_bytes` per repository, thrash is `cache_refetch_after_eviction
 pass and a deleted remote's references end through eviction's call (`repository-lifecycle.md`).
 Extended again the same day by the metadata-eviction decision (was Q21): the cached content eviction
 reaches is cached files; a remote's current metadata is never evicted and sits outside the quota,
-reported as `cache_metadata_bytes`.
+reported as `cache_metadata_bytes`, so a deleted remote's documents end with the deletion itself
+(`repository-lifecycle.md`, "Deletion" step 5), not through eviction's call.
 
 ### Resolved: real-upstream conformance runs (was Q9)
 
@@ -1877,3 +1943,4 @@ What each entry is (adapter, URL, credential kind, allowlist) is a profile in
 | 2026-09-28 | 181a63b | closing reconciliation sweep of the format batch 3 to 8 items and the signing-service closing-sweep item, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through "From the signing-service.md closing sweep" verified against the current text of the spec that raised it and of the format spec each row concerns. Signing-service closing sweep item 1: AC22 and "Freshness of what a remote serves" reworded so its two clauses are the two conditional rules of `signing-service.md`'s resolved later-condition decision (was its Q12), matched to its Design text and AC11 (`exact` default, `not-earlier` declared, brew's API remote per `homebrew.md` AC4), rendered through its serving door, cached files through `ServeFile`; the adoption commit made one transaction with a hook `Adopt` registers on (its was-Q16), fed by a new adoption check in the fetch-and-cache request (AC25); the revalidation seam adopted as Q18 (the `proxy.revalidate` job, coalesced per remote, enqueued by virtual reads past the TTL and by creation or member addition, replaying the handler's route below the authorizer; Option B, a fourth optional interface, and C, layer-only revalidation, rejected), folded through Scope, Design, the passive-detection paragraph, the refresh paragraph, AC18, AC26 and Phase 2, with an extension note on the was-Q12 record. Batch 7 item 2 is the same rewording and batch 7 item 5 the same seam. Event-class table: batch 4 item 6 (conda), batch 5 item 9 (hex, terraform, luarocks; luarocks.org and the Terraform registries), batch 6 item 13 (hackage, cpan), batch 7 item 13 (vagrant, composer, opam), batch 8 item 11 (swift, pub, pub.dev), each row read from that format's own removal table; the revision-bound class now names its two variants and the ordinary class a handler-recorded divergence (cpan, opam), AC13 and its row extended; `cpan.md`'s signature-verdict row recorded as in no class. Batch 4 item 6's Alpine half: named as a completion-only verifier consumer with swift, vagrant, chef, julia, hex and homebrew. Earlier items found already done: every item before format batch 3 is in the progress log and verified in the text (Open items 12 to 32 rows and requests, theme 7, upstream-adapters 1 to 3, repository-lifecycle 14, sweep 1 item 2); puppet's per-module gating (Open item 25) is handler-local in `puppet.md` and needs nothing here. Consequences for `async-operations.md` (the new kind), `signing-service.md`, `format-handler-interface.md`, `auth.md` and `homebrew.md` reported, not applied. One question adopted on Opus, so `fable_recheck` added. `node scripts/check-spec.js`: zero failures on this file. Stays draft pending a gate review. |
 | 2026-09-28 | 93982ba | data-loss fix on Opus (storage-and-gc closing-sweep item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 0 of "From the storage-and-gc.md closing sweep" in `agents/spec-loop/consequences.md`, verified against `storage-and-gc.md`'s fourth mark root (its third reach, AC16) and `data-model.md` AC34, AC36 and AC45: a digest a document merely mentions keeps nothing alive, the declared blob-digest list is a document's only keep-alive, and a remote writes no content snapshot. The hole: the event-class row said the old blob "stays servable while a retained metadata revision names it", and five format specs kept retained revisions and per-revision maps as CAS-backed metadata named only inside a remote's document, so the sweep would collect them while clients could still request them. Two questions raised in decision shape and adopted under the standing delegation, `fable_recheck` extended. Q19: every blob a handler keeps for a current or retained revision is on the declared blob-digest list of the remote's repository-level document, the lifetime a handler-declared count of superseded revisions (one by default, `debian.md` two), rewritten by each adoption in its own transaction; a lazily built map is a reference creation through the shared call, discarded once its revision is dropped; files stay on their own cached references (B, cached references for metadata, lost to the missing `File` row and to eviction breaking a revision it had not dropped; C, time-based retention, to the job, the key and churn-scaled storage). Q20: in the new-blob variant the route follows the current revision, since every format in it requests a digest-less path, and the new blob's commit ends the old blob's cached reference in the same transaction (B and C kept bytes no request can reach). Folded into Scope, the event-class row and the paragraph beneath it, the adoption-commit bullet, a new "What a remote keeps past its current revision" under Interaction with GC, the Obligation section (kept digests from the adoption check, the retention count), AC13, Phases 2 and 3. AC27 (retained blobs survive a sweep with the grace lapsed and with the sweep paused after its mark and after intent recording across an adoption and a map build, and are collected after the dropping adoption) and AC28 (the reference move, both revisions' clients served the current bytes, the old blob collected, the divergence record kept) added with Test Plan rows naming `internal/proxy/retained_revision_test.go`, `internal/proxy/upstream_removal_test.go` and the shared `internal/storage/gc_property_test.go`. No mark root added; the set stays five. `node scripts/check-spec.js`: zero failures on this file. Stays draft pending a gate review. |
 | 2026-09-28 | f0bfe75 | metadata-eviction reconciliation on Opus (data-loss fix second wave, items 0 and 1): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Item 0 of "From the data-loss fix second wave" in `agents/spec-loop/consequences.md`, verified against `data-model.md`'s non-root row and AC44 and `storage-and-gc.md`'s fourth root and AC16: the three specs disagreed on whether a remote's current metadata could be LRU-evicted, which read one way let a proxied repository's live index be collected. Raised and adopted Q21 under the standing delegation (A: a remote's current documents at every level are never evicted, the pass selects cached files only, a document changes only by adoption and ends only with the remote's deletion, metadata outside the quota and reported as `cache_metadata_bytes{repository}`; B, documents evictable, lost to five separate repairs of settled rules (freshness, regression, retained revisions, offline, virtual inputs) and to an index every request reads thrashing; C, a package-level stub, to a new record and still-broken offline and virtual rules), folded through Scope, "The distinction that governs everything", "Freshness of what a remote serves", the new "Eviction never reaches a remote's metadata" paragraph and the quota bullet under Interaction with GC, the Obligation section, AC14, the new AC29 and Phase 3, and extension notes on was-Q8 and was-Q19. Item 1: homebrew moved from kept bytes to the new-blob variant as a digest-addressed `File` whose old blob keeps its cached reference until eviction, the paragraph under the table naming its OCI-shaped route, AC28 extended and a was-Q20 extension note; a declared count of zero made valid (homebrew's API documents and manifests, cpan); puppet and vagrant added as Q19 examples, vagrant's current upstream body among the kept blobs; and Q22 raised and adopted (A: a per-package set's declared list on its package-level document, B one repository-level list lost to serialising every adoption on one row, C handler choice to having no rule), AC27 extended. Mark-root check: nothing added, the set stays five. Two criteria changed in substance, one added, each with its Test Plan row. `fable_recheck` extended. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
+| 2026-09-28 | 4278ce0 | leftovers pass of the closing sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the items queued against this file after its eviction settlement, each verified against the owning spec's settled text. Async-operations closing sweep item 1: `EnqueueRevalidation(ctx, tx, remote)` takes the caller's transaction because the queue has no enqueue without one (`async-operations.md`, "Enqueue is transactional"): virtual creation and member change enqueue inside theirs, and `ServeDocument`'s read path opens one holding only the job row and serves the read whether or not it commits; `run_at` is now; a rate limit returns the job through `async.RetryAt(err, RetryAfter)`, counted as an attempt (that spec's resolved retry-time decision, was Q11, AC7); AC26 and its row extended, the row shared with `async-operations.md` AC29 and AC30. The import direction settled by `signing-service.md`'s resolved proxy-import decision (was Q19 there): `internal/proxy` imports neither `internal/index` nor `internal/signing`, the member-input paths arriving through a one-method interface this layer declares (AC26, the arch test row); the "reported to it" wording on the profile paths now cites `signing-service.md` AC35. Six-spec closing sweep item 3 and format-handler-interface closing sweep item 3: the Obligation list gains the git location `{url, commit}` (`upstream-adapters.md` was-Q9, AC34) and the advisory key (`supply-chain-policy.md` was-Q11, AC24), asserted at this layer's entry by the new AC30 with its Test Plan row and placed in Phase 1. Auth and data-model second passes item 2: "Revalidation outside the request" cites `auth.md` AC36 and `format-handler-interface.md` was-Q11 and AC18, and AC26's `revalidate_job_test.go` and `arch_test.go` are shared with `auth.md` AC36; format-handler-interface closing sweep item 3's second half: a dated note on the was-Q18 record names every counterpart that has landed. Repository-lifecycle's step 5 correction (eviction settlement item 5, raised against that spec) had the same stale shape here: the Scope bullet, the eviction paragraph, AC23 and its row, and the was-Q11 extension note now say a remote's deletion ends its current documents in the same transaction as its cached references, as current documents rather than in eviction's shape. Found already done: data-loss second wave item 1 (applied by the eviction settlement: homebrew in the new-blob variant, zero-valid count, puppet and vagrant examples, the package-level declaring document). No question raised or adopted; no mark root added; the fable_recheck marker is unchanged. 30 criteria, each with a Test Plan row. Stays draft. |

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Closing reconciliation sweep 2026-09-28 at 173da1b on Opus (not a review), applying every format batch 3 to 8 item placed here: Q12 adopted (the conditional rule is declared per document, exact-match 304 by default for clients echoing the served date and CPAN.pm's fallback, not-earlier 304 for clients sending their own clock such as brew, so proxy-cache AC22's undefined later condition is settled; AC11 rewritten); Q13 adopted (a generator-declared serve-time stage, Render, for variants from one stored body, deployment-value expansion and on-request gzip, memoised under index.render_memo_bytes with the ETag derived from body, variant and inputs; LuaRocks, opam, Chef, Vagrant, Homebrew; AC31, AC30); Q14 adopted (the freshness boundary stays module-wide, with ServeRendered for per-request documents and ServeFile for stored files beside ServeDocument, behind a Documents interface in Deps; Composer, Cargo, npm, NuGet, PyPI, Open VSX, Puppet; AC32); Q15 adopted (a virtual merge commit and member-list change are document-only transitions of the virtual's default pointer, so merged Date, TUF version and Last-Modified rise; Debian, Hackage, CPAN, Composer, Homebrew; AC34); Q16 adopted (an adoption hook runs FromUpstream and re-merges every virtual listing the remote; virtual reads drive a remote member's revalidation off the request path; creation fetches a new remote; AC35); Q17 adopted (composed remote documents need a verified verdict, declared pass-through documents are served verbatim whatever the verdict; CPAN; AC36); Q18 adopted (Cache-Control per format, no per-repository override; CRAN; AC30). Folded without a question: single and multi byte ranges and If-Range (Hackage, RPM; AC30), repository-scoped pointer documents renewed once per repository (Hackage root.json and mirrors.json; AC33), SignedBy for Terraform's signing_keys (AC37), CPAN named under announce-switch-retire, Vagrant moved from the merge consumers to FromUpstream, the four rotation rewordings cited as applied, the configuration count corrected to fourteen. 37 criteria, each with a Test Plan row; zero open questions. Earlier: reconciled 2026-09-28 at 3a82b21 with the foundation authoring wave (not a review): the virtual merge is the index.merge kind and the cadence re-sign the signing.resign Schedule on internal/async, asserted on the production runtime with no fixture runner and no goroutine of its own (AC19, AC22); signing.master_key is gone, replaced by a citation of deployment's security.master_key (14 keys); keys retire in the deletion transaction, public forms resolve by digest until tombstone time and private material is destroyed then, rename changes nothing, and a virtual's first merge is enqueued at creation (AC29, AC19); the signing.key.* audit events, the signing_* and index_* metrics, the four alerts and LogValuer-typed private material named from observability's catalogue; the harness signing sub-entry's generate defined; every record and hook owed to a sibling (data-model AC36 and AC37, storage-and-gc AC16 and AC25, proxy-cache AC22, replication AC21, format-handler-interface was-Q10) cited as applied. 29 criteria, each with a Test Plan row; zero open questions. Earlier: first grounded draft, authored 2026-09-27 against 1fbf1e7 from the requirements twenty-two format specs, write-triggered-services-prototype.md, replication.md, artifact-verification.md, management-api.md and the consequences queue placed on this spec. Eleven questions raised in the template's decision shape and adopted under the owner's standing delegation: the write path dispatches regeneration, signatures are records keyed by body digest and key rather than snapshot content, renderers are per-format generator packages discovered by an optional interface, the freshness mechanism is split with data-model.md, verification stays artifact-verification.md's, keys are per repository, file custody is the default with KMS and PKCS#11 behind one crypto.Signer seam, contention is serialised per document, followers serve pointer documents verbatim, and Galaxy server-side signing is not built. Never gate-reviewed; awaits review."
+status_description: "Leftovers pass of the closing sweep 2026-09-28 at 4278ce0 on Opus (not a review): a merging Profile declares each member-read document's member-input path under the member's mount, which proxy-cache's proxy.revalidate job replays to fetch a never-adopted remote the first time (registration refuses a merging profile without one); ServeDocument's read-path enqueue calls proxy-cache's EnqueueRevalidation in an enqueue-only transaction and serves the read whether or not it commits (async-operations Enqueue is transactional); Adopt receives the handler adoption check's result and FromUpstream runs over exactly its records (AC20); Q19 adopted under the standing delegation: internal/index imports internal/proxy, never the reverse, the member-input paths reaching the job through an interface internal/proxy declares, held by both packages' architecture tests (AC35 extended). AC20 and AC35 rows cite proxy-cache AC25 and AC26 and async-operations AC11 and AC29; data-model AC36 and AC45 cited where the transitions and the input record had been reported. 37 criteria, zero open questions; fable_recheck extended. Earlier, closing reconciliation sweep 2026-09-28 at 173da1b on Opus (not a review), applying every format batch 3 to 8 item placed here: Q12 adopted (the conditional rule is declared per document, exact-match 304 by default for clients echoing the served date and CPAN.pm's fallback, not-earlier 304 for clients sending their own clock such as brew, so proxy-cache AC22's undefined later condition is settled; AC11 rewritten); Q13 adopted (a generator-declared serve-time stage, Render, for variants from one stored body, deployment-value expansion and on-request gzip, memoised under index.render_memo_bytes with the ETag derived from body, variant and inputs; LuaRocks, opam, Chef, Vagrant, Homebrew; AC31, AC30); Q14 adopted (the freshness boundary stays module-wide, with ServeRendered for per-request documents and ServeFile for stored files beside ServeDocument, behind a Documents interface in Deps; Composer, Cargo, npm, NuGet, PyPI, Open VSX, Puppet; AC32); Q15 adopted (a virtual merge commit and member-list change are document-only transitions of the virtual's default pointer, so merged Date, TUF version and Last-Modified rise; Debian, Hackage, CPAN, Composer, Homebrew; AC34); Q16 adopted (an adoption hook runs FromUpstream and re-merges every virtual listing the remote; virtual reads drive a remote member's revalidation off the request path; creation fetches a new remote; AC35); Q17 adopted (composed remote documents need a verified verdict, declared pass-through documents are served verbatim whatever the verdict; CPAN; AC36); Q18 adopted (Cache-Control per format, no per-repository override; CRAN; AC30). Folded without a question: single and multi byte ranges and If-Range (Hackage, RPM; AC30), repository-scoped pointer documents renewed once per repository (Hackage root.json and mirrors.json; AC33), SignedBy for Terraform's signing_keys (AC37), CPAN named under announce-switch-retire, Vagrant moved from the merge consumers to FromUpstream, the four rotation rewordings cited as applied, the configuration count corrected to fourteen. 37 criteria, each with a Test Plan row; zero open questions. Earlier: reconciled 2026-09-28 at 3a82b21 with the foundation authoring wave (not a review): the virtual merge is the index.merge kind and the cadence re-sign the signing.resign Schedule on internal/async, asserted on the production runtime with no fixture runner and no goroutine of its own (AC19, AC22); signing.master_key is gone, replaced by a citation of deployment's security.master_key (14 keys); keys retire in the deletion transaction, public forms resolve by digest until tombstone time and private material is destroyed then, rename changes nothing, and a virtual's first merge is enqueued at creation (AC29, AC19); the signing.key.* audit events, the signing_* and index_* metrics, the four alerts and LogValuer-typed private material named from observability's catalogue; the harness signing sub-entry's generate defined; every record and hook owed to a sibling (data-model AC36 and AC37, storage-and-gc AC16 and AC25, proxy-cache AC22, replication AC21, format-handler-interface was-Q10) cited as applied. 29 criteria, each with a Test Plan row; zero open questions. Earlier: first grounded draft, authored 2026-09-27 against 1fbf1e7 from the requirements twenty-two format specs, write-triggered-services-prototype.md, replication.md, artifact-verification.md, management-api.md and the consequences queue placed on this spec. Eleven questions raised in the template's decision shape and adopted under the owner's standing delegation: the write path dispatches regeneration, signatures are records keyed by body digest and key rather than snapshot content, renderers are per-format generator packages discovered by an optional interface, the freshness mechanism is split with data-model.md, verification stays artifact-verification.md's, keys are per repository, file custody is the default with KMS and PKCS#11 behind one crypto.Signer seam, contention is serialised per document, followers serve pointer documents verbatim, and Galaxy server-side signing is not built. Never gate-reviewed; awaits review."
 description: "Spec for the shared signing and generated-index service: the production form of the write-triggered services prototype's signed-index half. It regenerates every repository-wide or version-scoped generated document inside the write that invalidates it, stores it as CAS-backed metadata, keeps signatures as records outside snapshot content so rotation and rollback never rewrite history, renders pointer-scoped freshness (dated envelopes, TUF versions, forward-moving Last-Modified), holds every signing key behind one custody seam (encrypted file, KMS, PKCS#11, operator-held) that no handler can reach, publishes public keys in each ecosystem's form, and runs virtual merges as deferred work. Twenty-two formats consume it; it produces and never verifies."
 author: michielvha
 goal: "Make every signed or generated index in the registry the output of one shared service with one custody model, so that a format that only needs an index costs a generator function rather than a signing subsystem, and no handler ever holds a key."
@@ -11,7 +11,7 @@ covers:
   - internal/signing/**
   - internal/index/**
   - internal/format/*/index/**
-fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate. Closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q12 to Q18 (conditional rule per document, serve-time stage, ServeRendered and ServeFile with a module-wide boundary, virtual freshness as pointer transitions, remote-member adoption and revalidation, verdict-free pass-through, per-format Cache-Control) under the standing delegation; that judgement also needs a Fable recheck"
+fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate. Closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q12 to Q18 (conditional rule per document, serve-time stage, ServeRendered and ServeFile with a module-wide boundary, virtual freshness as pointer transitions, remote-member adoption and revalidation, verdict-free pass-through, per-format Cache-Control) under the standing delegation; that judgement also needs a Fable recheck. The leftovers pass of that sweep on Opus 2026-09-28 raised and adopted Q19 (internal/index imports internal/proxy and never the reverse, the profile's member-input paths reaching the proxy.revalidate job through an interface internal/proxy declares), which needs the same recheck"
 ---
 
 # Plan: the signing and generated-index service
@@ -359,7 +359,14 @@ types and the one-method consumer interface:
     only where they leave the signed bytes untouched (an HTTP content encoding does; a URL
     expansion does not), and registration refuses a profile that breaks this, because a signature
     over stored bytes cannot survive a serve-time rewrite and the read path never signs (AC6,
-    AC31).
+    AC31). A profile that declares a `Merge` also declares, for each document key the merge reads
+    from a member, that document's **member-input path**: its path under the member's mount, the
+    route a client of the member requests. `proxy-cache.md`'s `proxy.revalidate` job replays
+    exactly these paths on a remote member whose documents were never adopted, so a remote added
+    to a virtual is fetched for the first time with no client request ever reaching it (its
+    "Revalidation outside the request", AC26); once a document is cached its route is recorded
+    with the entry and the declaration is not read again. Registration refuses a merging profile
+    with a member-read key that declares no path (AC35).
   - `Generate(ctx, in) (out, error)`: `in` carries a read view of the repository at the pending
     state of the transaction (the version-level records the generator reads, through the same
     metadata store the handler reads, scoped to the repository), the previous document set by key
@@ -550,8 +557,9 @@ document (AC23). It changes only in a **repository batch**: a renewal on the cad
 in one transaction, re-renders it on every pointer together with every pointer-scoped document
 that names it (each pointer's `snapshot.json` and `timestamp.json`), advancing every pointer's
 freshness record, with no snapshot. A pointer created later receives the repository's current body
-at creation. The batch is a transition on every pointer of the repository, which is
-`data-model.md`'s to list among its transitions (reported). AC33 asserts it.
+at creation. The batch is a transition on every pointer of the repository, which `data-model.md`
+lists among its document-only transitions ("Freshness scoped to the pointer", AC36). AC33 asserts
+it.
 
 ### Freshness scoped to the pointer: the split with `data-model.md`
 
@@ -568,7 +576,7 @@ freshness-split decision below, the mechanism is one and it is split by ownershi
 (a) `moved_at`, set at every pointer transition (a write advancing the default pointer, a
 promotion, a rollback, a key switch, a cadence re-sign; and, from this spec's closing
 reconciliation, a repository batch on every pointer of the repository and a virtual's merge commit
-or member-list change, which `data-model.md` is asked to list) to the later of the transition time and
+or member-list change, which `data-model.md` lists as document-only transitions, its AC36) to the later of the transition time and
 one second after the previous value, so it never moves backwards whatever the clock does
 (`cpan.md`, `arch.md`); (b) a per-pointer **generation counter** incremented by one at every
 transition and every re-signing, durable and never lowered by a clock step (`hackage.md` item 4);
@@ -629,7 +637,8 @@ freshness source, as `proxy-cache.md` already states ("the same shared serving h
 documents use, with the cache record in place of the pointer record"). Its AC22 states the answer
 as "`304` only on an exact match" and "no `200` at or before the condition" jointly, which leaves a
 later, unequal condition undefined; under this spec's rules the first clause is `exact`'s and the
-second is `not-earlier`'s, and the rewording is reported to it.
+second is `not-earlier`'s, and `proxy-cache.md` now states its AC22 as those two declared rules,
+rendered through this door.
 
 ### Serving: one door for every validator
 
@@ -922,10 +931,14 @@ request too. The service's obligations:
   A remote adopting a new upstream revision is cache materialisation, not a write, so no
   pre-commit hook sees it; `proxy-cache.md` commits an adoption in one transaction (its
   "Freshness of what a remote serves"), and the runtime registers on that **adoption commit** as
-  it does on the write path's pre-commit hook. Inside the adoption transaction it runs the
-  format's `FromUpstream` where the format regenerates (The proxied path, below) and enqueues
-  `index.merge` for every virtual listing the remote, with the same coalesce key as a member
-  write. This is the trigger `conda.md`, `arch.md`, `alpine.md`, `rpm.md`, `hackage.md`,
+  it does on the write path's pre-commit hook. `Adopt` receives the remote, the adopted document
+  keys and what the handler's **adoption check** returned for the revision: its ordering value,
+  the event classes observed, the records `FromUpstream` consumes and the digests of the blobs it
+  keeps (`proxy-cache.md`, "Obligation to the handler interface", AC25). Inside the adoption
+  transaction it runs the format's `FromUpstream` over exactly those records where the format
+  regenerates (The proxied path, below), so the runtime never parses an upstream body itself, and
+  enqueues `index.merge` for every virtual listing the remote, with the same coalesce key as a
+  member write. This is the trigger `conda.md`, `arch.md`, `alpine.md`, `rpm.md`, `hackage.md`,
   `cpan.md`, `cran.md`, `debian.md` and `opam.md` each asked for.
 - **A remote reached only through a virtual is kept fresh by the virtual's reads.** Such a remote
   receives no request of its own, so `proxy-cache.md`'s TTL revalidation, which is driven by
@@ -933,12 +946,17 @@ request too. The service's obligations:
   for it. Each merged set therefore records its **inputs**: per member, the member's repository
   identity and the freshness value (a local member's `moved_at`, a remote member's `adopted_at`)
   of the documents it read. When `ServeDocument` serves a virtual's merged document and one of
-  its remote inputs is past that remote's metadata TTL, it enqueues that remote's revalidation
-  off the request path, coalesced per remote, and serves the current merged set; the revalidation
-  is `proxy-cache.md`'s own, so an adoption it produces re-merges through the trigger above. A
-  virtual's creation, and a member-list change adding a remote whose documents were never
-  adopted, enqueues that remote's first fetch the same way, so a fresh remote contributes before
-  the first client asks (`opam.md`'s "until those land, the operator recipe warms a new remote"
+  its remote inputs is past that remote's metadata TTL, it calls `proxy-cache.md`'s
+  `EnqueueRevalidation` in a transaction of its own that holds only the job row, and serves the
+  current merged set whether or not that transaction commits: the read commits nothing else, so
+  there is no data for the job to see uncommitted and no rollback for it to outlive, and the
+  enqueue still goes through `Enqueue(ctx, tx, Job)` (`async-operations.md`, "Enqueue is
+  transactional"). The job is coalesced per remote, and the revalidation is `proxy-cache.md`'s
+  own, so an adoption it produces re-merges through the trigger above. A virtual's creation, and
+  a member-list change adding a remote whose documents were never adopted, calls the same
+  function inside the transaction making the change, and that remote's first fetch replays the
+  member-input paths the profile declares (above), so a fresh remote contributes before the
+  first client asks (`opam.md`'s "until those land, the operator recipe warms a new remote"
   becomes unnecessary). The accepted cost: the first read after the TTL is served the previous
   merged set, so an upstream change reaches a virtual's clients within the TTL plus the
   revalidation plus the staleness bound, against the TTL alone for a direct client of the remote.
@@ -954,7 +972,9 @@ request too. The service's obligations:
   pointer record and the members' records for the name, and a member-list change moves the
   virtual's `moved_at` to no earlier than one second after the latest value the virtual served,
   so removing the member that supplied the latest value cannot send `Last-Modified` backwards
-  (`composer.md`, `homebrew.md` AC20). The transition kind is `data-model.md`'s to list (reported).
+  (`composer.md`, `homebrew.md` AC20). `data-model.md` lists both as document-only transitions and
+  derives the floor with no stored record of what was served ("Freshness scoped to the pointer",
+  AC36), and records the merged set's input record (below) as non-root metadata (AC45).
 - **Never a gap.** The previous merged document set serves until the new one commits atomically;
   a merge that fails leaves the previous set and an alert, never an empty index.
 - **Signed with the virtual repository's own key** under its format's profile, so a virtual is a
@@ -1058,7 +1078,8 @@ backend is configured.
 ### Package shape
 
 `internal/index`: the runtime (`Runtime` with `Regenerate`, registered on the write
-transaction's pre-commit hook; `Adopt`, registered on `proxy-cache.md`'s adoption commit;
+transaction's pre-commit hook; `Adopt`, registered on `proxy-cache.md`'s adoption commit and
+handed the handler's adoption-check result;
 `Transition`, invoked by the pointer store at a repoint; `Merge`, the `index.merge` worker
 registered on `internal/async`; the serving forms `ServeDocument`, `ServeRendered`, `ServeFile`
 and `SignedBy`, handed to handlers only as the `Documents` interface), the value types a
@@ -1074,6 +1095,18 @@ interface, the concrete types satisfy it. Each format's generator is `internal/f
 **Neither package starts a goroutine that outlives a request**, owns a `time.Ticker` or a
 `time.AfterFunc`: the cadence is a `Schedule` and the merge a job, both on `internal/async`,
 whose AC16 holds the rule for every package with an AST scan; the shutdown path is the queue's.
+
+**The runtime reaches `internal/proxy` in one direction only** (the resolved proxy-import
+decision below, was Q19). `internal/index` imports `internal/proxy` for the two things it uses
+there: `EnqueueRevalidation`, which `ServeDocument` and the virtual's creation and member-change
+paths call, and the adoption hook's registration type, which `Adopt` satisfies. `internal/proxy`
+imports neither `internal/index` nor `internal/signing`: the member-input paths a
+`proxy.revalidate` job replays for a never-adopted remote reach it through a one-method interface
+`internal/proxy` declares and the runtime satisfies (the consumer owns the interface), handed to
+`internal/proxy` by the composition root at construction beside the replay entry
+(`format-handler-interface.md` AC18), and the adoption hook is registered there too, never
+through a global. So the cycle the two packages could form, the cache calling the renderer that
+calls the cache, is ruled out by the import graph rather than by review.
 
 ### Mechanical enforcers
 
@@ -1092,6 +1125,7 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | Every produced signature verifies under `internal/verify` before commit | `internal/signing/selfcheck_test.go` (fault-injected backend returning a bad signature) |
 | Key routes are under `api`, mapped through the central authorizer, admin only, and in the OpenAPI document | `internal/signing/arch_test.go` (the shape `management-api.md` AC2 uses); `management-api.md` AC25's `internal/manage/openapi/openapi_test.go` covers the routes |
 | One write, one snapshot, generated documents included; a refused write leaves no document | `internal/index/accounting_test.go` (property test with fault injection) |
+| `internal/proxy` imports neither `internal/index` nor `internal/signing`; `internal/index` references `internal/proxy` only for `EnqueueRevalidation` and the adoption hook's registration | `internal/proxy/arch_test.go` (import graph, beside `proxy-cache.md` AC26's single-call-site assertion); `internal/index/arch_test.go` (scan of the `internal/proxy` identifiers `internal/index` references) |
 
 ## Acceptance Criteria
 
@@ -1204,8 +1238,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
       virtual repository's own key, and no merge runs on a request's path.
 - [ ] AC20: A `remote` repository's regenerated documents (CRAN, LuaRocks, Chef, opam and Vagrant
       from upstream records) are produced through `FromUpstream` by the same generator as the
-      hosted path, inside the transaction that adopts the upstream revision, and stored
-      unsigned; no `Signature` record and no key ever names a `remote` repository.
+      hosted path, inside the transaction that adopts the upstream revision, over exactly the
+      records the handler's adoption check returned for that revision, and stored unsigned; no
+      `Signature` record and no key ever names a `remote` repository.
 - [ ] AC21: A repository seeded through the harness's `state` entries serves generated and signed
       documents byte-identical to those a publish of the same content produces, and the case can
       read the repository's public keys from the server before its client runs.
@@ -1295,10 +1330,15 @@ Per the constitution, every boundary this spec introduces names the test that ho
       virtual listing it inside the adoption transaction, and the change is visible in the
       virtual within the staleness bound; serving a virtual's merged document whose remote input
       is past that remote's TTL enqueues exactly one revalidation of the remote per coalescing
-      window, never on the request's path, and serves the current merged set; a virtual's
-      creation and a member-list change adding a never-adopted remote enqueue that remote's
-      first fetch, so the virtual lists the remote's content with no request ever made to the
-      remote's own URL.
+      window, never on the request's path, through `EnqueueRevalidation` in a transaction that
+      holds only the job row, and serves the current merged set, including when that
+      transaction fails to commit; a virtual's creation and a member-list change adding a
+      never-adopted remote enqueue that remote's first fetch inside the transaction making the
+      change, and the fetch requests exactly the member-input paths the format's profile
+      declares, so the virtual lists the remote's content with no request ever made to the
+      remote's own URL; registration refuses a merging profile with a member-read key that
+      declares no member-input path; and `internal/proxy` imports neither `internal/index` nor
+      `internal/signing`.
 - [ ] AC36: A virtual merge composes a remote member's document into a body the virtual signs only
       when that document's verdict is `verified`, and a `failed` or `absent` one contributes
       nothing, with an operator record; a document the profile declares pass-through is served by
@@ -1317,7 +1357,7 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
 | AC1 | integration + property | `internal/index/dispatch_test.go` (fixture handler: wire write, `Submit`, seed subcommand, retention pass; hook-disabled write refused); `internal/index/accounting_test.go` (snapshot counting under fault injection) |
-| AC2 | architecture test | `internal/format/signing_boundary_test.go`; `internal/index/generator_purity_test.go`; `internal/signing/library_allowlist_test.go` |
+| AC2 | architecture test | `internal/format/signing_boundary_test.go`; `internal/index/generator_purity_test.go`; `internal/signing/library_allowlist_test.go`; `format-handler-interface.md` AC15 holds `internal/signing` in its whole import list independently, and its "The scheduled re-open" records `Indexer` and `Documents` as inputs |
 | AC3 | property + conformance | `internal/index/concurrent_publish_test.go`; `conformance/debian/concurrent_publish_test.go` (real apt after N concurrent publishes, the prototype's vehicle) |
 | AC4 | integration + benchmark | `internal/index/incremental_test.go`; `internal/index/bench_incremental_test.go` (touch-one-of-N at the largest consumer's scale) |
 | AC5 | integration + property | `internal/storage/metadata_blob_gc_test.go` (extended: declared blob lists); `internal/index/stream_serve_test.go` |
@@ -1335,7 +1375,7 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | AC17 | integration + fault injection | `internal/signing/selfcheck_test.go` |
 | AC18 | benchmark | `internal/signing/bench_signblob_test.go` (peak allocation under `testing.AllocsPerRun` and a memory ceiling; refusal above maximum) |
 | AC19 | integration | `internal/index/virtual_merge_test.go` on the production runner, shared with `async-operations.md` AC11 (staleness bound, coalescing count, merge at creation, atomic swap, failure keeps previous set and alerts through `telemetry.NewTestRecorder`, virtual key, no merge on a request goroutine) |
-| AC20 | integration | `internal/index/proxied_generation_test.go` (same generator, unsigned, run inside the adoption transaction through the adoption hook; no `Signature` row, no key for a `remote`; a Vagrant-shaped catalog fixture beside the CRAN, LuaRocks, Chef and opam ones) |
+| AC20 | integration | `internal/index/proxied_generation_test.go` (same generator, unsigned, run inside the adoption transaction through the adoption hook; `FromUpstream` handed exactly the fixture adoption check's records, and an injected hook failure leaving the previous document serving; no `Signature` row, no key for a `remote`; a Vagrant-shaped catalog fixture beside the CRAN, LuaRocks, Chef and opam ones); the hook's transaction semantics are `proxy-cache.md` AC25's `internal/proxy/adoption_test.go` |
 | AC21 | integration + conformance | `internal/index/seed_equivalence_test.go` (seeded versus published bytes); `conformance/core/seed_signed_state_test.go` (case reads public keys, real client installs) |
 | AC22 | integration | `internal/signing/cadence_test.go` under `testing/synctest` on the production scheduler, shared with `async-operations.md` AC14 (injected clock; expiry-derived next run written in `Finish`; restart mid-schedule; idle pointers; the expiry gauge and `SigningDocumentExpiring` through `telemetry.NewTestRecorder`) |
 | AC23 | integration | `internal/replication/signing_records_test.go` (records in the read surface; follower signs nothing; shared with `replication.md` AC21); `internal/replication/takeover_keys_test.go` (refused without resolvable keys, succeeds with a shared `kms` fixture key; the link state of `replication.md` AC10 observed across the takeover) |
@@ -1350,7 +1390,7 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | AC32 | integration | `internal/index/serve_rendered_test.go` (bytes form and lazy form with a validator identity, zero renderer calls on `304`, repoint changes the `ETag`, per-request virtual source with the supplying member removed under a backwards clock); `internal/index/serve_file_test.go` (digest `ETag`, `304`) |
 | AC33 | integration + conformance | `internal/index/repository_pointer_documents_test.go` (identical bytes on every pointer, absent from snapshot content, one version per renewal, rotation and external acceptance, one batch advancing every pointer's record, the repository-scoped schedule alone renewing, a pointer created later, no lower version after any repoint); `conformance/hackage/rotation_test.go` (shared with `hackage.md` AC34) |
 | AC34 | integration + conformance | `internal/index/virtual_freshness_test.go` (merge commit and member-list change advance the virtual's pointer record with no snapshot; a member rollback; clock stepped backwards); `conformance/debian/virtual_test.go`, `conformance/hackage/virtual_test.go` and `conformance/cpan/virtual_test.go` (a real client adopts the new merge; shared with `debian.md` AC22, `hackage.md` AC27 and `cpan.md` AC26) |
-| AC35 | integration + conformance | `internal/index/virtual_remote_member_test.go` (adoption enqueues `index.merge` in its transaction; a read past the remote's TTL enqueues one coalesced revalidation off the request goroutine; creation and member addition enqueue a never-adopted remote's first fetch; network-layer count of upstream requests); `conformance/opam/virtual_test.go` (the virtual lists a remote's packages with no request to the remote's own URL, shared with `opam.md` AC26) |
+| AC35 | integration + architecture test + conformance | `internal/index/virtual_remote_member_test.go` (adoption enqueues `index.merge` in its transaction; a read past the remote's TTL enqueues one coalesced revalidation off the request goroutine in an enqueue-only transaction, and a read whose enqueue transaction is made to fail is still served; creation and member addition enqueue a never-adopted remote's first fetch in their own transaction; the first fetch's requested paths equal the profile's member-input paths; network-layer count of upstream requests), shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go` and with `async-operations.md` AC11 (merge coalescing) and AC29 (the kind's coalescing, triggers and `RetryAt`); `internal/index/profile_test.go` (a merging profile with a member-read key and no path refused at registration); `internal/proxy/arch_test.go` and `internal/index/arch_test.go` (the one-way import); `conformance/opam/virtual_test.go` (the virtual lists a remote's packages with no request to the remote's own URL, shared with `opam.md` AC26) |
 | AC36 | integration + conformance | `internal/index/passthrough_test.go` (composed input with `verified`, `failed` and `absent` verdicts; declared pass-through served byte-identical with no `Signature` row under every verdict; a signature-requiring rule refusing it at the virtual as at the remote); `conformance/cpan/virtual_test.go` (CPAN.pm through a virtual over a remote with no PAUSE key in its trust set, shared with `cpan.md` AC26) |
 | AC37 | integration + conformance | `internal/index/signed_by_test.go` (public forms only; the key set follows the current records; retirement under `additive` with snapshot count unchanged); `conformance/terraform/key_rotation_test.go` (shared with `terraform.md` AC10); `internal/format/signing_boundary_test.go` (the Terraform handler imports no `internal/signing`) |
 
@@ -1418,8 +1458,8 @@ Populated by `/tasks` once this spec reaches `planned`.
 ## Open Questions
 
 None open. Eleven questions were raised in the authoring pass and adopted under the owner's
-standing delegation, and seven more (Q12 to Q18) in the 2026-09-28 closing reconciliation sweep, on
-Opus; each is recorded below and folded through Scope, Design, the criteria and the Test Plan.
+standing delegation, seven more (Q12 to Q18) in the 2026-09-28 closing reconciliation sweep, on
+Opus, and one (Q19) in that sweep's leftovers pass, on Opus; each is recorded below and folded through Scope, Design, the criteria and the Test Plan.
 `grep -rn "standing delegation"` is the owner's review queue.
 
 ### Resolved: who owns the trigger (was Q1)
@@ -1854,7 +1894,8 @@ renderer knows how to read, and a merge commit is a change of what that pointer 
 **Why this is yours:** it extends what counts as a pointer transition in `data-model.md`, a record
 you settled for hosted pointers.
 
-Accepted cost: the transition kind and its floor are `data-model.md`'s to list (reported), and a
+Accepted cost: the transition kind and its floor are listed in `data-model.md` (its AC36, with the
+input record as its AC45), and a
 virtual's `Last-Modified` moves at every merge even when a document's bytes did not change,
 narrowed by the per-document rule. B lost as a duplicate record; C because it cannot sign.
 
@@ -1946,6 +1987,43 @@ per-repository value.
 Accepted cost: no per-repository tuning; a reverse proxy in front of the registry remains the place
 for site policy. B lost for want of a consumer and for its rollback cost.
 
+### Resolved: which way `internal/index` and `internal/proxy` import each other (was Q19, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation**, in the leftovers pass of the
+closing reconciliation sweep, on Opus. Option A: `internal/index` imports `internal/proxy` for
+`EnqueueRevalidation` and the adoption hook's registration type; `internal/proxy` imports neither
+`internal/index` nor `internal/signing`, and reads the profile's member-input paths through a
+one-method interface it declares, which the runtime satisfies and the composition root hands it
+(Design, "Package shape" and "Virtual merges", the Profile bullet, the enforcer table; AC35).
+
+The question: two edges now join the packages. The runtime calls `proxy-cache.md`'s
+`EnqueueRevalidation` from `ServeDocument` and from a virtual's creation and member change, and
+registers `Adopt` on the proxy layer's adoption commit; and the `proxy.revalidate` job, which
+lives in `internal/proxy`, must read the member-input paths a generator profile declares when it
+fetches a never-adopted remote. If each package imported the other for its edge, Go refuses the
+cycle at build time, so one direction has to be chosen and held.
+
+**Recommendation:** A, because the proxy layer is the lower of the two (a remote's cache exists
+with or without any generator, and a format with no `Indexer` never touches `internal/index`),
+the edge from the runtime into it is the heavier one (two calls and a hook type), and the one
+datum flowing the other way is a list of paths, which the go skill's consumer-owns-the-interface
+rule carries without an import.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. `internal/index` imports `internal/proxy`; the member-input paths flow back through an interface `internal/proxy` declares** | The cache layer builds and tests with no renderer present; the adoption hook and `EnqueueRevalidation` are ordinary typed calls; one small interface wired at the composition root beside the replay entry | One more construction-time injection into `internal/proxy`, and an architecture test holding the direction |
+| **B. `internal/proxy` imports `internal/index` to read `Profile` directly; the runtime reaches the proxy layer through interfaces it declares** | The job reads the profile with no adapter | The cache layer depends on the renderer and on every generator's value types, so a format with no `Indexer` still links them into its proxied path, and the hook and enqueue become two consumer interfaces instead of one |
+| **C. Neither imports the other; every edge an interface wired at the composition root** | No package edge at all | Three injected interfaces for what is one layer calling a lower one; the hook's argument type still has to live somewhere both can name, which is one of the two packages or a third |
+
+**Why this is yours:** it fixes the dependency direction between two shared layers the
+constitution requires to be held mechanically, and a later spec that wants the proxy layer to
+consult the renderer (or the reverse) must reopen it here rather than add an import.
+
+Accepted cost: the member-input paths reach the job through an injected interface rather than a
+direct read, and `internal/proxy/arch_test.go` gains an import assertion beside its single-call-site
+one. B lost because it inverts the layering for one list of paths; C because it trades one import
+for three injections with no gain.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1953,3 +2031,4 @@ for site policy. B lost for want of a consumer and for its rollback cost.
 | 2026-09-27 | 1fbf1e7 | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirement lists of the twenty-two format specs that cite this file, the prototype spec, `replication.md`, `artifact-verification.md`, `management-api.md`, `conformance-harness.md`, `data-model.md`, `storage-and-gc.md` and `format-handler-interface.md`, and the items the consequences queue placed here (replication item 6; Open items 9, 11, 12, 14 to 32; theme 1; management-api item 14; artifact-verification item 13). Grounded prior art by fetching Pulp's signing-service guides, reprepro(1), aptly's publish guide, Nexus's Yum and APT signing pages, Artifactory's GPG signing page, the TUF specification, the Debian repository format, and the Go seams (`sigstore/sigstore` `kms.Get`, `crypto11`, go-crypto's `NewSignerPrivateKey`), each cited with what is taken and rejected. Eleven questions written in the decision shape and adopted under the standing delegation: write-path dispatch, signature records outside snapshot content, per-format generator packages behind an optional `Indexer`, the freshness split with `data-model.md` and `proxy-cache.md`, the produce/verify boundary with a self-check, per-repository keys, `file` custody by default behind one `crypto.Signer` seam with KMS, PKCS #11 and operator-held keys, per-document locking, verbatim pointer documents on followers with a takeover precondition, no Galaxy server-side signing, and rotation as a snapshot-less operation. Twenty-eight criteria with Test Plan rows; ten mechanical enforcers named; five phases. Sibling consequences reported to the caller, not applied. `node scripts/check-spec.js` run on this file. Stays draft. |
 | 2026-09-28 | 3a82b21 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. From `async-operations.md` (item 5): "except the cadence scheduler" dropped, the cadence is the `signing.resign` `Schedule` with an expiry-derived next run written in `Finish` and the virtual merge the `index.merge` kind (coalesce and exclusivity key `virtual:{repository}`), both on `internal/async`, which lands at the start of charter step 4b and so precedes Phase 1: the "fixture runner until that spec's runtime exists" wording is gone and AC19 and AC22 are asserted on the production runtime, their rows shared with that spec's AC11 and AC14. From `deployment.md` (item 1): the `signing.master_key` row removed, the `file` backend encrypts under `security.master_key` (its resolved master-key decision, was Q5 there), fourteen keys plus the citation, AC26 reworded. From `repository-lifecycle.md` (item 9): keys retire in the deletion transaction, public forms resolve by digest until tombstone time, private material is destroyed then, rename changes nothing (new "Keys follow the repository's lifecycle" paragraph, AC29 with a Test Plan row), and a virtual's first merge is enqueued at creation (AC19). From `observability.md` (item 9): the `signing_*` and `index_*` metrics, `SigningFailed`, `SigningDocumentExpiring`, `VirtualMergeFailed` and `VirtualMergeStalenessBreach`, the `signing.key.*` audit events with their attributes (AC15), private material as `slog.LogValuer` and AC14's scan through `telemetry.NewTestRecorder`, `// gate:` on AC28's benchmark. From `conformance-harness.md`'s reconciliation (item 10): the `signing` sub-entry's `generate` defined as key generation under the `file` backend at repository creation (Design, AC21). From the `data-model.md` reconciliation (item 1): "`data-model.md`'s to add" became citations of its "Freshness scoped to the pointer", AC36 and AC37, and a record is pruned when no retained snapshot or pointer document holds its body; from the `storage-and-gc.md` reconciliation (items 3 and 7): the fourth root's widened reach cited as AC16 and the pre-commit hook the write path dispatches through cited as `data-model.md` AC37 and `storage-and-gc.md` AC25; from `format-handler-interface.md`'s (item 5): the re-open answer cited to "Optional interfaces discovered at registration" (was Q10 there); from `proxy-cache.md`'s (item 8): AC22 for the cache-scoped half; from `replication.md`'s (item 8): AC21 and AC10 in AC23's row. The four format specs' rotation rewording (item 9 of this spec's authoring) is still queued and cited as such. Already done at authoring: replication fold item 6, management-api item 14, artifact-verification item 13, the Open items and theme 1. `node scripts/check-spec.js` on this file: zero failures. Stays draft; awaits an independent review. |
 | 2026-09-28 | 173da1b | closing reconciliation sweep of the format batch 3 to 8 items, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through "From format batch 8 reconciliation" verified against the current text of the format spec that raised it (`debian.md`, `luarocks.md`, `chef.md`, `terraform.md`, `hackage.md`, `cpan.md`, `openvsx.md`, `composer.md`, `homebrew.md`, `opam.md`, `vagrant.md`, `cran.md`, `puppet.md`, `cargo.md`, `nuget.md`, `rpm.md`, `conda.md`, `alpine.md`, `maven.md`) and against `proxy-cache.md`, `data-model.md` and `async-operations.md`, and applied as five designs rather than item by item. Serving: batch 5 item 4, batch 6 item 6, batch 7 items 1 and 3, batch 8 item 9 (puppet half) as Q13 (serve-time `Render` stage, memo, `ETag` from body, variant and inputs, on-request `gzip` with a per-encoding `ETag`) and Q14 (`ServeRendered`, `ServeFile`, `Documents` in `Deps`, the boundary module-wide over five header names); batch 6 item 2 folded (byte ranges, `If-Range`, `multipart/byteranges` from `ServeFile`); batch 5 item 5 folded (`SignedBy`). Conditional rule: batch 7 item 2 as Q12, after finding `cpan.md` (CPAN.pm's captured later-date fallback) and `homebrew.md` (brew's own-clock condition) need opposite answers, so neither a single rule nor proxy-cache AC22's two clauses together can hold; AC11 rewritten. Repository-wide documents: batch 6 item 1 folded under `hackage.md`'s adopted was-Q16 (repository-scoped pointer documents, repository batches, a repository-scoped `signing.resign` schedule; AC33). Virtual merges: batch 3 item 6 and batch 6 item 3 as Q15; batch 4 item 7, batch 6 item 3, batch 7 item 5 and batch 8 item 9 (CRAN half) as Q16; batch 7 item 4 applied (Vagrant out of the merge list, into `FromUpstream`; AC20); consumer list now names maven, opam, hackage, cpan and debian beside the original set. Boundary: batch 6 item 4 as Q17. Rotation: batch 6 item 5 folded (CPAN under `announce-switch-retire`). Cache-Control: batch 8 item 9 as Q18. Earlier items found already done: every item before format batch 3 is recorded as applied in the progress log and verified in the text; the four rotation rewordings (this spec's authoring item 9) are now applied in `hex.md`, `arch.md`, `rpm.md` and `alpine.md`, so the "queued" wording became a citation. Also found: the configuration table held thirteen rows under a "fourteen keys" sentence; with `index.render_memo_bytes` it holds fourteen. `Deps` did not carry the serving door although AC11 required every handler to use it; `Documents` now names it. New AC30 to AC37 with Test Plan rows; AC11, AC20, AC25 rewritten; Phases 1 to 4 updated; seven questions adopted, so `fable_recheck` extended. `node scripts/check-spec.js`: zero failures on this file. Stays draft; awaits an independent review. |
+| 2026-09-28 | 4278ce0 | leftovers pass of the closing sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the items queued against this file after its closing sweep, each verified against the owning spec's settled text. Proxy-cache closing sweep item 2: (a) a merging `Profile` declares each member-read document's member-input path under the member's mount, replayed by `proxy-cache.md`'s `proxy.revalidate` job for a never-adopted remote (its "Revalidation outside the request", AC26), with registration refusing a merging profile that lacks one; (b) the import direction the item asked to check: `ServeDocument` calling `internal/proxy`'s `EnqueueRevalidation` and `Adopt` registering on its adoption commit put an edge from `internal/index` into `internal/proxy`, while the job in `internal/proxy` needs the profile's paths, so the two packages could cycle; raised and adopted **Q19** under the standing delegation (option A: `internal/index` imports `internal/proxy`, never the reverse, the paths flowing back through a one-method interface `internal/proxy` declares, wired at the composition root beside the replay entry), folded into "Package shape", the enforcer table and AC35; (c) `Adopt` receives the handler's adoption-check result and `FromUpstream` runs over exactly its records ("Virtual merges", "Package shape", AC20); (d) AC20's row cites `proxy-cache.md` AC25 and AC35's cites its AC26. Async-operations closing sweep item 2: the read-path enqueue runs in a transaction holding only the job row and the read is served whether or not it commits (`async-operations.md`, "Enqueue is transactional"), in "Virtual merges" and AC35, whose row cites that spec's AC11 and AC29. Data-model closing sweep item 2: the four "`data-model.md`'s to list (reported)" lines now cite its "Freshness scoped to the pointer", AC36 and AC45, and the stale "the rewording is reported to it" line notes that `proxy-cache.md` AC22 now states the two declared rules. Format-handler-interface closing sweep item 6 (optional, applied): AC2's row cites that spec's AC15 and re-open inputs. Found already done: every earlier item for this file. 37 criteria, each with a Test Plan row; nineteen questions resolved, zero open; `fable_recheck` extended for Q19. Stays draft. |

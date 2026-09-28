@@ -397,6 +397,13 @@ One target file per agent. A file listed here has had every item targeting it ap
 - EVICTION CONTRADICTION: SETTLED 2026-09-28 at f0bfe75 on Opus. proxy-cache Q21 adopted (a remote's current metadata documents at every level are never LRU-evicted: fourth-root current documents; the quota bounds cached files only; cache_metadata_bytes{repository} gauge beside it; accepted cost: metadata grows with names ever requested, visible not bounded) and Q22 adopted (a per-package revision set's declared list lives on its package-level document, so adoptions of different packages never serialise). Folded through data-model (non-root row, AC44, AC37) and storage-and-gc (fourth root, property eviction op, AC16). AC29 added. Roots stay five. fable_recheck on all three.
 - observability.md, CLOSING SWEEP: DONE 2026-09-28 at 1848c7d on Opus. unbound_hosts in repository.rename's extension set (AC12); replication.link.*, replication.export, replication.import confirmed with emitting routes; policy.rule.update covers coordinate_exemptions. No question adopted.
 - management-surfaces-and-the-oracle.md: DONE 2026-09-28 on Opus, one row per format from all 32 specs; 14 items queued below.
+- auth.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. basic-exchange in AC10's upstream-kind review list; async AC30 cited in the replay's no-principal property and AC36's row. AC10 unchanged in force; no question.
+- management-api.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. basic-exchange kind; coordinate_exemptions refused on remote/virtual (AC19); rename Operation records unbound_hosts (AC31); AC6 row path fixed; storage-and-gc AC30/AC31/was-Q12 and data-model AC32/AC35 cited.
+- signing-service.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. Member-input paths in Profile; enqueue-only read-path transaction; Adopt fed the adoption check; Q19 adopted (index imports proxy, never the reverse; AC35). fable_recheck extended.
+- format-handler-interface.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. Fetch-and-cache input gains git location, kept digests, evictability, zero-valid retention count and declaring level (AC8); AC18 gains the non-GET, local/virtual and marker cases auth AC36 relies on. Pin stays five; no question.
+- proxy-cache.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. EnqueueRevalidation takes a transaction, RetryAt deferral, no import of index/signing; Obligation gains git location and advisory key (new AC30); deletion ends current documents beside cached references (AC23). 30 criteria; no question.
+- repository-lifecycle.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. Deletion step 5: a remote's current documents are ended alongside its cached references, not in the eviction shape (AC14, AC16). No question.
+- storage-and-gc.md, LEFTOVERS: DONE 2026-09-28 at 4278ce0 on Opus. proxy.revalidate job-held grace bounded by max_attempts times the cool-down cap (AC23); AC30 row names data-model AC35. Roots stay five; no question.
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
 1. signing-service.md (~l.439, ~l.460): "`data-model.md`'s to add" -> "added in data-model.md (Design 'Freshness scoped to the pointer', AC36, AC37)"; ~l.437: "no retained snapshot holds" -> "no retained snapshot or pointer document holds" (data-model AC37).
@@ -760,3 +767,9 @@ Found while writing one row per format into `analysis/management-surfaces-and-th
 12. pypi.md: Design table yank action "delete on the version" vs Addressed objects' file-level withdraw; align.
 13. management-api.md "Bindings: one operation, two ways in": add ansible-galaxy collection publish and npm deprecate to the illustrative list.
 14. Wire-only effects to close or record as deliberate gaps: swift restore and rebind (no client resolve after), alpine and arch architecture-set configure (no client sees a change), cpan author record.
+
+## From the foundation leftovers pass (2026-09-28, on Opus)
+1. async-operations.md: EnqueueRevalidation is now (ctx, tx, remote) per proxy-cache; update the two call sites that still write (ctx, remote).
+2. Every merging format spec names its member-input paths (signing-service AC35: a merging Profile declares, under the member's mount, each document the merge reads from a member; registration refuses one without): conda, arch, alpine, rpm, hackage, cpan, cran, debian, opam, luarocks, chef, maven, helm.
+3. data-model.md "Operations" (optional): the lifecycle rename result carries unbound_hosts (management-api AC31, repository-lifecycle was-Q10).
+4. question-triage.md: record signing-service Q19 (index imports proxy, never the reverse) as adopted on Opus, awaiting a Fable recheck.
