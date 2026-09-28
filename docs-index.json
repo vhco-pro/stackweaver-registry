@@ -426,7 +426,7 @@
   },
   {
     "path": "docs/internal/plans/foundation/async-operations.md",
-    "description": "Spec for the shared asynchronous-operation subsystem: one PostgreSQL-backed job queue (SKIP LOCKED claims, leases with fencing tokens, transactional enqueue and completion, bounded retries, coalescing and exclusivity keys, cooperative cancellation, pause and resume, a leader-elected scheduler) that executes every deferred management operation behind data-model.md's Operation record and every scheduled or background activity the sibling specs name: virtual merges, cadence re-signing, verdict re-evaluation, scans and feed sync, replication transfers, retention passes and the GC sweep.",
+    "description": "Spec for the shared asynchronous-operation subsystem: one PostgreSQL-backed job queue (SKIP LOCKED claims, leases with fencing tokens, transactional enqueue and completion, bounded retries, coalescing and exclusivity keys, cooperative cancellation, pause and resume, a leader-elected scheduler) that executes every deferred management operation behind data-model.md's Operation record and every scheduled or background activity the sibling specs name: virtual merges, cadence re-signing, the revalidation of remotes reached only through a virtual, verdict re-evaluation, scans and feed sync, replication transfers, retention passes and the GC sweep.",
     "internal": true,
     "status": "draft",
     "issue": "49",
