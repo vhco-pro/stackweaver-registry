@@ -1,12 +1,13 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at da0aecd (not a review): Q6 raised and adopted (yank and unyank are bindings onto the registry-owned management operation, authorized by delete, AC19); per-route addressed objects over the folded key (AC17) and the 403 policy rendering (AC18) added; charter AC9 recorded; Q4 confirmed by proxy-cache's Q14. Earlier: Authored 2026-09-26 as a grounded first draft: wire contract captured from cargo 1.70.0 and 1.98.1 against a logging stub, checked against the Cargo book, the cargo source and the live crates.io index. Five questions written and adopted under the owner's standing delegation. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at 15ced69 with the foundation wave (not a review): yank and unyank are management-api's withdraw and restore kinds under delete, declared through Operator with cargo's routes as bindings, retiring nothing, 405 repository-type on remotes and virtuals (AC19); config.json is a descriptor so a patterned-only pull runs cargo fetch end to end (AC17 inverted, auth.md was-Q23); refusals through WriteRefusal with the status-line phrase and the supply-chain binding row filled by the policy case (AC18); the proxied index under proxy-cache's cache-scoped Last-Modified with the regression row (AC11, AC12); the upstream binding under upstream-adapters: an https root, the download host on the allowlist, the header credential kind (AC21); Q7 adopted (sparse-only enforced at first fetch, since the adapter admits only https roots, AC15); Capabilities with rename and virtual cases (AC20). Earlier: reconciled 2026-09-26 at da0aecd (Q6 adopted, AC17-AC19); authored 2026-09-26 from captures of cargo 1.70.0 and 1.98.1; seven questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for the Cargo (Rust) registry format: the sparse index protocol and the crates.io-style web API, hosted and proxied, with cargo as the conformance oracle for reads, publish and yank alike."
 author: michielvha
 goal: "Serve Rust teams a private crate registry and a crates.io cache from one handler, with every management operation cargo itself can drive verified through the real client."
 priority: "medium"
 issue: 17
 created: 2026-09-26
+fable_recheck: "cross-spec reconciliation with the foundation wave on Opus 2026-09-28 adopted Q7 (sparse-only enforcement under the https-only upstream URL rule); the adoption was never Fable-reviewed"
 covers:
   - "internal/format/cargo/**"
   - "conformance/cargo/**"
@@ -110,7 +111,8 @@ write accounting, so the yank half of Phase 2 waits on it reaching `planned`.
   resolved name-collision decision below).
 - The proxied path against a sparse upstream (crates.io or a private sparse registry):
   classification, `config.json` rewriting, conditional revalidation against the upstream's
-  `ETag`, negative caching, and Cargo's rows of the upstream-removal table.
+  `ETag`, negative caching, Cargo's rows of the upstream-removal table, and the upstream binding
+  `upstream-adapters.md` shapes (an `https://` root, the download host on the allowlist).
 - The write-boundary declaration `data-model.md` requires, with yank and unyank as metadata-only
   writes.
 - The handler's `Capabilities()` declaration, repository rename and virtual aggregation
@@ -387,8 +389,11 @@ object and action, and the binding and the API produce the same snapshot delta. 
 What this format required of `management-api.md`, and what that spec provides: a `withdraw` and
 a `restore` operation on a version, `Authorize` reporting the object `{crate}/{version}` in the
 canonical form below, exactly one metadata-only snapshot per completed operation (its AC5), and
-the bindings above reaching the same `Apply` with identical semantics and authorization (AC19);
-the trigger is verified by this registry's integration tests plus the `script`-driven case its
+the bindings above reaching the same `Apply` with identical semantics and authorization (this
+spec's AC19; its AC8 holds every declared binding's `Scope(r)` equal to `Authorize` and the two
+entry points' snapshot deltas byte-identical, and its AC9 refuses a Cargo yank to a `push`-only
+principal); the management-API entry point is `POST /api/v1/repositories/{name}/operations` with
+kind `withdraw` or `restore` and target `{crate}/{version}`; the trigger is verified by this registry's integration tests plus the `script`-driven case its
 AC24 requires for every declared kind, and the effect by the real client.
 
 ### Addressed objects and pattern scopes
@@ -456,8 +461,11 @@ settled decisions in `proxy-cache.md`:
   entry, but what clients receive is always this registry's own document: `dl` and `api`
   pointing at this repository's format-first URLs and `auth-required` derived from this
   repository's visibility. The upstream's `dl` template (with every marker the Cargo book
-  defines) is what the handler uses to compose upstream download URLs, and it follows the
-  upstream's redirects (crates.io's `api` download path answers 302 to `static.crates.io`).
+  defines) is what the handler uses to compose upstream download URLs; the fetch itself goes
+  through the `https` adapter of `upstream-adapters.md`, which follows the upstream's redirects
+  inside the adapter and never hands a `Location` to a client (its AC8; crates.io's `api`
+  download path answers 302 to `static.crates.io`). The download host is therefore an
+  off-origin host of the upstream, reachable only through the upstream's allowlist (below).
   This is the same format-specific transform `format-handler-interface.md` canonicalises with
   npm's packument URLs, and it likewise needs the externally visible base URL, not the bind
   address: the handler reads it as `deployment.md`'s `server.public_url` through `Deps`, as npm
@@ -482,6 +490,25 @@ settled decisions in `proxy-cache.md`:
   (`proxy-cache.md` AC9).
 - The `cargo-protocol: version=1` request header is logged, never required: `curl` and other
   tools read sparse indexes too.
+
+**The upstream binding, as `upstream-adapters.md` shapes it.** A Cargo remote's `Upstream` row
+names the sparse index root as an `https://` URL, which is the Cargo client's `sparse+` URL with
+the client-side `sparse+` prefix removed: the prefix tells cargo which protocol to speak and
+names nothing on the wire, and the adapter's URL rule admits only `https://` roots (its AC22).
+Its off-origin allowlist (`hosts`, the resolved allowlist decision there, was Q3) must name the
+host the upstream's `config.json` sends downloads to, because a `dl` host is a location the
+handler took out of upstream metadata: for crates.io that is `static.crates.io` with role
+`none`, plus `crates.io` with role `none` when the `dl` template is the `api` download path
+that redirects to it. A `dl` host the allowlist does not name makes no connection; the adapter
+returns `HostNotAllowedError` and the handler answers the download `502` with an `errors[].detail`
+naming the host (the Composer rendering that spec's AC7 cites), never a redirect to the host.
+A private sparse upstream that wants cargo's bare-token `Authorization` is configured with the
+`header` credential kind (header `Authorization`, the token as the value), presented to the root
+and to any allowlist entry given role `root`, and to no other host (its AC6). crates.io is not a
+preconfigured profile (the resolved preconfigured-upstream decision below), so this binding is
+the operator's recipe until the revisit that decision names. How the sparse-only rule of the
+resolved git-protocol decision is enforced under this URL rule is the resolved sparse-enforcement
+decision below (was Q7).
 
 **Cross-registry dependencies are a client-side routing directive, not a cache decision.** An
 index line's `registry` field names the index URL a dependency comes from; the client resolves
@@ -616,14 +643,16 @@ exception list before its flow is expected to replay.
 - [ ] AC11: A proxied index file is revalidated after its TTL and not before, using the
       upstream's `ETag` so an unchanged file costs a 304 upstream; a version published upstream
       becomes visible to `cargo fetch` after the TTL and, absent an explicit refresh, not before;
-      and a client's own `If-None-Match` refresh inside the TTL is answered 304 without an
-      upstream request.
+      a client's own `If-None-Match` refresh inside the TTL is answered 304 without an
+      upstream request; and every adopted revision is served under a cache-scoped
+      `Last-Modified` later than the previous one, never the upstream's (`proxy-cache.md` AC22).
 - [ ] AC12: An upstream `yanked` flip is mirrored at the next revalidation with the cached file
       kept and a divergence recorded, a 404 or 410 on a previously served crate keeps serving
       with a divergence recorded, a 451 purges the cached content and raises the operator alert,
       and a changed `cksum` purges that version's cached file, raises the alert, and the next
-      download re-fetches and verifies against the new digest: Cargo's side of the settled
-      removal table in `proxy-cache.md` (its AC13).
+      download re-fetches and verifies against the new digest, and an upstream index file older
+      than the adopted revision is not adopted and records a divergence: Cargo's side of the
+      settled removal table in `proxy-cache.md` (its AC13 and AC22).
 - [ ] AC13: A publish whose features use `dep:` or weak-dependency syntax is served with those
       entries in `features2` and `v: 2`, a renamed dependency round-trips through the index
       `package` field, and `links`, `rust_version` and `pubtime` appear in the line; every line
@@ -634,26 +663,49 @@ exception list before its flow is expected to replay.
       crates.io crates entirely through this registry, with the upstream stand-in contacted only
       on the first fetch, asserted at the network layer; and an index line whose `registry`
       names a foreign index is served with that value intact.
-- [ ] AC15: Configuring a remote repository whose upstream index URL lacks the `sparse+` prefix
-      is refused at configuration time with a message naming the sparse requirement, and no
-      hosted route under the format mount answers a git smart-HTTP request.
+- [ ] AC15: Configuring a remote repository whose upstream URL is not an `https://` root (a
+      `sparse+https://`, `git://`, `ssh://` or `file://` URL) is refused at configuration with
+      `upstream-invalid` naming the rule (`upstream-adapters.md` AC23); a remote whose `https://`
+      root serves no sparse `config.json` (a git smart-HTTP index URL) answers the client's first
+      request `502` with an `errors[].detail` naming the sparse requirement, contacts the
+      upstream for nothing but that `config.json` and never speaks git to it; and no hosted
+      route under the format mount answers a git smart-HTTP request.
 - [ ] AC16: Replay-match passes against a corpus recorded from crates.io covering the recorded
       surface named in Design.
 - [ ] AC17: A token holding an unpatterned `pull` beside `push` and `delete` under the pattern
       `acme-*/**` publishes, yanks and unyanks `Acme_Tool` through the real 1.98.1 client and is
       refused publishing or yanking `other-tool`, with no snapshot created by a refusal; a token
-      holding only `pull` under the same pattern fetches `acme-tool`'s index file and downloads
-      its `.crate` and is refused `other-tool`'s, is refused `config.json`, and a real
-      `cargo fetch` under it therefore fails at its first request; and in proxied mode the
-      patterned-`pull` token downloads an in-pattern crate and is refused another.
+      holding only `pull` under the same pattern reads `config.json` (a descriptor), and a real
+      `cargo fetch` under it completes for a crate depending only on in-pattern crates, in the
+      hosted and the proxied mode, while its direct request for `other-tool`'s index file is
+      refused in both modes; and `config.json`'s body carries none of the
+      sentinel crate name, version or `cksum` a seeded sentinel crate holds (the descriptor
+      sentinel check of `format-handler-interface.md` AC12).
 - [ ] AC18: An index-file or download request the shared policy layer refuses answers `403` with
       an `errors[].detail` naming the policy, on the hosted and the proxied path, and a real
       `cargo fetch` of the refused version exits non-zero with that text in its output.
-- [ ] AC19: A yank and an unyank driven through the registry-owned management endpoint produce
-      the same served index line, exactly one snapshot each, and the same authorization outcome
-      as the same operation driven through `cargo yank` and `cargo yank --undo`; a principal
-      holding `push` without `delete` is refused through both entry points with no snapshot
-      created; and a yank against a proxied repository is refused.
+- [ ] AC19: A yank and an unyank driven through the registry-owned management endpoint
+      (`POST /api/v1/repositories/{name}/operations`, kinds `withdraw` and `restore`, target
+      `{crate}/{version}`) produce the same served index line, exactly one snapshot each, and
+      the same authorization outcome as the same operation driven through `cargo yank` and
+      `cargo yank --undo`; a principal holding `push` without `delete` is refused through both
+      entry points with no snapshot created; neither kind writes a `Retirement` record; and a
+      yank against a proxied or a virtual repository answers `405` with problem type
+      `repository-type` through both entry points and creates nothing.
+- [ ] AC20: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
+      availability `available`, `Virtual: supported` and `Rename: supported`; a real
+      `cargo fetch` from a renamed repository succeeds under the new name in both modes, its
+      `config.json` naming the new name's `dl` and `api`, while the old name answers exactly
+      what a never-existing repository answers; and a virtual repository of two local members
+      that both hold a crate under one folded key serves that crate's index file from the first
+      member only, `cargo fetch` downloading the first member's bytes.
+- [ ] AC21: A proxied download whose `dl` host (crates.io's `static.crates.io` shape) is on the
+      upstream's allowlist with role `none` succeeds with no upstream credential reaching that
+      host, asserted at the network layer, while the root host receives the `header`
+      credential; the same download with the host
+      removed from the allowlist makes no connection to it and answers `502` with an
+      `errors[].detail` naming the host; and no response to the client carries the upstream's
+      redirect `Location`.
 
 ## Test Plan
 
@@ -669,22 +721,27 @@ exception list before its flow is expected to replay.
 | AC8 | conformance | `conformance/cargo/search_test.go` (readable and private repositories) |
 | AC9 | conformance | `conformance/cargo/owners_test.go` |
 | AC10 | conformance | `conformance/cargo/proxied_test.go` (transcript + network-level assertion, fresh `CARGO_HOME` in setup) |
-| AC11 | conformance | `conformance/cargo/proxied_ttl_test.go` (mutating sparse stand-in; upstream 304 and client 304 both asserted) |
-| AC12 | integration | `internal/format/cargo/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
+| AC11 | conformance | `conformance/cargo/proxied_ttl_test.go` (mutating sparse stand-in; upstream 304 and client 304 both asserted; served `Last-Modified` strictly increasing across adopted revisions, the cache-scoped half being `proxy-cache.md` AC22's `internal/proxy/freshness_test.go`) |
+| AC12 | integration | `internal/format/cargo/removal_test.go` (stand-in presenting each event class, including an older index file after a newer one; the shared-layer half is `proxy-cache.md` AC13's and AC22's) |
 | AC13 | conformance + integration | `conformance/cargo/index_fidelity_test.go` (install of a `dep:`-featured crate); `internal/format/cargo/index_render_test.go` (line stability across snapshots) |
 | AC14 | conformance | `conformance/cargo/source_replacement_test.go` (network-level assertion) |
-| AC15 | integration | `internal/format/cargo/upstream_config_test.go` |
+| AC15 | integration | `internal/format/cargo/upstream_config_test.go` (the configuration refusals through `management-api.md`'s remote create; a git-shaped `https://` stand-in whose `config.json` is absent, with its request log asserting nothing but that path was requested) |
 | AC16 | conformance | `conformance/cargo/replay_test.go` |
-| AC17 | conformance + unit | `conformance/cargo/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; `curl` for the direct index and download requests of the patterned-`pull` token); `internal/format/cargo/scope_object_test.go` (the object table, per route, including folding of every spelling, `format-handler-interface.md` AC12) |
+| AC17 | conformance + unit | `conformance/cargo/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; a real `cargo fetch` under the patterned-only `pull` token in both modes, and `curl` for its refused out-of-pattern index request; shared with `auth.md` AC32); `internal/format/cargo/scope_object_test.go` (the object table, per route, including folding of every spelling and the descriptor sentinel check on `config.json` through the shared helper in `internal/format/scope_test.go`, `format-handler-interface.md` AC12) |
 | AC18 | conformance | `conformance/cargo/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`) |
-| AC19 | conformance + integration | `conformance/cargo/manage_binding_test.go` (twin crates in one `script`: one yanked through the management endpoint, one through real `cargo yank`; served index lines compared); `internal/format/cargo/manage_binding_test.go` (snapshot count per entry point, `push`-only refusal, proxied refusal) |
+| AC19 | conformance + integration | `conformance/cargo/manage_binding_test.go` (twin crates in one `script`: one yanked through the management endpoint, one through real `cargo yank`; served index lines compared; this is the `script`-driven case `management-api.md` AC24 requires for `withdraw` and `restore`, its presence enforced by `conformance-harness.md` AC26); `internal/format/cargo/manage_binding_test.go` (snapshot count per entry point, `push`-only refusal, no `Retirement` row, `405` `repository-type` on a remote and a virtual; the cross-handler binding table test is `management-api.md` AC8's) |
+| AC20 | unit + conformance | `internal/format/cargo/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/cargo/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; `config.json` under the new name); `conformance/cargo/virtual_test.go` (first-member resolution through real `cargo fetch`) |
+| AC21 | integration + conformance | `internal/format/cargo/upstream_hosts_test.go` (allowlisted and removed `dl` host, `502` naming the host, no `Location` in any client response; the adapter halves are `upstream-adapters.md` AC6, AC7 and AC8); `conformance/cargo/proxied_test.go` (a crates.io-shaped stand-in whose `dl` sits on a second hostname declared as a `hosts` stand-in of the `upstreams` entry, `conformance-harness.md` AC23) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
-closed-vocabulary decision, was Q4): `repositories` with their visibility, `credentials`, an
-`upstreams` stand-in, and `state` for pre-yanked and pre-published versions. The issued
-credential reaches the client as `CARGO_REGISTRIES_<NAME>_TOKEN`, which the `cargo:token`
-provider reads. The runner-enforced obligations, both modes and the unauthenticated,
-unauthorized and pattern-refusal cases in each, apply from the sibling specs and are not
+closed-vocabulary decision, was Q4): `repositories` with their visibility, `credentials`
+(patterned tokens included), an `upstreams` stand-in with a `hosts` stand-in for the download
+host (AC21), `state` for pre-yanked and pre-published versions, and `policies` and
+`advisories` for AC18. The issued credential reaches the client as
+`CARGO_REGISTRIES_<NAME>_TOKEN`, which the `cargo:token` provider reads. The runner-enforced
+obligations, both modes and the unauthenticated, unauthorized and pattern-refusal cases in
+each, a `script`-driven case per declared management kind and `rename_test.go`, apply from the
+sibling specs and the harness's case-set validator (`conformance-harness.md` AC26) and are not
 restated per criterion here.
 
 ## Implementation Phases
@@ -692,19 +749,22 @@ restated per criterion here.
 ### Phase 1: Hosted reads
 - `config.json` from visibility and base URL, index rendering from the head snapshot with the
   snapshot-derived `ETag` and 304, downloads through the CAS, name folding and the 404 rule for
-  wrong spellings, the challenge and scope mapping
+  wrong spellings, the challenge and scope mapping with `config.json` as a descriptor and its
+  sentinel check; `Capabilities()` with the rename and virtual cases (AC20)
 
 ### Phase 2: The web API
 - Publish with the binary body, feature splitting, collision and duplicate refusals, the
   write-boundary declaration exercised end to end; owners listing and refusals; search; the
   per-route addressed-object declaration and the `403` policy rendering
-- Yank and unyank as bindings onto the registry-owned operations, waiting on
-  `docs/internal/plans/foundation/management-api.md` reaching `planned` (AC4, AC19)
+- The `Operator` interface declaring `withdraw` and `restore`, with cargo's yank and unyank
+  routes as its `Bindings()`, waiting on `docs/internal/plans/foundation/management-api.md`
+  reaching `planned` (AC4, AC19)
 
 ### Phase 3: Proxied path
 - `config.json` rewriting and upstream download-URL composition from the `dl` template,
   conditional revalidation against the upstream `ETag`, negative caching, the removal table
-  with the `cksum` and 451 rows, the source-replacement recipe
+  with the `cksum`, 451 and regression rows, the source-replacement recipe, the upstream
+  binding with the download host on the allowlist (AC15, AC21)
 
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate), replay-match,
@@ -723,16 +783,60 @@ folded through Scope, Design, the criteria and the Test Plan in the same pass, a
 by the owner at any time. `grep -rn "standing delegation"` is the owner's review queue. A sixth,
 whether yank binds onto the registry-owned management operation, was raised and adopted the same
 way by the 2026-09-26 cross-spec reconciliation, which also recorded that the `proxy-cache.md`
-revision Q4 looked to has happened and confirmed its answer.
+revision Q4 looked to has happened and confirmed its answer. A seventh, where the sparse-only
+rule is enforced now that `upstream-adapters.md` admits only `https://` roots, was raised and
+adopted the same way by the 2026-09-28 reconciliation with the foundation wave.
+
+### Resolved: enforcing sparse-only under the adapter's URL rule (was Q7, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option A: the upstream is
+configured as an `https://` root, the Cargo client's `sparse+` URL without its prefix; anything
+the `https` adapter's URL rule refuses (`sparse+https://`, `git://`, `ssh://`, `file://`) is
+refused at configuration with `upstream-invalid`; and an `https://` root that serves no sparse
+`config.json` fails at the first request with a `502` naming the sparse requirement, the handler
+never speaking git to it. Folded through Design ("The upstream binding, as `upstream-adapters.md`
+shapes it"), AC15 and its Test Plan row, Phase 3, and the git-protocol record's accepted cost.
+
+The question: this spec's AC15 required a remote whose upstream URL *lacks* the `sparse+`
+prefix to be refused at configuration. `upstream-adapters.md` has since fixed the `Upstream`
+row's URL as an `https://` root (its AC22), with validation per adapter and not per format (its
+`Validator`, which `management-api.md` calls on remote create and `PATCH`, its AC23), so the
+prefix AC15 demanded is now the thing the adapter refuses. And a git index served over
+`https://` is syntactically identical to a sparse root, so no configuration-time check can tell
+them apart without a request to the upstream, which `management-api.md` declines at creation
+("an unreachable but well-formed upstream is accepted").
+
+**Recommendation (adopted):** A, because it keeps one URL rule for every format, needs no
+handler hook the pinned interface lacks, and still guarantees the property the git-protocol
+decision cares about: no git client in the egress path and a refusal that names the sparse
+requirement instead of a confusing parse error.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. `https://` root at configuration; sparse checked at the first fetch of `config.json`** | One URL rule across formats; no new interface; the sparse requirement named to the operator on the first use | A git index URL is accepted at configuration and fails at first use rather than at creation |
+| **B. A handler-side upstream validation hook that probes `config.json` at configuration** | The refusal at creation, as AC15 first said | A new optional interface for the re-open, and a network request inside the creation transaction, which `management-api.md` declined for every format |
+| **C. Store the `sparse+` URL and strip the prefix in the handler** | Operators paste the URL cargo uses | A second URL grammar on `Upstream`, contradicting `upstream-adapters.md` AC22 and every other format's row |
+
+**Why this is yours:** it trades an earlier failure for one uniform configuration rule, which
+is an operator-experience call.
+
+Accepted cost: a mistyped git index URL is caught at the first client request, not at creation;
+the operator docs must show the root without `sparse+`. B lost because it adds an interface and
+a creation-time probe for one format's convenience; C lost because it forks the upstream URL
+grammar the adapter spec settled.
 
 ### Resolved: yank as a binding onto the registry-owned operation (was Q6, raised and adopted 2026-09-26)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: cargo's yank and unyank
 routes are served as bindings onto the yank operation of the registry-owned management API,
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), authorized
-by `delete` like every yank, with one implementation behind both entry points. Folded through
-Context, the blocking preconditions, Scope, the `Scope(r)` mapping, the write-boundary
-declaration, Design ("Yank is a binding onto the registry-owned operation"), AC19 and Phase 2.
+`docs/internal/plans/foundation/management-api.md`, authorized by `delete` like every yank, with
+one implementation behind both entry points. Folded through Context, the blocking
+preconditions, Scope, the `Scope(r)` mapping, the write-boundary declaration, Design ("Yank is a
+binding onto the registry-owned operation"), AC19 and Phase 2. That spec now exists and
+confirms the answer: the operation is its `withdraw` and `restore` kinds, both under `delete`
+(its resolved withdraw-action decision, was Q1, whose option B named this record as what it
+would undo), with Cargo's row and bindings in its reconciliation table and its AC9 asserting
+the `push`-only refusal.
 
 The judgment call it settles: this spec was authored in the same pass that adopted the
 cross-format management precedent, and it kept yank as a Cargo route authorized by `push`, on
@@ -789,7 +893,9 @@ one format's upstreams, and how old a client this registry promises to serve, wh
 product-support floor rather than a measurement.
 
 Accepted cost: the upstream-adapter validation rule and the matrix row that says "sparse only",
-and no answer for a git-only private upstream beyond "publish a sparse index".
+and no answer for a git-only private upstream beyond "publish a sparse index". Where that rule
+is enforced changed with `upstream-adapters.md`'s `https://`-only URL rule: the resolved
+sparse-enforcement decision (was Q7) above.
 
 ### Resolved: what the owners endpoints do (was Q2)
 
@@ -862,7 +968,11 @@ galaxy.ansible.com as the fourth upstream through `proxy-cache.md`'s own revisio
 That revision has since been made, and it confirmed this answer: `proxy-cache.md`'s resolved
 preconfigured-set extension (was Q14) added galaxy.ansible.com and left crates.io and pub.dev
 user-configured until a `continue` breadth-gate verdict authorizes their formats, each then
-decided as its own extension. The revisit this record names is that extension.
+decided as its own extension. The revisit this record names is that extension. A second
+extension (`proxy-cache.md`'s was-Q17, adding api.nuget.org and repo.maven.apache.org) kept the
+same line: its AC19 names crates.io as seeded by no fresh installation, and
+`upstream-adapters.md`'s profile table lists crates.io as "not preconfigured and not profiled
+here", so a Cargo remote is the operator-configured binding Design describes.
 
 The question: `proxy-cache.md` settled npm, PyPI and Docker Hub as the preconfigured,
 enabled-by-default upstreams, with the nightly real-upstream job covering exactly that set, and
@@ -910,9 +1020,10 @@ second mechanism, and issuing the challenge uniformly is what keeps it from disc
 **Why this is yours:** it applies a security rule you settled to a protocol that needs a
 specific status to work, and confirms the OCI reading of that rule generalises.
 
-Accepted cost: an `auth.md` client-table row for cargo (bare token, and the challenge form) is a
-sibling amendment recorded in this spec's consequences, since that spec's table must carry the
-captured form before the auth cases are written.
+Accepted cost: an `auth.md` client-table row for cargo (bare token, and the challenge form) was
+a sibling amendment this spec needed before its auth cases are written; it has landed, as the
+`cargo` row of that spec's client table and the scheme-less form of its presentation-forms
+table (AC31), with the `login_url` challenge named in its existence rule.
 
 ## Review Log
 
@@ -920,3 +1031,4 @@ captured form before the auth cases are written.
 |------|----------|---------------|---------|
 | 2026-09-26 | 4d1aeb1 | authoring pass: grounded first draft, not a review | Grounded the wire contract three ways: captured traffic from `cargo 1.70.0` and `cargo 1.98.1` run in containers against a logging stub (publish body decoded with its two little-endian lengths, duplicate publish on each client generation, yank, unyank, owners, search, `cargo add`, `cargo fetch`, conditional refreshes, mixed-case and separator-permutation lookups, the 401 challenge and token retry, yank resolution with and without a lockfile, `cargo info` and `cargo install` on a yanked crate); the Cargo book's index, web API, authentication and credential-provider pages plus the cargo source for the sparse client, publish wait, index lookup and `cargo add`; and the live `index.crates.io` (`config.json`, `ETag`/`Last-Modified`/`Cache-Control`, a 304, 404s on missing and wrong-case paths, the immutable download endpoint). Version milestones taken from the Rust release notes (sparse stabilised 1.68, default 1.70, registry-auth 1.74, `cargo info` 1.82, publish wait 1.66). Design built from that: the rendered append-only index file with a snapshot-derived `ETag`, the three-layer name trap with folded key plus registered spelling, the bare-token auth form and the 401 dance with its 1.74 floor, the search-cannot-authenticate limitation, the write-boundary declaration with yank as a metadata-only write, the proxied classification with `config.json` never served verbatim, the cross-registry `registry` field as a client-side routing directive answered by source replacement, Cargo's rows of the removal table (yank mirrored, 404/410 keep-and-flag, 451 and `cksum` change purge), and the fresh-`CARGO_HOME` assertion trap. Five questions written in decision shape and adopted under the standing delegation: sparse only (git deliberately unimplemented, AC15), owners listing-plus-refusal (AC9), both name-collision classes refused (AC5), crates.io not preconfigured in v1, and the uniform 401 challenge reconciled with the existence rule via the OCI precedent (AC6). Sixteen criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here: an `auth.md` client-table row for cargo, a Cargo yank row beside the PyPI one in `proxy-cache.md`'s removal table, and a Cargo row in the management-surfaces analysis. Stays draft; awaits an independent review. |
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: charter AC9 beside catalogue AC5 in the breadth-gate precondition; the Cluster 5 precedent folded in: Q6 raised and adopted (yank and unyank as bindings onto `management-api.md`'s yank operation, `delete` as for PyPI, hosted only), through Context, preconditions, Scope, the `Scope(r)` mapping, the write boundary, a new Design section and AC19, resolving from this side the yank-to-push divergence `auth.md` recorded for the management-api author; the addressed-object table over the folded key with version-level objects, `config.json` and search none, publish object from the metadata JSON that precedes the crate bytes, with AC17 and the consequence that patterned-only `pull` cannot run cargo; the policy rendering (AC18); the shared security-signal rule cited; the Q2 record's human-grant wording qualified as resolved; the Q4 record noted as confirmed by `proxy-cache.md`'s resolved Q14. The management-surfaces analysis gained Cargo's rows. Stays draft. |
+| 2026-09-28 | 15ced69 | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review. Redid the pass the interrupted batch-3 agent left without a record, every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec and of this file; items the partial commit had applied verified as done (the `management-api.md` preconditions, Scope, write-boundary and binding text; the Cargo row of `artifact-verification.md`'s "Nothing" table and `signing-service.md`'s "Nothing, stated"; the `auth.md` `cargo` row and scheme-less form; `config.json` as a descriptor in the object table and the Design prose, Open item 34; `WriteRefusal` and the status-line phrase; `server.public_url`; the removal table in `proxy-cache.md`'s event classes with the regression row; the Capabilities and lifecycle section). Applied now: AC17 inverted to the descriptor reading (patterned-only `pull` runs a real `cargo fetch` in both modes, out-of-pattern index refused, descriptor sentinel check; Test Plan row shared with `auth.md` AC32); AC19 names the operations endpoint, kinds and target, no `Retirement`, `405` `repository-type` on remote and virtual, with `management-api.md` AC8, AC9 and AC24 cited; AC11 and AC12 gain the cache-scoped `Last-Modified` and the regression row (`proxy-cache.md` AC22); new AC20 (Capabilities, rename and virtual through real `cargo fetch`, which the Design section already promised) and AC21 (the `dl` host on the upstream allowlist, `header` credential to the root only, `502` naming an unlisted host, `upstream-adapters.md` AC6-AC8), each with a Test Plan row; the Q6 record cites `management-api.md` as written, the Q4 record its second extension (was Q17) and AC19, the Q5 record the landed `auth.md` row. A mismatch found, not queued: AC15 demanded the `sparse+` prefix that `upstream-adapters.md` AC22 now refuses, and no configuration-time check can tell a git index over `https://` from a sparse one without a request `management-api.md` declines at creation; Q7 raised in decision shape and adopted (A: `https://` root, sparse checked at the first `config.json` fetch), folded through Design, AC15, Phase 3 and the Q1 record; `fable_recheck` added. Stays draft. |
