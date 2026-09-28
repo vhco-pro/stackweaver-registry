@@ -1,6 +1,6 @@
 ---
 status: in-progress
-status_description: "Fifth round 2026-09-25, amended 2026-09-26. 51 open across 14 specs, minus storage-and-gc Q10 and proxy-cache Q11 now answered. Cluster 5's framing was corrected: it is a management-surface precedent question, not a hole in the conformance gate, because the oracle can assert every one of those operations' effects even where no client triggers them."
+status_description: "Round six 2026-09-28: 146 questions across 27 specs were adopted under the standing delegation while Fable was out of credit (cloud session and local Opus), none yet Fable-reviewed; listed with a recheck-first order (data retention, revisions of earlier decisions, the authorizer surface). The live queue is check-spec's fable_recheck list. Earlier: Fifth round 2026-09-25, amended 2026-09-26. 51 open across 14 specs, minus storage-and-gc Q10 and proxy-cache Q11 now answered. Cluster 5's framing was corrected: it is a management-surface precedent question, not a hole in the conformance gate, because the oracle can assert every one of those operations' effects even where no client triggers them."
 description: "Triage of every open spec question into three tiers by what it blocks, so decisions are made in dependency order rather than all at once."
 author: michielvha
 goal: "Prevent the mistake of answering 44 questions before the interactions between them are understood, by naming which ones actually gate the next commit."
@@ -413,6 +413,69 @@ the build order, so it describes an existing gap rather than a future one.
 because the measurement cannot be designed until there is one format's cost to measure. It keeps
 its hard obligation: **it must be answered before npm starts** (build step 5), since npm is the
 measurement's baseline and a baseline collected under an undefined procedure is not a baseline.
+
+## Round six: adopted without the judgment tier (2026-09-27 to 2026-09-28)
+
+Fable ran out of credit on 2026-09-27. From then on, the cloud session (model not recorded) and local
+Opus passes kept the loop moving under the standing delegation, adopting each blocked question at
+its own written recommendation. None of these adoptions has had a Fable review. Every spec below
+carries `fable_recheck`, which `node scripts/check-spec.js` lists as the live queue and which keeps
+the spec off `planned` until a Fable review clears it. That output is authoritative; this table is a
+dated snapshot of the question-level subset, extracted from the resolved records' dates.
+
+**146 questions across 27 specs.** A spec authored whole on Opus (most format specs from alpine
+onwards) is marked for a full recheck, and its authoring-time adoptions are covered by that mark
+even where the table below omits them.
+
+### Recheck these first
+
+These adoptions carry the most weight, because they touch data retention or revise an earlier
+decision:
+
+1. **Data retention.** GC correctness is the highest-stakes judgment in the corpus.
+   - `proxy-cache.md` Q19 to Q22: the retained-revision keep-alive, the release of old blobs, current
+     metadata never being evicted, and the declaring document.
+   - `storage-and-gc.md` Q12: the commit-time claim check under the Pointer row lock.
+   - `signing-service.md` Q19: the import direction between index and proxy.
+2. **Revisions of earlier decisions.**
+   - `supply-chain-policy.md` Q9 revised a delegation-adopted Q1.
+   - `proxy-cache.md` Q17 extends the preconfigured upstreams a second time.
+3. **The authorizer surface.**
+   - `auth.md` Q23 to Q25: the descriptor object kind and the Conan exchange echo.
+   - `management-api.md` Q13: a binding is never wider than its operation. It feeds auth AC10's
+     review surface.
+
+### Every adoption
+
+| Spec | Questions adopted 2026-09-27 or 2026-09-28 |
+|---|---|
+| `formats/cargo.md` | Q7 |
+| `formats/composer.md` | Q10, Q11 |
+| `formats/conan.md` | Q11 |
+| `formats/homebrew.md` | Q15 |
+| `formats/debian.md` | Q10 |
+| `formats/hackage.md` | Q16 |
+| `formats/opam.md` | Q16 |
+| `formats/swift.md` | Q11 |
+| `foundation/credential-management.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7 |
+| `formats/openvsx.md` | Q19 |
+| `formats/hex.md` | Q9, Q10 |
+| `formats/pub.md` | Q6 |
+| `foundation/artifact-verification.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 |
+| `foundation/proxy-cache.md` | Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22 |
+| `formats/vagrant.md` | Q13 |
+| `foundation/async-operations.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 |
+| `foundation/format-handler-interface.md` | Q10, Q11 |
+| `foundation/supply-chain-policy.md` | Q9, Q10, Q11, Q12 |
+| `foundation/deployment.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13 |
+| `foundation/observability.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8 |
+| `foundation/management-api.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16 |
+| `foundation/auth.md` | Q23, Q24, Q25 |
+| `foundation/web-ui.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9 |
+| `foundation/repository-lifecycle.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10 |
+| `foundation/upstream-adapters.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9 |
+| `foundation/signing-service.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19 |
+| `foundation/storage-and-gc.md` | Q11, Q12 |
 
 ## Closed without an owner decision
 
