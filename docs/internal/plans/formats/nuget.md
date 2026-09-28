@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 as a grounded first draft: the NuGet v3 wire contract captured from the .NET SDK 6.0 (NuGet 6.3.4) and 9.0 (NuGet 6.14.3) images against a logging stub, checked against the Microsoft NuGet server API documentation, the NuGet.Client source and the live api.nuget.org. Eight questions written in decision shape and adopted under the owner's standing delegation; none open. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at ddc73fb with the foundation wave (not a review): unlist and relist are management-api's withdraw and restore kinds under delete (its was-Q1 reversed this spec's push), hard delete is delete-version, deprecate is annotate, the client DELETE and documented POST are declared bindings (AC19); retirement is data-model's core-held Retirement record (AC8); the service index is a descriptor so a patterned pull runs dotnet restore (AC11); refusals through WriteRefusal with the status-line phrase and the supply-chain binding row filled by the policy case (AC12); completion-only fetch offered by proxy-cache was-Q15 with the short-close case (AC13); artifact-verification's NuGet CMS profile and revocation modes and signing-service's reserved countersign hook cited (AC18); api.nuget.org preconfigured (was-Q17); the dotnet row and X-NuGet-ApiKey form in auth.md; Capabilities with rename and virtual cases (AC23). Earlier: authored 2026-09-26 from captures of NuGet 6.3.4 and 6.14.3; eight questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for the NuGet v3 registry format: the service index, the flat container, the paged registration hives, search and the PackagePublish push and unlist surface, hosted and proxied, with the dotnet CLI as the conformance oracle."
 author: michielvha
 goal: "Serve .NET teams a private NuGet feed and a nuget.org cache from one handler whose every URL hangs off a service index this registry owns, with unlisting, hard deletion and deprecation as registry-owned management operations the real client observes."
@@ -81,8 +81,9 @@ hives that differ by compression and SemVer 2.0.0 membership, all changing on ev
 every unlist, so it is a rendering problem with paging in it. **Identifiers are lowercased and
 versions normalised by the client before any flat-container URL is built**, so a registry that
 stores what the publisher spelled serves 404s to every correct client. And **`dotnet nuget push`
-authenticates with a header of its own**, `X-NuGet-ApiKey`, which is not one of the credential
-forms `auth.md`'s client table knows; the row it needs is a sibling consequence of this spec.
+authenticates with a header of its own**, `X-NuGet-ApiKey`, a bare vendor header that `auth.md`'s
+client table (its `dotnet` row), its presentation-forms table and its AC31 now carry as a
+route-scoped form, confirmed against this spec's captures.
 
 ## Blocking preconditions
 
@@ -92,20 +93,21 @@ npm and PyPI record the gate from their sides and this spec records it here beca
 enforced on one side only is enforced nowhere. At build step 7 the gate is discharged long
 before this format is reachable, but it binds this spec independently.
 
-**The management API must be specced before Phase 2's management operations.** Unlisting,
-relisting, hard deletion and deprecation are registry-owned management operations whose URL
-shape, authorization and write accounting belong to
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), and the
-client's own `DELETE` route is served as a binding onto the unlist operation (Design, "Unlist,
-relist, delete and deprecate"). AC7, AC8 and AC19 are untestable until that surface exists, so
-Phase 2's management half waits on that spec reaching `planned`. Phase 1, the publish half of
-Phase 2, and Phases 3 and 4 do not.
+**The management API must reach `planned` before Phase 2's management operations.** Unlisting,
+relisting, hard deletion and deprecation are kinds of the closed operation vocabulary
+`docs/internal/plans/foundation/management-api.md` now fixes (`withdraw`, `restore`,
+`delete-version`, `annotate`; its kind table and cross-format reconciliation table carry NuGet's
+rows), whose URL shape, authorization and write accounting that spec owns, and the client's own
+`DELETE` route is served as a binding onto `withdraw` under that spec's binding rule (Design,
+"Unlist, relist, delete and deprecate"). AC7, AC8 and AC19 are untestable until that surface
+exists, so Phase 2's management half waits on that spec reaching `planned`. Phase 1, the publish
+half of Phase 2, and Phases 3 and 4 do not.
 
-**One shared-layer amendment this spec depends on is requested, not assumed.** The proxied
-`.nupkg` fetch has no digest to verify against, because the NuGet read surface publishes none
-(Design, "The proxied path"); it needs the completion-only fetch-and-cache mode `go-modules.md`
-already requested of `proxy-cache.md` for the same reason, and this spec does not edit that
-sibling.
+**The completion-only fetch mode this spec depends on is offered.** The proxied `.nupkg` fetch
+has no digest to verify against, because the NuGet read surface publishes none (Design, "The
+proxied path"); `proxy-cache.md` admitted the completion-only fetch-and-cache mode this spec and
+`go-modules.md` asked for (its resolved completion-only decision, was Q15, and AC20), so the
+former request is now a citation.
 
 ## Scope
 
@@ -125,9 +127,12 @@ sibling.
 - `PackagePublish/2.0.0`: push as the client sends it (a chunked `multipart/form-data` `PUT`
   with the `X-NuGet-ApiKey` header), a duplicate refused with `409`, and the `DELETE` route
   served as a binding onto the registry-owned unlist operation.
-- The management operations this format needs from the registry-owned management API: unlist,
-  relist, hard delete and deprecate, each a completed logical write, with hard deletion
-  retiring the coordinate forever.
+- The management operations this format declares on the registry-owned management API: unlist,
+  relist, hard delete and deprecate as the kinds `withdraw`, `restore`, `delete-version` and
+  `annotate`, each a completed logical write, with hard deletion retiring the coordinate forever
+  through the core-held `Retirement` record.
+- The handler's `Capabilities()` declaration, repository rename and virtual aggregation
+  (Design, "Capabilities and lifecycle").
 - Name and version rules: lowercase folding of identifiers, NuGet version normalisation, the
   case-insensitive pre-release label, SemVer 2.0.0 membership including the dependency-range
   rule, and the uniqueness those rules force.
@@ -159,13 +164,17 @@ of done requires the deliberately unimplemented surface to be named:
 - **Repository signing** and the `RepositorySignatures` resource (the resolved repository-signing
   decision below). Countersigning rewrites the package bytes, which contradicts the byte
   fidelity signed packages depend on unless the shared signing service does it before the CAS
-  commit; that service is `docs/internal/plans/foundation/signing-service.md` (to be authored in
-  the spec loop), built at charter step 7 before Helm, and what NuGet requires of it is stated
-  in Design rather than built here. Author-signed packages are stored and served unmodified.
+  commit; that service is `docs/internal/plans/foundation/signing-service.md`, built at charter
+  step 7 before Helm, and it records NuGet's countersignature as reserved on this spec's decision
+  (its consumer table, "Reserved, on a sibling's decision"): the pre-commit transform hook is
+  specified there as an interface and left unimplemented. Author-signed packages are stored and
+  served unmodified.
 - **Signature verification.** Verification of author and repository signatures belongs to
-  `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop),
-  per the verification-ownership decision `supply-chain-policy.md` adopted (was its Q6); this
-  spec states what NuGet needs from it (Design, "Signing and provenance").
+  `docs/internal/plans/foundation/artifact-verification.md`, per the verification-ownership
+  decision `supply-chain-policy.md` adopted (was its Q6); that spec's CMS entry carries the
+  NuGet profile (its "Per-format positions", AC14, and its resolved NuGet trust-roots and
+  revocation decision, was Q8), and this spec states what NuGet needs from it (Design, "Signing
+  and provenance").
 - **Symbol packages** (`SymbolPackagePublish`, `.snupkg`; the resolved symbol-package decision
   below). A symbol package is consumed through a symbol-server protocol that is not NuGet v3
   and has no client in this loop, so stored symbols would be a claim nothing tests; the client
@@ -259,8 +268,12 @@ The levels are exactly those `data-model.md` provides; no table is added.
 
 - `Package.name` holds the **lowercased identifier**, the key every flat-container and
   registration URL carries and the key uniqueness is enforced on. The display spelling
-  (`ZzFoo`) lives in the package-level metadata document with the package's **retirement set**
-  (every hard-deleted version, below) and its deprecation record.
+  (`ZzFoo`) lives in the package-level metadata document. The package's retired coordinates
+  (every hard-deleted version, below) are **not** in that document: they are core-held
+  `Retirement` records (`data-model.md`, its entity table and AC35; `management-api.md`,
+  "Retirement is core-held", its resolved retirement-placement decision, was Q3), outside
+  snapshot content, so a backwards repoint cannot resurrect a retired coordinate and the handler
+  carries nothing forward.
 - `Version.version` holds the **lowercased normalised version**, the token the flat container
   uses (`2.0.0-beta.1`). The version-level document holds the normalised version with its
   pre-release case as `pack` wrote it (`2.0.0-Beta.1`, which the registration `version` field
@@ -376,9 +389,12 @@ What this registry enforces on ingest:
   `.nupkg` at a coordinate is the immutable artifact this registry's own proxy layer caches
   forever, and lock files pin its content hash; accepting a replacement would rewrite what
   every downstream cache and lock file already holds.
-- **A retired coordinate is refused the same way**: a hard-deleted version joins the package's
-  retirement set and is never republishable, with the same bytes or different ones, the
-  cross-format rule `npm.md`, `pypi.md` and `go-modules.md` adopted. The docs note that on
+- **A retired coordinate is refused the same way**: a hard-deleted version is a core-held
+  `Retirement` record and is never republishable, with the same bytes or different ones, the
+  cross-format rule `npm.md`, `pypi.md` and `go-modules.md` adopted. The shared write path
+  refuses the write with `retired` before the handler sees it (`management-api.md` AC12;
+  `data-model.md` AC35), and the handler renders that refusal as the same `409` a duplicate
+  gets, because the client's `--skip-duplicate` reads exactly that status. The docs note that on
   nuget.org a deleted-and-republished coordinate "breaks the official client's assumption that
   a package ID and version imply a specific package content".
 - The bytes commit to the CAS unmodified, whatever signatures they carry (Design, "Signing and
@@ -402,7 +418,8 @@ metadata-only mutations snapshot-creating writes. NuGet's declaration:
   `add package` chose the newest listed version.
 - **Each deprecation, or its removal, is one metadata-only write.**
 - **A hard delete is one write per management action**, removing the version from the head
-  snapshot and recording it in the retirement set within that same write.
+  snapshot; the handler returns the coordinate to retire in the operation's `Outcome` and the
+  core writes its `Retirement` record in the same transaction (`data-model.md` AC35).
 - A proxied repository creates no snapshots at all; document arrival and revalidation are cache
   materialisation.
 
@@ -417,36 +434,53 @@ the registration hive, absence from search, resolution behaviour in `add package
 `deprecation` record that `dotnet list package --deprecated` reads.
 
 This spec follows the precedent the Cluster 5 format specs share, whose common home is
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop):
+`docs/internal/plans/foundation/management-api.md`, which now fixes the vocabulary:
 
 - **Each operation is a registry-owned management operation**, exposed through that one
-  management API, and the client's own `DELETE {PackagePublish}/{ID}/{VERSION}` is served as a
-  **binding onto the unlist operation** with identical semantics, authorization and write
-  accounting (the resolved delete-semantics decision below), because a .NET team whose
-  `dotnet nuget delete` does nothing, or destroys a version their lock files pin, does not have
-  a NuGet registry. The docs' `POST` relist route is served as the binding onto relist for the
-  same reason, though no `dotnet` command drives it. There is one operation and two ways in.
+  management API as a **kind** of its closed vocabulary, and the action follows the kind, never
+  the format (its kind table and cross-format reconciliation table, which carry NuGet's rows).
+  The handler implements that spec's optional `Operator` interface, declaring `withdraw`,
+  `restore`, `delete-version` and `annotate`, reporting each operation's object through
+  `Authorize` (the route table below) and applying it inside the write transaction the core
+  opened through `Apply`. The client's own `DELETE {PackagePublish}/{ID}/{VERSION}` is served as a
+  **binding onto `withdraw`** with identical semantics, authorization and write accounting (the
+  resolved delete-semantics decision below), because a .NET team whose `dotnet nuget delete` does
+  nothing, or destroys a version their lock files pin, does not have a NuGet registry. The docs'
+  `POST` relist route is served as the binding onto `restore` under that spec's second binding
+  rule (a route of the ecosystem's published reference API, recorded with its reason), though no
+  `dotnet` command drives it. There is one operation and two ways in, declared through
+  `Bindings()`, and `management-api.md` AC8 holds the two entry points equal in scope, snapshot
+  delta and served documents.
 - **Each operation is a completed logical write through the shared write path**: exactly one
-  snapshot per operation, none for a refused one, no blob-store object deleted directly.
-- **Authorization uses the settled `(repository, action)` vocabulary with no new action.**
-  Unlist, relist and deprecation are metadata-only and require `push`, the action the client's
-  single API key already holds for pushing; hard deletion is removal-class and requires
-  `delete`. `auth.md` records that the mapping of management operations onto the vocabulary
-  is `management-api.md`'s to reconcile across formats, and this spec's mapping is an input to
-  that reconciliation, not a decision over it.
+  snapshot per operation, none for a refused one, no blob-store object deleted directly
+  (`management-api.md` AC5, AC6).
+- **Authorization uses the settled `(repository, action)` vocabulary with no new action, and the
+  action follows the kind.** Unlist and relist are `withdraw` and `restore` and require
+  `delete`: an operation that takes a version out of new resolution is removal-class whatever
+  its ecosystem calls it (`management-api.md`'s resolved withdraw-action decision, was Q1, and
+  its AC9, which names the NuGet unlist). Hard deletion is `delete-version` and requires
+  `delete`; deprecation and its removal are `annotate` and require `push`. This spec first
+  adopted `push` for unlist and relist and recorded that mapping as an input to
+  `management-api.md`'s cross-format reconciliation rather than a decision over it; that
+  reconciliation decided the other way on 2026-09-27 and this spec follows it (the note under
+  the resolved delete-semantics decision). The visible consequence: `dotnet nuget delete` with a
+  push-only API key is refused `403`, which is stricter than nuget.org, and a CI key that only
+  pushes can never take a version out of resolution.
 - **Hosted only.** A proxied repository takes its unlists and removals from the upstream per
-  the removal table, so every operation against one is refused.
+  the removal table, so every operation against one is refused `405` with problem type
+  `repository-type`, identically through the API and the bindings (`management-api.md` AC7).
 - **Verification is split the way the oracle's reach is split.** The unlist trigger is verified
   by the real client through the binding (AC7); the relist, delete and deprecate triggers are
-  verified by this registry's integration tests against the management endpoint, and nothing
-  else vouches for them; every effect is verified by a real `dotnet` command.
+  verified by this registry's integration tests against the management endpoint plus the
+  `script`-driven conformance case `management-api.md` AC24 requires for every declared kind,
+  and nothing else vouches for them; every effect is verified by a real `dotnet` command.
 
-| Operation | Client binding | Effect a client sees | Action |
-|---|---|---|---|
-| Unlist a version | `dotnet nuget delete` (`DELETE {PackagePublish}/{ID}/{VERSION}`) | `listed: false` and the 1900 `published` in every hive; absent from search; `add package` and floating restore skip it unless it is the only match; an exact `PackageReference` still restores it; the flat container still lists it, as the docs require | `push` |
-| Relist a version | the docs' `POST {PackagePublish}/{ID}/{VERSION}`; no `dotnet` command | The marks revert and normal resolution returns | `push` |
-| Hard delete a version | none | The version leaves every hive and the version list, the download answers `404`, the coordinate is retired | `delete` |
-| Deprecate or undeprecate a version | none | The registration `deprecation` object with its `reasons`, `message` and `alternatePackage`, which `dotnet list package --deprecated` reports | `push` |
+| Operation | Kind | Client binding | Effect a client sees | Action |
+|---|---|---|---|---|
+| Unlist a version | `withdraw` | `dotnet nuget delete` (`DELETE {PackagePublish}/{ID}/{VERSION}`) | `listed: false` and the 1900 `published` in every hive; absent from search; `add package` and floating restore skip it unless it is the only match; an exact `PackageReference` still restores it; the flat container still lists it, as the docs require | `delete` |
+| Relist a version | `restore` | the docs' `POST {PackagePublish}/{ID}/{VERSION}`; no `dotnet` command | The marks revert and normal resolution returns | `delete` |
+| Hard delete a version | `delete-version` | none | The version leaves every hive and the version list, the download answers `404`, the coordinate is retired | `delete` |
+| Deprecate or undeprecate a version | `annotate` | none | The registration `deprecation` object with its `reasons`, `message` and `alternatePackage`, which `dotnet list package --deprecated` reports | `push` |
 
 The docs' 72-hour and dependent-count restrictions are nuget.org's own policy (the deletion
 policy page) and are not enforced, as `npm.md` decided for the same class of rule.
@@ -465,16 +499,17 @@ therefore arrives twice, the second time carrying both headers.
 
 How this meets `auth.md`, whose rules this spec does not bend:
 
-- **The API key is a registry token, presented in a fifth form.** No separate key kind exists:
-  the value in `X-NuGet-ApiKey` is a token `auth.md` issued, verified by the same one-way
-  lookup, and the header is accepted on the `PackagePublish` routes only. When a request
-  carries both the header and `Authorization: Basic`, both are verified, a failure of either
-  rejects the request (`auth.md` AC12, never downgraded to anonymous), and the request's
-  authority is the intersection of the two. The client table in `auth.md` has no `dotnet` row
-  and its verifier's presentation forms (its AC31) do not include a bare header; the row and
-  the form are listed in this spec's sibling consequences and must land there before this
-  format's auth cases are written, per that spec's rule that each row is confirmed against
-  captured traffic (it now is).
+- **The API key is a registry token, presented in one of `auth.md`'s route-scoped forms.** No
+  separate key kind exists: the value in `X-NuGet-ApiKey` is a token `auth.md` issued, verified
+  by the same one-way lookup, and the header is accepted on the `PackagePublish` routes only;
+  presented on any other route it is an authentication failure, never anonymous, and redacted
+  (`auth.md`'s resolved off-route decision, was Q24). When a request carries both the header and
+  `Authorization: Basic`, both are verified, a failure of either rejects the request (`auth.md`
+  AC12, never downgraded to anonymous), and the request's authority is the intersection of the
+  two, the rule `auth.md` states for exactly this challenged push. The `dotnet` row of that
+  spec's client table, the `X-NuGet-ApiKey` row of its presentation-forms table and its AC31
+  carry the form, confirmed against this spec's captures as that spec requires before a
+  format's auth cases are written.
 - **The Basic form is the token-as-password convention** `auth.md` already defines for pip:
   the token in the password field, the username not an authentication input. The harness
   writes the issued token into the client container as
@@ -510,38 +545,53 @@ byte for byte against a canonical form.
 
 | Route | Object kind | Canonical object |
 |---|---|---|
-| Service index | none | - |
+| Service index | descriptor | - (a repository-wide document whose body names resources, never a package, version or digest; `auth.md`'s resolved name-free-document decision, was Q23) |
 | Version list (flat container) | named | `{id}` |
 | `.nupkg` and `.nuspec` download | named | `{id}/{version}` |
 | Registration index, page and leaf | named | `{id}` (pages and leaves address versions of one package, and a leaf reports `{id}/{version}`) |
-| Search | none | - |
-| Vulnerability index and pages | none | - |
+| Search | none | - (it enumerates package identifiers) |
+| Vulnerability index and pages | none | - (the pages name the packages they flag, so they cannot be descriptors) |
 | Push | named | `{id}/{version}`, taken from a **bounded peek** at the archive's leading entries in the streamed body (the resolved push-object decision below); a body whose `.nuspec` is not found within the bound is refused before any byte is spooled to the CAS |
 | Unlist and relist bindings | named | `{id}/{version}`, folded from the URL |
 
 What that gives and costs, applying `auth.md`'s rules rather than re-deciding them. Every
 `dotnet` command fetches the service index first, and the index addresses the repository as a
-whole, so a credential holding **only** a patterned `pull` is refused at its first request and
-no `dotnet` command works under it, the same consequence `cargo.md` records for `config.json`.
-Pattern narrowing on this format is therefore practical for writes: a CI credential confined to
-its own packages holds an unpatterned `pull` beside a `push` patterned `acme.*/**`, and pushes
-and unlists only those packages. A patterned `pull` still narrows direct flat-container and
-registration requests, which AC11 asserts rather than leaving implied. Search and the
-vulnerability pages are refused to a patterned credential as they are to any credential-less
-request on a private repository.
+whole while naming nothing the repository holds, so it is a **descriptor**, the fourth object
+kind `auth.md` adopted on 2026-09-27 (was Q23) for exactly this shape, and a patterned `pull`
+authorizes it. A credential holding **only** a patterned `pull` therefore runs `dotnet restore`
+end to end for the packages inside its pattern and is refused the version list, package and
+registration documents of any other, which AC11 asserts with the real client; before that
+decision this spec recorded the opposite (refused at the first request, as `cargo.md` recorded
+for `config.json`), and both records were corrected together. The descriptor claim carries its
+own mechanical check: `format-handler-interface.md` AC12's sentinel test seeds a package whose
+identifier and version occur nowhere else and fails the route table if the served index carries
+either. Pattern narrowing is equally practical for writes: a CI credential confined to its own
+packages holds a `pull`, `push` and `delete` patterned `acme.*/**`, and pushes and unlists only
+those packages. Search and the vulnerability pages enumerate identifiers, report `none`, and are
+refused to a patterned credential as they are to any credential-less request on a private
+repository, so `dotnet package search` under a patterned-only token fails while restore works.
 
 ### Policy refusals on the wire
 
 When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on a
 version-list, download or registration route of either path, the handler answers `403` with a
 plain-text body naming the policy and rule, or naming the signal for a coordinate condemned
-under the shared security-signal rule. `403` rather than the existence rule's `404`, because
-the caller is authorized and the content is what is refused; and plain text because NuGet v3
-defines no error body, and the client reports the status line ("Response status code does not
-indicate success: 403 (Forbidden)", captured for a refused push). The client retries a failed
-`.nupkg` download six times before giving up (captured), so a refused download costs six
-requests and a `NU1101`-class error rather than one; whether the body text reaches the user is
-what AC12's case proves.
+under the shared security-signal rule, written through the shared refusal writer `WriteRefusal`
+in `internal/format` (`format-handler-interface.md` AC14), which on an HTTP/1.1 connection also
+puts the condition into the status line's reason phrase, `HTTP/1.1 403 Refused by policy:
+{condition}` (`supply-chain-policy.md`'s resolved refusal-status-line decision, was Q10, and
+its AC18; `deployment.md` keeps `h2` off the main listener by default so the phrase reaches the
+client). `403` rather than the existence rule's `404`, because the caller is authorized and the
+content is what is refused; and plain text because NuGet v3 defines no error body. The client
+reports the status line ("Response status code does not indicate success: 403 (Forbidden)",
+captured for a refused push), which is why the phrase matters here: it is the one place the
+condition can reach a `dotnet` user. The client retries a failed `.nupkg` download six times
+before giving up (captured), so a refused download costs six requests and a `NU1101`-class
+error rather than one; whether the phrase or the body reaches the user, and whether the client
+falls back to another configured source, is what AC12's case captures, and that capture fills
+NuGet's `pending` row of `supply-chain-policy.md`'s "When a refusal binds, per format" table in
+the same change (its AC20; the harness refuses a policy case while the row is `pending`,
+`conformance-harness.md` AC26).
 
 ### Audit data and the vulnerability resource
 
@@ -559,10 +609,15 @@ search documents, because this registry makes no vulnerability claim it did not 
 the handler cannot compute one without crossing the policy boundary `supply-chain-policy.md`
 AC4 holds. The operator documentation names the implementation guide's own recipe for exactly
 this case, an `auditSources` entry pointing at `https://data.nuget.org/v3/index.json`, "which
-only serves vulnerability data, not packages". What this format asks of
-`supply-chain-policy.md`, recorded as a sibling consequence rather than built here: an
-advisory read through `Deps` scoped to one ecosystem and coordinate range, from which a later
-revision of this spec renders the resource for hosted repositories. A **proxied** repository
+only serves vulnerability data, not packages". The read this format asked of
+`supply-chain-policy.md` now exists: `Deps` carries the **advisory reader** (that spec's "A
+handler may read advisories, never evaluate them"; `format-handler-interface.md` AC14), which
+returns advisory records and standing condemnations for an ecosystem and coordinate range and
+refuses nothing, so a later revision of this spec can render the hosted resource from it without
+touching the policy boundary. That rendering is not built here: the resolved audit-data decision
+below keeps the hosted path silent until a revision adds the resource with its own criterion,
+because a page rendered from a feed whose staleness is the policy layer's to judge needs its
+own freshness contract first. A **proxied** repository
 advertises the resource and passes the upstream's index and pages through as mutable metadata
 with a TTL, every page `@id` rewritten to this registry, and passes registration
 `vulnerabilities` through unchanged, so a nuget.org cache loses no audit signal.
@@ -589,20 +644,28 @@ and "repository countersignature"). Two facts follow for a registry:
   (captured). Per the resolved repository-signing decision below, v1 advertises no such
   resource and signs nothing.
 
-What NuGet requires of the shared services, stated so the dependency cannot be lost:
+What NuGet required of the shared services, and what each now provides:
 
-- Of `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec
-  loop): verification of an author signature and a repository countersignature inside a
-  `.nupkg`, with the trust roots the SDK's own bundle semantics imply (verification on Linux
-  needs a root store valid for code signing and timestamping; the SDK falls back to its own
-  bundle), yielding the per-digest verdict `supply-chain-policy.md` consumes and the signer
-  identity; and a position on nuget.org's revocation checks, which the capture could not
-  complete offline (`NU3018`, `NU3028` warnings).
-- Of `docs/internal/plans/foundation/signing-service.md` (to be authored in the spec loop):
-  should repository signing ever be adopted, a countersigning step on the publish path that
-  produces the stored bytes **before** the CAS commit, so the committed digest is the signed
-  package's, an HTTPS-only certificate list to advertise, and the re-signing of every affected
-  package on certificate removal that the repository-signatures docs require.
+- `docs/internal/plans/foundation/artifact-verification.md` verifies both the author signature
+  and the repository countersignature from the `.nupkg`'s signature file, at ingest on the hosted
+  path and at commit on the proxied path, through its CMS entry's NuGet profile (its "Per-format
+  positions", AC14): the author identity is the leaf fingerprint matched against `author`
+  trusted signers, the repository identity the fingerprint plus `owners` against `repository`
+  trusted signers, so a policy rule can require "signed by nuget.org and owned by `microsoft`";
+  trust roots are the repository's `x509-roots`, seeded on Linux from the imported SDK fallback
+  bundle when the operator asks; an untrusted root answers `untrusted-key` unless the trust set
+  allows it. The revocation position this spec asked for is that spec's resolved NuGet decision
+  (was Q8): a per-repository mode, `cached` (the default, `revocation: unchecked` when no CRL
+  material is cached), `required` or `off`, with the status recorded on the verdict, which is
+  what `supply-chain-policy.md` consumes. A hosted publish never fails on signature state
+  (verdict recorded, not enforced, its AC21); a malformed signature file fails structurally.
+- `docs/internal/plans/foundation/signing-service.md` records NuGet's countersignature as
+  reserved on this spec's decision: the pre-commit transform hook that would produce the stored
+  bytes **before** the CAS commit, so the committed digest is the signed package's, is specified
+  there as an interface and left unimplemented, together with the HTTPS-only certificate list
+  and the re-signing on certificate removal that the repository-signatures docs require. Should
+  repository signing ever be adopted, the resolved repository-signing decision below is revised
+  and that hook is built.
 
 Advisory matching for NuGet packages is the policy engine's coordinate-level path (OSV carries
 the NuGet ecosystem) and needs no handler cooperation.
@@ -637,9 +700,14 @@ resources (AC22).
   rule). The read surface publishes **no digest** for them: the flat container carries none,
   the registration leaf carries none, and the only hash on the wire, the catalog's
   `packageHash`, is in a resource the client does not read and this registry does not consume.
-  The fetch therefore uses the completion-only fetch-and-cache mode `go-modules.md` requested
-  of `proxy-cache.md`: a truncated body is never committed, the CAS digest of the complete body
-  is recorded, and a served package is byte-identical to what the upstream sent.
+  The fetch therefore uses `proxy-cache.md`'s **completion-only fetch-and-cache mode** (its
+  resolved completion-only decision, was Q15, and AC20): the client streams from the first byte,
+  completion is withheld until the adapter's body reader ends cleanly, a truncated or stalled
+  body commits nothing and reaches the client as a short-closed transfer it reports as a failure
+  rather than a package it accepts, the CAS digest of the complete body is recorded, and a
+  served package is byte-identical to what the upstream sent. The short-close is observed with
+  the real client in `conformance/nuget/proxied_test.go`, the case `conformance-harness.md`
+  names for `dotnet` (AC13).
 - **Search is forwarded** as mutable metadata with the short TTL, keyed by the normalised query
   string, with every `registration` and `@id` URL in the response rewritten. A virtual
   repository queries each member and merges results by lowercased identifier in member order.
@@ -655,7 +723,7 @@ Upstream removal maps onto the settled purge-or-flag table as NuGet's side of th
 
 | Upstream event, as observed at revalidation | Classification |
 |---|---|
-| A version's `listed` flips to false (`published` becomes the 1900 sentinel) | **Mirror the flag**, keep the cached package, and record an operator-visible divergence: the same class as the PyPI-yank and Cargo-yank rows of `proxy-cache.md` AC13, because unlisting means "hidden from search and new adoption, existing consumers keep working" (the deletion policy). New resolutions then skip it because the client does; that is the client's half, and ours is serving the flag faithfully |
+| A version's `listed` flips to false (`published` becomes the 1900 sentinel) | **Mirror the flag**, keep the cached package, and record an operator-visible divergence: the flag-mirroring class of `proxy-cache.md`'s removal event table (AC13), whose row names NuGet `listed` beside PyPI and Cargo yank, because unlisting means "hidden from search and new adoption, existing consumers keep working" (the deletion policy). New resolutions then skip it because the client does; that is the client's half, and ours is serving the flag faithfully |
 | A version or the whole identifier vanishes from the version list and the hive | Keep serving, record an operator-visible divergence. nuget.org deletes only for policy violations, malware among them, and the wire carries no signal distinguishing a takedown from a rare owner-requested deletion; the catalog would (`PackageDelete` items), but it is not consumed. The security-signal rule's other channel, the advisory feed, is what condemns a NuGet coordinate OSV names as malicious, and this registry never observes an explicit NuGet security signal on this channel |
 | A `deprecation` object appears on a version, or `vulnerabilities` entries appear or change | An ordinary metadata change, propagated at the next revalidation; never a removal event |
 | A `.nupkg` re-fetched after eviction differs from the recorded digest | An **immutability violation** treated as the explicit signal: purge and alert, because the ecosystem's own rule is that a coordinate implies its bytes and every lock file that pinned the old hash would otherwise disagree with this registry |
@@ -663,6 +731,27 @@ Upstream removal maps onto the settled purge-or-flag table as NuGet's side of th
 Detection happens at revalidation, passively, per `proxy-cache.md`'s resolved passive-detection
 decision (was Q12); the active channel is the policy engine's advisory feed, which carries
 NuGet through OSV.
+
+`api.nuget.org` is a preconfigured, enabled-by-default upstream: `proxy-cache.md` made the
+extension this spec asked for (its resolved second preconfigured-set extension, was Q17, carried
+by its AC15 and AC19), and `upstream-adapters.md` holds the profile row
+(`https://api.nuget.org/v3/index.json`, adapter `https`, credential `none`, the allowlist as
+captured with this format; its AC24 keeps the two tables equal). What remains for Phase 3 is the
+allowlist capture and the nightly row.
+
+### Capabilities and lifecycle
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available`, `Virtual: supported` and `Rename: supported` (`format-handler-interface.md` AC13).
+A virtual NuGet repository resolves an identifier in its first member that holds it, the
+dependency-confusion-closing order every format spec adopts, and merges search results by
+identifier in member order (AC9); nothing on this wire is signed with the repository name, so
+aggregation is possible where `hex.md` found it was not. A rename changes no served byte: the
+service index is a pure function of the base URL, so it is rendered under the new name and the
+old name answers the uniform `401` or `404` the existence rule gives a never-existing repository.
+`repository-lifecycle.md` AC12 requires `conformance/nuget/rename_test.go`, enforced by the
+harness's case-set validator (`conformance-harness.md` AC26); AC23 carries it with a real
+`dotnet restore` from the renamed repository.
 
 ### Conformance, the two clients and the corpus
 
@@ -741,12 +830,14 @@ goes on the recorded exception list before its flow is expected to replay.
       still lists it, and the `.nupkg` is never removed; a relist through the management
       binding restores the marks with one further snapshot; the identifier and version in the
       `DELETE` URL are folded, so `/zzfoo/1.0.0` and `/ZzFoo/1.0.0` unlist the same version.
-- [ ] AC8: A version hard-deleted through the registry-owned management API leaves every hive
-      and the version list in exactly one snapshot, its download answers `404`, and a later push
-      of the same coordinate is refused as AC3 refuses a duplicate, with the same bytes or
-      different ones, including after the deletion's snapshot has been pruned out of retention;
-      a principal without `delete` is refused with no snapshot created, and the same operation
-      against a proxied repository is refused.
+- [ ] AC8: A version hard-deleted through the registry-owned management API (`delete-version`)
+      leaves every hive and the version list in exactly one snapshot, its download answers `404`,
+      and a later push of the same coordinate is refused as AC3 refuses a duplicate, with the
+      same bytes or different ones, on the core-held `Retirement` record, including after the
+      deletion's snapshot has been pruned out of retention and after the default pointer has been
+      repointed to a snapshot older than the deletion and back; a principal without `delete` is
+      refused with no snapshot created, and the same operation against a proxied repository is
+      refused `405`.
 - [ ] AC9: `dotnet package search` returns pushed packages with `id`, `version`, `versions[]`
       with `@id` and `downloads`, `registration` and `packageTypes`, honouring `q` over
       identifier, description and tags, `skip` and `take`, `prerelease` and `packageType`;
@@ -762,27 +853,36 @@ goes on the recorded exception list before its flow is expected to replay.
       a challenging source is retried with both `Authorization: Basic` and `X-NuGet-ApiKey` and
       accepted; and a credential presented over a connection this registry did not terminate
       with TLS is refused per `auth.md` AC27 whether it arrives as the header or as Basic.
-- [ ] AC11: A token holding an unpatterned `pull` beside `push` under the pattern `acme.*/**`
-      pushes and unlists `Acme.Tool` through the real 6.14.3 client and is refused pushing or
-      unlisting `Other.Tool`, with no snapshot created by a refusal; a token holding only
-      `pull` under the same pattern fetches `acme.tool`'s version list, package and
-      registration index and is refused `other.tool`'s (the handler reporting `{id}` and
-      `{id}/{version}` as the canonical objects, per the route table), is refused the service index, and a
-      real `dotnet restore` under it therefore fails at its first request; a push whose
-      `.nuspec` is not found within the bounded peek is refused before any byte reaches the
-      CAS; and in proxied mode the patterned-`pull` token downloads an in-pattern package and
-      is refused another.
+- [ ] AC11: A token holding `pull`, `push` and `delete` under the pattern `acme.*/**` pushes and
+      unlists `Acme.Tool` through the real 6.14.3 client and is refused pushing or unlisting
+      `Other.Tool`, with no snapshot created by a refusal; a token holding only `pull` under the
+      same pattern fetches the service index (reported as a descriptor, whose body carries none
+      of the sentinel identifier, version or digest `format-handler-interface.md` AC12 seeds),
+      completes a real `dotnet restore` of `acme.tool` on both clients, is refused `other.tool`'s
+      version list, package and registration index (the handler reporting `{id}` and
+      `{id}/{version}` as the canonical objects, per the route table), and is refused
+      `dotnet package search`; a push whose `.nuspec` is not found within the bounded peek is
+      refused before any byte reaches the CAS; and in proxied mode the patterned-`pull` token
+      restores an in-pattern package through the cache and is refused another.
 - [ ] AC12: A version-list, download or registration request the shared policy layer refuses
-      answers `403` with a body naming the policy, on the hosted and the proxied path, and a
-      real `dotnet restore` of the refused version exits non-zero naming the status, with the
-      refusal text captured in the transcript.
+      answers `403` through `WriteRefusal` with a body naming the policy and, on the HTTP/1.1
+      connection the harness terminates, the status line `Refused by policy: {condition}`
+      observed on the raw socket, on the hosted and the proxied path; a real `dotnet restore` of
+      the refused version exits non-zero naming the status, with the refusal text and the
+      phrase captured in the transcript and the client's output recorded for whether either
+      reaches the user; and the case's capture of whether the client falls back to a second
+      configured source fills NuGet's row of `supply-chain-policy.md`'s "When a refusal binds,
+      per format" table in the same change (its AC20).
 - [ ] AC13: The proxied path restores a package and its dependency from a v3 upstream stand-in
       and, from fresh client caches, a second `dotnet restore` reaches this registry and the
       upstream receives no request, both asserted at the network layer; the served `.nupkg` is
       byte-identical to the upstream's; the served index, version list, registration documents
-      and search results carry no upstream URL; and a request for an identifier the upstream
-      lacks is answered `404` (`NU1101` on the client) and negatively cached, while an upstream
-      `429` or `5xx` is not.
+      and search results carry no upstream URL; a `.nupkg` whose upstream body is truncated or
+      stalls commits nothing, leaves no `File` behind, and reaches the client as a short-closed
+      transfer the real client reports as a failure and never as a package it accepts, with the
+      next request fetching again (`proxy-cache.md` AC20's completion-only mode); and a request
+      for an identifier the upstream lacks is answered `404` (`NU1101` on the client) and
+      negatively cached, while an upstream `429` or `5xx` is not.
 - [ ] AC14: A proxied version list and registration index are revalidated after their TTL and
       not before, using `If-Modified-Since` so an unchanged document costs a `304` upstream; a
       version published upstream becomes visible to `dotnet restore` and `add package` after
@@ -811,15 +911,23 @@ goes on the recorded exception list before its flow is expected to replay.
 - [ ] AC18: A repository-signed package fetched through the proxied path and an author-signed
       package pushed through the hosted path are each served byte-identical, proven by
       `dotnet nuget verify` on the served bytes reporting the same signatures and fingerprints
-      as on the originals and by equal digests; the served `.nuspec` equals the archive's; and
-      no `RepositorySignatures` resource is advertised on either path.
-- [ ] AC19: An unlist driven through the registry-owned management endpoint produces the same
-      served registration documents, exactly one snapshot, and the same authorization outcome
-      as the same operation driven through `dotnet nuget delete`; a relist and a deprecation
-      through the endpoint produce one snapshot each, and `dotnet list package --deprecated`
-      reports the deprecation with its reasons and alternate package; a principal holding
-      `pull` without `push` is refused through both entry points with no snapshot created; and
-      every operation against a proxied repository is refused.
+      as on the originals and by equal digests; the served `.nuspec` equals the archive's; the
+      verdict recorded for each is the CMS entry's, with `dotnet restore` under
+      `signatureValidationMode=require` agreeing on every fixture (this format's half of
+      `artifact-verification.md` AC14, whose case it shares); and no `RepositorySignatures`
+      resource is advertised on either path.
+- [ ] AC19: An unlist driven through the registry-owned management endpoint (`withdraw`)
+      produces the same served registration documents, exactly one snapshot, and the same
+      authorization outcome as the same operation driven through `dotnet nuget delete`, the
+      binding declared through `Bindings()` (`management-api.md` AC8); a relist (`restore`) and
+      a deprecation (`annotate`) through the endpoint produce one snapshot each, and
+      `dotnet list package --deprecated` reports the deprecation with its reasons and alternate
+      package; a principal holding `push` without `delete` is refused unlist and relist through
+      both entry points with no snapshot created, `dotnet nuget delete` under a push-only API key
+      exiting non-zero on the `403` (`management-api.md` AC9), while a principal holding `push`
+      alone deprecates and one holding `pull` alone is refused deprecation; each declared kind
+      has a `script`-driven conformance case (`management-api.md` AC24); and every operation
+      against a proxied repository is refused `405`.
 - [ ] AC20: Replay-match passes against a corpus recorded from nuget.org covering the recorded
       surface named in Design.
 - [ ] AC21: `dotnet nuget push` with a `.snupkg` beside the `.nupkg` makes exactly one `PUT`,
@@ -830,6 +938,12 @@ goes on the recorded exception list before its flow is expected to replay.
       `SearchQueryService` resources (a V2 `api/v2` URL among the refused inputs) is refused at
       configuration with a message naming the requirement, and a push or management operation
       against a remote repository answers `405`.
+- [ ] AC23: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
+      availability `available`, `Virtual: supported` and `Rename: supported`; a real
+      `dotnet restore` from a renamed repository succeeds under the new name in both modes, its
+      service index rendered under the new name, while the old name answers exactly what a
+      never-existing repository answers; and a virtual repository of two members restores an
+      identifier present in both from the first member.
 
 ## Test Plan
 
@@ -841,30 +955,33 @@ goes on the recorded exception list before its flow is expected to replay.
 | AC4 | conformance + unit | `conformance/nuget/service_index_test.go` (URL-space assertion over every served document during a proxied restore, `add package` and `package search`; network-level no-direct-upstream assertion); `internal/format/nuget/service_index_test.go` (resource set per repository type, cache header) |
 | AC5 | conformance + integration | `conformance/nuget/names_test.go` (SemVer 2.0.0 push and restore, mixed-case `add package` on both clients, the `[1.02.0.0]` reference); `internal/format/nuget/names_test.go` (folding table over identifier case and version normalisation forms) |
 | AC6 | conformance + integration | `conformance/nuget/registration_test.go` (127- and 128-version packages seeded through `state`; `add package` page fetches from the transcript; hive encoding and SemVer 2.0.0 exclusion asserted with `curl`); `internal/format/nuget/registration_render_test.go` (paging boundaries, hive membership, gzip) |
-| AC7 | conformance + integration | `conformance/nuget/unlist_test.go` (real `dotnet nuget delete`, then `add package` on both clients, floating, exact and search assertions; folded `DELETE` URL spellings); `internal/format/nuget/unlist_test.go` (one snapshot per unlist and relist, file retained) |
-| AC8 | integration + conformance | `internal/format/nuget/manage_delete_test.go` (one snapshot, retirement with same and different bytes, after pruning under an injected clock, `delete` refusal, proxied refusal); `conformance/nuget/hosted_delete_test.go` (the `script` deletes through the management endpoint, real restore then fails, real push of the coordinate is refused) |
+| AC7 | conformance + integration | `conformance/nuget/unlist_test.go` (real `dotnet nuget delete` under an API key holding `delete`, then `add package` on both clients, floating, exact and search assertions; folded `DELETE` URL spellings); `internal/format/nuget/unlist_test.go` (one snapshot per unlist and relist, file retained) |
+| AC8 | integration + conformance | `internal/format/nuget/manage_delete_test.go` (one snapshot, retirement with same and different bytes on the core-held record, after pruning under an injected clock and after a backwards repoint and back, `delete` refusal, proxied `405`); `conformance/nuget/hosted_delete_test.go` (the `script` deletes through the management endpoint, real restore then fails, real push of the coordinate is refused; a second case starts from a `Retirement` record seeded through `state`) |
 | AC9 | conformance + integration | `conformance/nuget/search_test.go` (`dotnet package search` over each parameter; unlisted exclusion); `internal/format/nuget/search_test.go` (virtual merge order) |
 | AC10 | conformance + integration | `conformance/nuget/auth_test.go` (private repository on both clients; challenge equality across existing and missing repositories from the transcript; config-file and environment credentials; push with header alone, wrong key, and the double-header retry); `internal/format/nuget/apikey_test.go` (header acceptance limited to the publish routes; plaintext refusal for the header form under `auth.md` AC27) |
-| AC11 | conformance + unit | `conformance/nuget/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; `curl` for the direct requests of the patterned-`pull` token; an archive with the `.nuspec` beyond the peek bound); `internal/format/nuget/scope_object_test.go` (the object table, per route, including folding of every spelling and the bounded peek, `format-handler-interface.md` AC12) |
-| AC12 | conformance | `conformance/nuget/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; the refused restore's transcript) |
-| AC13 | conformance | `conformance/nuget/proxied_test.go` (transcript + network-level assertion, fresh client caches in setup; byte comparison of the served package; missing identifier and throttling stand-in responses) |
+| AC11 | conformance + unit | `conformance/nuget/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; a real `dotnet restore` and a refused `dotnet package search` under the patterned-`pull` token, `curl` for its refused direct requests; an archive with the `.nuspec` beyond the peek bound); `internal/format/nuget/scope_object_test.go` (the object table, per route, including folding of every spelling, the bounded peek and the sentinel check on the service index, `format-handler-interface.md` AC12) |
+| AC12 | conformance | `conformance/nuget/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; the raw status line read from the socket; the refused restore's transcript and output; a second configured source to capture fallback for the `supply-chain-policy.md` AC20 row) |
+| AC13 | conformance | `conformance/nuget/proxied_test.go` (transcript + network-level assertion, fresh client caches in setup; byte comparison of the served package; a stand-in that truncates and one that stalls a `.nupkg` body, the client's short-close failure and the absent `File` asserted, the case `conformance-harness.md` names for `dotnet` under `proxy-cache.md` AC20; missing identifier and throttling stand-in responses) |
 | AC14 | conformance | `conformance/nuget/proxied_ttl_test.go` (mutating v3 stand-in serving `Last-Modified`; upstream `304` and client `304` both asserted at the network layer) |
 | AC15 | integration | `internal/format/nuget/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
 | AC16 | conformance | `conformance/nuget/proxied_paging_test.go` (stand-in with a paged, non-inlined hive; page requests upstream counted at the network layer; proxied `package search` URL-space assertion) |
 | AC17 | conformance | `conformance/nuget/audit_test.go` (hosted: no vulnerability request on 6.14.3, no property in served documents; proxied: stand-in vulnerability pages, `NU1903` on 6.14.3, no request on 6.3.4, passthrough of the registration property) |
-| AC18 | conformance | `conformance/nuget/signed_test.go` (a committed repository-signed fixture from nuget.org served through a stand-in; an author-signed fixture pushed; `dotnet nuget verify` output and digests compared; index resource-set assertion) |
-| AC19 | conformance + integration | `conformance/nuget/manage_binding_test.go` (twin packages in one `script`: one unlisted through the management endpoint, one through real `dotnet nuget delete`; served documents compared; deprecation then `dotnet list package --deprecated`); `internal/format/nuget/manage_binding_test.go` (snapshot count per entry point and operation, `push`-only and `pull`-only refusals, proxied refusal) |
+| AC18 | conformance | `conformance/nuget/signed_test.go` (a committed repository-signed fixture from nuget.org served through a stand-in; an author-signed fixture pushed; `dotnet nuget verify` output and digests compared; index resource-set assertion); `conformance/nuget/signature_test.go` (`dotnet restore` under `signatureValidationMode=require` against the recorded verdicts, the trust set seeded through the `trust` key; shared with `artifact-verification.md` AC14) |
+| AC19 | conformance + integration | `conformance/nuget/manage_binding_test.go` (twin packages in one `script`: one unlisted through the management endpoint, one through real `dotnet nuget delete`; served documents compared; relist through the documented `POST`; deprecation then `dotnet list package --deprecated`; `dotnet nuget delete` under a push-only key refused; the `script`-driven case per declared kind `management-api.md` AC24 and `conformance-harness.md` AC26 require); `internal/format/nuget/manage_binding_test.go` (snapshot count per entry point and operation, `push`-only refusal of `withdraw` and `restore`, `pull`-only refusal of `annotate`, proxied `405`; the `Bindings()` scope-equality table `management-api.md` AC8 enumerates) |
 | AC20 | conformance | `conformance/nuget/replay_test.go` |
 | AC21 | conformance | `conformance/nuget/symbols_test.go` (push with a `.snupkg` beside the package on both clients; single `PUT` from the transcript; direct `PUT` to the symbol path) |
 | AC22 | integration | `internal/format/nuget/upstream_config_test.go` (V2 URL, non-JSON, wrong major version, missing required resource; `405` on push and management routes of a remote repository) |
+| AC23 | unit + conformance | `internal/format/nuget/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/nuget/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; the service index under the new name); `conformance/nuget/virtual_test.go` (first-member resolution through real `dotnet restore`) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their visibility and type,
 `credentials`, an `upstreams` stand-in, `state` for pre-published, pre-unlisted and paged
-packages, and `policies` with `advisories` for AC12. The issued credential reaches the client as
-`NuGetPackageSourceCredentials_{name}` and as the `--api-key` argument. The runner-enforced
-obligations, both modes and the unauthenticated, unauthorized and pattern-refusal cases in
-each, apply from the sibling specs and are not restated per criterion here.
+packages and for seeded `Retirement` records (`management-api.md`, "Retirement is core-held"),
+`trust` for AC18's trust set (`artifact-verification.md` AC25), and `policies` with `advisories`
+for AC12. The issued credential reaches the client as `NuGetPackageSourceCredentials_{name}` and
+as the `--api-key` argument. The runner-enforced obligations, both modes and the unauthenticated,
+unauthorized and pattern-refusal cases in each, apply from the sibling specs and are not restated
+per criterion here.
 
 ## Implementation Phases
 
@@ -872,20 +989,25 @@ each, apply from the sibling specs and are not restated per criterion here.
 - The per-repository service index from visibility, type and base URL; the flat container from
   the head snapshot; the three registration hives from one renderer with inlining, paging,
   gzip and SemVer 2.0.0 exclusion; search; identifier and version folding; the challenge and
-  scope mapping; the per-route addressed objects and the `403` policy rendering
+  scope mapping; the per-route addressed objects with the descriptor sentinel check; the `403`
+  policy rendering through `WriteRefusal`; `Capabilities()` with the rename and virtual cases
+  (AC23)
 
 ### Phase 2: Publish and management
 - Push with the bounded peek, archive validation, duplicate and retirement refusals, the API
   key header on the publish routes, the write-boundary declaration exercised end to end
-- Unlist and relist as bindings onto the registry-owned operations, hard deletion and
-  deprecation through the management API, the retirement set: waits on
+- The `Operator` interface declaring `withdraw`, `restore`, `delete-version` and `annotate`,
+  the client `DELETE` and the documented `POST` as bindings onto `withdraw` and `restore`, the
+  `Retirement` coordinates returned in `Outcome`: waits on
   `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
   preconditions; AC7, AC8, AC19)
 
 ### Phase 3: Proxied path
 - Upstream index discovery and validation, total URL rewriting, conditional revalidation on
   `Last-Modified`, proxied paging, proxied search and vulnerability passthrough, negative
-  caching, the completion-only fetch mode, the removal table
+  caching, the completion-only fetch mode (`proxy-cache.md` AC20), the removal table, the
+  api.nuget.org profile's allowlist capture and its nightly row (`proxy-cache.md` AC15;
+  `upstream-adapters.md` AC24)
 
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate), replay-match,
@@ -907,9 +1029,20 @@ by the owner at any time. `grep -rn "standing delegation"` is the owner's review
 ### Resolved: what the PackagePublish DELETE does (was Q1)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: the client's `DELETE`
-is an **unlist**, served as a binding onto the registry-owned unlist operation and authorized by
-`push`; hard deletion exists only as a management-API operation under `delete`, and a deleted
-coordinate is retired forever (Design, "Unlist, relist, delete and deprecate"; AC7, AC8, AC19).
+is an **unlist**, served as a binding onto the registry-owned unlist operation; hard deletion
+exists only as a management-API operation under `delete`, and a deleted coordinate is retired
+forever (Design, "Unlist, relist, delete and deprecate"; AC7, AC8, AC19).
+
+**Revised 2026-09-28 on `management-api.md`'s resolved withdraw-action decision (was Q1 there,
+adopted 2026-09-27 under the same delegation).** This record first authorized the unlist by
+`push`, the key every publisher holds, and said in as many words that the mapping was an input
+to that spec's cross-format reconciliation rather than a decision over it. That reconciliation
+placed every operation that takes a version out of new resolution, NuGet unlist included, on
+the `withdraw` kind under `delete`, so one rule covers PyPI yank, Cargo yank, conda revocation
+and this unlist. The unlist is still an unlist, still a binding, still never a hard delete; only
+the action changed, and the visible cost is that `dotnet nuget delete` with a push-only API key
+is refused where nuget.org would accept it. Option A's "It costs" column below is read with that
+revision; the destructive path (hard delete) requires `delete` as it always did.
 
 The question: the docs say nuget.org "interprets the package delete request as an unlist" while
 "other server implementations are free to interpret this signal as a hard delete, soft delete,
@@ -973,8 +1106,9 @@ resource must be HTTPS-only; and countersigning rewrites the package bytes.
 
 **Recommendation:** A. A repository signature changes the bytes the CAS stores, so it can only
 be applied by the shared signing service before the commit, and that service is
-`docs/internal/plans/foundation/signing-service.md` (to be authored in the spec loop) at charter
-step 7; adopting it here would be defining a shared service's shape from a format. And
+`docs/internal/plans/foundation/signing-service.md` at charter step 7, which now records the
+pre-commit transform hook as specified and unimplemented on this decision; adopting it here
+would have been defining a shared service's shape from a format. And
 `allRepositorySigned: true` is unsatisfiable on any repository serving proxied content, whose
 signatures are the upstream's, so the promise the resource exists to make could only be made
 for pure hosted repositories.
@@ -1017,8 +1151,10 @@ documented; proxied passthrough keeps nuget.org's audit signal intact for the ca
 **Why this is yours:** it prices a false all-clear against a missing warning on the hosted path,
 a security-posture claim the product will be held to.
 
-Accepted cost: the `Deps` advisory read is a sibling consequence for `supply-chain-policy.md`,
-and hosted audit is documentation until it lands.
+Accepted cost: hosted audit is documentation until a revision renders the resource. The `Deps`
+advisory read this record asked of `supply-chain-policy.md` exists since 2026-09-28 (its advisory
+reader, `format-handler-interface.md` AC14), so the revision now waits only on a freshness
+contract for the rendered page, not on a shared-layer change.
 
 ### Resolved: symbol packages (was Q5)
 
@@ -1080,7 +1216,9 @@ Accepted cost: the bound is a configured constant, recorded with the refusal mes
 the preconfigured, enabled-by-default upstream set through `proxy-cache.md`'s own extension
 mechanism (its resolved preconfigured-set extension, was Q14), the amendment recorded as a
 sibling consequence of this spec rather than made here, with the nightly real-upstream job
-gaining its row when NuGet ships.
+gaining its row when NuGet ships. That spec made the amendment on 2026-09-28 (its resolved
+second preconfigured-set extension, was Q17; AC15 and AC19), and `upstream-adapters.md` carries
+the profile row (AC24), so the consequence is discharged (Design, "The proxied path").
 
 The question: `proxy-cache.md` extended the owner's npm, PyPI and Docker Hub set with
 galaxy.ansible.com because that format is Tier 1, and left the Tier 2 formats' upstreams
@@ -1130,3 +1268,4 @@ Accepted cost: a redirect-free acceptance that never corrects a caller.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 6641886 | authoring pass: grounded first draft, not a review | Grounded the wire contract three ways: captured traffic from the .NET SDK 6.0 (NuGet 6.3.4) and 9.0 (NuGet 6.14.3) images, pinned by digest, run in containers against a logging stub with `dotnet pack` fixtures (cold and warm restore, a SemVer 2.0.0 reference, a non-normalised reference, a mixed-case identifier, floating and exact restores of an unlisted version, `add package` with and without `--prerelease` and against a paged hive, `package search`, `list package --outdated` and `--vulnerable`, push accepted, duplicate with and without `--skip-duplicate`, invalid, key-less and wrong-key, push with a `.snupkg` beside the package with and without the symbol resource, `nuget delete` accepted, `404` and key-less, the `401` challenge with config-file and environment credentials on restore and push, a rejected credential, a repository-signatures resource over HTTP, `nuget verify` on an unsigned and a nuget.org package, restore with and without a vulnerability resource, and a missing identifier); the Microsoft NuGet server API reference (overview, service index, package content, package metadata, search, push and delete, symbol publish, catalog, repository signatures, vulnerability info), the implementation guide, the versioning, signed-packages, trust-boundary and authenticated-feed pages, the deletion policy, the SDK's signed-package-verification, restore-audit and verify pages, and the NuGet.Client source for the push and flat-container requests; and the live api.nuget.org (resource set, inlined and non-inlined registration paging, an unlisted leaf, cache and conditional-request behaviour, the CDN lowercase rewrite, `404`s on non-normalised and mixed-case paths). Design built from that: the per-repository service index beneath which every resource lives and total URL rewriting on the proxied path; the three registration hives from one renderer with nuget.org's 128/64 paging heuristic, gzip and SemVer 2.0.0 exclusion; lowercase and normalised keys with the display spelling and label case in the documents; the chunked multipart push with the bounded `.nuspec` peek as its addressed object; the write-boundary declaration with unlist and relist as metadata-only writes and hard deletion retiring the coordinate; unlist, relist, hard delete and deprecate as registry-owned management operations with the client's `DELETE` bound onto unlist; the API key header as a fifth presentation of a registry token beside Basic-after-challenge, with the double-header retry and the twelve-attempt `NU1301` storm recorded; the `403` policy rendering; hosted repositories making no vulnerability claim while proxied ones pass the upstream's pages through; byte fidelity for signed packages with the requirements on the shared verification and signing services stated; the proxied classification with `Last-Modified` revalidation (the live flat container ignores `If-None-Match`), opaque page-URL mapping, forwarded search, the completion-only fetch mode `go-modules.md` requested, and NuGet's rows of the removal table; and the client-cache trap. Eight questions written in decision shape and adopted under the standing delegation: `DELETE` is unlist with hard deletion under `delete` (AC7, AC8, AC19); no catalog (AC4); no repository signing in v1 with byte fidelity (AC18); hosted audit data absent and proxied passthrough (AC17); no symbol packages (AC21); the bounded-peek push object (AC11); api.nuget.org preconfigured through `proxy-cache.md`'s extension mechanism (sibling consequence); non-canonical spellings folded and served (AC5). Twenty-two criteria, each with a Test Plan row; check-spec clean with zero advisories. Sibling consequences recorded in the authoring report, not applied here: an `auth.md` client-table row for `dotnet` and the header form in its AC31, the `proxy-cache.md` preconfigured-set extension and a NuGet unlist row in its removal table, the `management-api.md` operations and action mapping, the `supply-chain-policy.md` advisory read through `Deps`, the verification and signing requirements, and a NuGet row in the management-surfaces analysis. Stays draft; awaits an independent review. |
+| 2026-09-28 | ddc73fb | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From `management-api.md` (its resolved withdraw-action decision, was Q1, and the reconciliation table): unlist and relist are the `withdraw` and `restore` kinds and require `delete`, reversing this spec's adopted `push` (a revision note under the resolved delete-semantics record), hard delete is `delete-version`, deprecation is `annotate`; the handler declares them through `Operator`, the client `DELETE` and the documented `POST` relist are declared bindings (`Bindings()`, AC8), refusals on a remote are `405` `repository-type` (AC7), every kind gets a `script`-driven case (AC24); AC19 and its Test Plan row rewritten, `dotnet nuget delete` under a push-only key refused. From `management-api.md` was Q3 and `data-model.md` AC35: the retirement set left the package-level document for the core-held `Retirement` record, refused centrally and rendered as the duplicate `409`; AC8 gains the backwards-repoint clause and a `state`-seeded retirement case. From `auth.md` was Q23: the service index is a descriptor, so a patterned-only `pull` now runs `dotnet restore` for in-pattern packages where this spec said it failed at its first request; AC11 inverted, sentinel check in the scope test; the `dotnet` row and `X-NuGet-ApiKey` form are in `auth.md` (client table, presentation forms, AC31), off-route presentation an authentication failure (was Q24), so the 'must land there' wording is gone. From `supply-chain-policy.md` (was Q10, AC18, AC20) and `format-handler-interface.md` AC14: refusals through `WriteRefusal` with the `Refused by policy` status-line phrase; AC12 asserts the raw status line and captures fallback to fill NuGet's `pending` binding-table row; the advisory reader now exists, so the hosted-audit record's accepted cost is only the missing freshness contract. From `proxy-cache.md` (was Q15, AC20; was Q17, AC15, AC19) and `conformance-harness.md`: the completion-only mode is offered, not requested, the client streams with completion withheld and the short-close is observed in `proxied_test.go` (AC13); api.nuget.org is preconfigured with its `upstream-adapters.md` profile row (AC24), the was-Q7 record marked discharged. From `artifact-verification.md` (AC14, AC21, was Q8) and `signing-service.md`: the NuGet CMS profile, trust roots, `owners` identity and revocation modes cited in Design and AC18 (shared `signature_test.go`, `trust` key); the countersign hook recorded as reserved and unimplemented. From `repository-lifecycle.md` AC12 and `format-handler-interface.md` AC13: a Capabilities and lifecycle section, `Virtual: supported`, `Rename: supported`, new AC23 with `rename_test.go` and `virtual_test.go`. Twenty-three criteria, each with a Test Plan row. Consequences for other files: a NuGet row in `docs/internal/analysis/management-surfaces-and-the-oracle.md` (still absent); `supply-chain-policy.md`'s NuGet binding row stays `pending` until AC12's case lands. Stays draft; awaits an independent review. |

@@ -71,7 +71,8 @@
     "status": "draft",
     "issue": "10",
     "covers": [
-      "internal/format/ansible/**"
+      "internal/format/ansible/**",
+      "conformance/ansible/**"
     ]
   },
   {

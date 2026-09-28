@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at da0aecd (not a review): the Operation entity and the galaxy.ansible.com preconfigured amendment now exist in their owning specs, so those preconditions are updated; the 403 policy rendering added (AC14). Earlier: 2026-09-26 at 0dbca1f: Q1-Q5 adopted under the owner's standing delegation and folded, and Q6-Q8 raised and adopted in the same pass. Synchronous import validation with the task record in a shared Operation entity data-model.md must gain (AC9); namespaces as a name segment isolated by auth pattern scopes (AC10); empty hosted signatures, proxied ones passed through, producer the to-be-authored artifact-verification.md (AC11); version deletion through the to-be-authored management-api.md with versions retired forever (AC12); galaxy.ansible.com preconfigured (AC13). Now Tier 1 at charter step 6a. No open questions; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-28 at ddc73fb with the foundation wave (not a review): Q9 raised and adopted under the standing delegation, the import runs deferred as the publish kind on async-operations' runner with the pause-held conformance case (AC9, revising was-Q1); hosted signatures by management-api attach verified per artifact-verification AC9, served in pulp_ansible's shape, proxied ones with a verdict (AC11); deletion as delete-version and delete-package kinds with the core-held Retirement record (AC12); discovery a descriptor (AC10); refusals through WriteRefusal, no OSV ecosystem for Galaxy so advisory rules are uncovered and the binding row is filled by the policy case (AC14); Capabilities with rename and virtual cases (AC15). Earlier: 2026-09-26 at da0aecd, the Operation entity and galaxy.ansible.com preconfigured recorded as met, AC14 added; 2026-09-26 at 0dbca1f, Q1-Q8 adopted and folded. Tier 1 at charter step 6a. No open questions; stays draft pending a gate review."
 description: "Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist."
 author: michielvha
 goal: "Serve the one ecosystem whose only free self-hosted options are heavy enough that practitioners abandon them."
@@ -9,6 +9,7 @@ issue: 10
 created: 2026-09-21
 covers:
   - "internal/format/ansible/**"
+  - "conformance/ansible/**"
 ---
 
 # Plan: Ansible Galaxy collections
@@ -39,13 +40,15 @@ SSO is a genuinely unserved need.
 Sequencing: this format is **Tier 1**, third in build order after npm and PyPI. The catalogue
 promoted it from Tier 3 on 2026-09-26 (its resolved tier-gate decision, was Q4), which keeps the
 early slot the charter had already given it without making the tier gate ceremonial, and the
-charter places it at build step 6a, immediately after the shared asynchronous-operation
-subsystem it is the first client-visible consumer of (its resolved decision on extending the
-phases past PyPI, was Q1).
+charter places it at build step 6a, "the deferred management operation on the async runner,
+then Ansible collections": the queue core (`async-operations.md` Phases 1 to 3) lands at the
+start of step 4b, its deferred-operation consumer (Phase 4) at 6a, and this format is the first
+client-visible consumer of that deferred path (the charter's resolved decision on extending the
+phases past PyPI, was Q1; `async-operations.md`'s resolved placement decision, was Q9 there).
 
 ## Blocking preconditions
 
-Four gates hold before the phase that needs them, each recorded here as well as in the sibling
+Five gates hold before the phase that needs them, each recorded here as well as in the sibling
 that owns it, because a contract enforced on one side only is enforced nowhere:
 
 - **The handler-interface re-open, before any handler work.** As a Tier 1 format this one is
@@ -54,35 +57,49 @@ that owns it, because a contract enforced on one side only is enforced nowhere:
   asynchronous half is built on a Galaxy-shaped publish-and-poll
   (`foundation/write-triggered-services-prototype.md`), so the interface this handler is built
   against was re-opened with this format's hardest mechanism in view.
-- **The shared model's `Operation` entity, before Phase 1.** The import-task record lives in the
-  first-class asynchronous-operation entity `data-model.md` now specifies (its "Operations"
-  section and AC32; Design, "Import tasks" here). No handler owns a table, so Phase 1 cannot
-  store a task record until the entity is built; the charter builds its production form as the
-  asynchronous-operation subsystem at step 6a, immediately before this handler.
+- **The shared model's `Operation` entity and the shared runner's deferred path, before
+  Phase 1.** The import-task record lives in the first-class `Operation` entity `data-model.md`
+  specifies (its "Operations" section and AC32; Design, "Import tasks" here), and the import
+  itself runs as a deferred `publish` operation on `internal/async` (`async-operations.md` AC5;
+  `management-api.md` AC16; the resolved deferred-import decision below, was Q9). No handler owns
+  a table or a goroutine, so Phase 1 cannot store a task record or run an import until both are
+  built; the charter lands the queue core at the start of step 4b and its deferred management
+  operation at step 6a, immediately before this handler.
 - **The preconfigured-upstreams amendment to `proxy-cache.md`: made.** galaxy.ansible.com joins
   the preconfigured, enabled-by-default upstreams and the nightly real-upstream job (Design,
   "The proxied path") through that spec's resolved preconfigured-set extension (was Q14), with
-  its AC15 and AC19 carrying the row; what remains for Phase 2 is building it.
-- **`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop),
-  before Phase 3.** Version and collection deletion are registry-owned management endpoints
-  whose shape, authorization and write accounting that spec owns; AC12 is untestable until the
+  its AC15 and AC19 carrying the row and `upstream-adapters.md` holding the profile row (its
+  AC24); what remains for Phase 2 is building it.
+- **`docs/internal/plans/foundation/management-api.md` reaching `planned`, before Phase 3.**
+  Version and collection deletion are the `delete-version` and `delete-package` kinds of that
+  spec's closed operation vocabulary and signature attachment is its `attach` kind (its kind
+  table and cross-format reconciliation table carry Galaxy's rows); it owns their URL shape,
+  authorization and write accounting, and AC11's attachment and AC12 are untestable until the
   surface exists.
+- **`docs/internal/plans/foundation/artifact-verification.md` reaching `planned`, before the
+  signature half of Phase 3.** The attached signature is verified over the stored
+  `MANIFEST.json` against the repository's `openpgp` trust set before it is stored (its AC9,
+  its resolved Galaxy-signatures decision, was Q6 there), and the `trust` setup key that seeds
+  the keyring lands with that spec (its AC25).
 
 ## Scope
 
 **In scope:** Galaxy v3 version discovery (the available-versions document served at the
 configured base URL), collection detail, version list and version detail, versioned artifact
 download, multipart publish with the asynchronous import-task status endpoint the client polls
-(validated synchronously in v1, the task record kept in the shared `Operation` entity; Design,
-"Import tasks"), refusal of a duplicate or retired version, token authentication in the
-`Authorization: Token <token>` header form the client sends (Design, "The wire contract"),
-namespaces as a name segment with per-namespace rights through the central authorizer's pattern
-scopes (Design, "Namespaces"), an empty `signatures` list on hosted versions and the upstream's
-list passed through on proxied ones (Design, "Signatures"), version and collection deletion
-through the registry-owned management API (Design, "The management surface"), and the proxied
-path: pull-through caching of an upstream Galaxy server with `download_url` rewriting, with
-galaxy.ansible.com preconfigured and enabled by default (Design, "The proxied path"), and the
-wire rendering of a shared policy refusal (Design, "Policy refusals on the wire").
+(the import a deferred `publish` operation on the shared runner, its record the shared
+`Operation` entity; Design, "Import tasks"), refusal of a duplicate or retired version, token
+authentication in the `Authorization: Token <token>` header form the client sends (Design, "The
+wire contract"), namespaces as a name segment with per-namespace rights through the central
+authorizer's pattern scopes (Design, "Namespaces"), hosted signatures attached through the
+management API's `attach` kind and verified before storage, with the upstream's list passed
+through on proxied ones (Design, "Signatures"), version and collection deletion through the
+registry-owned management API (Design, "The management surface"), the proxied path:
+pull-through caching of an upstream Galaxy server with `download_url` rewriting, with
+galaxy.ansible.com preconfigured and enabled by default (Design, "The proxied path"), the wire
+rendering of a shared policy refusal (Design, "Policy refusals on the wire"), and the handler's
+`Capabilities()` declaration with repository rename and virtual aggregation (Design,
+"Capabilities and lifecycle").
 
 **Out of scope:**
 
@@ -90,11 +107,12 @@ wire rendering of a shared policy refusal (Design, "Policy refusals on the wire"
   repository archive rather than from a registry-published artifact - a different feature
   wearing the same name.
 - Write-through publishing to an upstream. `proxy-cache.md` rules it out for every format.
-- Signature attachment, production and server-side verification. They belong to the shared
-  producer `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the
-  spec loop), per the verification-ownership decision adopted in `supply-chain-policy.md`;
-  building an attachment surface here would pre-empt it. Excluded on evidence sequencing, not
-  effort.
+- Server-side signature production. `signing-service.md` declined Galaxy server-side signing
+  (its resolved Galaxy decision, was Q10 there), so `signing_service` is `null` on every served
+  entry and no key exists in this handler; signatures arrive by user attachment, verified by
+  `docs/internal/plans/foundation/artifact-verification.md` (its AC9), per the
+  verification-ownership decision adopted in `supply-chain-policy.md`. The registry verifying
+  what it serves is the whole of its part.
 - Namespace objects with their own ownership records. Namespace isolation comes from the
   settled authorization model, never from a second vocabulary (Design, "Namespaces").
 - Galaxy NG's own management routes (namespace CRUD, its collection and version `DELETE`
@@ -163,59 +181,80 @@ agreement between the filename, the URL and `collection_info` on namespace, name
 this ecosystem: the version detail declares its sha256, and this registry's own proxy layer
 caches artifacts forever on that assumption. So a publish of a version that is live, or that was
 deleted through the management surface, ends its import task `state: failed` with an error
-naming the reason, and nothing is written. Deleted versions sit in the collection's
-**retirement set**, held in the package-level metadata document, carried forward by every later
-write because writes build on the newest snapshot, and surviving deletion of the collection's
-last version: a collection with no live versions is served as absent but still refuses its
-retired versions. The rule is about the coordinate, not the bytes, so an identical re-publish is
-refused too.
+naming the reason, and nothing is written. A deleted version is a **core-held `Retirement`
+record** (`data-model.md`, its entity table and AC35; `management-api.md`, "Retirement is
+core-held", its resolved retirement-placement decision, was Q3), not part of the package-level
+document: the handler returns `{namespace}/{name}/{version}` as the coordinate to retire in the
+deleting operation's `Outcome`, the core writes the record in that transaction, and the shared
+write path refuses any later write claiming the coordinate with `retired` before this handler's
+import runs, across a backwards repoint and after every snapshot that held the version has been
+pruned, with nothing for the handler to carry forward. The handler renders that refusal in
+Galaxy's shape, an import task ending `state: failed` whose `error.description` names the
+retired coordinate, because the client reads the poll, never the status of the write. A
+collection with no live versions keeps its `Package` row and package-level document
+(`data-model.md` AC33), is served as absent, and still refuses its retired versions. The rule is
+about the coordinate, not the bytes, so an identical re-publish is refused too.
 
 ### Where the write boundary falls
 
 Per `data-model.md`, each handler's spec declares its ecosystem's write boundaries, and the
 declaration is a review item. For this format: **one successful import task is one completed
-logical write and produces exactly one snapshot**; a failed import produces nothing. The
+logical write and produces exactly one snapshot**, committed in the runner's `Finish` together
+with the task's terminal state; a failed import produces nothing but the failed `Operation`. The
 import-task record itself is not repository content and never enters a snapshot's content set:
 it lives in the shared `Operation` entity (Design, "Import tasks"). A version or whole-collection
 deletion through the management surface is one completed write however many versions it
-removes, and records every removed version in the retirement set within that same write.
+removes, and the core writes one `Retirement` record per removed version in that same
+transaction (`data-model.md` AC35). A signature attachment is one metadata-only write on the
+version it joins (Design, "Signatures").
 
 ### Import tasks
 
-The wire is asynchronous (publish, receive a task URI, poll), but **v1 validates synchronously
-inside the publish request**: the tarball read and both digest chains run before the POST
-answers, the version is committed (or the failure recorded) in that window, and the task record
-is terminal by the time the response carries its URI. The client's first poll therefore finds
-`finished_at` set, which honours the poll contract trivially. The accepted cost is that a very
-large artifact holds the POST open for its validation.
+The wire is asynchronous (publish, receive a task URI, poll), and **the import is genuinely
+deferred**: it runs as the `publish` kind declared deferred on the shared runner (the resolved
+deferred-import decision below, was Q9; `management-api.md` AC16, `async-operations.md` AC5).
+The publish route is a binding onto that operation: it spools the multipart artifact into the
+CAS through the shared upload path, reports the addressed object from the file part's declared
+filename (Design, "Namespaces"), and `Submit` inserts the `pending` `Operation` and its
+`manage.apply` job in one transaction and answers with the task URI. The runner claims the job,
+and the handler's `Apply` does the import inside the transaction the core opened: the tarball
+read, both digest chains, the agreement of filename, URL and `collection_info`, the duplicate
+and retirement refusals, and the version commit. `Finish` commits the snapshot and the
+`Operation`'s terminal state together. A large artifact therefore no longer holds the POST open
+for its validation; the client polls, as it was built to.
 
-The record lives in a first-class **`Operation` entity in the shared model**, which
+The record lives in the first-class **`Operation` entity in the shared model**, which
 `data-model.md` gained for this format and for the write-triggered services prototype's
-asynchronous half (the resolved import-task-record decision below). The prototype exercises it
-first, the step 4a re-open confirms or revises its shape on that evidence, and the charter's
-step 6a builds its production form before this handler. The properties this spec relies on,
-and therefore requires of that entity whatever the re-open changes:
+asynchronous half (the resolved import-task-record decision below; its "Operations" section and
+AC32). The prototype's Galaxy-shaped half exercises the deferred path first on this handler's
+package (`async-operations.md` names `internal/format/ansible/deferred_crash_test.go` as the
+prototype's instance), the step 4a re-open confirms or revises the dispatch shape on that
+evidence, and the charter's step 6a builds the production form immediately before this handler.
+The properties this spec relies on, each now asserted by the owning spec:
 
 - It is **not repository content**: never in a snapshot delta, untouched by repointing or
   rollback, and never a reason for a write to create a snapshot. A failed import writes an
-  `Operation` and no snapshot.
+  `Operation` and no snapshot (`data-model.md` AC32).
 - It carries a format-opaque **result document** the handler writes and the core never parses;
   Galaxy's is the poll response's `state`, `error.code`, `error.description` and `messages[]`.
 - Its **terminal transition commits atomically with the snapshot** a successful import creates,
   so there is never a snapshot whose operation reads unfinished, or a finished operation whose
-  snapshot is missing.
+  snapshot is missing (`async-operations.md` AC5); a server killed at any fault point leaves the
+  operation terminal within a bounded time with the import applied at most once (its AC6), and
+  the pending import's artifact blob is protected by the job-held grace until the job is
+  terminal (its resolved grace decision, was Q4 there), so a sweep past grace cannot collect it.
 - Its identifier is the wire task id, generated unguessably, and it is **pruned after a bounded,
   configurable retention window** after finishing; a poll for a pruned or unknown task answers
-  404, which the client already reads as "not yet".
+  404, which the client already reads as "not yet". While the job is queued or running the poll
+  answers the task with `finished_at` null, the other shape the client reads as "not yet".
 - Reading it requires the authorization the write needed (Design, "Namespaces", for the object
-  the poll reports), so a task id is not a side channel into another principal's publish.
-
-Synchronous validation is a v1 choice, not a wire commitment. The write-triggered services
-prototype builds a genuinely deferred import on the same entity before the interface re-open
-(`foundation/write-triggered-services-prototype.md`); if its finding shows deferral is
-expressible and worth having for large artifacts, this format can move to it with **no wire
-change and no schema change**, because the client polls either way and the record's home is the
-same.
+  the poll reports), so a task id is not a side channel into another principal's publish
+  (`management-api.md` AC16's poll rule).
+- **The harness holds an import without any test-only code in the server.** The admin pause
+  routes of `management-api.md` pause the `manage.apply` kind (`async-operations.md` AC10): a
+  case's `script` pauses, publishes, polls once and sees unfinished, resumes, and polls to
+  completion, which is how `write-triggered-services-prototype.md` AC8 is satisfied with the
+  real client and how AC9 here proves the deferral rather than believing it.
 
 ### Namespaces
 
@@ -233,35 +272,53 @@ in canonical form with `/` as the separator the pattern grammar uses:
 
 | Route | Object kind | Canonical object |
 |---|---|---|
-| Discovery | none | - |
+| Discovery | descriptor | - (the available-versions document names API versions and nothing the repository holds; `auth.md`'s resolved name-free-document decision, was Q23; `format-handler-interface.md` AC12's sentinel test runs against it) |
 | Collection detail, version list | named | `{namespace}/{name}` |
 | Version detail, artifact download | named | `{namespace}/{name}/{version}` |
 | Publish | named | `{namespace}/{name}/{version}`, taken from the multipart file part's declared filename, which precedes the artifact bytes; validation refuses an artifact whose `collection_info` disagrees with it, so the pattern cannot be evaded by a mislabelled part |
 | Import poll | named | the object of the publish the task records; an unknown task reports none and answers 404 |
 
 So a token scoped `(repository, push, alpha/**)` publishes and polls any collection in namespace
-`alpha` and is refused in `beta`. Teams needing harder isolation still have what the model has
-always given them: separate repositories.
+`alpha` and is refused in `beta`, and a token holding only a patterned `pull` passes discovery,
+which every `ansible-galaxy` command sends first, and installs the collections inside its
+pattern; before `auth.md` adopted the descriptor kind this table reported discovery as `none`,
+under which AC10's patterned install could not have passed its first request, a latent
+contradiction that decision closed (`auth.md`'s own Galaxy consumer bullet still says discovery
+reports none; that is a consequence for it). Teams needing harder isolation still have what
+the model has always given them: separate repositories.
 
 ### Signatures
 
 The version detail's `signatures` list has a real-client oracle for **serving**: `ansible-galaxy`
 verifies the entries against a GnuPG keyring when told to require valid signatures. It has none
-for **attaching**, since the client cannot upload one. So v1:
+for **attaching**, since the client cannot upload one. The producer this spec waited for,
+`docs/internal/plans/foundation/artifact-verification.md`, answered every requirement the
+resolved signatures decision below recorded (its resolved Galaxy-signatures decision, was Q6
+there, and its AC9), and this is the result:
 
-- **Hosted versions serve `signatures: []`**, always. Unsigned collections are the ecosystem's
-  default posture, and a client that requires a valid signature refuses the install, which is
-  the honest outcome. No signing, no attachment surface, no signing key.
+- **Hosted versions acquire signatures by user attachment through the management API**: an
+  `attach` operation on the version (`management-api.md`'s kind table, `push` on the version)
+  carrying a detached OpenPGP signature over the version's stored `MANIFEST.json`. The handler's
+  `Apply` runs the coherence check the kind requires through `Deps`' `Verifier`: the signature
+  must verify over the exact stored `MANIFEST.json` bytes with a key in the repository's
+  `openpgp` trust set, otherwise the attachment is refused `validation` with the reason and
+  nothing is stored, because a served signature this registry could not verify is exactly what a
+  client that requires valid signatures will act on. A version nobody has signed serves
+  `signatures: []`, the ecosystem's default posture, and a client requiring a valid signature
+  refuses it, which is the honest outcome. No signing and no signing key in this handler:
+  `signing_service` is `null` on every served entry because `signing-service.md` declined
+  server-side Galaxy signing (its resolved Galaxy decision, was Q10 there), while keeping the
+  same verified `attach` path open should a later producer want it.
+- **The served entry shape** is pulp_ansible's, grounded there in Galaxy's real traffic:
+  `signatures: [{signature, pubkey_fingerprint, signing_service: null, pulp_created}]`, of which
+  `ansible-galaxy` reads `signature` and verifies it against its own keyring.
 - **Proxied versions pass the upstream's `signatures` list through unchanged**, as the proxied
-  path passes every other field of the version detail. The entries are the upstream's claims,
-  verified by the client against its own keyring; this registry neither verifies them nor
-  strips them, and since the artifact bytes are digest-verified against the upstream's declared
-  sha256, a signature valid upstream stays valid through the cache.
-
-The signed-collection story for hosted content lands with the shared producer
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop). The
-requirements this format places on it are recorded in the resolved signatures decision below, so
-the gap cannot be lost.
+  path passes every other field of the version detail (the resolved proxied-signatures decision
+  below, was Q7), now **with a verdict**: the same `openpgp` entry verifies each relayed
+  signature against the remote's trust set at commit and records the result for
+  `supply-chain-policy.md` to consume, without stripping or altering the entry, since the
+  artifact bytes are digest-verified against the upstream's declared sha256 and a signature
+  valid upstream stays valid through the cache.
 
 ### The management surface
 
@@ -272,39 +329,48 @@ offers download, init, build, publish, install and list and nothing else, so no 
 a deletion; the effect, an install that no longer resolves, is fully client-observable.
 
 This spec follows the precedent shared by the Cluster 5 format specs (`pypi.md`, `npm.md` and
-this one), whose common home is `docs/internal/plans/foundation/management-api.md` (to be
-authored in the spec loop):
+this one), whose common home is `docs/internal/plans/foundation/management-api.md`, which now
+fixes the vocabulary:
 
-- **The surface is registry-owned, not Galaxy NG-shaped.** Deletion is an endpoint of the one
-  management API that spec defines. Galaxy NG's own `DELETE` routes are not served: they live
-  under the distribution-based route style this server deliberately does not serve (Design,
-  "The wire contract"), and serving them would make this the one format answering the
-  management question its own way. This spec defines what each operation means and what the
-  client sees afterwards; the shared spec defines URL shape, request form, authorization and
-  audit.
+- **The surface is registry-owned, not Galaxy NG-shaped.** Each operation is a **kind** of that
+  spec's closed vocabulary, and the action follows the kind, never the format (its kind table
+  and cross-format reconciliation table carry Galaxy's rows). The handler implements that spec's
+  optional `Operator` interface, declaring `publish` (deferred; Design, "Import tasks"),
+  `delete-version`, `delete-package` and `attach`, reporting each operation's object through
+  `Authorize` (the table above) and applying it inside the write transaction the core opened
+  through `Apply`. Galaxy NG's own `DELETE` routes are not served and nothing is a binding except
+  the publish route: they live under the distribution-based route style this server deliberately
+  does not serve (Design, "The wire contract"), no client in the matrix drives them, and serving
+  them would make this the one format answering the management question its own way. This spec
+  defines what each operation means and what the client sees afterwards; the shared spec defines
+  URL shape, request form, authorization and audit.
 - **Each operation is a completed logical write through the shared write path**: exactly one
   snapshot per operation, none for a refused one, and no blob-store object deleted directly,
   so space returns only through retention pruning and the single-deleter boundary in
-  `storage-and-gc.md` holds unchanged.
+  `storage-and-gc.md` holds unchanged (`management-api.md` AC5, AC6).
 - **Authorization uses the settled `(repository, action)` vocabulary with no new action.**
-  Deletion is removal-class and requires `delete`, evaluated against the object table above,
-  so a pattern-scoped grant deletes only inside its namespaces.
+  Deletion is removal-class and requires `delete`, attachment adds to a version and requires
+  `push`, each evaluated against the object table above, so a pattern-scoped grant deletes and
+  attaches only inside its namespaces.
 - **Hosted only.** A proxied repository creates no snapshots and takes its removals from the
-  upstream per the settled removal table, so a deletion against one is refused.
+  upstream per the settled removal table, so every operation against one is refused `405` with
+  problem type `repository-type` (`management-api.md` AC7).
 - **Verification is split the way the oracle's reach is split, and the exception is named.**
   The trigger is verified by this registry's integration tests against the management endpoint
-  and by nothing else; these are the first operations in this format with no real-client
+  plus the `script`-driven conformance case `management-api.md` AC24 requires for every declared
+  kind, and by nothing else; these are the first operations in this format with no real-client
   oracle for their trigger, and that is a deliberate, recorded exception rather than a silent
   one. The effect is verified by a real `ansible-galaxy collection install` in a conformance
   case whose `script` calls the management endpoint as any HTTP client would and then runs the
   client; `setup` never calls a management endpoint, per the harness's resolved decision on how
-  `setup` is applied, so a case wanting only the effect seeds the post-deletion state through
-  its `state` key instead.
+  `setup` is applied, so a case wanting only the effect seeds the post-deletion state, including
+  its `Retirement` records, through its `state` key instead.
 
-| Operation | Effect a client sees | Write |
-|---|---|---|
-| Delete a collection version | The version leaves the version list and detail, and installing it fails; it joins the retirement set | One write |
-| Delete a collection | Every version leaves, the collection detail answers 404, and installing any version fails; every removed version joins the retirement set | One write, however many versions |
+| Operation | Kind | Effect a client sees | Action | Write |
+|---|---|---|---|---|
+| Delete a collection version | `delete-version` | The version leaves the version list and detail, and installing it fails; its coordinate is retired | `delete` | One write |
+| Delete a collection | `delete-package` | Every version leaves, the collection detail answers 404, and installing any version fails; every removed version's coordinate is retired | `delete` | One write, however many versions |
+| Attach a signature to a version | `attach` | The version detail's `signatures` list carries the verified entry, and a client requiring one valid signature installs the version (Design, "Signatures") | `push` | One metadata-only write |
 
 ### The proxied path
 
@@ -338,12 +404,30 @@ hosted-only.
 When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on the
 version-detail or artifact-download route of either path, the handler answers `403` with a JSON
 error body naming the policy and rule, or naming the signal for a coordinate condemned under the
-shared security-signal rule; the body's exact shape follows the error shape the recorded corpus
-shows galaxy.ansible.com using for a refused read, since `ansible-galaxy` renders whatever that
-server sends. `403` rather than the existence rule's `404`, because the caller is authorized and
-the content is what is refused. Whether the client prints the text is what AC14 proves. A
-publish is never refused this way: policy governs resolution, and an import that fails
+shared security-signal rule, written through the shared refusal writer `WriteRefusal` in
+`internal/format` (`format-handler-interface.md` AC14), which on an HTTP/1.1 connection also
+puts the condition into the status line's reason phrase (`supply-chain-policy.md`'s resolved
+refusal-status-line decision, was Q10, and its AC18); the body's exact shape follows the error
+shape the recorded corpus shows galaxy.ansible.com using for a refused read, since
+`ansible-galaxy` renders whatever that server sends. `403` rather than the existence rule's
+`404`, because the caller is authorized and the content is what is refused. Whether the client
+prints the text, and whether it falls back to another `server_list` entry on the refusal, is
+what AC14 captures, and that capture fills this format's `pending` row of
+`supply-chain-policy.md`'s "When a refusal binds, per format" table in the same change (its
+AC20; the harness refuses a policy case while the row is `pending`, `conformance-harness.md`
+AC26). A publish is never refused this way: policy governs resolution, and an import that fails
 validation keeps its own contract (AC8).
+
+**Advisory coverage.** OSV's `ecosystems.txt` (fetched 2026-09-28 from
+`osv-vulnerabilities.storage.googleapis.com`) lists no Ansible or Galaxy ecosystem, so
+`supply-chain-policy.md`'s coverage table row for Ansible collections is **uncovered** by the
+default feed: a coordinate-level advisory rule on this format is refused at configuration as
+uncovered (its coverage rule), until a second OSV-schema source declaring such an ecosystem is
+configured through `policy.feed.sources` (its AC21), and the matcher would then key on
+`{namespace}.{name}` under semver ordering. AC14's policy case therefore condemns through a
+rule that needs no advisory (a licence rule, or a standing condemnation record), never through
+an `advisories` fixture in an ecosystem the feed does not define. Filling that spec's row is a
+consequence for it.
 
 ### What the real client cannot oracle, recorded
 
@@ -358,15 +442,31 @@ surface deliberately unimplemented or not client-testable:
   "Namespaces") and deletion is the registry-owned management operation (Design, "The
   management surface").
 - The **trigger** of that deletion has no client oracle either; it is verified by integration
-  tests against the management endpoint, while its effect is a real-client conformance case
-  (AC12). This is the format's one named exception to the real-client-oracle principle.
+  tests against the management endpoint and the `script`-driven case per declared kind, while
+  its effect is a real-client conformance case (AC12). Signature **attachment** is the same
+  shape: the client cannot upload a signature, so the `attach` trigger is a `script` call and
+  its effect, a signature-requiring install that succeeds, is the real client's (AC11). These are
+  the format's named exceptions to the real-client-oracle principle.
 - Signature **serving** has a real-client oracle (`ansible-galaxy` verifies the signatures
-  list against a GnuPG keyring when configured to require it), and AC11 uses it on both paths;
-  signature **attachment** has none, because the client cannot upload one, and is not built
-  (Design, "Signatures").
+  list against a GnuPG keyring when configured to require it), and AC11 uses it on both paths.
 - Whether an import was really deferred is invisible to the client, which polls the same way
-  either way. v1 does not defer; the prototype that does verifies its deferral by integration
-  test, not by the client.
+  either way; the harness makes it visible by pausing the `manage.apply` kind from the case's
+  `script` so the first poll answers unfinished (AC9), with no test-only code in the server.
+
+### Capabilities and lifecycle
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available`, `Virtual: supported` and `Rename: supported` (`format-handler-interface.md` AC13).
+A virtual Galaxy repository resolves `{namespace}/{name}` in its first member that holds it, the
+dependency-confusion-closing order every format spec adopts; nothing on this wire is signed with
+the repository name (a collection signature covers `MANIFEST.json`), so aggregation is possible
+where `hex.md` found it was not. A rename changes no served byte the client keeps: every URL
+except `download_url` is rebuilt by the client from its configured base, and the rewritten
+`download_url` is rendered per request under the new name, while the old name answers exactly
+what a never-existing repository answers. `repository-lifecycle.md` AC12 requires
+`conformance/ansible/rename_test.go`, enforced by the harness's case-set validator
+(`conformance-harness.md` AC26); AC15 carries it with a real install from the renamed
+repository.
 
 ## Acceptance Criteria
 
@@ -395,37 +495,70 @@ surface deliberately unimplemented or not client-testable:
       `chksum_sha256`, or a filename disagreeing with `collection_info`) ends its import task
       with `state: failed` carrying `error.code`, `error.description` and `messages[]` the
       client displays, and no version becomes installable.
-- [ ] AC9: A publish's import task is terminal before the publish response returns, so the
-      client's first poll finds `finished_at` set; the task record is held in the shared
-      `Operation` entity and appears in no snapshot's content set; a failed import creates an
-      `Operation` and no snapshot, while a successful one creates exactly one snapshot committed
-      atomically with the task's terminal state; and a poll for a task pruned after its
-      retention window, or for an unknown id, answers 404.
+- [ ] AC9: A publish's import runs as a deferred `publish` operation on the shared runner: the
+      publish response carries the task URI once the `pending` `Operation` and its `manage.apply`
+      job are committed together, the handler's `Apply` runs inside the job, and the task record
+      is held in the shared `Operation` entity and appears in no snapshot's content set; a failed
+      import ends the `Operation` `failed` with no snapshot, while a successful one creates
+      exactly one snapshot committed atomically with the task's terminal state; with the
+      `manage.apply` kind paused through the admin routes from the case's `script`, a real
+      `ansible-galaxy collection publish`'s first poll answers unfinished (`finished_at` null) and
+      the poll after resume answers finished and a following install succeeds, with no test-only
+      hold in the server (`async-operations.md` AC10; `write-triggered-services-prototype.md`
+      AC8); a server killed at each of the runner's fault points leaves the operation terminal
+      within a bounded time with the import applied at most once and the pending import's
+      artifact blob never collected before then (`async-operations.md` AC6); and a poll for a
+      task pruned after its retention window, or for an unknown id, answers 404.
 - [ ] AC10: A principal holding unpatterned `push` on a repository publishes `alpha.tools` and
       `beta.tools` into it with neither namespace created beforehand, and the two install as
       distinct collections; a token scoped to `pull` and `push` under the pattern `alpha/**`
       publishes, polls and installs `alpha.tools` and is refused publishing `beta.tools`, the
       refused publish creating no snapshot.
-- [ ] AC11: A hosted version detail serves `signatures: []` and an `ansible-galaxy collection
-      install` requiring one valid signature refuses it; on the proxied path an upstream
-      version carrying a signature is served with its `signatures` entries unchanged, and the
-      same signature-requiring install, with the upstream's public key in the client keyring,
-      succeeds through this registry.
-- [ ] AC12: A version deleted through the registry-owned management API leaves the version list
-      and detail and no longer installs through the real client, a whole-collection deletion
-      does the same for every version in exactly one snapshot, a principal without `delete` is
-      refused with no snapshot created, and a deletion against a proxied repository is refused;
-      a publish of a live version, or of a deleted one with the same or different bytes, ends
-      its import task `state: failed` naming the reason with nothing written, including after
-      the deletion's snapshot has been pruned and after the collection's last version is gone.
+- [ ] AC11: A hosted version detail serves `signatures: []` until a signature is attached, and an
+      `ansible-galaxy collection install` requiring one valid signature refuses it; a detached
+      OpenPGP signature attached through the management API's `attach` kind is accepted only
+      when it verifies over the version's stored `MANIFEST.json` with a key in the repository's
+      `openpgp` trust set, and refused `validation` with the reason and nothing stored otherwise;
+      the version detail then serves `signatures: [{signature, pubkey_fingerprint,
+      signing_service: null, pulp_created}]`, the same signature-requiring install, with the
+      signing key in the client keyring, installs the attached-and-verified collection, and the
+      same client refuses a collection whose stored `MANIFEST.json` was tampered after
+      attachment; a principal without `push` is refused the attachment with no snapshot created;
+      and on the proxied path an upstream version carrying a signature is served with its
+      `signatures` entries unchanged, a verdict recorded under the remote's trust set, and the
+      signature-requiring install with the upstream's public key in the client keyring succeeds
+      through this registry (this format's half of `artifact-verification.md` AC9).
+- [ ] AC12: A version deleted through the registry-owned management API (`delete-version`)
+      leaves the version list and detail and no longer installs through the real client, a
+      whole-collection deletion (`delete-package`) does the same for every version in exactly one
+      snapshot, a principal without `delete` is refused with no snapshot created, and a deletion
+      against a proxied repository is refused `405`; each declared kind has a `script`-driven
+      conformance case (`management-api.md` AC24); and a publish of a live version, or of a
+      deleted one with the same or different bytes, ends its import task `state: failed` naming
+      the reason with nothing written, on the core-held `Retirement` record, including after the
+      deletion's snapshot has been pruned, after the default pointer has been repointed to a
+      snapshot older than the deletion and back, and after the collection's last version is gone.
 - [ ] AC13: A fresh installation carries galaxy.ansible.com as an enabled Galaxy upstream with no
       operator configuration, a proxied install through that preconfigured upstream succeeds
       with the upstream swapped for a stand-in as the harness requires, and the nightly
       real-upstream job runs this format's proxied suite against the real galaxy.ansible.com.
 - [ ] AC14: A version-detail or artifact request the shared policy layer refuses answers `403`
-      with a body naming the policy, on the hosted and the proxied path, and a real
-      `ansible-galaxy collection install` of the refused version exits non-zero with that text
-      in its output.
+      through `WriteRefusal` with a body naming the policy and, on the HTTP/1.1 connection the
+      harness terminates, the status line `Refused by policy: {condition}` observed on the raw
+      socket, on the hosted and the proxied path, the condemning rule being one that needs no
+      advisory ecosystem (Design, "Policy refusals on the wire"); a real `ansible-galaxy
+      collection install` of the refused version exits non-zero with that text in its output; a
+      coordinate-level advisory rule configured on this format is refused at configuration as
+      uncovered while no configured feed source declares an Ansible ecosystem; and the case's
+      capture of whether the client falls back to a second `server_list` entry fills this
+      format's row of `supply-chain-policy.md`'s "When a refusal binds, per format" table in the
+      same change (its AC20).
+- [ ] AC15: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
+      availability `available`, `Virtual: supported` and `Rename: supported`; a real
+      `ansible-galaxy collection install` from a renamed repository succeeds under the new name
+      in both modes, its `download_url` rendered under the new name, while the old name answers
+      exactly what a never-existing repository answers; and a virtual repository of two members
+      installs a collection present in both from the first member.
 
 ## Test Plan
 
@@ -439,45 +572,56 @@ surface deliberately unimplemented or not client-testable:
 | AC6 | conformance | `conformance/ansible/proxied_test.go` |
 | AC7 | conformance | `conformance/ansible/replay_test.go` |
 | AC8 | conformance | `conformance/ansible/publish_test.go` (failed-import case) |
-| AC9 | conformance + integration | `conformance/ansible/publish_test.go` (transcript: the first poll already carries `finished_at`); `internal/format/ansible/import_task_test.go` (snapshot counts for success and failure, the record absent from every snapshot's content set, atomic terminal transition under an injected fault, pruning and unknown-id 404 under an injected clock) |
-| AC10 | conformance + integration | `conformance/ansible/namespace_test.go` (unseen namespaces, and the `alpha/**` token's publish, poll, install and refusal); `internal/format/ansible/scope_object_test.go` (the object table, per route) |
-| AC11 | conformance | `conformance/ansible/signatures_test.go` (hosted refusal under a signature requirement; a fixture stand-in upstream serving a collection signed with a fixture GnuPG key, which the `script` imports into the client keyring) |
-| AC12 | integration + conformance | trigger: `internal/format/ansible/manage_delete_test.go` (snapshot count per operation, `delete` refusal, proxied refusal, retired-version refusal after pruning under an injected clock and after last-version deletion); effect: `conformance/ansible/delete_test.go` (the `script` deletes through the management endpoint, then the real client's install fails and a real republish is refused through the import task) |
+| AC9 | conformance + integration + fault injection | `conformance/ansible/deferred_publish_test.go` (real client; the `script` pauses `manage.apply` through the admin routes, publishes, polls once and sees unfinished, resumes, polls to completion and installs; shared with `async-operations.md` AC5 and AC10 and `write-triggered-services-prototype.md` AC8); `internal/format/ansible/import_task_test.go` (snapshot counts for success and failure, the record absent from every snapshot's content set, atomic terminal transition under an injected fault, pruning and unknown-id 404 under an injected clock); `internal/format/ansible/deferred_crash_test.go` (process kill at each fault point, applied at most once, the pending artifact blob surviving a forced sweep; the prototype's instance of `async-operations.md` AC6) |
+| AC10 | conformance + integration | `conformance/ansible/namespace_test.go` (unseen namespaces, and the `alpha/**` token's publish, poll, install and refusal; a patterned-`pull`-only token's discovery and in-pattern install); `internal/format/ansible/scope_object_test.go` (the object table, per route, with the sentinel check on discovery, `format-handler-interface.md` AC12) |
+| AC11 | conformance | `conformance/ansible/signatures_test.go` (hosted refusal under a signature requirement; the `script` attaches a detached signature through the management API, then the real client requiring one valid signature installs; a tampered `MANIFEST.json` seeded through `state` refused by the client; a `push`-less attachment refused; a fixture stand-in upstream serving a collection signed with a fixture GnuPG key, which the `script` imports into the client keyring, with the verdict asserted; the repository's `openpgp` trust set seeded through the `trust` key; shared with `artifact-verification.md` AC9) |
+| AC12 | integration + conformance | trigger: `internal/format/ansible/manage_delete_test.go` (snapshot count per operation, `delete` refusal, proxied `405`, retired-version refusal on the core-held record after pruning under an injected clock, after a backwards repoint and back, and after last-version deletion); effect: `conformance/ansible/delete_test.go` (one `script`-driven case per declared kind, `management-api.md` AC24 and `conformance-harness.md` AC26: the `script` deletes through the management endpoint, then the real client's install fails and a real republish is refused through the import task; a second case starts from a `Retirement` record seeded through `state`) |
 | AC13 | integration + conformance + ci | `internal/format/ansible/preconfigured_test.go` (fresh-install upstream set); `conformance/ansible/proxied_test.go` (preconfigured-upstream case against the stand-in); the nightly real-upstream workflow `proxy-cache.md` AC15 defines, with this format's row |
-| AC14 | conformance | `conformance/ansible/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`) |
+| AC14 | conformance + integration | `conformance/ansible/policy_test.go` (hosted and proxied modes; a licence rule or a standing condemnation through the `policies` key; the raw status line read from the socket; the client's output; a second `server_list` entry to capture fallback for `supply-chain-policy.md` AC20's row); `internal/format/ansible/policy_coverage_test.go` (an advisory rule refused at configuration as uncovered, shared with `supply-chain-policy.md` AC17's coverage rows) |
+| AC15 | unit + conformance | `internal/format/ansible/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/ansible/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; the rewritten `download_url` under the new name); `conformance/ansible/virtual_test.go` (first-member resolution through a real install) |
 
 The case set stays inside the harness's closed `setup` vocabulary: `credentials` carries AC10's
 pattern-scoped token (the token scope of `auth.md`, patterns included), `upstreams` carries
-AC11's signed stand-in as a fixture server, and `state` can seed a post-deletion collection
-with its retirement set carried verbatim in the package-level document. AC12's deletion is
-called from the case's `script`, since `setup` never calls a management endpoint, and AC11's
-client keyring is imported by the `script` inside the client container.
-The runner-enforced obligations - both modes, unauthenticated and unauthorized cases in each -
-apply from the sibling specs and are not restated per criterion here.
+AC11's signed stand-in as a fixture server, `trust` carries the repository's `openpgp` trust set
+for AC11 (`artifact-verification.md` AC25), and `state` can seed a post-deletion collection with
+its `Retirement` records (`management-api.md`, "Retirement is core-held") and a tampered
+`MANIFEST.json`. AC9's hold, AC11's attachment and AC12's deletion are called from the case's
+`script`, since `setup` never calls a management endpoint, and AC11's client keyring is imported
+by the `script` inside the client container. The runner-enforced obligations - both modes,
+unauthenticated, unauthorized and pattern-refusal cases in each - apply from the sibling specs
+and are not restated per criterion here.
 
 ## Implementation Phases
 
 ### Phase 1: Hosted path
-- Waits on the shared `Operation` entity (Blocking preconditions)
-- Discovery, collection and version endpoints, artifact download, multipart publish with
-  synchronous import-task validation and the task record in the `Operation` entity, duplicate
-  and retired version refusal, token auth, the per-route addressed-object table, `signatures: []`
-  on hosted versions, the `403` rendering of the typed policy refusal
+- Waits on the shared `Operation` entity and the runner's deferred management operation
+  (Blocking preconditions; charter step 6a)
+- Discovery, collection and version endpoints, artifact download, the publish route as a
+  binding onto the deferred `publish` kind with the import in `Apply` on the shared runner and
+  the task record in the `Operation` entity, the pause-held conformance case (AC9), duplicate
+  and retired version refusal rendered as a failed import, token auth, the per-route
+  addressed-object table with the descriptor sentinel check, `signatures: []` on unsigned
+  versions, the `403` rendering of the typed policy refusal through `WriteRefusal`,
+  `Capabilities()` with the rename and virtual cases (AC15)
 
 ### Phase 2: Proxied path
-- Response classification, `download_url` rewriting, signature pass-through, cache and offline
-  behaviour through the shared proxy layer, galaxy.ansible.com as a preconfigured upstream and
-  its nightly row (per `proxy-cache.md`'s preconfigured-set extension)
+- Response classification, `download_url` rewriting, signature pass-through with the recorded
+  verdict, cache and offline behaviour through the shared proxy layer, galaxy.ansible.com as a
+  preconfigured upstream and its nightly row (per `proxy-cache.md`'s preconfigured-set
+  extension)
 
 ### Phase 3: Management surface
-- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned`
-- Version and collection deletion through the registry-owned management API, the retirement
-  set, the trigger's integration tests and the effect's conformance cases
+- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned`, and on
+  `docs/internal/plans/foundation/artifact-verification.md` for the signature half
+- The `Operator` interface declaring `delete-version`, `delete-package` and `attach`, the
+  `Retirement` coordinates returned in `Outcome`, the attachment verified through `Deps`'
+  `Verifier` and the served entry shape (AC11), the trigger's integration tests and the
+  effect's conformance cases
 
 Charter sequencing places this after the post-OCI interface re-open. The import-task mechanism
-does not ride that re-open: v1 validates synchronously on the shared `Operation` entity, and the
-write-triggered services prototype's asynchronous half decides only whether deferral is offered
-later, which changes neither wire nor schema.
+rides the shared runner, not this format: the write-triggered services prototype's asynchronous
+half is built on this handler's package and feeds the re-open, and the wire and the record's
+home are the same whether the import is deferred or not.
 
 ## Tasks
 
@@ -486,10 +630,11 @@ Populated by `/tasks` once this spec reaches `planned`.
 ## Open Questions
 
 None open. The 2026-09-25 first review raised Q1 through Q5; folding them on 2026-09-26 exposed
-Q6 through Q8. All eight were adopted on 2026-09-26 under the owner's standing delegation and
-folded through Scope, the blocking preconditions, Design, the criteria (AC9 to AC13), the Test
-Plan and the Phases. The records below keep each question's framing, options and reasoning, so
-an owner reversing an adoption has the whole trade in front of them.
+Q6 through Q8, and the 2026-09-28 reconciliation with the foundation wave raised and adopted Q9.
+All nine were adopted under the owner's standing delegation and folded through Scope, the
+blocking preconditions, Design, the criteria (AC9 to AC15), the Test Plan and the Phases. The
+records below keep each question's framing, options and reasoning, so an owner reversing an
+adoption has the whole trade in front of them.
 
 ### Resolved: import-task handling (was Q1)
 
@@ -497,6 +642,12 @@ an owner reversing an adoption has the whole trade in front of them.
 validation runs synchronously inside the publish request, the task is terminal before the
 client's first poll, and the outcome is fed to the interface re-open as evidence beside the
 write-triggered services prototype (Design, "Import tasks"; AC9).
+
+**Revised 2026-09-28 by the resolved deferred-import decision (was Q9, below):** the mechanism
+half is superseded too. The import now runs deferred on the shared runner, so the task is
+terminal within a bounded time rather than before the first poll, and the accepted cost of a
+large artifact holding the POST open is gone. The record stands as the history of how the
+question was first answered.
 
 A's **storage** half did not survive folding and was re-decided as Q6 below: the
 repository-level metadata document is snapshot content under the settled model, so storing task
@@ -585,32 +736,46 @@ empty `signatures` list and v1 builds no signing or attachment surface (Design, 
 AC11). What the proxied path does with an upstream's signatures was a separate call, settled as
 Q7 below.
 
-Accepted cost: private-registry users get no signed-collection story for hosted content at
-launch, where Galaxy NG has one, and the story stalls if its producer stalls. Why the
-alternatives lost: B designs a bespoke attachment surface with no client oracle before the
-producer spec exists, and C takes on signing-key management, the most dangerous class of
-surface, for a need this spec has not established.
+**Answered 2026-09-27 by the producer, applied here 2026-09-28.** `artifact-verification.md`'s
+resolved Galaxy-signatures decision (was Q6 there, adopted under the same delegation) took
+option B's shape with the verification A lacked: user attachment through `management-api.md`'s
+`attach` kind, verified over the stored `MANIFEST.json` against the repository's `openpgp` trust
+set before storage, the pulp_ansible entry shape, a verdict on relayed proxied signatures, and
+`signing-service.md` declining server-side signing (option C). AC11 was rewritten to the
+criterion shape this record asked for (Design, "Signatures"). The accepted cost of A, no signed
+story at launch, therefore lasted until the producer's phase; the story now lands with Phase 3.
 
-The producer is `docs/internal/plans/foundation/artifact-verification.md` (to be authored in
-the spec loop), per the verification-ownership decision adopted in `supply-chain-policy.md`.
-What this format requires of it, recorded so the dependency cannot be lost:
+Accepted cost, as first recorded: private-registry users get no signed-collection story for
+hosted content at launch, where Galaxy NG has one, and the story stalls if its producer stalls.
+Why the alternatives lost at the time: B designs a bespoke attachment surface with no client
+oracle before the producer spec exists, and C takes on signing-key management, the most
+dangerous class of surface, for a need this spec has not established.
+
+The producer is `docs/internal/plans/foundation/artifact-verification.md`, per the
+verification-ownership decision adopted in `supply-chain-policy.md`. What this format required
+of it, each now answered:
 
 - A decision on how hosted collections acquire signatures: attached by users (store-and-serve,
   with or without server-side verification against a configured keyring) or produced
-  server-side (which brings signing-key generation, storage and rotation).
+  server-side (which brings signing-key generation, storage and rotation). Answered: user
+  attachment, verified before storage; server-side signing declined (`signing-service.md`, was
+  Q10 there).
 - If attachment, the attachment surface is a management operation with no client trigger, so
   it is an endpoint of `docs/internal/plans/foundation/management-api.md`, never a
-  Galaxy-specific route.
+  Galaxy-specific route. Answered: the `attach` kind, `push` on the version.
 - The served entry shape, grounded in captured Galaxy traffic before it is specified: the
   signature text, the signing key's fingerprint and the signing service, and the object the
-  client verifies a signature against.
+  client verifies a signature against. Answered: `{signature, pubkey_fingerprint,
+  signing_service: null, pulp_created}` over `MANIFEST.json`.
 - A position on proxied signatures, which this spec passes through unverified (Q7): whether the
-  producer verifies them, and what the registry does with one that fails.
+  producer verifies them, and what the registry does with one that fails. Answered: passed
+  through unchanged with a verdict recorded under the remote's trust set; a failing verdict is
+  policy's input, never a stripped entry.
 - A criterion shape for this spec's revision: hosted versions then serve signatures that a real
   `ansible-galaxy` requiring valid signatures accepts, and one tampered signature it refuses,
-  with AC11 rewritten accordingly.
+  with AC11 rewritten accordingly. Answered: AC11 as it now reads.
 - A verdict the policy engine can consume as the signature-state input `supply-chain-policy.md`
-  names.
+  names. Answered: the `openpgp` entry's verdict, recorded per digest.
 
 The original question:
 
@@ -685,8 +850,8 @@ oracle"; AC12). Whole-collection deletion comes with it as one write.
 
 The **surface** is re-homed for consistency with the other Cluster 5 answers: deletion is an
 endpoint of the registry-owned management API homed in
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), not
-Galaxy NG's own `DELETE` routes. That is the shape `pypi.md` and `npm.md` adopted in the same
+`docs/internal/plans/foundation/management-api.md` (the `delete-version` and `delete-package`
+kinds of its vocabulary since 2026-09-27), not Galaxy NG's own `DELETE` routes. That is the shape `pypi.md` and `npm.md` adopted in the same
 pass, and the reason is the one `docs/internal/analysis/management-surfaces-and-the-oracle.md`
 gives against per-format endpoints: four specs answering one question four ways, each a new
 deletion path and a new grant. Folding this answer also exposed whether a deleted version may be
@@ -724,8 +889,10 @@ hole, and whichever way it goes the exception or the gap must be recorded by nam
 **Adopted 2026-09-26 under the owner's standing delegation.** Option B: a first-class,
 format-agnostic `Operation` entity in the shared model, outside snapshot content, pruned after a
 bounded window (Design, "Import tasks"; AC9; a blocking precondition of Phase 1). The entity
-belongs to `data-model.md`, which this spec does not edit; the exact requirement is carried to
-it as a sibling consequence.
+belongs to `data-model.md`, which this spec does not edit; the requirement was carried to it as
+a sibling consequence and is met (its "Operations" section and AC32, widened by
+`management-api.md` to every management operation and by `async-operations.md` to the
+`cancelled` terminal state and the `Job` that executes a deferred one).
 
 The question as raised: Q1's recommendation put the finished task record in the
 repository-level metadata document. Folding it against the settled model found that document is
@@ -776,9 +943,11 @@ security gain.
 **Why this is yours:** it decides whether the registry relays third-party security claims it
 cannot yet verify, a posture a later verification producer inherits.
 
-Accepted cost: A's row; whether the producer later verifies relayed signatures is recorded as
-one of its requirements under Q3. Why B lost: it defeats the signature workflow for exactly the
-users who configured it.
+Accepted cost: A's row; whether the producer later verifies relayed signatures was recorded as
+one of its requirements under Q3, and it does: `artifact-verification.md` AC9 records a verdict
+under the remote's trust set for every relayed entry while the entry passes through unchanged
+(Design, "Signatures"). Why B lost: it defeats the signature workflow for exactly the users who
+configured it.
 
 ### Resolved: re-publishing a deleted version (was Q8)
 
@@ -805,7 +974,51 @@ pass, so it is one cross-format rule rather than a Galaxy choice.
 property the proxy layer depends on.
 
 Accepted cost: A's row. Why B lost: the failure it produces is silent until a digest check
-somewhere downstream fails, far from the deletion that caused it.
+somewhere downstream fails, far from the deletion that caused it. Since 2026-09-28 the retired
+coordinates are core-held `Retirement` records (`management-api.md` was Q3, `data-model.md`
+AC35) rather than a set in the package-level document; the rule is unchanged, its home moved
+(Design, "Artifact validation").
+
+### Resolved: the import runs deferred on the shared runner (was Q9, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option A: the import is the
+`publish` kind declared deferred, executed by the `manage.apply` job on `internal/async`; the
+publish route is a binding that spools the artifact and submits the operation; `Apply` runs the
+validation and the commit inside the runner's transaction; the harness holds an import through
+the admin pause of the kind (Design, "Import tasks"; AC9; the Phase 1 precondition; the was-Q1
+record revised).
+
+The question: this spec's was-Q1 answer validated synchronously inside the publish request and
+reserved deferral for later, and `async-operations.md`'s Context still describes it that way.
+But the siblings written since assume the deferred path runs here: `async-operations.md` AC10
+requires a paused `manage.apply` to hold "a real `ansible-galaxy collection publish`'s import",
+its AC5 and AC6 name `conformance/ansible/deferred_publish_test.go` and
+`internal/format/ansible/deferred_crash_test.go`, `write-triggered-services-prototype.md` AC8
+runs the real client against the asynchronous vehicle held by that pause, and the charter's
+step 6a builds "the deferred management operation on the async runner, then Ansible
+collections" for this format. A synchronous import has no job to pause, so those criteria and
+this spec could not both be true.
+
+**Recommendation:** A, because the wire is already asynchronous and the client already polls,
+because the queue core now exists as a shared mechanism with crash-safety, grace and
+cancellation criteria this spec would otherwise have to re-derive for large artifacts later,
+because the prototype's Galaxy-shaped half is built on this handler's package and its finding
+is worthless if the shipping handler does not use the path it proved, and because it removes
+the one accepted cost was-Q1 carried (a large artifact holding the POST open).
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Deferred on the shared runner; publish route binds onto the `publish` kind** | One asynchronous mechanism for every format; the charter's step 6a, the prototype's AC8 and `async-operations.md` AC5, AC6 and AC10 are satisfied by the shipping handler; the first poll may answer "not yet", which the client was built for | Phase 1 waits on the runner's deferred operation (already sequenced at 6a); a crashed import is observable to the client only through its terminal state after a bounded time |
+| **B. Synchronous in-request, as was-Q1 adopted** | The first poll always answers finished; no queue dependency | Contradicts `async-operations.md` AC10, the prototype's AC8 vehicle and the charter's 6a placement; a large artifact holds the POST open; the prototype's finding is proved on a path the handler does not use |
+| **C. Configurable per repository** | Both behaviours | Two code paths for one wire, and a conformance suite that proves whichever the case set happens to configure |
+
+**Why this is yours:** it decides whether the one format built for the asynchronous path uses
+it, and it sequences this handler behind the shared runner.
+
+Accepted cost: the runner dependency in Phase 1, and a client whose first poll may say "not
+yet". B lost because it contradicts three adopted sibling criteria; C lost on the duplicated
+path. `async-operations.md`'s Context sentence describing this spec as synchronous is a
+consequence for it.
 
 ## Review Log
 
@@ -814,3 +1027,4 @@ somewhere downstream fails, far from the deletion that caused it.
 | 2026-09-25 | 331ef25 | first review (never previously interrogated): protocol grounding by running the real client this pass (ansible-galaxy from ansible-core 2.18.18rc1 against a local logging server, live galaxy.ansible.com probes, and the client source on disk) + adversarial + cross-spec (format-handler-interface's pinned method set, URL-shape record and definition of done; data-model's write-boundary obligation and no-handler-owns-a-table rule; proxy-cache's classification, integrity and preconfigured-upstream decisions; auth's client table and repository-scoped model; conformance-harness's setup vocabulary, stand-in rule and authoritative-reference resolution; supply-chain-policy Q6; catalogue Q4 and charter Q1) + constitution + go-spec-reviewer. Claim verification against code vacuous pre-implementation: the tree holds only a stub `cmd/stackweaver-registry/main.go`, no `internal/` or `conformance/` exists, so protocol claims were verified against captured traffic instead of a tree. Independent: this reviewer authored none of the spec's prior content | The premise survived its refute-check (Forgejo's package docs, re-read this pass, list 24 types with no Ansible), but the draft understated its own protocol and missed sibling obligations. Wire contract pinned from capture: the auth header is `Authorization: Token <token>` on every request including discovery, correcting `foundation/auth.md`'s "Bearer or Basic" guess (synced there as a cross-spec row); the client rebuilds the import-poll URL from its own configured base plus the last path segment of the publish response's task URI, fixing where the endpoint must live; the poll contract (404 while queued, `finished_at`, `state: failed` with `error.code`/`error.description`, `messages[]`) recorded; the format-first mount verified by a real run, joining the URL-shape record's client evidence; the per-file digest claim corrected (`FILES.json` carries them, `MANIFEST.json` anchors `FILES.json` by digest). The proxied path had one AC and no design: classification declaration (metadata mutable under TTL, artifacts immutable), `download_url` rewriting (without which the cache never sees the artifact bytes) and the integrity digest added. The write-boundary declaration `data-model.md` makes a review item was absent and is now stated: one successful import task, one snapshot. Definition-of-done gaps closed: two pinned client versions (AC2), replay corpus (AC7), failed-import contract (AC8), and the deliberately-unimplemented recording added; AC6 corrected off "public Galaxy", since the main suite runs against stand-ins. Raised Q1 (the import-task record has no home in a model with no async-operation entity, the exact class the interface spec deferred to its re-open), Q2 (namespaces versus repository-scoped auth, touching open auth Q13/Q16), Q3 (signatures: serving has a client oracle, attachment has none, and supply-chain-policy Q6 owns the producer), Q4 (whether galaxy.ansible.com joins the preconfigured upstreams, amending a resolved proxy-cache decision), Q5 (deletion has no client oracle; the OCI precedent cuts the other way). Stays draft on Q1-Q5. |
 | 2026-09-26 | 0dbca1f | folding adopted recommendations under the standing delegation | Not a review: adoption and application of this spec's own recommendations, made consistent with the Cluster 5 and Cluster 6 format specs and the prototype. Q1 adopted as A for its mechanism (synchronous validation, terminal before the first poll); folding found its storage half (the repository-level metadata document) contradicts settled rules, since that document is snapshot content and a failed import would create a snapshot, so the home was raised as Q6 in decision shape and adopted as B: a format-agnostic `Operation` entity in `data-model.md`, outside snapshot content, atomic with the snapshot it produces, pruned after a window (new Design section "Import tasks", AC9, a Phase 1 precondition). Q2 adopted as A, and since `auth.md` adopted pattern scopes in the same pass the per-route addressed-object table is declared now and a token scoped `alpha/**` is confined to its namespace (Design "Namespaces", AC10). Q3 adopted as A with the requirements this format places on `docs/internal/plans/foundation/artifact-verification.md` (to be authored) recorded; its silence on proxied signatures raised as Q7 and adopted as A, pass-through (Design "Signatures", AC11). Q4 adopted as A, the `proxy-cache.md` amendment recorded as a Phase 2 precondition for that spec to make (AC13). Q5 adopted as B for its decision, re-homed onto the registry-owned management API in `docs/internal/plans/foundation/management-api.md` (to be authored) instead of Galaxy NG routes, for consistency with pypi and npm (Design "The management surface", AC12, Phase 3); folding it raised Q8, re-publishing a deleted version, adopted as A: retired forever, live duplicates refused too (Artifact validation, AC12). Also: blocking preconditions section added (interface re-open, now binding since the catalogue promoted this format to Tier 1; Operation entity; proxy-cache amendment; management-api.md); sequencing note rewritten to Tier 1 at charter step 6a; sibling citations now resolved (auth pattern scoping and grants, supply-chain-policy component inventory and verification ownership, conformance-harness setup vocabulary) reframed with historical qualifiers; conformance notes aligned with the harness's closed vocabulary and seed path (management triggers called from `script`). Test Plan rows added for AC9 to AC13. Stays draft. |
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Found already done by the interrupted fold (d56e1ff): the Tier 1 sequencing (charter item), the resolved supply-chain Q3 and Q6 citations, the harness closed-vocabulary note, the auth Q13 citations and the per-route addressed-object table. Applied: the per-format policy rendering (403 naming the policy, AC14, `conformance/ansible/policy_test.go`); the Operation precondition now cites `data-model.md`'s Operations section and AC32; the preconfigured-upstreams precondition recorded as discharged by `proxy-cache.md`'s resolved preconfigured-set extension (was Q14), in the preconditions, the proxied path, Phase 2 and the Q4 record. Stays draft. |
+| 2026-09-28 | ddc73fb | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. Judgment call raised and adopted as Q9 under the standing delegation: `async-operations.md` AC5, AC6 and AC10, `write-triggered-services-prototype.md` AC8 and the charter's step 6a all assume this handler's import runs deferred on the shared runner, while this spec (was Q1) validated synchronously; adopted A, the import is the deferred `publish` kind executed by `manage.apply`, the publish route a binding, the harness holding an import through the admin pause (Design 'Import tasks' rewritten, AC9 rewritten with `deferred_publish_test.go` and `deferred_crash_test.go`, Phase 1 precondition, was-Q1 record revised). From `artifact-verification.md` (item 9: its resolved Galaxy-signatures decision, was Q6, AC9, AC25) and `signing-service.md` (was Q10): hosted signatures by user attachment through `management-api.md`'s `attach` kind, verified over the stored `MANIFEST.json` against the `openpgp` trust set before storage, served as `{signature, pubkey_fingerprint, signing_service: null, pulp_created}`, proxied entries passed through with a verdict; Scope, Design 'Signatures', the management table, AC11 and its row rewritten, `trust` key in the Test Plan note; the was-Q3 requirement list annotated with each answer and the was-Q7 record with the verdict. From `management-api.md` (kind table, reconciliation table, AC5, AC6, AC7, AC24) and its was Q3 with `data-model.md` AC35: `delete-version`, `delete-package` and `attach` declared through `Operator`, no Galaxy NG binding, retirement core-held and rendered as a failed import (Artifact validation, the write boundary, AC12, the was-Q5 and was-Q8 records). From `auth.md` was Q23: discovery is a descriptor, closing the latent contradiction under which AC10's patterned install could not pass its first request; sentinel check in the scope test. From `supply-chain-policy.md` (was Q10, AC17, AC18, AC20, AC21) and `format-handler-interface.md` AC14: refusals through `WriteRefusal`; OSV's `ecosystems.txt` fetched 2026-09-28 lists no Ansible ecosystem, so the coverage row is uncovered, advisory rules refused at configuration, AC14's case condemns without an advisory and fills the binding row. From `repository-lifecycle.md` AC12 and `format-handler-interface.md` AC13: a Capabilities and lifecycle section, new AC15 with `rename_test.go` and `virtual_test.go`. Charter step 6a wording, the `upstream-adapters.md` profile row, `conformance/ansible/**` in `covers`. Fifteen criteria, each with a Test Plan row. Consequences for other files: `auth.md`'s Galaxy consumer bullet says discovery reports none, now descriptor; `async-operations.md` Context (~l.133) says this spec validates synchronously; `supply-chain-policy.md`'s Ansible coverage row (uncovered, no OSV ecosystem) and binding row (filled by AC14's case). Stays draft pending a gate review. |

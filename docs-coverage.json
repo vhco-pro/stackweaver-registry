@@ -18,6 +18,9 @@
   "conformance/alpine/**": [
     "docs/internal/plans/formats/alpine.md"
   ],
+  "conformance/ansible/**": [
+    "docs/internal/plans/formats/ansible-collections.md"
+  ],
   "conformance/arch/**": [
     "docs/internal/plans/formats/arch.md"
   ],

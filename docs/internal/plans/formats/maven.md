@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 as a grounded first draft: the Maven repository layout captured from Maven 3.8.8 and 3.9.11, Gradle 8.14.5 and 9.1.0, sbt 1.13.0 (Coursier) and Leiningen 2.13.0 run in containers against a logging stub, checked against the Maven layout and repository-metadata references, the resolver's checksum and configuration pages, the settings and deploy-plugin references, Maven Central's requirements, the Gradle Module Metadata specification and the Gradle user guide sources, and the live repo.maven.apache.org. Seven questions written in decision shape and adopted under the owner's standing delegation; none open. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at ddc73fb with the foundation wave (not a review): the three maven-metadata.xml levels are the handler's Indexer generator in internal/format/maven/index run by signing-service's index runtime (its AC1, AC3, AC4, AC11, AC19, AC24, AC28; AC22 here), the charter naming Maven the first unsigned consumer at step 7; delete-version, delete-file and prune are management-api kinds under delete with no binding, retirement the core-held Retirement record (AC10); refusals through WriteRefusal with the Refused by policy status-line phrase, Maven's policy case being supply-chain's AC18 proof and filling its binding row (AC13); completion-only fetch offered by proxy-cache was-Q15 with the short-close case (AC14); artifact-verification's openpgp entry recorded-not-enforced (AC18); Maven Central preconfigured (was-Q17); the gradle/sbt/lein rows in auth.md; no descriptor route, decided; Capabilities with rename and virtual cases (AC24). Earlier: authored 2026-09-26 from captures of Maven 3.8.8 and 3.9.11, Gradle 8.14.5 and 9.1.0, sbt 1.13.0 and Leiningen 2.13.0; seven questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for the Maven repository layout: the path-addressed release and SNAPSHOT files, the three levels of generated maven-metadata.xml, checksum and signature sidecars and Gradle Module Metadata, hosted and proxied, with Maven, Gradle, sbt and Leiningen as the conformance oracles."
 author: michielvha
 goal: "Serve the whole JVM world from one handler: a private Maven-layout repository and a Maven Central cache whose generated metadata never loses a concurrent deploy, whose checksums are served rather than trusted, and whose one wire is spoken by five build tools."
@@ -117,27 +117,33 @@ and `format-handler-interface.md` AC8 blocks all Tier 1 handler work on the post
 npm, PyPI and NuGet record the gate from their sides and this spec records it here because a
 contract enforced on one side only is enforced nowhere.
 
-**The shared signing and index service must be specced before Phase 1.** Every level of
+**The shared signing and index service must reach `planned` before Phase 1.** Every level of
 `maven-metadata.xml` is a write-triggered generated document (Design, "The generated
-documents") produced by `docs/internal/plans/foundation/signing-service.md` (to be authored in
-the spec loop), which the charter builds first in step 7, before this format, as the
-production form of what the step 4a prototype learned (`write-triggered-services-prototype.md`).
-The charter's AC12 names Helm as the handler that follows that service; Maven consumes it
-earlier in the same step and is recorded as a sibling consequence, not assumed here. What this
-format requires of the service is stated in Design rather than designed here.
+documents") produced by `docs/internal/plans/foundation/signing-service.md`, which the charter
+builds first in step 7, before this format, as the production form of what the step 4a
+prototype learned (`write-triggered-services-prototype.md`). That spec's generator contract is
+what this handler implements: the optional `Indexer` interface discovered at registration,
+returning a pure generator from the sibling package `internal/format/maven/index`, run by the
+index runtime inside every write on the repository (its AC1). The charter's AC12 and build step
+7 now name Maven as the first, unsigned consumer of the service, before Helm, and
+`signing-service.md`'s consumer table carries Maven's three levels, the virtual merge and the
+contention requirement, so nothing here is assumed of a sibling any more. What this format
+requires of the service is stated in Design as citations of its criteria.
 
-**The management API must be specced before Phase 2's management operations.** No JVM build
-tool has a delete, retire or prune command, so every management operation on this format is
-client-less, PyPI's case in `docs/internal/analysis/management-surfaces-and-the-oracle.md`, and
-each is an operation of `docs/internal/plans/foundation/management-api.md` (to be authored in
-the spec loop). AC10 is untestable until that surface exists, so Phase 2's management half
-waits on that spec reaching `planned`. Phase 1, the deploy half of Phase 2, and Phases 3 and 4
-do not.
+**The management API must reach `planned` before Phase 2's management operations.** No JVM
+build tool has a delete, retire or prune command, so every management operation on this format
+is client-less, PyPI's case in `docs/internal/analysis/management-surfaces-and-the-oracle.md`,
+and each is a kind of `docs/internal/plans/foundation/management-api.md`'s closed operation
+vocabulary (`delete-version`, `delete-file`, `prune`; its kind table and cross-format
+reconciliation table carry Maven's rows). AC10 is untestable until that surface exists, so
+Phase 2's management half waits on that spec reaching `planned`. Phase 1, the deploy half of
+Phase 2, and Phases 3 and 4 do not.
 
-**One shared-layer amendment this spec depends on is requested, not assumed.** A proxied
-artifact from an upstream that publishes no checksum sidecar and no checksum header has no
-digest to verify against; it needs the completion-only fetch-and-cache mode `go-modules.md`
-and `nuget.md` already requested of `proxy-cache.md`, and this spec does not edit that sibling.
+**The completion-only fetch mode this spec depends on is offered.** A proxied artifact from an
+upstream that publishes no checksum sidecar and no checksum header has no digest to verify
+against; `proxy-cache.md` admitted the completion-only fetch-and-cache mode this spec,
+`go-modules.md` and `nuget.md` asked for (its resolved completion-only decision, was Q15, and
+AC20), so the former request is now a citation.
 
 ## Scope
 
@@ -174,8 +180,11 @@ and `nuget.md` already requested of `proxy-cache.md`, and this spec does not edi
 - Non-interactive authentication exactly as the clients send it: HTTP Basic after a `401`
   challenge on reads, preemptively on `PUT`, the per-route addressed objects `auth.md`'s
   pattern scopes evaluate (AC12), and the `403` rendering of a shared policy refusal (AC13).
-- The management operations this format needs from the registry-owned management API: delete
-  a version, delete a file, prune SNAPSHOT builds.
+- The management operations this format declares on the registry-owned management API: delete
+  a version, delete a file, prune SNAPSHOT builds, as the kinds `delete-version`, `delete-file`
+  and `prune`, with retirement through the core-held `Retirement` record.
+- The handler's `Capabilities()` declaration, repository rename and virtual aggregation
+  (Design, "Capabilities and lifecycle").
 - The proxied path against a plain-layout upstream (Maven Central or a private repository):
   classification per file kind, conditional revalidation as the live upstream supports it,
   negative caching, the absence of any URL rewriting, virtual-repository metadata merging, and
@@ -200,11 +209,13 @@ of done requires the deliberately unimplemented surface to be named:
   than listing the directory, and Maven and Coursier never requested a directory URL. A
   browsing surface is UI-era work.
 - **Signature verification.** Verifying a `.asc` against a trust set belongs to
-  `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop),
-  per the verification-ownership decision `supply-chain-policy.md` adopted (was its Q6); this
-  spec stores and serves signatures byte-identical and states what it requires of the producer
-  (Design, "Signatures and provenance"). Repository-level signing does not exist in this
-  ecosystem, so nothing is asked of the signing half of the shared service.
+  `docs/internal/plans/foundation/artifact-verification.md`, per the verification-ownership
+  decision `supply-chain-policy.md` adopted (was its Q6); that spec's `openpgp` entry carries
+  Maven with the `any` semantics flag (its "Per-format positions"), the verdict recorded and
+  never enforced (its AC21), and this spec stores and serves signatures byte-identical (Design,
+  "Signatures and provenance"). Repository-level signing does not exist in this ecosystem, so
+  Maven's profile declares no signing profile and `signing-service.md` AC24 gives it generation
+  with no key.
 - **Serving a hosted `.module` the registry generated.** Gradle Module Metadata is produced by
   the publishing build and carries hashes of the files it names; a registry that synthesised
   one for a Maven-deployed artifact would be inventing variants Gradle then trusts. Files
@@ -255,9 +266,12 @@ The levels are exactly those `data-model.md` provides; no table is added.
   folding exists to apply. The package-level document holds the **deploy-order state** the
   artifact-level document renders and no version row carries: which version was deployed last
   (`latest`), which release was deployed last (`release`), the time of the last write
-  (`lastUpdated`), the package's **retirement set** (every deleted release file coordinate),
-  and, for a `maven-plugin` artifact, the goal prefix read from the jar's
-  `META-INF/maven/plugin.xml`.
+  (`lastUpdated`), and, for a `maven-plugin` artifact, the goal prefix read from the jar's
+  `META-INF/maven/plugin.xml`. The package's retired coordinates (every deleted release file
+  coordinate) are **not** in that document: they are core-held `Retirement` records
+  (`data-model.md`, its entity table and AC35; `management-api.md`, "Retirement is core-held",
+  its resolved retirement-placement decision, was Q3), outside snapshot content, so a backwards
+  repoint cannot resurrect a retired coordinate and the handler carries nothing forward.
 - `Version.version` holds the base version: `1.0.0` for a release, `1.1.0-SNAPSHOT` for a
   SNAPSHOT. The version-level document holds, for a SNAPSHOT, the ordered list of timestamped
   builds (`timestamp`, `buildNumber`, arrival order, the `snapshotVersions` manifest each
@@ -288,41 +302,61 @@ registry that stores the client's document is a registry whose index silently lo
 under exactly the concurrency a CI fleet produces.
 
 Per the resolved metadata-generation decision below, every level is produced by the shared
-signing and index service (`docs/internal/plans/foundation/signing-service.md`, to be authored
-in the spec loop; charter build step 7, before this format) as a **write-triggered generated
-document** in the sense `write-triggered-services-prototype.md` defines, and this spec states
-what it requires of that service rather than defining the service's shape:
+signing and index service (`docs/internal/plans/foundation/signing-service.md`; charter build
+step 7, before this format) as a **write-triggered generated document** in the sense
+`write-triggered-services-prototype.md` defines. The handler's part is the generator: the
+optional `Indexer` interface returns a pure `index.Generator` from `internal/format/maven/index`,
+which renders the three levels from the records the write leaves and names, through `Affects`,
+which document keys a write invalidates; the runtime in `internal/index` does the rest, and the
+handler package holds no renderer and requests no regeneration (AC22). What this format
+required of the service, each now a criterion of that spec:
 
 - **Regeneration inside the write that triggered it.** A file landing under `{g}/{a}/{v}`
   regenerates the artifact-level document of `{g}:{a}` (and the version-level document when
   `{v}` is a SNAPSHOT, and the group-level document of `{g}` when the package is a plugin), in
   the **same** completed logical write and the same snapshot as the file, so no snapshot ever
   serves a document that disagrees with its content set (`data-model.md`'s one-write-one-
-  snapshot rule, and the prototype's question 3).
+  snapshot rule, and the prototype's question 3): `signing-service.md` AC1, on a wire write, a
+  management operation, a seed-path write and a retention pass alike, with a refused or failed
+  write leaving no document; and only the keys `Affects` names are regenerated (its AC4).
 - **Under contention, both land.** Two concurrent writes into one artifact each produce a
   document that includes the other's result once both are complete; the captured lost update
   is impossible by construction, whatever order the writes commit in. This is the ordinary
   revision-token retry `data-model.md` makes mandatory, applied by the service rather than by
-  each handler.
+  each handler: `signing-service.md` AC3 (every snapshot's document set lists exactly the
+  packages that snapshot holds) and AC28 (N concurrent publishes into one tree complete within
+  the configured lock wait, no livelock, a lock timeout failing the write rather than committing
+  without regeneration), both grounded on this spec's captured two-deploy race, which that spec
+  names as its hottest-document scenario.
 - **Unsigned.** Nothing in this ecosystem signs repository metadata; the service's signing half
-  is not used by this format, which is why Maven precedes Helm in the step.
+  is not used by this format, which is why Maven precedes Helm in the step, and
+  `signing-service.md` AC24 asserts that a profile declaring no signing profile gets generation
+  with no key created and no signature record.
 - **Sidecars and headers for the generated bytes.** The four checksum sidecars and the
   `x-checksum-*` headers of a generated document are computed from the generated bytes by the
-  same rule as for any file (below), and the `ETag` derives from the package and the snapshot
-  number, so a repoint changes it and a `304` costs nothing.
+  same rule as for any file (below). The document is served through the runtime's
+  `ServeDocument` (`signing-service.md` AC11): its `Last-Modified` is the serving pointer's
+  forward-moving freshness record (`data-model.md`, "Freshness scoped to the pointer"), its
+  `ETag` changes on a repoint, and a conditional request is answered `304` only on an exact
+  match, so a rollback is never hidden from a client that revalidates by time; no handler code
+  sets these headers.
 - **Stored, not rendered on request**, inline below `data-model.md`'s size threshold and as a
-  CAS blob above it, which the fourth GC mark root protects (`storage-and-gc.md`). The
-  artifact-level document of a long-lived artifact is small (Central's `commons-lang3` document
-  is 1.1 KB), the group-level document of a plugin-heavy group is not (`org.apache.maven.plugins`
-  lists every plugin), and the version-level document of a SNAPSHOT with many classifiers grows
-  with them; the threshold decides, not the handler.
+  CAS blob above it, which the fourth GC mark root protects (`storage-and-gc.md`;
+  `signing-service.md` AC5). The artifact-level document of a long-lived artifact is small
+  (Central's `commons-lang3` document is 1.1 KB), the group-level document of a plugin-heavy
+  group is not (`org.apache.maven.plugins` lists every plugin), and the version-level document
+  of a SNAPSHOT with many classifiers grows with them; the threshold decides, not the handler.
 - **Virtual repositories merge.** A `virtual` repository's artifact-level document is the union
   of its members' `versions` in member order with `latest`, `release` and `lastUpdated` taken
   from the member whose `lastUpdated` is newest, its version-level document names the newest
   build across members, and its group-level document is the union of the members' `plugins`.
   Maven 3.9.11 performs exactly this merge client-side across its configured repositories
   (captured: it asked both the stub and Central for the same document), so a client pointed at
-  one virtual URL sees what it would have seen with every member configured.
+  one virtual URL sees what it would have seen with every member configured. The merge runs as
+  the `index.merge` job on the shared runner (`signing-service.md` AC19; `async-operations.md`
+  AC11): a member write is visible in the virtual's documents within the staleness bound, the
+  previous merged set serves without a gap until the new one commits, and the generator's merge
+  rule above is the only Maven-specific code in it.
 
 What each level carries, rendered from the model, matching the reference schema and the
 captured client-written bodies field for field:
@@ -385,10 +419,11 @@ registry cannot trust. Maven's declaration, per the resolved write-boundary deci
   `400` naming the timestamped form, and a `GET` for one answers `404`, which Coursier expects
   (the resolved base-version decision).
 - **Each management operation is one write**: deleting a version removes its files from the
-  head snapshot and records every release file coordinate in the retirement set within the same
-  write; deleting a file does the same for one coordinate; pruning SNAPSHOT builds removes
-  whole builds and is one write however many it removes, per `data-model.md`'s bulk-operation
-  rule.
+  head snapshot and the core writes a `Retirement` record for every release file coordinate the
+  handler returns in the operation's `Outcome`, in the same transaction (`data-model.md` AC35);
+  deleting a file does the same for one coordinate; pruning SNAPSHOT builds removes whole builds
+  and is one write however many it removes, per `data-model.md`'s bulk-operation rule, retiring
+  nothing.
 - A proxied repository creates no snapshots at all; metadata arrival and revalidation are
   cache materialisation.
 
@@ -468,18 +503,22 @@ them from the repository when a project trusts signatures. To this registry a `.
 of the version bound to the file it names, stored and served byte-identical, with no sidecars
 of its own, on both paths.
 
-What Maven requires of the shared services, stated so the dependency cannot be lost:
+What Maven required of the shared services, and what each now provides:
 
-- Of `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec
-  loop): verification of a detached PGP signature over the file it names against a per-
-  repository trust set (key servers as Gradle uses them, or an operator-imported keyring),
-  yielding the per-digest verdict `supply-chain-policy.md` consumes and the signer identity;
-  and a position on a file that arrives unsigned into a repository whose policy requires
-  signatures, which is that spec's rule-binding refusal, not this handler's.
-- Of `docs/internal/plans/foundation/signing-service.md` (to be authored in the spec loop):
-  nothing beyond the unsigned index generation above. Maven repositories are not signed at the
-  repository level, and a registry signature over `maven-metadata.xml` would be read by no
-  client.
+- `docs/internal/plans/foundation/artifact-verification.md` verifies a detached PGP signature
+  over the file it names through its `openpgp` entry with the `any` semantics flag this spec
+  asked for (any listed key may sign), against the repository's trust set of keys with subkeys,
+  each curated by the operator or fetched once by fingerprint from a configured keyserver as
+  Gradle's dependency verification does and then stored (its resolved trust-set decision, whose
+  accepted cost is that "whatever key the artifact names" is not a trust set). The verdict is
+  recorded and never enforced (its AC21): a hosted artifact with a bad or missing `.asc` is
+  stored, its verdict is `failed` or `absent`, and only a `supply-chain-policy.md` rule requiring
+  a `verified` verdict refuses it at resolution, which is the position this spec asked for on an
+  unsigned file in a signature-requiring repository. On the proxied path the same entry runs at
+  commit against the remote's trust set.
+- `docs/internal/plans/foundation/signing-service.md` provides nothing beyond the unsigned index
+  generation above, and says so (its AC24). Maven repositories are not signed at the repository
+  level, and a registry signature over `maven-metadata.xml` would be read by no client.
 
 Advisory matching for Maven coordinates is the policy engine's coordinate-level path (OSV
 carries the `Maven` ecosystem with `groupId:artifactId` names) and needs no handler
@@ -490,32 +529,44 @@ cooperation; the component inventory catalogues jars as it does any archive.
 Every management operation on this format is client-less: no build tool deletes, retires or
 prunes, and Central never deletes at all. Per the cross-format precedent (`pypi.md`'s resolved
 hosted-yank decision, with `npm.md`, `ansible-collections.md`, `cargo.md` and `nuget.md`),
-each is an operation of the registry-owned management API,
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), with no
-client binding, because there is no client route to bind:
+each is a kind of the closed operation vocabulary in
+`docs/internal/plans/foundation/management-api.md` (its kind table and cross-format
+reconciliation table carry Maven's rows), declared by the handler through that spec's optional
+`Operator` interface, with no client binding, because there is no client route and no published
+reference API to bind (that spec's binding rule refuses a route with nothing but `curl` behind
+it):
 
-| Operation | Effect a client sees | Action |
-|---|---|---|
-| Delete a version (release or SNAPSHOT base version) | Its directory answers `404`, the artifact-level document omits it and `latest`/`release` move to the previous deploy, every release file coordinate is retired | `delete` |
-| Delete a file | The file answers `404`, its sidecars with it; the coordinate is retired; a version whose POM is deleted leaves `versions` | `delete` |
-| Prune SNAPSHOT builds (keep the newest N, or those newer than a cutoff) | The pruned builds' files answer `404`, the version-level document names the newest surviving build, the base version stays listed | `delete` |
+| Operation | Kind | Effect a client sees | Action |
+|---|---|---|---|
+| Delete a version (release or SNAPSHOT base version) | `delete-version` | Its directory answers `404`, the artifact-level document omits it and `latest`/`release` move to the previous deploy, every release file coordinate is retired | `delete` |
+| Delete a file | `delete-file` | The file answers `404`, its sidecars with it; the coordinate is retired; a version whose POM is deleted leaves `versions` | `delete` |
+| Prune SNAPSHOT builds (keep the newest N, or those newer than a cutoff) | `prune` | The pruned builds' files answer `404`, the version-level document names the newest surviving build, the base version stays listed | `delete` |
 
 Rules, applying the precedent rather than re-deciding it: each operation is one completed
 logical write through the shared write path, exactly one snapshot, none for a refused one, no
-blob-store object deleted directly; authorization is the settled `(repository, action)`
-vocabulary with no new action, every operation here being removal-class; hosted only, a
-proxied repository taking its removals from the upstream per the removal table; the trigger is
-verified by this registry's integration tests and every effect by a real client. What this
-format requires of `management-api.md`: the three operations above reporting the objects named
-in "Addressed objects and pattern scopes", the retirement set carried forward by every later
-write and preserved across a backwards repoint (`data-model.md` AC33's obligation on that
-surface), and pruning as one write.
+blob-store object deleted directly (`management-api.md` AC5, AC6); the action follows the kind
+and every kind here is removal-class, so every operation requires `delete`; `Authorize` reports
+the objects named in "Addressed objects and pattern scopes", the version object for
+`delete-version`, the file object for `delete-file` and each removed build's file objects for
+`prune`, so a patterned `delete` prunes only inside its pattern and one out-of-pattern object
+refuses the whole operation (its AC4); hosted only, a proxied repository taking its removals
+from the upstream per the removal table and answering `405` with problem type
+`repository-type` (its AC7); the generated documents regenerate inside the operation's write
+through the same `Indexer` hook as a deploy (`signing-service.md` AC1); the trigger is verified
+by this registry's integration tests plus the `script`-driven conformance case
+`management-api.md` AC24 requires for every declared kind, and every effect by a real client.
 
-A retired release coordinate is never republishable, with the same bytes or different ones,
-the cross-format rule the sibling specs adopted; the version string itself is not retired, so
-a deleted 1.0.6 whose sources jar was never deployed still refuses `ZzBar-1.0.6.jar` but a
-new `1.0.8` deploys normally. SNAPSHOT build filenames are unique by construction, so pruning
-retires nothing.
+Retirement is core-held: the handler returns the release file coordinates to retire in the
+operation's `Outcome` (Maven's granularity is the file coordinate, as `management-api.md`'s
+"Retirement is core-held" records), the core writes one `Retirement` record per coordinate in
+the retiring transaction, and the shared write path refuses any later `PUT` claiming one with
+`retired`, rendered here as the `409` a changed-bytes redeploy gets, across a backwards repoint
+and after every snapshot that held the file has been pruned, with nothing for this handler to
+carry forward (`data-model.md` AC35, `management-api.md` AC12). A retired release coordinate is
+therefore never republishable, with the same bytes or different ones, the cross-format rule the
+sibling specs adopted; the version string itself is not retired, so a deleted 1.0.6 whose
+sources jar was never deployed still refuses `ZzBar-1.0.6.jar` but a new `1.0.8` deploys
+normally. SNAPSHOT build filenames are unique by construction, so pruning retires nothing.
 
 ### Authentication: Basic after a challenge, preemptive on PUT
 
@@ -529,10 +580,10 @@ behaves identically). How this meets `auth.md`, whose rules this spec does not b
   authentication input. The harness writes the issued token into `settings.xml` as the
   `server` password for the repository id (Maven, Leiningen, which reads the same file through
   `:repositories` credentials) and into `credentials {}` (Gradle) or `Credentials(...)` (sbt);
-  nothing new is asked of the `setup` vocabulary. `auth.md`'s table row for `mvn` is now
-  confirmed against captured traffic, as that spec requires before a format's auth cases are
-  written, and the Gradle, sbt and Leiningen forms are listed in this spec's sibling
-  consequences for that table.
+  nothing new is asked of the `setup` vocabulary. `auth.md`'s client table carries the `mvn`
+  row with the preemptive-`PUT` mode and the reason-phrase note, and a `gradle` / `sbt` / `lein`
+  row with the same two modes and Gradle's explicit `BasicAuthentication` case, each confirmed
+  against this spec's captures as that spec requires before a format's auth cases are written.
 - **The challenge is uniform and not an existence oracle.** A credential-less request under a
   repository that is not anonymously readable answers `401` with `WWW-Authenticate: Basic
   realm="..."`, whether the repository is private, missing or someone else's, the mechanism
@@ -575,6 +626,12 @@ grants a group, `zz/acme/tool/**` an artifact, `zz/acme/tool/1.0.0/**` one versi
 | Artifact-level and group-level metadata `PUT` | named / none | `{group as path}/{artifactId}` for the artifact level; none for the group level, which a patterned credential is refused and which every client tolerates as a failed final `PUT` only when the deploy is a plugin |
 | A directory URL | none | - (answers `404` in any case) |
 
+No route on this format reports the fourth object kind, `descriptor` (`auth.md`'s resolved
+name-free-document decision, was Q23): the only repository-wide document, the group-level
+`maven-metadata.xml`, enumerates the artifacts of a group by name, which is exactly the document
+the sentinel test `format-handler-interface.md` AC12 runs against a descriptor would fail, so it
+stays `none` and the plugin-prefix limitation below is decided, not an oversight.
+
 What that gives and costs, applying `auth.md`'s rules rather than re-deciding them. Nothing on
 this format fetches a repository-wide document first, so a credential holding **only** a
 patterned `pull` under `zz/acme/**` resolves every `zz.acme` artifact and its dependencies
@@ -592,13 +649,24 @@ management operations report the version and file objects above.
 When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on a
 file, sidecar or metadata route of either path, the handler answers `403` with a `text/plain`
 body naming the policy and rule, or naming the signal for a coordinate condemned under the
-shared security-signal rule. `403` rather than the existence rule's `404`, because the caller
-is authorized and the content is what is refused. The body reaches nobody through the pinned
-clients: Maven prints `status code: 403, reason phrase: Forbidden (403)` and Gradle `Received
-status code 403 from server: Forbidden`, both captured for `401` with the same rendering path,
-and Go's server writes the reason phrase from the status code alone, so the body is for `curl`
-and the transcript. That is the reason-phrase risk `pypi.md` named, confirmed here for two
-more clients and carried to `supply-chain-policy.md` as a finding rather than worked around.
+shared security-signal rule, written through the shared refusal writer `WriteRefusal` in
+`internal/format` (`format-handler-interface.md` AC14). `403` rather than the existence rule's
+`404`, because the caller is authorized and the content is what is refused. The body reaches
+nobody through the pinned clients: Maven prints `status code: 403, reason phrase: Forbidden
+(403)` and Gradle `Received status code 403 from server: Forbidden`, both captured for `401`
+with the same rendering path, and Go's `net/http` writes the canonical phrase from the status
+code alone. That is the reason-phrase finding this spec carried to `supply-chain-policy.md`,
+and that spec answered it (its resolved refusal-status-line decision, was Q10, and AC18): on an
+HTTP/1.1 connection `WriteRefusal` takes the connection and writes the status line itself,
+`HTTP/1.1 403 Refused by policy: {condition}`, so the one text these clients show becomes the
+condition; `deployment.md` keeps `h2` off the main listener by default (`server.http2: false`)
+so the phrase survives to the client. Maven is the first reason-phrase-only client to reach
+conformance, so `supply-chain-policy.md` AC18 names this format's policy case,
+`conformance/maven/policy_test.go`, as the proof that the phrase reaches a user through `mvn`
+and `gradle` (AC13). The same case captures whether either client falls back to a second
+configured repository on the refusal, and that capture fills Maven's `pending` row of that
+spec's "When a refusal binds, per format" table in the same change (its AC20; the harness
+refuses a policy case while the row is `pending`, `conformance-harness.md` AC26).
 
 ### The proxied path
 
@@ -621,11 +689,15 @@ rather than an HTML page (AC21).
   strongest sidecar the upstream serves** (`.sha512`, `.sha256`, `.sha1`, `.md5` in that
   order, fetched before the file; or the `x-checksum-sha1` header the resolver documents,
   which Central sends), never committed on a mismatch or a truncated body. An upstream that
-  serves neither a sidecar nor a header (a plain file server with a partial layout) uses the
-  completion-only fetch-and-cache mode `go-modules.md` and `nuget.md` requested of
-  `proxy-cache.md`, and the CAS digest of the complete body is recorded. Served sidecars and
-  headers are then rendered from the store's digests, so a correct upstream sidecar and ours
-  are byte-identical.
+  serves neither a sidecar nor a header (a plain file server with a partial layout) uses
+  `proxy-cache.md`'s **completion-only fetch-and-cache mode** (its resolved completion-only
+  decision, was Q15, and AC20): the client streams from the first byte, completion is withheld
+  until the adapter's body reader ends cleanly, a truncated or stalled body commits nothing and
+  reaches the client as a short-closed transfer it reports as a failure rather than a file it
+  accepts, and the CAS digest of the complete body is recorded; the short-close is observed with
+  the real client in `conformance/maven/proxied_test.go`, the case `conformance-harness.md`
+  names for `mvn` (AC14). Served sidecars and headers are then rendered from the store's
+  digests, so a correct upstream sidecar and ours are byte-identical.
 - **`maven-metadata.xml` at every level is mutable metadata with a TTL.** Central serves
   `ETag` (the MD5) and `Last-Modified` with no `Cache-Control`, answered `304` to
   `If-None-Match` and `200` to `If-Modified-Since` (captured), so revalidation uses the entity
@@ -658,6 +730,27 @@ Detection happens at revalidation, passively, per `proxy-cache.md`'s resolved pa
 decision (was Q12); the active channel is the policy engine's advisory feed, which carries the
 `Maven` ecosystem through OSV and is the only channel that condemns a Maven coordinate as
 malicious, under the shared security-signal rule.
+
+`repo.maven.apache.org` is a preconfigured, enabled-by-default upstream: `proxy-cache.md` made
+the extension this spec asked for (its resolved second preconfigured-set extension, was Q17,
+carried by its AC15 and AC19), and `upstream-adapters.md` holds the profile row
+(`https://repo.maven.apache.org/maven2/`, adapter `https`, credential `none`, an empty
+allowlist; its AC24 keeps the two tables equal). What remains for Phase 3 is the nightly row.
+
+### Capabilities and lifecycle
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available`, `Virtual: supported` and `Rename: supported` (`format-handler-interface.md` AC13).
+Virtual aggregation is the metadata merge above (AC21): nothing on this wire is signed with the
+repository name, so aggregation is possible where `hex.md` found it was not, and a file is
+served from the first member that holds it, the dependency-confusion-closing order every format
+spec adopts. A rename changes no served byte: no Maven document carries the repository name, so
+the layout serves under the new base URL unchanged and the old name answers exactly what a
+never-existing repository answers, and every generated document, retirement and grant still
+resolves to the repository by identity (`repository-lifecycle.md` AC12). That criterion requires
+`conformance/maven/rename_test.go`, enforced by the harness's case-set validator
+(`conformance-harness.md` AC26); AC24 carries it with a real `mvn` resolve from the renamed
+repository.
 
 ### Conformance, the pinned clients and the corpus
 
@@ -758,14 +851,19 @@ and the generated metadata's field order.
       `pluginGroups` resolves and runs the plugin through this registry on both releases, the
       transcript showing the group-level, artifact-level, POM and jar requests; a group with no
       plugins answers `404` for the document.
-- [ ] AC10: Deleting a version, deleting a file and pruning SNAPSHOT builds through the
-      registry-owned management API each produce exactly one snapshot, the affected files and
+- [ ] AC10: Deleting a version (`delete-version`), deleting a file (`delete-file`) and pruning
+      SNAPSHOT builds (`prune`) through the registry-owned management API each produce exactly
+      one snapshot with the affected documents regenerated inside it, the affected files and
       sidecars answer `404`, the served documents omit what was removed and `latest`, `release`
       and `snapshot` move to the previous deploy or newest surviving build; a later `PUT` of a
       deleted release coordinate is refused as AC5 refuses changed bytes, with the same bytes or
-      different ones, including after the deletion's snapshot has been pruned out of retention;
-      a principal without `delete` is refused with no snapshot created; and every operation
-      against a proxied repository is refused.
+      different ones, on the core-held `Retirement` record, including after the deletion's
+      snapshot has been pruned out of retention and after the default pointer has been repointed
+      to a snapshot older than the deletion and back; a principal without `delete` is refused
+      with no snapshot created, and a `prune` naming one out-of-pattern build under a patterned
+      `delete` is refused whole; each declared kind has a `script`-driven conformance case
+      (`management-api.md` AC24); and every operation against a proxied repository is refused
+      `405`.
 - [ ] AC11: On a private repository a credential-less read answers `401` with
       `WWW-Authenticate: Basic` byte-identical for a private and a non-existent repository, both
       pinned Maven releases then resolve with the token as the `settings.xml` server password
@@ -785,16 +883,24 @@ and the generated metadata's field order.
       plugin fails on its final group-level `PUT` after every file has landed; and in proxied
       mode the patterned-`pull` token resolves an in-pattern artifact and is refused another.
 - [ ] AC13: A file, sidecar or metadata request the shared policy layer refuses answers `403`
-      with a `text/plain` body naming the policy, on the hosted and the proxied path, and real
-      `mvn` and `gradle` resolves of the refused version exit non-zero naming the status, with
-      the body captured in the transcript.
+      through `WriteRefusal` with a `text/plain` body naming the policy and, on the HTTP/1.1
+      connection the harness terminates, the status line `Refused by policy: {condition}`
+      observed on the raw socket, on the hosted and the proxied path; real `mvn` and `gradle`
+      resolves of the refused version exit non-zero with that phrase in their output, the proof
+      `supply-chain-policy.md` AC18 assigns to the first reason-phrase-only client; and the
+      case's capture of whether either client falls back to a second configured repository
+      fills Maven's row of that spec's "When a refusal binds, per format" table in the same
+      change (its AC20).
 - [ ] AC14: The proxied path resolves a release and its dependency from a plain-layout upstream
       stand-in and, from fresh client caches, a second resolve on each pinned client reaches
       this registry while the upstream receives no request, both asserted at the network layer;
       every served file is byte-identical to the upstream's and was verified against the
       strongest sidecar or the `x-checksum-sha1` header the stand-in served before being
-      committed, a stand-in serving neither uses the completion-only mode and a truncated body
-      is never committed; a missing version's POM, a missing `.module` and a missing `.sha1`
+      committed, a stand-in serving neither uses the completion-only mode in which the client
+      streams from the first byte and a truncated or stalled body is never committed, leaves no
+      `File` behind and reaches the real client as a short-closed transfer it reports as a
+      failure and never as a file it accepts (`proxy-cache.md` AC20); a missing version's POM,
+      a missing `.module` and a missing `.sha1`
       are each negatively cached while a `429` or `5xx` is not; and no served document carries
       any upstream URL because none exists.
 - [ ] AC15: A proxied artifact-level and version-level document are revalidated after their TTL
@@ -817,8 +923,11 @@ and the generated metadata's field order.
 - [ ] AC18: A release deployed by a GPG-signing Maven build stores each `.asc` as a file of the
       version and serves it byte-identical with no sidecars of its own, Gradle dependency
       verification with the signing key trusted passes against this registry and fails against
-      a tampered signature, and a `.asc` fetched through the proxied path is byte-identical to
-      the stand-in's.
+      a tampered signature, a `.asc` fetched through the proxied path is byte-identical to the
+      stand-in's, and the registry's own `openpgp` verdict over each `.asc` is recorded and never
+      enforced: the tampered signature commits with a `failed` verdict, a real `mvn` resolve
+      without a signature rule installs it, and the same artifact is refused at resolution once
+      a rule requiring `verified` binds (this format's half of `artifact-verification.md` AC21).
 - [ ] AC19: sbt 1.13.0 and Leiningen 2.13.0, each pinned by image digest, pass this format's
       resolve cases on both paths as the client (AC1, AC3 and AC14), appearing in the matrix's
       Client column under the Maven row; and Apache Ivy either passes the same cases before this
@@ -835,15 +944,26 @@ and the generated metadata's field order.
       build across members, and its group-level document the union of their `plugins`, each
       proven by a real resolve that succeeds only through the merge.
 - [ ] AC22: Every level of `maven-metadata.xml` on the hosted path is produced by the shared
-      index service inside the triggering write, never by the handler and never from a client
+      index runtime inside the triggering write through the handler's `Indexer` generator in
+      `internal/format/maven/index`, never by the handler's serving code and never from a client
       body, proven by an architecture test that the handler package holds no metadata renderer
-      and by a document above the inline size threshold being stored as a CAS blob, protected
-      across a GC sweep by the CAS-backed-metadata mark root, and served to a real client
-      afterwards; and the `ETag` of every generated document changes on a repoint.
+      and requests no regeneration (`signing-service.md` AC1) and by a document above the inline
+      size threshold being stored as a CAS blob, protected across a GC sweep by the
+      CAS-backed-metadata mark root, and served to a real client afterwards; a write touching one
+      artifact leaves every other artifact's document bytes and `ETag` unchanged
+      (`signing-service.md` AC4); and every generated document is served through `ServeDocument`
+      with a `Last-Modified` that moves forward on a repoint in either direction and an `ETag`
+      that changes with it (`signing-service.md` AC11).
 - [ ] AC23: An `http://` externally visible base URL is refused at configuration unless the
       plaintext flag is set, and with TLS terminated by the harness with its CA in each client's
       truststore, every pinned client resolves and deploys with no insecure-protocol opt-in on
       the client side.
+- [ ] AC24: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
+      availability `available`, `Virtual: supported` and `Rename: supported`; a real `mvn`
+      resolve from a renamed repository succeeds under the new name in both modes while the old
+      name answers exactly what a never-existing repository answers, and a `mvn deploy` into the
+      renamed repository regenerates its documents as before; and a virtual repository of two
+      members serves a file present in both from the first member.
 
 ## Test Plan
 
@@ -858,25 +978,29 @@ and the generated metadata's field order.
 | AC7 | conformance | `conformance/maven/module_test.go` (publish on both Gradle releases; consume on Gradle, Maven, sbt and Leiningen; the `metadataSources` variant) |
 | AC8 | conformance + integration | `conformance/maven/dynamic_versions_test.go` (each client's selectors; the no-document failure); `internal/format/maven/metadata_order_test.go` (`latest` and `release` by deploy order) |
 | AC9 | conformance + integration | `conformance/maven/plugin_prefix_test.go` (plugin deploy and `mvn {prefix}:{goal}` on both releases); `internal/format/maven/plugin_descriptor_test.go` (prefix read from `plugin.xml`, `404` for a plugin-less group) |
-| AC10 | integration + conformance | `internal/format/maven/manage_test.go` (one snapshot per operation, retirement with same and different bytes, after pruning under an injected clock, `delete` refusal, proxied refusal); `conformance/maven/hosted_delete_test.go` (the `script` operates through the management endpoint, real resolves then fail, a real redeploy is refused) |
+| AC10 | integration + conformance | `internal/format/maven/manage_test.go` (one snapshot per operation with the regenerated documents in it, retirement with same and different bytes on the core-held record, after pruning under an injected clock and after a backwards repoint and back, `delete` refusal, the whole-operation refusal of a patterned `prune`, proxied `405`); `conformance/maven/hosted_delete_test.go` (one `script`-driven case per declared kind, `management-api.md` AC24 and `conformance-harness.md` AC26: the `script` operates through the management endpoint, real resolves then fail, a real redeploy is refused; a second case starts from a `Retirement` record seeded through `state`) |
 | AC11 | conformance + integration | `conformance/maven/auth_test.go` (private repository on all four pinned clients; challenge equality across existing and missing repositories from the transcript; preemptive `PUT` and `BasicAuthentication` from the transcript; rejected credential and `pull`-less token); `internal/format/maven/auth_test.go` (plaintext refusal under `auth.md` AC27, credential-less `PUT` `403`) |
 | AC12 | conformance + unit | `conformance/maven/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; prefix resolution and plugin deploy under the pattern); `internal/format/maven/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
-| AC13 | conformance | `conformance/maven/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; `mvn` and `gradle` transcripts) |
-| AC14 | conformance + integration | `conformance/maven/proxied_test.go` (transcript and network-level assertion, fresh client caches in setup, byte comparison, stand-ins with sidecars, headers only, and neither, throttling and missing coordinates); `internal/format/maven/proxied_verify_test.go` (sidecar priority, completion-only mode, truncation) |
+| AC13 | conformance | `conformance/maven/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; the raw status line read from the socket; `mvn` and `gradle` transcripts and output with the phrase asserted, the case `supply-chain-policy.md` AC18 names; a second configured repository to capture fallback for its AC20 row) |
+| AC14 | conformance + integration | `conformance/maven/proxied_test.go` (transcript and network-level assertion, fresh client caches in setup, byte comparison, stand-ins with sidecars, headers only, and neither, one that truncates and one that stalls a body with the client's short-close failure and the absent `File` asserted, the case `conformance-harness.md` names for `mvn` under `proxy-cache.md` AC20, throttling and missing coordinates); `internal/format/maven/proxied_verify_test.go` (sidecar priority, completion-only mode, truncation) |
 | AC15 | conformance | `conformance/maven/proxied_ttl_test.go` (mutating plain-layout stand-in serving `ETag`; upstream `304` and client `304` and `HEAD` at the network layer; the SNAPSHOT-file `404` revalidation) |
 | AC16 | integration | `internal/format/maven/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
 | AC17 | conformance + unit | `conformance/maven/head_test.go` (`gradle --refresh-dependencies` transcript); `internal/format/maven/conditional_test.go` (`HEAD` header equality, `304`) |
-| AC18 | conformance | `conformance/maven/signatures_test.go` (a committed fixture signed once with a fixture key, deployed by real `mvn`; Gradle `verification-metadata.xml` trusting the key, then a tampered `.asc` seeded through `state`; proxied byte comparison) |
+| AC18 | conformance | `conformance/maven/signatures_test.go` (a committed fixture signed once with a fixture key, deployed by real `mvn`; Gradle `verification-metadata.xml` trusting the key, then a tampered `.asc` seeded through `state`; proxied byte comparison; the repository's `openpgp` trust set seeded through the `trust` key, the recorded-not-enforced pair shared with `artifact-verification.md` AC21's `conformance/core/verdict_enforcement_test.go`) |
 | AC19 | conformance | `conformance/maven/clients_test.go` (sbt and Leiningen pinned by digest running the resolve, SNAPSHOT and proxied cases; an Ivy case that is either passing or absent together with the catalogue row) |
 | AC20 | conformance | `conformance/maven/replay_test.go` |
 | AC21 | integration + conformance | `internal/format/maven/upstream_config_test.go` (`http://` upstream, HTML probe answer, `405` on remote writes); `conformance/maven/virtual_test.go` (a virtual repository over a local and a remote member; range, SNAPSHOT and prefix resolutions that succeed only through the merge) |
-| AC22 | architecture test + integration | `internal/format/maven/arch_test.go` (no renderer in the handler package); `internal/storage/metadata_root_test.go` (threshold crossing, sweep, serve); `internal/format/maven/etag_test.go` (repoint changes the `ETag`) |
+| AC22 | architecture test + integration | `internal/format/maven/arch_test.go` (no renderer and no regeneration request in the handler package; the generator lives in `internal/format/maven/index`); `internal/index/dispatch_test.go` and `internal/index/accounting_test.go` (`signing-service.md` AC1, with the Maven generator as a registered fixture); `internal/storage/metadata_root_test.go` (threshold crossing, sweep, serve); `internal/format/maven/etag_test.go` (one artifact's write leaves the others' bytes and `ETag` unchanged; a repoint moves `Last-Modified` forward and changes the `ETag` through `ServeDocument`, shared with `signing-service.md` AC11's `internal/index/freshness_test.go`) |
 | AC23 | integration + conformance | `internal/format/maven/base_url_test.go` (configuration refusal); every conformance case above runs behind the harness's TLS termination with no client-side insecure opt-in, asserted by the case definitions carrying none |
+| AC24 | unit + conformance | `internal/format/maven/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/maven/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; resolve and deploy under the new name); `conformance/maven/virtual_test.go` (first-member file resolution, beside AC21's merge cases) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their visibility and type,
-`credentials`, an `upstreams` stand-in, `state` for pre-deployed versions, builds and a tampered
-signature, and `policies` with `advisories` for AC13. The issued credential reaches the clients
+`credentials`, an `upstreams` stand-in, `state` for pre-deployed versions, builds, a tampered
+signature and seeded `Retirement` records (`management-api.md`, "Retirement is core-held"),
+`trust` for AC18's trust set (`artifact-verification.md` AC25), and `policies` with `advisories`
+for AC13. Seeded state is signed and indexed through the same write-path hook as a deploy
+(`signing-service.md` AC21, `conformance-harness.md` AC24). The issued credential reaches the clients
 as the `settings.xml` server password (Maven, Leiningen), `credentials {}` (Gradle) and
 `Credentials` (sbt). The runner-enforced obligations, both modes and the unauthenticated,
 unauthorized and pattern-refusal cases in each, apply from the sibling specs and are not
@@ -889,24 +1013,27 @@ restated per criterion here.
   preconditions)
 - Path routing and case-sensitive matching, file serving through the CAS with the four
   rendered sidecars and the `x-checksum-*` headers, `HEAD` and conditional requests, the
-  three metadata levels through the shared index service with the virtual merge, the SNAPSHOT
-  filename grammar and base-version refusals, the challenge and scope mapping, the per-route
-  addressed objects and the `403` policy rendering
+  `Indexer` generator in `internal/format/maven/index` for the three metadata levels with the
+  virtual merge rule, the SNAPSHOT filename grammar and base-version refusals, the challenge and
+  scope mapping, the per-route addressed objects, the `403` policy rendering through
+  `WriteRefusal` with the phrase case (AC13), `Capabilities()` with the rename and virtual cases
+  (AC24)
 
 ### Phase 2: Deploy and management
 - Per-file writes with checksum verification, the metadata `PUT` disposition and the SNAPSHOT
   build gate, immutability with the idempotent and `409` cases, `.asc` and `.module` as files,
   the plugin descriptor read for the group-level document, `Expect: 100-continue`, the
   write-boundary declaration exercised end to end under concurrency
-- Delete a version, delete a file and prune SNAPSHOT builds through the management API, the
-  retirement set: waits on `docs/internal/plans/foundation/management-api.md` reaching
-  `planned` (Blocking preconditions; AC10)
+- The `Operator` interface declaring `delete-version`, `delete-file` and `prune`, the
+  `Retirement` coordinates returned in `Outcome`: waits on
+  `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
+  preconditions; AC10)
 
 ### Phase 3: Proxied path
 - Upstream validation, classification per file kind, sidecar-priority and completion-only
-  verification, `If-None-Match` revalidation, negative caching with the SNAPSHOT-file
-  exception, the removal table, `405` on remote writes, Maven Central preconfigured through
-  `proxy-cache.md`'s extension mechanism (the resolved preconfigured-upstream decision)
+  verification (`proxy-cache.md` AC20), `If-None-Match` revalidation, negative caching with the
+  SNAPSHOT-file exception, the removal table, `405` on remote writes, the preconfigured Maven
+  Central profile's nightly row (`proxy-cache.md` AC15; `upstream-adapters.md` AC24)
 
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate), replay-match,
@@ -1006,7 +1133,10 @@ how sources and signatures are attached in this ecosystem.
 **Why this is yours:** it sets what operators may correct in place, against an immutability
 property the proxy layer and every consumer's checksum rely on.
 
-Accepted cost: the `409` divergence on the exception list, and a retirement set to carry.
+Accepted cost: the `409` divergence on the exception list, and a retirement set to carry; since
+2026-09-28 the core carries it as `Retirement` records (`management-api.md` was Q3,
+`data-model.md` AC35), so the handler's share of that cost is returning the coordinates in
+`Outcome`.
 
 ### Resolved: base-version SNAPSHOT filenames (was Q4)
 
@@ -1089,7 +1219,11 @@ with the snapshot" a property rather than a hope under concurrency.
 class of document Maven's index is, a question the sibling specs answered two ways.
 
 Accepted cost: the precondition, and a sibling consequence for the charter's AC12 to name
-Maven beside Helm as a consumer of the service.
+Maven beside Helm as a consumer of the service; the charter applied it on 2026-09-28 (its build
+step 7 and AC12 name Maven as the first, unsigned consumer), and `signing-service.md`'s consumer
+table and generator contract (`Indexer`, `internal/format/maven/index`) now carry this format's
+requirements, so the precondition is a citation of that spec's AC1, AC3, AC4, AC11, AC19, AC24
+and AC28 (Design, "The generated documents").
 
 ### Resolved: Maven Central as a preconfigured upstream (was Q7)
 
@@ -1097,7 +1231,10 @@ Maven beside Helm as a consumer of the service.
 joins the preconfigured, enabled-by-default upstream set through `proxy-cache.md`'s own
 extension mechanism (its resolved preconfigured-set extension, was Q14), the amendment
 recorded as a sibling consequence of this spec rather than made here, with the nightly
-real-upstream job gaining its row when Maven ships (Phase 3).
+real-upstream job gaining its row when Maven ships (Phase 3). That spec made the amendment on
+2026-09-28 (its resolved second preconfigured-set extension, was Q17; AC15 and AC19), and
+`upstream-adapters.md` carries the profile row (AC24), so the consequence is discharged (Design,
+"The proxied path").
 
 The question: `proxy-cache.md` extended the owner's npm, PyPI and Docker Hub set with
 galaxy.ansible.com because that format is Tier 1, `nuget.md` adopted the same for nuget.org,
@@ -1124,3 +1261,4 @@ real Central is exercised by the recording session and the nightly job.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 1ac78d6 | authoring pass: grounded first draft, not a review | Grounded the wire contract three ways: captured traffic from Maven 3.8.8 and 3.9.11, Gradle 8.14.5 and 9.1.0, sbt 1.13.0 (Coursier) and Leiningen 2.13.0, pinned by digest, run in containers against a logging plain-layout stub (release and SNAPSHOT deploys on each Maven release and each Gradle release, a duplicate redeploy, a GPG-signed deploy with sources, a `maven-plugin` deploy and the prefix resolution it enables, two concurrent deploys reproducing the metadata lost update, cold and warm resolves on all six clients, `-U` and `--refresh-dependencies`, ranges, `RELEASE`, `1.+` and `latest.release`, a Gradle-published `.module` consumed by Gradle with and without the redirect and by Maven, sbt and Leiningen, corrupt and missing sidecars under `warn` and `-C`, the `x-checksum-*` headers on both Maven releases, the `401` challenge on reads and the preemptive `PUT` on all four, Gradle `BasicAuthentication`, wrong and missing credentials, the Maven HTTP blocker and Gradle's insecure-protocol refusal, and a dynamic version with no metadata); the Maven layout and repository-metadata references, the resolver's expected-checksums and configuration pages, the settings, deploy-mojo and 3.8.1 release-note references, Central's requirements, the Gradle Module Metadata 1.1 specification and the Gradle user guide sources (two of which the captures refute: `.module`-first lookup and sidecar fetching on resolution); and the live repo.maven.apache.org (headers, `304` on `If-None-Match` only, a wrong-case `404`, directory listings, a Gradle-published artifact's sidecars and marker, the plugins block). Design built from that: the case-sensitive path layout with no folding and no URL rewriting; the three generated metadata levels as write-triggered documents of the shared index service with the virtual merge and deploy-order `latest` and `release`; per-file writes with the SNAPSHOT build gated on the client's manifest and the client's metadata `PUT` discarded; immutability with idempotent, `409` and attachment cases and a retirement set; four rendered sidecars plus the `x-checksum-*` headers; the `.module` and `.asc` as files with the Gradle-versus-Maven resolution table; Basic after a challenge and preemptive on `PUT` with TLS enforced on both sides; the layout path as the addressed object; the `403` rendering and its reason-phrase limit; the proxied classification with sidecar-priority verification, `ETag` revalidation, the SNAPSHOT-file negative-cache exception and Maven's rows of the removal table; and the client-cache trap for every client. Seven questions written in decision shape and adopted under the standing delegation: per-file write boundary (AC2 to AC4), client metadata discarded (AC2, AC3, AC22), redeploy immutability (AC5, AC10), base-version SNAPSHOT names refused (AC5), four sidecars plus headers (AC6), generation by the shared index service (AC22), and Central preconfigured (sibling consequence). Twenty-three criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here: `auth.md` client-table rows for Gradle, sbt and Leiningen and the preemptive-`PUT` note on the `mvn` row; the charter's AC12 naming Maven as a consumer of the signing and index service; the `proxy-cache.md` preconfigured-set extension and Maven's rows in its removal table; the `management-api.md` operations; what `signing-service.md` and `artifact-verification.md` must provide; the reason-phrase finding for `supply-chain-policy.md`; and a Maven row in the management-surfaces analysis. Stays draft; awaits an independent review. |
+| 2026-09-28 | ddc73fb | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From `signing-service.md` (its consumer table, `Indexer` contract, AC1, AC3, AC4, AC5, AC11, AC19, AC24, AC28) and `project-charter.md` (step 7 and AC12 naming Maven the first unsigned consumer): the 'to be authored' and 'sibling consequence' wording in the Blocking preconditions, Design and the was-Q6 record replaced by citations; the handler's part is the generator in `internal/format/maven/index`, the virtual merge runs as `index.merge` on the shared runner, documents are served through `ServeDocument` with the pointer's forward-moving `Last-Modified`; AC22 rewritten with the shared test files. From `management-api.md` (kind table, reconciliation table, binding rule, AC4, AC5, AC6, AC7, AC24) and its was Q3 with `data-model.md` AC35: the three operations carry their kinds (`delete-version`, `delete-file`, `prune`), declared through `Operator`, no binding, retirement core-held at file granularity with the coordinates returned in `Outcome`; the retirement-set wording in Mapping, the deploy path, Management operations and the was-Q3 record replaced; AC10 gains the repoint, patterned-`prune` and per-kind-case clauses. From `auth.md`: the `gradle` / `sbt` / `lein` row and the `mvn` note exist, so the 'sibling consequences for that table' wording is gone; a sentence records that no Maven route is a descriptor (was Q23) and why. From `supply-chain-policy.md` (was Q10, AC18, AC20) and `format-handler-interface.md` AC14: refusals through `WriteRefusal` with the `Refused by policy` status-line phrase, Maven's policy case named as AC18's proof; AC13 asserts the raw status line, the phrase in `mvn` and `gradle` output and captures fallback to fill Maven's `pending` binding-table row. From `proxy-cache.md` (was Q15, AC20; was Q17, AC15, AC19), `conformance-harness.md` and `upstream-adapters.md` AC24: completion-only offered, client streams with completion withheld, short-close case in `proxied_test.go` (AC14); Central preconfigured with its profile row, the was-Q7 record marked discharged. From `artifact-verification.md` (`openpgp` entry, AC21, AC25): the Maven verdict is recorded and never enforced, AC18 gains the recorded-not-enforced pair sharing `verdict_enforcement_test.go`, the `trust` key in the Test Plan note. From `repository-lifecycle.md` AC12 and `format-handler-interface.md` AC13: a Capabilities and lifecycle section, `Virtual: supported`, `Rename: supported`, new AC24 with `rename_test.go` and `virtual_test.go`. Twenty-four criteria, each with a Test Plan row. Consequences for other files: a Maven row in `docs/internal/analysis/management-surfaces-and-the-oracle.md` (still absent); `supply-chain-policy.md`'s Maven binding row stays `pending` until AC13's case lands. Stays draft; awaits an independent review. |
