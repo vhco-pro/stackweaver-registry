@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 as a grounded first draft: the Open VSX API and the VS Marketplace-compatible gallery contract captured from ovsx 0.10.12 and 1.2.0, VSCodium 1.99.32846 and 1.135.06055 (remote extension host builds), code-server 4.139.1 and, for signature handling only, Microsoft VS Code server 1.139.1, all pinned by digest or tarball checksum and run on a dedicated Podman network against a logging, rule-injecting stub implementing the /api and /vscode routes from the reference source (genuine VSIX fixtures across four target platforms, pre-release, dependencies, a pack, a tampered package, foreign-host fallbacks, refusals with reason phrases, a Basic challenge, a control document, rollback) and through a pass-through to the live open-vsx.org and its CDN; checked against eclipse/openvsx at a6cfaf7 (server and CLI), VS Code 1.99.3, 1.135.0 and 1.139.1, the live open-vsx.org (headers, 302s, 100 sampled versions all with sha256 and signature, an Ed25519 .sigzip verified with openssl, case-insensitive lookup, the GitHub control document) and OSV (21 MAL- advisories under VSCode and VSCode:https://open-vsx.org). Eighteen questions written in decision shape and adopted under the owner's standing delegation; none open. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at 20ff418 with the foundation wave on Opus (not a review): hosted packages signed through signing-service's Indexer with no generated document and SignBlob under its one-copy Ed25519 bound, the signature a Signature record and the .sigzip assembled on read, the by-digest rotation profile (AC14, AC28); removed (version, target) pairs retired core-held and refused in the reference's wording (AC7); ovsx unpublish bound onto delete-version and delete-package, the verified declaration a configure operation (AC30); auth.md now carries the ovsx row and the query, header and read-segment forms, and an off-route query token is an authentication failure under auth was-Q24 (AC9); api/version is a descriptor (AC11); WriteRefusal with the Refused by policy phrase and the control document rendered from the advisory reader, binding row holds (AC16); declared digests from the prior .sha256 request under proxy-cache AC20, a structural verifier where none is declared, the storage host an off-origin allowlist entry with role none, pinned keys as the trust set, and a bad upstream signature now a failed verdict recorded not enforced per artifact-verification AC21 (AC21 to AC23); proxy-cache event classes and refresh (AC25); Capabilities with the rename case (AC32); trusted publishing adopted as a binding onto credential-management's exchange under Q19 (AC33). Earlier: authored 2026-09-26 from captures of ovsx 0.10.12 and 1.2.0, VSCodium 1.99 and 1.135, code-server 4.139.1 and VS Code 1.139.1; eighteen questions adopted under the standing delegation, a nineteenth at this reconciliation; none open. Awaits a /spec review pass."
 description: "Spec for the Open VSX format: the Open VSX registry API (/api metadata, per-target .vsix files, publish and unpublish with a token that released ovsx clients send only in the query string) and the VS Marketplace-compatible gallery surface (a POST extensionquery with a flags bitfield and typed criteria, and /vscode/asset routes), where every served URL, including the fallbackAssetUri the editor falls back to, names this registry, namespace ownership is expressed as auth.md pattern scopes through a namespace-bound publish base, hosted versions carry a .sigzip signed by the shared signing service, policy refusals reach the editor through a registry-served control manifest, and an open-vsx.org cache regenerates every document it serves, with ovsx 0.10.12 and 1.2.0, VSCodium 1.99 and 1.135 and code-server 4.139.1 as the oracles."
 author: michielvha
 goal: "Serve editor teams a private Open VSX registry and an open-vsx.org cache that VSCodium, code-server and ovsx use as they are, in which every extension an editor installs comes from the registry, is bound to the bytes the registry verified, and can be refused by policy with no request leaving the registry, with namespace ownership mapped onto the registry's own pattern scopes and the real clients as the oracle on both paths."
@@ -10,7 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/openvsx/**"
   - "conformance/openvsx/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed"
+fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed. Reconciled on Opus 2026-09-28 (format batch 6), adopting Q19 (trusted publishing brought into scope as a binding onto credential-management's OIDC exchange, its wire still to be captured), which also needs a Fable recheck"
 ---
 
 # Plan: Open VSX format
@@ -136,7 +136,7 @@ two codebases and whose filter type 8 means one thing to the editor and another 
 by a rule that prefers the newest version over the most specific target (captured). **Namespace
 ownership is Open VSX's whole authorization model** and has to become this registry's pattern
 scopes without a second vocabulary. **Released publishers put the token in the query string**, a
-credential form `auth.md` does not have. **No editor verifies what it installs, and the one that
+credential form `auth.md` had to add as a route-scoped presentation form. **No editor verifies what it installs, and the one that
 tries rejects this ecosystem's signatures**: VSCodium and code-server installed a tampered package
 with exit 0 and never fetched the signature, while Microsoft VS Code refused both an Open VSX
 signature and no signature (all captured). And **no editor can present a credential or show a
@@ -151,38 +151,53 @@ and the charter's breadth verdict (its AC9, build step 8) both precede it; the r
 here anyway, from this side, because a gate enforced on one side only is enforced nowhere.
 
 **The shared signing and index service must be `planned` before Phase 1.** A hosted publish is a
-client-native wire write that produces a per-version `.sigzip` inside the same write, signed by a
-registry key the service holds (the resolved hosted-signing decision below). That service is
-`docs/internal/plans/foundation/signing-service.md` (to be authored in the spec loop), which the
-charter builds at step 7 as the production form of what the step 4a prototype learned. What this
-format requires of it is stated in Design ("What the signing service must provide"), never designed
-here. Nothing is asked of its index half: this format has no repository-wide generated index.
+client-native wire write that signs its package inside the same write, with a registry key the
+service holds (the resolved hosted-signing decision below). That service is
+`docs/internal/plans/foundation/signing-service.md`, which the charter builds at step 7 as the
+production form of what the step 4a prototype learned; this format is one of its two consumers
+that use signing with no generated index ("nothing is asked of its index half", its "Two halves,
+one write"), reached through the optional `Indexer` interface with a profile that declares no
+document keys and one signing profile (its AC24), and `SignBlob` over the committed package under
+its memory bound (its "Signing stored blobs, and the memory bound", AC18). What this format
+requires of it is stated in Design ("What the signing service must provide"), each item mapped onto
+that spec's contract, never designed here.
 
 **The management API must be `planned` before Phase 2.** `ovsx unpublish` is a client-driven route
-served as a binding onto the registry-owned removal operation, and marking a namespace verified is a
-registry-owned operation with no client trigger (the resolved unpublish and verified-namespace
-decisions below). Both belong to `docs/internal/plans/foundation/management-api.md` (to be authored
-in the spec loop), whose core the charter builds at step 2 and completes at step 9.
+served as a binding onto the registry-owned `delete-version` and `delete-package` kinds, and
+declaring a namespace verified is a `configure` operation with no client trigger (the resolved
+unpublish and verified-namespace decisions below). Both are rows of
+`docs/internal/plans/foundation/management-api.md`'s cross-format reconciliation table, whose core
+the charter builds at step 2 and whose bindings land in its Phase 3. The trusted-publishing route is
+a binding onto `docs/internal/plans/foundation/credential-management.md`'s OIDC exchange, which lands
+in that spec's Phase 3, between OCI and PyPI (the resolved trusted-publishing decision below, was
+Q19), so it too exists before this handler.
 
 **Artifact verification must be `planned` before Phase 3.** A proxied package's upstream signature
 is verified against the remote repository's pinned upstream keys, and the verdict is what
 `supply-chain-policy.md`'s signature rules consume (Design, "Signing, provenance and policy"). That
-producer is `docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec
-loop; charter step 4b). This format supplies it the first Ed25519 raw-signature envelope in the
+producer is `docs/internal/plans/foundation/artifact-verification.md`, whose core lands at charter
+step 4b and whose raw Ed25519 entry (its `raw` scheme, AC16) is built with this format in its
+Phase 4 at step 11. This format supplies it the first Ed25519 raw-signature envelope in the
 catalogue.
 
-**The proxy layer must accept a declared digest obtained by a second metadata request, and the Open
-VSX upstream adapter must exist, before Phase 3.** The gallery response that leads a client to a
-package carries no digest; the digest lives in a separate `.sha256` file named by the version's
-`/api` metadata, so stream-and-verify must take a digest the handler fetched beforehand through the
-same fetch-and-cache entry. The adapter, requested of
-`docs/internal/plans/foundation/upstream-adapters.md` (to be authored in the spec loop; charter
-step 4), follows the upstream's `302` to its storage host only within an allowlist (the shape
-`composer.md` requested in its resolved dist-host decision, was Q6), fetches and revalidates the
-upstream's extension-control document, and holds the remote's pinned upstream public keys.
+**The proxy layer and the upstream transport this format needs now exist as specs; both must be
+`planned` before Phase 3.** The gallery response that leads a client to a package carries no
+digest; the digest lives in a separate `.sha256` file named by the version's `/api` metadata.
+`proxy-cache.md` accepts exactly that: "a digest a handler obtained through a prior metadata
+request, such as Open VSX's `.sha256`, is a declared digest like any other" (its "Completion-only
+mode and the verifier hook", the resolved completion-only decision, was Q15 there, AC20). The
+transport is `docs/internal/plans/foundation/upstream-adapters.md`'s `https` adapter (charter step
+4), whose requirements table carries this format's row ("Storage-host allowlist; control-document
+fetch; pinned upstream keys", its AC7): the upstream's `302` to its storage host is followed inside
+the adapter only to a host on the remote's off-origin allowlist (the shape `composer.md` requested
+in its resolved dist-host decision, was Q6), the control document is fetched by the handler through
+fetch-and-cache from a second allowlisted host, and the pinned upstream keys are the remote's
+trust set, `artifact-verification.md`'s, not the adapter's.
 
-Nothing is required of `docs/internal/plans/foundation/async-operations.md` (charter step 6a): every
-write this format makes completes inside its request, as the reference server's own `201` does.
+Nothing is required of `docs/internal/plans/foundation/async-operations.md`, which records Open VSX
+among the formats that ask nothing of it: every write this format makes completes inside its
+request, as the reference server's own `201` does, and a virtual repository renders its documents
+per request with no merge job.
 
 ## Scope
 
@@ -205,8 +220,9 @@ write this format makes completes inside its request, as the reference server's 
   extensions this repository condemns as a whole.
 - Target platforms: one package per `(version, target)`, the twelve target names the reference
   server accepts, per-target retirement and removal.
-- Hosted signing: every hosted package gets a `.sigzip` and a `.sha256` produced inside its publish,
-  signed by a registry key held by the shared signing service, with public keys addressed by digest.
+- Hosted signing: every hosted package is signed inside its publish by a registry key held by the
+  shared signing service, the signature kept as a `Signature` record and served as a `.sigzip` in
+  the reference's layout, with a `.sha256` beside it and public keys addressed by digest.
 - Names: case-preserving namespaces and extension names, unique case-insensitively, looked up
   case-insensitively; the canonical addressed object lowercased.
 - Namespace ownership as `auth.md` pattern scopes, with a namespace-bound write base so a
@@ -222,6 +238,11 @@ write this format makes completes inside its request, as the reference server's 
   upstream control document's `malicious` list as an explicit upstream security signal, negative
   caching, and this format's rows of the removal table.
 - Virtual repositories with per-extension member-ordered resolution.
+- Trusted publishing: ovsx 1.2.0's `api/-/trusted-publishing/token` route as a binding onto
+  `credential-management.md`'s OIDC exchange (the resolved trusted-publishing decision below, was
+  Q19).
+- The declared capabilities `format-handler-interface.md` AC13 names, and the shared rename case
+  `repository-lifecycle.md` AC12 requires of every format.
 - ovsx 0.10.12 and 1.2.0, VSCodium 1.99.32846 and 1.135.06055 and code-server 4.139.1 as the
   conformance oracles on both paths, and Microsoft VS Code 1.139.1 with signature verification
   switched off as a documented additional client.
@@ -235,10 +256,6 @@ done requires the deliberately unimplemented surface to be named:
 - **Download counts.** The reference increments a counter on every package download. A counter is a
   write per read, which the shared model deliberately has no place for (`data-model.md`: only a
   completed logical write creates state); counts are served as zero.
-- **Trusted publishing** (`api/-/trusted-publishing/token`, the OIDC exchange ovsx 1.2.0 performs in
-  CI). It issues registry credentials in exchange for a CI provider's identity token, which is
-  credential issuance and belongs to the token surface `auth.md` places in
-  `foundation/credential-management.md` (owed), not to a format.
 - **Deprecation, replacement and pre-release migration as published state.** Their only effect on
   an editor is through the control document's `deprecated` and `migrateToPreRelease` entries, which
   make the editor install a different extension than the one requested
@@ -366,30 +383,44 @@ The levels are exactly those `data-model.md` provides; no table is added.
 
 - **`Package.name` is `{namespace}.{extension}`** as first published, case preserved (the resolved
   name decision below). The package-level document holds the extension's **UUID** (the gallery's
-  `extensionId`, generated at the first publish of the name and never changed), the **retirement
-  set** of removed `(version, target)` pairs, and the principal of each publish for `publishedBy`.
+  `extensionId`, generated at the first publish of the name and never changed) and the principal of
+  each publish for `publishedBy`. The removed `(version, target)` pairs are **not** here: each is a
+  core-held `Retirement` record, written in the removing operation's transaction, outside snapshot
+  content and never pruned (`management-api.md`, "Retirement is core-held", its resolved
+  retirement-placement decision, was Q3 there; `data-model.md` AC35), so no repoint can restore a
+  document that predates a removal.
 - **`Version.version` is the version string**, exactly as the manifest's `Identity` declares it. The
   version-level document holds, **per target platform**, what ingest read from the package's
   `extension.vsixmanifest` and `extension/package.json` (display name, description, `engines`,
   `extensionDependencies`, `extensionPack`, categories, tags, `extensionKind`, localized languages,
   licence, repository, gallery colour and theme, whether the `Microsoft.VisualStudio.Code.PreRelease`
-  property is `true`), the package's SHA-256, the signing key's digest, the member names of each
-  extracted asset, and the publish time. A version with packages for several targets is one
+  property is `true`), the package's SHA-256, the SHA-256 of each zip entry (what the `.sigzip`'s
+  `.signature.manifest` lists), the member names of each extracted asset, and the publish time. A version with packages for several targets is one
   `Version` with several targets in its document (the resolved target-platform decision below).
 - **Files per target** `{t}`: `{t}/{namespace}.{extension}-{version}[@{t}].vsix` (the `@{t}` suffix
-  omitted for `universal`, the reference's file name, `NamingUtil`), the matching `.sigzip` and
-  `.sha256`, and each extracted asset (`package.json`, `extension.vsixmanifest`, the readme,
-  changelog, licence and icon the manifest's `Assets` name), each a `File` over a `Blob` keyed by its
-  CAS digest. Two targets with byte-identical packages share one blob.
+  omitted for `universal`, the reference's file name, `NamingUtil`), the matching `.sha256`, and each
+  extracted asset (`package.json`, `extension.vsixmanifest`, the readme, changelog, licence and icon
+  the manifest's `Assets` name), each a `File` over a `Blob` keyed by its CAS digest. Two targets with
+  byte-identical packages share one blob.
+- **The signature is a record, not a file**: a `Signature` record keyed by the package's digest and
+  the signing key, outside snapshot content, pruned with the package it signs (`signing-service.md`,
+  "Storage: bodies in the snapshot, signatures as records"; `data-model.md` AC37). The `.sigzip` a
+  client downloads is **assembled** from that record and the version document's entry digests by a
+  deterministic framing (the reference's three entries, fixed zip metadata), never by a signing
+  operation on a read (`signing-service.md` AC6), so a key rotation never rewrites a snapshot.
 - **The repository-level document** holds the namespace UUIDs (the gallery's `publisherId`, generated
   at the first publish into a namespace), the set of namespaces an administrator declared verified,
   and the case-folded name set that enforces case-insensitive uniqueness.
 - **A `remote` repository** holds, in each package-level document, the regenerated record of the
   upstream extension (every version and target with the fields above, the upstream UUIDs, the
-  upstream's declared SHA-256 per package once fetched, and the upstream's `verified` flag), CAS-backed
-  above the inline threshold (`storage-and-gc.md` AC16); in its repository-level document the
-  upstream's pinned public keys and the record of its control document; and each fetched package as a
-  `File` with a `RemoteFile` whose upstream path is the reference's file route.
+  upstream's declared SHA-256 per package once fetched, and the upstream's `verified` flag), a current
+  document carrying `proxy-cache.md`'s cache-scoped `adopted_at` (`data-model.md` AC44) and
+  CAS-backed above the inline threshold (`storage-and-gc.md` AC16); in its repository-level document
+  the record of its control document; and each fetched package, and the upstream's `.sigzip` bytes
+  beside it, as a `File` with a `RemoteFile` whose upstream path is the reference's file route. The
+  upstream's pinned public keys are the remote's **trust set**, `raw-keys` entries by digest
+  (`artifact-verification.md`, "Trust sets"), not a document of this handler's, and each fetched
+  package's verdict is that spec's record, keyed by the package digest.
 
 ### Publishing, and what counts as a write
 
@@ -413,7 +444,9 @@ committed:
    the twelve names in "Target platforms"; `engines.vscode` is present; the namespace matches the
    namespace-bound base where one was used; and every extracted asset stays within its bound.
 5. **Produce the derived files inside the write**: the `.sha256` (the package's hex digest, as the
-   reference serves it) and the `.sigzip` (Design, "Signing, provenance and policy").
+   reference serves it), written by the handler, and the package's signature, produced by the signing
+   runtime from the shared write path's pre-commit hook with no call from the handler
+   (`signing-service.md` AC1, AC24; Design, "Signing, provenance and policy").
 
 The declaration `data-model.md` requires, per the resolved write-boundary decision below:
 
@@ -430,19 +463,29 @@ The declaration `data-model.md` requires, per the resolved write-boundary decisi
   PublishExtensionVersionHandler), so ovsx's `--skip-duplicate` recognises it. **A retired one
   answers `400` with "... is already published and was removed. Extension versions are immutable, so
   this version's identity stays permanently reserved and cannot be republished."**, the reference's
-  wording, which `--skip-duplicate` deliberately does not swallow. Another target of an existing
-  version publishes normally.
+  wording, which `--skip-duplicate` deliberately does not swallow. The retirement check itself is the
+  shared write path's, against the core-held `Retirement` records, for the coordinate the handler
+  reports for the write, `{namespace}/{extension}/{version}@{target}`, which is finer than the route's
+  authorization object; the handler renders that refusal in the reference's status and wording rather
+  than as the management API's `retired` (409), because the wording is what ovsx matches
+  (`management-api.md`, "Retirement is core-held", AC12). Another target of an existing version
+  publishes normally.
 - **A spelling that differs case-insensitively from a stored namespace or extension name answers
   `409`** (the resolved name decision below).
-- **An unpublish is one write** however many `(version, target)` pairs it removes; each removed pair
-  joins the retirement set, carried forward by every later write (`data-model.md` AC33's
-  obligation), and removing an extension's last package leaves its `Package` row.
+- **An unpublish is one write** however many `(version, target)` pairs it removes; the handler returns
+  each removed pair in its `Outcome` and the core writes a `Retirement` record for it in the same
+  transaction, with nothing for the handler to carry forward (`management-api.md` AC12,
+  `data-model.md` AC35), and removing an extension's last package leaves its `Package` row
+  (`data-model.md` AC33).
 - **`verify-pat` and `namespace/create` write nothing** (the resolved namespace decision below).
-- **All are synchronous**: no `Operation` is recorded.
+- **All are synchronous.** A wire publish records no `Operation`; an unpublish and a verified
+  declaration, being management operations, complete in-request and leave the `Operation` record every
+  management operation leaves (`data-model.md`'s "Operations", widened to every management
+  operation).
 - **A proxied repository creates no snapshots**: arrival and revalidation are cache materialisation.
 
 Two concurrent publishes of different targets of one version each read-modify-write the version
-document through `data-model.md`'s revision-token retry and both land; two concurrent publishes of
+document through `data-model.md`'s revision-token retry (its AC20) and both land; two concurrent publishes of
 one `(version, target)` produce one success and one duplicate refusal. Removal rules apply the
 precedent rather than re-deciding it: no blob-store object is deleted directly (`storage-and-gc.md`
 AC15), and removing something absent answers `404` with `{"error": "Extension not found: ..."}`.
@@ -456,21 +499,52 @@ see (the resolved dependency decision below); the divergence is on the recorded 
 ### Unpublish, namespaces and the management API
 
 `ovsx unpublish` is a client-driven route and is served as a **binding onto the registry-owned
-removal operation** of `docs/internal/plans/foundation/management-api.md` (to be authored in the
-spec loop), per the cross-format precedent (`cargo.md`'s resolved yank-binding decision, was Q6):
-authorized by `delete` in the settled `(repository, action)` vocabulary, hosted only (a proxied or
-virtual repository answers `405`), its trigger verified by this registry's integration tests and by
-ovsx 1.2.0, its effect by the editors. `api/version` answers `{"version": "v1.3.0",
-"maxExtensionSize": ...}`, the lowest reference version whose client contract this spec serves (the
-header token forms included), so ovsx 1.2.0's unpublish check passes and the unreleased ovsx that
-sends `Authorization: Bearer` to 1.3.0 and later is served too (the resolved credential-form decision
-below). What this format **requires** of that API, stated rather than designed:
+removal kinds** of `docs/internal/plans/foundation/management-api.md`, the binding its
+cross-format reconciliation table names for the Open VSX row (`ovsx unpublish` onto `delete-version`
+and `delete-package`), per the cross-format precedent (`cargo.md`'s resolved yank-binding decision,
+was Q6): authorized by `delete` in the settled `(repository, action)` vocabulary, hosted only (a
+proxied or virtual repository answers `405` with the `repository-type` problem, identically through
+the binding and the API, `management-api.md` AC7), its trigger verified by this registry's
+integration tests and by ovsx 1.2.0, its effect by the editors. The handler declares the kinds
+through the optional `Operator` interface's `Operations()` and the route through `Bindings()`; the
+route has no behaviour of its own beyond parsing the version and target list into the operation and
+rendering the outcome in the reference's JSON, and its `Scope(r)` reports what the operation's
+`Authorize` reports (`management-api.md`, "Bindings: one operation, two ways in", AC8). Every
+declared kind is driven by a `script` case (`management-api.md` AC24, enforced by
+`conformance-harness.md` AC26). `api/version` answers `{"version": "v1.3.0", "maxExtensionSize":
+...}`, the lowest reference version whose client contract this spec serves (the header token forms
+included), so ovsx 1.2.0's unpublish check passes and the unreleased ovsx that sends
+`Authorization: Bearer` to 1.3.0 and later is served too (the resolved credential-form decision
+below):
 
-| Operation | What it carries | Effect a client sees | Action |
-|---|---|---|---|
-| Remove packages (`ovsx unpublish -v ... [-t ...]`) | Namespace, extension, and a list of versions, each optionally with a target | Removed packages leave every metadata document and query answer; their file and asset routes answer `404`; `--update-extensions` never moves an installed copy back, and `--install-extension --force` installs the newest remaining version (captured) | `delete` |
-| Remove an extension (`ovsx unpublish` with no `-v`) | Namespace and extension | Every package leaves; the query answers nothing for the name; the `Package` row, its UUID and its retirement set stay | `delete` |
-| Declare a namespace verified, or withdraw it | Namespace | `verified` in `api/{namespace}` and in extension metadata turns true or false; ovsx prints "(verified)" and "verified publisher" (captured) | admin role |
+| Operation | What it carries | Effect a client sees | Kind | Action |
+|---|---|---|---|---|
+| Remove packages (`ovsx unpublish -v ... [-t ...]`) | Namespace, extension, and a list of versions, each optionally with a target | Removed packages leave every metadata document and query answer; their file and asset routes answer `404`; `--update-extensions` never moves an installed copy back, and `--install-extension --force` installs the newest remaining version (captured); each removed pair is retired | `delete-version` (binding: `api/{namespace}/{extension}/delete` with a body) | `delete` |
+| Remove an extension (`ovsx unpublish` with no `-v`) | Namespace and extension | Every package leaves and is retired; the query answers nothing for the name; the `Package` row and its UUID stay | `delete-package` (binding: the same route with `allVersions=true`) | `delete` |
+| Declare a namespace verified, or withdraw it | Namespace | `verified` in `api/{namespace}` and in extension metadata turns true or false; ovsx prints "(verified)" and "verified publisher" (captured) | `configure` | admin role |
+
+`delete-version`'s retirement granularity is the handler's: it retires each `(version, target)` pair
+it removed, not the whole version, which the kind table allows ("Granularity is the handler's") and
+which the reference's per-target removal requires. The verified declaration is a `configure`
+operation whose `Apply` is this handler's, changing the repository-level document's verified set in
+one snapshot; no repository-scoped token can perform it (`auth.md` AC30).
+
+### Trusted publishing is a binding onto the OIDC exchange
+
+ovsx 1.2.0 can publish from CI with no stored token by exchanging the CI provider's OIDC identity
+token at the reference's `api/-/trusted-publishing/token`. The exchange is
+`credential-management.md`'s (`POST /api/v1/tokens/exchange`, its "OIDC exchange": a robot's trust
+policy names the issuer and claim constraints, and the minted token is an ordinary token owned by
+that robot, scoped within its grants and expiring within `credentials.exchange_token_lifetime`; its
+AC13), and that spec names this format as one of its two first consumers, written as a format-side
+binding. Per the resolved trusted-publishing decision below (was Q19), the handler serves
+`api/-/trusted-publishing/token` as a binding that translates the client's request into that
+exchange and returns the minted token in the shape ovsx expects, and nothing else, so there is one
+exchange and two ways in; the token it returns is then presented on the write routes like any other
+(Design, "Authentication"). The route's exact request and response shape was not captured by the
+authoring pass, so it is grounded in captured ovsx 1.2.0 traffic against the pinned reference server
+when the binding is written, before its case is expected to pass, never in the reference's
+documentation. The route answers `405` against a remote or virtual repository.
 
 ### The gallery query: what the `POST` body means
 
@@ -565,10 +639,17 @@ pattern.
 
 ### Authentication: the token in the query string, and reads that cannot authenticate
 
-The client table in `auth.md` has no Open VSX row, and the form released ovsx sends is none of the
-verifier's four presentation forms. This section reconciles both surfaces, per the resolved
-credential-form and private-read decisions below, and every check runs in the shared authentication
-layer.
+`auth.md` now carries this format's client row (`ovsx` / VS Code-family editors) and the three
+forms this section needs in its presentation-form table: the `token` query parameter and the
+`X-OpenVSX-Token` header, route-scoped to this format's four write routes, and the read token segment
+`-/t/{token}/`, route-scoped to its read routes and honoured only for a `pull`-only token; its AC31
+asserts every one of them, with redaction (its AC7) and the plaintext refusal (its AC27) (the
+resolved credential-form and private-read decisions below, whose sibling consequence is thereby
+met). Where a route-scoped form sits is declared by this handler beside its route-to-scope mapping
+and extracted by the shared layer, so the handler never reads a credential (`auth.md`, "Where the
+credential sits is declared, never guessed"; the declaration's home is the interface re-open input
+`format-handler-interface.md` records for route-scoped and URL-borne credentials). Every check below
+runs in the shared authentication layer.
 
 **Writes: a registry token as the `token` query parameter, `Authorization: Bearer`, or
 `X-OpenVSX-Token`.** The central verifier accepts the `token` query parameter and the
@@ -585,8 +666,10 @@ string, named rather than discovered:
   AC27 requires of the other forms.
 - **A rejected token** answers `401` with `{"error": "Invalid access token."}`, which both versions
   print (captured); never `403`, and never served as anonymous (`auth.md` AC12).
-- **A query-string token on any other route is not a credential**: the route is served as
-  credential-less, so a token pasted into a read URL grants nothing and is never logged.
+- **A query-string token on any other route is an authentication failure, never anonymous, and
+  redacted** (`auth.md` AC31; its resolved off-route decision, was Q24, which chose this over serving
+  such a request credential-less): a token pasted into a read URL answers `401`, grants nothing and is
+  never logged.
 
 **Reads: a read-only registry token as a path segment, `{base}/-/t/{token}/...`.** No editor and no
 released ovsx read sends a credential (captured), so a private repository is otherwise unreadable by
@@ -673,61 +756,90 @@ attestation, verified by `ovsx verify` and by the reference's own mirror
 (`MirrorExtensionService`, which fetches the upstream's public key and refuses a package that fails).
 
 **Hosted packages are signed by this registry**, per the resolved hosted-signing decision below:
-inside each publish, the handler asks the shared signing service for an Ed25519 signature over the
-package blob with the repository's current key, and assembles the `.sigzip` in the reference's layout
-(entries in the order `.signature.sig`, `.signature.manifest`, `.signature.p7s`, deterministic zip
-metadata). Public keys are served at `api/-/public-key/{id}` where `{id}` is the lowercase hex
-SHA-256 of the key's DER `SubjectPublicKeyInfo`, so the route is content-addressed; retired keys stay
-served for as long as a package they signed is. The gallery advertises the signature and public-key
-assets as the reference does: VSCodium and code-server never fetch them (captured), and Microsoft VS
-Code refuses Open VSX signatures and unsigned packages alike (captured), so withholding them from
-the gallery would change nothing for any client, while the `/api` surface's `files.signature` and
+inside each publish, the signing runtime produces a pure Ed25519 signature over the committed
+package blob with the repository's current key and stores it as a `Signature` record; the `.sigzip`
+is assembled from it in the reference's layout (entries in the order `.signature.sig`,
+`.signature.manifest`, `.signature.p7s`, deterministic zip metadata) when a client asks for it.
+Public keys are served at `api/-/public-key/{id}` where `{id}` is the lowercase hex SHA-256 of the
+key's DER `SubjectPublicKeyInfo`, so the route is content-addressed; retired keys stay served for as
+long as a package they signed is. The gallery advertises the signature and public-key assets as the
+reference does: VSCodium and code-server never fetch them (captured), and Microsoft VS Code refuses
+Open VSX signatures and unsigned packages alike (captured), so withholding them from the gallery
+would change nothing for any client, while the `/api` surface's `files.signature` and
 `files.publicKey` are what `ovsx verify` needs.
 
 **What the signing service must provide**, stated so the dependency on
-`docs/internal/plans/foundation/signing-service.md` (to be authored in the spec loop) cannot be
-lost, and precisely enough that the service can be specced against it:
+`docs/internal/plans/foundation/signing-service.md` cannot be lost; that spec lists these as
+`openvsx.md`'s five items (its "Who depends on this" table, "Signed per-version document") and each
+is mapped onto its contract below:
 
 1. **Pure Ed25519 (RFC 8032) detached signatures over a stored blob**, not Ed25519ph, which no
-   verifier of this ecosystem accepts (the reference's source comment on `createSignatureFile`).
-2. **Bounded memory for a large package.** Pure Ed25519 hashes the message twice, and the
-   reference needed a 2 GB heap to sign a 300 MB package until it read the package once into one
-   array (its issue #1450, cited in the same comment); the service signs a package up to the
-   maximum package size without holding more than one copy of it, or by two streaming passes over
-   the CAS blob, and the benchmark suite holds the budget (AC28).
-3. **Signing inside the triggering write**, so the `.sigzip` lands in the same snapshot as the
-   package, under `data-model.md`'s revision-token retry.
+   verifier of this ecosystem accepts (the reference's source comment on `createSignatureFile`):
+   the profile "Open VSX pure Ed25519, not Ed25519ph" with the Ed25519 raw envelope codec in
+   `internal/signing/raw` (its "Key custody"). A key requested on the `pkcs11` backend, which offers
+   no Ed25519, is refused at key creation naming the ceiling (its AC13).
+2. **Bounded memory for a large package.** Pure Ed25519 hashes the message twice, and the reference
+   needed a 2 GB heap to sign a 300 MB package until it read the package once into one array (its
+   issue #1450, cited in the same comment). `SignBlob(profile, digest)` holds peak allocation to the
+   blob's size plus a constant, reading the committed CAS blob once into a buffer sized from its
+   known length, and refuses a package above `signing.max_blob_sign_size` (default 1 GiB, above this
+   format's 262,144,000-byte default maximum) at publish; its benchmark gate is this format's
+   requirement stated from that side (`signing-service.md`, "Signing stored blobs, and the memory
+   bound", AC18), and AC28 here holds the publish end to end.
+3. **Signing inside the triggering write**, so the signature exists in the same transaction as the
+   package: the handler declares an `Indexer` whose profile names no generated document and one
+   signing profile, and the runtime, run by the shared write path's pre-commit hook, calls
+   `SignBlob` for each newly committed package (`signing-service.md` AC1, AC24). Every signature is
+   self-checked through `artifact-verification.md`'s `raw` entry before the write commits (its
+   AC17), and neither the handler nor its generator package can reach a key (its AC2).
 4. **A key per repository, rotatable, with every public key retrievable by its digest** for as long
-   as a retained snapshot references a signature it made.
+   as a retained snapshot references a signature it made: the `by-digest` rotation profile, whose
+   activation signs new packages with the new key while every existing signature keeps its key
+   (`signing-service.md`, "Rotation profiles", AC7), each step a `configure` operation on the
+   signing-key routes (`management-api.md` AC32), creating no snapshot (`signing-service.md` AC8).
+   The key's public form is the SPKI PEM `api/-/public-key/{id}` serves, byte-checked in
+   `signing-service.md` AC12.
 5. **Nothing repository-wide**: this format has no generated index, so the service's index half is
-   not used.
+   not used (`signing-service.md` AC24's second half: signing with no generated document).
 
 **Proxied packages keep the upstream's signature**, per the resolved proxied-signature decision
-below: the adapter pins the upstream's public keys in the remote repository (fetched at
-configuration from the upstream's `publicKey` URLs and on first sight of a new key identifier, each
-new key recorded with a divergence), `docs/internal/plans/foundation/artifact-verification.md` (to be
-authored in the spec loop) verifies each fetched package's `.signature.sig` against the pinned key
-its metadata names, and its verdict (verified with that key's identity, failed, or absent) is what
-`supply-chain-policy.md` AC15's rule consumes. The registry serves the upstream's `.sigzip` bytes
-and the upstream key under its digest, so `ovsx verify` through the cache proves the package is the
-one the upstream signed. A virtual repository serves each package with its supplying member's
-signature. What this format requires of that service: the Ed25519 raw envelope above, key pinning
-per remote, and a verdict computed from the CAS blob after the verified commit, never from bytes in
-flight.
+below: the remote's trust set pins the upstream's public keys as `raw-keys` entries by digest,
+fetched at configuration from the upstream's `publicKey` URLs and on first sight of a new key
+identifier, each new key creating a trust-set revision with a recorded divergence
+(`artifact-verification.md`, "Trust sets", AC16, AC23); that spec's `raw` scheme verifies each
+fetched package's `.signature.sig` against the pinned key its metadata names, from the committed CAS
+blob after the verified commit and never from bytes in flight (`proxy-cache.md`, "Verdicts come
+after the commit and never gate it"), and its verdict (`verified` with that key's identity,
+`failed`, or `absent`) is what `supply-chain-policy.md` AC15's rule consumes, recorded and not
+enforced (`artifact-verification.md` AC21). The handler reaches the entry only through the
+`Verifier` consumer interface in `Deps` (`format-handler-interface.md` AC15). The registry serves the
+upstream's `.sigzip` bytes and the upstream key under its digest, so `ovsx verify` through the cache
+proves the package is the one the upstream signed; no `Signature` record ever names a remote
+(`signing-service.md` AC20). A virtual repository serves each package with its supplying member's
+signature. The conformance matrix's verification column needs a passing hosted and a passing
+proxied verification case for Open VSX (`artifact-verification.md` AC24), which AC14 and AC23
+carry.
+
+**The registry is the only integrity check an editor has** (Design, "Nothing verifies"), so the
+shared read path verifies every package's digest while streaming it to a client and aborts with an
+operator alert on a mismatch (`storage-and-gc.md` AC21), which is what makes a storage alteration
+visible although no editor would notice it.
 
 **Advisory coverage exists.** OSV carries a `VSCode` ecosystem (Context), so coordinate-level rules
-are accepted at configuration (`supply-chain-policy.md` AC11 refuses only uncovered ecosystems). What
-matching requires, per the resolved OSV-mapping decision below, listed as consequences for
-`supply-chain-policy.md`: every Open VSX repository matches advisories of **every** `VSCode`
-variant (the Marketplace's `VSCode` and any `VSCode:{url}`), because a namespace on one registry may
-be the same publisher or a squatter of it on another and the safe error is over-refusal; names are
-matched **case-insensitively** on both sides, because the registry resolves them so and OSV's own
-query does not; an advisory's `versions` list and `ECOSYSTEM` ranges are ordered by semantic
-versioning; and the purl is `pkg:vscode-extension/{namespace}/{extension}@{version}` with the
-`platform` qualifier. Every advisory today is a `MAL-` entry, so the feed channel of the shared
-security-signal rule condemns Open VSX coordinates now. The byte-level cataloguer sees a zip holding
-a Node package tree; licence and component rules depend on its coverage of that layout, which
-`supply-chain-policy.md` measures in its own Phase 1 and refuses at configuration where it has none.
+are accepted at configuration (`supply-chain-policy.md` AC11 refuses only uncovered ecosystems).
+`supply-chain-policy.md`'s coverage table carries the row this spec asked for, per the resolved
+OSV-mapping decision below: `namespace.name` matched case-insensitively across both ecosystem
+spellings, semantic-version ordering, purl type `vscode-extension`, and every entry a security signal
+under the shared rule (its AC17). This spec adopted every `VSCode` variant (the Marketplace's
+`VSCode` and any `VSCode:{url}`), because a namespace on one registry may be the same publisher or a
+squatter of it on another and the safe error is over-refusal; that table names the two spellings
+OSV holds today, which is the same set until a third registry URL appears, and the difference is
+reported as a sibling consequence rather than decided here. The purl is
+`pkg:vscode-extension/{namespace}/{extension}@{version}` with the `platform` qualifier. Every
+advisory today is a `MAL-` entry, so the feed channel of the shared security-signal rule condemns
+Open VSX coordinates now. The byte-level cataloguer sees a zip holding a Node package tree; licence
+and component rules depend on its coverage of that layout, which `supply-chain-policy.md` measures
+in its own Phase 1 and refuses at configuration where it has none.
 
 ### Policy refusals on the wire
 
@@ -735,14 +847,22 @@ When a shared resolution call returns the typed refusal `supply-chain-policy.md`
 handler renders it per the resolved refusal-rendering decision below:
 
 - **On every route of the refused package** (the `.vsix`, every extracted asset, the `.sigzip`, the
-  `.sha256`, on both surfaces): `403` with the reason phrase `Refused by policy {policy} rule {rule}`
-  (or naming the security signal) and `{"error": "..."}` with the same text, served over HTTP/1.1.
-  ovsx prints the reason phrase on a download and the body on metadata (captured shapes); an editor
-  fails at its first manifest request with "Server returned 403", before any package byte, with no
-  request to any other host because every URL it holds names this registry.
+  `.sha256`, on both surfaces): `403` with `{"error": "refused by policy {policy}, rule {rule}:
+  {detail}"}` (or naming the security signal), written through the shared refusal writer
+  `WriteRefusal`, never a status line of the handler's own (`format-handler-interface.md` AC14), so
+  on the HTTP/1.1 the main listener speaks by default (`deployment.md`'s `server.http2: false`) the
+  status line carries the phrase `Refused by policy: {condition}`, the condition being the advisory
+  or signal id, the licence, `stale advisory data` or `unscanned` (`supply-chain-policy.md`,
+  "Rendering a refusal", its resolved refusal-status-line decision, was Q10 there, AC18). ovsx prints
+  the reason phrase on a download and the body on metadata (captured shapes); an editor fails at its
+  first manifest request with "Server returned 403", before any package byte, with no request to any
+  other host because every URL it holds names this registry.
 - **An extension condemned as a whole** (every version refused: a malware advisory or upstream
   signal with no fixed version, or a rule naming the extension) is listed in the repository's
-  control document `vscode/control.json` as `{"malicious": ["{namespace}.{extension}", ...],
+  control document `vscode/control.json`, which the handler renders from what the **advisory
+  reader** in `Deps` returns for the repository's extensions (the advisory records and standing
+  condemnations, with their sources; `supply-chain-policy.md`, "A handler may read advisories, never
+  evaluate them", AC19, which names this document as one of the reader's four consumers), as `{"malicious": ["{namespace}.{extension}", ...],
   "deprecated": {}, "search": []}`, in its stored spelling; an editor configured with it refuses the
   install, and the install of anything depending on it, with "Can't install ... since it was reported
   to be problematic." before any package request (captured). A version-level condemnation is never
@@ -757,13 +877,20 @@ handler renders it per the resolved refusal-rendering decision below:
 The operator documentation sets the editors' `controlUrl` to the repository's control document; an
 editor left on VSCodium's default reads the GitHub document instead and learns nothing of this
 registry's condemnations, and one whose control fetch fails treats the list as empty
-(`updateControlCache`).
+(`updateControlCache`). `supply-chain-policy.md`'s table "When a refusal binds, per format" carries
+this as the Open VSX row, `holds` by regeneration (its AC20): the editors retry at
+`fallbackAssetUri` and follow any `files.download`, so the refusal holds only because every URL is
+this registry's (Design, "Serving documents that cannot leave the registry"), the general rule that
+table states for every proxied format. Each refusal writes one record, readable at
+`GET /api/v1/repositories/{name}/refusals` (`supply-chain-policy.md` AC5).
 
 ### Serving documents that cannot leave the registry
 
 Per the resolved regeneration decision below, every document the registry serves is **rendered from
 its own records**, on all three paths, and every URL-valued field in it names this registry under the
-externally visible base URL that `npm.md` and `composer.md` already require the handler to know:
+externally visible base URL that `npm.md` and `composer.md` already require the handler to know
+(`deployment.md`'s `server.public_url`, read through `Deps` until the interface re-open settles its
+home):
 `assetUri`, `fallbackAssetUri` and every `files[].source` in query answers; `files`, `downloads`,
 `allVersions`, `allVersionsUrl`, `namespaceUrl`, `reviewsUrl` and `url` fields in `/api` documents;
 and the dependency and bundled-extension references. File routes are served, never redirected,
@@ -782,8 +909,19 @@ matching the current `ETag` answers `304`; query answers carry `Cache-Control: n
 reference's `public, max-age=600`; file and asset routes carry the file's digest as `ETag` and
 `Cache-Control: public, max-age=604800, immutable` on anonymously readable repositories and
 `private` otherwise, since a URL's bytes never change. Nothing is required of `data-model.md`'s
-pointer. What a rollback does to editors is theirs: an installed newer version stays until a forced
-install (captured), which the operator documentation says beside the promotion recipe.
+pointer freshness record: this format generates no document through the index runtime (its
+documents are rendered per request from records), so neither the pointer's `moved_at` nor
+`proxy-cache.md`'s cache-scoped record reaches its headers, and consequences Open item 31 recorded
+that no pointer-scoped freshness is needed. One constraint crosses from the shared layer:
+`signing-service.md` AC11's architecture test holds that no handler package sets `ETag` or
+`Last-Modified` or evaluates a conditional request itself, and it is worded for every handler
+package, while this format's `ETag`s and `304`s are on rendered documents and stored files that are
+not generated documents. The headers here are therefore required to come from a shared helper that
+takes a rendered body or a file's digest, the same conditional rule `ServeDocument` applies, rather
+than from handler code; that helper, or the test's scope narrowed to generated documents, is
+reported as a sibling consequence on `signing-service.md` rather than assumed. What a rollback does
+to editors is theirs: an installed newer version stays until a forced install (captured), which the
+operator documentation says beside the promotion recipe.
 
 ### Reading a VSIX
 
@@ -814,19 +952,25 @@ below, the canonical object is the lowercased `{namespace}/{extension}`:
 | `vscode/asset/{namespace}/{extension}/...`, the two latest-version routes | `pull` | named | `{namespace}/{extension}` |
 | `api/{namespace}` (lists that namespace's extensions) | `pull` | named | `{namespace}` |
 | `api/-/public-key/{id}` | `pull` | content-addressed | the key identified by its digest |
-| `vscode/gallery/extensionquery`, `api/-/search`, `vscode/control.json`, `api/version` | `pull` | none | - (answers over every name) |
+| `api/version` (`maxExtensionSize` and the reported version; no name, version or digest of anything the repository holds) | `pull` | descriptor | - |
+| `vscode/gallery/extensionquery`, `api/-/search`, `vscode/control.json` (its `malicious` list names extensions) | `pull` | none | - (answers over every name) |
 | `api/-/publish`, `api/-/namespace/create` on the ordinary base | `push` | none | - (the name is only in the body) |
 | `-/ns/{namespace}/api/-/publish`, `.../api/-/namespace/create`, `api/{namespace}/verify-pat` (either base) | `push` | named | `{namespace}` |
 | `api/{namespace}/{extension}/delete` (either base) | `delete` | named | `{namespace}/{extension}` |
+| `api/-/trusted-publishing/token` | none | none | - (no registry credential is presented: the OIDC identity token is verified by `credential-management.md`'s exchange, and the minted token carries the robot's grants) |
 
 A path not of one of these shapes makes `Scope(r)` return an error, which denies it as an
 unauthorized request (`format-handler-interface.md` AC10). What that gives and costs, applying
 `auth.md` rather than re-deciding it:
 
-- **A patterned `pull` cannot drive an editor**, because resolution starts at the query, whose object
-  is none: the editor reports "not found" (the consequence `cargo.md`, `conan.md`, `chef.md`,
-  `luarocks.md` and `opam.md` accepted). A patterned `pull` reads in-pattern extensions with `ovsx
-  get`, whose metadata and file routes are named.
+- **`api/version` is a descriptor** (`auth.md`'s resolved name-free-document decision, was Q23 there),
+  held to that definition by the sentinel test `format-handler-interface.md` AC12 and `auth.md` AC32
+  require on every descriptor route; a patterned `pull` reads it. **A patterned `pull` still cannot
+  drive an editor**, because resolution starts at the query, whose object is none, and the descriptor
+  kind does not change that, since an enumerating answer is never a descriptor: the editor reports
+  "not found", the consequence `rpm.md` and `hackage.md` record for their enumerating indexes. A
+  patterned `pull` reads in-pattern extensions with `ovsx get`, whose metadata and file
+  routes are named.
 - **A namespace listing is named by its namespace**, because every name it reveals lies under that
   namespace, so `acme/**` authorizes it and `acme/hello` does not.
 - **A pattern refusal is answered as absence**: `404` with `{"error": "Extension not found: ..."}`,
@@ -840,8 +984,14 @@ unauthorized request (`format-handler-interface.md` AC10). What that gives and c
 The handler owns the request and classifies for the proxy layer's fetch-and-cache API per the settled
 decisions in `proxy-cache.md`. The upstream is an Open VSX server base URL (`https://open-vsx.org`, a
 self-hosted reference, or another registry), validated at configuration by fetching `api/version` and
-one extension's metadata. An upstream credential, where one is needed, is presented by the adapter;
-the client's credential is never forwarded.
+one extension's metadata, beside the transport validation `upstream-adapters.md` runs on every remote
+create and update (its "Configuration-time validation", AC23; an invalid upstream is refused
+`upstream-invalid`). The transport is its `https` adapter under the upstream's allowlist and
+credential role; the protocol half (which documents to fetch, how records are parsed, what is
+rendered) stays in this handler. An upstream credential, where one is needed, is one of the kinds
+that adapter accepts (`none` by default; `bearer`, or `path-token` for an upstream that is itself an
+instance of this registry), presented by the adapter to the root host only (its AC6); the client's
+credential is never forwarded.
 
 | Route | Classification |
 |---|---|
@@ -858,42 +1008,56 @@ search answer never carries an upstream URL either.
 
 **Fetching a package.** On a miss for a `(version, target)` the record lists, the handler first
 obtains the upstream's declared digest: the version's `/api` document names a `sha256` file (100 of
-100 sampled live versions have one), whose 64 hex digits the adapter fetches through the same
-fetch-and-cache entry. The package is then fetched from the upstream's file route; the upstream's
-`302` to its storage host (`openvsx.eclipsecontent.org` for open-vsx.org, captured) is followed only
-to hosts on the remote's **storage-host allowlist**, which defaults to that one host for an
-open-vsx.org upstream and is empty otherwise; a redirect elsewhere answers `502`. The body is
-streamed through SHA-256 and committed only if it matches the declared digest, the initiating
-client's connection aborted before its final bytes otherwise and coalesced waiters served only from
-the CAS after the verified commit, per the settled waiter rule. Where an upstream declares no digest,
-the first verified fetch pins the CAS digest on the `File`, and a refetch after eviction with another
-digest is an integrity failure. The signature verdict is computed after the commit (Design, "Signing,
+100 sampled live versions have one), whose 64 hex digits it fetches through the same
+fetch-and-cache entry. The package is then fetched from the upstream's file route with that value as
+the request's **declared digest** (`proxy-cache.md`, "Completion-only mode and the verifier hook": a
+digest obtained through a prior metadata request "is a declared digest like any other", AC20), so the
+body is verified while it streams. The upstream's `302` to its storage host
+(`openvsx.eclipsecontent.org` for open-vsx.org, captured) is followed inside the adapter only to a
+host on the remote's **storage-host allowlist**, entries of the upstream's off-origin allowlist with
+role `none` so no credential follows the redirect, defaulting to that one host for an open-vsx.org
+upstream and empty otherwise (`upstream-adapters.md` AC6, AC7, AC8); a redirect elsewhere is refused
+by the adapter before any connection and answered `502`, and no upstream `Location` ever reaches a
+client. The package is committed only if it matches the declared digest, the initiating client's
+connection closed short before its final bytes otherwise and coalesced waiters served only from the
+CAS after the verified commit, per the settled waiter rule. Where an upstream declares no digest, the
+request carries a handler-supplied **verifier** instead, never neither (AC20 there): the VSIX
+reader's bounded structural check that the package's identity names the requested coordinate, run
+over the complete spooled body before the commit; the first verified fetch then pins the CAS digest
+on the `File`, and a refetch after eviction with another digest fails the next fetch's integrity
+check. The signature verdict is computed after the commit and never gates it (Design, "Signing,
 provenance and policy").
 
 - **Missing extensions and packages are negatively cached** with the short TTL; a `429` or `5xx` is
-  never cached as absence (`proxy-cache.md` AC9).
+  never cached as absence (`proxy-cache.md` AC9). The operator's "refresh now",
+  `POST /api/v1/repositories/{name}/refresh`, marks every record and negative entry due for
+  revalidation (`management-api.md` AC29; `proxy-cache.md` AC24).
 - **Upstream UUIDs are kept**, so an editor that installed an extension from open-vsx.org keeps
   updating it through the cache.
 
-**The upstream control document.** Per the resolved control-document decision below, the adapter
+**The upstream control document.** Per the resolved control-document decision below, the handler
 fetches the remote's configured control-document URL (for an open-vsx.org upstream the
-`EclipseFdn/publish-extensions` file VSCodium names, on a second allowlisted host) as mutable
-metadata, revalidated when the repository's own control document is requested, which every editor
-install does (captured). Each identifier in its `malicious` list is an **explicit upstream security
-signal** for that extension (or, for a bare publisher, every extension of that namespace) under the
-shared security-signal rule; its `deprecated`, `migrateToPreRelease`, `extensionsEnabledWithPreRelease`
-and `search` entries are ignored, so no upstream text can make an editor install a different
-extension than it asked for.
+`EclipseFdn/publish-extensions` file VSCodium names, on a second allowlisted host, role `none`)
+through fetch-and-cache as mutable metadata, revalidated when the repository's own control document
+is requested, which every editor install does (captured); the fetch is the handler's, the transport
+the adapter's (`upstream-adapters.md`'s requirements row). Each identifier in its `malicious` list is
+an **explicit upstream security signal** for that extension (or, for a bare publisher, every
+extension of that namespace) under the shared security-signal rule, the class `proxy-cache.md`'s
+event table lists for this document by name; its `deprecated`, `migrateToPreRelease`,
+`extensionsEnabledWithPreRelease` and `search` entries are ignored, so no upstream text can make an
+editor install a different extension than it asked for.
 
-Upstream removal maps onto the settled purge-or-flag table as Open VSX's side of that contract:
+Upstream removal maps onto `proxy-cache.md`'s event classes ("Upstream removal or replacement"), the
+handler classifying and the layer responding, as Open VSX's side of that contract:
 
-| Upstream event, as observed at revalidation | Classification |
-|---|---|
-| A new version or target, or changed descriptive fields (display name, `verified`, `deprecated`) | An **ordinary metadata change**, propagated at the next revalidation |
-| A `(version, target)` or a whole extension vanishes (an `ovsx unpublish`, an administrator's removal, a namespace rename) | Drop it from the served record; keep serving cached files by URL; record an operator-visible divergence. The wire carries no reason |
-| An identifier appears in the upstream control document's `malicious` list | An **explicit upstream security signal**: the shared security-signal rule condemns the extension, and it enters this repository's control document |
-| A package's declared `sha256` changes, or a fetched package fails it, or its signature fails against the pinned key | An **integrity failure**: never committed, a cached copy keeps serving, and the operator is alerted |
-| A package's metadata names a public key not yet pinned | The key is fetched, pinned and recorded as a divergence; an already-verified package whose key identifier changes is an integrity failure |
+| Upstream event, as observed at revalidation or fetch | Class | What this format adds |
+|---|---|---|
+| A new version or target, or changed descriptive fields (display name, `verified`, `deprecated`) | Ordinary metadata change | Propagated at the next revalidation |
+| A `(version, target)` or a whole extension vanishes (an `ovsx unpublish`, an administrator's removal, a namespace rename) | Removal with no signal | Dropped from the served record; cached files keep serving by URL. The wire carries no reason |
+| An identifier appears in the upstream control document's `malicious` list | Explicit security signal | The shared security-signal rule condemns the extension, and it enters this repository's control document |
+| A package's declared `sha256` changes, or a fetched package fails it or is truncated | Integrity failure at fetch | Nothing committed; a cached copy keeps serving; the operator is alerted with the real reason |
+| A fetched package's signature fails against the pinned key | None: a verdict, not an event | Committed with a `failed` verdict, recorded and not enforced; refused at resolution only where a rule requiring `verified` binds (`artifact-verification.md` AC21) |
+| A package's metadata names a public key not yet pinned | None: a trust-set change | The key is fetched and pinned as a new trust-set revision with a recorded divergence (`artifact-verification.md` AC16, AC23); a cached package whose metadata later names a different key keeps serving its cached bytes and signature, and the change is recorded as a divergence and alerted |
 
 Detection happens at revalidation, passively, per `proxy-cache.md`'s resolved passive-detection
 decision (was Q12). The control document is this ecosystem's upstream signal channel and OSV's `MAL-`
@@ -920,7 +1084,12 @@ extension, in member order**:
 - **Every URL names the virtual repository**, and file and asset routes resolve in the member that
   supplied the extension; `verified` and signatures are the supplying member's.
 - **The control document** lists the condemned extensions each name's supplying member condemns.
-- A virtual repository creates no snapshots, and every write route answers `405`.
+- A virtual repository creates no snapshots, and every write route answers `405` with the
+  `repository-type` problem.
+- **Nothing is merged ahead of time.** Every virtual document is rendered per request from the
+  members' records, so the format declares no `Merge` and no `index.merge` job exists for it
+  (`signing-service.md`, "The generator contract": a format whose virtual is a union of listings
+  declares no merge), and a member's write is visible in the virtual at the next request.
 
 The accepted cost: a private extension shadows every upstream version of its name, so a team that
 wants both must rename; the operator documentation says so beside the recipe.
@@ -949,14 +1118,18 @@ The clients are those named in Context, each pinned by digest or tarball checksu
 1.135.06055 in one Debian image, and code-server 4.139.1; Microsoft VS Code 1.139.1 with
 `extensions.verifySignature: false` joins the proxied and hosted install cases as a documented
 additional client. Each editor case uses a fresh extensions directory and user data directory, sets
-the gallery and control URLs explicitly, and asserts at the network layer. The catalogue counts one
-ecosystem and no multiplier row.
+the gallery and control URLs explicitly, and asserts at the network layer. Every client container
+reaches only the hostnames its case declares (`conformance-harness.md`'s resolved client-confinement
+decision, was Q6 there, AC23); the open-vsx.org stand-in's storage host and control-document host are
+`hosts` sub-entries of its `upstreams` entry, resolvable by their declared names inside the client
+container (the same criterion). The catalogue counts one ecosystem and no multiplier row.
 
 Five assertion traps are recorded where the cases are written. **An editor's download failure writes
 the error body as the package**, so a refusal case asserts the requests and the message, never only
 the exit code. **ovsx `get` succeeds on any bytes**, so a download case hashes what it saved.
 **Defaults reach open-vsx.org and GitHub**, so every case sets every URL and asserts no request left
-the test network. **VSCodium's platform is the container's**, so target cases run on `linux-x64` and
+the test network; the harness's confinement makes a default that slipped through fail at name
+resolution rather than reach the internet. **VSCodium's platform is the container's**, so target cases run on `linux-x64` and
 name what they expect. **The editor retries a failed download three rounds**, so request-count
 assertions allow six requests per refused package.
 
@@ -976,8 +1149,41 @@ publishes with unresolved dependencies accepted, differently spelled names refus
 namespace-bound base, `create-namespace` writing nothing, and the target fallback for a version with
 no universal package.
 
-`Capabilities()` declares proxy support and the reference implementation `available`
-(`format-handler-interface.md` AC13), the implementation being the Eclipse Open VSX server.
+### What it needs from Deps
+
+The pinned `Deps` (`format-handler-interface.md`): the CAS, the metadata store at all three levels
+with snapshot-pointer resolution, the fetch-and-cache entry point with classification as an argument
+and the request shape `proxy-cache.md`'s "Obligation to the handler interface" states (a declared
+digest or a verifier; a re-open input), the central authorizer, and the request logger, with the
+policy-enforcing resolution calls returning the typed refusal. Beyond the pin, each now specified by
+its owner rather than invented here: the `Verifier` consumer interface for the `raw` entry of
+`artifact-verification.md` (`format-handler-interface.md` AC15); the advisory reader for the control
+document and the refusal writer `WriteRefusal` (`format-handler-interface.md` AC14;
+`supply-chain-policy.md` AC19, AC18); `upstream.Options` on fetch-and-cache for the adapter's
+allowlist and credential role (`upstream-adapters.md`); the externally visible base URL (`npm.md`'s
+and `composer.md`'s requirement, a re-open input); the route-scoped credential declaration for the
+`token` parameter, the header and the `-/t/` segment (a re-open input); and, outside `Deps`, the
+optional `Indexer` interface through which `signing-service.md`'s runtime signs each hosted package,
+and the optional `Operator` interface through which `management-api.md`'s `Submit` reaches
+`delete-version`, `delete-package` and `configure` (optional interfaces held apart until the re-open,
+`format-handler-interface.md`'s resolved optional-interfaces decision, was Q10 there).
+
+### Capabilities and lifecycle
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available` (the Eclipse Open VSX server), `Virtual: supported` (Design, "Virtual repositories") and
+`Rename: supported`, the four fields `format-handler-interface.md` AC13 names. Rename is supported
+because no stored byte names the repository: every URL-valued field is rendered per request from the
+externally visible base URL and the repository's current name, a `.sigzip` is assembled from a
+signature record and entry digests that name no repository, public keys are addressed by digest, and
+the extension and namespace UUIDs are unchanged, so an editor repointed at the new gallery URL keeps
+updating its installed extensions. After a rename the repository serves byte-identical packages and
+signatures, every rendered URL names the new name, every `SigningKey` and signature record is
+unchanged with no re-sign (`signing-service.md` AC29), and the old name answers `not-found`
+indistinguishably from a never-existing repository (`repository-lifecycle.md` AC12).
+`repository-lifecycle.md` AC12 requires `conformance/openvsx/rename_test.go`, enforced by the
+harness's case-set validator (`conformance-harness.md` AC26); AC32 carries it with the real
+clients.
 
 ## Acceptance Criteria
 
@@ -1022,9 +1228,11 @@ no universal package.
       clients, while a retired pair answers the reference's "was removed" message and
       `--skip-duplicate` exits 1.
 - [ ] AC7: A publish of an existing `(version, target)` answers the duplicate refusal with the same
-      and with different bytes; after it is unpublished the pair is refused after the removal's
-      snapshot is pruned, after a whole-extension removal and after a pointer is moved back across
-      the removal, while another target of the same version and a new version publish normally.
+      and with different bytes; after it is unpublished the pair is refused, through the shared write
+      path's check of its core-held `Retirement` record and in the reference's wording, after the
+      removal's snapshot is pruned, after a whole-extension removal and after a pointer is moved back
+      across the removal, with no retirement state in any package-level document, while another
+      target of the same version and a new version publish normally.
 - [ ] AC8: No package is executed and no process is started by the registry: an architecture test
       asserts that `internal/format/openvsx` imports no `os/exec`, creates no process and uses no
       cgo; and packages holding a zip bomb, an entry named with `..`, an absolute path, a
@@ -1033,7 +1241,7 @@ no universal package.
       snapshot and no file created on the server, or stored inert.
 - [ ] AC9: The `token` query parameter, `Authorization: Bearer` and `X-OpenVSX-Token` each
       authenticate the same principal on the four write routes; a `token` query parameter on a read
-      route grants nothing; a rejected token answers `401` with "Invalid access token." printed by
+      route is an authentication failure answered `401`, never served as anonymous and never logged; a rejected token answers `401` with "Invalid access token." printed by
       both clients and is never served as anonymous; a token in the query string over plain HTTP is
       refused identically for a valid and an invalid token; `api/version` answers `v1.3.0` with
       the repository's maximum package size as `maxExtensionSize`, which ovsx 1.2.0 checks before
@@ -1052,7 +1260,8 @@ no universal package.
       `verify-pat acme` while `verify-pat other` answers `404`; a token holding unpatterned `pull`
       and no `push` fails `verify-pat acme` with `403` and "Insufficient access rights";
       `create-namespace` answers `201` and writes no snapshot; a token holding `pull` patterned
-      `acme/**` reads `acme.tool` through `ovsx get` and is refused `404` with
+      `acme/**` reads `api/version`, a descriptor passing the sentinel test, and reads `acme.tool`
+      through `ovsx get` and is refused `404` with
       `{"error": "Extension not found: ..."}` on `other.tool`, and the
       query refuses it; the same pattern cases hold in proxied mode.
 - [ ] AC12: `verified` is false in `api/{namespace}` and extension metadata until an administrator
@@ -1068,17 +1277,22 @@ no universal package.
       `.signature.manifest`, an empty `.signature.p7s`) whose `.signature.sig` verifies as raw
       Ed25519 over the package against the key its metadata's `files.publicKey` names (the archive
       itself named by `files.signature`), served at
-      `api/-/public-key/{sha256 of the key}`; `ovsx verify` passes for the published package and
-      fails for tampered bytes of the same identity; after a key rotation new packages carry the new
-      key and old packages still verify with the old one.
+      `api/-/public-key/{sha256 of the key}`; the signature is a `Signature` record keyed by the
+      package digest, absent from every snapshot's content, produced inside the publish by the
+      pre-commit hook and assembled on read with no signing operation; `ovsx verify` passes for the
+      published package and fails for tampered bytes of the same identity; and after a `by-digest`
+      key rotation through the signing-key routes, which creates no snapshot, new packages carry the
+      new key and old packages still verify with the old one.
 - [ ] AC15: Microsoft VS Code 1.139.1 with `extensions.verifySignature: false` installs extensions
       from a hosted, a proxied and a virtual repository.
-- [ ] AC16: A version the shared policy layer refuses answers `403` with a reason phrase and
-      `{"error": ...}` naming the policy on its package, asset, signature and checksum routes on both
-      surfaces, on the hosted and the proxied path; ovsx `get` prints the reason phrase; both
+- [ ] AC16: A version the shared policy layer refuses answers `403`, written through `WriteRefusal`
+      with the status line `Refused by policy: {condition}` over HTTP/1.1, and `{"error": ...}`
+      naming the policy on its package, asset, signature and checksum routes on both surfaces, on the
+      hosted and the proxied path; ovsx `get` prints that phrase; both
       VSCodium versions fail with "Server returned 403" before any package byte and with no request
       to any other host; every metadata document and query answer still lists the version; an
-      extension condemned as a whole appears in `vscode/control.json` and both VSCodium versions
+      extension condemned as a whole appears in `vscode/control.json`, rendered from the advisory
+      reader's answer, and both VSCodium versions
       refuse it and anything depending on it with "reported to be problematic" before any package
       request, while a version-level condemnation never appears there; and a publish refused by a
       byte-dependent rule answers `403`.
@@ -1104,19 +1318,23 @@ no universal package.
       an extension missing upstream is negatively cached so a second request within the negative
       TTL makes no upstream request; and an upstream `429` or `5xx` is neither cached as absence nor
       surfaced as not-found.
-- [ ] AC21: A stand-in package that fails its declared `.sha256`, is truncated, fails its signature
-      against the pinned key, or after eviction arrives with a digest other than the pinned one (for
-      an upstream declaring none) is never committed or delivered in full to any client through this
-      registry, the installing client failing and the real reason recorded observably to the
-      operator; and a verified package's verdict names the pinned key's identity.
+- [ ] AC21: A stand-in package that fails its declared `.sha256`, is truncated, or after eviction
+      arrives with a digest other than the pinned one (for an upstream declaring none, fetched with
+      the handler's structural verifier) is never committed or delivered in full to any client
+      through this registry, the installing client failing and the real reason recorded observably to
+      the operator; a stand-in package whose signature fails against the pinned key is committed with
+      a `failed` verdict, installs where no signature rule applies and is refused at resolution once a
+      rule requiring `verified` binds; and a verified package's verdict names the pinned key's
+      identity.
 - [ ] AC22: A stand-in redirect to a host outside the remote's storage-host allowlist answers `502`
-      with no request to that host; the open-vsx.org default allowlist holds exactly the upstream's
-      storage host; the client's credential is never forwarded; and a proxied manifest request is
+      with no connection to that host; the open-vsx.org default allowlist holds exactly the upstream's
+      storage host with role `none`, so no upstream credential follows the redirect; the client's
+      credential is never forwarded; and a proxied manifest request is
       served from the verified cached package with no request to the upstream's asset routes.
 - [ ] AC23: Through a remote repository, `ovsx verify` on a package fetched from the stand-in passes
       against the upstream key served under its digest, and the served `.sigzip` is byte-identical
-      to the stand-in's; a package whose metadata names an unpinned key pins it and records a
-      divergence.
+      to the stand-in's; a package whose metadata names an unpinned key pins it as a new revision of
+      the remote's trust set and records a divergence.
 - [ ] AC24: An identifier added to the stand-in's control document `malicious` list condemns that
       extension under the shared security-signal rule at the next control-document revalidation,
       the extension then appearing in the repository's `vscode/control.json` with its cached
@@ -1124,15 +1342,17 @@ no universal package.
       `migrateToPreRelease` and `search` entries never appear in any served document.
 - [ ] AC25: A version or target, and a whole extension, vanishing from the stand-in, and a changed
       declared digest, each keep cached files served by URL, change the served record as the
-      removal table says, and record a divergence; and an ordinary upstream metadata change is
-      propagated at the next revalidation: Open VSX's side of the settled removal table in
-      `proxy-cache.md` (its AC13).
+      removal table says, and record a divergence; an ordinary upstream metadata change is propagated
+      at the next revalidation; each event produces the `proxy-cache.md` event class the table names
+      (its AC13); and a refresh through the management API makes the next request revalidate every
+      record and negative entry.
 - [ ] AC26: A virtual repository whose members are a hosted repository then an open-vsx.org remote
       resolves each `{namespace}.{extension}` the hosted member holds only from that member on both VSCodium versions
       even when the remote holds a higher version of it or of a case variant; resolves extensions only
       the remote holds from it; answers a UUID criterion only from the supplying member, after which
       the editor's repeat by name installs it; merges search without duplicates; serves every file
-      from the supplying member; and answers `405` to every write route.
+      from the supplying member; makes a member's publish visible at the next request with no merge
+      job; and answers `405` with the `repository-type` problem to every write route.
 - [ ] AC27: A coordinate rule over an OSV-shaped `MAL-` advisory under `VSCode:https://open-vsx.org`
       for `CodeInKlingon.git-worktree-menu` refuses `codeinklingon.git-worktree-menu` requested in
       lowercase on hosted, proxied and virtual repositories; one under `VSCode` refuses the same
@@ -1141,8 +1361,9 @@ no universal package.
       the control document; and the rule is accepted at configuration.
 - [ ] AC28: A query over a hosted repository holding 18,472 extensions, a publish of a package at the
       maximum size including its signature, and a proxied install through a cold cache each
-      complete within the budgets recorded in the benchmark suite, the publish within its peak
-      memory budget, and CI fails on a regression beyond its tolerance.
+      complete within the budgets recorded in the benchmark suite, the publish's signing within
+      `signing-service.md` AC18's bound of the blob's size plus a constant, and CI fails on a
+      regression beyond its tolerance.
 - [ ] AC29: Two concurrent publishes of different targets of one version, and of different versions,
       both land with the metadata listing both; two concurrent publishes of one `(version, target)`
       produce exactly one success and one duplicate refusal; a publish racing an unpublish of its
@@ -1153,13 +1374,27 @@ no universal package.
       extension through the management binding each change exactly what they name in exactly one
       snapshot, after which the query answers and metadata omit them and their routes answer `404`;
       a principal holding `push` without `delete` is refused `403`; an unpublish of something absent
-      answers `404`; every write route against a remote or virtual repository answers `405`; and a
-      hosted publish whose `extensionDependencies` name an extension the repository lacks is
-      accepted.
+      answers `404`; the same removal submitted through the binding and through the management API's
+      `delete-version` and `delete-package` produces byte-identical served documents and snapshot
+      deltas; every write route against a remote or virtual repository answers `405`; the verified
+      declaration is a `configure` operation refused to every non-admin principal; and a hosted
+      publish whose `extensionDependencies` name an extension the repository lacks is accepted.
 - [ ] AC31: Replay-match passes against a corpus recorded from open-vsx.org and from the pinned
       reference server image, covering the recorded surface named in Design, with every divergence
       named in Design on the exception list and no `token` parameter, `-/t/` segment or token header
       value in the committed corpus.
+- [ ] AC32: `Capabilities()` declares proxy `supported`, reference implementation `available`,
+      `Virtual: supported` and `Rename: supported`; after a hosted repository is renamed, both
+      VSCodium versions and code-server repointed at the new gallery URL update an extension installed
+      before the rename and install another, ovsx 1.2.0 `get` and `verify` pass under the new URL,
+      every rendered URL names the new name, packages and signatures are byte-identical with no key
+      re-created, and the old name answers `not-found` exactly as a never-existing repository does.
+- [ ] AC33: ovsx 1.2.0 in trusted-publishing mode, given an identity token from the harness's fixture
+      OIDC issuer matching a robot's trust policy, obtains a token through
+      `api/-/trusted-publishing/token` and publishes under the robot's grants, the token expiring
+      within `credentials.exchange_token_lifetime`; an identity token matching no trust policy is
+      refused with nothing minted; and the route answers `405` against a remote or virtual
+      repository.
 
 ## Test Plan
 
@@ -1171,78 +1406,96 @@ no universal package.
 | AC4 | conformance | `conformance/openvsx/target_platform_test.go` (multi-target, mixed-version and win32-only fixtures on both VSCodium versions and code-server; `ovsx get -t`) |
 | AC5 | conformance | `conformance/openvsx/prerelease_update_test.go` (both VSCodium versions; `--pre-release`, `@version`, `--update-extensions` after a publish) |
 | AC6 | integration + conformance | `internal/format/openvsx/publish_validation_test.go` (each refusal, no snapshot, size bound while streaming chunked bodies); `conformance/openvsx/ovsx_refusals_test.go` (both ovsx versions; printed errors; `--skip-duplicate` on duplicate and on retired pairs) |
-| AC7 | integration | `internal/format/openvsx/retirement_test.go` (duplicate with same and different bytes, pruned snapshot under an injected clock, whole-extension removal, backwards repoint, other target and new version) |
+| AC7 | integration | `internal/format/openvsx/retirement_test.go` (duplicate with same and different bytes, pruned snapshot under an injected clock, whole-extension removal, backwards repoint, other target and new version, no retirement state in any document; the core check is `management-api.md` AC12's) |
 | AC8 | architecture test + integration | `internal/format/openvsx/arch_test.go` (import, process and cgo audit); `internal/format/openvsx/hostile_vsix_test.go` (bomb, path, size, XXE and prepublish-script cases; bounded time; no file created; no snapshot) |
-| AC9 | conformance + integration | `conformance/openvsx/write_credentials_test.go` (both ovsx versions with the query form; Bearer and header forms by `curl`; rejected token; plaintext refusal; `unpublish` proceeding); `internal/auth/redaction_scan_test.go` (query-string token absent from logs, traces, metrics and bodies after real publishes) |
-| AC10 | conformance + integration | `conformance/openvsx/private_read_test.go` (both VSCodium versions, code-server and `ovsx get` through `-/t/`; prefix on every URL; cache headers; challenge equality; push-bearing token refused); `internal/auth/redaction_scan_test.go` (path-segment token case) |
-| AC11 | conformance + unit | `conformance/openvsx/auth_pattern_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, in both modes; patterned credentials through the `credentials` key; namespace-bound publishes, `verify-pat`, `create-namespace`, patterned `get` and query refusal); `internal/format/openvsx/scope_object_test.go` (the object table per route, `format-handler-interface.md` AC12) |
+| AC9 | conformance + integration | `conformance/openvsx/write_credentials_test.go` (both ovsx versions with the query form; Bearer and header forms by `curl`; rejected token; off-route query token `401`; plaintext refusal; `unpublish` proceeding); `internal/auth/credential_form_test.go` (the forms and the off-route failure, `auth.md` AC31); `internal/auth/leak_test.go` (query-string token absent from logs, traces, metrics and bodies after real publishes, `auth.md` AC7) |
+| AC10 | conformance + integration | `conformance/openvsx/private_read_test.go` (both VSCodium versions, code-server and `ovsx get` through `-/t/`; prefix on every URL; cache headers; challenge equality; push-bearing token refused); `internal/auth/leak_test.go` (path-segment token case) |
+| AC11 | conformance + unit | `conformance/openvsx/auth_pattern_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, in both modes; patterned credentials through the `credentials` key; namespace-bound publishes, `verify-pat`, `create-namespace`, patterned `get`, `api/version` read and query refusal); `internal/format/openvsx/scope_object_test.go` (the object table per route and the sentinel test on `api/version` through the shared helper in `internal/format/scope_test.go`, `format-handler-interface.md` AC12, `auth.md` AC32) |
 | AC12 | integration + conformance | `internal/format/openvsx/verified_test.go` (declaration, withdrawal, admin-only, remote passthrough); `conformance/openvsx/verified_display_test.go` (ovsx 1.2.0 output) |
 | AC13 | conformance + integration | `conformance/openvsx/names_test.go` (mixed-case publish; lowercase and uppercase installs on both VSCodium versions; `ovsx get`); `internal/format/openvsx/name_uniqueness_test.go` (case-folded `409`; pattern match on the lowercased object) |
-| AC14 | integration + conformance | `internal/format/openvsx/sigzip_test.go` (layout, raw Ed25519 verification, key digest route, rotation); `conformance/openvsx/ovsx_verify_test.go` (genuine and tampered packages through ovsx 1.2.0) |
+| AC14 | integration + conformance | `internal/format/openvsx/sigzip_test.go` (layout, deterministic assembly from the record, raw Ed25519 verification, key digest route, rotation); `internal/signing/rotation_profiles_test.go` (the `by-digest` row with `ovsx verify`, `signing-service.md` AC7); `internal/model/signature_record_test.go` (absent from snapshots, `data-model.md` AC37); `conformance/openvsx/ovsx_verify_test.go` (genuine and tampered packages through ovsx 1.2.0) |
 | AC15 | conformance | `conformance/openvsx/vscode_microsoft_test.go` (VS Code server 1.139.1 with the machine setting; hosted, proxied and virtual installs) |
-| AC16 | conformance + integration | `conformance/openvsx/policy_test.go` (hosted and proxied; rules and advisories through the `policies` and `advisories` keys; ovsx and both VSCodium versions; network-layer assertion; listing kept; control-document refusal for a whole-extension condemnation and absence for a version-level one); `internal/format/openvsx/policy_publish_test.go` (byte-dependent refusal at publish) |
+| AC16 | conformance + integration | `conformance/openvsx/policy_test.go` (hosted and proxied; rules and advisories through the `policies` and `advisories` keys, admitted because the Open VSX binding row is `holds`, `conformance-harness.md` AC26; ovsx and both VSCodium versions; the phrase in ovsx's output; network-layer assertion; listing kept; control-document refusal for a whole-extension condemnation and absence for a version-level one); `internal/format/openvsx/policy_publish_test.go` (byte-dependent refusal at publish); `internal/format/refusal_writer_test.go` and `internal/policy/advisory_reader_test.go` (the writer and the reader, shared with `supply-chain-policy.md` AC18, AC19) |
 | AC17 | property + conformance | `internal/format/openvsx/served_hosts_test.go` (every served document on all three paths scanned for foreign hosts); `conformance/openvsx/fallback_containment_test.go` (primary asset `403`, `404`, `500` and wrong bytes; network-layer assertion on both VSCodium versions; the foreign-fallback control case) |
-| AC18 | conformance + integration | `conformance/openvsx/headers_test.go` (`ETag`, `Cache-Control`, `304`); `conformance/openvsx/rollback_test.go` (rollback through the management surface; query, `--update-extensions` and `--force` on both VSCodium versions) |
-| AC19 | conformance + integration | `conformance/openvsx/proxied_test.go` (stand-in serving recorded open-vsx.org answers and a storage-host redirect; both VSCodium versions, code-server, both ovsx versions; fresh containers; UUID continuity); `internal/format/openvsx/proxied_render_test.go` (regenerated documents differ from the stand-in's only in the named fields) |
+| AC18 | conformance + integration | `conformance/openvsx/headers_test.go` (`ETag`, `Cache-Control`, `304`, set by the shared helper, never the handler); `conformance/openvsx/rollback_test.go` (rollback through the management surface's pointer routes from the case `script`; query, `--update-extensions` and `--force` on both VSCodium versions) |
+| AC19 | conformance + integration | `conformance/openvsx/proxied_test.go` (stand-in serving recorded open-vsx.org answers and a storage-host redirect to a declared `hosts` stand-in; both VSCodium versions, code-server, both ovsx versions; fresh containers; UUID continuity); `internal/format/openvsx/proxied_render_test.go` (regenerated documents differ from the stand-in's only in the named fields) |
 | AC20 | conformance + integration | `conformance/openvsx/proxied_ttl_test.go` (mutating stand-in; installs before and after the TTL); `internal/format/openvsx/proxied_negative_test.go` (negative caching, throttling responses) |
-| AC21 | integration + conformance | `internal/format/openvsx/proxied_integrity_test.go` (checksum mismatch, truncation, bad signature, pinned-digest refetch; CAS and reference assertions; operator record; verdict identity); `conformance/openvsx/proxied_integrity_test.go` (a tampered package failing through both VSCodium versions) |
-| AC22 | integration | `internal/format/openvsx/storage_allowlist_test.go` (allowlisted and refused redirect hosts, the open-vsx.org default, credential non-forwarding, manifest from the cached package, asserted at the network layer) |
-| AC23 | conformance + integration | `conformance/openvsx/proxied_verify_test.go` (ovsx 1.2.0 `verify` through the remote); `internal/format/openvsx/key_pinning_test.go` (byte-identical `.sigzip`, unpinned key pinned with a divergence) |
+| AC21 | integration + conformance | `internal/format/openvsx/proxied_integrity_test.go` (checksum mismatch, truncation, pinned-digest refetch through the structural verifier; CAS and reference assertions; operator record; bad signature committed with a `failed` verdict and refused only under a signature rule; verdict identity); `internal/verify/raw/ed25519_test.go` (shared with `artifact-verification.md` AC16); `conformance/openvsx/proxied_integrity_test.go` (a tampered package failing through both VSCodium versions) |
+| AC22 | integration | `internal/format/openvsx/storage_allowlist_test.go` (allowlisted and refused redirect hosts, the open-vsx.org default with role `none`, credential non-forwarding, manifest from the cached package, asserted at the network layer; the adapter half is `upstream-adapters.md` AC6 to AC8) |
+| AC23 | conformance + integration | `conformance/openvsx/proxied_verify_test.go` (ovsx 1.2.0 `verify` through the remote, the pinned keys provisioned through the `trust` key, `artifact-verification.md` AC25); `internal/format/openvsx/key_pinning_test.go` (byte-identical `.sigzip`, unpinned key pinned as a trust-set revision with a divergence) |
 | AC24 | integration + conformance | `internal/format/openvsx/upstream_control_test.go` (malicious entry to condemnation, purge and single alert; ignored entry kinds); `conformance/openvsx/upstream_control_test.go` (the served control document refusing the install on both VSCodium versions) |
-| AC25 | integration | `internal/format/openvsx/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
-| AC26 | conformance | `conformance/openvsx/virtual_test.go` (hosted then remote members; higher upstream version and a case variant of the private name; UUID criterion and repeat by name; search merge; both VSCodium versions; provenance from the network layer; `405`) |
+| AC25 | integration | `internal/format/openvsx/removal_test.go` (stand-in presenting each event, asserting the class; refresh; the shared-layer half is `proxy-cache.md` AC13's and AC24's) |
+| AC26 | conformance | `conformance/openvsx/virtual_test.go` (hosted then remote members; higher upstream version and a case variant of the private name; UUID criterion and repeat by name; search merge; a member publish visible at the next request; both VSCodium versions; provenance from the network layer; `405`) |
 | AC27 | integration | `internal/policy/openvsx_osv_match_test.go` (both ecosystem variants, case-insensitive names, `fixed` range, `versions` list, control-document exclusion) |
-| AC28 | benchmark | `internal/format/openvsx/bench_test.go` (a generated 18,472-extension repository; query, maximum-size publish with signing and its peak memory, cold proxied install; budgets and tolerance in the benchmark gate) |
+| AC28 | benchmark | `internal/format/openvsx/bench_test.go` (a generated 18,472-extension repository; query, maximum-size publish with signing and its peak memory, cold proxied install; budgets and tolerance in the benchmark gate, a `// gate:` comment under `scripts/bench-gate.sh`); the `SignBlob` allocation bound is `signing-service.md` AC18's |
 | AC29 | integration | `internal/format/openvsx/concurrent_publish_test.go` (two writers per case, publish racing unpublish, fault injection at each write boundary, final documents and snapshot contents asserted) |
-| AC30 | conformance + integration | `conformance/openvsx/unpublish_test.go` (ovsx 1.2.0 through the management binding; version, target and extension removal; editor effects; remote and virtual `405`); `internal/format/openvsx/unpublish_test.go` (one snapshot per operation, `push`-only refusal, absent target, unresolved dependency accepted) |
+| AC30 | conformance + integration | `conformance/openvsx/unpublish_test.go` (ovsx 1.2.0 through the management binding; version, target and extension removal; the verified declaration from the case `script`; editor effects; remote and virtual `405`); `internal/format/openvsx/unpublish_test.go` (one snapshot per operation, `push`-only refusal, absent target, admin-only `configure`, unresolved dependency accepted); the binding-equivalence table test of `management-api.md` AC8 enumerating this handler's `Bindings()` |
 | AC31 | conformance | `conformance/openvsx/replay_test.go` |
+| AC32 | unit + conformance | `internal/format/capabilities_test.go` (this handler's four declarations, `format-handler-interface.md` AC13); `conformance/openvsx/rename_test.go` (editors and ovsx against the renamed repository, rendered URLs, byte comparison, old name `not-found`; required by `repository-lifecycle.md` AC12) |
+| AC33 | conformance + integration | `conformance/openvsx/trusted_publishing_test.go` (fixture OIDC issuer in a container, ovsx 1.2.0 minting through the binding and publishing; no-match refusal); `internal/format/openvsx/oidc_binding_test.go` (the binding translates into `POST /api/v1/tokens/exchange` and nothing else; `405` on remote and virtual) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their visibility and type, including a
-virtual repository's member order and a remote's storage-host allowlist, control-document URL and
-pinned keys in its repository metadata document; `credentials`, patterned and `pull`-only ones
-included; an `upstreams` stand-in (a fixture server serving recorded open-vsx.org answers, its
-storage-host redirect, a control document, and the tampered, truncated, badly signed and vanishing
-variants); `state` for pre-published packages with their derived files, retired pairs and verified
-namespaces; and `policies` and `advisories` for AC16 and AC27. The runner-enforced obligations, both
-modes and the unauthenticated, unauthorized and pattern-refusal cases in each, apply from the
-sibling specs and are not restated per criterion here.
+virtual repository's member order and a remote's storage-host allowlist and control-document URL,
+and the `signing` sub-entry of a hosted repository; `credentials`, patterned, `pull`-only and
+robot-owned ones included (`conformance-harness.md` AC25), the robot carrying a trust policy for
+AC33; `trust` for a remote's pinned upstream keys (`artifact-verification.md` AC25); an `upstreams`
+stand-in (a fixture server serving recorded open-vsx.org answers, its storage-host redirect and a
+control document on declared `hosts` stand-ins, and the tampered, truncated, badly signed and
+vanishing variants); `state` for pre-published packages, retired pairs (`management-api.md`,
+"Retirement is core-held": retirements are seedable) and verified namespaces, where a seeded hosted
+package comes out signed by the write-path hook exactly as a publish would, with no `.sigzip` seeded
+(`signing-service.md` AC21; `conformance-harness.md` AC24); and `policies` and `advisories` for AC16
+and AC27. The fixture OIDC issuer AC33 needs is a case container, as `pypi.md`'s trusted-publishing
+case uses. The runner-enforced obligations, both modes and the unauthenticated, unauthorized and
+pattern-refusal cases in each, a `script` case per declared kind and the shared rename case
+(`conformance-harness.md` AC26), apply from the sibling specs and are not restated per criterion
+here.
 
 ## Implementation Phases
 
 ### Phase 1: Hosted core
 - Waits on `docs/internal/plans/foundation/signing-service.md` reaching `planned` (Blocking
-  preconditions)
+  preconditions), its Phase 1 built (the runtime and the `Indexer` contract) and its Phase 2 (the
+  Ed25519 raw codec, `SignBlob` under its memory bound and the `by-digest` rotation profile)
 - The format-first mount, the VSIX reader and its architecture test, the `/api` and gallery read
-  surfaces with the query semantics, target platforms, publish with its validation, derived files and
-  signing, duplicate and retirement handling, names, the write credential forms and their redaction,
-  private reads through the path token, the namespace-bound base, `verify-pat` and `create-namespace`,
-  per-route addressed objects, freshness headers, the `403` policy rendering and the control
-  document, the benchmarks
+  surfaces with the query semantics, target platforms, publish with its validation, the `.sha256` and
+  the signature record through the pre-commit hook, the assembled `.sigzip`, duplicate handling and
+  the core-held retirement check in the reference's wording, names, the write credential forms and
+  the read segment through the shared verifier, the namespace-bound base, `verify-pat` and
+  `create-namespace`, per-route addressed objects with the descriptor sentinel test, freshness
+  headers through the shared helper, the `403` policy rendering through `WriteRefusal` and the
+  control document through the advisory reader, `Capabilities()` and the rename case (AC32), the
+  benchmarks
 
 ### Phase 2: Management bindings
-- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
-  preconditions)
-- `ovsx unpublish` as a binding onto the removal operation, the verified-namespace declaration, and
-  the write boundaries exercised end to end under concurrency and fault injection
+- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (its Phase 3:
+  `Operator` and bindings) and, for the trusted-publishing binding, on
+  `credential-management.md`'s Phase 3 (the OIDC exchange)
+- The `Operator` interface with `delete-version`, `delete-package` and `configure`, `ovsx unpublish`
+  as a binding onto the first two, the verified-namespace declaration, the trusted-publishing binding
+  with its wire grounded by a capture first (AC33), and the write boundaries exercised end to end
+  under concurrency and fault injection
 
 ### Phase 3: Proxied path
-- Waits on `artifact-verification.md` reaching `planned`, on `proxy-cache.md` accepting a declared
-  digest from a prior metadata request, and on the Open VSX adapter in `upstream-adapters.md`
-  (Blocking preconditions)
+- Waits on `artifact-verification.md` (its `raw` entry, built here with this format in its Phase 4 at
+  charter step 11), `proxy-cache.md` and `upstream-adapters.md` reaching `planned` (Blocking
+  preconditions)
 - Upstream validation, per-extension records and their revalidation, regenerated documents, forwarded
-  search, package fetch through the storage-host allowlist with digest and signature verification,
-  key pinning, the upstream control document as a security signal, negative caching, the removal
-  table, `405` on remote writes
+  search, package fetch through the storage-host allowlist with a declared digest or the structural
+  verifier, signature verdicts after the commit, key pinning in the trust set, the upstream control
+  document as a security signal, negative caching and refresh, the removal event classes, `405` on
+  remote writes
 
 ### Phase 4: Virtual repositories
-- Per-extension member-ordered resolution, UUID resolution in the supplying member, merged search,
-  the merged control document, `405` on virtual writes
+- Per-extension member-ordered resolution rendered per request, UUID resolution in the supplying
+  member, merged search, the merged control document, `405` on virtual writes
 
 ### Phase 5: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate) against
   open-vsx.org and the pinned reference server, replay-match, the exception-list entries named in
-  Design, and the matrix rows for the deliberately unimplemented surface
+  Design, the matrix rows for the deliberately unimplemented surface, and the matrix's verification
+  column (`artifact-verification.md` AC24)
 
 ## Tasks
 
@@ -1250,9 +1503,10 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None open. The eighteen questions this draft raised were each written in the template's decision
-shape and then adopted at their own recommendation under the owner's standing delegation of
-2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided, folded
+None open. The eighteen questions the authoring draft raised, and a nineteenth the 2026-09-28
+reconciliation raised on Opus (trusted publishing, once the exchange it waited on existed), were each
+written in the template's decision shape and then adopted at their own recommendation under the
+owner's standing delegation of 2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided, folded
 through Scope, Design, the criteria and the Test Plan in the same pass, and reversible by the owner
 at any time. `grep -rn "standing delegation"` is the owner's review queue.
 
@@ -1279,8 +1533,12 @@ about the contract served, header forms included.
 
 **Why this is yours:** it widens the shared verifier's accepted forms, which `auth.md` owns.
 
-Accepted cost: the `auth.md` client-table row and verifier amendment, listed as a sibling
-consequence, and redaction of query strings.
+Accepted cost: the `auth.md` client-table row and verifier amendment, now made (its client table's
+`ovsx` row, its presentation-form table's `X-OpenVSX-Token` and `token` query parameter rows, route-
+scoped to the four write routes, and AC31), and redaction of query strings. `auth.md`'s resolved
+off-route decision (was Q24 there) settled the one point this record left open, in the direction
+this record did not take: a query-string token on any other route is an authentication failure,
+never served credential-less.
 
 ### Resolved: private reads for clients that cannot authenticate (was Q2)
 
@@ -1305,7 +1563,8 @@ read-only, one-repository token confines what the credential in an editor's conf
 **Why this is yours:** it adds a credential presentation form to the shared verifier and accepts
 credential-bearing URLs.
 
-Accepted cost: the verifier amendment, the operator guidance on rotation, and redaction of the path
+Accepted cost: the verifier amendment, now made (`auth.md`'s read token segment row, honoured only for
+a `pull`-only token, and AC31), the operator guidance on rotation, and redaction of the path
 segment.
 
 ### Resolved: namespace ownership as pattern scopes (was Q3)
@@ -1433,7 +1692,11 @@ regardless).
 
 **Why this is yours:** it puts a registry key's attestation on every hosted package.
 
-Accepted cost: the requirements on `signing-service.md`, including bounded-memory pure Ed25519.
+Accepted cost: the requirements on `signing-service.md`, including bounded-memory pure Ed25519, now
+met: the Open VSX pure-Ed25519 profile, `SignBlob` under its one-copy bound (its AC18) and the
+`by-digest` rotation profile. The signature is a `Signature` record rather than a stored `.sigzip`
+file, per that spec's resolved signature-placement decision (was Q2 there), which changes where the
+bytes live and not what a client downloads.
 
 ### Resolved: signatures on proxied packages (was Q9)
 
@@ -1452,7 +1715,10 @@ wants to bind to, and it is what the reference's own mirror checks.
 
 **Why this is yours:** it decides whose attestation a cached package carries.
 
-Accepted cost: the verdict requirement on `artifact-verification.md` and the key-divergence alerts.
+Accepted cost: the verdict requirement on `artifact-verification.md`, now met by its `raw` scheme and
+pinned `raw-keys` trust-set entries (its AC16, AC23), and the key-divergence alerts. That spec records
+this verdict as recorded, not enforced (its AC21), so a bad upstream signature commits with a `failed`
+verdict and refuses only where a rule requiring `verified` binds, which AC21 here now states.
 
 ### Resolved: how a policy refusal reaches an editor (was Q10)
 
@@ -1512,7 +1778,10 @@ is to one known host, and serving assets from the verified package gives one int
 
 **Why this is yours:** it widens where the proxy layer may send requests.
 
-Accepted cost: the requirements on `proxy-cache.md` and `upstream-adapters.md`.
+Accepted cost: the requirements on `proxy-cache.md` and `upstream-adapters.md`, now met: a digest from
+a prior metadata request is a declared digest (`proxy-cache.md` AC20), an upstream declaring none is
+fetched with the handler's structural verifier, and the storage host is an off-origin allowlist entry
+with role `none` (`upstream-adapters.md` AC7).
 
 ### Resolved: the upstream control document (was Q13)
 
@@ -1568,7 +1837,8 @@ authorization must not depend on the wire it arrived over.
 
 **Why this is yours:** it applies a cross-format rule to a client-native route.
 
-Accepted cost: the dependency on `management-api.md`.
+Accepted cost: the dependency on `management-api.md`, whose reconciliation table now carries the
+binding onto `delete-version` and `delete-package`.
 
 ### Resolved: unresolved dependencies at publish (was Q16)
 
@@ -1604,7 +1874,9 @@ another, all 21 advisories are malware, and over-refusal is the safe error.
 
 **Why this is yours:** it trades attribution precision against missed malware.
 
-Accepted cost: the matcher requirement on `supply-chain-policy.md`.
+Accepted cost: the matcher requirement on `supply-chain-policy.md`, now met by its coverage row (its
+AC17), which names the two ecosystem spellings OSV holds today; "every variant" and "both spellings"
+are the same set until a third appears, reported as a sibling consequence.
 
 ### Resolved: open-vsx.org as a preconfigured upstream (was Q18)
 
@@ -1625,8 +1897,40 @@ own extension mechanism (its resolved preconfigured-set extension, was Q14), the
 Accepted cost: the proxied cases run against a stand-in; the real upstream is exercised by the
 recording session.
 
+### Resolved: trusted publishing (was Q19, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation**, during the reconciliation with the
+foundation wave, on Opus. Option A: ovsx 1.2.0's `api/-/trusted-publishing/token` is served as a
+binding onto `credential-management.md`'s OIDC exchange, its wire grounded in a capture before its
+case is expected to pass (Scope; Design, "Trusted publishing is a binding onto the OIDC exchange";
+AC33; Phase 2).
+
+The question: the authoring draft put trusted publishing out of scope because issuing credentials
+"belongs to the token surface `auth.md` places in `foundation/credential-management.md` (owed), not to
+a format". That spec now exists, builds the exchange in its Phase 3, before this handler, and names
+this format as one of its two first consumers, "whose clients call a format-shaped route that binds
+onto this exchange" (consequences item credential-management 12). The reason for the exclusion is
+gone, so the question is whether to serve the route.
+
+**Recommendation:** A. The exchange is built anyway, `pypi.md` binds onto it the same way (its AC19),
+and a binding adds no credential logic to the handler; the only cost is the capture the authoring
+pass did not make.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Bind the route onto the exchange, grounded by capture** | ovsx 1.2.0 publishes from CI with no stored secret; one exchange, two ways in | A capture of ovsx 1.2.0's exchange before the binding is written, since the authoring pass recorded none |
+| **B. Keep it out of scope** | Nothing to capture | CI publishers keep a long-lived token in their secrets, for no remaining reason |
+| **C. Serve the reference's exchange semantics in the handler** | No dependency on `credential-management.md` | A second credential issuer inside a handler, which `auth.md`'s nothing-is-invented posture and `credential-management.md`'s boundary both forbid |
+
+**Why this is yours:** it widens the format's scope and adds a credential-minting route under its
+mount.
+
+Accepted cost: the capture, recorded as Phase 2's first step; C lost on the boundary, B because its
+reason expired.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 05cf090 | authoring pass: grounded first draft, not a review | Grounded four ways: captured traffic from ovsx 0.10.12 and 1.2.0, VSCodium 1.99.32846 and 1.135.06055, code-server 4.139.1 and Microsoft VS Code server 1.139.1, each pinned, on a dedicated Podman network against a logging, rule-injecting stub (the query-string token on every write of both ovsx versions whatever version the registry reports, chunked publish bodies, the `api/version` probe and the client-side unpublish floor, the `--skip-duplicate` string match, ovsx following foreign download URLs and redirects and printing only the reason phrase on downloads, the gallery query bodies with flags 950 and 439 by name and UUID, lowercased identifiers, target selection preferring the newest version, the win32-only refusal, pre-release and pinned installs, `--update-extensions` moving forward only and `--force` applying a rollback, the editor falling back to `fallbackAssetUri` on another host, a tampered package installed unverified by VSCodium and code-server, Microsoft VS Code refusing Open VSX-signed and unsigned packages unless `extensions.verifySignature` is off, userinfo ignored and a Basic challenge read as not found, a refused package written out as a corrupt zip after six requests, a refused manifest shown as `Server returned 403`, and the control document's `malicious` list refusing an install and its dependents); the eclipse/openvsx server and CLI sources and VS Code's gallery client at three versions; the live open-vsx.org (version report, headers and ignored conditional requests, CDN redirects, 100 of 100 sampled versions with `sha256` and `signature`, a raw Ed25519 signature over the whole package verified with openssl, eleven targets for one extension, case-insensitive lookup, the GitHub control document with 948 malicious entries); and OSV (a `VSCode` ecosystem with the `VSCode:https://open-vsx.org` variant, 21 `MAL-` advisories, case-sensitive name matching) and the `vscode-extension` purl. Design built from that: the wire table; seven decisive client behaviours; the shared-model mapping with targets as files of one version; publish as a client-native write with its write-boundary declaration and the reference's duplicate wording; unpublish and the verified declaration as management bindings; the full query semantics with the overloaded type 8 and per-target latest-only; names case-preserved and folded; write credentials in the query string and header forms; `pull`-only path tokens for private reads; namespace ownership as `{namespace}/**` patterns with a namespace-bound publish base; `verified` by declaration; hosted `.sigzip` signing through the shared service with its requirements, proxied signatures verified and relayed, OSV matching across variants; `403` with reason phrases, whole-extension condemnations in a registry-served control document, no elision; every served document regenerated; ETag-only freshness; a non-executing, bounded VSIX reader; per-route addressed objects; the proxied path with declared-digest verification, a storage-host allowlist, assets from the verified package and the upstream control document as a security signal, with Open VSX's removal-table rows; per-extension virtual resolution. Eighteen questions adopted under the standing delegation: write credential forms and the reported version (AC9), path-token private reads (AC10), namespaces as pattern scopes (AC11), `verified` by declaration (AC12), names (AC13), targets as files (AC4, AC7), query semantics (AC3), hosted signing (AC14), relayed proxied signatures (AC21, AC23), refusal rendering (AC16), regeneration (AC17, AC19), proxied fetch and integrity (AC21, AC22), the upstream control document (AC24), virtual repositories (AC26), unpublish as a binding (AC30), unresolved dependencies accepted (AC30), OSV matching (AC27), open-vsx.org user-configured. Thirty-one criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here. Stays draft; awaits an independent review. |
+| 2026-09-28 | 20ff418 | cross-spec reconciliation of the Wave 1 folds and the foundation wave, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying: auth reconciliation items 1 and 4 (an off-route query token is an authentication failure, never anonymous, under `auth.md` was-Q24; the forms and the client row are in `auth.md` AC31 and its tables; AC9); credential-management item 12 (trusted publishing homed in the OIDC exchange: adopted Q19, a binding, new AC33); format-management item 11 and management-api items 11 and 12 (retirement core-held, rendered in the reference's wording; kinds `delete-version`, `delete-package`, `configure` with the `ovsx unpublish` binding and `Operator`; AC7, AC30); signing-service item 11 (no index half, `Indexer` with no document keys, `SignBlob` under AC18's bound, signature records assembled into the `.sigzip`, `by-digest` profile, the five items mapped onto the contract; AC14, AC28); upstream-adapters item 12 (`https` adapter, storage host as an allowlist entry with role `none`, control-document fetch the handler's, pinned keys the trust set; AC22); proxy-cache reconciliation item 4 (the prior-metadata digest is a declared digest, AC20 there; the precondition discharged; a structural verifier where no digest is declared); artifact-verification (the `raw` entry and key pinning, AC16 and AC23 there; its AC21 records Open VSX verdicts as recorded, not enforced, so AC21 here no longer refuses the commit on a bad signature); supply-chain (the `holds` row, the `VSCode` coverage row, `WriteRefusal` and the fixed phrase shape, the advisory reader for the control document; AC16); auth was-Q23 (`api/version` a descriptor; AC11); proxy-cache event classes and refresh (AC25); conformance-harness client confinement, `hosts` stand-ins, `trust` key and seed-path signing; storage-and-gc AC21 read-path verification cited; repository-lifecycle AC12 and FHI AC13 (Capabilities and lifecycle section, new AC32); async-operations (asks nothing, confirmed, queue core at step 4b). Adopted Q19 (trusted publishing), `fable_recheck` extended. Found and reported rather than assumed: `signing-service.md` AC11's architecture test, worded for every handler package, forbids the `ETag` and `304` this format sets on per-request-rendered documents and files that are not generated documents; `supply-chain-policy.md`'s coverage row names two `VSCode` spellings where this spec adopted every variant; the auth-table and presentation forms are in place. Thirty-three criteria, each with a Test Plan row. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |

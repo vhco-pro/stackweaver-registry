@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 as a grounded first draft: the hackage-security repository contract captured from cabal-install 3.16.1.0 and 3.8.1.0 and Stack 3.11.1 and 2.9.1, each in the upstream haskell image pinned by digest, on dedicated Podman networks against a logging stub (HTTP, TLS and a second instance as a signed mirror) serving repositories built and signed with hackage-repo-tool 0.1.1.5 and crafted generations (incremental and rebased indexes, two gzip schemes, rolled-back and re-signed metadata, expired metadata, rotated online and root keys, revisions, preferred-versions, a signed mirror list); cabal upload with tokens and passwords; checked against the hackage-security, cabal-install, hackage-server and Stack sources and docs, the live hackage.haskell.org (TUF metadata, index, headers, upload challenges, a byte-for-byte pass-through that cabal and Stack verified with Hackage's own keys, and Stack 2.9.1's pre-rotation keys failing against the live root), OSV and purl. Fifteen questions written in decision shape and adopted under the owner's standing delegation; none open. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at 20ff418 with the foundation wave on Opus (not a review): the index and every TUF document generated through signing-service's Indexer and generator package internal/format/hackage/index on the pre-commit hook; timestamp and snapshot versions are data-model's per-pointer generation counter and expires is moved_at plus the window (AC6, AC36 there); the four TUF documents are PointerDocument records, root.json and mirrors.json identical on every pointer under adopted Q16 (AC34); segments declared through data-model's blob-digest list (AC28); ed25519 SigningKey roles, the root-chain rotation profile, the external backend for an operator-held root and the signing.resign cadence (AC9 to AC11, AC8); publish, annotate and delete-version on management-api with the POST upload binding and core-held retirement (AC12, AC17, AC18); X-ApiKey now in auth.md AC31 (AC20); TUF documents are descriptors so a patterned pull reads them and fails at the index (AC21); WriteRefusal and the holds/restricted-egress binding row (AC22, AC23); the tuf entry, tuf-root trust set and repository-chain verdict (AC25, AC29); paired revisions, regression not adopted and proxy-cache event classes (AC25, AC26); index.merge with a rising virtual version (AC27); Capabilities and the rename case (AC33). Earlier: authored 2026-09-26 from captures of cabal-install 3.16 and 3.8 and Stack 3.11 and 2.9; fifteen questions adopted under the standing delegation, a sixteenth at this reconciliation; none open. Awaits a /spec review pass."
 description: "Spec for Hackage (Haskell) repositories served to cabal-install and Stack through hackage-security: the only catalogue format with The Update Framework, so hosted and virtual repositories get root, snapshot, timestamp and mirrors metadata from the shared signing service with per-pointer version counters that make a rollback reach clients instead of failing them, an append-only 01-index.tar.gz built as appended gzip members so incremental Range updates survive every publish, uploads through cabal upload --publish, revisions, preferred-versions deprecation and rebasing deletion as registry-owned operations, a byte-for-byte proxied cache that never re-signs Hackage's metadata, and re-signed virtual repositories."
 author: michielvha
 goal: "Serve Haskell users a private Hackage and a verified cache of hackage.haskell.org that stock cabal-install (3.16 and 3.8) and Stack (3.11 and 2.9) update, verify end to end against root keys they hold, and install from, with a rollback that reaches every client and no refusal a signed mirror list can route around."
@@ -10,7 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/hackage/**"
   - "conformance/hackage/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed"
+fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed. Reconciled on Opus 2026-09-28 (format batch 6), adopting Q16 (root.json and mirrors.json as PointerDocument records identical on every pointer, re-rendered in one batch on any root or mirror change), which also needs a Fable recheck"
 ---
 
 # Plan: Hackage (hackage-security repositories)
@@ -118,31 +118,42 @@ upload), so no root-anchored claim is made.
 
 **The shared signing and index service must be `planned` before Phase 1.** Every hosted and virtual
 TUF document and every index generation is produced by
-`docs/internal/plans/foundation/signing-service.md` (to be authored in the spec loop), the first
-item of the charter's step 7. What this format requires of it is stated in Design ("What the
-signing and index service must provide"), never designed here.
+`docs/internal/plans/foundation/signing-service.md`, the first item of the charter's step 7:
+through the optional `Indexer` interface and this format's generator package
+`internal/format/hackage/index`, run by the shared write path's pre-commit hook (its "The generator
+contract" and "The write path dispatches", AC1). Its Phase 2 (pointer documents, cadence re-signing
+and the rotation profiles) and its Phase 3 (the `external` backend and the TUF root chain,
+"completing the TUF root chain for Hackage" in the charter's step 11) are what this handler needs
+beyond Phase 1. What this format requires of it is stated in Design ("What the signing and index
+service must provide"), each item mapped onto that spec's contract, never designed here.
 
 **The management API must be `planned` before Phase 2.** Publish, metadata revisions,
-deprecation, deletion and key rotation are operations of
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), whose core
-the charter builds at step 2 and completes at step 9; `cabal upload --publish` is a client binding
-onto its publish operation.
+deprecation and deletion are operations of `docs/internal/plans/foundation/management-api.md`,
+whose core the charter builds at step 2 and whose publish and bindings land in its Phases 2 and 3;
+its cross-format reconciliation table carries this format's four rows, and `cabal upload
+--publish` is the binding `POST upload` onto its `publish` kind. Key rotation and the operator-held
+root are `configure` operations on its signing-key routes, applied by `signing-service.md` (its
+AC15, AC16; `management-api.md` AC32).
 
-**The data model must carry two things before Phase 3**: the pointer-held signed document that
-`debian.md` already raised for its envelope, which this format's `timestamp.json` and
-`snapshot.json` also need (Design, "Pointers, rollback and the version counter"), and a
-core-visible list of the blobs a metadata document depends on, which the segmented index needs
-(Design, "Mapping onto the shared model"). Both are revisions of `data-model.md` and
-`storage-and-gc.md` raised by this spec, not tables this handler owns.
+**The data model carries what this format needs; it must be `planned` before Phase 1**, which the
+signing service's own Phase 1 entry condition already requires. The two
+revisions this spec raised are in `data-model.md`: the pointer's freshness record with its
+generation counter and the `PointerDocument` record outside snapshot content, which this format's
+`timestamp.json` and `snapshot.json` are (its "Freshness scoped to the pointer, and the documents
+that hang on it", AC36), and the declared blob-digest list a document uses to name the blobs it
+consists of, which the segmented index is (the same section, AC37), marked through by
+`storage-and-gc.md`'s fourth root (its AC16). Neither is a table this handler owns.
 
-**The proxied path depends on shared services that are requested, not assumed**: the upstream
-adapter behaviour in Design ("The proxied path") of
-`docs/internal/plans/foundation/upstream-adapters.md` (to be authored in the spec loop, charter step
-4), and the TUF chain verification requested of
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop, step
-4b). The virtual merge runs as deferred work on
-`docs/internal/plans/foundation/async-operations.md` (to be authored in the spec loop, step 6a),
-which must be `planned` before Phase 5.
+**The proxied path depends on shared services that now exist as specs**: the transport of
+`docs/internal/plans/foundation/upstream-adapters.md` (charter step 4; its requirements table row
+for this format: incremental `Range` fetches and redirects followed inside the adapter, its AC8
+and AC15), the fetch-and-cache contract of `proxy-cache.md` (declared digests, paired revisions,
+the cache-scoped freshness record, the removal event classes), and the TUF chain entry of
+`docs/internal/plans/foundation/artifact-verification.md` (its `tuf` scheme and AC17, built with
+this format in its Phase 4 at step 11). The virtual merge runs as the `index.merge` job on
+`docs/internal/plans/foundation/async-operations.md`'s queue core, which the charter builds at the
+start of step 4b, so it exists long before this handler; that spec must be `planned` before
+Phase 5.
 
 ## Scope
 
@@ -169,6 +180,8 @@ which must be `planned` before Phase 5.
   revisions verified as a chain and served byte for byte, incremental upstream index fetches,
   tarballs verified against the index, and this format's rows of the removal table.
 - **Virtual repositories**, merged and re-signed with the virtual repository's own keys.
+- **The declared capabilities** `format-handler-interface.md` AC13 names, and the shared rename
+  case `repository-lifecycle.md` AC12 requires of every format.
 
 **Out of scope for v1**, each with its reason, recorded because the interface spec's definition of
 done requires the deliberately unimplemented surface to be named:
@@ -312,36 +325,57 @@ The levels are exactly those `data-model.md` provides; no table is added.
   the tarball's SHA-256 and length, and the entry times of its `package.json` and `.cabal` entries.
 - **`File`**: one per version, `{name}-{version}.tar.gz`, keyed by CAS digest.
 - **The package-level document** holds the `preferred-versions` history (each range with its entry
-  time) and the retirement set of deleted versions.
+  time). The retirement set of deleted versions is **not** here: it is core-held, a `Retirement`
+  record per retired coordinate outside snapshot content, written in the deleting operation's
+  transaction and never pruned (`management-api.md`, "Retirement is core-held", its resolved
+  retirement-placement decision, was Q3 there; `data-model.md` AC35), so no repoint can restore a
+  document that predates a retirement.
 - **The repository-level document** holds the **index manifest**: the ordered list of segments, one
   per write, each naming the CAS digest of its raw tar bytes and of its gzip member, the running
   lengths, and the SHA-256 state of the tar and gzip streams after the last segment, so the next
   write hashes only what it appends. It also holds the repository's case index of names.
-- **Not snapshot content**: `timestamp.json` and `snapshot.json` belong to the pointer, and
-  `root.json` and `mirrors.json` to the signing service's per-repository records, so no repoint can
-  restore an older root or a lower version (next sections).
-- **A remote repository's document** holds its current and retained upstream revisions (Design, "The
-  proxied path") and the verification record of each cached tarball; none of it is snapshot
-  content.
+- **Not snapshot content**: all four TUF documents are `PointerDocument` records
+  (`data-model.md` AC36; `signing-service.md`, "Storage"): `timestamp.json` and `snapshot.json`
+  carry the pointer's own version, and `root.json` and `mirrors.json` carry the repository's current
+  root and mirror list, byte-identical on every pointer, per the resolved root-placement decision
+  below (was Q16). The keys themselves are `SigningKey` records. So no repoint can restore an older
+  root or a lower version (next sections).
+- **A remote repository's current documents** are its adopted upstream revision, each carrying
+  `proxy-cache.md`'s cache-scoped `adopted_at` and one paired-set id for the whole revision
+  (`data-model.md` AC44), with the retained previous revision for the stale bound (Design, "The
+  proxied path"); the verdict on each cached tarball is `artifact-verification.md`'s record, keyed by
+  the tarball's digest, outside the format entity model (`data-model.md`'s verification-records
+  row). None of it is snapshot content.
 
-**The segments need the core to see them.** The manifest names segment blobs inside an opaque
-document, which no mark root can read, and the per-write alternative (a whole index blob per
-generation) costs a gigabyte per write at Hackage's scale. Per the resolved index-storage decision
-below, a metadata document may declare to the core the blob digests it depends on, which GC marks
-wherever the document itself is marked, the fourth root's reach extended from a document's own blob
-to the blobs it declares. That is a revision of `data-model.md` and `storage-and-gc.md`, listed in
-the sibling consequences.
+**The segments need the core to see them, and now it does.** The manifest names segment blobs
+inside an opaque document, which no mark root can read, and the per-write alternative (a whole
+index blob per generation) costs a gigabyte per write at Hackage's scale. Per the resolved
+index-storage decision below, the document **declares the digests of its segments** to the core:
+the generator's `Generate` returns them beside the document (`signing-service.md`, "The generator
+contract"), `data-model.md` carries the declared blob-digest list (its "Freshness scoped to the
+pointer, and the documents that hang on it", AC37), and `storage-and-gc.md`'s fourth mark root
+marks through it, so a segment is live while any current or retained document declares it and
+collectable once none does (its AC16; `signing-service.md` AC5 asserts the survival). A remote's
+chunked upstream index declares its chunks the same way.
 
 ### The hosted publish path and what counts as a write
 
 `cabal upload --publish` is the one write a client triggers, so, following `debian.md`'s dput
 decision and `puppet.md`'s Forge binding, **`POST {base}/upload` is a client binding onto the
-publish operation of `docs/internal/plans/foundation/management-api.md`** (to be authored in the
-spec loop). The part named `package` is streamed into the CAS, its SHA-256 computed in the stream,
-and committed only once ingest validation passes. Responses: `200` with a one-line body (cabal
-prints it under "Warnings:"); `400` naming the rule for content that fails validation; `409` for an
-existing or retired coordinate with different bytes; `401` and `404` per `auth.md`; `405` against a
-remote or virtual repository. cabal prints the body of every refusal (captured).
+`publish` kind of `docs/internal/plans/foundation/management-api.md`**, the binding its
+cross-format reconciliation table names for the Hackage row (its "Bindings: one operation, two ways
+in"). The handler declares it through the optional `Operator` interface's `Bindings()`, and the
+route has no behaviour of its own: it streams the part named `package` into the CAS as an upload
+session's bytes, its SHA-256 computed in the stream, constructs the `publish` operation with the
+committed digest and the coordinate the filename declares, and submits it through `Submit`, the
+same entry point the API's publish uses, so the two produce byte-identical documents and snapshot
+deltas (`management-api.md` AC8). The binding renders the operation's outcome in cabal's wire, and
+cabal prints the body of every refusal (captured): `200` with a one-line body (cabal prints it under
+"Warnings:"); `400` naming the rule for content the handler's `Apply` refuses as `validation`;
+`409` for an existing coordinate with different bytes (`conflict`) and for a retired one, which the
+shared write path refuses with the `retired` problem before `Apply` runs (`management-api.md` AC12);
+`401` and `404` per `auth.md`; `405` with the `repository-type` problem against a remote or virtual
+repository, identically through the binding and the API (`management-api.md` AC7).
 
 What ingest enforces, following hackage-server's `Unpack.hs` and `Upload.hs` where the rule does not
 need Cabal's own parser, each refusal naming the rule and committing nothing:
@@ -357,9 +391,11 @@ need Cabal's own parser, each refusal naming the rule and committing nothing:
   per the resolved revision-checking decision below.
 - **Coordinates bind one set of bytes for the life of the repository.** An existing version answers
   `409` unless the bytes are identical, which answers `200` and creates no snapshot; a deleted
-  version answers `409` with any bytes, including after the deleting snapshot is pruned; a version
-  differing from an existing one only by trailing zeros (`1.2` beside `1.2.0`) answers `409`, as
-  hackage-server refuses it.
+  version answers `409` with any bytes, including after the deleting snapshot is pruned and across a
+  backwards repoint, because its `Retirement` record is core-held and checked centrally, with
+  nothing for this handler to carry forward (`management-api.md` AC12, `data-model.md` AC35); a
+  version differing from an existing one only by trailing zeros (`1.2` beside `1.2.0`) answers
+  `409`, as hackage-server refuses it.
 - **Names**: a new package whose name differs only in case from an existing one answers `409`
   (hackage-server's case-clash rule; this registry has no maintainer groups to except anyone); a name
   whose index paths do not fit a ustar entry's name and prefix fields answers `400`.
@@ -371,142 +407,217 @@ declaration:
   the release's `package.json` and `.cabal` entries, in that order, as the live index writes them.
 - **A metadata revision, a change of a package's `preferred-versions` and a deletion are each one
   write**; a retention pass over a repository is one write however many versions it removes.
-- **Two concurrent publishes** each read-modify-write the repository-level manifest through the
-  revision-token retry `data-model.md` makes mandatory (its AC20); both land, each segment after the
-  other, and each entry's time is the later of the write's commit time and the manifest's last entry
-  time, so the log never goes back in time, whatever the clock does.
-- **Re-signing** `timestamp.json` and `snapshot.json` on the expiry cadence or at a key rotation is
-  not a write and creates no snapshot. A proxied repository creates no snapshots.
+- **Two concurrent publishes** queue on the signing service's per-document transaction lock over the
+  index manifest (`signing-service.md`, "Contention", AC28) and fall back to the revision-token retry
+  `data-model.md` makes mandatory (its AC20) where the lock does not cover them; both land as two
+  snapshots, each segment after the other, and each entry's time is the later of the write's commit
+  time and the manifest's last entry time, so the log never goes back in time, whatever the clock
+  does. The two publishes are never merged into one regeneration (`signing-service.md`, "The write
+  path dispatches").
+- **A deletion is one write**, the core writing its `Retirement` record in the same transaction.
+- **Re-signing** the TUF documents on the expiry cadence, at a key rotation or when an operator-held
+  root is accepted is not a write and creates no snapshot: it produces `PointerDocument` records
+  only (`signing-service.md` AC8, AC22). A proxied repository creates no snapshots.
 
 ### Every hosted index is a write-triggered signed document
 
 Per `write-triggered-services-prototype.md`'s class and `debian.md`'s split, which this spec follows
-rather than re-deciding:
+rather than re-deciding, and as `signing-service.md` now specifies it (its "Storage: bodies in the
+snapshot, signatures as records, envelopes on the pointer"):
 
-- **Index segments are snapshot content**, produced by the signing and index service inside the
-  write that triggers them, in the same snapshot as the change, so a repoint restores them, as
-  `data-model.md` AC13 requires of all three levels. An untouched package never changes bytes.
-- **`snapshot.json` and `timestamp.json` belong to the pointer**, produced inside the write for the
-  default pointer (so the publisher sees the release at its next update), at every promotion or
-  rollback, on the expiry cadence and at key rotation, and stored beside the pointer.
-- **`root.json` and `mirrors.json` belong to the repository's signing record**, outside every
-  snapshot; every pointer's `snapshot.json` names the current ones.
-- **A deletion rebases the index**: the service regenerates the log without the deleted release's
+- **Index segments are snapshot content**, produced by this format's generator inside the write that
+  triggers them, dispatched by the shared write path's pre-commit hook with no call from the handler
+  (`signing-service.md` AC1; `data-model.md` AC37's hook), in the same snapshot as the change, so a
+  repoint restores them, as `data-model.md` AC13 requires of all three levels. An untouched package
+  never changes bytes.
+- **`snapshot.json` and `timestamp.json` belong to the pointer**: `PointerDocument` records
+  produced inside the write for the default pointer (so the publisher sees the release at its next
+  update), at every promotion or rollback inside the repoint, on the expiry cadence and at key
+  rotation, and never snapshot content (`signing-service.md` AC10; `data-model.md` AC36).
+- **`root.json` and `mirrors.json` belong to no snapshot either**: they are `PointerDocument`
+  records carrying the repository's current root and mirror list, byte-identical on every pointer
+  and re-rendered on every pointer at once whenever either changes (the resolved root-placement
+  decision below, was Q16), so every pointer's `snapshot.json` names the current ones and no repoint
+  restores an older root.
+- **A deletion rebases the index**: the generator regenerates the log without the deleted release's
   entries as one new segment list, a non-prefix change every client absorbs with one whole download
   after two failed incremental attempts (captured for any non-prefix change). Rebases are therefore
   rare administrative events, which the operator documentation says of deletion and of retention
-  rules on this format.
+  rules on this format; a retention pass is a write like any deletion and runs the same generator
+  (`signing-service.md` AC1).
 
 ### Pointers, rollback and the version counter
 
-Each pointer carries a **TUF version counter**. Every `timestamp.json` and `snapshot.json` produced
-for a pointer takes the version one above the highest either document has ever carried on that
-pointer, per the resolved pointer-metadata decision below. What each transition does:
+Each pointer carries a **version counter**, and it is not this handler's: it is the **generation
+counter** of the pointer's freshness record in `data-model.md`, advanced by one at every pointer
+transition (a write advancing the default pointer, a promotion, a rollback, a key switch, a cadence
+re-sign), written only by the transition itself in the transaction that moves the pointer, and never
+lowered by a clock step (its "Freshness scoped to the pointer", AC36). Per the resolved
+pointer-metadata decision below, every `timestamp.json` and `snapshot.json` produced for a pointer
+carries that counter's value as its TUF `version`, so both documents share one sequence that only
+rises, and the counter is the one this spec's per-pointer requirement asked for. The generator
+writes it from the record and never computes it, and `expires` is the record's `moved_at` plus the
+role's window, so no freshness value in a served TUF document comes from a clock in the handler or
+the service (`signing-service.md`, "Freshness scoped to the pointer: the split with
+`data-model.md`", AC10, AC27). Versions may skip numbers where a transition re-renders nothing on a
+pointer; the clients refuse only a decrease (verifyRole', captured), so a gap is harmless. What each
+transition does:
 
 | Transition | Index served | `snapshot.json` and `timestamp.json` | What a client that updated before sees |
 |---|---|---|---|
-| A write advances the default pointer | The new generation, an extension of the last | Re-signed at the next version, inside the write | An incremental `Range` update |
-| Rollback to an earlier snapshot | That snapshot's generation, a prefix of what the client holds | Re-signed at the next version over the earlier index | The earlier index: one `Range` request inside 64 KiB, otherwise a whole download (captured) |
+| A write advances the default pointer | The new generation, an extension of the last | Re-signed at the pointer's advanced counter, inside the write | An incremental `Range` update |
+| Rollback to an earlier snapshot | That snapshot's generation, a prefix of what the client holds | Re-signed at the advanced counter over the earlier index, inside the repoint | The earlier index: one `Range` request inside 64 KiB, otherwise a whole download (captured) |
 | Promotion to an environment pointer | The promoted snapshot's generation | Re-signed on that pointer's own counter | Byte-identical index and tarballs; metadata that differ only in version, expiry and signature |
-| A deletion (rebase) | A regenerated generation | Re-signed at the next version | Two failed incremental attempts, then a whole download (captured) |
-| Re-sign on the expiry cadence | Unchanged | Re-signed at the next version with a new expiry | `timestamp.json` and `snapshot.json` only |
+| A deletion (rebase) | A regenerated generation | Re-signed at the advanced counter | Two failed incremental attempts, then a whole download (captured) |
+| Re-sign on the expiry cadence | Unchanged | Re-signed at the advanced counter with a new expiry | `timestamp.json` and `snapshot.json` only |
+| A key switch, a root renewal or an accepted operator-held root | Unchanged | Every pointer's four documents re-rendered, each pointer's counter advanced | The new root or key, followed as in the rotation item below |
 | Serving an older snapshot's metadata as stored | (never done) | (lower versions) | "Version of <repo>/timestamp.json is less than the previous version", exit 1 (captured) |
 
 The accepted cost, as in `debian.md`, is that a promoted environment's metadata are not
 byte-identical to the source environment's: the index and tarballs are, the version, expiry and
-signatures are not, the same qualification of `data-model.md` AC22 that spec raised. A version equal
-to the last with different content is accepted by the clients (verifyRole' refuses only a
-decrease; captured), but the counter never relies on it.
+signatures are not. `data-model.md` now states this qualification of its AC22 for both formats
+("AC22 is qualified, not weakened": content is byte-identical across environments, pointer
+documents and freshness signals are not; its AC36). A version equal to the last with different
+content is accepted by the clients (verifyRole' refuses only a decrease; captured), but the counter
+never relies on it.
+
+Every TUF document and the index are served through the index runtime's `ServeDocument`, never by a
+header this handler sets (`signing-service.md` AC11's architecture test): a byte-derived `ETag`, the
+`Cache-Control` this format's profile declares (below), and a `Last-Modified` from the record's
+`moved_at`, which no pinned client reads, since none sends a conditional request (captured).
 
 ### What the signing and index service must provide
 
-Stated so the dependency on `docs/internal/plans/foundation/signing-service.md` (to be authored in
-the spec loop) cannot be lost, in the shape `debian.md` and `alpine.md` use, and precisely enough
-that the service can be specced against it:
+Stated so the dependency on `docs/internal/plans/foundation/signing-service.md` cannot be lost, in
+the shape `debian.md` and `alpine.md` use; that spec lists these as `hackage.md`'s ten items (its
+"Who depends on this" table) and each is mapped onto its contract below:
 
 1. **Keys per hosted and per virtual repository, ed25519 only**, the one scheme hackage-security
    reads (every key in the live root is ed25519): a root role of three keys at threshold two by
    default (hackage-repo-tool's default), one snapshot key, one timestamp key and one mirrors key,
-   and a `targets` role declared with no keys, the live Hackage's shape, which every client accepts
-   (captured through the pass-through). Key ids are the SHA-256 of the key's canonical JSON form, as
-   hackage-repo-tool and the live root compute them. The handler never sees a private key, which an
-   architecture test asserts as `write-triggered-services-prototype.md` AC5 does for Debian.
+   each a `SigningKey` whose purpose is its TUF role (`signing-service.md`, "Key custody": `root`,
+   `snapshot`, `timestamp`, `mirrors`), and a `targets` role declared in `root.json` with no keys,
+   the live Hackage's shape, which every client accepts (captured through the pass-through), so no
+   `targets` key exists. The profile constrains every role to ed25519 ("Hackage ed25519 only"), so a
+   role requested on the `pkcs11` backend, which offers no Ed25519, is refused at key creation with a
+   message naming the ceiling, never at the first publish (its AC13). Key ids are the SHA-256 of the
+   key's canonical JSON form, as hackage-repo-tool and the live root compute them, and equal to
+   hackage-repo-tool's (its AC12). Neither the handler nor the generator package can reach a private
+   key or import a signature library, which `signing-service.md` AC2's architecture tests assert for
+   every format, as `write-triggered-services-prototype.md` AC5 does for Debian.
 2. **Canonical JSON signing byte-compatible with hackage-security**: signatures over the canonical
    form of `signed`, `"method": "ed25519"`, every signing key listed in the document's key
-   environment; proven by the real clients and by verifying the live Hackage's metadata with the same
-   code path in a test.
-3. **The documents**: `root.json` (version, expiry one year by default, keys, roles),
-   `mirrors.json` (an empty list unless the operator configures mirrors, expiry one year), and per
-   pointer `snapshot.json`, naming `<repo>/01-index.tar.gz`, `<repo>/01-index.tar`,
-   `<repo>/root.json` and `<repo>/mirrors.json` each with `sha256` and `length`, and
-   `timestamp.json`, naming `<repo>/snapshot.json`; both expire three days after signing by
-   default, the live Hackage's window.
-4. **The version counter per pointer** as above, durable across restarts and never lowered by a
-   clock step.
+   environment; the service's TUF canonical-JSON envelope codec in `internal/signing/tuf`, its
+   assembly a framing of the signatures into the document, never a signing operation on a read
+   (its "Key custody", AC6). Every signature is self-checked before commit through
+   `artifact-verification.md`'s `tuf` entry with the public material the service publishes (its
+   AC17), and the same verifier checks the live Hackage's metadata in this spec's AC9, so producer
+   and verifier agree on canonical JSON against a reference neither wrote.
+3. **The documents**, declared in the generator's `Profile` as pointer-level document keys
+   (`signing-service.md`, "The generator contract"): `root.json` (version, expiry one year by
+   default, keys, roles), `mirrors.json` (an empty list unless the operator configures mirrors,
+   expiry one year), and per pointer `snapshot.json`, naming `<repo>/01-index.tar.gz`,
+   `<repo>/01-index.tar`, `<repo>/root.json` and `<repo>/mirrors.json` each with `sha256` and
+   `length`, and `timestamp.json`, naming `<repo>/snapshot.json`; both expire three days after
+   signing by default, the live Hackage's window. The windows are this format's profile
+   declarations, not instance keys.
+4. **The version counter per pointer**, durable across restarts and never lowered by a clock step:
+   `data-model.md`'s generation counter, rendered by the generator (the section above;
+   `signing-service.md` AC27).
 5. **Re-signing without a write**: `timestamp.json` and `snapshot.json` at half their window,
-   `root.json` and `mirrors.json` at half theirs (a new root version signed by the current root
-   keys, or, where the operator holds them, an alert to the operator well before expiry), for every
-   pointer including idle environments, creating no snapshot. The default clients ignore expiry
-   (captured), so this is for the opt-in clients, and it is a hard requirement for them.
-6. **Index generation inside the write**: ustar entries with a fixed owner (the live index carries
-   the uploader's name, which leaks identities to every reader), each entry's time as in the write
-   boundary above, one gzip member per segment plus a final trailer member, and the running SHA-256
-   and lengths carried in the manifest; the service never recompresses a published segment. A
-   rebase regenerates the whole log once.
-7. **Rotation with overlap**, through the management API. Online keys (snapshot, timestamp,
-   mirrors) rotate by a new root version signed by the current root threshold: clients meet the
-   unknown key, fetch the root and continue (captured on both cabal lines: "Could not deserialize
-   <repo>/timestamp.json: Unknown key", then success). Root keys rotate by a new root whose root role
-   holds the new keys, whose key map keeps the old root keys, and which carries a threshold of
-   signatures from both, which a client still holding the first root accepts directly and a fresh client
-   bootstraps from with either set's ids (captured on both cabal lines). A
-   root signed by the new keys alone is refused by such a client ("does not have enough signatures",
-   captured), and one carrying an old key's signature without listing that key fails to parse
-   ("Unknown key", captured), because hackage-security checks only against the cached root and never
-   walks intermediate versions. The old root keys therefore keep cross-signing for an
-   operator-set window, and rotation is announced, because a client bootstrapping with ids the new
+   `root.json` and `mirrors.json` at half theirs, for every pointer including idle environments,
+   creating no snapshot, which is the `signing.resign` schedule at `signing.resign_at_fraction`
+   (default `0.5`), its next run derived from the stored documents' expiry so a restart loses
+   nothing (`signing-service.md`, "Rotation profiles", AC22). A root or mirror list the service holds
+   is renewed as one new version for the repository and re-rendered on every pointer in one batch,
+   never once per pointer (the resolved root-placement decision below); where the operator holds the
+   root, the `SigningDocumentExpiring` alert fires `signing.external_expiry_lead` (default 14 days)
+   before its expiry (its AC22). The default clients ignore expiry (captured), so this is for the
+   opt-in clients, and it is a hard requirement for them.
+6. **Index generation inside the write**: the generator's `Generate` appends one segment for the
+   write, ustar entries with a fixed owner (the live index carries the uploader's name, which leaks
+   identities to every reader), each entry's time as in the write boundary above, one gzip member
+   per segment plus a final trailer member, the running SHA-256 and lengths carried in the manifest,
+   and returns the segment digests as the document's declared blob list (`signing-service.md`, "The
+   generator contract"); it never recompresses a published segment, streams each member to the CAS
+   without buffering the index (its AC5), is deterministic over the same records (its AC25), and
+   `Affects` names only the manifest and the pointer documents, never another package's entries
+   (its AC4). A rebase regenerates the whole log once.
+7. **Rotation with overlap**, through the management API: `signing-service.md`'s `root-chain`
+   rotation profile (its "Rotation profiles", AC7), an atomic cutover that creates no snapshot (its
+   AC8), each step a `configure` operation on the signing-key routes (`management-api.md` AC32;
+   `signing-service.md` AC15). Online keys (snapshot, timestamp, mirrors) rotate by a new root
+   version signed by the current root threshold: clients meet the unknown key, fetch the root and
+   continue (captured on both cabal lines: "Could not deserialize <repo>/timestamp.json: Unknown
+   key", then success). Root keys rotate by a new root whose root role holds the new keys, whose key
+   map keeps the old root keys, and which carries a threshold of signatures from both, which a
+   client still holding the first root accepts directly and a fresh client bootstraps from with
+   either set's ids (captured on both cabal lines). A root signed by the new keys alone is refused by
+   such a client ("does not have enough signatures", captured), and one carrying an old key's
+   signature without listing that key fails to parse ("Unknown key", captured), because
+   hackage-security checks only against the cached root and never walks intermediate versions. The
+   old root keys therefore keep cross-signing for `signing.rotation_window` (default 30 days, an
+   operator-set window), and rotation is announced, because a client bootstrapping with ids the new
    root's signatures no longer reach fails: Stack 2.9.1's built-in pre-2025 Hackage key ids fail
    against the live root today ("<repo>/root.json does not have enough signatures signed with the
    appropriate keys", captured).
-8. **Operator-held root keys**, per the resolved root-custody decision below: the service accepts a
+8. **Operator-held root keys**, per the resolved root-custody decision below: the `external`
+   custody backend, which holds public material only, and its submit operation, which accepts a
    `root.json` the operator signed offline (with hackage-repo-tool, for instance), verifies it
-   against the current root, and serves it, so a deployment can keep its root keys off the server.
-9. **The key ids and threshold** shown in the management surface, in the forms cabal's `root-keys`
-   and Stack's `keyids` take.
-10. **The virtual merge** (Design, "Virtual repositories"), run as deferred work and signed with the
-    virtual repository's keys.
+   against the current root under this format's rule, refuses it with a problem naming the failing
+   check otherwise, and serves it (`signing-service.md`, "Key custody", AC16), so a deployment can
+   keep its root keys off the server while the online roles live on the `file` backend, the mix TUF
+   intends.
+9. **The key ids and threshold** shown in the management surface's key listing with each key's
+   fingerprint (`signing-service.md` AC12), in the forms cabal's `root-keys` and Stack's `keyids`
+   take, readable by a conformance case's `script` before its client runs (its AC21).
+10. **The virtual merge** (Design, "Virtual repositories"): the generator's `Merge`, run as the
+    deferred `index.merge` job when a member's document set changes, coalesced per virtual, never on
+    a request's path, and signed with the virtual repository's own keys (`signing-service.md`,
+    "Virtual merges", AC19).
 
 Verification of an upstream's TUF chain is not the signing service's: it belongs to artifact
-verification (Design, "The proxied path").
+verification (`signing-service.md`, "The produce/verify boundary"; Design, "The proxied path").
 
 ### Revisions, deprecation and deletion
 
 Per the cross-format precedent (`pypi.md`'s resolved hosted-yank decision, with `npm.md`,
 `cargo.md`, `julia.md`, `puppet.md` and `conan.md`), each operation is a completed logical write
-through the shared write path, authorized in the settled `(repository, action)` vocabulary with no
-new action, hosted only, its trigger verified by integration tests and its effect by the real clients
+through the shared write path, bound onto the kind `management-api.md`'s cross-format
+reconciliation table assigns the Hackage rows, carrying that kind's action, hosted only, its trigger
+verified by integration tests and its effect by the real clients
 (`docs/internal/analysis/management-surfaces-and-the-oracle.md`). **No client in the matrix triggers
 any of them but publish**: neither cabal line nor Stack has a revise, deprecate or delete command.
+The handler declares the kinds through `Operator.Operations()` and implements them in `Apply` inside
+the transaction `Submit` opens, and every declared kind is driven by a `script` case
+(`management-api.md` AC24, enforced before any container starts by `conformance-harness.md` AC26):
 
-| Operation | Effect a client sees | Action |
-|---|---|---|
-| Publish a release | The release appears in the index | `push` |
-| Revise a release's `.cabal` | A new `.cabal` entry with the next `x-revision` is appended; `cabal info` and `cabal get` use it (captured) | `push` |
-| Set a package's `preferred-versions` | A new `preferred-versions` entry is appended; versions outside it are avoided but still chosen when nothing else satisfies (captured) | `push` |
-| Delete a release | The index is rebased without it, the tarball answers `404`, the coordinate joins the retirement set; a pinned build fails "Unexpected response 404" (captured shape) | `delete` |
-| Rotate keys, renew or replace the root | New metadata; clients follow as in the list above | administrative |
+| Operation | Effect a client sees | Kind | Action |
+|---|---|---|---|
+| Publish a release | The release appears in the index | `publish` (binding: `POST upload`) | `push` |
+| Revise a release's `.cabal` | A new `.cabal` entry with the next `x-revision` is appended; `cabal info` and `cabal get` use it (captured) | `annotate` | `push` |
+| Set a package's `preferred-versions` | A new `preferred-versions` entry is appended; versions outside it are avoided but still chosen when nothing else satisfies (captured) | `annotate` | `push` |
+| Delete a release | The index is rebased without it, the tarball answers `404`, the coordinate is retired; a pinned build fails "Unexpected response 404" (captured shape) | `delete-version` | `delete` |
+| Rotate keys, renew or replace the root | New metadata; clients follow as in the rotation item above | `configure` on the signing-key routes, applied by `signing-service.md` | admin role |
 
-Rules, applying the precedent: every operation is one snapshot, none for a refused one, and no blob
-is deleted directly, so space returns only through retention pruning and `storage-and-gc.md`'s
-single-deleter boundary (its AC15) holds; the retirement set is carried forward by every later write
-and preserved across a backwards repoint (`data-model.md` AC33's obligation on the management
-surface); the `Package` row outlives its versions. A revision must keep `name` and `version` and carry
-`x-revision` equal to the previous number plus one, and nothing else about it is checked (the resolved
-revision-checking decision below); the revision's author and time are recorded. Key operations are
-administrative: `management-api.md` decides their authorization, and no repository-scoped token can
-perform them (`auth.md` AC30). What this format requires of `management-api.md`: the five operations
-above on the objects in the addressed-object table, one implementation behind the upload binding and
-the endpoint, and the note that deprecation here is a preference that never excludes, unlike yank.
+Revision and preferred versions are both `annotate`, the kind for "metadata that excludes nothing
+from resolution", which that table names for "Hackage preferred versions and metadata revisions";
+the handler's `args` document says which, and deprecation here is a preference that never
+excludes, unlike yank, which is why it is not `withdraw`. Rules, applying the precedent: every
+operation is one snapshot, none for a refused one, and no blob is deleted directly, so space
+returns only through retention pruning and `storage-and-gc.md`'s single-deleter boundary (its AC15;
+`management-api.md` AC6) holds; the coordinate a `delete-version` returns in its `Outcome` becomes a
+core-held `Retirement` record written in the same transaction, refused centrally on every later
+write for the life of the repository and unaffected by any repoint (`management-api.md`, "Retirement
+is core-held", AC12; `data-model.md` AC35); the `Package` row outlives its versions (`data-model.md`
+AC33). A revision must keep `name` and `version` and carry `x-revision` equal to the previous number
+plus one, and nothing else about it is checked (the resolved revision-checking decision below); the
+revision's author and time are recorded. Key operations are `configure` operations whose `Apply` is
+`internal/signing`'s, not the handler's, with this format's generator run in the same transaction to
+re-render the documents the rotation changes; they are admin-only and no repository-scoped token can
+perform them (`auth.md` AC30; `signing-service.md` AC15). A publish or management operation against
+a remote or virtual repository answers `405` with the `repository-type` problem (`management-api.md`
+AC7).
 
 ### Names, versions and case
 
@@ -533,9 +644,12 @@ What each client sends, captured, since the four differ:
 
 How this meets `auth.md`, whose rules this spec does not bend: its verifier accepts the Basic password
 (its AC31), which covers both Stack lines and cabal 3.16's downloads and password upload. **cabal
-3.16's `X-ApiKey` scheme is not among AC31's four forms**, so `auth.md` needs this format's scheme
-added to its verifier, or cabal 3.16's token upload is rejected; the adopted client-scheme decision
-below asks for it as a sibling consequence rather than widening anything here. The `401` this format
+3.16's `X-ApiKey` scheme is now one of `auth.md`'s presentation forms**: its Design table lists
+`Authorization: X-ApiKey <token>` as a universal form, its client table carries the `cabal` /
+`stack` row from these captures, and its AC31 asserts the form resolves to the same principal as
+the same token in Basic, with redaction (its AC7) and the plaintext refusal (its AC27), so the
+resolved client-scheme decision below is met in the shared verifier and this handler never reads a
+credential. The `401` this format
 answers carries `WWW-Authenticate: Basic realm="{repository}"`, because cabal 3.16 sends nothing
 without one; it is identical for a private and a missing repository (`auth.md` AC17), a valid token
 lacking `pull` answers `404`, and a rejected token answers `401` and is never served as anonymous
@@ -554,7 +668,7 @@ request addresses, and the format declares which object each route reports ("Pat
 
 | Route | Canonical object | Action | Object kind |
 |---|---|---|---|
-| `root.json`, `timestamp.json`, `snapshot.json`, `mirrors.json` | - | `pull` | none |
+| `root.json`, `timestamp.json`, `snapshot.json`, `mirrors.json` (keys, roles, versions, expiries, mirror hosts, and the digests of the index and of each other; no package name, version or tarball digest) | - | `pull` | descriptor |
 | `01-index.tar.gz`, `01-index.tar` (they enumerate every name) | - | `pull` | none |
 | `package/{name}-{version}.tar.gz`, `package/{name}-{version}/{name}-{version}.tar.gz` | `{name}/{version}` parsed from the path | `pull` | named |
 | `POST upload`, multipart with the `package` part's filename before its bytes | `{name}/{version}` from the filename | `push` | named |
@@ -564,16 +678,25 @@ request addresses, and the format declares which object each route reports ("Pat
 | Delete (management API) | `{name}/{version}` | `delete` | named |
 | Any other route | - (answered `404`) | `pull` | none |
 
-What that gives, applying `auth.md`'s rules rather than re-deciding them. **A patterned `pull` cannot
-update**: every client must read the index, which reports none, so `cabal update` and `stack update`
-fail at the first request under a token patterned `acme-*/**`, the consequence `alpine.md` and
-`rpm.md` recorded for the same reason; a patterned `pull` still confines a scripted tarball fetch to
+What that gives, applying `auth.md`'s rules rather than re-deciding them. **The four TUF documents
+are descriptors** (`auth.md`'s resolved name-free-document decision, was Q23 there): each is a
+repository-wide document whose body names no package, version or tarball digest, `snapshot.json`
+naming only the index and the other metadata files by digest, the shape `auth.md` gives RPM's
+`repomd.xml` ("an index of metadata files named by checksum and type"), so a patterned `pull` reads
+them. The sentinel test `format-handler-interface.md` AC12 and `auth.md` AC32 require on every
+descriptor route holds each one to that definition: a repository seeded with a sentinel release is
+fetched on all four routes and fails the test if the sentinel's name, version or tarball digest
+appears in a body. **A patterned `pull` still cannot update**: every client must read the index,
+which enumerates every name and reports none, so `cabal update` and `stack update` read the TUF
+metadata and then fail at the index request under a token patterned `acme-*/**`, the consequence
+`rpm.md` records for `primary`; a patterned `pull` still confines a scripted tarball fetch to
 in-pattern releases. **A pattern refusal on a named route is answered as absence**, `404`,
 indistinguishable from a release that does not exist. **A patterned `push` publishes** in-pattern
 releases through `cabal upload --publish`, whose part header names the file first (captured), and is
 refused an out-of-pattern one with no snapshot; ingest refuses an archive whose identity disagrees
 with the filename, so a mislabelled part cannot evade the pattern (the resolved publish-object
-decision below).
+decision below). The binding's `Scope(r)` reports the object the `publish` operation's `Authorize`
+reports, which `management-api.md` AC8 holds for every declared binding.
 
 ### Policy refusals on the wire
 
@@ -581,12 +704,20 @@ When a shared resolution call returns the typed refusal `supply-chain-policy.md`
 **tarball route** of either path, the handler answers `403` with `Content-Type: text/plain` and the
 body `refused by policy {policy}, rule {rule}: {detail}` (or naming the signal, for a coordinate
 condemned under the shared security-signal rule), per the resolved refusal-rendering decision below.
+It writes the response through the shared refusal writer `WriteRefusal`, never a status line of its
+own (`format-handler-interface.md` AC14; `supply-chain-policy.md` AC18), so on the HTTP/1.1 the main
+listener speaks by default the status line carries `Refused by policy: {condition}` as its phrase.
 What reaches the user, captured: Stack 2.9.1 prints the body; cabal prints "Unexpected response 403 for
-{url}" and never the body; Stack 3.11.1 prints "Error: [S-5170]". The reason is therefore guaranteed
-only in the registry's refusal record, which the operator documentation points to, and each refused
-download produces exactly one. Where the repository's signed mirror list is empty (every hosted and
-virtual repository) no client goes anywhere else; a remote serving an upstream list is the fallback
-case above.
+{url}" and never the body; Stack 3.11.1 prints "Error: [S-5170]". Whether either line prints the
+phrase was not captured, so nothing is claimed for it and nothing here depends on HTTP/1.1. The
+reason is therefore guaranteed only in the registry's refusal record, readable at `GET
+/api/v1/repositories/{name}/refusals` (`supply-chain-policy.md` AC5), which the operator
+documentation points to, and each refused download produces exactly one. Where the repository's
+signed mirror list is empty (every hosted and virtual repository) no client goes anywhere else; a
+remote serving an upstream list is the fallback case above. `supply-chain-policy.md`'s table "When a
+refusal binds, per format" carries this as the Hackage row, `holds` for hosted and virtual
+repositories and `restricted-egress` for a remote (its AC20), and the operator page `deployment.md`
+generates from that table is where a Haskell operator reads the egress precondition.
 
 **The index keeps naming a refused release.** Eliding it is impossible on a remote, whose index is
 signed upstream, and on a hosted or virtual repository it would be a rebase per policy change and a
@@ -596,25 +727,41 @@ silent downgrade, the no-elision precedent of `conan.md`, `debian.md` and `puppe
 
 **TUF is repository signing, not author signing.** No field carries a publisher's signature, and the
 `targets` role, the only place TUF offers one, has no keys on the live Hackage. So
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop) is asked
-for one entry, per `supply-chain-policy.md`'s resolved verification-ownership decision: **a
-hackage-security chain verification** taking a TUF revision (root, timestamp, snapshot, mirrors,
-index) and the trusted root key ids and threshold, and answering verified with the verifying keys per
-role, or the first failing link with hackage-security's own reason (signatures, version, expiry,
-hash), with canonical JSON and the root-update rule exactly as hackage-security applies them. The
+`docs/internal/plans/foundation/artifact-verification.md` is asked for one entry, per
+`supply-chain-policy.md`'s resolved verification-ownership decision, and provides it as its `tuf`
+scheme (its entry table, AC17): **a hackage-security chain verification** taking a TUF revision
+(root, timestamp, snapshot, mirrors, index) and the trusted root key ids and threshold, and
+answering verified with the verifying keys per role, or the first failing link with
+hackage-security's own reason (signatures, version, expiry, hash), with canonical JSON and the
+root-update rule exactly as hackage-security applies them. The trusted ids and threshold are the
+remote's **trust set**, a `tuf-root` entry holding the root key ids, the threshold and the current
+root document (`artifact-verification.md`, "Trust sets"), administered through
+`PUT /api/v1/repositories/{name}/trust` (its AC3) and provisioned in a case through the harness's
+`trust` key (its AC25). The handler reaches the entry only through the `Verifier` consumer
+interface in `Deps` and never imports `internal/verify` (`format-handler-interface.md` AC15). The
 verdict source `supply-chain-policy.md` consumes answers, per the resolved signature-verdict decision
-below, **verified (repository chain)** for a proxied tarball whose digest matches an index entry of a
-verified upstream revision, and **absent** for a hosted tarball, whose only signature is this
-registry's over its own index; a rule requiring a verified signature therefore refuses every hosted
-release (its AC15), which the operator documentation states.
+below, **verified with chain `repository-chain`** for a proxied tarball whose digest matches an index
+entry of a verified upstream revision, and **absent** for a hosted tarball, whose only signature is
+this registry's over its own index (`artifact-verification.md`, "CPAN, Hackage, Homebrew", AC17). A
+rule requiring any verified verdict therefore serves verified proxied releases and refuses every
+hosted release, while a rule requiring a **publisher** identity accepts no `repository-chain`
+verdict and so refuses every release on both paths (`supply-chain-policy.md` AC15), which the
+operator documentation states. The conformance matrix's verification column needs a passing hosted
+and a passing proxied verification case for Hackage (`artifact-verification.md` AC24), which AC29
+and AC25 carry.
 
 **Advisory coverage exists.** OSV's `Hackage` ecosystem holds 32 `HSEC-` advisories with `ECOSYSTEM`
 ranges and explicit version lists, twenty carrying CVE aliases, and none withdrawn or malicious-package
 entries (captured). The coordinate is `(Hackage, {name}, {version})`, name matched byte for byte
 (purl's `hackage` type is case-sensitive), and version ranges evaluate under the component-wise
-integer order above. Advisory rules therefore bind on both paths. OSV's separate `GHC` ecosystem (three
-advisories) concerns the compiler and its boot packages, which no repository of this format serves.
-Byte-level rules depend on the shared cataloguer's coverage of sdists, which that spec decides.
+integer order above; `supply-chain-policy.md`'s coverage table carries the row ("Hackage | covered
+... | package name and version", its AC17). Its matcher binds a range only under an ordering it
+vendors, and its list of vendored orderings does not yet name Hackage's, so until that spec adds it
+the Hackage row would bind nothing by that spec's own rule; this is reported as a sibling
+consequence rather than assumed. Advisory rules then bind on both paths. OSV's separate `GHC`
+ecosystem (three advisories) concerns the compiler and its boot packages, which no repository of
+this format serves. Byte-level rules depend on the shared cataloguer's coverage of sdists, which
+that spec decides.
 
 **No upstream security signal exists on the Hackage wire**: nothing in the index or TUF metadata marks
 a release as malicious. A future OSV malicious-package entry for Hackage condemns under the shared
@@ -643,61 +790,93 @@ the proxy design:
 
 **The upstream revision is the unit of metadata caching.** On a miss or after the TTL, the handler
 fetches `timestamp.json`; if it names a different snapshot, `snapshot.json`, then `root.json` and
-`mirrors.json` when changed, then the index, and asks artifact verification to verify the whole chain
-against the remote's configured upstream root key ids and threshold (or, for a remote configured
-without them, the root it bootstrapped, as a client would). Only a verified revision replaces the
-current one, atomically, so a client never meets a timestamp whose snapshot or index is not already
-cached; the previous revision is retained for the stale limit. Upstream `root.json` changes are
-verified against the cached upstream root, exactly as the clients verify them. A revision whose
-versions decrease or whose timestamp has expired is refused, recorded and alerted, and the previous one
-keeps serving within `proxy-cache.md`'s stale-if-error bound.
+`mirrors.json` when changed, then the index, and asks artifact verification's `tuf` entry to verify
+the whole chain against the remote's trust set, its `tuf-root` entry holding the upstream's root key
+ids and threshold (or, for a remote configured without them, the root it bootstrapped, as a client
+would). The chain check is an integrity call that may refuse the commit, never a verdict recorded
+afterwards (`proxy-cache.md`, "Completion-only mode and the verifier hook": its catalogue names the
+TUF chain). The five documents are declared to the proxy layer as **one paired set**: fetched
+together, verified together, committed in one transaction and served under one cache-scoped
+freshness record, the paired-set id `data-model.md` AC44 carries, so a client never meets a
+timestamp whose snapshot or index is not already cached (`proxy-cache.md`, "Freshness of what a
+remote serves", AC22); the previous revision is retained for the stale limit. Upstream `root.json`
+changes are verified against the cached upstream root, exactly as the clients verify them. **A
+revision whose versions decrease is not adopted**: the TUF `version` is this format's revision
+ordering, which `proxy-cache.md` names ("a TUF `version`"), so the cached revision keeps serving,
+its record unchanged, and the regression is recorded for the operator as a divergence. A revision
+whose timestamp has expired, or whose chain fails, commits nothing and is alerted with the real
+reason, and the previous one keeps serving within `proxy-cache.md`'s stale-if-error bound.
 
-What this format requires of `docs/internal/plans/foundation/upstream-adapters.md` (to be authored in
-the spec loop):
+The transport is `upstream-adapters.md`'s `https` adapter under the upstream's allowlist and
+credential role; the protocol half (which documents to fetch, the splice, the chain) stays in this
+handler's derivation. That spec's requirements table carries this format's row ("Incremental index
+fetch by `Range`; `301` followed inside the adapter", its AC8 and AC15), and each item this spec
+asked of it is placed:
 
-- **Incremental index fetches**: `Range: bytes={cached size - 65536}-` against the upstream's index,
-  spliced and verified against the new snapshot's hash, falling back to a whole fetch on a mismatch,
-  as the clients do, so revalidating a 138 MB index costs one small request per upstream publish.
-- **Storage of the upstream index as chunks reused across revisions**, so a revision stores only the
-  bytes the upstream changed and the hash state is resumed at the last unchanged chunk; this is the
-  remote half of the declared-blob-references revision above.
+- **Incremental index fetches**: the adapter sends `Range: bytes={cached size - 65536}-` when the
+  handler asks, reporting a `206` as `PartialContent` and a `200` to a ranged request as `OK` so the
+  handler knows the upstream ignored the range (its "Request hygiene", AC15). The splice and the
+  verification against the new snapshot's hash are the handler's, falling back to a whole fetch on a
+  mismatch, as the clients do, so revalidating a 138 MB index costs one small request per upstream
+  publish.
+- **Storage of the upstream index as chunks reused across revisions** is not the adapter's but the
+  handler's and the shared model's: the remote's current index document declares its chunk digests
+  through `data-model.md`'s declared blob-digest list (AC37), which `storage-and-gc.md`'s fourth
+  root marks through for a remote's current documents as for hosted ones (its AC16), so a revision
+  stores only the bytes the upstream changed and the hash state is resumed at the last unchanged
+  chunk.
 - **Redirects followed inside the adapter**: the live Hackage answers `package/{id}.tar.gz` with `301`
-  to `package/{id}/{id}.tar.gz` (captured), and a client never sees an upstream `Location`.
-- **An optional upstream credential**, sent only to the upstream's host over HTTPS.
+  to `package/{id}/{id}.tar.gz` (captured), a same-host redirect the adapter follows, and no upstream
+  `Location` ever reaches a client (its AC8).
+- **An optional upstream credential**, `basic`, or `header` naming `X-ApiKey` for a Hackage-shaped
+  upstream (its credential-kind table), sent only to the upstream's root host over HTTPS (its AC6,
+  AC22).
 
 Classification and behaviour:
 
 - **TUF documents and the index are mutable metadata** revalidated as one revision; the live Hackage
   marks them `Cache-Control: public, no-transform, max-age=60` (captured), and the proxy layer's TTL
-  governs.
-- **Tarballs are immutable artifacts**, fetched on a miss and verified under stream-and-verify against
-  the SHA-256 and length of their `package.json` in the current or a retained revision; a tarball
-  neither cached nor named by such a revision answers `404` with no upstream request, so the remote is
-  not an open relay. A truncated or mismatching body is never committed.
+  governs. They are served through the same `ServeDocument` helper hosted documents use, with the
+  cache-scoped record in place of the pointer's (`proxy-cache.md`, "Freshness of what a remote
+  serves"), and never re-dated, since the remote's documents are byte-identical to the upstream's.
+- **Tarballs are immutable artifacts**, fetched on a miss with a **declared digest**: the SHA-256 and
+  length of their `package.json` in the current or a retained revision, which the fetch-and-cache
+  request carries so the bytes are verified while streaming (`proxy-cache.md`, "Completion-only mode
+  and the verifier hook": a request carries a declared digest or a verifier, never neither, AC20).
+  A tarball neither cached nor named by such a revision answers `404` with no upstream request, so
+  the remote is not an open relay. A truncated or mismatching body is never committed. After the
+  commit, the `repository-chain` verdict is recorded against the tarball's digest (above), never
+  gating the client.
 - **A remote serves the upstream's `mirrors.json`**, since the snapshot hashes it: the live one lists
   `http://hackage.fpcomplete.com/` and `http://objects-us-east-1.dream.io/hackage-mirror/`, which every
   client falls back to on any refusal from this registry. The operator documentation says a remote's
-  policy refusals hold only with client egress restricted, and that a virtual repository over the
-  remote signs an empty list instead.
+  policy refusals hold only with client egress restricted (`supply-chain-policy.md`'s
+  `restricted-egress` row, above), and that a virtual repository over the remote signs an empty list
+  instead.
 - **Expiry is the upstream's.** A cached revision keeps its upstream expiry through serve-stale and
   offline mode: the default clients ignore it (captured), an opt-in client fails once the live
   Hackage's three-day window passes, and the registry never re-dates upstream metadata, which the
-  operator documentation states beside `proxy-cache.md`'s offline mode.
+  operator documentation states beside `proxy-cache.md`'s offline mode (`proxy.offline`) and the
+  `read_only` remote, which freezes the cache record in the same way (`repository-lifecycle.md`).
 - **Missing tarballs are negatively cached** with the short TTL; a `429` or `5xx` is never cached as
-  absence (`proxy-cache.md` AC9).
-- **Publish and every management operation against a remote repository answer `405`.**
+  absence (`proxy-cache.md` AC9). The operator's "refresh now", `POST
+  /api/v1/repositories/{name}/refresh`, marks the revision and every negative entry due for
+  revalidation (`management-api.md` AC29; `proxy-cache.md` AC24).
+- **Publish and every management operation against a remote repository answer `405`** with the
+  `repository-type` problem (`management-api.md` AC7).
 
-Upstream removal maps onto the settled purge-or-flag table as this format's side of that contract
-(`proxy-cache.md`, "Upstream removal or replacement"):
+Upstream removal maps onto `proxy-cache.md`'s event classes ("Upstream removal or replacement"), the
+handler classifying and the layer responding, as this format's side of that contract:
 
-| Upstream event, as observed at revalidation or fetch | Classification |
-|---|---|
-| A revision appends a `.cabal` or `preferred-versions` entry | An ordinary metadata change, mirrored by serving the new revision |
-| A new revision's index does not extend the cached one (an upstream rebase) | Served, since the upstream signed it; the divergence and the vanished entries recorded and alerted; cached tarballs of vanished releases stay fetchable at their paths |
-| A new revision gives a cached release a different SHA-256 | The route follows the served index, which is signed upstream, so the new bytes are fetched and verified as a new blob; the old blob stays referenced by the record; recorded and alerted as an immutability violation |
-| An indexed release's tarball answers `404` or `410` upstream | An author or administrator removal with no security signal: cached bytes keep serving, the divergence recorded and alerted |
-| The upstream root rotates | Verified against the cached upstream root; a root that fails is refused, alerted, and the previous revision serves within the stale bound |
-| A revision's version decreases or its timestamp has expired | Refused, recorded and alerted; the previous revision serves within the stale bound |
+| Upstream event, as observed at revalidation or fetch | Class | What this format adds |
+|---|---|---|
+| A revision appends a `.cabal` or `preferred-versions` entry | Ordinary metadata change | Mirrored by serving the new revision |
+| A new revision's index does not extend the cached one (an upstream rebase) | Removal with no signal, for the entries that vanished | Served, since the upstream signed it; cached tarballs of vanished releases stay fetchable at their paths |
+| A new revision gives a cached release a different SHA-256 | Immutability violation, revision-bound | The new bytes are fetched and verified as a new blob and the old blob stays referenced while its revision is retained; because the tarball path carries no digest, the route serves the bytes the current revision names |
+| An indexed release's tarball answers `404` or `410` upstream | Removal with no signal | Cached bytes keep serving |
+| The upstream root rotates and fails verification against the cached root | Integrity failure at fetch | The previous revision serves within the stale bound |
+| A revision's timestamp has expired, or its chain fails | Integrity failure at fetch | As above |
+| A revision's version decreases | Regression not adopted | The cached revision stands |
 
 Per the resolved preconfigured-upstream decision below, no Hackage upstream is preconfigured; the
 operator documentation gives the remote for `https://hackage.haskell.org/` with its root key ids.
@@ -715,9 +894,11 @@ instead of Hackage's, per the resolved virtual-repository decision below:
   cabal tolerates because it filters by entry time rather than position (its filterCache, source); Stack's
   behaviour on a merged log whose times are not monotonic was not captured and is asserted by a case
   before this path ships.
-- **Remote members are verified before they are merged**, through the chain verification above; the
-  end-to-end check to Hackage's keys becomes a check by this registry followed by its own signature, the
-  accepted cost.
+- **Remote members are verified before they are merged**: a remote's current revision is adopted only
+  after the chain verification above passes, so the merge reads verified documents by construction,
+  and a revision that failed is never a remote's current one (`signing-service.md`, "The
+  produce/verify boundary": a virtual merges only verified member documents). The end-to-end check to
+  Hackage's keys becomes a check by this registry followed by its own signature, the accepted cost.
 - **Retroactive shadowing rebases.** When a member earlier in the order gains a name a later member's
   entries already supplied, the merge regenerates the log without them, one whole download per client,
   which is what keeps a private `acme-base` from being resolved against a public squatter's releases
@@ -725,7 +906,23 @@ instead of Hackage's, per the resolved virtual-repository decision below:
 - **Tarballs are the members' bytes**, served through the virtual route, so the merged index's digests
   are the members'.
 - **The virtual repository signs an empty mirror list**, so its refusals hold; publish and management
-  operations against it answer `405`.
+  operations against it answer `405` with the `repository-type` problem.
+- **The merge is the generator's `Merge`**, run as the deferred `index.merge` job on
+  `internal/async`, enqueued by a member's write and by a remote member's adoption of a new upstream
+  revision (cache materialisation is not a write, so this second trigger is one `signing-service.md`
+  does not yet name; reported as a sibling consequence), coalesced per virtual inside `index.virtual_merge_window`, visible within
+  `index.virtual_staleness_bound`, with the previous merged set serving until the new one commits
+  atomically and a failed merge leaving it and firing `VirtualMergeFailed` (`signing-service.md`,
+  "Virtual merges", AC19; `async-operations.md`'s kind table). A virtual created over members has
+  its first merge enqueued at creation, so its documents exist before the first request. The merged
+  index is the virtual's current document, declaring its segment digests as a hosted index does, and
+  its four TUF documents are signed with the virtual repository's own keys. **Each merge commit must
+  raise the virtual's TUF version**, since a merge that served the same version with a new index would
+  be adopted but one that served a lower version would fail every client (the rollback finding
+  above); the virtual's default pointer's generation counter is the natural source, advanced at each
+  merge commit, which is the shape `debian.md` asked of `signing-service.md` for its virtual
+  `InRelease` `Date` and which that spec does not yet state, so it is reported as a sibling
+  consequence rather than assumed.
 
 **cabal users have a second way that keeps end-to-end verification**: two `repository` stanzas, the
 remote with Hackage's key ids and the hosted repository with its own, and
@@ -744,7 +941,52 @@ with `206` and `Content-Range`, and `416` for an unsatisfiable one. Types are `a
 `application/x-gzip` and `application/x-tar`, the live Hackage's. TUF documents and the index are
 served `Cache-Control: no-cache` with a byte-derived `ETag`, tarballs
 `Cache-Control: public, max-age=31536000, immutable`; no client sends a conditional request (captured),
-so the headers serve intermediaries. No hosted route answers a redirect.
+so the headers serve intermediaries. No hosted route answers a redirect. The TUF documents and the
+index are generated documents, so their headers come from `ServeDocument` and this format's profile
+declares `no-cache` for them (`signing-service.md`, "Freshness scoped to the pointer"); the index is
+also the one generated document a client fetches by byte range, and `ServeDocument` as specified
+states no `Range` behaviour, so this format needs it to answer a single byte range over a
+multi-segment document with `206`, `Content-Range` and `416` exactly as the tarball routes do (AC32).
+That is a requirement on `signing-service.md`, reported as a sibling consequence, not a header this
+handler may set itself. Tarballs are CAS content the handler serves through the shared read path,
+which verifies the digest while streaming (`storage-and-gc.md` AC21).
+
+### What it needs from Deps
+
+The pinned `Deps` (`format-handler-interface.md`): the CAS, the metadata store at all three levels
+with snapshot-pointer resolution, the fetch-and-cache entry point with classification as an
+argument and the request shape `proxy-cache.md`'s "Obligation to the handler interface" states
+(a declared digest or a verifier, a paired set; a re-open input), the central authorizer, and the request logger, with the
+policy-enforcing resolution calls returning the typed refusal. Beyond the pin, each now specified by
+its owner rather than invented here: the `Verifier` consumer interface for the `tuf` entry of
+`artifact-verification.md` (`format-handler-interface.md` AC15); `upstream.Options` on
+fetch-and-cache for the adapter's allowlist, credential role and `Range` (`upstream-adapters.md`);
+the refusal writer `WriteRefusal` (`format-handler-interface.md` AC14); and, outside `Deps`, the
+optional `Indexer` interface through which `signing-service.md`'s runtime generates, signs and
+serves the index and every TUF document, rendering the pointer's generation counter and `moved_at`
+from `data-model.md` and, on a remote, the cache-scoped record from `proxy-cache.md`, and the
+optional `Operator` interface through which `management-api.md`'s `Submit` reaches `publish`,
+`annotate` and `delete-version` (three optional interfaces held apart until the re-open,
+`format-handler-interface.md`'s resolved optional-interfaces decision, was Q10 there).
+
+### Capabilities and lifecycle
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available` (below), `Virtual: supported` (the section above) and `Rename: supported`, the four
+fields `format-handler-interface.md` AC13 names. Rename is supported because nothing a client reads
+names the repository: every TUF target path is the literal `<repo>/...` placeholder hackage-security
+uses, `root.json` and `mirrors.json` name keys and mirror hosts, and the index names packages, so a
+renamed repository serves byte-identical TUF documents, index and tarballs under its new URL with
+every `SigningKey`, `PointerDocument` and public form unchanged and no re-sign
+(`signing-service.md` AC29), clients keep verifying with the same root key ids once their `url:` or
+`download-prefix` names the new path, and the old name answers `not-found` indistinguishably from a
+never-existing repository (`repository-lifecycle.md` AC12). `repository-lifecycle.md` AC12 requires
+`conformance/hackage/rename_test.go`, enforced by the harness's case-set validator
+(`conformance-harness.md` AC26); AC33 carries it with the real clients. Deleting a repository
+retires its keys in the deletion transaction and destroys their private material at tombstone time
+(`signing-service.md` AC29), which the operator documentation states, because a Haskell client
+configured with the deleted repository's root key ids cannot be pointed at a recreated one under the
+same name without new ids.
 
 ### Conformance, the clients and the corpus
 
@@ -756,13 +998,20 @@ publishes with a token. **Between the Stack lines** the skew is the configuratio
 text. Every hosted and proxied case runs on all four unless it names a client-specific behaviour; the
 catalogue counts one ecosystem, and the four appear in the matrix's Client column under the Hackage row.
 
-**Every case runs with the client's network restricted to this registry and its stand-ins**, except
-the recording session; the fallback case's mirror is a declared second instance, so it stays inside. The client images are the
-upstream images named in Context, pinned by digest (`conformance-harness.md` AC4); each case writes the
+**Every case runs with the client's network restricted to this registry and its stand-ins**, which
+the harness now does for every case: each client container reaches only the hostnames its case
+declares (`conformance-harness.md`'s resolved client-confinement decision, was Q6 there, AC23), the
+recording session being the one run with egress. The fallback case's mirror is a declared second
+instance (`conformance-harness.md` AC16), so it stays inside. The client images are the upstream
+images named in Context, pinned by digest (`conformance-harness.md` AC4); each case writes the
 client's configuration with the repository's root key ids read from the server in the case `script`,
 adds the harness CA (`CURL_CA_BUNDLE` for cabal, the system store for Stack 2.9.1), and gives each
-client a fresh home unless it continues one. The fallback case declares a second server instance as the
-mirror (`conformance-harness.md` AC16).
+client a fresh home unless it continues one. A hosted case's repository carries the `signing`
+sub-entry (a fixture key file or `generate`), and its `state` entries come out appended and signed
+by the write-path hook with no seed-side code, byte-identical to a publish of the same content, with
+the root key ids readable before the client runs (`signing-service.md` AC21; `conformance-harness.md`
+AC24). A proxied case declares the remote's `tuf-root` through the `trust` key
+(`artifact-verification.md` AC25).
 
 The recorded surface for the replay corpus: against hackage.haskell.org, a bootstrap (root, timestamp,
 snapshot, mirrors, a whole index), an incremental update, one tarball through its redirect, and an
@@ -804,33 +1053,48 @@ and legacy routes, and `405` on remote writes.
       pointer back to the snapshot before it serves that snapshot's index with `timestamp.json` and
       `snapshot.json` at a version above any previously served on the pointer; every client's next update
       succeeds and no longer offers 2.1.0, with one `Range` request when the rollback lies inside 64 KiB
-      and a whole download otherwise; and no pointer ever serves either document at a version lower than
-      one it served, including with the clock stepped backwards.
+      and a whole download otherwise; each document's `version` equals the pointer's generation
+      counter in `data-model.md`'s freshness record at the transition that produced it, and its
+      `expires` that record's `moved_at` plus the role's window; and no pointer ever serves either
+      document at a version lower than one it served, including with the clock stepped backwards.
 - [ ] AC7: Promoting a snapshot to a second pointer serves byte-identical index and tarball bytes there,
       with `timestamp.json` and `snapshot.json` on that pointer's own counter, and every client of the
       second pointer updates and installs from it.
 - [ ] AC8: An idle default pointer and an idle environment pointer are each re-signed before their
-      `timestamp.json` and `snapshot.json` expire, over three windows under an injected clock, with no
+      `timestamp.json` and `snapshot.json` expire, over three windows under an injected clock, by the
+      `signing.resign` schedule on the production scheduler, surviving a restart mid-schedule, with no
       snapshot created; `cabal --ignore-expiry update` on both cabal lines and Stack with
       `ignore-expiry: false` on both lines succeed at every step.
 - [ ] AC9: Every served TUF document verifies under hackage-security's canonical JSON rules with ed25519
       keys only; the root role, snapshot, timestamp and mirrors keys and an empty `targets` role are as
-      Design states; the signing test path also verifies the live Hackage's current metadata; and no
-      handler package holds a private key or performs signing, asserted by an architecture test.
+      Design states, each role a `SigningKey` of that purpose; the TUF key ids equal
+      hackage-repo-tool's for the same keys; a role requested on the `pkcs11` backend is refused at key
+      creation naming the Ed25519 ceiling; the verifier that self-checks every produced signature also
+      verifies the live Hackage's current metadata; and no handler or generator package holds a
+      private key or performs signing, asserted by an architecture test.
 - [ ] AC10: Rotating the snapshot, timestamp and mirrors keys makes every client that holds the previous
       root update successfully through one root download; rotating the root keys serves a root whose root
       role holds the new keys, whose key map keeps the old root keys, and which carries a threshold of both
       sets' signatures, which a client holding the original root accepts directly and a fresh client
-      configured with either set's ids bootstraps from; and neither rotation creates a snapshot.
-- [ ] AC11: A `root.json` signed offline by an operator is accepted only when a threshold of the current
-      root keys signed it and every signing key appears in its key map, and is then served to every
-      client, which follows it; a root failing either check is refused with the reason and never served.
+      configured with either set's ids bootstraps from; the old root keys keep cross-signing for
+      `signing.rotation_window`; each step is an admin-only `configure` operation on the signing-key
+      routes; and neither rotation creates a snapshot.
+- [ ] AC11: A `root.json` signed offline by an operator and submitted through the `external`
+      backend's submit operation is accepted only when a threshold of the current root keys signed it
+      and every signing key appears in its key map, and is then served on every pointer to every
+      client, which follows it; a root failing either check is refused with a problem naming the
+      failing check and never served; the service never holds the root's private keys; and
+      `SigningDocumentExpiring` fires `signing.external_expiry_lead` before an operator-held root
+      expires.
 - [ ] AC12: `cabal upload --publish --token` from cabal 3.16.1.0, sent as `POST upload` to
       `https://{host}/hackage/{repo}`, stores the release in exactly one snapshot, prints the response under "Warnings:", and the release then
       installs on all four clients; `--username` and `--password` over HTTPS publish the same way; an
       identical republish answers `200` with no snapshot; different bytes at an existing or deleted
-      coordinate, including after the deleting snapshot is pruned, and a trailing-zero variant answer `409`,
-      which cabal prints with its body.
+      coordinate, including after the deleting snapshot is pruned and after a backwards repoint, and a
+      trailing-zero variant answer `409`, which cabal prints with its body, the deleted coordinate refused
+      by the shared write path's retirement check before the handler runs; and the same release
+      published through the binding and through the management API's `publish` yields byte-identical
+      served documents and snapshot deltas.
 - [ ] AC13: Each of these publishes answers `400` naming the rule, with nothing committed and no snapshot:
       an archive that is not gzip-compressed tar; an entry outside `{name}-{version}/`; a missing or second
       `{name}.cabal`; a `.cabal` `name` or `version` disagreeing with the directory or the filename; an
@@ -847,14 +1111,17 @@ and legacy routes, and `405` on remote writes.
       entry in one snapshot, after which both cabal lines list 1.1.0 in parentheses and resolve `acme-app` to 1.0.0; with every
       release `acme-app` accepts excluded, both still install one; and `cabal update '{repo},{instant}'`
       before the entry resolves 1.1.0 again.
-- [ ] AC17: Deleting `acme-base` 1.1.0 rebases the index in one snapshot without its entries, its tarball
-      answers `404`, every client's next update succeeds with a whole index download, the coordinate stays
-      retired after a backwards repoint and after the deleting snapshot is pruned, and the `Package` row
-      survives deleting its last release.
+- [ ] AC17: Deleting `acme-base` 1.1.0 through the `delete-version` operation rebases the index in one
+      snapshot without its entries and writes its `Retirement` record in the same transaction, its
+      tarball answers `404`, every client's next update succeeds with a whole index download, the
+      coordinate stays retired after a backwards repoint and after the deleting snapshot is pruned with no
+      retirement state in any package-level document, and the `Package` row survives deleting its last
+      release.
 - [ ] AC18: Every management operation and the upload binding is refused with no snapshot for a principal
-      lacking its action (`push` for publish, revision and preferred versions, `delete` for deletion), answers
-      `405` against a remote or virtual repository, and key operations are refused for every
-      repository-scoped token.
+      lacking its action (`push` for `publish` and `annotate`, `delete` for `delete-version`), answers
+      `405` with the `repository-type` problem against a remote or virtual repository, identically through
+      the binding and the API, and key operations are refused for every repository-scoped token,
+      including one holding every action.
 - [ ] AC19: On a private repository over TLS, cabal 3.16.1.0 with userinfo in `url:` updates and installs,
       the transcript showing each request answered `401` with `WWW-Authenticate: Basic` and repeated with
       `Authorization: Basic`, index `Range` requests included; both Stack lines with userinfo in
@@ -862,54 +1129,70 @@ and legacy routes, and `405` on remote writes.
       installs nothing; a credential-less request answers `401` identically for a private and a missing
       repository; a token lacking `pull` answers `404`; a rejected token answers `401`; plain HTTP carrying
       a credential is refused before lookup; and no credential appears in logs, error bodies or metrics.
-- [ ] AC20: cabal 3.16.1.0's `Authorization: X-ApiKey {token}` authenticates as the same principal as the
-      same token in Basic, and an `X-ApiKey` value naming no token answers `401`; and cabal 3.8.1.0's
-      password upload, sent by `--digest`, exits non-zero with "http code 401" against this registry.
-- [ ] AC21: A token holding `pull` patterned `acme-*/**` is refused `cabal update` and `stack update` at the
-      first index or metadata request on every client, in hosted and proxied mode, while a scripted fetch
+- [ ] AC20: cabal 3.16.1.0's `Authorization: X-ApiKey {token}`, the presentation form `auth.md` AC31
+      lists, authenticates as the same principal as the same token in Basic, and an `X-ApiKey` value
+      naming no token answers `401`; and cabal 3.8.1.0's password upload, sent by `--digest`, exits
+      non-zero with "http code 401" against this registry.
+- [ ] AC21: A token holding `pull` patterned `acme-*/**` reads `root.json`, `timestamp.json`,
+      `snapshot.json` and `mirrors.json`, each a descriptor passing the sentinel test, and is refused
+      `cabal update` and `stack update` at the index request on every client, in hosted and proxied mode,
+      while a scripted fetch
       under it downloads `acme-base` tarballs and answers `404` for `other-pkg`, the answer a nonexistent
       release gets; a token holding `push` patterned `acme-*/**` publishes `acme-new` through `cabal upload
       --publish` and is refused `other-new` with no snapshot; and an upload whose `package` part names no
       filename before its bytes is refused for that patterned `push` and accepted for an unpatterned one.
 - [ ] AC22: A release the shared policy layer refuses answers `403` with `text/plain` naming the policy on
-      its tarball routes, on the hosted and the proxied path, while the index keeps naming it; Stack 2.9.1
+      its tarball routes, written through `WriteRefusal`, on the hosted and the proxied path, while the
+      index keeps naming it; Stack 2.9.1
       prints the body, cabal exits 1 with "Unexpected response 403", Stack 3.11.1 exits non-zero; on a
       hosted repository no request reaches any other host, asserted at the network layer; and each refused
       download produces exactly one refusal record.
 - [ ] AC23: With a stand-in upstream whose signed mirror list names a reachable second instance, a remote
       repository's `403` on a tarball sends both cabal lines to that instance, while a hosted and a virtual
       repository serve an empty signed mirror list so the same refusal sends no client anywhere, asserted at
-      the network layer; and the operator documentation states the remote's exposure.
+      the network layer; and the operator documentation states the remote's exposure, which
+      `supply-chain-policy.md`'s binding table records as `restricted-egress` for a remote and `holds`
+      for hosted and virtual repositories.
 - [ ] AC24: A remote repository over a stand-in hackage-security repository served under a path prefix,
       and separately over the live hackage.haskell.org in the nightly job, serves `root.json`,
       `timestamp.json`, `snapshot.json`, `mirrors.json` and the index byte-identical to the upstream's, and
       every client configured with the upstream's root key ids updates and installs through it with only
-      this registry reachable; the upstream receives one incremental index request per upstream change, and
+      this registry reachable, the remote's trust set holding those ids as its `tuf-root` entry; the
+      upstream receives one incremental index request per upstream change, answered `206` and spliced, and
       a second install from fresh containers produces no upstream request.
-- [ ] AC25: For a proxied upstream revision whose snapshot hash, index hash, signature, root or version fails
-      verification, or whose timestamp has expired, nothing is committed, the previous revision keeps
-      serving within the stale bound, clients never receive a timestamp whose snapshot or index is not
-      cached, and the real reason reaches the operator record; and a proxied tarball whose bytes do not
-      match its `package.json`, or whose body is truncated, is never committed.
+- [ ] AC25: For a proxied upstream revision whose snapshot hash, index hash, signature or root fails the
+      `tuf` entry's chain verification, or whose timestamp has expired, nothing is committed, the previous
+      revision keeps serving within the stale bound, and the real reason reaches the operator record; a
+      revision whose versions decrease is not adopted, the cached revision and its cache-scoped record
+      standing and a divergence recorded; the five documents of a revision are committed and served as one
+      paired set, so clients never receive a timestamp whose snapshot or index is not cached; a proxied
+      tarball whose bytes do not match the declared SHA-256 and length of its `package.json`, or whose
+      body is truncated, is never committed; and a committed proxied tarball carries a `verified` verdict
+      with chain `repository-chain`.
 - [ ] AC26: A tarball request for a release no current or retained upstream revision names answers `404`
       with no upstream request, asserted at the network layer; an upstream tarball `404` is negatively
       cached while a `429` or `5xx` is neither cached as absence nor surfaced as not-found; an upstream
-      redirect on the tarball route never reaches the client; and a stand-in presenting each removal-table
-      event produces this format's classification in the table.
+      redirect on the tarball route never reaches the client; a refresh through the management API makes
+      the next request revalidate the revision and the negative entries; and a stand-in presenting each
+      removal-table event produces the `proxy-cache.md` event class the table names.
 - [ ] AC27: A virtual repository over a hosted and a remote member serves a merged index signed with its
       own keys, which every client verifies with the virtual repository's key ids; a hosted `acme-base`
       placed first shadows the remote's `acme-base` so that no upstream release of it is listed or fetched,
       asserted at the network layer, including when the remote's release was merged first and the shadowing
       rebases the index; `cabal update '{repo},{instant}'` resolves by member entry times; Stack 3.11.1 and
-      2.9.1 update against a merged log whose entry times are not monotonic; and publish to the virtual
-      repository answers `405`.
-- [ ] AC28: A proxied index above the inline metadata threshold, and a hosted index manifest whose segments
-      are CAS blobs, survive a GC sweep while current or retained and serve every client afterwards; and a
+      2.9.1 update against a merged log whose entry times are not monotonic; a member publish is visible
+      in the virtual within the staleness bound through the `index.merge` job, never on a request's path,
+      with every client of the virtual adopting the new merge because its TUF version rose; and publish
+      to the virtual repository answers `405`.
+- [ ] AC28: A proxied index stored as declared chunks, and a hosted index manifest whose segments are CAS
+      blobs named in its declared blob-digest list, survive a GC sweep while current or retained and serve
+      every client afterwards, and a segment no current or retained document declares is collected; and a
       hosted repository's storage grows by the appended segment, not by a whole index, per publish.
 - [ ] AC29: A policy rule depending on advisory data attached to a Hackage repository binds on both paths
-      through the `Hackage` OSV ecosystem, refusing a release an advisory's range covers; and a rule
-      requiring a verified signature serves a proxied tarball whose chain verified and refuses every hosted
-      release with the reason that no author signature exists.
+      through the `Hackage` OSV ecosystem, refusing a release an advisory's range covers under the
+      component-wise integer version order; a rule requiring any verified verdict serves a proxied tarball
+      whose chain verified and refuses every hosted release with the reason that no author signature
+      exists; and a rule requiring a publisher identity refuses both.
 - [ ] AC30: The candidate route answers `400` whose body names `--publish`, the docs routes and
       `00-index.tar.gz` answer `404`, and a bare `cabal upload` and `cabal upload -d` on cabal 3.16.1.0 print
       those bodies and exit non-zero.
@@ -921,7 +1204,19 @@ and legacy routes, and `405` on remote writes.
       answer one byte range with `206` and `Content-Range` and an unsatisfiable one with `416`; both tarball
       routes, `package/{name}-{version}.tar.gz` and `package/{name}-{version}/{name}-{version}.tar.gz`,
       serve the same bytes with no redirect; TUF documents and the index carry `Cache-Control: no-cache`
-      and a byte-derived `ETag`, and tarballs the immutable caching header.
+      and a byte-derived `ETag` set by `ServeDocument`, never by the handler, and tarballs the immutable
+      caching header.
+- [ ] AC33: `Capabilities()` declares proxy `supported`, reference implementation `available`,
+      `Virtual: supported` and `Rename: supported`; after a hosted repository is renamed, all four clients,
+      reconfigured with the new URL and the unchanged root key ids, update and install from it with
+      byte-identical TUF documents, index and tarballs and no key re-created or re-signed, and the old
+      name answers `not-found` exactly as a never-existing repository does.
+- [ ] AC34: `root.json` and `mirrors.json` are served byte-identical on every pointer of a repository and
+      appear in no snapshot's content; renewing the root on the cadence, rotating a key or accepting an
+      operator-held root produces exactly one new root version for the repository and re-renders every
+      pointer's four documents in one batch with each pointer's counter advanced; and after a root
+      rotation, repointing to a snapshot older than it serves the current root, which every client that
+      holds the new root accepts.
 
 ## Test Plan
 
@@ -932,78 +1227,94 @@ and legacy routes, and `405` on remote writes.
 | AC3 | conformance + property | `conformance/hackage/incremental_test.go` (index above 64 KiB, `Range` header and `206` asserted on all four); `internal/format/hackage/segment_prefix_test.go` (thirty writes, two compressor builds, prefix property) |
 | AC4 | integration + property | `internal/format/hackage/index_consistency_test.go` (snapshot hashes against served bytes, trailer, entry order, injected clock stepped backwards) |
 | AC5 | conformance | `conformance/hackage/tamper_test.go` (storage fault injection on tarball and index segment, each client's error text) |
-| AC6 | conformance + integration | `conformance/hackage/rollback_test.go` (all four clients, repoint inside and beyond 64 KiB); `internal/format/hackage/pointer_version_test.go` (per-pointer counter under an injected clock stepped backwards) |
+| AC6 | conformance + integration | `conformance/hackage/rollback_test.go` (all four clients, repoint inside and beyond 64 KiB; shared with `signing-service.md` AC10); `internal/format/hackage/index/pointer_version_test.go` (version and expiry read from the freshness record under an injected clock stepped backwards; the record itself is `data-model.md` AC36's `internal/model/pointer_freshness_test.go`) |
 | AC7 | conformance | `conformance/hackage/promotion_test.go` (second pointer, byte comparison of index and tarballs, installs) |
-| AC8 | conformance + integration | `conformance/hackage/expiry_test.go` (injected clock over three windows, expiry-checking cabal and Stack runs); `internal/format/hackage/resign_test.go` (no snapshot created) |
-| AC9 | unit + integration | `internal/signing/tuf_canonical_test.go` (canonical JSON and ed25519 against hackage-repo-tool output and the live Hackage metadata); `internal/format/hackage/arch_test.go` (no key material in the handler) |
-| AC10 | conformance | `conformance/hackage/rotation_test.go` (online and root rotation, clients holding the original root, fresh bootstraps with old and new ids) |
-| AC11 | integration + conformance | `internal/format/hackage/offline_root_test.go` (threshold and key-map checks, refusal reasons); `conformance/hackage/offline_root_test.go` (clients follow the accepted root) |
-| AC12 | conformance + integration | `conformance/hackage/publish_test.go` (cabal 3.16.1.0 token and password uploads, install on all four, idempotent republish, `409` cases with printed bodies); `internal/format/hackage/publish_snapshot_test.go` (snapshot counts, retirement after pruning) |
+| AC8 | conformance + integration | `conformance/hackage/expiry_test.go` (injected clock over three windows, expiry-checking cabal and Stack runs); `internal/format/hackage/resign_test.go` (no snapshot created; the schedule's restart behaviour is `signing-service.md` AC22's) |
+| AC9 | unit + integration | `internal/signing/tuf/canonical_test.go` (canonical JSON and ed25519 against hackage-repo-tool output); `internal/verify/tuf/chain_test.go` (the live Hackage metadata, shared with `artifact-verification.md` AC17); `internal/signing/public_forms_test.go` (key ids against `hackage-repo-tool`, `signing-service.md` AC12); `internal/signing/backends_test.go` (the `pkcs11` Ed25519 refusal, `signing-service.md` AC13); the module-wide import architecture test of `signing-service.md` AC2 covering `internal/format/hackage/**` |
+| AC10 | conformance + integration | `conformance/hackage/rotation_test.go` (online and root rotation through the signing-key routes from the case `script`, clients holding the original root, fresh bootstraps with old and new ids); `internal/signing/rotation_profiles_test.go` (the `root-chain` row with the `hackage-security` vectors, no snapshot, `signing-service.md` AC7, AC8) |
+| AC11 | integration + conformance | `internal/signing/external_test.go` (offline-signed `root.json` fixtures: valid, under-threshold, unlisted signer; shared with `signing-service.md` AC16); `internal/format/hackage/index/offline_root_test.go` (the accepted root re-rendered on every pointer); `conformance/hackage/offline_root_test.go` (clients follow the accepted root); the expiry alert through `telemetry.NewTestRecorder` |
+| AC12 | conformance + integration | `conformance/hackage/publish_test.go` (cabal 3.16.1.0 token and password uploads, install on all four, idempotent republish, `409` cases with printed bodies); `internal/format/hackage/publish_snapshot_test.go` (snapshot counts, retirement after pruning and a backwards repoint); the binding-equivalence table test of `management-api.md` AC8 enumerating this handler's `Bindings()` |
 | AC13 | integration | `internal/format/hackage/ingest_test.go` (one malformed or hostile sdist per rule, CAS and snapshot unchanged) |
 | AC14 | integration | `internal/format/hackage/names_test.go` (case-clash refusal, exact-case lookups, spelling in index and routes) |
 | AC15 | conformance + integration | `conformance/hackage/revision_test.go` (management endpoint from the case `script`, `cabal info` and `cabal get` on both lines); `internal/format/hackage/revision_rules_test.go` (identity and sequence refusals) |
 | AC16 | conformance | `conformance/hackage/preferred_versions_test.go` (parentheses, resolution, all-deprecated install, `index-state` before the entry) |
-| AC17 | conformance + integration | `conformance/hackage/delete_test.go` (rebase absorbed by all four, `404` on the tarball); `internal/format/hackage/retirement_test.go` (backwards repoint, pruning, `Package` row survival) |
-| AC18 | integration | `internal/format/hackage/manage_auth_test.go` (action refusals per operation and binding, `405` on remote and virtual, key operations refused for tokens) |
+| AC17 | conformance + integration | `conformance/hackage/delete_test.go` (the `delete-version` operation from the case `script`, rebase absorbed by all four, `404` on the tarball); `internal/format/hackage/retirement_test.go` (the `Retirement` record in the deleting transaction, backwards repoint, pruning, no retirement state in any document, `Package` row survival) |
+| AC18 | integration | `internal/format/hackage/manage_auth_test.go` (action refusals per kind and binding, `405` `repository-type` on remote and virtual through both entry points, key operations refused for tokens holding every action) |
 | AC19 | conformance + integration | `conformance/hackage/auth_test.go` (TLS private repository, challenge transcript on cabal 3.16.1.0, preemptive Basic on both Stack lines, cabal 3.8.1.0 refused, anonymous, `pull`-less, rejected and plain-HTTP cases); `internal/auth/leak_test.go` (redaction for this format) |
-| AC20 | conformance + unit | `conformance/hackage/upload_auth_test.go` (`X-ApiKey` upload, cabal 3.8.1.0 password upload); `internal/auth/verifier_test.go` (`X-ApiKey` form, the sibling change to `auth.md`) |
-| AC21 | conformance + unit | `conformance/hackage/pattern_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, both modes, all four clients refused at the index, scripted tarball fetches, patterned publish); `internal/format/hackage/scope_object_test.go` (the object table per route, `format-handler-interface.md` AC12) |
-| AC22 | conformance + integration | `conformance/hackage/policy_test.go` (hosted and proxied modes through the `policies` key, printed text and exit status per client, network-layer assertion); `internal/format/hackage/refusal_record_test.go` (one record per refused download) |
+| AC20 | conformance + unit | `conformance/hackage/upload_auth_test.go` (`X-ApiKey` upload, cabal 3.8.1.0 password upload); `internal/auth/credential_form_test.go` (the `X-ApiKey` form resolving as Basic does, `auth.md` AC31) |
+| AC21 | conformance + unit | `conformance/hackage/pattern_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, both modes, TUF documents read and all four clients refused at the index, scripted tarball fetches, patterned publish); `internal/format/hackage/scope_object_test.go` (the object table per route and the sentinel test on the four descriptor routes through the shared helper in `internal/format/scope_test.go`, `format-handler-interface.md` AC12, `auth.md` AC32) |
+| AC22 | conformance + integration | `conformance/hackage/policy_test.go` (hosted and proxied modes through the `policies` key, printed text and exit status per client, network-layer assertion; admitted by the case-set validator because the Hackage binding row is not `pending`, `conformance-harness.md` AC26); `internal/format/hackage/refusal_record_test.go` (one record per refused download, `WriteRefusal` the only writer, `format-handler-interface.md` AC14) |
 | AC23 | conformance | `conformance/hackage/mirror_fallback_test.go` (a second declared instance as the signed mirror, remote versus hosted and virtual, network-layer assertion) |
-| AC24 | conformance | `conformance/hackage/proxied_install_test.go` (prefixed stand-in, byte comparison of every TUF document and the index, upstream request counts, second install with no upstream request); nightly `conformance/hackage/live_upstream_test.go` (hackage.haskell.org) |
-| AC25 | integration | `internal/format/hackage/proxied_chain_test.go` (each failing link, atomic revision switch, stale bound, operator record, tarball mismatch and truncation) |
-| AC26 | integration | `internal/format/hackage/proxied_negative_test.go` (unnamed tarball, `404`, `429`, `5xx`, redirect); `internal/format/hackage/removal_test.go` (stand-in presenting each removal-table event) |
-| AC27 | conformance + integration | `conformance/hackage/virtual_test.go` (merged index on all four clients, shadowing and the rebase, `index-state`, non-monotonic merged times on both Stack lines, `405`); `internal/format/hackage/virtual_merge_test.go` (per-package member order) |
-| AC28 | integration | `internal/storage/metadata_root_test.go` (declared segment blobs and a proxied index across a sweep, then serving); `internal/format/hackage/segment_growth_test.go` (storage delta per publish) |
-| AC29 | integration | `internal/format/hackage/policy_config_test.go` (advisory rule through the `advisories` key on both paths, signature rule against proxied and hosted releases) |
+| AC24 | conformance | `conformance/hackage/proxied_install_test.go` (prefixed stand-in, the remote's `tuf-root` through the `trust` key, byte comparison of every TUF document and the index, upstream request counts and `206` answers, second install with no upstream request); nightly `conformance/hackage/live_upstream_test.go` (hackage.haskell.org) |
+| AC25 | integration | `internal/format/hackage/proxied_chain_test.go` (each failing link, a decreasing version not adopted, the paired-set commit, stale bound, operator record, tarball mismatch and truncation, the recorded `repository-chain` verdict); `internal/proxy/freshness_test.go` (the paired set and the regression rule, shared with `proxy-cache.md` AC22) |
+| AC26 | integration | `internal/format/hackage/proxied_negative_test.go` (unnamed tarball, `404`, `429`, `5xx`, redirect, refresh); `internal/format/hackage/removal_test.go` (stand-in presenting each removal-table event, asserting the event class) |
+| AC27 | conformance + integration | `conformance/hackage/virtual_test.go` (merged index on all four clients, shadowing and the rebase, `index-state`, non-monotonic merged times on both Stack lines, a member publish adopted after the merge, `405`); `internal/format/hackage/index/merge_test.go` (per-package member order, rising virtual version); the `index.merge` contract is `signing-service.md` AC19's `internal/index/merge_test.go` |
+| AC28 | integration | `internal/storage/metadata_blob_gc_test.go` (declared segment and chunk lists across a sweep, then serving; an undeclared segment collected; shared with `data-model.md` AC37); `internal/format/hackage/segment_growth_test.go` (storage delta per publish) |
+| AC29 | integration | `internal/format/hackage/policy_config_test.go` (advisory rule through the `advisories` key on both paths, any-verified and publisher-identity signature rules against proxied and hosted releases) |
 | AC30 | conformance | `conformance/hackage/unsupported_routes_test.go` (candidate, docs and legacy answers, cabal 3.16.1.0 output) |
 | AC31 | conformance | `conformance/hackage/replay_test.go` (corpus replay against the recorded Hackage surface with the named redactions) |
-| AC32 | integration + conformance | `internal/format/hackage/headers_test.go` (every route's encoding, range, type and caching headers, both tarball routes compared); `conformance/hackage/no_range_test.go` (all four clients send `Range` on their second update against the served headers) |
+| AC32 | integration + conformance | `internal/format/hackage/headers_test.go` (every route's encoding, range, type and caching headers, both tarball routes compared); `conformance/hackage/no_range_test.go` (all four clients send `Range` on their second update against the served headers); the freshness-boundary architecture test of `signing-service.md` AC11 |
+| AC33 | unit + conformance | `internal/format/capabilities_test.go` (this handler's four declarations, `format-handler-interface.md` AC13); `conformance/hackage/rename_test.go` (all four clients against the renamed repository, byte comparison, old name `not-found`; required by `repository-lifecycle.md` AC12) |
+| AC34 | integration + conformance | `internal/format/hackage/index/root_placement_test.go` (identical bytes on every pointer, absent from snapshot content, one root version per renewal, one batch across pointers); `conformance/hackage/rotation_test.go` (the repoint-after-rotation case on all four clients) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
-closed-vocabulary decision, was Q4): `repositories` with type and virtual member order, `credentials`
-(patterned tokens included), `upstreams` (stand-in hackage-security repositories with variants for a path
-prefix, mutation, rebase, rotation, corruption, expiry and a mirror list), `state` for pre-published
-releases, revisions and preferred versions, and `advisories` and `policies`, plus a second server instance
-for AC23. Two obligations on the harness are recorded rather than assumed and listed in the sibling
-consequences: a hosted `state` entry is servable only once the signing and index service has appended it
-and signed the pointer's metadata, so the seed path invokes the same service the write path does, as
-`debian.md` also requires; and the client's root key ids exist only once the repository does, so the case
-`script` reads them from the server before writing the client's configuration, which is client-side work
-the vocabulary already leaves to the script. The runner-enforced obligations, both modes and the
-unauthenticated, unauthorized and pattern-refusal cases in each, apply from the sibling specs.
+closed-vocabulary decision, was Q4): `repositories` with type, virtual member order and the `signing`
+sub-entry, `credentials` (patterned tokens included), `upstreams` (stand-in hackage-security
+repositories with variants for a path prefix, mutation, rebase, rotation, corruption, expiry and a
+mirror list), `trust` for a remote's `tuf-root`, `state` for pre-published releases, revisions and
+preferred versions, and `advisories` and `policies`, plus a second server instance for AC23. The two
+obligations this spec once recorded on the harness are met by the sibling specs: a hosted `state`
+entry comes out appended and signed because the write-path hook runs the index runtime on the seed
+write too, with no seed-side code (`signing-service.md` AC21; `conformance-harness.md` AC24), and the
+client's root key ids are readable from the server before the client runs (the same criteria), which
+the case `script` writes into the client's configuration. The runner-enforced obligations, both modes
+and the unauthenticated, unauthorized and pattern-refusal cases in each, a `script` case per declared
+kind and the shared rename case (`conformance-harness.md` AC26), apply from the sibling specs.
 
 ## Implementation Phases
 
 ### Phase 1: Hosted reads and the signed index
 - Waits on `docs/internal/plans/foundation/signing-service.md` reaching `planned` (Blocking
-  preconditions)
-- The format-first mount, TUF documents from the signing service, the segmented index with appended gzip
-  members, tarball routes, headers and ranges, seeded releases through `state`, the per-route addressed
-  objects, the `403` policy rendering
+  preconditions), its Phases 1 to 3 built (the runtime and the `Indexer` contract, pointer documents
+  and cadence, the TUF canonical-JSON codec) and its Phase 4's seed-path equivalence
+- The format-first mount, the generator package `internal/format/hackage/index`, TUF documents from the
+  signing service, the segmented index with appended gzip members and its declared blob list, tarball
+  routes, headers and ranges through `ServeDocument`, seeded releases through `state` with the
+  `signing` sub-entry, the per-route addressed objects with the descriptor sentinel test, the `403`
+  policy rendering through `WriteRefusal`, `Capabilities()` and the rename case (AC33)
 
 ### Phase 2: Publish and management
-- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned`
-- The upload binding with ingest validation, revisions, preferred versions, rebasing deletion and the
-  retirement set, key rotation and offline roots, the write-boundary declaration under concurrency
+- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (its Phases 2 and 3:
+  publish, `Operator`, bindings)
+- The `Operator` interface with `publish`, `annotate` and `delete-version` and the `POST upload`
+  binding, ingest validation, revisions, preferred versions, rebasing deletion with core-held
+  retirement, the write-boundary declaration under concurrency
 
-### Phase 3: Pointers
-- Waits on the `data-model.md` revisions (pointer-held documents, declared blob references)
-- Per-pointer version counters, rollback and promotion, the expiry cadence
+### Phase 3: Pointers, keys and rotation
+- Waits on `data-model.md` reaching `planned` (the freshness record, `PointerDocument`, declared blob
+  lists), already required by Phase 1's documents, and on `signing-service.md`'s Phase 3 for the
+  `root-chain` profile and the `external` backend
+- Per-pointer versions from the generation counter, rollback and promotion, the expiry cadence, the
+  four TUF documents as pointer documents (AC34), key rotation and operator-held roots through the
+  signing-key routes
 
 ### Phase 4: Proxied path
-- Waits on `upstream-adapters.md` and `artifact-verification.md`
-- Verified upstream revisions, incremental upstream index fetches, chunked storage, verified tarball
-  caching, negative caching, the removal table, `405` on remote writes
+- Waits on `upstream-adapters.md` and `artifact-verification.md` (its `tuf` entry, built here with this
+  format in its Phase 4 at charter step 11) reaching `planned`
+- Verified upstream revisions as paired sets, incremental upstream index fetches, chunked storage,
+  verified tarball caching with declared digests and `repository-chain` verdicts, negative caching, the
+  removal event classes, `405` on remote writes
 
 ### Phase 5: Virtual repositories
-- Waits on `async-operations.md`
-- The merge with per-package member order, remote verification before merge, rebasing on retroactive
-  shadowing, the virtual repository's keys
+- Waits on `async-operations.md` reaching `planned` (its queue core exists from charter step 4b) and
+  `signing-service.md`'s Phase 4 (virtual merges)
+- The merge as the `index.merge` job with per-package member order, remote verification before merge,
+  rebasing on retroactive shadowing, a rising virtual version, the virtual repository's keys
 
 ### Phase 6: Corpus and gate
 - The recorded corpus against hackage.haskell.org and a local hackage-server for publish, all four clients
-  in the matrix, the exception-list entries named in Design
+  in the matrix, the exception-list entries named in Design, the matrix's verification column
+  (`artifact-verification.md` AC24)
 
 ## Tasks
 
@@ -1011,9 +1322,10 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None open. The fifteen questions this draft raised were each written in the template's decision shape
-and then adopted at their own recommendation under the owner's standing delegation of 2026-09-26, so the
-loop can continue; each is recorded below as adopted rather than decided, folded through Scope, Design,
+None open. The fifteen questions the authoring draft raised, and a sixteenth the 2026-09-28
+reconciliation raised on Opus (where `root.json` and `mirrors.json` live, which the foundation specs
+left unstated), were each written in the template's decision shape and then adopted at their own
+recommendation under the owner's standing delegation of 2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided, folded through Scope, Design,
 the criteria and the Test Plan in the same pass, and reversible by the owner at any time.
 `grep -rn "standing delegation"` is the owner's review queue.
 
@@ -1041,8 +1353,12 @@ pointer transitions, never on a read.
 **Why this is yours:** it asks the shared model for a pointer-held record on a second format's account and
 qualifies a promotion guarantee you settled.
 
-Accepted cost: the shared revision and `data-model.md` AC22's qualification. B lost because it turns the
-product's rollback into an outage; C lost on cost and on abusing the trust root as a cache flush.
+Accepted cost: the shared revision and `data-model.md` AC22's qualification, both now made: the
+per-pointer generation counter and `PointerDocument` are in `data-model.md` (AC36, which states the
+qualification), and `signing-service.md` renders the TUF version from the counter (its AC10, AC27),
+so the counter this record adopted is that one rather than one the handler keeps. B lost because it
+turns the product's rollback into an outage; C lost on cost and on abusing the trust root as a cache
+flush.
 
 ### Resolved: how the compressed index is produced (was Q2)
 
@@ -1079,7 +1395,9 @@ segments already exist as the gzip members of Q2's answer.
 
 **Why this is yours:** it changes what the shared model lets a document reference.
 
-Accepted cost: the shared revision, listed in the sibling consequences.
+Accepted cost: the shared revision, now made: `data-model.md` carries the declared blob-digest list
+(AC37), `storage-and-gc.md`'s fourth root marks through it (its AC16), and `signing-service.md`'s
+generator returns the digests beside the document (AC5 there asserts the survival).
 
 ### Resolved: what a remote serves, and whether it may re-sign (was Q4)
 
@@ -1180,7 +1498,9 @@ Accepted cost: the operator documentation says the rules are looser than Hackage
 ### Resolved: who holds the root keys (was Q9)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: the signing service holds them by
-default and accepts an operator-signed root (Design, signing-service requirement 8; AC11).
+default and accepts an operator-signed root (Design, signing-service requirement 8; AC11). The shared
+spec now provides both modes: the `file` backend by default and the `external` backend with its
+submit operation for an operator-held root (`signing-service.md`, "Key custody", AC16).
 
 **Recommendation:** A. Most deployments cannot run a key ceremony, and the ones that can get TUF's offline-root
 property.
@@ -1233,7 +1553,9 @@ Accepted cost: the operator documentation points cabal users at the refusal reco
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: verified (repository chain) for a proxied
 tarball under a verified upstream revision, absent for a hosted one (Design, "Signing, provenance and policy";
-AC29).
+AC29). `artifact-verification.md` records it as a `verified` verdict with chain `repository-chain`
+(its AC17), which a rule requiring any verified verdict accepts and a rule requiring a publisher
+identity does not.
 
 **Recommendation:** A. The upstream chain is a real signature over the tarball's digest by keys the operator
 chose to trust, and this registry signing its own index attests nothing about the author.
@@ -1262,7 +1584,9 @@ credential kind.
 
 **Why this is yours:** it changes the shared verifier for one client.
 
-Accepted cost: the sibling change, listed in the consequences.
+Accepted cost: the sibling change, now made: `auth.md` lists the `X-ApiKey` scheme as a universal
+presentation form in its Design table and asserts it in AC31, with the `cabal` / `stack` row in its
+client table.
 
 ### Resolved: the addressed object of an upload (was Q14)
 
@@ -1299,8 +1623,48 @@ change to that spec.
 
 Accepted cost: the configuration step.
 
+### Resolved: where `root.json` and `mirrors.json` live (was Q16, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation**, during the reconciliation with the
+foundation wave, on Opus. Option A: `root.json` and `mirrors.json` are `PointerDocument` records on
+every pointer of the repository, byte-identical across pointers, re-rendered on all of them in one
+batch whenever either document changes (a root-chain rotation, an online-key rotation, a cadence
+renewal, an accepted operator-held root), each pointer's counter advanced in the same batch (Design,
+"Mapping onto the shared model", "Every hosted index is a write-triggered signed document",
+"Pointers, rollback and the version counter"; AC34; Phase 3).
+
+The question: this spec always said the two documents "belong to the repository's signing record,
+outside every snapshot", because a repoint that restored an older `root.json` would serve a root
+version below the one a client holds, and hackage-security refuses a decreasing version. The
+foundation specs gave the index runtime three places to store a generated body: snapshot content
+at the `repository`, `package` or `version` level, a `PointerDocument` at the `pointer` level, and a
+`Signature` record (`signing-service.md`, "Storage"). None of them is "a per-repository record
+outside every snapshot", and neither `signing-service.md` nor `data-model.md` states where these two
+documents go, so a Phase 1 implementer would have to choose.
+
+**Recommendation:** A. It uses a record the shared model already has, it keeps both documents out of
+snapshot content, and every pointer's `snapshot.json` must be re-signed whenever either document
+changes anyway, because it names their hashes, so the batch costs one more small document per
+pointer and nothing structural.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Pointer documents, identical on every pointer** | No new record; no repoint can restore an older root; one mechanism for all four TUF documents; replication carries them with the pointer set as it carries every pointer document (`signing-service.md` AC23) | N copies of two small documents; a renewal must produce one root version and fan it out to every pointer in one batch, which `signing-service.md`'s per-pointer `signing.resign` schedule does not yet say (reported as a sibling consequence) |
+| **B. A new repository-scoped, non-snapshot document record** | One copy, the shape this spec first described | A record `data-model.md` and `signing-service.md` would have to add for one format, and a second freshness path beside the pointer's |
+| **C. Snapshot content at the `repository` level** | No new mechanism at all | A repoint across a rotation serves a lower root version, which every client that updated refuses, the same outage the resolved pointer-metadata decision (was Q1) exists to prevent |
+
+**Why this is yours:** it decides where a trust root lives in the shared model, and it asks
+`signing-service.md` for a repository-wide renewal it does not state.
+
+Accepted cost: the fan-out and its consequence on `signing-service.md` (a renewal of a
+repository-wide pointer document is one run per repository, exclusive per repository, not one per
+pointer) and on `data-model.md` (an accepted operator-held root is a transition on every pointer).
+B lost because it adds a record for one format when an existing one serves; C lost because it
+reintroduces the rollback failure.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | d31e54b | authoring pass: grounded first draft, not a review | Grounded five ways: captured traffic from cabal-install 3.16.1.0 and 3.8.1.0 and Stack 3.11.1 and 2.9.1, each from the upstream haskell image pinned by digest, on dedicated Podman networks against a logging stub (HTTP, TLS, and a second instance as a signed mirror) serving repositories built and signed with hackage-repo-tool 0.1.1.5 and crafted generations (bootstrap and every update path, the `Range` incremental index against a 505 KB index, a changed compressor failing twice then downloading whole, appended gzip members read whole and incrementally by all four, rollback as stored failing every client in a five-iteration verification loop and re-signed at a higher version adopted by all four, expiry checked only under cabal's inverted `--ignore-expiry` and Stack's `ignore-expiry: false`, fallback to a signed mirror on any `403`, online-key rotation followed and root rotation accepted only with retained old keys and cross-signatures, revisions and `preferred-versions` as appended entries, `index-state`, a malformed `.cabal`, tampered tarballs, the credential split between the cabal lines and between their uploads, Stack's two configuration keys, cabal's repository combining); the hackage-security, cabal-install, hackage-server and Stack sources and docs; the live hackage.haskell.org (TUF metadata and its signatures verified independently, index shape and 358,366 monotonic entries, headers, redirects, Digest-only upload challenges, a byte-for-byte pass-through that cabal 3.16.1.0 and Stack 3.11.1 verified with Hackage's own keys, and Stack 2.9.1's pre-rotation key ids failing against the live root); and OSV (32 `HSEC-` advisories under `Hackage`) and purl. Fifteen questions written in decision shape and adopted under the standing delegation: pointer-scoped timestamp and snapshot with a per-pointer counter (AC6, AC7, AC8), appended gzip members (AC3), segmented index storage with declared blob references (AC28), remotes byte for byte and never re-signed (AC24, AC25), re-signed per-package virtual merges (AC27), candidates refused (AC30), rebasing deletion (AC17), revisions checked for identity and sequence only (AC15), service-held roots with an operator-held option (AC11), Hackage's name rules (AC13, AC14), `403` at the tarball (AC22), the repository-chain signature verdict (AC29), `X-ApiKey` in the shared verifier (AC20), the publish object from the multipart filename (AC21), no preconfigured upstream. Thirty-two criteria, each with a Test Plan row. Stays draft; awaits an independent review. |
+| 2026-09-28 | 20ff418 | cross-spec reconciliation of the Wave 1 folds and the foundation wave, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying: format-management item 11 and management-api items 11 and 12 (retirement core-held, kinds `publish`, `annotate`, `delete-version`, `configure` with the `POST upload` binding, `Operator`, `repository-type` and `retired`; AC12, AC17, AC18); auth reconciliation item 4 (the `X-ApiKey` form is in `auth.md` AC31 and its Design table; the resolved scheme record discharged; AC20); signing-service item 11 (freshness is `data-model.md`'s generation counter and `moved_at`, generator contract and package, pre-commit dispatch, per-document lock, `root-chain` profile, `external` backend, `signing.resign`, `ServeDocument`; the ten-item list mapped onto the contract; AC6, AC8 to AC11); upstream-adapters item 12 (`https` adapter, `Range` and redirects AC8 and AC15, chunk storage placed on the declared blob list, credential kinds); conformance-harness reconciliation item 4 and client confinement (seed-path signing through the write-path hook, `signing` sub-entry, `trust` key, was-Q6 AC23; the Test Plan obligations paragraph discharged); supply-chain reconciliation item 10 and theme 2 (the `holds` / `restricted-egress` row, `WriteRefusal`, the refusals read route; AC22, AC23); auth was-Q23 (the four TUF documents are descriptors with the sentinel test; AC21); artifact-verification (the `tuf` entry, `tuf-root` trust set, `repository-chain` verdict and publisher-identity nuance; AC25, AC29); proxy-cache (paired revision sets, the TUF version as revision ordering with regression not adopted, declared tarball digests, event classes, refresh; AC25, AC26); data-model AC36 and AC37 and storage-and-gc AC16 (the two revisions this spec raised are made, Q1 and Q3 records discharged); async-operations (`index.merge`, queue core at step 4b; AC27); repository-lifecycle AC12 and FHI AC13 (Capabilities and lifecycle section, new AC33). Adopted Q16 (where `root.json` and `mirrors.json` live: pointer documents identical on every pointer), new AC34, `fable_recheck` extended. Found and reported rather than assumed: `signing-service.md` states no `Range` behaviour for `ServeDocument`, no repository-wide renewal of a pointer document, and no rising version for a virtual's signed documents at each merge; `data-model.md` does not list an accepted operator-held root as a pointer transition; `supply-chain-policy.md`'s vendored orderings omit Hackage's. Thirty-four criteria, each with a Test Plan row. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
