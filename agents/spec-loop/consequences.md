@@ -414,6 +414,11 @@ One target file per agent. A file listed here has had every item targeting it ap
 - alpine.md, FORMAT SWEEP: DONE 2026-09-28 at f8ad8b2 on Opus. Member-input path, unkeyed remotes excluded (AC20); architecture-set client case (AC8); origin as advisory key (AC21); was-Q21/Q22 (new AC25); stale apk-row wording removed.
 - arch.md, FORMAT SWEEP: DONE 2026-09-28 at f8ad8b2 on Opus. Q13 adopted (unsigned upstream databases contribute nothing to a signed virtual; AC23); member-input paths; architecture-set client case (AC9); %BASE% as advisory key (AC24); was-Q21/Q22 (new AC28).
 - conformance-harness.md: conda, alpine and arch exception rows added 2026-09-28.
+- cran.md, FORMAT SWEEP: DONE 2026-09-28 at a3a9d78 on Opus. DATA-LOSS: digest index declared, count zero (AC24); archive-only fetches verified in completion-only mode (AC11); member-input template; AC35/AC26/AC34; AC36 not binding (CRAN signs nothing); ServeFile; was-Q18/Q15/Q14; fable_recheck added.
+- debian.md, FORMAT SWEEP: DONE 2026-09-28 at a3a9d78 on Opus. DATA-LOSS (second hole, missed by the batch 2 spot check): a virtual's two previous merged generations were held only by the by-hash map, now declared on its merged-document list (AC22); dput was-Q13; derived member-input paths; adoption hook; advisory key (AC23); auth gate lifted.
+- hackage.md, FORMAT SWEEP: DONE 2026-09-28 at a3a9d78 on Opus. Literal member-input path; AC30/33/34/35/36; ServeFile; was-Q13/14/15; Operations() without configure; AC16 entry point; vendored ordering.
+- cpan.md, FORMAT SWEEP: DONE 2026-09-28 at a3a9d78 on Opus. Member-input paths; announce-switch-retire; shared-directory finding (AC26); was-Q13/14/15; author record observed via CPAN.pm (new AC33), closing the last wire-only effect; ServeFile/ServeRendered.
+- conformance-harness.md: cran and hackage exception rows added 2026-09-28.
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
 1. signing-service.md (~l.439, ~l.460): "`data-model.md`'s to add" -> "added in data-model.md (Design 'Freshness scoped to the pointer', AC36, AC37)"; ~l.437: "no retained snapshot holds" -> "no retained snapshot or pointer document holds" (data-model AC37).
@@ -799,3 +804,12 @@ Found while writing one row per format into `analysis/management-surfaces-and-th
 5. DATA-LOSS AUDIT: conda's digest index was a keep-alive-by-mention hole the waves missed. debian checked 2026-09-28: fine (index declared, pool files by own cached references). cran.md: CHECK in its batch; its digest index's storage is unstated (l.367 lists it among current documents without saying declared or document). Every remaining batch greps its files for maps or indexes held only inside a document body.
 6. analysis/management-surfaces-and-the-oracle.md: strike the alpine and arch architecture-set half of the wire-only list (alpine AC8, arch AC9 now assert a client sees it). With batch 1 item 4, only the CPAN author record remains.
 7. question-triage.md: record rpm Q11 and arch Q13 as adopted on Opus, awaiting a Fable recheck.
+
+## From format closing sweep batch 3 (2026-09-28, on Opus)
+1. signing-service.md AC35 templates (extends batch 2 item 1): cran {tree} over the other members' trees; debian {suite} over the virtual's configured suites plus paths derived from the envelope read earlier; cpan CHECKSUMS paths derived from the index and the other members' author sets. hackage needs none.
+2. signing-service.md AC36 (extends batch 2 item 2, owner-facing): state it does not bind unsigned consumers (cran, conda). The CPAN shared-directory case drops an unverified remote's entries; decide whether an entry-level admission rule is wanted.
+3. signing-service.md "Virtual merges" and storage-and-gc.md AC16: a merged document may declare its predecessor generations' blobs (debian keeps two for the by-hash race); add the virtual merge as a declared-list producer in the property op set and AC16 fixtures.
+4. management-api.md: confirm a rename configure reaches an Operator whose Operations() omits configure (hackage relies on it), or state the opposite; the Hackage "key rotation, offline root" row is on the signing-key routes, not a handler-declared kind.
+5. analysis/management-surfaces-and-the-oracle.md: the wire-only list is now empty (swift batch 1, alpine and arch batch 2, cpan AC33 here); strike it with a dated note. Hackage row: configure is not in Operations().
+6. proxy-cache.md was-Q19 examples: cran's digest index (count zero) beside conda; CRAN archive-path fetches among the completion-only consumers.
+7. DATA-LOSS AUDIT lesson: the batch 2 spot check of debian missed the virtual's by-hash predecessors; a grep for "digest index" is not an audit. Remaining batches must check every map, index and merged generation, virtual paths included.

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a CHECKSUMS entry naming a different SHA-256 for a cached archive now ends the old blob's cached reference at the new blob's commit, the route following the current CHECKSUMS; the row had kept the old blob 'while a retained revision names it', but a remote keeps no superseded CHECKSUMS and a mention keeps nothing alive (proxy-cache was-Q20, AC28); AC24 extended. Earlier: Reconciled 2026-09-28 at 20ff418 with the foundation wave on Opus (not a review): the index, 01mailrc and CHECKSUMS generated through signing-service's Indexer and generator package internal/format/cpan/index on the pre-commit hook, bodies declared through data-model's blob-digest list (AC27), CHECKSUMS signatures as Signature records assembled in the CPAN::Checksums cleartext framing (AC8), the per-pointer Last-Modified now data-model's moved_at rendered by ServeDocument (AC10), rotation announced then switched on the signing-key routes (AC11); publish, delete-version, annotate (author record) and configure (ownership transfer, key rotation) on management-api with the pause/authenquery binding and core-held retirement (AC12, AC15, AC16); 03modlist a descriptor (AC18); WriteRefusal with the shared Refused by policy phrase over the listener's default HTTP/1.1 (AC19); the restricted-egress or client-setting binding row; CHECKSUMS entries as declared digests, the cache-scoped Last-Modified and regression rule, proxy-cache event classes and refresh on the proxied path (AC23, AC24); the openpgp cleartext entry, trust set and keyserver import with repository-chain verdicts (AC25); the index.merge virtual merge with forward-moving freshness (AC26); CPANSA still out under supply-chain was-Q9 (AC28); Capabilities and the rename case (AC32). Earlier: authored 2026-09-26 from captures of cpanm 1.7049 and 1.7044, CPAN.pm 2.38 and 2.22, cpm 1.1.5 and 0.997024, Carton 1.0.35 and 1.0.34 and cpan-upload; seventeen questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status_description: "Format closing sweep 2026-09-28 at a3a9d78 on Opus (not a review): the merging profile declares member-input paths (the index and 01mailrc literal, and the CHECKSUMS of each author directory another member also holds, a path derived from the index read earlier in the replay, which is signing-service's owed change); a remote member's adoption re-merges through the adoption hook (signing-service was-Q16, AC35), a virtual-only remote is revalidated by the virtual's reads (proxy-cache AC26), and the virtual's Last-Modified moves forward at every merge commit and member-list change (was-Q15, AC34); a single-member CHECKSUMS is declared pass-through and admitted whatever its verdict (was-Q17, AC36), and the NEW FINDING recorded: a directory both a hosted and a remote member hold is composed, so the remote's entries enter it only under a verified verdict, else the merged body lists the hosted files alone with an operator record (AC26 extended); rotation named announce-switch-retire; the cpan-upload binding's none object admitted by management-api was-Q13, the identical republish its declared unchanged publish (was-Q15) and the retired claim checked at declaration and again at commit (was-Q14; AC12 extended); the author-record annotate now observed by a real client, CPAN.pm's distribution report reading 01mailrc (new AC33), and the ownership-transfer configure named as AC6's script case (management-surfaces items 11 and 14); archives through ServeFile, metadb through ServeRendered, Cache-Control per format (was-Q14, Q18; AC29 extended); a remote retains no superseded revision (count zero) and its metadata sits outside the quota (proxy-cache was-Q19, Q21; AC27 extended); the auth rows now exist; version.pm cited as owed by supply-chain. DATA-LOSS AUDIT: nothing held by mention. No question adopted; fable_recheck extended; 33 criteria. Earlier: Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a CHECKSUMS entry naming a different SHA-256 for a cached archive now ends the old blob's cached reference at the new blob's commit, the route following the current CHECKSUMS; the row had kept the old blob 'while a retained revision names it', but a remote keeps no superseded CHECKSUMS and a mention keeps nothing alive (proxy-cache was-Q20, AC28); AC24 extended. Earlier: Reconciled 2026-09-28 at 20ff418 with the foundation wave on Opus (not a review): the index, 01mailrc and CHECKSUMS generated through signing-service's Indexer and generator package internal/format/cpan/index on the pre-commit hook, bodies declared through data-model's blob-digest list (AC27), CHECKSUMS signatures as Signature records assembled in the CPAN::Checksums cleartext framing (AC8), the per-pointer Last-Modified now data-model's moved_at rendered by ServeDocument (AC10), rotation announced then switched on the signing-key routes (AC11); publish, delete-version, annotate (author record) and configure (ownership transfer, key rotation) on management-api with the pause/authenquery binding and core-held retirement (AC12, AC15, AC16); 03modlist a descriptor (AC18); WriteRefusal with the shared Refused by policy phrase over the listener's default HTTP/1.1 (AC19); the restricted-egress or client-setting binding row; CHECKSUMS entries as declared digests, the cache-scoped Last-Modified and regression rule, proxy-cache event classes and refresh on the proxied path (AC23, AC24); the openpgp cleartext entry, trust set and keyserver import with repository-chain verdicts (AC25); the index.merge virtual merge with forward-moving freshness (AC26); CPANSA still out under supply-chain was-Q9 (AC28); Capabilities and the rename case (AC32). Earlier: authored 2026-09-26 from captures of cpanm 1.7049 and 1.7044, CPAN.pm 2.38 and 2.22, cpm 1.1.5 and 0.997024, Carton 1.0.35 and 1.0.34 and cpan-upload; seventeen questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for CPAN (Perl) repositories served to cpanm, cpm, the core cpan client and Carton: a write-triggered 02packages index that maps packages to distributions under first-come indexing permissions this registry enforces, per-author-directory CHECKSUMS produced and clearsigned by the shared signing service, the 01mailrc and 03modlist files CPAN.pm refuses to run without, a cpanmetadb-shaped history route that makes pinned versions resolvable, a pointer-scoped Last-Modified that makes a rollback reach clients that revalidate, publish through the management API and a PAUSE-shaped cpan-upload binding, a byte-for-byte CPAN cache whose tarballs are gated on the upstream CHECKSUMS, and per-package virtual merges with reserved namespaces, with every client's route back to public CPAN named because a refusal holds only where that route is closed."
 author: michielvha
 goal: "Serve Perl teams a private CPAN and a verified cache of public CPAN that stock cpanm, cpm, the core cpan client and Carton (two generations each) install from on both paths, whose index no uploader can hijack, whose CHECKSUMS the verifying clients accept, and whose rollbacks reach every client, with the configuration that keeps each client from falling back to public CPAN proven rather than assumed."
@@ -10,7 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/cpan/**"
   - "conformance/cpan/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q20 into the removal table (the old archive blob released at the new commit, the route following the current CHECKSUMS), which needs the same recheck"
+fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q20 into the removal table (the old archive blob released at the new commit, the route following the current CHECKSUMS), which needs the same recheck; the format closing sweep on Opus 2026-09-28 folded two design judgements without a question, which need the same recheck: a shared author directory's merged CHECKSUMS listing only the hosted member's files when the remote's verdict is not verified (the consequence of signing-service AC36, recorded rather than worked around), and member-input CHECKSUMS paths derived from the index read earlier in the same replay"
 ---
 
 # Plan: CPAN (Perl) repositories
@@ -514,8 +514,10 @@ describes the archive and not a transfer encoding; it then submits the `publish`
 deltas (`management-api.md` AC8). The binding renders the operation's outcome in the form cpan-upload
 reads: `200` with a one-line `text/plain` body (cpan-upload prints only "PAUSE add message sent ok
 [200]"); `400` for what the handler's `Apply` refuses as `validation`, `409` for a `conflict` and for a
-coordinate the shared write path refuses as `retired` before `Apply` runs (`management-api.md`
-AC12), and `401` and `404` per `auth.md`, each with a reason phrase naming the rule, since cpan-upload
+coordinate the shared write path refuses as `retired`, checking the claimed distribution and version
+when `Authorize` declares it, before `Apply` runs, and again at commit, serialised with any retiring
+write on the repository head (`management-api.md`'s resolved retirement-check decision, was Q14,
+AC12; `storage-and-gc.md` AC30), and `401` and `404` per `auth.md`, each with a reason phrase naming the rule, since cpan-upload
 prints the reason phrase and not the body; and `405` with the `repository-type` problem against a
 remote or virtual repository, identically through the binding and the API (`management-api.md`
 AC7). The publish result document the handler writes for the `Operation` lists each package not
@@ -541,7 +543,10 @@ What ingest enforces, each refusal naming the rule and committing nothing:
   one under case folding answers `409` (the resolved case decision below).
 - **Coordinates bind one set of bytes for the life of the repository.** A version of a distribution
   that exists answers `409` unless the bytes are identical, which answers `200` and creates no
-  snapshot; a deleted version answers `409` with any bytes, including after the deleting snapshot is
+  snapshot: this handler declares `management-api.md`'s unchanged publish (its resolved
+  unchanged-publish decision, was Q15, AC5), so the `Operation` completes with `unchanged: true` and
+  no snapshot reference and no pointer, `Last-Modified` or signature moves, which is what lets a CI
+  retry of cpan-upload, which sends no idempotency key, succeed; a deleted version answers `409` with any bytes, including after the deleting snapshot is
   pruned and across a backwards repoint, because its `Retirement` record is core-held and checked
   centrally (`management-api.md` AC12, `data-model.md` AC35); a version equal to an existing one under
   `version.pm` (`1.10` beside `1.1`) answers `409`.
@@ -556,7 +561,8 @@ declaration:
 - **One publish is one completed logical write and one snapshot**, carrying the archive, the version
   document, the author directory's new `CHECKSUMS` body and its signature, the new `02packages`
   body when a package line changes, `01mailrc` when the author directory is new, and the ownership
-  map when a package is first claimed. A developer release changes no package line.
+  map when a package is first claimed. A developer release changes no package line. The one
+  exception is the declared unchanged publish above, which completes with no snapshot.
 - **A deletion, an ownership transfer and an author record change are each one write**, a deletion's
   `Retirement` record written in the same transaction; a retention pass is one write however many
   versions it removes, and it runs the same generator as any deletion (`signing-service.md` AC1).
@@ -599,17 +605,18 @@ shape `debian.md`, `alpine.md` and `hackage.md` use; that spec lists these as `c
    generalised from this item (its "Storage", AC6, AC8, AC9).
 5. **Rotation with overlap**, through the management API: the new public key is exposed before it
    signs, for an operator-set window (`signing.rotation_window`, default 30 days), and the operator
-   documentation tells `check_sigs` users to import it, citing PAUSE's 2027 subkey. The service
-   records this as "`dual-signature`'s shape without dual signatures" (its "Rotation profiles"), which
-   is not one of its seven named profiles; in effect it is `announce-switch-retire` (announce adds the
-   key to the published key set and signs nothing, switch re-signs every served body under the new
-   key alone as one atomic batch, retire drops the old key), and naming it so is reported as a sibling
-   consequence rather than assumed. Each step is a `configure` operation on the signing-key routes
-   (`management-api.md` AC32; `signing-service.md` AC15).
+   documentation tells `check_sigs` users to import it, citing PAUSE's 2027 subkey. This is the
+   service's `announce-switch-retire` profile, under which `signing-service.md` names CPAN (its
+   "Rotation profiles"): announce adds the key to the published key set and signs nothing, switch
+   re-signs every served body under the new key alone as one atomic batch with no snapshot, and
+   retire drops the old key (its AC7, AC8). Each step is a `configure` operation on the signing-key
+   routes (`management-api.md` AC32; `signing-service.md` AC15).
 6. **The virtual merge** (Design, "Virtual repositories"): the generator's `Merge`, run as the
-   deferred `index.merge` job when a member's documents change, coalesced per virtual, never on a
-   request's path, and signed with the virtual repository's key where members share a directory
-   (`signing-service.md`, "Virtual merges", AC19).
+   deferred `index.merge` job when a member's documents change or a remote member adopts a new
+   upstream revision (its adoption hook, was Q16, AC35), coalesced per virtual, never on a request's
+   path, with the virtual's `Last-Modified` moving forward at every merge commit (its was-Q15, AC34),
+   the member-input paths the profile declares, and signed with the virtual repository's key where
+   members share a directory (`signing-service.md`, "Virtual merges", AC19).
 
 Verification of an upstream's signature is not the signing service's: it belongs to artifact
 verification (`signing-service.md`, "The produce/verify boundary"; Design, "The proxied path").
@@ -662,7 +669,15 @@ tests and its effect by the real clients
 any of them but publish**: cpan-upload uploads, and PAUSE's delete page and permission pages have no
 client. The handler implements the kinds in `Apply` inside the transaction `Submit` opens, and every
 declared kind is driven by a `script` case (`management-api.md` AC24, enforced before any container
-starts by `conformance-harness.md` AC26):
+starts by `conformance-harness.md` AC26). `Operations()` declares `publish`, `delete-version`,
+`annotate` and `configure`, and each has a named case whose effect a real client observes: `publish`
+in AC12 and AC13, `delete-version` in AC15, `annotate` in AC33 (an author record changed from the case
+`script`, after which CPAN.pm's distribution report on both lines shows the new name and email, read
+from the regenerated `01mailrc`, the report captured at authoring: "CPAN_USERID ACME (Acme Corp
+<acme@example.com>)"), and `configure` in AC6 (an ownership transfer from the case `script`, after
+which the transferred package's publish is indexed and cpanm resolves it to the new owner) and in
+AC26 (a virtual's reserved namespaces set through its `settings`). Key rotation's `configure` arrives
+on the signing-key routes with `internal/signing`'s `Apply` (AC11):
 
 | Operation | Effect a client sees | Kind | Action |
 |---|---|---|---|
@@ -725,8 +740,9 @@ valid token lacking `pull` answers `404`, and a rejected token answers `401` and
 anonymous (`auth.md` AC12). Plain HTTP is refused before lookup (`auth.md` AC27). Because CPAN.pm
 prints and stores the credential, the operator documentation recommends a `pull`-only token for it.
 Every form here is the universal Basic password, so `auth.md` needs no new presentation form for
-this format; its client table has no rows yet for these five clients, which that spec asks for before
-a format's auth cases are written, so the rows above are reported to it as a sibling consequence.
+this format; its client table carries the `cpanm`, `cpm` / `carton`, `CPAN.pm` and `cpan-upload` rows
+from these captures, which that spec requires before a format's auth cases are written, so AC17 rests
+on rows that exist.
 
 ### Addressed objects and pattern scopes
 
@@ -763,10 +779,10 @@ cpan-upload binding**, whose object is none because cpan-upload orders its parts
 to run, per the resolved binding-object decision below; the binding serves unpatterned `push` tokens.
 That makes the binding's `Scope(r)` stricter than what the `publish` operation's `Authorize` reports
 for the same release once the archive is committed (`{AUTHOR}/{distribution}/{version}`, from a
-bounded peek), so `management-api.md` AC8's "`Scope(r)` equals `Authorize`" does not hold as worded
-for this binding; the restatement format batch 3 reported for dput (the route's object among
-`Authorize`'s pairs, or a route stricter than its operation) covers it, and this spec's case is
-reported beside it.
+bounded peek), which `management-api.md`'s resolved binding-scope decision (was Q13, its AC8) admits
+by name: a binding's route object is one of `Authorize`'s, none, or a declared route-level object,
+`Submit` evaluates every pair `Authorize` reports on both ways in, so the binding is never wider than
+its operation, and a format spec says where it is stricter, which this paragraph does.
 
 ### Policy refusals on the wire
 
@@ -841,10 +857,11 @@ from several sources** (its resolved advisory-sources decision, was Q9, declared
 `policy.feed.sources`), and records why CPANSA still stays out: its advisories are in their own
 schema, not OSV's, so CPAN is covered the moment an operator declares an OSV-schema export of CPANSA
 as a source, with no change here, and not before (its coverage table: "advisory rules refused at
-configuration until an OSV-schema export of CPANSA is declared as a source"). Even then a range
-binds only under an ordering that spec's matcher vendors, and its list (semver, PEP 440, Maven, RPM
-EVR, Debian, Alpine, opam, Cargo, Go) has no `version.pm` ordering, which is the only correct one here
-(`1.1` equals `1.10`); that gap is reported as a sibling consequence. Per the resolved advisory
+configuration until an OSV-schema export of CPANSA is declared as a source **and** `version.pm`'s
+ordering is vendored"). A range binds only under an ordering that spec's matcher vendors, and
+`version.pm`'s, the only correct one here (`1.1` equals `1.10`), is not in its set: that spec names
+it as owed the moment a CPAN source appears, and until it is vendored a declared CPAN source still
+binds no range (its "What the feed covers, per ecosystem", AC17). Per the resolved advisory
 decision below, this spec adds no converter of its own. Byte-level rules depend on the
 shared cataloguer's coverage of Perl distributions, which that spec decides. **No upstream security
 signal exists on the CPAN wire**: nothing in the index, `CHECKSUMS` or the author directory marks a
@@ -872,6 +889,18 @@ Classification and behaviour:
   remote serves", AC22; `data-model.md` AC44), because cpm and Carton revalidate a remote's index as
   they do a hosted one's (Design, "How the clients decide"). The documents are served through the
   same `ServeDocument` helper hosted documents use, with the cache record in place of the pointer's.
+  They are the remote's current documents, CAS-backed above the inline threshold under the fourth
+  root's current-document half, never LRU-evicted, ending only when an adoption supersedes one or the
+  remote is deleted, and counted in `cache_metadata_bytes{repository}` outside the quota
+  (`proxy-cache.md`'s resolved metadata-eviction decision, was Q21, AC29): a remote therefore holds
+  the 2.5 MB index plus every author directory's `CHECKSUMS` a client has asked for (ETHER's is
+  673,093 bytes), visible in that gauge and not bounded by the quota. The handler declares a
+  retained count of **zero** (`proxy-cache.md`'s resolved retained-revision decision, was Q19,
+  which names this format among those retaining none): no route reads a superseded index or
+  `CHECKSUMS`, since an archive request is gated on the current `CHECKSUMS` and a path it does not
+  name answers `404` (below), so nothing is kept past an adoption and nothing is held by mention.
+  Archives are cached files, each held by its own cached reference under the quota, and re-fetched
+  against the current `CHECKSUMS` after an eviction.
 - **Archives are immutable artifacts**, fetched on a miss and **committed only when their SHA-256 and
   size match the entry for their filename in the author directory's `CHECKSUMS`**, fetched or
   revalidated first: that entry's SHA-256 is the fetch-and-cache request's **declared digest**, a
@@ -952,30 +981,61 @@ freshness record and signing key:
   index's paths are relative and a client fetches what the merged line names.
 - **`CHECKSUMS` pass through from the one member holding an author directory**, a remote's PAUSE-signed
   file included, as the upstream signed it and whatever its verdict, because the archive gate is the
-  SHA-256 and the signature is policy's input (Design, "The proxied path"); a directory present in more
-  than one member gets a merged body, first member per file, signed with the virtual repository's key.
-  A `check_sigs` user of a virtual repository over a remote therefore needs both PAUSE's keys and the
-  registry's, which the operator documentation states. `signing-service.md` says a virtual "merges
-  only documents whose verdict is verified" from a remote member; read literally, that would drop
-  every public author directory of a remote whose trust set holds no PAUSE key, and CPAN.pm would
-  then refuse every public install, so this pass-through is reported to that spec as a case its rule
-  must admit rather than assumed.
+  SHA-256 and the signature is policy's input (Design, "The proxied path"): the profile declares a
+  directory's `CHECKSUMS` **pass-through**, which `signing-service.md` admits whatever the verdict,
+  served byte-identical to the remote's copy with the upstream's signature, no `Signature` record of
+  ours and the same policy evaluation as at the remote's own URL (its resolved pass-through decision,
+  was Q17, AC36, whose conformance half is this spec's `conformance/cpan/virtual_test.go`). A
+  `check_sigs` user of a virtual repository over a remote therefore needs both PAUSE's keys and the
+  registry's, which the operator documentation states. **A directory present in more than one member
+  is composed, not passed through**: it gets a merged body, first member per file, signed with the
+  virtual repository's key, and under the same decision a remote member's `CHECKSUMS` contributes to
+  that body only when its verdict is `verified`. So when a hosted author ID is also a PAUSE ID and
+  the remote's trust set holds no PAUSE key that verifies that directory's `CHECKSUMS`, the merged
+  body lists the hosted member's files only, with an operator record naming the directory, and the
+  remote's archives in it have no entry in the `CHECKSUMS` the virtual serves: CPAN.pm refuses them
+  under `check_sigs` and whether it refuses an archive its directory's `CHECKSUMS` does not list by
+  default was not captured, while cpanm, cpm and Carton, which do not read `CHECKSUMS`, install them.
+  The operator documentation already recommends hosted author IDs not registered on PAUSE (the
+  resolved author-directory decision below, was Q1), which avoids the shared directory, and a
+  remote whose trust set holds PAUSE's keys (keyserver import, Design, "Signing, provenance and
+  policy") contributes the remote's entries when they verify.
 - **`01mailrc` is the union** of members' authors, first member per ID; `03modlist` is the constant.
 - **The merge is the generator's `Merge`**, run as the deferred `index.merge` job on `internal/async`
-  when a member's documents change (a hosted member's write, or a remote member adopting a new
-  upstream index, which is cache materialisation rather than a write and so a trigger
-  `signing-service.md` does not yet name, reported as a sibling consequence), coalesced per virtual
+  when a member's documents change: a hosted member's write through the pre-commit hook, and a remote
+  member adopting a new upstream index or `CHECKSUMS`, which is cache materialisation rather than a
+  write, through the runtime's adoption hook inside the adoption transaction (`signing-service.md`'s
+  resolved remote-member decision, was Q16, AC35; `proxy-cache.md` AC25); coalesced per virtual
   inside `index.virtual_merge_window`, visible within `index.virtual_staleness_bound`, with the
   previous merged set serving until the new one commits and a failed merge leaving it and firing
   `VirtualMergeFailed` (`signing-service.md`, "Virtual merges", AC19; `async-operations.md`'s kind
-  table); a virtual created over members has its first merge enqueued at creation. The merged bodies
-  are the virtual's current documents, declaring their blob digests as a hosted repository's do.
-- **Freshness must move forward at every merge**, so a member's rollback reaches the virtual
+  table); a virtual created over members has its first merge enqueued at creation. A remote reached
+  only through the virtual receives no request of its own, so serving the virtual's merged index
+  while the remote's input is past its TTL enqueues one coalesced `proxy.revalidate` job that replays
+  the remote's own routes below the authorizer, never on the request's path (`proxy-cache.md`,
+  "Revalidation outside the request", AC26). The merged bodies are the virtual's current documents,
+  declaring their blob digests as a hosted repository's do.
+- **Member-input paths.** The profile declares, under the member's mount, the path of every
+  document the `Merge` reads from a member, as `signing-service.md`'s `Profile` requires and
+  registration refuses a merging profile without (its AC35): `modules/02packages.details.txt.gz`
+  and `authors/01mailrc.txt.gz`, literal, and `authors/id/{X}/{XX}/{AUTHOR}/CHECKSUMS` for each
+  author directory the member's index names that another member of the virtual also holds, which
+  is **derived from the index read earlier in the same replay** and from the other members' author
+  sets; a directory only one member holds is pass-through and read from that member when served, so
+  it is no merge input. A virtual's creation, or a member-list change adding a never-adopted remote,
+  therefore fetches the remote's index, `01mailrc` and the shared directories' `CHECKSUMS`, and the
+  virtual lists the remote's packages with no request ever made to the remote's own URL.
+  `signing-service.md` AC35 fetches "exactly the member-input paths the format's profile declares",
+  with no path derived from a document read earlier in the replay, so the `CHECKSUMS` path is a
+  change that spec owes (format closing sweep batch 2 item 1 in `agents/spec-loop/consequences.md`,
+  raised by `rpm.md` for the same shape).
+- **Freshness moves forward at every merge**, so a member's rollback reaches the virtual
   repository's clients as any rollback does: cpm and Carton revalidate the virtual's index as they do
-  a hosted one's. A merge creates no snapshot and moves no pointer, so the forward-moving
-  `Last-Modified` needs a source the merge advances; the virtual's default pointer's `moved_at`,
-  advanced at each merge commit, is the shape `debian.md` asked of `signing-service.md` for its
-  virtual `InRelease`, and this format's case is reported beside it.
+  a hosted one's. A merge commit and a member-list change are document-only transitions of the
+  virtual's default pointer, advancing its `moved_at` with no snapshot and no change of target
+  (`signing-service.md`'s resolved virtual-freshness decision, was Q15, AC34; `data-model.md` AC36),
+  and the merged index is served with that `Last-Modified`, later than any the virtual served before
+  whatever a member's own transitions did.
 - **Publish and management operations against a virtual repository answer `405`** with the
   `repository-type` problem.
 
@@ -993,10 +1053,15 @@ archives, `text/plain` for `CHECKSUMS`, `text/yaml` and `text/plain` for the `me
 mirrors' choices. Every response carries `Accept-Ranges: bytes`, and archives honour one byte range with
 `206`. Generated files and `CHECKSUMS` carry the pointer's `Last-Modified` and a byte-derived `ETag`
 with `Cache-Control: no-cache`, all three set by `ServeDocument` from this format's profile and the
-pointer's record, never by the handler (`signing-service.md` AC11); archives `Cache-Control: public,
-max-age=31536000, immutable`, served from the CAS through the shared read path, which verifies each
-archive's digest while streaming and aborts with an operator alert on a mismatch
-(`storage-and-gc.md` AC21), the only integrity check cpm and Carton users get. No hosted route
+pointer's record, never by the handler (`signing-service.md` AC11), the value the same on every CPAN
+repository (its resolved `Cache-Control` decision, was Q18, AC30); archives, hosted and cached, are
+served through `ServeFile` (its resolved handler-rendered decision, was Q14, AC32) under a
+package-level serve policy of this handler carrying `Cache-Control: public, max-age=31536000,
+immutable`, one byte range and no encoding, with the CAS digest as the strong `ETag`, and the shared
+read path verifies each archive's digest while streaming and aborts with an operator alert on a
+mismatch (`storage-and-gc.md` AC21), the only integrity check cpm and Carton users get. The `metadb`
+routes are rendered on read, so they are served through `ServeRendered` with the serving pointer as
+their freshness source (the same decision), and the handler sets no validator on any response. No hosted route
 answers a redirect, and every route reaches clients over the HTTP/1.1 the main listener speaks by
 default (Design, "Policy refusals on the wire").
 
@@ -1101,7 +1166,8 @@ refusals, and `405` on remote writes.
 - [ ] AC6: With `Acme-Base` owning `Acme::Base`, publishing `Other-Hijack` 9.0 that declares
       `package Acme::Base` answers `409` naming the package and `Acme-Base`, with no snapshot, and the
       index and every client's resolution are unchanged; after an administrative transfer of
-      `Acme::Base` to `Other-Hijack` the same publish is accepted and indexed; and a new package equal
+      `Acme::Base` to `Other-Hijack`, a `configure` operation driven from the case `script`, the same
+      publish is accepted and indexed and cpanm resolves `Acme::Base` to `Other-Hijack`; and a new package equal
       to an owned one under case folding answers `409`.
 - [ ] AC7: A developer release (a filename matching `/\d\.\d+_\d/` such as `2.1_01`, or `-TRIAL[0-9]*`
       before the extension such as `1.0-TRIAL`) is stored, listed in its directory's `CHECKSUMS`
@@ -1141,7 +1207,11 @@ refusals, and `405` on remote writes.
 - [ ] AC12: A publish through the management API's `publish` kind stores the release in exactly one
       snapshot whose index, `CHECKSUMS` and `01mailrc` reflect it, after which it installs on every
       client, and its `Operation` result lists each package not indexed with its reason; an identical
-      republish answers `200` with no snapshot; different bytes at an existing or deleted version,
+      republish answers `200` with a completed `Operation` carrying `unchanged: true`, no snapshot and
+      no change to any served `Last-Modified` or signature (`management-api.md` AC5); a publish whose
+      coordinate a `delete-version` retires after its claim was declared and before it commits is
+      refused `retired` at commit with nothing landed (`management-api.md` AC12, `storage-and-gc.md`
+      AC30); different bytes at an existing or deleted version,
       including after the deleting snapshot is pruned and after a backwards repoint, a version equal
       under `version.pm` (`1.10` beside `1.1`), and the same distribution version under a second
       author ID each answer `409`, the deleted one refused by the shared write path's retirement check
@@ -1243,22 +1313,39 @@ refusals, and `405` on remote writes.
       reserved prefix never appears; archives resolve by path in member order; an author directory held
       by one member serves that member's `CHECKSUMS` unchanged and one held by both serves a merged body
       signed with the virtual repository's key, while a remote member's `CHECKSUMS` passes through
-      whatever its verdict; every client installs from it with only this registry reachable; a member
+      whatever its verdict, CPAN.pm installing a public distribution through the virtual over a remote
+      whose trust set holds no PAUSE key (`signing-service.md` AC36); a directory held by the hosted
+      member and by a remote whose `CHECKSUMS` verdict is not `verified` serves a merged body listing
+      the hosted member's files only, with an operator record, and the remote's entries once PAUSE's
+      key verifies them; every client installs from it with only this registry reachable; a member
       write and a remote member's adopted upstream change become visible in the virtual within the
-      staleness bound through the `index.merge` job, never on a request's path; a member's rollback
-      reaches the virtual repository's clients as AC10 requires, the virtual's `Last-Modified` moving
-      forward at the merge; and publish to it answers `405`.
+      staleness bound through the `index.merge` job, never on a request's path, the latter with no
+      request to the virtual in between (`signing-service.md` AC35); a member's rollback and a
+      member-list change reach the virtual repository's clients as AC10 requires, the virtual's
+      `Last-Modified` moving forward at the merge commit under an injected clock stepped backwards
+      (`signing-service.md` AC34); a virtual created over a never-adopted remote lists the remote's
+      packages, the stand-in's transcript showing only the member-input paths and the network layer no
+      request to the remote's own URL, and a read of the virtual's index past the remote's TTL enqueues
+      one revalidation and is served the current merged index with no upstream request on its path
+      (`proxy-cache.md` AC26); and publish to it answers `405`.
 - [ ] AC27: A hosted repository's generated bodies, referenced through the repository document's
       declared blob-digest list, and a proxied index above the inline metadata threshold survive a GC
       sweep while current or retained and serve every client afterwards, and a generated body no
-      current or retained document declares is collected.
+      current or retained document declares is collected; and on a remote far over its quota, an
+      eviction pass ends cached references of archives only, the index and every cached `CHECKSUMS`
+      unchanged, served inside their TTL with no upstream request, and counted in
+      `cache_metadata_bytes{repository}` rather than `cache_referenced_bytes{repository}`
+      (`proxy-cache.md` AC29), while with the retained count of zero the body a `CHECKSUMS` adoption
+      superseded is collected by the next sweep past grace (`proxy-cache.md` AC27).
 - [ ] AC28: An advisory-dependent rule attached to a CPAN repository is refused at configuration naming
       the absent coverage while no configured advisory source declares a CPAN ecosystem, and no CPAN
       coordinate is condemned by the advisory feed.
 - [ ] AC29: No response of this format carries a `Content-Encoding`, including to a request sending
       `Accept-Encoding: gzip`; every response carries `Accept-Ranges: bytes`; archives answer one byte
       range with `206`; generated files and `CHECKSUMS` carry `Cache-Control: no-cache`, the pointer's
-      `Last-Modified` and a byte-derived `ETag`, archives the immutable caching header; no hosted route
+      `Last-Modified` and a byte-derived `ETag`, archives the immutable caching header and their CAS
+      digest as `ETag` through `ServeFile` and the `metadb` documents their validators through
+      `ServeRendered` (`signing-service.md` AC32), none set by the handler; no hosted route
       answers a redirect; and `02packages.details.txt`, `CHECKSUMS.gz`, `MIRRORED.BY` and
       `modules/06perms.txt.gz` (no `06perms.txt` is served) answer `404`.
 - [ ] AC30: Replay-match passes against a corpus recorded from `www.cpan.org` covering the recorded
@@ -1272,6 +1359,13 @@ refusals, and `405` on remote writes.
       from a snapshot written before the rename succeeds, generated bodies, signatures and archives are
       byte-identical with no key re-created or re-signed, and the old name answers `not-found` exactly
       as a never-existing repository does.
+- [ ] AC33: Setting `ACME`'s author record to a new display name and email through the management
+      API's `annotate` operation, from the case `script`, creates exactly one snapshot in which
+      `01mailrc` carries the new `alias` line and nothing else changes, after which CPAN.pm on both
+      official images shows the new name and email for `CPAN_USERID ACME` in its distribution report
+      for an `ACME` distribution; a principal holding `push` patterned `OTHER/**` is refused it with
+      no snapshot; and the operation against a remote or virtual repository answers `405`
+      `repository-type`.
 
 ## Test Plan
 
@@ -1282,13 +1376,13 @@ refusals, and `405` on remote writes.
 | AC3 | conformance | `conformance/cpan/cpan_client_test.go` (both official images, `urllist`, `pushy_https` 0 written by the case `script`, transcript order, "Checksum ... ok", absence of index warnings) |
 | AC4 | conformance | `conformance/cpan/carton_test.go` (both Carton images, snapshot contents compared with the index, deployment reinstall with a network-layer assertion) |
 | AC5 | unit + property | `internal/format/cpan/index_gen_test.go` (header fields, sort, declared version strings); `internal/format/cpan/version_order_test.go` (`version.pm` ordering against a table generated in the perl image, including `1.1`/`1.10`, `0.9`/`0.10`, `1.1`/`1.1.0`, `v1.2.3`/`1.002003`) |
-| AC6 | integration + conformance | `internal/format/cpan/ownership_test.go` (first-come refusal, transfer, case-folded clash); `conformance/cpan/hijack_test.go` (cpanm resolution unchanged after the refused hijack) |
+| AC6 | integration + conformance | `internal/format/cpan/ownership_test.go` (first-come refusal, transfer, case-folded clash); `conformance/cpan/hijack_test.go` (cpanm resolution unchanged after the refused hijack; then the ownership transfer as a `configure` operation from the case `script`, the per-kind case for `configure`, and cpanm resolving `Acme::Base` to `Other-Hijack` after its publish) |
 | AC7 | integration + conformance | `internal/format/cpan/indexing_rules_test.go` (developer releases, `no_index`, newline hack, `provides`, underscore versions, static grammar and `undef`, publish response); `conformance/cpan/dev_release_test.go` (cpanm path install) |
 | AC8 | integration + conformance | `internal/format/cpan/index/checksums_gen_test.go` (entries against stored bytes, key order, leading line, body evaluated in the perl image and compared with `CPAN::Checksums` 2.14 output for the same directory, cleartext assembly from the record); `internal/model/signature_record_test.go` (absent from snapshots, `data-model.md` AC37); `conformance/cpan/check_sigs_test.go` (gpg in both images, CPAN.pm 2.38 `check_sigs` install) |
 | AC9 | conformance | `conformance/cpan/tamper_test.go` (storage fault injection, CPAN.pm both lines, cpanm `--verify` in the Module::Signature images, exit status and text) |
 | AC10 | conformance + integration | `conformance/cpan/rollback_test.go` (warm cpm, Carton, cpanm and CPAN.pm homes, `reload index`); the pointer record and its rendering are `data-model.md` AC36's `internal/model/pointer_freshness_test.go` and `signing-service.md` AC11's freshness tests (exact-match `304`, `moved_at` under an injected clock stepped backwards, no handler setting the headers) |
 | AC11 | conformance + integration | `conformance/cpan/promotion_test.go` (byte comparison across pointers, installs); `internal/format/cpan/rotation_test.go` (the rotation through the signing-key routes from the case `script`, signatures under the new key on every pointer, key published before it signs, no snapshot); `internal/signing/rotation_profiles_test.go` (`signing-service.md` AC7, AC8) |
-| AC12 | integration + conformance | `internal/format/cpan/publish_test.go` (snapshot counts and contents, idempotent republish, the `409` cases including after pruning and a backwards repoint, the not-indexed list in the result document); `conformance/cpan/publish_install_test.go` (install on every client after a management publish from the case `script`); the binding-equivalence table test of `management-api.md` AC8 enumerating this handler's `Bindings()` |
+| AC12 | integration + conformance | `internal/format/cpan/publish_test.go` (snapshot counts and contents, the `unchanged` operation with no snapshot and no header or signature change, the claim-versus-deletion race at commit, the `409` cases including after pruning and a backwards repoint, the not-indexed list in the result document); `conformance/cpan/publish_install_test.go` (install on every client after a management publish from the case `script`); the binding-equivalence table test of `management-api.md` AC8 enumerating this handler's `Bindings()` |
 | AC13 | conformance + integration | `conformance/cpan/cpan_upload_test.go` (cpan-upload publish, printed text, refused upload's reason phrase); `internal/format/cpan/binding_order_test.go` (both part orders, stored bytes, subdirectory and upload-by-URL refusals) |
 | AC14 | integration | `internal/format/cpan/ingest_test.go` (one malformed or hostile archive per rule, CAS and snapshot unchanged) |
 | AC15 | conformance + integration | `conformance/cpan/delete_test.go` (the `delete-version` operation from the case `script`, index fallback, `404`, client resolution); `internal/format/cpan/retirement_test.go` (the `Retirement` record in the deleting transaction, backwards repoint, pruning, no retirement state in any document, `Package` row and ownership survival) |
@@ -1302,13 +1396,14 @@ refusals, and `405` on remote writes.
 | AC23 | conformance + integration | `conformance/cpan/proxied_install_test.go` (prefixed stand-in mirror, byte comparison of metadata, upstream request counts, second install with no archive request); nightly `conformance/cpan/live_upstream_test.go` (`www.cpan.org`); `internal/proxy/freshness_test.go` (the cache-scoped record and the regression rule, shared with `proxy-cache.md` AC22) |
 | AC24 | integration | `internal/format/cpan/proxied_gate_test.go` (declared-digest mismatch, truncation, unnamed path, operator record); `internal/format/cpan/proxied_negative_test.go` (`404`, `429`, `5xx`, refresh); `internal/format/cpan/removal_test.go` (stand-in presenting each removal-table event, asserting the event class; a changed SHA-256 served as the current bytes, a sweep on an injected clock past grace, the object store and the divergence record read afterwards) |
 | AC25 | integration | `internal/format/cpan/signature_verdict_test.go` (trust set through the `trust` key, rotated subkey, keyserver import against a fixture keyserver, verdicts recorded, serving continues); `internal/verify/openpgp/cleartext_test.go` (the entry itself, `artifact-verification.md` AC11); `internal/format/cpan/policy_config_test.go` (any-verified and publisher-identity rules against verified, failed and hosted releases) |
-| AC26 | conformance + integration | `conformance/cpan/virtual_test.go` (merged index on every client, shadowing, reserved prefix, member rollback reaching cpm and Carton, a remote member's upstream change, `405`); `internal/format/cpan/index/merge_test.go` (per-package order, path resolution, merged and passed-through `CHECKSUMS`); the `index.merge` contract is `signing-service.md` AC19's |
-| AC27 | integration | `internal/storage/metadata_blob_gc_test.go` (declared generated-body blobs and a proxied index across a sweep, then serving; an undeclared body collected; shared with `data-model.md` AC37) |
+| AC26 | conformance + integration | `conformance/cpan/virtual_test.go` (merged index on every client, shadowing, reserved prefix set through the virtual's `settings`, member rollback and member-list change reaching cpm and Carton, a remote member's upstream change, CPAN.pm through the virtual over a remote with no PAUSE key, `405`; shared with `signing-service.md` AC34's cpm half and AC36's CPAN.pm half); `internal/format/cpan/index/merge_test.go` (per-package order, path resolution, merged and passed-through `CHECKSUMS`, a shared directory whose remote verdict is absent contributing the hosted files only with an operator record); the `index.merge` contract is `signing-service.md` AC19's, the version source its AC34's `internal/index/virtual_freshness_test.go` and the verdict rule its AC36's `internal/index/passthrough_test.go`; `conformance/cpan/virtual_remote_test.go` (a virtual created over a never-adopted remote, the stand-in's transcript showing only the member-input paths and the network layer no request to the remote's URL; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go` and `signing-service.md` AC35's `internal/index/virtual_remote_member_test.go`); `internal/format/cpan/index/profile_test.go` (the declared member-input paths, and a profile lacking one refused at registration) |
+| AC27 | integration | `internal/storage/metadata_blob_gc_test.go` (declared generated-body blobs and a proxied index across a sweep, then serving; an undeclared body collected; shared with `data-model.md` AC37); `internal/format/cpan/proxied_metadata_test.go` (an eviction pass over a remote far over quota, documents untouched and served inside TTL, both gauges read through `telemetry.NewTestRecorder`; a `CHECKSUMS` adoption and a sweep past grace collecting the superseded body; the layer halves are `proxy-cache.md` AC27's and AC29's) |
 | AC28 | integration | `internal/format/cpan/advisory_config_test.go` (advisory-dependent rule refused at configuration, no condemnation); the coverage table's CPAN row is `supply-chain-policy.md` AC17's |
-| AC29 | integration | `internal/format/cpan/headers_test.go` (every route's encoding, range, type and caching headers, the `404` routes) |
+| AC29 | integration | `internal/format/cpan/headers_test.go` (every route's encoding, range, type and caching headers, the `404` routes, an archive's digest `ETag` and a `metadb` document's validators); the freshness-boundary architecture test of `signing-service.md` AC11 and the `ServeFile` and `ServeRendered` cases of its AC32 row |
 | AC30 | conformance | `conformance/cpan/replay_test.go` (corpus replay against the recorded `www.cpan.org` surface with the named redactions) |
 | AC31 | conformance + integration | `conformance/cpan/case_test.go` (lower-case requests on every client); `internal/format/cpan/names_test.go` (exact spelling in index, paths and `CHECKSUMS`) |
 | AC32 | unit + conformance | `internal/format/capabilities_test.go` (this handler's four declarations, `format-handler-interface.md` AC13); `conformance/cpan/rename_test.go` (the four installers against the renamed repository, a pre-rename `cpanfile.snapshot`, byte comparison, old name `not-found`; required by `repository-lifecycle.md` AC12) |
+| AC33 | conformance + integration | `conformance/cpan/author_record_test.go` (the `annotate` operation posted to `POST /api/v1/repositories/{name}/operations` from the case `script`, then CPAN.pm's distribution report on both official images asserted for the new name and email, the per-kind case `management-api.md` AC24 and `conformance-harness.md` AC26 require); `internal/format/cpan/author_record_test.go` (one snapshot, only `01mailrc` changed, the patterned refusal, `405` on remote and virtual) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with type, virtual member order, the reserved
@@ -1343,7 +1438,9 @@ and the shared rename case (`conformance-harness.md` AC26), apply from the sibli
 ### Phase 2: Publish and management
 - Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (its Phases 2 and 3:
   publish, `Operator`, bindings)
-- The `Operator` interface with `publish`, `delete-version`, `annotate` and `configure`, ingest
+- The `Operator` interface with `publish`, `delete-version`, `annotate` and `configure`, each with its
+  named `script` case (AC6, AC12, AC15, AC33), the declared unchanged publish, claims checked at
+  declaration and at commit, ingest
   validation and package extraction, first-come ownership, the cpan-upload binding, deletion with
   core-held retirement, author records, ownership transfer and key rotation through the signing-key
   routes, the write-boundary declaration under concurrency
@@ -1358,14 +1455,17 @@ and the shared rename case (`conformance-harness.md` AC26), apply from the sibli
 - Byte-for-byte metadata with the cache-scoped `Last-Modified`, the `CHECKSUMS` gate on archives as a
   declared digest, the signature verdict against the remote's trust set, negative caching and
   refresh, the removal event classes with the old blob's cached reference ending at the new blob's
-  commit, `405` on remote writes
+  commit, a retained count of zero and the metadata outside the quota (AC27), archives through
+  `ServeFile`, `405` on remote writes
 
 ### Phase 5: Virtual repositories
 - Waits on `async-operations.md` reaching `planned` (its queue core exists from charter step 4b) and
   `signing-service.md`'s Phase 4 (virtual merges)
-- The per-package merge as the `index.merge` job, reserved namespaces, path resolution, merged and
-  re-signed shared directories, passed-through remote `CHECKSUMS`, forward-moving freshness at each
-  merge
+- The per-package merge as the `index.merge` job enqueued by member writes and remote adoptions,
+  the member-input paths and the virtual-only remote's revalidation, reserved namespaces, path
+  resolution, merged and re-signed shared directories taking a remote's entries only when verified,
+  passed-through remote `CHECKSUMS`, forward-moving freshness at each merge commit and member-list
+  change
 
 ### Phase 6: Corpus, fallbacks and gate
 - The recorded corpus against `www.cpan.org`, the public-host stand-ins and the fallback cases, all nine
@@ -1566,7 +1666,10 @@ reading the object from the body would pass or fail by chance.
 
 **Why this is yours:** it decides which uploads a narrow token supports.
 
-Accepted cost: patterned publishing needs the management API.
+Accepted cost: patterned publishing needs the management API. `management-api.md`'s resolved
+binding-scope decision (was Q13 there, its AC8) admits this shape by name, a binding whose route
+object is none while its operation's `Authorize` reports a named object, so the binding is never
+wider than the operation and its binding test holds as written.
 
 ### Resolved: rendering a policy refusal (was Q10)
 
@@ -1629,7 +1732,11 @@ distribution never provided; reserved prefixes close that without per-package co
 
 **Why this is yours:** it decides how much configuration a dependency-confusion defence costs.
 
-Accepted cost: the prefix list.
+Accepted cost: the prefix list. Added 2026-09-28, the option unchanged: `signing-service.md`'s
+resolved pass-through decision (was Q17 there, AC36) admits a remote's single-member `CHECKSUMS`
+whatever its verdict, as this record's pass-through needed, and composes a shared directory only from
+verified remote documents, so a shared directory whose remote `CHECKSUMS` is unverified serves the
+hosted files alone (Design, "Virtual repositories"), which unregistered hosted author IDs avoid.
 
 ### Resolved: advisory coverage (was Q13)
 
@@ -1653,7 +1760,8 @@ here is unchanged, and the reason is now that spec's, not a single-feed rule.
 changes.
 
 Accepted cost: the sibling consequence for `supply-chain-policy.md`, now answered by its was-Q9 record
-and coverage row, and a remaining one on its matcher, which vendors no `version.pm` ordering.
+and coverage row, and the `version.pm` ordering, which that spec now names as owed the moment a CPAN
+source is declared (its coverage table's CPAN row requires both).
 
 ### Resolved: what deletion means (was Q14)
 
@@ -1735,3 +1843,4 @@ Accepted cost: the migration note.
 | 2026-09-26 | c86fc0a | authoring pass: grounded first draft, not a review | Grounded five ways: captured traffic from cpanm 1.7049 and 1.7044 and CPAN.pm 2.38 and 2.22 on the official perl 5.42 and 5.30 images pinned by digest, and cpm 1.1.5 and 0.997024, Carton 1.0.35 and 1.0.34 and cpan-upload on images derived from them, on dedicated Podman networks against a logging stub serving OrePAN2-built DarkPAN generations with CPAN::Checksums-signed CHECKSUMS (the OrePAN2 package hijack installed by cpanm, the developer release and numified v-string, the OrePAN2 `Last-Updated` crashing CPAN.pm, swapped bytes installed silently by cpanm, cpm and Carton and refused by CPAN.pm and cpanm `--verify`, cpanm 1.7044 accepting bad, missing and absent signatures, CPAN.pm 2.38 `check_sigs` and `cpan_path`, missing 01mailrc, 03modlist and CHECKSUMS, `pushy_https` ignoring `urllist`, rollback masked by `If-Modified-Since` and fixed by exact matching or a forward `Last-Modified`, CPAN.pm's index cache, Basic over HTTP and TLS, reason phrases reaching CPAN.pm, cpm, cpanm and cpan-upload, every client's fallback to public CPAN, the cpanmetadb-shaped history route, cpan-upload's shuffled multipart), plus a byte-for-byte pass-through to the live www.cpan.org; the client sources, PAUSE's operating model and Pinto's stacks; the live CPAN (index statistics, 01mailrc, 03modlist, 06perms, CHECKSUMS signed by PAUSE's expired 2026 subkeys and its keyserver-only 2027 subkey, gzip-encoded CHECKSUMS on request, the upload challenge); MetaCPAN's download_url and cpanmetadb; and OSV (no CPAN ecosystem), CPANSA (2,117 advisories) and purl. Seventeen questions written in decision shape and adopted under the standing delegation: publisher-named author IDs (AC12-AC14), first-come ownership keyed to distributions (AC6, AC15), PAUSE's indexing rules (AC5, AC7), static package extraction with `undef` (AC7), generated and signed CHECKSUMS (AC8, AC9, AC11), pointer-scoped `Last-Modified` with exact-match `304` (AC10, AC11), the cpanmetadb-shaped route (AC20), the cpan-upload binding (AC13) with no addressed object (AC18), `403` with a reason phrase (AC19), byte-for-byte remotes gated on CHECKSUMS with a signature verdict (AC23-AC25), per-package virtual merges with reserved namespaces (AC26), OSV only with CPANSA recorded (AC28), deletion that keeps ownership (AC15), no preconfigured upstream, four archive formats without subdirectories (AC13, AC14), exact case with folded clashes refused (AC6, AC31). Thirty-one criteria, each with a Test Plan row. Stays draft; awaits an independent review. |
 | 2026-09-28 | 20ff418 | cross-spec reconciliation of the Wave 1 folds and the foundation wave, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying: format-management item 11 and management-api items 11 and 12 (retirement core-held; kinds `publish` with the `POST pause/authenquery` binding, `delete-version`, `annotate` on `{AUTHOR}`, `configure`; `Operator`; `repository-type` and `retired`; the not-indexed list in the result document; AC12, AC15, AC16); signing-service item 11 (freshness is `data-model.md`'s `moved_at` rendered by `ServeDocument`, the resolved freshness record discharged; generator contract and package; `Signature` records, generalised from this spec; per-document lock; the six items mapped onto the contract; AC8, AC10, AC11); upstream-adapters item 12 (`https` adapter, identity encoding AC5, revalidation AC14 and AC15, `basic` to the root host AC6 and AC22); conformance-harness reconciliation items 2 and 4 (public-host stand-ins as `hosts` sub-entries, AC23; seed-path signing through the write-path hook, `signing` sub-entry, AC24; the Test Plan obligations paragraph discharged); supply-chain reconciliation item 10 (CPANSA stays out under was-Q9 because of its schema, the advisory record revised; the `restricted-egress or client-setting` row; AC28); deployment and supply-chain was-Q10 (HTTP/1.1 as the listener default, `WriteRefusal` and the shared phrase shape, the refusal-rendering record revised; AC19); auth was-Q23 (`03modlist` a descriptor; AC18); artifact-verification (the `openpgp` cleartext entry AC11, trust set, keyserver import AC23, `repository-chain` and the publisher-identity nuance; AC25); proxy-cache (declared digests from `CHECKSUMS`, the cache-scoped record and regression rule, event classes, refresh; AC23, AC24); storage-and-gc AC21 read-path verification cited; async-operations (`index.merge`, queue core at step 4b; AC26); repository-lifecycle AC12 and FHI AC13 (Capabilities and lifecycle section, new AC32). No question adopted, `fable_recheck` kept. Found and reported rather than assumed: `auth.md` has no client rows for the five CPAN clients; `management-api.md` AC8's `Scope(r)`-equals-`Authorize` does not hold for this binding, whose object is stricter; `signing-service.md` names no profile for this format's announced rotation, names no remote-adoption merge trigger, gives a virtual no forward-moving freshness at merge, and would drop an unverified remote `CHECKSUMS` from a virtual merge; `supply-chain-policy.md` vendors no `version.pm` ordering. Thirty-two criteria, each with a Test Plan row. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
 | 2026-09-28 | 93982ba | data-loss fix on Opus (storage-and-gc closing-sweep item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 0 of "From the storage-and-gc.md closing sweep" in `agents/spec-loop/consequences.md`, verified against `storage-and-gc.md`'s fourth mark root (its third reach, AC16) and `data-model.md` AC34, AC36 and AC45: a digest a document merely mentions keeps nothing alive, the declared blob-digest list is a document's only keep-alive, and a remote writes no content snapshot. The hole: the changed-SHA-256 row said the old blob "stays referenced while a retained revision names it", but a remote keeps no superseded `CHECKSUMS`, a digest one merely names would keep nothing alive, and the route already follows the current `CHECKSUMS` over an author path that carries no digest, so no request could be served the old bytes. Chosen: let it go (proxy-cache was-Q20, AC28): the old blob's cached reference ends in the commit that creates the new one, the sweep reclaims it, and the divergence record keeps both digests. AC24 extended (every client served the new bytes, the old blob gone after the next sweep past grace, the record still queryable); its Test Plan row and Phase 4 updated. No retained revision exists on this remote, so proxy-cache was-Q19 changes nothing here. No new question adopted here; `fable_recheck` extended for the folded decision. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
+| 2026-09-28 | a3a9d78 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Applied: foundation-leftovers item 2 and `signing-service.md` AC35 (member-input paths: the index and `01mailrc` literal, each shared author directory's `CHECKSUMS` derived from the index read earlier in the replay, citing format closing sweep batch 2 item 1 as the owed change); signing-service closing-sweep item 8 (rotation is `announce-switch-retire`, the "reported" text replaced; pass-through admitted under was-Q17, AC36, the "reported to that spec" text replaced; NEW FINDING recorded honestly: a directory present in both a hosted and a remote member is composed, so the remote's entries enter the virtual-signed body only under `verified`, otherwise the merged body lists the hosted files alone with an operator record, CPAN.pm refusing those remote archives under `check_sigs`, its default behaviour on an unlisted archive not captured; AC26, its row and the Q12 record); proxy-cache closing-sweep item 6 (adoption re-merges, was-Q16, AC35; the virtual-only remote's revalidation, AC26; the virtual's `Last-Modified` per was-Q15, AC34; the service item 6); batch 2 item 2 (AC36 recorded for this format as above, AC36 unchanged); management-api closing-sweep items 4 and 5 (the cpan-upload binding's none object admitted by was-Q13, the ~l.764-769 text and the Q9 record; the declared unchanged publish, was-Q15, AC5; claims at declaration and again at commit, was-Q14, `storage-and-gc.md` AC30; AC12 and its row, the write boundary); management-surfaces items 11 and 14 (`Operations()` named with each kind's case; the author record's `annotate` observed by CPAN.pm's distribution report, which reads `01mailrc` and was captured at authoring, new AC33; the ownership-transfer `configure` named as AC6's `script` case; the CPAN author record is no longer a wire-only effect); `signing-service.md` was-Q14 and Q18 (archives through `ServeFile`, `metadb` through `ServeRendered`, `Cache-Control` per format; AC29 and its row); auth closing-sweep item 3 (the "no rows yet" text replaced: `auth.md` carries the `cpanm`, `cpm` / `carton`, `CPAN.pm` and `cpan-upload` rows); supply-chain closing-sweep item 3 (`version.pm` named as owed there, the CPAN row requiring both a source and the ordering; the Q13 record). DATA-LOSS AUDIT: the hosted generated bodies are declared (AC27), cached archives are held by their own cached references, and a remote keeps no superseded index or `CHECKSUMS`, now stated as a declared retained count of zero (proxy-cache was-Q19, which names this format) with the remote's metadata outside the quota in `cache_metadata_bytes` (was-Q21; AC27 extended); no map or body is held by mention. Found already done: conformance-harness reconciliation items 2 and 4 (`hosts` sub-entries, the seed path), supply-chain reconciliation item 10 (was-Q9 and the `restricted-egress` row), signing-service authoring item 11. Skipped: nothing; the corpus records PAUSE's upload challenge against the public PAUSE, so no exception-list row is needed. No question adopted; `fable_recheck` extended for two folded judgements. 33 criteria, each with a Test Plan row. Stays draft. |

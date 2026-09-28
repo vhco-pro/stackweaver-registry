@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-28 at fe2a39f with the foundation wave on Opus (not a review), this spec's first reconciliation: every tree's three index representations and both Meta documents are this format's Indexer generator output (internal/format/cran/index, holding the R serialisation writer and latestOnly) under signing-service's write-path runtime as an unsigned consumer with no key, dispatched at the pre-commit hook, stored in snapshot content and served through ServeDocument with Last-Modified from the pointer's moved_at (AC2, AC5, AC22); the virtual merge is the index.merge job and the proxied index FromUpstream under proxy-cache's cache-scoped Last-Modified (AC12, AC17); publish, delete-file (per tree, now retiring the version coordinate rather than management-api's unplace), delete-version and delete-package on management-api with core-held Retirement records refused centrally as retired, validation and conflict problem types, 405 repository-type (AC3, AC4); digest-less binary trees through proxy-cache's completion-only mode with a DESCRIPTION verifier (AC11); the P3M and PACKAGES checks moved from configuration to the first request per upstream-adapters AC23, the non-R agent being that spec's default User-Agent (AC20); refusals through WriteRefusal with the status-line phrase R and pak print, the capture filling CRAN's pending binding row (AC10); storage-and-gc's read-path verification as the only integrity check CRAN clients get (AC16); removal rows named by proxy-cache event class; pak's public-host stand-ins under the harness's client confinement; Capabilities and the rename case (AC23). Earlier: authored 2026-09-26 from captures of R 4.5.1 and 4.3.3, pak 0.11.1 and renv 1.1.5; nine questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status_description: "Format closing sweep 2026-09-28 at a3a9d78 on Opus (not a review): DATA-LOSS AUDIT: the proxied digest index was held only by being named in the remote's document; it is now declared on the remote's repository-level blob-digest list with a retained count of zero, archive-only coordinates verified in the completion-only mode with the DESCRIPTION verifier rather than against a superseded map, package files on their own cached references, and every remote index, Meta/ document and the map outside the quota in cache_metadata_bytes (proxy-cache was-Q19, Q21, Q22; new AC24; AC11 extended); the merging profile declares member-input paths ({tree}/PACKAGES.gz as a template over src/contrib and the trees other members hold, and src/contrib/Meta/archive.rds; the template is signing-service's owed change), remote adoption re-merges and a virtual-only remote is revalidated by the virtual's reads (signing-service was-Q16, AC35; proxy-cache AC26), the virtual's Last-Modified moves forward at each merge commit (was-Q15, AC34), and unsigned remote documents contribute with no verdict, AC36 governing signed bodies (AC17 extended); package files through ServeFile (was-Q14) and Cache-Control per format with no repository override (was-Q18, AC30; AC22 extended); the identical republish is management-api's declared unchanged publish (was-Q15) and the retired claim is checked at declaration and again at commit (was-Q14; AC4 extended); numeric_version cited as vendored (supply-chain AC17); the hosted read half recorded against a pinned write_PACKAGES tree and no write corpus, two exception-list rows reported for conformance-harness (AC21). No question adopted; fable_recheck added for three folded judgements; 24 criteria. Earlier: Reconciled 2026-09-28 at fe2a39f with the foundation wave on Opus (not a review), this spec's first reconciliation: every tree's three index representations and both Meta documents are this format's Indexer generator output (internal/format/cran/index, holding the R serialisation writer and latestOnly) under signing-service's write-path runtime as an unsigned consumer with no key, dispatched at the pre-commit hook, stored in snapshot content and served through ServeDocument with Last-Modified from the pointer's moved_at (AC2, AC5, AC22); the virtual merge is the index.merge job and the proxied index FromUpstream under proxy-cache's cache-scoped Last-Modified (AC12, AC17); publish, delete-file (per tree, now retiring the version coordinate rather than management-api's unplace), delete-version and delete-package on management-api with core-held Retirement records refused centrally as retired, validation and conflict problem types, 405 repository-type (AC3, AC4); digest-less binary trees through proxy-cache's completion-only mode with a DESCRIPTION verifier (AC11); the P3M and PACKAGES checks moved from configuration to the first request per upstream-adapters AC23, the non-R agent being that spec's default User-Agent (AC20); refusals through WriteRefusal with the status-line phrase R and pak print, the capture filling CRAN's pending binding row (AC10); storage-and-gc's read-path verification as the only integrity check CRAN clients get (AC16); removal rows named by proxy-cache event class; pak's public-host stand-ins under the harness's client confinement; Capabilities and the rename case (AC23). Earlier: authored 2026-09-26 from captures of R 4.5.1 and 4.3.3, pak 0.11.1 and renv 1.1.5; nine questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for the CRAN (R) repository format: the per-tree PACKAGES index in its plain, gzip and rds representations, the source tree with its Archive/ directory of superseded versions, binary trees keyed by operating system, build and R minor version, publishing and deletion through the registry-owned management API because the ecosystem has no publish protocol, hosted and proxied, with base R, pak and renv as the conformance oracles."
 author: michielvha
 goal: "Serve R teams a private CRAN-like repository whose index is regenerated in every representation by the shared index service on every publish, whose superseded versions move into Archive/ exactly as CRAN's do so that pak and renv find them, and a CRAN cache whose superseded coordinates never 404 under a client's hour-old index."
@@ -10,6 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/cran/**"
   - "conformance/cran/**"
+fable_recheck: "the format closing sweep on Opus 2026-09-28 folded three design judgements without a question, which need a Fable recheck: the member-input tree template expanded over the trees the virtual's other members hold; the digest index's retained count of zero, with every archive-only coordinate verified in the completion-only mode by the DESCRIPTION verifier instead of against a retained map; and the hosted read half of the corpus recorded against a pinned write_PACKAGES tree instead of against this registry"
 ---
 
 # Plan: CRAN repository format
@@ -364,8 +365,10 @@ The levels are exactly those `data-model.md` provides; no table is added.
   the two `Meta/` documents are named members of it, the generator's output at level
   `repository` (`signing-service.md`, "Storage: bodies in the snapshot"), inline below the
   threshold and a CAS blob above it; a `remote` repository's current documents are the
-  generator's `FromUpstream` output, plus the digest index the proxied path builds from the
-  upstream's records (below).
+  generator's `FromUpstream` output and the two `Meta/` documents passed through, and the
+  digest index the proxied path builds from the upstream's records is held on the remote's
+  repository-level document's declared blob-digest list, never by mention (Design, "The proxied
+  path").
 
 ### Every hosted index document is a write-triggered document
 
@@ -415,10 +418,14 @@ The rules the generator and the runtime apply for this format:
   document's bytes (`data-model.md` AC36), a conditional request is `304` only on an exact
   `If-Modified-Since` or a matching `ETag`, and the handler sets none of those headers itself.
   `Accept-Ranges: bytes` and `Cache-Control: max-age=1800` (CRAN's own value) travel in the
-  generator's profile; a per-repository override of that value is a request on
-  `signing-service.md`, whose profile carries `Cache-Control` per format. Every package file is
-  served by the handler with `Cache-Control: public, max-age=31536000, immutable`, because a
-  coordinate binds its bytes for the life of the repository.
+  generator's profile, one value for every CRAN repository: `signing-service.md` declined a
+  per-repository override (its resolved `Cache-Control` decision, was Q18, AC30), so an operator
+  wanting another `max-age` sets it in a reverse proxy. Every package file, at its current and
+  its archive path, is served through `ServeFile` (`signing-service.md`'s resolved
+  handler-rendered decision, was Q14, AC32), whose serve policy is a package-level constant of
+  this handler carrying `Cache-Control: public, max-age=31536000, immutable` and range support,
+  because a coordinate binds its bytes for the life of the repository; the strong `ETag` is the
+  CAS digest, and the handler sets no validator on a file either.
 - **A repoint restores the documents.** Because the documents live in snapshot content, a
   rollback serves exactly the index of the snapshot it targets, under a `Last-Modified` that
   moves forward rather than back; the retirement set is untouched by the repoint because it is
@@ -429,7 +436,9 @@ The rules the generator and the runtime apply for this format:
   that holds the package in that tree, whatever version the later members hold; its
   `Meta/archive.rds` is the union by package with the first member's entries first; a package
   file or archive path resolves through the members in order. The merge is the generator's
-  `Merge`, run by the runtime as the deferred, coalesced `index.merge` job (below).
+  `Merge`, run by the runtime as the deferred, coalesced `index.merge` job, enqueued by a member's
+  write and by a remote member's adoption, with the member-input paths the profile declares
+  (Design, "Virtual repositories").
 
 ### What the signing and index service provides
 
@@ -457,9 +466,14 @@ generator contract and criteria:
    member's write and coalesced within the merge window, the first merge enqueued at the
    virtual's creation, the previous merged set serving until the new one commits, a failure
    leaving the previous set and an alert (its "Virtual merges" and AC19). A remote member
-   adopting a new upstream revision is cache materialisation, not a write, and triggering a merge
-   from it is queued on `signing-service.md` by the format batch 4 reconciliation; this format
-   needs it (the resolved virtual-repository decision's accepted cost).
+   adopting a new upstream revision is cache materialisation, not a write, and it re-merges
+   through the runtime's adoption hook, inside the adoption transaction
+   (`signing-service.md`'s resolved remote-member decision, was Q16, AC35; `proxy-cache.md`
+   AC25); a remote reached only through the virtual is revalidated by the virtual's reads
+   (`proxy-cache.md` AC26); and each merge commit moves the virtual's freshness forward
+   (`signing-service.md`'s resolved virtual-freshness decision, was Q15, AC34). The profile
+   declares the member-input paths each merge input is read from (Design, "Virtual
+   repositories").
 6. **The same generation on the proxied path** is the generator's `FromUpstream` over records
    parsed out of an upstream's `PACKAGES.gz` (the resolved proxied-index decision below), stored
    unsigned as the remote's current document (its AC20), so hosted and proxied trees share one
@@ -494,8 +508,9 @@ files), so an unretired removal would let different bytes be republished at a pa
 serves as `immutable`. Granularity is the handler's (`management-api.md`, "Retirement is
 core-held"): every retiring kind here returns the coordinate `{package}/{canonical version}` in
 its `Outcome`, so a version deleted from one tree is never republished into any tree, which is
-the rule this spec adopted before the core held the set. The table's correction is a reported
-consequence.
+the rule this spec adopted before the core held the set. `management-api.md`'s reconciliation
+table now carries the correction (its CRAN rows and the `delete-file` kind row naming CRAN's
+one-tree deletion; `unplace` no longer names CRAN).
 
 What this registry enforces on ingest:
 
@@ -515,13 +530,18 @@ What this registry enforces on ingest:
 - **A coordinate that already exists in the tree with identical bytes is idempotent** (no
   snapshot: the CI retry); **with different bytes it is refused `conflict` (409)**. The
   ecosystem's own convention is that a rebuild bumps the version (CRAN never accepts the same
-  version twice), and every `renv.lock` pins the version. That an identical republish completes
-  with no snapshot is a request on `management-api.md` AC5, which counts every completed
-  operation as one snapshot; it is reported.
+  version twice), and every `renv.lock` pins the version. The identical republish is
+  `management-api.md`'s declared unchanged publish (its resolved unchanged-publish decision,
+  was Q15, AC5): this handler declares it, and the operation completes with `unchanged: true`
+  and no snapshot reference, so no pointer or freshness record moves.
 - **A retired coordinate is refused centrally**, with the same bytes or different ones, in every
   tree: the shared write path answers `retired` (409) naming the coordinate for the life of the
   repository, including after every snapshot that held it is pruned and across a backwards
-  repoint (`management-api.md` AC12), so the handler carries no set forward.
+  repoint (`management-api.md` AC12), so the handler carries no set forward. The publish
+  declares the coordinate it claims, `{package}/{canonical version}`, and the core checks it
+  when it is declared and again at commit, serialised with any retiring write on the repository
+  head, so a deletion committing between the two cannot let the publish land
+  (`management-api.md`'s resolved retirement-check decision, was Q14; `storage-and-gc.md` AC30).
 - The response is `201` with a completed `Operation` whose result document the handler writes:
   the tree, the stored path, the record's `SHA256sum`, the supersession it performed (which
   version moved to the archive, if any) and the snapshot; any operation against a `remote` or
@@ -696,10 +716,11 @@ ecosystem** (read 2026-09-26; `Bioconductor` beside it) and serves advisories un
 Consortium's `RSEC-*` series with `pkg:cran/{package}` PURLs (captured: `readxl`, `jsonlite`,
 `commonmark`), so the feed condemns a CRAN coordinate by name with no handler cooperation and
 `supply-chain-policy.md`'s advisory-dependent rules bind on this format; its coverage table
-carries the row (covered, keyed on package name and version, its AC17). The version ordering
-the matcher needs is R's `numeric_version`, which that table's vendored orderings do not yet
-name, so until it does a range-based advisory binds no CRAN version (that spec's own rule for an
-ordering it does not implement); the missing ordering is reported. Byte-level cataloguing of a
+carries the row (covered, keyed on package name and canonical version, its AC17). The version
+ordering the matcher needs is R's `numeric_version`, which is in that spec's vendored set
+(components split on `.` or `-` and compared as integers, so `1.0-1` equals `1.0.1`), so a
+range-based advisory binds CRAN versions under the same order this registry's canonical form
+uses (its AC17, whose ordering test carries `numeric_version` cases). Byte-level cataloguing of a
 source tarball or an installed-package archive is the cataloguer's business; whether the library
 selected at that spec's Phase 1 emits `pkg:cran/` PURLs is checked there.
 
@@ -753,9 +774,31 @@ presented to the root host only (its AC6), and the client's credential is never 
   whose binary-ness matches the tree, the same checks hosted ingest applies, so a body that is
   truncated, of the wrong format or of another package is never committed; the client streams
   while the fetch runs and its response completes only once the verifier passes. The served
-  record then carries the digests this registry computed. The record comes from the **digest
-  index** the handler builds once per revalidated index and keeps with the remote's current
-  documents.
+  records are `FromUpstream` output, produced at adoption before any file is fetched, so they
+  carry the upstream record's digests, which for every file this registry has cached equal the
+  digests it computed (a mismatch never commits), and a digest-less tree's records carry none
+  on the proxied path, exactly as the upstream's do. The record a fetch verifies against comes
+  from the **digest index**: a map from tree and filename to the upstream record's `SHA256sum`
+  or `MD5sum`, built from the same parse `FromUpstream` consumes, once per adopted index
+  revision, so a package miss never re-parses a 7 MB index. It is stored as metadata on the
+  remote's repository-level document, inline below the threshold and a CAS blob above it, and
+  **declared on that document's blob-digest list**, the only way a document keeps another blob
+  alive (`storage-and-gc.md` AC16; `data-model.md`, "Declared blob digests on a document, inline
+  or CAS-backed", AC37); named only inside the document's body, the first sweep past grace would
+  collect it while it still serves. The handler declares a retained count of **zero**
+  (`proxy-cache.md`'s resolved retained-revision decision, was Q19, where zero is valid): a
+  package request is verified against the current index's record, so the adoption of a new
+  index drops the previous map from the list in the same transaction, and a map finished after
+  that adoption is discarded rather than declared (its AC27). The list sits on the
+  repository-level document because a tree's index is repository-wide, not revisioned per
+  package (its resolved declaring-document decision, was Q22). A coordinate the current digest
+  index does not list, which is every fetch that reaches the upstream's `Archive/` (CRAN's
+  `Meta/archive.rds` carries `file.info` rows and no digest, and a version superseded since the
+  client's index is absent from the current one), is fetched in the completion-only mode with
+  the same `DESCRIPTION` verifier, so no route depends on a superseded map. The package files
+  themselves are cached files, each held by its own cached reference under the remote's quota
+  and evictable; after an eviction a request re-fetches and re-verifies against the current
+  digest index or the verifier.
 - **A coordinate resolves at both its paths** (the resolved archive-resolution decision below).
   A request for `src/contrib/{package}_{version}.tar.gz` or for
   `src/contrib/Archive/{package}/{package}_{version}.tar.gz` is one coordinate; on a miss the
@@ -785,6 +828,16 @@ presented to the root host only (its AC6), and the client's credential is never 
   serves `Accept-Ranges: bytes` and so does this registry), and the parse-and-regenerate per
   revalidation is bounded by a streaming DCF reader with a CI benchmark gate on its time and
   peak memory because `CLAUDE.md` makes performance a gate rather than a hope.
+- **The remote's metadata sits outside the quota.** Every tree's three served representations,
+  the two `Meta/` documents and the digest index are the remote's current metadata, which LRU
+  eviction never reaches and which ends only when an adoption supersedes it or the remote is
+  deleted; they are counted in `cache_metadata_bytes{repository}` beside the quota's
+  referenced bytes, never in them (`proxy-cache.md`'s resolved metadata-eviction decision, was
+  Q21, AC29). Package files are the only evictable class. A CRAN remote therefore holds about
+  17 MB of source-tree metadata (the three representations, `Meta/archive.rds` at 5.4 MB and
+  `Meta/current.rds` at 0.7 MB) plus each binary tree a client has asked for, visible in that
+  gauge and not bounded by the quota, which is that decision's accepted cost at this format's
+  scale (AC24).
 
 Upstream removal maps onto `proxy-cache.md`'s event classes ("Upstream removal or replacement")
 as CRAN's side of that contract, each row naming its class:
@@ -831,6 +884,50 @@ CRAN's next release silently un-shadow a private fork); and the `Archive/` of a 
 repository is the union, so pak's and renv's version-pinned lookups find a version whichever
 member holds it, the first in order supplying the bytes on a collision. Artifactory and Nexus
 both offer virtual CRAN repositories, so the shape is the one users arrive expecting.
+
+How a remote member feeds the merge, each piece `signing-service.md`'s or `proxy-cache.md`'s and
+applied here rather than re-decided:
+
+- **Adoption re-merges.** A remote member adopting a new upstream index revision is cache
+  materialisation, not a write, and it enqueues `index.merge` for every virtual listing the
+  remote inside the adoption transaction, through the runtime's adoption hook, after
+  `FromUpstream` has run over exactly the records the handler's adoption check returned
+  (`signing-service.md`'s resolved remote-member decision, was Q16, AC35; `proxy-cache.md`
+  AC25). A remote reached only through the virtual receives no request of its own, so serving a
+  merged document whose input from the remote is past the remote's TTL enqueues one coalesced
+  `proxy.revalidate` job that replays the remote's own routes below the authorizer, never on
+  the request's path (`proxy-cache.md`, "Revalidation outside the request", AC26).
+- **Member-input paths.** The profile declares, under the member's mount, the path of every
+  document the `Merge` reads from a member, as `signing-service.md`'s `Profile` requires and
+  registration refuses a merging profile without (its AC35): `{tree}/PACKAGES.gz` for each tree
+  (the representation every generator writes and pak reads; on a remote, requesting it runs the
+  upstream fetch and the `FromUpstream` that produce all three representations) and, for the
+  source tree, `src/contrib/Meta/archive.rds` (the archive union's input). `{tree}` is a
+  **template**: a virtual's creation, or a member-list change adding a never-adopted remote,
+  replays these paths on that remote for `src/contrib`, which every CRAN repository holds, and
+  for every binary tree another member of the virtual already holds, so the virtual lists the
+  remote's records there with no request ever made to the remote's own URL. `signing-service.md`
+  AC35 fetches "exactly the member-input paths the format's profile declares", with no variable
+  expanding over the trees the other members hold, so the template is a change that spec owes
+  (format closing sweep batch 2 item 1 in `agents/spec-loop/consequences.md`, raised by `rpm.md`,
+  `alpine.md` and `conda.md` for the same shape). A binary tree held by the remote alone is
+  unknown to the virtual until the remote has adopted it, which a direct client of the remote
+  causes; a read-driven first fetch for such a tree is part of the same owed change.
+- **Remote documents contribute with no verdict.** Nothing on this wire is signed, so every
+  remote document's verdict is `absent`, and it still contributes: `signing-service.md`'s rule
+  that a composed document needs a `verified` verdict governs a body the virtual signs (its
+  resolved pass-through decision, was Q17, AC36), and a CRAN virtual signs nothing, so its merged
+  index vouches for nothing a client could mistake for the registry's verification; a file
+  fetched through the virtual is verified at the remote exactly as at the remote's own URL.
+  AC36 is written for signed bodies and does not say so; that it does not bind an unsigned
+  consumer is the statement format closing sweep batch 2 item 2 asks `signing-service.md` to
+  make explicit.
+- **Freshness moves forward at every merge commit.** A merge commit and a member-list change are
+  document-only transitions of the virtual's default pointer (`signing-service.md`'s resolved
+  virtual-freshness decision, was Q15, AC34; `data-model.md` AC36), so every merged index is
+  served with a `Last-Modified` later than any the virtual served before, whatever a member's own
+  transitions did. No pinned R client sends a conditional request for an index, so this protects
+  `curl` and the corpus rather than a captured client failure.
 
 ### Capabilities and lifecycle
 
@@ -887,16 +984,28 @@ a current and of an archived version, `pak::pkg_install("{package}@{version}")` 
 version (the flow this pass could not reproduce against the fixture), and an `Archive/` fetch
 of a superseded version. For the hosted write surface there is **no reference implementation of
 a publish**: no wire publish exists anywhere, so the publish flows are exercised through this
-registry's management endpoint and verified by the real clients' resolves, recorded as an
-exception-list entry rather than left for the matrix to imply; the read surface's reference
+registry's management endpoint and verified by the real clients' resolves, with the write half
+recorded as having no corpus (below) rather than left for the matrix to imply; the read surface's reference
 implementation is a `write_PACKAGES` tree behind a plain file server, which is exactly what a
 CRAN mirror is, so `Capabilities()` declares reference-implementation availability `available`.
 Recording gates on the harness's redaction criterion (`conformance-harness.md` AC13); the
 userinfo credential travels in the URL as well as in the `Authorization` header, and that
-criterion redacts URL userinfo always, whatever the format's permitted list says. Every deliberate
-divergence from a
-`write_PACKAGES` tree behind a file server goes on the recorded exception list before its flow
-is expected to replay: the `SHA256sum` and `MD5sum` on binary-tree records, the empty index
+criterion redacts URL userinfo always, whatever the format's permitted list says.
+
+The halves are recorded against references `conformance-harness.md` AC28 accepts, and never
+against this registry, whose own transcripts would replay-match by construction. The read half
+is recorded against `cloud.r-project.org`, the public canonical registry. The hosted read half
+(the trees a publish produces as each client reads them: a supersession with its `Archive/`
+move and `Meta/` documents, a version older than the listed one, a Windows, macOS and Linux
+binary tree, an empty tree) is recorded against a tree the real `tools::write_PACKAGES` of the
+pinned R 4.5.1 image generates from the corpus's packages, behind a pinned static server, and
+has no public reference because CRAN accepts no test upload. The write half has no corpus: no
+CRAN client publishes, so there is nothing to record, and the four declared kinds are
+`script`-driven cases (`conformance-harness.md` AC26) proven by the effect a real client
+observes. Both are rows of that spec's authoritative-reference exception list, which this pass
+reports rather than adds, since that file is not this spec's to edit. Every deliberate
+divergence from a `write_PACKAGES` tree behind a file server goes on this format's recorded
+exception list before its flow is expected to replay: the `SHA256sum` and `MD5sum` on binary-tree records, the empty index
 served for a tree the repository holds no file for, a current version answering `200` at its
 archive path, a superseded version answering `200` at its current path, the `404` on directory
 URLs, the `405` on remote writes, the `409` on a changed-bytes republish, and the regenerated
@@ -946,8 +1055,10 @@ URLs, the `405` on remote writes, the `409` on a changed-bytes republish, and th
       coordinate disagrees with its `DESCRIPTION`, is refused `validation` (422) with nothing
       referenced and no snapshot, the committed blob collected as an orphan once its session
       expires.
-- [ ] AC4: A publish of an existing coordinate with identical bytes answers `201` and creates
-      no snapshot; one with different bytes is refused `conflict` (409); a `delete-version`
+- [ ] AC4: A publish of an existing coordinate with identical bytes answers `201` with a
+      completed `Operation` carrying `unchanged: true` and no snapshot reference, and moves no
+      pointer or `Last-Modified` (`management-api.md` AC5); one with different bytes is refused
+      `conflict` (409); a `delete-version`
       removes the version's files from every tree in one snapshot, the index lists the
       package's next-highest remaining version or omits the package, its paths answer `404`,
       `Meta/` follows, and a real install of the deleted version fails on every client; a
@@ -957,7 +1068,10 @@ URLs, the `405` on remote writes, the `409` on a changed-bytes republish, and th
       the three is refused `retired` (409) on republication with the same or different bytes,
       into any tree, including after the deletion's snapshot has been pruned out of retention
       and after a repoint to a snapshot older than the deletion, with a `Retirement` record per
-      coordinate and nothing in any metadata document; a principal holding `pull` alone is
+      coordinate and nothing in any metadata document, and a publish of a coordinate whose
+      deletion commits after the publish declared its claim and before the publish commits is
+      refused `retired` at commit with nothing landed (`management-api.md` AC12,
+      `storage-and-gc.md` AC30); a principal holding `pull` alone is
       refused every operation, one holding `push` without `delete` is refused deletion, no
       snapshot is created by a refusal, and every operation against a `remote` or `virtual`
       repository answers `405` `repository-type`.
@@ -1031,7 +1145,11 @@ URLs, the `405` on remote writes, the `409` on a changed-bytes republish, and th
       the completion-only mode with the handler's `DESCRIPTION` verifier when it carries
       neither, before commit, a digest-less file whose `DESCRIPTION` names another package or
       version committing nothing; a stand-in whose `PACKAGES.gz` is absent is read from its
-      `PACKAGES`; and the served records carry the digests this registry computed.
+      `PACKAGES`; the served records carry the upstream record's digests, equal to the digests
+      this registry computed for every file it has cached; and a request for a version present
+      only under the stand-in's `Archive/`, absent from its current index, is fetched in the
+      completion-only mode with the `DESCRIPTION` verifier and never against a superseded
+      digest index.
 - [ ] AC12: A proxied index is revalidated after its TTL and not before, with `If-None-Match`
       so an unchanged document costs a `304` upstream; a version published upstream becomes
       visible to every client after the TTL and, absent an explicit refresh, not before, with
@@ -1082,7 +1200,17 @@ URLs, the `405` on remote writes, the `409` on a changed-bytes republish, and th
       of a version only the second member archives installs it through the merge; the merged
       documents exist before the virtual's first request, a member's publish is visible in them
       within the `index.merge` staleness bound, and no merge runs on a request's path
-      (`signing-service.md` AC19).
+      (`signing-service.md` AC19); an upstream change adopted by the remote member is visible in
+      the merged documents within the staleness bound with no request to the virtual in
+      between (`signing-service.md` AC35); a virtual created over a never-adopted remote lists
+      the remote's `src/contrib` records and those of a binary tree the local member holds, the
+      stand-in's transcript showing only the member-input paths and the network layer no request
+      to the remote's own URL; a read of the merged index past the remote's TTL enqueues one
+      revalidation and is served the current merged set with no upstream request on its path
+      (`proxy-cache.md` AC26); the remote's documents, whose verdict is `absent`, contribute to
+      the merge; and every merge commit and member-list change serves the merged index under a
+      `Last-Modified` later than any served before, under an injected clock stepped backwards
+      (`signing-service.md` AC34).
 - [ ] AC18: A Windows binary (a zip of an installed package) published into
       `bin/windows/contrib/4.5/` and a macOS binary (a gzip tar of an installed package)
       published into `bin/macosx/big-sur-arm64/contrib/4.5/` through the management API are
@@ -1114,22 +1242,42 @@ URLs, the `405` on remote writes, the `409` on a changed-bytes republish, and th
       asserted from the stand-in's transcript; a `virtual` repository of format `cran` is
       accepted; and a publish or management operation against a remote repository answers
       `405` `repository-type`.
-- [ ] AC21: Replay-match passes against a corpus recorded from `cloud.r-project.org` covering
-      the recorded surface named in Design, with the hosted publish flows on the exception list
-      as flows exercised through this registry's management endpoint.
+- [ ] AC21: Replay-match passes against a corpus recorded from `cloud.r-project.org`, with the
+      hosted read half recorded from a pinned static server over a tree the pinned R 4.5.1
+      image's `tools::write_PACKAGES` generates, covering the recorded surface named in Design;
+      the corpus manifest names that local reference for the hosted half and no write reference,
+      each matching a CRAN row of `conformance-harness.md`'s authoritative-reference exception
+      list (its AC28), and no transcript recorded against this registry is part of the corpus.
 - [ ] AC22: A hosted tree's `Cache-Control: max-age=1800`, `ETag`, `Last-Modified` and
       `Accept-Ranges: bytes` headers are served on every index document through `ServeDocument`,
       a matching `If-None-Match` or an exactly matching `If-Modified-Since` answers `304`, every
       package file is served with an `immutable` cache header, an index the repository's writes
       did not change keeps its `ETag` and `Last-Modified` across snapshots while a repoint that
       changes it changes the tag and moves `Last-Modified` forward, never back (`data-model.md`
-      AC36), and no header of an index document is set by the handler package.
+      AC36), and no header of an index document is set by the handler package; every package
+      file is served through `ServeFile` with its CAS digest as a strong `ETag`, a matching
+      `If-None-Match` answering `304` and a byte range answering `206`, at its current and its
+      archive path alike, and the handler package sets no validator on a file either
+      (`signing-service.md` AC30, AC32); and the index's `Cache-Control` is the same on every
+      CRAN repository, with no repository setting that changes it.
 - [ ] AC23: `Capabilities()` declares proxy `supported`, reference implementation `available`,
       `Virtual: supported` and `Rename: supported`; after a rename, `install.packages` on both R
       generations, `pak::pkg_install` and `renv::install` resolve and install from the new name
       with byte-identical index documents and files, the old name answers `not-found`
       indistinguishably from a never-existing repository, and a coordinate retired before the
       rename is still refused `retired`.
+- [ ] AC24: On a remote far over its quota holding the source tree's three representations,
+      both `Meta/` documents, a binary tree's index, a digest index above the inline threshold
+      and cached package files, an eviction pass ends cached references of package files only:
+      every index document, `Meta/` document and the digest index are unchanged, a request for
+      each inside its TTL is served from the cache with no upstream request and the same
+      `Last-Modified`, and `cache_metadata_bytes{repository}` counts them while
+      `cache_referenced_bytes{repository}` does not; a sweep run with the grace lapsed leaves
+      the current revision's digest index in the store, and after an adoption of a new
+      `PACKAGES.gz` the next sweep past grace collects the previous revision's map, a map
+      finished after that adoption is discarded rather than declared, and an evicted package
+      the new index still lists is re-fetched, verified and installed on a real client
+      afterwards.
 
 ## Test Plan
 
@@ -1138,26 +1286,27 @@ URLs, the `405` on remote writes, the `409` on a changed-bytes republish, and th
 | AC1 | conformance | `conformance/cran/hosted_test.go` (both R images, pak and renv in the 4.5.1 image; fresh session, library, `pak::meta_clean()`, `pak::cache_clean()` and a fresh `RENV_PATHS_CACHE` in setup; the third-party hostnames bound to a fast-`404` fixture in the pak client container; per-client index representation and headers asserted from the transcript; the warm runs asserted at the network layer) |
 | AC2 | conformance + integration | `conformance/cran/documents_test.go` (`curl` and `readRDS` in both R images over every representation and both `Meta/` documents; the empty-tree `download.packages` runs on both generations; wrong-spelling, directory and out-of-grammar paths through `curl`); `internal/format/cran/documents_test.go` (record agreement across representations, server-computed digests, the R serialisation writer against a golden `saveRDS` output) |
 | AC3 | conformance + integration | `conformance/cran/publish_test.go` (the `script` publishes through the management endpoint, then real installs on all three clients from fresh caches with digest comparison; a newer publish then `renv::install("{package}@{version}")` of the archived one; refusal fixtures through `curl`); `internal/format/cran/publish_test.go` (snapshot count and content set, head-snapshot visibility before the response, the supersession move and `Meta/` regeneration in one write, the older-than-listed case, `DESCRIPTION`, grammar and declared-coordinate refusals as `validation`, the orphaned blob collected) |
-| AC4 | conformance + integration | `conformance/cran/manage_test.go` (identical and changed-bytes republish through the management endpoint; the `script` drives `delete-file`, `delete-version` and `delete-package` through it, then real installs fail on all three clients; the case-set validator requires a `script` case per declared kind, `conformance-harness.md` AC26); `internal/format/cran/manage_test.go` (one snapshot per operation, `retired` with same and different bytes and across trees, after pruning under an injected clock and across a backwards repoint, `Retirement` records and no document mention, action refusals, `405` `repository-type` on remote and virtual; the retirement half shares `internal/manage/retirement_test.go` with `management-api.md` AC12) |
+| AC4 | conformance + integration | `conformance/cran/manage_test.go` (identical and changed-bytes republish through the management endpoint; the `script` drives `delete-file`, `delete-version` and `delete-package` through it, then real installs fail on all three clients; the case-set validator requires a `script` case per declared kind, `conformance-harness.md` AC26); `internal/format/cran/manage_test.go` (one snapshot per operation, the identical republish completing `unchanged` with no snapshot, `retired` with same and different bytes and across trees, a deletion committing between a publish's claim declaration and its commit, after pruning under an injected clock and across a backwards repoint, `Retirement` records and no document mention, action refusals, `405` `repository-type` on remote and virtual; the retirement half shares `internal/manage/retirement_test.go` with `management-api.md` AC12) |
 | AC5 | architecture test + integration | `internal/format/cran/arch_test.go` (no DCF, gzip-index or serialisation writer in the handler package); `internal/format/signing_boundary_test.go` and `internal/index/generator_purity_test.go` (`signing-service.md` AC2, covering `internal/format/cran/index`); `internal/format/cran/concurrent_publish_test.go` (two writers into one tree, every representation, predecessor repoint, untouched tree's `ETag`s stable, no key or `Signature` row); `internal/format/cran/index/golden_test.go` (determinism over golden fixtures, run by the runtime's determinism harness, `signing-service.md` AC25); `internal/storage/metadata_root_test.go` (threshold crossing, sweep, serve) |
 | AC6 | conformance + integration | `conformance/cran/archive_test.go` (`curl` at both paths for superseded, current and never-held versions; `renv::install("{package}@{version}")` and `pak::pkg_install("url::...")` from fresh caches; pak's archive probe, which its `packages_make_sources` records as every package's second source, asserted `200`; the `pak::pkg_install("{package}@{version}")` run recorded); `internal/format/cran/coordinate_paths_test.go` (both paths resolve one `File`) |
 | AC7 | conformance + unit | `conformance/cran/filters_test.go` (the `R (>= 9.0.0)` fixture on all three clients with each captured message; `available.packages(filters = list())`; the missing-package transcripts); `internal/format/cran/version_test.go` (canonical form table: `1.0-1` against `1.0.1`, `1.01` against `1.1`, `1.0` against `1.0.0`; duplicate refusal; the `File` field) |
 | AC8 | conformance + integration | `conformance/cran/auth_test.go` (private repository on all three clients with userinfo credentials; challenge equality across existing and missing repositories from the transcript; pak's `401` retry and the others' preemptive header asserted; `pull`-less and rejected tokens); `internal/format/cran/auth_test.go` (plaintext refusal under `auth.md` AC27); every conformance case runs behind the harness's TLS termination with `CURL_CA_BUNDLE` and `SSL_CERT_FILE` set in the client containers and no insecure opt-in |
 | AC9 | conformance + unit | `conformance/cran/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens through the `credentials` key; the index refusal under real installs on all three clients; in-pattern and out-of-pattern publishes through the management endpoint, the mislabelled and the undeclared-coordinate fixtures); `internal/format/cran/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
 | AC10 | conformance | `conformance/cran/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; the raw status line read from the socket; all three clients' transcripts and output on both R generations; a second configured repository and a non-`CRAN`-named pak run capture fallback for the `supply-chain-policy.md` AC20 row); the phrase itself shares `internal/format/refusal_writer_test.go` (`supply-chain-policy.md` AC18) |
-| AC11 | conformance + integration | `conformance/cran/proxied_test.go` (a `write_PACKAGES` stand-in with `SHA256sum`, `MD5sum`-only and digest-less trees, and a `.gz`-less variant; all three clients on both R generations; network-level assertion from fresh caches; served records compared with the stand-in's; short-close observation in the completion-only mode, as `proxy-cache.md` AC20 places it); `internal/format/cran/proxied_verify_test.go` (digest priority, the `DESCRIPTION` verifier refusing another package's archive, the digest index from a revalidated index) |
+| AC11 | conformance + integration | `conformance/cran/proxied_test.go` (a `write_PACKAGES` stand-in with `SHA256sum`, `MD5sum`-only and digest-less trees, and a `.gz`-less variant; all three clients on both R generations; network-level assertion from fresh caches; served records compared with the stand-in's; short-close observation in the completion-only mode, as `proxy-cache.md` AC20 places it); `internal/format/cran/proxied_verify_test.go` (digest priority, the `DESCRIPTION` verifier refusing another package's archive, the digest index from a revalidated index, an archive-only coordinate routed to the completion-only mode) |
 | AC12 | conformance + integration | `conformance/cran/proxied_ttl_test.go` (mutating stand-in serving `ETag`; upstream `304` and `curl` `304` at the network layer; visibility on every client after the TTL from a fresh session; `Meta/` pass-through); `internal/format/cran/proxied_freshness_test.go` (cache-scoped `Last-Modified`, the older index not adopted; shares `internal/proxy/freshness_test.go`'s assertions, `proxy-cache.md` AC22) |
 | AC13 | benchmark + conformance | `internal/format/cran/scale_bench_test.go` (regeneration over the recorded `cloud.r-project.org` index, peak RSS and time against the gate thresholds); `conformance/cran/scale_test.go` (the recorded index behind a stand-in; every client resolves; `Range`; warm zero-request run) |
 | AC14 | conformance + integration | `conformance/cran/proxied_archive_test.go` (stand-in mutated between runs; installs on both R generations with a pre-mutation session cache, `renv::install` at the archive path; pak's probe answered `200`; missing-version and absent-binary-tree cases; throttling stand-in responses); `internal/format/cran/negative_cache_test.go` (both-paths-tried rule, the not-negatively-cached current-path miss) |
 | AC15 | integration | `internal/format/cran/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's; the advisory-feed refusal with a network-level no-fetch assertion) |
 | AC16 | integration + conformance | `internal/format/cran/proxied_integrity_test.go` (corrupt file, truncated body; CAS and reference assertions; operator record); `conformance/cran/integrity_test.go` (a hosted tarball altered in storage by fault injection on all three clients: the aborted response, the operator alert, no install, the transcript asserted free of any digest comparison; the abort shares `internal/storage/read_verify_test.go`, `storage-and-gc.md` AC21) |
-| AC17 | integration + conformance | `internal/format/cran/index/merge_test.go` (the generator's `Merge` per tree, first-member-wins with a higher second-member version, archive union); `internal/format/cran/virtual_merge_test.go` (the `index.merge` job on the production runtime: merged set present at creation, staleness bound, no request-path merge; shares `signing-service.md` AC19's harness); `conformance/cran/virtual_test.go` (a virtual repository over a local and a remote member; resolves on all three clients; digest assertion on the shadowed package; the archived-version install through the merge) |
+| AC17 | integration + conformance | `internal/format/cran/index/merge_test.go` (the generator's `Merge` per tree, first-member-wins with a higher second-member version, archive union); `internal/format/cran/virtual_merge_test.go` (the `index.merge` job on the production runtime: merged set present at creation, staleness bound, no request-path merge; shares `signing-service.md` AC19's harness); `conformance/cran/virtual_test.go` (a virtual repository over a local and a remote member; resolves on all three clients; digest assertion on the shadowed package; the archived-version install through the merge; the merged index's `Last-Modified` after a merge commit and a member removal, shared with `signing-service.md` AC34's `internal/index/virtual_freshness_test.go`); `conformance/cran/virtual_remote_test.go` (a virtual created over a never-adopted remote, the stand-in's transcript showing only the member-input paths for `src/contrib` and the local member's binary tree and the network layer no request to the remote's URL; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go` and `signing-service.md` AC35's `internal/index/virtual_remote_member_test.go`; the unsigned remote documents contributing, the rule itself `signing-service.md` AC36's `internal/index/passthrough_test.go`); `internal/format/cran/index/profile_test.go` (the declared member-input paths, and a profile lacking one refused at registration) |
 | AC18 | conformance + integration | `conformance/cran/binary_trees_test.go` (Windows and macOS binaries built in the 4.5.1 image, published through the management endpoint in the `script`; `download.packages` on both R images with the tree path per generation asserted from the transcript; the Linux tree through `contriburl`); `internal/format/cran/tree_test.go` (tree grammar, `Built` rule, cross-tree refusals) |
 | AC19 | conformance | `conformance/cran/generations_test.go` (transcript diff between the two R images; the `.rds`-less and `.gz`-less trees on all three clients; the non-`CRAN`-name pak run with its transcript asserted) |
 | AC20 | integration | `internal/format/cran/upstream_first_request_test.go` (creation with no upstream request; the unparseable first request and the `__linux__` URL each answered `502`, the latter with no upstream request at the network layer; virtual acceptance; `405` `repository-type` on remote writes; the adapter `User-Agent` asserted from a stand-in transcript, `upstream-adapters.md` AC5) |
-| AC21 | conformance | `conformance/cran/replay_test.go` |
-| AC22 | conformance + unit | `conformance/cran/headers_test.go` (`curl` over index and file routes, `If-None-Match` and exact `If-Modified-Since`); `internal/format/cran/etag_test.go` (stable across unrelated writes, changed by a repoint, `Last-Modified` forward after a repoint under an injected clock); the no-handler-header rule is `signing-service.md` AC11's architecture test |
+| AC21 | conformance + unit | `conformance/cran/replay_test.go` (replay of the public and the hosted halves); the manifest-versus-table check is `conformance-harness.md` AC28's `conformance/record/reference_exceptions_test.go`, which fails while the two CRAN rows are absent from its table |
+| AC22 | conformance + unit | `conformance/cran/headers_test.go` (`curl` over index and file routes at both file paths, `If-None-Match`, exact `If-Modified-Since` and a byte range); `internal/format/cran/etag_test.go` (stable across unrelated writes, changed by a repoint, `Last-Modified` forward after a repoint under an injected clock); the no-handler-header rule is `signing-service.md` AC11's architecture test, and the per-format `Cache-Control` and `ServeFile` behaviour its AC30 and AC32 rows |
 | AC23 | unit + conformance | `internal/format/capabilities_test.go` (this handler's four declarations, `format-handler-interface.md` AC13); `conformance/cran/rename_test.go` (all three clients against the renamed repository on both R generations, byte comparison, old name `not-found`, a pre-rename retirement still refused; required by `repository-lifecycle.md` AC12) |
+| AC24 | integration | `internal/format/cran/proxied_metadata_test.go` (an eviction pass over a remote far over quota, documents and digest index untouched and served inside TTL, both gauges read through `telemetry.NewTestRecorder`; a sweep with the grace lapsed before and after an adoption, a late map build discarded; the layer halves are `proxy-cache.md` AC27's and AC29's); `conformance/cran/proxied_evict_test.go` (a real `install.packages` after the eviction pass and the sweep) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their visibility and type,
@@ -1186,7 +1335,7 @@ restated per criterion here.
   filename and version grammars with the canonical form, the `Indexer` and the generator package
   `internal/format/cran/index` producing every index representation and both `Meta/` documents
   including the R serialisation writer, served through `ServeDocument`, package files through
-  the CAS at both coordinate paths, the challenge and scope mapping with the per-route addressed
+  `ServeFile` at both coordinate paths, the challenge and scope mapping with the per-route addressed
   objects, the `403` policy rendering through `WriteRefusal`, and `Capabilities()` with the
   rename case (AC23)
 
@@ -1196,8 +1345,9 @@ restated per criterion here.
 - The `Operator` interface declaring `publish`, `delete-file`, `delete-version` and
   `delete-package`; publish from committed blobs with format and `DESCRIPTION` validation in
   `Apply`, server-computed digests, immutability with the idempotent and `conflict` cases,
-  supersession into `Archive/` with `Meta/archive.rds`, retirement returned in `Outcome` and
-  held by the core, the write-boundary declaration exercised end to end under concurrency
+  supersession into `Archive/` with `Meta/archive.rds`, the declared unchanged publish,
+  retirement returned in `Outcome` and held by the core with the claim checked at declaration
+  and at commit, the write-boundary declaration exercised end to end under concurrency
 
 ### Phase 3: Proxied path and virtual repositories
 - Waits on `signing-service.md` Phase 4 (virtual merges and the proxied path) and the queue core
@@ -1207,12 +1357,16 @@ restated per criterion here.
   digest index, digest-priority stream-and-verify and the completion-only mode with the
   `DESCRIPTION` verifier, `ETag` revalidation under the cache-scoped `Last-Modified`, the
   both-paths coordinate resolution, negative caching with the current-path exception, the
-  removal table by event class, `405` on remote writes, the virtual merge as `index.merge`, and
-  the CRAN-scale benchmark gate
+  removal table by event class, `405` on remote writes, the digest index on the remote's
+  declared blob-digest list with a retained count of zero and the metadata outside the quota
+  (AC24), the virtual merge as `index.merge` with the member-input paths, the adoption re-merge
+  and the virtual-only remote's revalidation (AC17), and the CRAN-scale benchmark gate
 
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate, extended to
-  URL userinfo) against `cloud.r-project.org`, replay-match, the second R generation, pak and
+  URL userinfo) against `cloud.r-project.org`, the hosted read half against the pinned
+  `write_PACKAGES` tree once `conformance-harness.md`'s exception list carries the CRAN rows
+  (AC21), replay-match, the second R generation, pak and
   renv, the exception-list entries named in Design, the matrix rows for the deliberately
   unimplemented `Path` subdirectories, P3M's `__linux__` scheme and the `mac.cran.dev` source
 
@@ -1445,8 +1599,9 @@ commits the index service to a merge for one more format.
 
 Accepted cost: the merge requirement on the index service and its re-run on member
 revalidation. The merge is `signing-service.md`'s `Merge`, run as the deferred `index.merge` job
-(its AC19); the re-run on a remote member's revalidation is the trigger queued for that spec by
-the format batch 4 reconciliation.
+(its AC19); the re-run on a remote member's revalidation is its adoption hook (its resolved
+remote-member decision, was Q16, AC35), with the member-input paths this profile declares
+(Design, "Virtual repositories"), whose tree template is a change that spec still owes.
 
 ### Resolved: `cloud.r-project.org` as a preconfigured upstream (was Q8)
 
@@ -1510,3 +1665,4 @@ blob its upload session's expiry collects as an orphan rather than a spooled bod
 |------|----------|---------------|---------|
 | 2026-09-26 | 1a6daa5 | authoring pass: grounded first draft, not a review | Grounded the wire contract three ways: captured traffic from R 4.5.1 and R 4.3.3 (`available.packages`, `install.packages`, `download.packages` in every type, `old.packages`, `update.packages`), pak 0.11.1 with pkgcache 2.2.5.9000 and renv 1.1.5, in rocker/r-ver images pinned by digest, run in containers against a logging stub serving trees written by the real `tools::write_PACKAGES` (a source tree with an `Archive/`, a `latestOnly = FALSE` tree, a Windows binary tree, a `Meta/` directory in CRAN's shape), across four rounds (cold, warm-in-session and fresh-session installs with each client's index representation, headers and probe order; the `.rds`-less, `.gz`-less and index-less trees; a package hidden by the `R_version` filter; a two-version index under the `duplicates` filter; missing packages and repositories; Basic from URL userinfo, no credential and a wrong one; a policy-shaped `403`; a tarball corrupted mid-body; binary-tree paths for `win.binary`, `mac.binary` and `mac.binary.big-sur-arm64` on both generations and `type = "both"` on Linux; renv and pak version-pinned installs from `Archive/`, pak's `url::` form and its archive probe on every download; pak with the repository under a non-`CRAN` name and against a `__linux__`-shaped URL; pak's and renv's caches); the R Installation and Administration manual's repository section, the `write_PACKAGES` reference, and the `utils` sources in both images for the read side the manual leaves to the code; the pkgcache, pkgdepends and renv sources for the archive URL construction, the CRAN-name rule, the third-party metadata fetch, the P3M binary-index path and the Artifactory and Nexus layout detection; the OSV ecosystem table and API (the `CRAN` ecosystem exists and carries `RSEC-*` advisories); and the live cloud.r-project.org (sizes, headers, `304`, records, `Archive/` listings, `Meta/` shapes, the binary trees per R minor and macOS build) and p3m.dev (one URL, three objects by `User-Agent`). Design built from that: the tree grammar with binary trees keyed by R minor, build and distro and an empty index for every well-formed tree; the index as three representations including an R serialisation this registry must write; the shared model mapping with a tree-keyed record map and a retirement set; every document as a write-triggered document of the shared index service with a six-item requirement list; the management API as the only write path, supersession into `Archive/` inside the publish, `latestOnly` selection and the write-boundary declaration; the canonical version form under which `1.0-1` and `1.0.1` are one coordinate; URL-userinfo Basic on all three clients with pak's `401` retry; the addressed-object table with the consequence that a patterned `pull` cannot resolve; the `403` rendering on three clients; the digests no client verifies and the OSV finding that CRAN is covered; the proxied path with the index regenerated from the upstream's `PACKAGES.gz`, both-path coordinate resolution, negative caching with the current-path exception, the `__linux__` refusal and CRAN's rows of the removal table; and virtual repositories merged by member order, against Hex's refusal. Nine questions written in decision shape and adopted under the standing delegation: supersession into `Archive/` (AC3, AC7), generation by the index service (AC2, AC5), the proxied index regenerated from the `.gz` (AC11 to AC13), both coordinate paths (AC6, AC14), any tree in the grammar with an empty index (AC2, AC18), P3M refused (AC20), virtual repositories first-member-wins (AC17), no preconfigured mirror, and the declared-coordinate publish object (AC9). Twenty-two criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here: `auth.md` client-table rows for `R`, `pak` and `renv`; the `management-api.md` operations including a publish that declares its coordinate and tree; the `signing-service.md` requirement list including the R serialisation writer; the `upstream-adapters.md` fixed non-R `User-Agent`; the `proxy-cache.md` completion-only mode (already requested by four siblings) and CRAN's rows in its removal table; the `conformance-harness.md` seed path invoking the index service, the URL-userinfo redaction rule and the pak third-party-hostname binding; the reason-phrase finding for `supply-chain-policy.md` and the confirmation that OSV covers CRAN; and a CRAN row in the management-surfaces analysis. Stays draft; awaits an independent review. |
 | 2026-09-28 | fe2a39f | cross-spec reconciliation of the Wave 1 folds and the foundation wave, on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec and of this file. Applied: signing-service item 11 (the six service requirements mapped onto the generator contract: `Indexer`, generator package `internal/format/cran/index` holding the R serialisation writer and `latestOnly`, pre-commit-hook dispatch, per-document lock, determinism, unsigned consumer with no key, `ServeDocument` with `Last-Modified` from the pointer's `moved_at`, `Merge` as the `index.merge` job, `FromUpstream`; AC2, AC5, AC17, AC22); conformance-harness reconciliation item 4 (seed path through the write-path hook, `signing-service.md` AC21, harness AC24; the Test Plan obligation discharged); management-api items 11 and 12 and format-management item 11 (kinds `publish`, `delete-file`, `delete-version`, `delete-package`, no bindings; retirement core-held and refused centrally as `retired`; `validation`, `conflict` and `repository-type`; the upload-session and convenience publish forms; AC3, AC4); proxy-cache reconciliation item 4 (completion-only mode offered, was-Q15 AC20, with a `DESCRIPTION` verifier the handler supplies; AC11); upstream-adapters item 12 and the AC23 finding (https adapter; the `PACKAGES` shape and `__linux__` checks moved from configuration to the first request, the non-R agent being that spec's default `User-Agent`; AC20, Q6 record noted, option unchanged); supply-chain reconciliation items 10 and 11 and theme 3 (`WriteRefusal` and the status-line phrase R and pak print; the capture fills the `pending` binding row; pak's non-`CRAN`-name fallback named; AC10); artifact-verification item 16 (verification column `none`); theme 4 (storage-and-gc AC21 read-path verification as the only integrity check; AC16 revised); proxy-cache classes named on every removal row, cache-scoped `Last-Modified`, refresh and read-only remotes (AC12); repository-lifecycle AC12 and FHI AC13 (Capabilities section, new AC23); auth rows found already done (`R` / `renv` / `pak`); harness client confinement for pak's public hosts. Found and resolved here: `management-api.md` placed CRAN's per-tree deletion on `unplace`, which retires nothing; this spec declares `delete-file` retiring the version coordinate, keeping its adopted never-republishable rule. No question adopted, so no `fable_recheck`. Reported rather than assumed: `unplace` to `delete-file` in management-api's CRAN row, an identical republish completing with no snapshot against its AC5, R `numeric_version` missing from supply-chain's vendored orderings, a per-repository `Cache-Control` on signing-service's profile, pak's stand-in hosts in the harness, `cran.md` in async-operations' virtual-merge consumers. Twenty-three criteria, each with a Test Plan row. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
+| 2026-09-28 | a3a9d78 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. DATA-LOSS AUDIT (format closing sweep batch 2 item 5): the proxied digest index was built "once per revalidated index and kept with the remote's current documents" with no storage stated, so a CAS-backed map named only in the remote's document would be collected by the first sweep past grace; it is now metadata on the remote's repository-level document, declared on its blob-digest list with a retained count of zero (`proxy-cache.md` was-Q19, zero valid; the repository-level placement per was-Q22, a tree's index being repository-wide), a late map discarded, and the files it names confirmed held by their own cached references. Verifying the count exposed that an archive-only coordinate (every fetch reaching the upstream's `Archive/`) had no stated verification: it now goes through the completion-only mode with the `DESCRIPTION` verifier, so no route reads a superseded map (AC11 extended). Eviction settlement item 7's "huge-index formats" line applied: every remote index, `Meta/` document and the map outside the quota in `cache_metadata_bytes`, about 17 MB per source tree (was-Q21; new AC24). The rest of the file grepped for other maps or bodies held only by mention: none (hosted documents are snapshot content; hosted and cached files are `File` rows; the remote's `Meta/` documents are current documents). Foundation leftovers item 2 and `signing-service.md` AC35: member-input paths `{tree}/PACKAGES.gz` and `src/contrib/Meta/archive.rds`, the tree a template over `src/contrib` and the trees other members hold, citing batch 2 item 1 as the owed change and the remote-only tree as a gap; signing-service closing-sweep item 6 (cran was-Q18, AC35) and proxy-cache closing-sweep item 6 (adoption re-merges, was-Q16; the virtual-only remote's revalidation, `proxy-cache.md` AC26; freshness per was-Q15, AC34; the service requirement 5, the Q7 record, AC17 and its row); batch 2 item 2: unsigned remote documents contribute with an `absent` verdict, AC36 governing signed bodies, recorded without changing AC36. `signing-service.md` was-Q14 (package files through `ServeFile`) and was-Q18 (per-format `Cache-Control`, the per-repository request withdrawn; AC22 extended). Management-api closing-sweep items 4 and 5: the identical republish is the declared unchanged publish (was-Q15, AC5; the cran AC5 request met), the claim checked at declaration and again at commit (was-Q14, `storage-and-gc.md` AC30; AC4 and its row extended), and the `unplace` correction found applied in its table. Supply-chain closing-sweep item 3: `numeric_version` is vendored (its AC17). Six-spec item 6: the corpus now records the hosted read half against a pinned `write_PACKAGES` tree and no write half, never against this registry (AC21 and its row); the two `conformance-harness.md` rows are reported. Found while verifying: the proxied path claimed its served records carry "the digests this registry computed", but `FromUpstream` runs at adoption before any fetch, so the records carry the upstream's, equal to ours for every cached file; corrected in Design and AC11. Found already done: the `R` / `pak` / `renv` auth row, pak's stand-ins in the harness, `cran.md` among async-operations' merge consumers. Skipped: nothing. No question adopted; `fable_recheck` added for three folded judgements. 24 criteria, each with a Test Plan row. Stays draft. |

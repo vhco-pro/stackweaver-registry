@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): the hosted by-hash map keeps nothing alive, so for a pointer whose predecessors were pruned (a pinned environment, a quiet suite) a map-named digest whose blob is gone answers 404 and apt completes by path, the earlier generations deliberately not declared (AC8 extended); on a remote each index body is a cached file under its by-hash coordinate, the two predecessor envelopes and the cumulative digest index are on the remote's declared blob-digest list (proxy-cache was-Q19, this format declaring two), AC21 extended. Earlier: Reconciled 2026-09-28 at 15ced69 with the foundation wave (not a review): the index is this format's Indexer generator in internal/format/debian/index run by signing-service's write-path runtime; the envelope is a PointerDocument dated from data-model's per-pointer freshness record (AC36, AC37, AC22 qualified), served through ServeDocument (AC9, AC24); rotation is the dual-signature profile on the signing-key routes (AC14), the Valid-Until cadence a signing.resign schedule (AC10); management operations are publish, place, unplace, delete-version and configure on Operator with dput's .changes as the publish binding and core-held Retirement (AC5, AC13); the envelope and key are descriptors (AC16); WriteRefusal puts the policy condition in the reason phrase apt prints (AC17); the upstream keyring is the remote's trust set under artifact-verification's openpgp scheme, the proxied envelope under proxy-cache's cache-scoped Last-Modified with older envelopes not adopted (AC19); the release qualifier is supply-chain's declared advisory_ecosystem (Q6 revised, AC23); Q10 adopted (keyring and flat checks at first fetch, AC20); virtual merges on index.merge (AC22); Capabilities, rename, deletion and the settings document (new AC28). Earlier: authored 2026-09-26 from captures of apt 2.4.14, 2.6.1, 2.8.3 and 3.0.3 and dput 1.1.3 and 1.2.4; ten questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status_description: "Format closing sweep 2026-09-28 at a3a9d78 on Opus (not a review): the merging profile declares member-input paths (dists/{suite}/InRelease over the virtual's configured suites, then the Packages, Sources and Contents that envelope names by hash, a path derived from a document read earlier in the replay, which is signing-service's owed change); a remote member's adoption re-merges through the adoption hook, replacing the pre-commit trigger for remote members (signing-service was-Q16, AC35), a virtual-only remote is revalidated by the virtual's reads (proxy-cache AC26), and the virtual envelope's Date moves forward from the virtual pointer's record at every merge commit and member-list change (was-Q15, AC34); composed remote indices need a verified verdict (was-Q17, AC36), which every adopted Debian envelope has; DATA-LOSS AUDIT: a virtual has no snapshots, so the two previous merged generations its by-hash race needs are now on the virtual's declared blob-digest list (AC22 extended); the dput .changes object is a declared route-level object under management-api was-Q13 and retired claims are checked at declaration and again at commit (was-Q14; AC5 extended); pool files through ServeFile with a record-derived Last-Modified for apt's date-form If-Range and Cache-Control per format (signing-service was-Q14, Q18; AC24 extended); the source coordinate is the version's stored advisory key, on the fetch-and-cache request too (supply-chain was-Q11, AC24; data-model AC46; AC23 extended); the stale missing-auth-row gate on AC15 lifted. No question adopted; fable_recheck extended for two folded judgements; 28 criteria. Earlier: Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): the hosted by-hash map keeps nothing alive, so for a pointer whose predecessors were pruned (a pinned environment, a quiet suite) a map-named digest whose blob is gone answers 404 and apt completes by path, the earlier generations deliberately not declared (AC8 extended); on a remote each index body is a cached file under its by-hash coordinate, the two predecessor envelopes and the cumulative digest index are on the remote's declared blob-digest list (proxy-cache was-Q19, this format declaring two), AC21 extended. Earlier: Reconciled 2026-09-28 at 15ced69 with the foundation wave (not a review): the index is this format's Indexer generator in internal/format/debian/index run by signing-service's write-path runtime; the envelope is a PointerDocument dated from data-model's per-pointer freshness record (AC36, AC37, AC22 qualified), served through ServeDocument (AC9, AC24); rotation is the dual-signature profile on the signing-key routes (AC14), the Valid-Until cadence a signing.resign schedule (AC10); management operations are publish, place, unplace, delete-version and configure on Operator with dput's .changes as the publish binding and core-held Retirement (AC5, AC13); the envelope and key are descriptors (AC16); WriteRefusal puts the policy condition in the reason phrase apt prints (AC17); the upstream keyring is the remote's trust set under artifact-verification's openpgp scheme, the proxied envelope under proxy-cache's cache-scoped Last-Modified with older envelopes not adopted (AC19); the release qualifier is supply-chain's declared advisory_ecosystem (Q6 revised, AC23); Q10 adopted (keyring and flat checks at first fetch, AC20); virtual merges on index.merge (AC22); Capabilities, rename, deletion and the settings document (new AC28). Earlier: authored 2026-09-26 from captures of apt 2.4.14, 2.6.1, 2.8.3 and 3.0.3 and dput 1.1.3 and 1.2.4; ten questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for the Debian apt archive format: the dists and pool layout with InRelease, Release and Release.gpg, the Packages, Sources, Contents indices and their by-hash forms, hosted through the shared signing and index service with the signed envelope scoped to the serving pointer, proxied as a byte-for-byte, chain-verified cache of an upstream archive, and merged into signed virtual views, with apt on four generations as the oracle."
 author: michielvha
 goal: "Serve Debian and Ubuntu fleets a private apt archive whose indices are generated and signed by a key the handler never holds and whose rollbacks apt actually sees, and a Debian or Ubuntu mirror cache whose every index and package is verified along the upstream's own signature chain, with apt on Debian bookworm and trixie and Ubuntu 22.04 and 24.04 as the oracle on both paths."
@@ -10,7 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/debian/**"
   - "conformance/debian/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed. Cross-spec reconciliation on Opus 2026-09-28 adopted Q10 (upstream keyring and flat-layout checks at first fetch) and revised Q6's qualifier mechanism to the declared advisory_ecosystem, also never Fable-reviewed; the data-loss fix on Opus 2026-09-28 chose to let a pinned pointer's pruned by-hash generations go with a 404 rather than declare them, and folded proxy-cache's adopted Q19 into the proxied path (two predecessor envelopes and the digest index on the remote's declared list, index bodies as cached files), which needs the same recheck"
+fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed. Cross-spec reconciliation on Opus 2026-09-28 adopted Q10 (upstream keyring and flat-layout checks at first fetch) and revised Q6's qualifier mechanism to the declared advisory_ecosystem, also never Fable-reviewed; the data-loss fix on Opus 2026-09-28 chose to let a pinned pointer's pruned by-hash generations go with a 404 rather than declare them, and folded proxy-cache's adopted Q19 into the proxied path (two predecessor envelopes and the digest index on the remote's declared list, index bodies as cached files), which needs the same recheck; the format closing sweep on Opus 2026-09-28 folded two design judgements without a question, which need the same recheck: the virtual's two previous merged generations declared on its merged document's blob-digest list for the by-hash race (the hosted pinned-pointer choice not transferring, since a virtual's merges are its publishes), and member-input paths derived from the member's envelope read earlier in the same replay"
 ---
 
 # Plan: Debian apt archive format
@@ -563,7 +563,14 @@ What this registry enforces on ingest:
   bytes; copying into another suite is the copy operation, not a republish. **A retired
   coordinate is refused** with `retired` (409), centrally by the shared write path against the
   core-held `Retirement` records (`management-api.md`, "Retirement is core-held"), the
-  cross-format rule `npm.md`, `pypi.md`, `hex.md` and `maven.md` adopted. **A pool filename collision is refused**: pool filenames omit the epoch
+  cross-format rule `npm.md`, `pypi.md`, `hex.md` and `maven.md` adopted. The claims are the
+  coordinates `Authorize` reports, each binary's and the source's, checked when they are
+  declared and again at commit, serialised with any retiring write on the repository head, so a
+  `delete-version` committing between a publish's authorization and its commit cannot let it
+  land (`management-api.md`'s resolved retirement-check decision, was Q14; `storage-and-gc.md`
+  AC30). This format declares no unchanged publish (`management-api.md`'s resolved
+  unchanged-publish decision, was Q15, is opt-in per format), so an identical republish stays
+  the `409` above (AC5). **A pool filename collision is refused**: pool filenames omit the epoch
   (`dpkg-deb` names `swhello_1.0-1_amd64.deb` for `1:1.0-1` and `1.0-1` alike), so two
   coordinates differing only in epoch, or a source tarball of the same name with different
   bytes, cannot share a pool path and the second is refused; a shared tarball with identical
@@ -614,12 +621,16 @@ under the object it names (the table in "Addressed objects and pattern scopes").
 then reports every object the publish adds, each binary coordinate and the source coordinate,
 and `Submit` evaluates every pair, so a token patterned to cover the source but not one of its
 binaries is refused the whole upload and nothing commits (an operation's pairs must all pass,
-that spec's kind rules). One seam is recorded rather than smoothed over: that spec's AC8 holds a
-binding's `Scope(r)` equal to its operation's `Authorize` result, while `Scope(r)` reports
-exactly one object (`format-handler-interface.md`, "The pinned method set") and a `.changes`
-publish reports several; the route reports `src:{source}/{version}/changes` and the equality
-AC8 checks cannot hold for a multi-object binding as written. The gap is `management-api.md`'s
-to close, listed as a sibling consequence of this pass.
+that spec's kind rules). `Scope(r)` reports exactly one object (`format-handler-interface.md`,
+"The pinned method set") while a `.changes` publish reports several, so the binding's route
+reports `src:{source}/{version}/changes`, which the `Binding` declares as its **route-level
+object**: `management-api.md`'s resolved binding-scope decision (was Q13, its AC8) holds a
+binding never wider than its operation, its route object one of `Authorize`'s, none, or a
+declared route-level object, with `Submit` evaluating every pair `Authorize` reports on both ways
+in. The binding is therefore stricter than the API where its wire forces it, never wider: a
+principal holding only the route's object is still refused a `.changes` whose binaries fall
+outside its pattern, and AC16 asserts exactly that. Several objects in one `Scope(r)` is left to
+the interface re-open, recorded there as an input.
 
 ### Signing, provenance and policy
 
@@ -652,9 +663,19 @@ spec first had the registry derive at configuration (the revision under the reso
 advisory-coordinate decision, was Q6). A hosted repository declares none unless the operator
 sets one, because its packages are not Debian's and a name shared with a Debian source package is
 a coincidence, not an advisory. An advisory-dependent rule on a repository with no declaration
-is refused at configuration as `validation` (422), `supply-chain-policy.md` AC11's rule; the
-handler's part is handing the source coordinate to the shared resolution call, and its source
-versions are compared under the Debian ordering that spec implements.
+is refused at configuration as `validation` (422), `supply-chain-policy.md` AC11's rule. The
+core never parses a stanza, so the handler **reports the source coordinate as the version's
+advisory key** (one name, the source package, and one version, the source version) in the
+metadata-store write that records the version, and the core stores it core-parsed on the
+`Version` row, outside every metadata document (`supply-chain-policy.md`'s resolved advisory-key
+decision, was Q11, AC24; `data-model.md` AC46). That closes the channel this spec's
+reconciliation had reported as missing: resolution, the pre-fetch check on a proxied miss and
+the request-free feed sync all match `libssl3` as `openssl` at its source version from the same
+stored key. On the proxied path the digest index carries each pool file's `Source` and source
+version beside its package, version and architecture, and the handler puts the key on the
+fetch-and-cache request, so a condemned source is refused before any upstream fetch
+(`proxy-cache.md`'s Obligation section, AC30). Source versions are compared under the Debian
+ordering that spec implements.
 
 ### Authentication: Basic, preemptive, as apt sends it
 
@@ -664,10 +685,9 @@ round (captured on all four: the first request of the update already carried it)
 without a scheme is **refused by apt itself on plain HTTP**: `W: ... Credentials for
 127.0.0.1:19401 match, but the protocol is not encrypted. Annotate with http:// to use.`, then
 the `401` (captured on all four). That is the Basic presentation `auth.md` already verifies (its
-AC31), so no new form is needed; the client table needs an `apt` and a `dput` row, which this
-spec's authoring pass listed as a sibling consequence and which `auth.md` does not yet carry
-(checked 2026-09-28), so it is listed again, and AC15's auth cases wait on it per that spec's
-rule that each row is confirmed against captured traffic first. How this meets `auth.md`, whose rules this spec does not bend:
+AC31), so no new form is needed; `auth.md`'s client table carries the `apt` row and the `dput`
+row from these captures, so AC15's auth cases rest on rows that exist. How this meets
+`auth.md`, whose rules this spec does not bend:
 
 - **The challenge is uniform.** A credential-less request under a repository that is not
   anonymously readable answers `401` with `WWW-Authenticate: Basic`, byte-identical for a
@@ -784,10 +804,22 @@ once for every client:
   lagging mirror behind a round-robin name, or an upstream rollback) is **not adopted**: the
   cached revision stands and a divergence is recorded, because apt would discard the older
   `Release` anyway and serving it would only pair an older envelope with clients' newer lists.
-- **Caching headers.** This registry serves every `by-hash` document and pool file, hosted and
-  proxied, with `Cache-Control: public, max-age=2592000`, the value the live archive uses for
-  both, since neither can change under its path, and every envelope and path-addressed index
-  with `Cache-Control: no-cache`, since both change with the pointer.
+- **Caching headers, through the one serving door.** This registry serves every `by-hash`
+  document and pool file, hosted and proxied, with `Cache-Control: public, max-age=2592000`, the
+  value the live archive uses for both, since neither can change under its path, and every
+  envelope and path-addressed index with `Cache-Control: no-cache`, since both change with the
+  pointer. The values travel in serve policies, never in handler code, and are the same on every
+  Debian repository (`signing-service.md`'s resolved `Cache-Control` decision, was Q18, AC30):
+  generated documents and envelopes through `ServeDocument` under the generator's profile, and
+  pool files, hosted and cached alike, through **`ServeFile`** (its resolved handler-rendered
+  decision, was Q14, AC32) under a package-level serve policy of this handler that asks for a
+  `Last-Modified` from the `File` record's creation and for range support. apt resumes a partial
+  pool download with `Range` and a date-form `If-Range` carrying the partial file's mtime
+  (captured, "The wire surface"), so a `Last-Modified` stable per file is what gives a resume
+  the chance to match, and a date that does not match returns the whole file, as `ServeFile`'s
+  `If-Range` rule states; whether apt stamps the partial file from the interrupted response's
+  `Last-Modified` was not captured and is confirmed by the resume case (AC24). The handler package sets no validator on
+  any response.
 - **Every index file is immutable by hash.** A `by-hash/SHA256/{hex}` request is served when the
   hash is one the cached envelope (or one of its two predecessors) lists, fetched from the
   upstream's own `by-hash` path (which the live archive serves with `max-age=2592000`) and
@@ -871,23 +903,71 @@ upstream's own signature chain certified and this registry verified before mergi
   verified against the member's trust set and each index against the envelope's SHA256, so the
   virtual signature never covers an unverified stanza; the merge reads that verdict from the
   verdict store through `Deps` and verifies nothing itself (`signing-service.md`, "The
-  produce/verify boundary").
+  produce/verify boundary"). Every `Packages`, `Sources` and `Contents` the merge reads is a
+  document it **composes** into a body the virtual signs, so it contributes only under a
+  `verified` verdict (`signing-service.md`'s resolved pass-through decision, was Q17, AC36);
+  nothing on this format is declared pass-through. On this format that rule excludes no
+  well-configured remote: a Debian remote never adopts an envelope that fails its trust set (the
+  integrity-failure class commits nothing, and a remote with no keyring fails its first fetch,
+  the resolved first-fetch decision below, was Q10), so every adopted envelope's verdict is
+  `verified` and an upstream with no signature at all is not a remote this format can hold.
+  What AC36 changes here is only the failure case already stated: a member whose envelope
+  stopped verifying contributes nothing, with the operator record, and the virtual keeps serving
+  its other members.
 - **Regeneration is deferred.** The merge rule above is this format's generator's `Merge`. A
-  hosted member's write, or a remote member's envelope changing at revalidation, enqueues an
-  `index.merge` job on `internal/async` through the pre-commit hook, coalesced per virtual
-  within `index.virtual_merge_window` (default 5 s) and visible within
+  hosted member's write enqueues an `index.merge` job on `internal/async` through the pre-commit
+  hook; a remote member adopting a new upstream envelope, which is cache materialisation and not
+  a write, enqueues it through the runtime's **adoption hook**, inside the adoption transaction
+  (`signing-service.md`'s resolved remote-member decision, was Q16, AC35; `proxy-cache.md`
+  AC25), replacing the pre-commit trigger this spec first assumed for remote members. Each is
+  coalesced per virtual within `index.virtual_merge_window` (default 5 s) and visible within
   `index.virtual_staleness_bound` (default 60 s), with the first merge enqueued at the virtual's
-  creation and one per member-list change (`signing-service.md`, "Virtual merges", AC19). The
-  virtual repository serves its last merged, signed state until the regeneration commits
-  atomically, and a failed merge leaves the previous set and an alert, never an empty index, so
-  no signing ever runs on a client's request. A virtual repository creates no snapshots: its
-  merged documents are derived state, stored as its current documents under the fourth mark
-  root's current-document half (`storage-and-gc.md` AC16). Its envelope is re-rendered and
-  signed at every merge commit with a `Date` never earlier than the last one the virtual served,
-  because apt discards an older `Release` from a virtual exactly as from a hosted suite; the
-  natural source is the freshness record of the virtual's own default pointer advanced at each
-  merge commit, which `signing-service.md`'s "Virtual merges" does not yet state and which this
-  pass lists as a sibling consequence (AC22 asserts the forward-moving `Date`).
+  creation and one per member-list change (`signing-service.md`, "Virtual merges", AC19). A
+  remote reached only through the virtual receives no request of its own, so serving a merged
+  envelope whose input from the remote is past the remote's TTL enqueues one coalesced
+  `proxy.revalidate` job that replays the remote's own routes below the authorizer, never on the
+  request's path (`proxy-cache.md`, "Revalidation outside the request", AC26). The virtual
+  repository serves its last merged, signed state until the regeneration commits atomically,
+  and a failed merge leaves the previous set and an alert, never an empty index, so no signing
+  ever runs on a client's request. A virtual repository creates no snapshots: its merged
+  documents are derived state, stored as its current documents under the fourth mark root's
+  current-document half (`storage-and-gc.md` AC16).
+- **Member-input paths.** The profile declares, under the member's mount, the path of every
+  document the `Merge` reads from a member, as `signing-service.md`'s `Profile` requires and
+  registration refuses a merging profile without (its AC35): `dists/{suite}/InRelease`, then,
+  for each (component, architecture) cell that envelope lists, the `Packages`, `Sources` and
+  `Contents-{arch}` it names, requested by their `by-hash/SHA256/{hex}` paths. `{suite}` expands
+  over the suites the virtual's own `settings` document configures, and the cells and `{hex}`
+  are **derived from the envelope read earlier in the same replay**, so a virtual's creation, or
+  a member-list change adding a never-adopted remote, fetches that remote's envelope and then
+  exactly the indices it names, and the virtual lists the remote's packages with no request ever
+  made to the remote's own URL. `signing-service.md` AC35 fetches "exactly the member-input paths
+  the format's profile declares", with neither a variable over the virtual's suites nor a path
+  derived from a document read earlier in the replay, so both are a change that spec owes (format
+  closing sweep batch 2 item 1 in `agents/spec-loop/consequences.md`, raised by `rpm.md` for its
+  `repomd.xml` hrefs, the same shape). A suite the virtual configures that the remote does not
+  hold answers the remote's negatively cached `404` and contributes nothing.
+- **Freshness moves forward at every merge commit.** A merge commit and a member-list change are
+  document-only transitions of the virtual's default pointer (`signing-service.md`'s resolved
+  virtual-freshness decision, was Q15, AC34; `data-model.md` AC36), so the envelope re-rendered
+  and signed at every merge commit carries a `Date` from the virtual's pointer record, later than
+  any the virtual served before whatever a member's own transitions did, and its
+  `Last-Modified` moves with it, because apt discards an older `Release` from a virtual exactly
+  as from a hosted suite (AC22).
+- **By-hash on a virtual keeps its predecessors by declaration.** The hosted rule serves the
+  current and two previous generations by hash through the snapshots that hold them, but a
+  virtual has no snapshots, and a merge commit replaces its current documents, so a previous
+  merged generation's index named only in the virtual's by-hash map would be held by nothing and
+  collected by a sweep while a client that fetched the previous envelope still requests it,
+  which is exactly the publish race `by-hash` exists to cure and which on a virtual recurs at
+  every merge. Each merge commit therefore puts the index bodies of the two previous merged
+  generations on the declared blob-digest list of the virtual's repository-level merged document
+  and drops a generation from it in the merge that makes it the third, the declared list being
+  the only way a document keeps another blob alive (`storage-and-gc.md` AC16; `data-model.md`,
+  "Declared blob digests on a document, inline or CAS-backed", AC37), the count mirroring the
+  two predecessor envelopes a remote keeps (Design, "The proxied path"). The hosted pinned-pointer
+  choice (Design, "By-hash") does not transfer: a pinned hosted pointer receives no publish and
+  so has no race, while a virtual's merges are its publishes.
 - **What it costs clients.** A client of a virtual repository trusts this registry's key for
   upstream packages too, and pinning or `unattended-upgrades` rules written against
   `origin=Debian` no longer match, since `Origin` is the virtual repository's. Both are stated in
@@ -1002,7 +1082,10 @@ exception list before their flow is expected to replay: SHA256-only `Release`, n
 - [ ] AC5: A publish of an existing coordinate is refused with `409` with identical and with
       different bytes, and a publish of a deleted coordinate is refused `409` `retired` by the
       shared write path, including after the delete's snapshot was pruned out of retention and
-      after the default pointer was moved back to a snapshot that predates the deletion; a version differing from an existing one only in
+      after the default pointer was moved back to a snapshot that predates the deletion, and a
+      publish whose coordinate a `delete-version` retires after the publish declared its claims
+      and before it commits is refused `retired` at commit with nothing landed; a version
+      differing from an existing one only in
       epoch, and a source tarball of an existing name with different bytes, are refused as pool
       filename collisions, while a second source version sharing an identical tarball is
       accepted; and a `.deb` whose name or version is outside Debian's grammar, or whose
@@ -1124,13 +1207,28 @@ exception list before their flow is expected to replay: SHA256-only `Release`, n
       serving its previous signed state until the deferred `index.merge` regeneration commits,
       within `index.virtual_staleness_bound`, and then serves the new version under an envelope
       whose `Date` and `Last-Modified` are later than the previous one's, with no signing
-      operation on any client request path; and a remote member whose envelope fails
-      verification contributes nothing to the merge.
+      operation on any client request path, the merge enqueued by the remote's adoption with no
+      request to the virtual in between (`signing-service.md` AC35); a member-list change, and a
+      merge after a member's rollback, likewise serve a later `Date` under an injected clock
+      stepped backwards, and a real apt that updated before adopts it (`signing-service.md`
+      AC34); a virtual created over a never-adopted remote lists the remote's packages for every
+      suite it configures, the stand-in's transcript showing only `InRelease` and the indices it
+      names by hash and the network layer no request to the remote's own URL, and a read of the
+      merged envelope past the remote's TTL enqueues one revalidation and is served the current
+      merged state with no upstream request on its path (`proxy-cache.md` AC26); a client that
+      fetched the envelope before a merge and its indices after completes `apt-get update` by
+      hash, including after a sweep run with the grace lapsed, while a generation three merges
+      old answers `404` and apt completes by path; and a remote member whose envelope fails
+      verification contributes nothing to the merge, with an operator record.
 - [ ] AC23: With a remote repository declaring `advisory_ecosystem: Debian:12` and an advisory
       rule attached, a binary whose stanza names an affected source package and source version is
       refused at resolution through the case-controlled advisory source, while the same binary
       name under an unaffected source is served, a `libssl3` stanza whose `Source` is `openssl`
-      being matched as `openssl` at the source version; the same repository declaring
+      being matched as `openssl` at the source version, and refused on a cache miss before any
+      upstream request; the key is the version's stored advisory key, so an advisory added after
+      the pool file was cached condemns it at the next feed sync with no request in flight, and
+      no metadata document is read to match it (`supply-chain-policy.md` AC24, `data-model.md`
+      AC46); the same repository declaring
       `Ubuntu:24.04:LTS` matches the Ubuntu record set instead; and an advisory-dependent rule on
       a hosted repository with no declaration is refused at configuration as `validation` naming
       the missing declaration.
@@ -1138,7 +1236,10 @@ exception list before their flow is expected to replay: SHA256-only `Release`, n
       generator run by the shared index runtime, never by the handler, proven by the architecture
       test that neither the handler package nor `internal/format/debian/index` imports
       `internal/signing/**`, key material or a signature library (`signing-service.md` AC2) and
-      that the handler sets no `Last-Modified` or `ETag` on a generated document (its AC11); and a proxied envelope above
+      that the handler package sets no `Last-Modified` or `ETag` on any response, generated
+      document or pool file (its AC11, module-wide under its was-Q14), a pool file answering a
+      matching date-form `If-Range` with `206` and a stale one with the whole body through
+      `ServeFile` (its AC32, AC30); and a proxied envelope above
       the inline threshold, and a hosted `Packages` above it, are CAS-backed, survive a GC sweep
       through the fourth mark root, and serve to a real client afterwards.
 - [ ] AC25: Debian (bookworm, trixie), Ubuntu (22.04, 24.04), Linux Mint 22 and Pop!_OS 24.04,
@@ -1170,7 +1271,7 @@ exception list before their flow is expected to replay: SHA256-only `Release`, n
 | AC2 | conformance + integration | `conformance/debian/signing_test.go` (both envelope forms on four generations with no warning line; wrong-key and altered envelopes with each captured text asserted); `internal/format/debian/envelope_test.go` (the served envelope verified with a Go OpenPGP verifier; key algorithm and digest against the sqv horizon) |
 | AC3 | conformance + integration | `conformance/debian/publish_test.go` (management-API publish, update, install); `internal/format/debian/publish_test.go` (snapshot count, untouched cells byte-compared, SHA256-only `Release`, envelope re-signed before the response) |
 | AC4 | conformance + integration | `conformance/debian/dput_test.go` (dput 1.1.3 and 1.2.4, binary and source `.changes`, challenge and preemptive retry from the transcript, install of the uploaded bytes); `internal/format/debian/dput_commit_test.go` (no snapshot before the `.changes`, missing digest and control mismatch refused) |
-| AC5 | conformance + integration | `conformance/debian/publish_test.go` (republish refusals through the endpoint); `internal/format/debian/immutability_test.go` (retirement after pruning under an injected clock and across a backwards repoint, the central refusal being `management-api.md`'s and `data-model.md` AC35's; epoch and tarball collisions; shared identical tarball; grammar and architecture refusals) |
+| AC5 | conformance + integration | `conformance/debian/publish_test.go` (republish refusals through the endpoint); `internal/format/debian/immutability_test.go` (retirement after pruning under an injected clock and across a backwards repoint, the claim-versus-deletion race checked at commit (`management-api.md` AC12, `storage-and-gc.md` AC30), the central refusal being `management-api.md`'s and `data-model.md` AC35's; epoch and tarball collisions; shared identical tarball; grammar and architecture refusals) |
 | AC6 | conformance | `conformance/debian/source_test.go` (three generations, byte comparison) |
 | AC7 | conformance | `conformance/debian/contents_test.go` (`apt-file` on apt 2.6.1 and 2.8.3, `by-hash` fetch asserted) |
 | AC8 | conformance + integration | `conformance/debian/race_test.go` (envelope served before a publish, indices after, via a `holds` declaration on the client's first index request, `conformance-harness.md` AC27); `internal/format/debian/byhash_test.go` (map trimming, foreign-repository digest refused); `internal/format/debian/byhash_pruned_test.go` (a pinned environment pointer aged past the window on an injected clock, the predecessors pruned and swept, a `by-hash` request for a digest the map names but the store lost answering `404`, the object store read, the response byte-identical to the unnamed-digest `404` the race case shows apt completing by path from) |
@@ -1187,9 +1288,9 @@ exception list before their flow is expected to replay: SHA256-only `Release`, n
 | AC19 | conformance | `conformance/debian/proxied_ttl_test.go` (mutating stand-in; `304` upstream at the network layer; no revalidation of `by-hash` or pool); `conformance/debian/proxied_rollback_test.go` (the lagging stand-in serving an older envelope after a newer one, a real apt on each generation; the proxied rollback case `proxy-cache.md` AC22 names under `conformance/debian/`) |
 | AC20 | integration | `internal/format/debian/upstream_config_test.go` (remote created against an unverifiable envelope and against a flat upstream, accepted, then the first fetch failing with nothing committed and the alert naming the reason); `internal/format/debian/proxied_integrity_test.go` (bad signature, index mismatch, pool mismatch, unknown pool path, operator record) |
 | AC21 | integration | `internal/format/debian/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's; slash component; negative caching and throttling responses); `internal/format/debian/proxied_retention_gc_test.go` (a sweep on an injected clock with the grace lapsed after each adoption, the object store read after each; the digest index and both predecessor envelopes declared on the remote's list and surviving; an evicted pool file re-fetched and verified; a predecessor's index served by hash; the third adoption dropping the oldest envelope; the shared-layer half is `proxy-cache.md` AC27's) |
-| AC22 | conformance + integration | `conformance/debian/virtual_test.go` (four generations installing from both members; first-member-wins; a second update after the merge adopting the new envelope); `internal/format/debian/virtual_regen_test.go` (the `index.merge` job held and released through the kind pause, no signing call on the request path, failed member excluded, forward-moving `Date`; the runtime half is `signing-service.md` AC19's) |
-| AC23 | integration | `internal/format/debian/advisory_coordinate_test.go` (source-package mapping under a declared `advisory_ecosystem`, `Debian:12` and `Ubuntu:24.04:LTS`; hosted refusal at configuration, the validation itself being `supply-chain-policy.md` AC11's; the `advisories` fixture carrying records for both) |
-| AC24 | architecture test + integration | `internal/format/debian/arch_test.go` (no key material, signing primitive or `internal/signing` import in the handler or its generator package, beside `signing-service.md` AC2's module-wide test; no freshness header set by the handler, beside its AC11); `internal/storage/metadata_root_test.go` (threshold crossing, sweep, serve through a real client in the conformance half) |
+| AC22 | conformance + integration | `conformance/debian/virtual_test.go` (four generations installing from both members; first-member-wins; a second update after the merge adopting the new envelope; a member-list change and a member rollback each adopted; shared with `signing-service.md` AC34's apt half); `internal/format/debian/virtual_regen_test.go` (the `index.merge` job held and released through the kind pause, no signing call on the request path, failed member excluded with its operator record, forward-moving `Date` under a clock stepped backwards; the runtime halves are `signing-service.md` AC19's `internal/index/virtual_merge_test.go` and AC34's `internal/index/virtual_freshness_test.go`); `conformance/debian/virtual_remote_test.go` (a virtual created over a never-adopted remote, the stand-in's transcript showing only the member-input paths and the network layer no request to the remote's URL; an upstream change adopted and merged with no virtual request; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go` and `signing-service.md` AC35's `internal/index/virtual_remote_member_test.go`); `internal/format/debian/index/profile_test.go` (the declared member-input paths, and a profile lacking one refused at registration); `internal/format/debian/virtual_byhash_gc_test.go` (the envelope held before a merge and the indices fetched after, a sweep on an injected clock with the grace lapsed between, the two previous generations on the virtual's declared list surviving and the third collected, the object store read after each; `conformance/debian/virtual_race_test.go` drives the same with a real apt through a `holds` declaration, `conformance-harness.md` AC27) |
+| AC23 | integration | `internal/format/debian/advisory_coordinate_test.go` (source-package mapping under a declared `advisory_ecosystem`, `Debian:12` and `Ubuntu:24.04:LTS`; the advisory key reported on the version write and on the fetch-and-cache request, a network-level no-fetch assertion on a condemned miss, a feed sync condemning a cached file with no request; hosted refusal at configuration, the validation itself being `supply-chain-policy.md` AC11's; the `advisories` fixture carrying records for both); the stored key shares `internal/policy/advisory_key_test.go` (`supply-chain-policy.md` AC24) |
+| AC24 | architecture test + integration | `internal/format/debian/arch_test.go` (no key material, signing primitive or `internal/signing` import in the handler or its generator package, beside `signing-service.md` AC2's module-wide test; no freshness header set by the handler, beside its AC11); `internal/format/debian/pool_serve_test.go` (a hosted and a cached pool file through `ServeFile`, a resumed range with a matching and a stale date-form `If-Range`, beside `signing-service.md` AC32's `ServeFile` cases); `internal/storage/metadata_root_test.go` (threshold crossing, sweep, serve through a real client in the conformance half) |
 | AC25 | conformance | `conformance/debian/clients_test.go` (six distribution images pinned by digest; the Pop!_OS build recipe in `conformance/debian/images/`) |
 | AC26 | conformance | `conformance/debian/replay_test.go` |
 | AC27 | conformance | `conformance/debian/suite_config_test.go` (`apt-cache policy` priority on apt 2.6.1 and 3.0.3; codename alias; missing suite) |
@@ -1247,13 +1348,16 @@ and pattern-refusal cases, a `script`-driven case per declared management kind a
   index-by-hash and path-to-hash serving with each index a cached file under its `by-hash`
   coordinate, the two predecessor envelopes and the cumulative digest index on the remote's
   declared blob-digest list, pool stream-and-verify,
-  negative caching, the removal table, the source coordinate under the declared
-  `advisory_ecosystem`, `405` on remote writes
+  negative caching, the removal table, the source coordinate reported as the version's advisory
+  key and carried on the fetch-and-cache request under the declared `advisory_ecosystem`, pool
+  files through `ServeFile`, `405` on remote writes
 
 ### Phase 5: Virtual repositories
 - Waits on `docs/internal/plans/foundation/async-operations.md` reaching `planned`
 - The generator's `Merge`, verification before merge, the `index.merge` deferred
-  regeneration, the virtual envelope with its forward-moving `Date`
+  regeneration enqueued by member writes and remote adoptions, the member-input paths and the
+  virtual-only remote's revalidation, the virtual envelope with its forward-moving `Date`, the
+  two previous merged generations on the virtual's declared list (AC22)
 
 ### Phase 6: Corpus and gate
 - Recording across the named surface after the harness redaction gate, replay-match, the four
@@ -1402,9 +1506,12 @@ it did not author, a trust-posture call.
 
 Accepted cost: the trust statement and the pinning caveat in the operator documentation, and
 Phase 5's dependency on the asynchronous subsystem, which is now concrete: the merge is the
-`index.merge` job kind on `internal/async` (`signing-service.md`, "Virtual merges", AC19), and a
-remote member's contribution is gated on its verdict read through `Deps`, never a verification
-inside the merge.
+`index.merge` job kind on `internal/async` (`signing-service.md`, "Virtual merges", AC19),
+enqueued for a remote member by its adoption hook (its was-Q16, AC35), and a remote member's
+contribution is gated on its verdict read through `Deps`, never a verification inside the merge
+(its was-Q17, AC36). Added 2026-09-28, the option unchanged: the virtual declares the index
+bodies of its two previous merged generations on its merged document's blob-digest list, since
+it has no snapshots to hold them for the by-hash race (Design, "Virtual repositories").
 
 ### Resolved: dput as a binding onto publish (was Q4)
 
@@ -1431,8 +1538,9 @@ model forbids.
 Accepted cost: the grace-period residue and the documented port limitation. `management-api.md`
 since carried the answer: its reconciliation table lists Debian's `publish` with "dput's HTTP
 upload" as the binding and its binding rule names dput among the clients a binding may serve;
-the one seam left, a multi-object publish under a binding whose `Scope(r)` reports one object,
-is stated in Design ("The dput binding") and listed as a consequence for that spec.
+the one seam this spec reported, a multi-object publish under a binding whose `Scope(r)` reports
+one object, is closed by its resolved binding-scope decision (was Q13, AC8): the `.changes`
+object is declared route-level and `Submit` evaluates every pair (Design, "The dput binding").
 
 ### Resolved: policy refusals, other sources, and index elision (was Q5)
 
@@ -1569,3 +1677,4 @@ the admin role (`management-api.md`'s kind table and its Debian rows).
 | 2026-09-26 | e77404f | authoring pass: grounded first draft, not a review | Grounded the archive contract three ways: captured traffic from apt 2.6.1 (bookworm), 3.0.3 (trixie, sqv), 2.8.3 (Ubuntu 24.04 and Mint 22) and 2.4.14 (Ubuntu 22.04), pinned by digest, against a logging stub serving archives built and signed with the bookworm image's own dpkg-deb, dpkg-source, dpkg-genchanges, apt-ftparchive and gpg (cold and warm updates as shipped and host-like, the gz and xz preference, by-hash under SHA512 and SHA256 with path fallback, foreign architectures, `apt-get source`, `apt-file`, InRelease and detached forms, wrong-key, tampered, SHA1, RSA 1024, Ed25519, dual-signed and unsigned envelopes with each generation's text, expired, future, older, equal and absent `Date`, the `If-Modified-Since`-only revalidation that masks a repoint, a changed `Codename`, a suite mismatch, the publish race with and without by-hash, the two-source fallback on a `403`, Basic from `auth.conf.d` with and without the scheme and from userinfo, `Range` resume, `NotAutomatic`, a path-prefixed base URL), dput 1.1.3 and 1.2.4 uploads, and a pass-through to the live deb.debian.org verified with the stock keyring; the Debian repository format and the apt 2.6.1 and 3.0.3 sources (the older-`Date` discard, `Max-FutureTime`, the alternative-URI fallback); the live Debian, Debian security, Ubuntu and Pop!_OS archives; and OSV's Debian and Ubuntu ecosystems. Design: what this spec takes from the prototype (its findings 1 to 3; three new captured facts fed back); the generated layout; the shared-model mapping with a `src:` namespace and a retirement set; by-hash as the CAS key and the race cure; index documents as snapshot content and the envelope as pointer-scoped; a seven-item signing-service requirement list; the publish path, dput binding and write-boundary declaration; OSV by source package and release; Basic auth; the addressed-object table; the `403` rendering and its fallback limit; the chain-verified proxied path with Debian's removal rows; signed virtual merges. Nine questions written in decision shape and adopted under the standing delegation: pointer-scoped envelope (AC9, AC10, AC14), `Valid-Until` off by default (AC10), virtual signed and proxied unmodified (AC18, AC22), dput binding (AC4, AC16), no index elision (AC17), OSV coordinate (AC23), SHA256-only `Release` (AC3), no preconfigured upstream, membership actions (AC13). Twenty-seven criteria, each with a Test Plan row. Stays draft; awaits an independent review. |
 | 2026-09-28 | 15ced69 | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec (signing-service 10, 11 and the verification routing; upstream-adapters 8 and 12; charter reconciliation 5; conformance-harness reconciliation 4 and 5; management-api 11 and 12; Open item 20's data-model, storage, signing, management, async, upstream and harness halves) and every requirement this spec placed on the ten foundation specs checked against what they say. Applied: every "to be authored" citation replaced by the real spec and criterion; the prototype's questions 1 to 3 answered by `signing-service.md` (optional `Indexer`, write-path trigger through `data-model.md` AC37's pre-commit hook) and the three captured facts marked met by the prototype's AC13 and `conformance/debian/repoint_test.go`; the pointer-scoped envelope as a `PointerDocument` dated from the pointer freshness record (`data-model.md` AC36, AC37; AC22 qualified there), `Last-Modified` through `ServeDocument`, the seven-item service list rewritten as citations (Debian key profile, generator package, `signing.resign` cadence at `signing.resign_at_fraction`, `dual-signature` rotation on the signing-key routes, public forms, the verification entry routed to `artifact-verification.md`'s `openpgp` scheme, `Merge` on `index.merge`); the management table gains the kinds (`publish` with the dput binding, `place`, `unplace`, `delete-version`, `configure`), the endpoint, `405` `repository-type` and per-kind cases; retirement moved to core-held `Retirement` (`retired` 409, AC5 across a backwards repoint); the envelope and `signing-key.asc` declared descriptors under `auth.md` was-Q23 with the sentinel check (AC16: apt now fails at the first index, not at `InRelease`); `WriteRefusal` and the `Refused by policy` reason phrase apt prints (AC17), the `package-level` binding row recorded; the proxied keyring moved to the remote's trust set, the `https` adapter with `allow_http`, the integrity-failure class, cache-scoped `Last-Modified` and a regression row with a proxied rollback case (AC19, `proxy-cache.md` AC22); the removal table named by event class; virtual merges on `index.merge` with a forward-moving virtual envelope `Date` (AC22); the seed path through the write-path hook, the `signing` sub-entry, `trust`, `holds` and the confined second source in the harness paragraph; a new Capabilities, lifecycle and settings section with AC28 (rename, deletion retiring keys, the declared `settings` document). Mismatches found, not queued: AC20 fetched the upstream at configuration, which `management-api.md` no longer does and whose keyring now lives in the trust set, so Q10 was raised in decision shape and adopted (first-fetch checks, A); Q6's derived qualifier contradicts `supply-chain-policy.md`'s operator-declared `advisory_ecosystem`, folded as a revision note under Q6 (the answer unchanged). Records Q1, Q3, Q4, Q5, Q8 and Q9 note what landed. `fable_recheck` extended, not removed. Stays draft. |
 | 2026-09-28 | 93982ba | data-loss fix on Opus (storage-and-gc closing-sweep item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 0 of "From the storage-and-gc.md closing sweep" in `agents/spec-loop/consequences.md`, verified against `storage-and-gc.md`'s fourth mark root (its third reach, AC16) and `data-model.md` AC34, AC36 and AC45: a digest a document merely mentions keeps nothing alive, the declared blob-digest list is a document's only keep-alive, and a remote writes no content snapshot. The holes: the hosted by-hash text said previous generations "stay alive through the snapshot mark root", but the map naming them is a mention, so for a pointer targeting a snapshot whose predecessors were pruned (an environment pinned past the window, a suite quiet for longer) the map names blobs the sweep collects; on the remote, the two predecessor envelopes a `by-hash` request is authorised against and the cumulative digest index were held by nothing stated. Chosen, hosted: let them go and answer cleanly, the handler answering `404` for a map-named digest whose blob is gone exactly as for an unnamed one, apt completing by path (captured), rather than declaring two extra Debian-scale generations on every long-pinned pointer for a race such a pointer does not have (AC8 extended, `internal/format/debian/byhash_pruned_test.go`). Chosen, proxied: each index body a cached file under its `by-hash` coordinate on its own cached reference; the two predecessor envelopes the remote's retained revisions, this format declaring two under proxy-cache was-Q19, and the digest index, both on the remote's declared blob-digest list (AC21 extended so it fails if either is collected, `internal/format/debian/proxied_retention_gc_test.go`). Phase 4 updated. The pool-file row is coordinate-bound (purge), so proxy-cache was-Q20 does not apply. No new question adopted here; `fable_recheck` extended for the judgement. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
+| 2026-09-28 | a3a9d78 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Applied: foundation-leftovers item 2 and `signing-service.md` AC35 (member-input paths `dists/{suite}/InRelease` over the virtual's configured suites, then each `Packages`, `Sources` and `Contents` that envelope names, by hash; the derived paths cite format closing sweep batch 2 item 1 as the owed change); signing-service closing-sweep item 6 (debian AC34 and AC35: the adoption hook replaces the pre-commit trigger this spec had for remote members, was-Q16; the virtual envelope's `Date` from the virtual pointer's record at every merge commit and member-list change, was-Q15, replacing the "does not yet state" wording); proxy-cache closing-sweep item 6 (the virtual-only remote's revalidation, AC26); batch 2 item 2 (AC36: every composed index needs `verified`, which every adopted Debian envelope has because a failing or keyring-less remote commits nothing, so the rule excludes only the already-stated failing member; AC36 left unchanged); management-api closing-sweep item 4 and management-surfaces item 6 ("The dput binding": the `.changes` object is a declared route-level object under was-Q13, AC8, the binding stricter than the API and never wider; the Q4 record's seam closed) and item 5 (claims checked at declaration and again at commit, was-Q14, `storage-and-gc.md` AC30; this format declares no unchanged publish, was-Q15 being opt-in; AC5 and its row); `signing-service.md` was-Q14 and Q18 (pool files through `ServeFile` under a package-level serve policy with a record-derived `Last-Modified` for apt's date-form `If-Range`, `Cache-Control` per format; AC24 and its row); supply-chain closing-sweep item 3 (the source package and version are the version's stored advisory key, was-Q11, AC24, `data-model.md` AC46, and ride the fetch-and-cache request from the digest index; AC23 and its row); auth closing-sweep item 3 (AC15's gate on the missing `apt` and `dput` rows lifted: both rows are in `auth.md`). DATA-LOSS AUDIT (batch 2 item 5 recorded this file as fine; re-checked): the hosted by-hash map, the remote's digest index and predecessor envelopes, and pool files on their own cached references are as the data-loss fix left them, but the virtual serves the hosted by-hash rule with no snapshots to hold the previous merged generations, so a previous generation named only in the virtual's map would be collected while a client in the race still requests it, a race a virtual meets at every merge; the two previous merged generations' index bodies are now on the virtual's declared blob-digest list (Design, "Virtual repositories"; AC22 and its row; the Q3 record). Found already done: charter reconciliation item 5 (prototype AC13), conformance-harness reconciliation items 4 and 5, the `reprepro` exception-list row in `conformance-harness.md`, Open item 20's halves, signing-service authoring item 10. Skipped: nothing. No question adopted; `fable_recheck` extended for two folded judgements. 28 criteria, each with a Test Plan row. Stays draft. |
