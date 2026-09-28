@@ -363,6 +363,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - artifact-verification.md, signing-service.md: DONE 2026-09-28. verify.workers retired into async.kind_limits, verify.reevaluate and refreshes on the queue, pull-level trust and verdict reads, lifecycle AC29 in each, telemetry names, master key from deployment, signing.resign and index.merge on the production runtime, `generate` defined, all owed-consequence wording cited. Deployment item 9(c) needs no rename: kinds `verify.tuf_refresh`/`verify.revocation_refresh`, periods `verify.sigstore.refresh`/`verify.revocation.refresh`.
 - upstream-adapters.md, async-operations.md: DONE 2026-09-28. Applied repository-lifecycle 12-13, observability 7-8, deployment 5 and 9, data-model reconciliation 2-3, storage-and-gc 3, management-api 6, proxy-cache 5, supply-chain 8, replication 7, charter 4. Adopted async Q10 (unknown kinds skipped, not refused). New ACs: upstream-adapters 30-32, async-operations 27-28.
 - observability.md, deployment.md, web-ui.md: DONE 2026-09-28. Applied storage-and-gc 2-3, data-model 9, auth 3, supply-chain 2 and 6, replication 4-5 and 8, management-api 2, conformance-harness 8-9, credential-management/lifecycle 1, upstream/async 3-4, FHI 4-5, web-ui authoring 6. Deployment inventory exhaustive (84 sibling keys, 14 prefixes, none reserved; new AC32 web UI build). Observability catalogue already held every sibling name; audit vocabulary +9 events.
+- SWEEP 1, data-model.md, auth.md, format-handler-interface.md: DONE 2026-09-28. data-model: storage-and-gc 1 (AC43), proxy-cache 1 (AC44), management-api 4, supply-chain 5, replication 1, upstream/async 1. auth: anonymous session answer (AC22). FHI: supply-chain 1 (advisory reader, WriteRefusal), replication 5, auth 2 (reserved `t`, credential-declaration re-open input), proxy-cache 9 (fetch request shape re-open input), plus Open items 17, 23, 24 FHI halves.
 
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
@@ -482,4 +483,13 @@ OWNER NOTE: supply-chain Q9 revises Q1 (single OSV feed) to one OSV schema from 
 ## From observability, deployment and web-ui reconciliation (2026-09-28)
 1. auth.md (~l.215): `GET /api/v1/session` answers "401 with no session" -> "answers the signed-in principal, its kind and its grant summary, or 200 with `principal_kind: anonymous` and no grants for a caller with no session (management-api AC28)".
 2. web-ui.md and deployment.md: `ui.help_url` defaults to `https://github.com/vhco-pro/stackweaver-registry/tree/main/docs`; change both if a docs site is fixed later (note only).
+
+## From sweep 1 (2026-09-28)
+Wording only.
+1. storage-and-gc.md, was-Q11 record (~l.968): cite data-model (Blob row, "A coordinate is not a storage key", AC43); AC21's row shares `internal/storage/read_verify_test.go` with data-model AC43.
+2. proxy-cache.md, freshness (~l.348-349): cite data-model "Freshness scoped to the pointer", AC44; AC22's row shares `internal/proxy/freshness_test.go`.
+3. supply-chain-policy.md (~l.415-416): cite format-handler-interface ("The pinned method set", AC14); AC18/AC19 rows share `internal/format/refusal_writer_test.go` and `internal/policy/advisory_reader_test.go`; ~l.280 may cite data-model AC28.
+4. management-api.md: AC28's `internal/manage/reads_test.go` shared with auth AC22's anonymous case; ~l.439 `refresh` may cite data-model AC32.
+5. replication.md: AC16/AC22 rows may cite data-model AC31.
+6. conda.md may cite FHI AC11 for the reserved `t` segment; chef.md, vagrant.md, npm.md, swift.md may cite FHI's "Route-scoped and URL-borne credential declarations" re-open input.
 
