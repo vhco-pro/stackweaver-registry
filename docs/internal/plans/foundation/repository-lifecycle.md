@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-27 at 21279d4 as a grounded first draft, not yet reviewed. Gathers the lifecycle requirements management-api.md (repository administration, its resolved deletion decision, AC19 and AC20), data-model.md (the Repository entity, the default pointer at creation, VirtualMember, Upstream, ReplicationLink), storage-and-gc.md (the fifth mark root, AC15, AC18, the job-held grace), auth.md (identity-bound scopes and grants), credential-management.md AC20, signing-service.md (per-repository keys), artifact-verification.md (per-repository trust sets), upstream-adapters.md, async-operations.md, replication.md, conformance-harness.md and hex.md's virtual-repository impossibility placed on the shared model, and fixes one lifecycle state machine (active, read-only, deleted) keyed by a generated identity that a name only labels. Nine questions written in decision shape and adopted under the owner's standing delegation; zero open. 27 criteria, each with a Test Plan row. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at 0b79dc8 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. Every sibling consequence this spec reported to a reconciled sibling is now a citation: data-model.md carries the identity, lifecycle columns and tombstone (AC38, sharing AC3's schema test), storage-and-gc.md holds the deleter scan, the property suite and the sole write-transaction constructor with deletion as its named exemption (AC15, AC24, AC25), management-api.md carries the three problem types, the lifecycle routes and the admin-only ?state=deleted listing (was Q11), format-handler-interface.md declares Virtual and Rename (AC13) surfaced through GET /api/v1/formats, replication.md's applier is the one importer of the ErrReplica-waiving entry point (405 replica) and its link is updatable and ends with reason deleted (AC12, AC22), proxy-cache.md AC23 shares AC11's read-only remote case, supply-chain-policy.md's policy document and advisory_ecosystem are core-held configuration dropped at tombstone (AC22), the harness seeds read_only and recreated names and enforces rename_test.go (AC24, AC26), and observability.md's repository.* audit vocabulary and repositories{format,repository_kind,state} gauge are asserted by AC27; the charter places Phases 1 to 3 at steps 2, 3 and 4. Items for signing-service.md, artifact-verification.md, async-operations.md and upstream-adapters.md remain queued there. Nine questions adopted under the owner's standing delegation; zero open. 27 criteria, each with a Test Plan row. Awaits a gate review."
 description: "Spec for the repository lifecycle: creation of local, remote and virtual repositories with their type-specific settings, configuration changes and which of them are completed writes, renaming and what it does to identities, tokens, grants, replication links and client URLs, the read-only state, deletion as a reference-ending write whose space returns only through pruning and the sweep, deletion's effect on pointers, snapshots, cached content, upload sessions, jobs, keys, trust sets, links and virtual membership, and the reuse of a name after deletion."
 author: michielvha
 goal: "Give every repository one lifecycle with one enforcement point, so that creating, renaming, freezing and deleting a repository of any format and type does exactly what the shared model says on both paths, deletes no object outside the sweep, never reattaches a stale grant or token, never leaves a virtual repository silently serving less, and is provable on an injected clock before the first handler that depends on it ships."
@@ -46,16 +46,20 @@ Who depends on this, and what each already requires:
   snapshot on each completed write" and is "not deletable", `VirtualMember` (position is the
   resolution order), `Upstream` bound one-to-one to a `remote`, `ReplicationLink` on a `local`
   only, `Operation`, and the rule that a write which ends references "adds no mark root and
-  deletes no object" (its retention-pass paragraph). Consequence item 3 of the management-api
-  fold already places "repository creation establishes the default pointer on an initial empty
-  snapshot" there.
+  deletes no object" (its retention-pass paragraph). Since the reconciliation it also carries
+  this spec's columns and shapes in "Repository identity and lifecycle state" (identity as the
+  primary key, the partial unique index on `name`, the lifecycle columns, the tombstone, the
+  initial and final empty checkpoint snapshots on every type) and asserts them in its AC38,
+  whose `internal/model/schema_test.go` is the same test AC3 here names.
 - `storage-and-gc.md`: the fifth mark root (a pointer-targeted snapshot and its reconstruction
   chain), AC15 (no code path outside the sweep's delete pass and the orphan scan deletes an
   object), AC18 (deleting a pointer releases the root and serialises with pruning), the
-  repository-scoped touch-refreshed grace, and consequence item 4 of the management-api fold:
-  "management operations and repository deletion are reference-ending paths, never deleters".
-  Consequence item 4 of the async-operations fold adds that an unfinished `Job` naming a
-  repository holds its grace open.
+  repository-scoped touch-refreshed grace, its AC15 scan naming `internal/repository` among the
+  packages it holds to "management operations and repository deletion are reference-ending
+  paths, never deleters", its AC24 (the lifecycle operations in the GC property suite), its AC25
+  (the sole write-transaction constructor calling `repository.Writable`, with repository deletion
+  as the one named exemption) and its AC23, under which an unfinished `Job` naming a repository
+  holds its grace open.
 - `auth.md`: "A scope binds to the repository's identity, never its name: a deleted and
   recreated repository of the same name is a new repository, and tokens scoped to the old one
   grant nothing on it"; a grant "binds the repository's identity, so it grants nothing on a
@@ -100,18 +104,21 @@ Who depends on this, and what each already requires:
   declarations the runner honours; the reserved-segment list; `Scope(r)` names a repository.
 - `formats/hex.md`, resolved signed-name decision (was Q1): "no virtual aggregation on this
   format" and "a hosted repository that cannot be renamed without every consumer re-adding it".
-  `agents/spec-loop/consequences.md` Open item 12 and theme 9 ask the shared model for a
-  per-format capability, "likely via `Capabilities()`". This spec is where that capability is
-  consumed.
+  `agents/spec-loop/consequences.md` Open item 12 and theme 9 asked the shared model for a
+  per-format capability, and `format-handler-interface.md` now declares it: `Capabilities()`
+  carries `Virtual` and `Rename` (its AC13), and `management-api.md` surfaces both to operators
+  and the UI through `GET /api/v1/formats`. This spec is where that capability is consumed.
 - `formats/generic.md`: the immutability switch forbids in-place replacement of a path and is
   repository configuration; it is not an archival state, and this spec says how the two differ.
 
 **Charter build step.** `project-charter.md` step 2 builds "the management surface core
 (repository and token operations)" with generic, because "generic's repository settings ... are
-changed through an operator API". This spec is the repository half of that core and lands its
-first three phases inside step 2 and step 3; the remote and virtual halves land with step 4, where
-the first `remote` exists. Scope is not a constraint (the charter's standing decision), so nothing
-here is deferred for effort.
+changed through an operator API". This spec is the repository half of that core, and the
+charter's build order places its phases one step each: Phase 1 (the state machine and `local`
+repositories) at step 2, Phase 2 (deletion against GC) at step 3, Phase 3 (`remote` and
+`virtual`) at step 4, where the first `remote` exists. Its cost is charged to `shared:management`
+with `credential-management.md`, the token half (charter, "Measuring per-format cost"). Scope is
+not a constraint (the charter's standing decision), so nothing here is deferred for effort.
 
 ## Scope
 
@@ -145,8 +152,10 @@ here is deferred for effort.
 **Out of scope, each with its reason**
 
 - **The HTTP routes, request bodies, problem types and OpenAPI document.** `management-api.md`
-  owns the wire; this spec adds three problem types and a handful of fields to it as sibling
-  consequences and defines their semantics here.
+  owns the wire and carries what this spec needs of it: the problem types `in-use` (`409`),
+  `read-only` (`405`) and `capability-unsupported` (`422`), the `confirm`, `detach` and `reclaim`
+  fields of the delete route, the `freeze`, `thaw` and `rename` routes, the `lifecycle` operation
+  kind and the admin-only `?state=deleted` listing; this spec defines their semantics.
 - **Space reclamation mechanics.** The pruner, the sweep, the deletion-intent table and the
   grace period are `storage-and-gc.md`'s; this spec adds operations to its property suite and
   one input to pruning (`reclaim: now`), already decided by `management-api.md`.
@@ -234,10 +243,17 @@ beside visibility and retention rules, never inside the opaque metadata document
 |---|---|---|---|---|
 | `active` | yes | yes | yes | yes |
 | `read_only` | yes | no (refused `read-only`) | yes (so it can be thawed) | yes, flagged |
-| `deleted` | no (`not-found`) | no | no | only in the deleted listing, by identity |
+| `deleted` | no (`not-found`) | no | no | only under `GET /api/v1/repositories?state=deleted` (admin), by identity |
+
+The deleted listing is a filter value on the collection route, not a literal
+`/repositories/deleted` path, so no name is reserved for it (`management-api.md`'s resolved
+deleted-listing decision, was Q11); `web-ui.md`'s Repositories page reads the same filter for
+the admin. Whether a format admits a `virtual` repository or a rename is read by operators and
+the UI from `GET /api/v1/formats`, which renders each handler's `Capabilities()`
+(`management-api.md`'s endpoint table).
 
 Transitions, each admin-only, each an audit line and an `Operation` record of kind
-`lifecycle` (a new kind in `management-api.md`'s administration family; see consequences):
+`lifecycle` (`management-api.md`'s administration family, each carrying its sub-kind):
 
 - `create` produces `active`.
 - `freeze` moves `active` to `read_only`; `thaw` moves it back. Both are configuration changes,
@@ -258,15 +274,24 @@ through `Submit`, a retention pass, a freeze in `replication.md`'s sense, and ev
 create, repoint or deletion. `replication.md` already places "refuses for a repository with an
 active replication link" at exactly this point under an architecture test; this spec generalises
 that check into the predicate and the test (AC9) so there is one writability answer, not two
-half-overlapping ones. Cache materialisation is not a completed write and does not consult the
-predicate; it consults `read_only` on a `remote` for a different reason (below).
+half-overlapping ones (`storage-and-gc.md` AC25 is the constructor's own statement of it). The
+constructor has exactly one further entry point, which waives `ErrReplica` and nothing else (a
+replica that is also `read_only` or `deleted` is refused through it too): the replication applier
+is its only importer, so `internal/replication` can commit the leader's snapshots on a follower
+while no other package can, and `internal/storage/arch_test.go` asserts the import
+(`replication.md` AC12, shared with AC9 here and `storage-and-gc.md` AC25). `ErrReplica` renders
+as `405` with problem type `replica` whose detail names the leader (`replication.md`); `ErrReadOnly`
+as `405` `read-only`; `ErrDeleted` as `not-found` under the existence oracle. Cache
+materialisation is not a completed write and does not consult the predicate; it consults
+`read_only` on a `remote` for a different reason (below).
 
 ### Identity and naming
 
 **Identity.** Every repository has an identity generated by the core at creation: 128 bits from
 `crypto/rand`, rendered in the API as a lowercase base32 string with a fixed `rep_` marker, the
 same shape `credential-management.md` gave the token lookup prefix. It is the primary key of
-`Repository` and the only column any other table may reference. That is the mechanical form of
+`Repository` and the only column any other table may reference (`data-model.md`, "Repository
+identity and lifecycle state", AC38). That is the mechanical form of
 `auth.md`'s rule: a grant, a token scope, a signing key, a trust set, a virtual membership, a
 replication link, a job, a policy rule and a retirement each name a repository by identity, so a
 deleted-and-recreated name inherits none of them by construction rather than by a check at use.
@@ -280,9 +305,13 @@ The grammar is the strictest one every client in the matrix accepts as a path co
 component grammar `formats/oci.md` must satisfy and a subset of what every other client passes
 through unchanged. Uppercase is refused rather than folded (two names differing only in case
 would resolve identically on a case-folding client and differently on another). A name may not
-be a reserved first path segment from `format-handler-interface.md`'s list (`api`, `v2`, the
-replication segment, every registered format name) and may not begin with `_` or `-`, which
-several formats use for their own control routes. Grammar violations are refused `validation`
+be a reserved first path segment from `format-handler-interface.md`'s reserved table (`api`,
+`ui`, `healthz`, `readyz`, `metrics`, `replication`), the first segment of a root-anchored
+carve-out that spec lists (`v2` is OCI's carve-out, not a reserved segment, and is refused for
+the same reason: a repository so named would shadow a route), a registered format name, and may
+not begin with `_` or `-`, which several formats use for their own control routes. The reserved
+table and the carve-out list are `format-handler-interface.md`'s; this spec reads both rather
+than keeping a copy. Grammar violations are refused `validation`
 with the rule named, and the grammar is fuzz-tested against the route table so no accepted name
 can shadow a route (AC2).
 
@@ -305,16 +334,16 @@ with nothing committed:
    registered handler), type, visibility (private unless explicitly public, per `auth.md`),
    retention rules in `data-model.md` AC28's shape, and an optional storage quota for a `remote`
    (`proxy-cache.md`).
-2. **Check the format's capabilities** for the type. `Capabilities()` gains two declarations
-   (a sibling consequence for `format-handler-interface.md`): `Virtual` (`supported` or
-   `unsupported`) and `Rename` (`supported` or `unsupported`). Creating a `virtual` repository
+2. **Check the format's capabilities** for the type. `Capabilities()` declares `Virtual`
+   (`supported` or `unsupported`) and `Rename` (`supported` or `unsupported`)
+   (`format-handler-interface.md` AC13; both Tier 0 handlers declare `supported`). Creating a `virtual` repository
    of a format that declares `Virtual: unsupported` is refused `capability-unsupported` with
    the format's own reason text, which is how `formats/hex.md`'s "no virtual aggregation on
    this format" becomes a refusal rather than a repository that serves documents every client
    rejects. `conformance-harness.md`'s matrix reads the same field to render the virtual column
    as exempt for that format, so the advertised number never exceeds the tested one (the
-   catalogue and charter assumption "every format supports virtual" is corrected by this
-   field, consequences theme 9).
+   catalogue's virtual column is driven by the same field, its AC7; the earlier assumption
+   that every format supports virtual, consequences theme 9, is corrected by it).
 3. **Type-specific validation.**
    - `local`: nothing beyond the common fields.
    - `remote`: exactly one upstream, validated by `upstream.Validate` (URL, adapter, hosts,
@@ -372,6 +401,8 @@ rest of the table, so every field has a declared class:
 | upstream of a `remote` (URL, adapter, hosts, credential ref, download policy) | configuration | validated by `upstream.Validate`; the `Upstream` row is updated in place; **cached references persist**, because cached content is content-addressed and its coordinates did not change; revalidation from then on goes to the new upstream, and `RemoteFile.last-checked` is reset so the first request after the change revalidates |
 | `settings` | completed write when the handler's `Apply` changes a served document; configuration otherwise | one snapshot or none, as `management-api.md` AC19 asserts |
 | trust set | configuration with a revision | `artifact-verification.md`'s |
+| `policy` document (supply-chain rules) | configuration | a core-held field of the repository, never part of the handler's `settings`; set through `PATCH`, validated by `supply-chain-policy.md`'s rule binding and refused `validation` (`422`) naming the unbindable condition (its AC11); rules apply from the commit; dropped at tombstone time |
+| `advisory_ecosystem` (OS-package formats) | configuration | a core-parsed field (`Debian:12`, `Alpine:v3.20`), validated against the advisory sources' ecosystem lists and refused `validation` with the unknown value named (`supply-chain-policy.md`); the handler never reads it; dropped at tombstone time |
 | format, type | refused `validation` | content is the format's; a `remote` becoming `local` is a freeze |
 | identity | not a field | never settable |
 
@@ -404,8 +435,9 @@ record and for clients, stated so no sibling has to derive it:
   follower cannot hold a foreign instance's identity. A leader-side rename therefore makes every
   follower's next sync fail with `not-found`, and the follower marks its link `failed` with that
   reason (`replication.md`'s status vocabulary). The operator updates the link's leader
-  repository name through the link's own configuration, which `replication.md` must expose
-  (sibling consequence). This spec does not invent a discovery protocol for it: the leader does
+  repository name through the link's own configuration, which `replication.md` exposes ("the
+  link's leader repository name is updatable", its AC22, through `management-api.md`'s link
+  administration routes). This spec does not invent a discovery protocol for it: the leader does
   not know its followers (`replication.md`'s resolved retention-gap decision), so it cannot tell
   them.
 - **Format documents that embed the name.** Some served documents carry the repository's name
@@ -451,7 +483,10 @@ record and for clients, stated so no sibling has to derive it:
   operational answer to "the upstream is compromised, serve what we already verified and
   nothing new" that `supply-chain-policy.md`'s condemnation path does per artifact and this
   state does per repository. The removal table (`proxy-cache.md`) is not consulted while
-  read-only, because nothing from the upstream is read.
+  read-only, because nothing from the upstream is read. `proxy-cache.md` asserts its half of
+  this in its AC23 (fetch-and-cache refuses with a typed refusal before any upstream request, TTL
+  revalidation does not run, eviction skips the repository however far over quota, the freshness
+  record is unchanged, `thaw` restores all three), sharing AC11's case here.
 - **On a `virtual`**, the state is refused `repository-type`: a virtual repository holds nothing
   to freeze, and freezing its members is what freezes what it serves.
 - **Configuration stays open**, so the state can be reversed and so visibility, retention rules
@@ -469,8 +504,9 @@ write. A repository may be both.
 ### Deletion
 
 Deletion is one transaction in `internal/repository`, admin-only, and it is a **reference-ending
-write, never a deleter** (consequence item 4 of the management-api fold, now asserted here as
-AC14). It proceeds in this order and refuses at the first failure with nothing committed:
+write, never a deleter** (`storage-and-gc.md` AC15's scan names `internal/repository`, its AC24
+puts the lifecycle operations in the property suite; asserted here as AC14). It proceeds in this
+order and refuses at the first failure with nothing committed:
 
 1. **Confirmation by identity.** The request names the repository by name in the path and must
    carry its identity in the body (`confirm: rep_...`); a mismatch is refused `validation`. A
@@ -487,8 +523,10 @@ AC14). It proceeds in this order and refuses at the first failure with nothing c
    repository. (The converse, deleting a credential in use, is below.)
 3. **Writability is not required.** A `read_only` repository and a replica can be deleted; the
    deletion is the one write the predicate does not gate, because it is the transition out of
-   every state. A replica's `ReplicationLink` is ended in this transaction (state `ended`, a
-   terminal value `replication.md` gains as a consequence, with the reason `deleted`).
+   every state, and it is "the single named exemption the architecture test knows"
+   (`storage-and-gc.md` AC25). A replica's `ReplicationLink` is ended in this transaction (state
+   `ended`, the terminal value in `replication.md`'s status vocabulary, with the reason
+   `deleted`; its AC22).
 4. **Mark deleted and free the name.** `state` becomes `deleted`, `deleted_at` and the deleting
    principal are recorded, and the partial unique index releases the name at commit.
 5. **End the head.** For a `local`, the repository's current content rows (`Version`, `File`,
@@ -518,11 +556,14 @@ AC14). It proceeds in this order and refuses at the first failure with nothing c
 8. **Jobs** naming the repository are asked to stop: every `pending` job is moved to
    `cancelled` in this transaction (it never ran), and every `running` job receives the
    cooperative cancellation `async-operations.md` defines and reaches `cancelled` or `failed`
-   at its next checkpoint. Until it does, its grace hold stands (consequence item 4 of the
-   async-operations fold), so a half-imported artifact's bytes are collected after the job
-   ends, never under it. The deletion does not wait for running jobs; a job that observes a
-   `deleted` repository at its next step ends itself. A `Schedule` scoped to the repository
-   (a retention pass, a cadence re-sign) is disabled.
+   at its next checkpoint. Until it does, its grace hold stands (`async-operations.md`'s
+   resolved grace-hold decision, was Q4; `storage-and-gc.md` AC23), so a half-imported
+   artifact's bytes are collected after the job ends, never under it. The deletion does not
+   wait for running jobs; a job that observes a `deleted` repository at its next step ends
+   itself. A `Schedule` scoped to the repository (a retention pass, a cadence re-sign) is
+   disabled. The job-side half (self-ending on a deleted repository, repository-scoped
+   schedules disabled) is queued for `async-operations.md` as repository-lifecycle item 12 in
+   `agents/spec-loop/consequences.md`, not yet applied there.
 9. **Grants** on the repository are deleted in this transaction, each with an audit line
    (`management-api.md`: a grant "dies with the repository"). **Credentials** are not touched:
    a token or key whose scope names the identity stays listed with that scope, grants nothing
@@ -533,15 +574,22 @@ AC14). It proceeds in this order and refuses at the first failure with nothing c
     `signing-service.md`'s state vocabulary, so no further document can be signed under them;
     their public forms stay retrievable by digest until tombstone time, because a client that
     fetched a signed document inside the retention window may still verify it. Private material
-    is destroyed at tombstone time (sibling consequence).
-11. **Trust set revisions, verdicts, policy rules, condemnation and refusal records,
-    retirement records and `Operation` records** are untouched by deletion. Verdicts and policy
-    records must outlive the artifact (`artifact-verification.md`, `supply-chain-policy.md`);
-    retirements are (identity, coordinate) and are inert once the identity is deleted, and a
-    recreated repository of the same name has a new identity and an empty retirement set, which
-    is consistent with "the coordinate is never reusable *in that repository*"; operations are
-    pruned by their own window. Trust set revisions and policy rules are dropped at tombstone
-    time; verdicts, condemnations, refusals and retirements are never dropped by this spec.
+    is destroyed at tombstone time. The key-side statement of this is queued for
+    `signing-service.md` (repository-lifecycle item 9 in `agents/spec-loop/consequences.md`, not
+    yet applied there).
+11. **Trust set revisions, verdicts, the `policy` document and `advisory_ecosystem`,
+    condemnation and refusal records, retirement records and `Operation` records** are untouched
+    by deletion. Verdicts and policy records must outlive the artifact
+    (`artifact-verification.md`; `supply-chain-policy.md` AC22 asserts condemnation and refusal
+    records readable through the tombstone at and after tombstone time); retirements are
+    (identity, coordinate) and are inert once the identity is deleted, and a recreated
+    repository of the same name has a new identity and an empty retirement set, which is
+    consistent with "the coordinate is never reusable *in that repository*"; operations are
+    pruned by their own window. Trust set revisions, the `policy` document and
+    `advisory_ecosystem` are dropped at tombstone time (`supply-chain-policy.md` AC22 for the
+    policy half; the trust-set half is queued for `artifact-verification.md` as
+    repository-lifecycle item 10); verdicts, condemnations, refusals and retirements are never
+    dropped by this spec.
 12. **Replication, leader side.** Nothing happens on the leader beyond the above, because the
     leader does not know its followers. A follower's next sync finds `not-found` and marks its
     link `failed` with that reason; the operator then takes the follower over (the repository
@@ -554,21 +602,50 @@ AC14). It proceeds in this order and refuses at the first failure with nothing c
     on the empty final snapshot), the sweep collects every blob no other root reaches, and a
     blob shared with another repository survives because the sweep marks from every root
     (`management-api.md` AC20; asserted here as AC15 and AC16 on both types).
-14. **Audit and record.** One audit line and one `lifecycle` `Operation` with sub-kind
-    `delete`, the identity, the name, `reclaim`, `detach`, and the counts of pointers released,
-    memberships detached, sessions expired and jobs cancelled.
+14. **Audit and record.** One audit line (`repository.delete`, below) and one `lifecycle`
+    `Operation` with sub-kind `delete`, the identity, the name, `reclaim`, `detach`, and the
+    counts of pointers released, memberships detached, sessions expired and jobs cancelled.
 
 **Tombstone.** When the pruner drops the deleted repository's last content snapshot (and, for a
 `local`, its final empty snapshot with it, since nothing else targets it once the default
 pointer is deleted at that moment), it also drops the `Package` rows, the trust set revisions,
-policy rules, `SigningKey` material and `PointerDocument` records, and leaves the `Repository`
-row as a tombstone: identity, last name, format, type, `deleted_at`, deleting principal, and
-the `Operation` reference. The tombstone is never removed. It is what lets a credential
-listing, an audit trail, a retirement record and an operation record name a repository that no
-longer exists, and it costs one row per deleted repository, which is a price worth paying for
-never having a dangling identity in the audit trail. A tombstone is listed only through the
-deleted-repositories listing (admin), by identity, so the live listing is never polluted (the
-"fourth state in every listing" cost `management-api.md` declined does not arise).
+the `policy` document and `advisory_ecosystem`, `SigningKey` material and `PointerDocument`
+records, and leaves the `Repository` row as a tombstone: identity, last name, format, type,
+`deleted_at`, deleting principal, and the `Operation` reference. The tombstone is never removed.
+It is what lets a credential listing, an audit trail, a retirement record and an operation
+record name a repository that no longer exists (`credential-management.md` AC20 renders the
+deleted repository's last name from it; `data-model.md` AC39), and it costs one row per deleted
+repository, which is a price worth paying for never having a dangling identity in the audit
+trail. A tombstone is listed only under `GET /api/v1/repositories?state=deleted` (admin), by
+identity, so the live listing is never polluted (the "fourth state in every listing" cost
+`management-api.md` declined does not arise; its resolved deleted-listing decision, was Q11).
+The pruner emits one audit line, `repository.reclaim`, at that moment (below).
+
+### Audit and metrics
+
+Every lifecycle operation, refused or not, emits exactly one audit record through
+`telemetry.Auditor.Emit` (`observability.md`, "The audit channel"), in that spec's closed
+vocabulary and with its fixed attribute set, which carries `repository` (the name) and
+`repository_id` (the `rep_` identity) on every record so a rename or a deletion leaves every line
+resolvable. The events: `repository.create`, `repository.configure` (any change from the
+Configuration table, naming the changed fields), `repository.freeze`, `repository.thaw`,
+`repository.rename` (extension attribute `previous_name`), `repository.delete` (extension
+attributes `reclaim` and `detach`, the latter listing the virtual repositories detached),
+`repository.detach` (a member removed from a `virtual` through its member-list configuration,
+so a virtual's resolution set never changes without a line naming it) and `repository.reclaim`
+(emitted by the pruner at tombstone time, the one lifecycle record not tied to an operator's
+request). `observability.md`'s vocabulary table already lists `repository.create`, `.delete`,
+`.freeze`, `.thaw`, `.rename`, `.detach` and `.reclaim` with `previous_name`, `reclaim` and
+`detach` as extension attributes; `repository.configure` and the placement of `.detach` on the
+member-list change and `.reclaim` on the pruner are what this pass reports back to it. A line
+for a refused operation carries `outcome: refused` and the `problem_type`.
+
+The gauge `repositories{format,repository_kind,state}` (`stackweaver_registry_` namespace;
+`repository_kind` over `local`, `remote`, `virtual`; `state` over the three lifecycle states) is
+state-derived from the `Repository` table and exported by the process holding scheduler
+leadership (`observability.md` AC4 lists it, AC7 fixes the leader rule). This package computes
+it from the same query the listing uses and proves it moves in
+`internal/repository/metrics_test.go` on `telemetry.NewTestRecorder` (AC27).
 
 ### Deleting what a repository depends on
 
@@ -613,9 +690,9 @@ Nothing in this package imports the blob store's delete surface, and the archite
 among the packages it scans, which is the mechanical form of "never a deleter" (AC14). The
 property suite in `internal/storage/gc_property_test.go` gains the lifecycle operations
 (create, delete with and without `reclaim`, delete a `remote`, detach, freeze and thaw, rename
-interleaved with writes) in its operation set, on the injected clock it already uses (AC17), a
-sibling consequence for `storage-and-gc.md` and the only place the interleavings this table
-describes are actually exercised.
+interleaved with writes) in its operation set, on the injected clock it already uses (AC17;
+`storage-and-gc.md` AC24 is that suite's own statement of the same set), the only place the
+interleavings this table describes are actually exercised.
 
 ### Type-specific summary
 
@@ -636,8 +713,9 @@ describes are actually exercised.
 lifecycle and exposes a small struct API (`Create`, `Configure`, `Rename`, `Freeze`, `Thaw`,
 `Delete`) taking `context.Context` and typed request structs, returning typed refusals
 (`ErrNameTaken`, `ErrNameInvalid`, `ErrInUse` carrying the dependants, `ErrCapability`
-carrying the format's reason, `ErrReadOnly`, `ErrReplica`, `ErrDeleted`, `ErrConfirm`) that
-`internal/manage` maps to problem types. It declares the consumer-side interfaces it needs
+carrying the format's reason, `ErrReadOnly`, `ErrReplica` carrying the leader, `ErrDeleted`,
+`ErrConfirm`) that `internal/manage` maps to problem types (`conflict`, `validation`, `in-use`,
+`capability-unsupported`, `read-only`, `replica`, `not-found`, `validation`). It declares the consumer-side interfaces it needs
 where it uses them: a metadata store transaction, a pointer writer, a session expirer, a job
 canceller, a link ender, a key retirer, and the `Operator` lookup, each satisfied by the owning
 package's type at wiring time and by fakes in tests. It starts no goroutine and holds no timer
@@ -654,14 +732,15 @@ seeded repository and an API-created one are indistinguishable (AC26).
 
 | Rule | Enforcer |
 |---|---|
-| Every foreign key into `repositories` targets the identity; no `repository_name` column exists | `internal/model/schema_test.go` (schema introspection over the migrated database) (AC3) |
-| Every completed-write path calls `Writable` before opening its transaction | `internal/storage/arch_test.go`: the write-transaction opener is the only constructor of a write transaction, and it calls the predicate; a fixture caller that bypasses it fails compilation against the unexported constructor (AC9) |
+| Every foreign key into `repositories` targets the identity; no `repository_name` column exists | `internal/model/schema_test.go` (schema introspection over the migrated database; shared with `data-model.md` AC38) (AC3) |
+| Every completed-write path calls `Writable` before opening its transaction; only `internal/replication` reaches the `ErrReplica`-waiving entry point | `internal/storage/arch_test.go`: the write-transaction opener is the only constructor of a write transaction, it calls the predicate, its one waiving entry point has one importer, and a fixture caller that bypasses it fails compilation against the unexported constructor (AC9; shared with `storage-and-gc.md` AC25 and `replication.md` AC12) |
 | Handlers never import `internal/repository`; `internal/repository` never imports a handler | `internal/format/arch_test.go` (AC8) |
 | `internal/repository` deletes no object | `internal/storage/arch_test.go`'s AC15 scan includes the package (AC14) |
 | No accepted name shadows a route or a reserved segment | `internal/repository/name_fuzz_test.go` against the route table (AC2) |
 | Every lifecycle operation is one transaction | `internal/repository/atomicity_test.go`: fault injection after each step asserts nothing committed (AC7) |
 | Deletion's interleavings with the sweep and pruning lose nothing | `internal/storage/gc_property_test.go`, lifecycle operations in the op set (AC17) |
-| The virtual and rename capabilities are honoured | `internal/repository/capability_test.go` with fixture handlers declaring each value (AC4, AC11) |
+| The virtual and rename capabilities are honoured | `internal/repository/capability_test.go` with fixture handlers declaring each value (AC4, AC13) |
+| Every audit record is in the registered `repository.*` vocabulary and carries `repository_id`; the gauge reports the table | `internal/repository/audit_test.go` and `internal/repository/metrics_test.go`, both on `telemetry.NewTestRecorder` (AC27) |
 
 ## Acceptance Criteria
 
@@ -675,8 +754,10 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       from the name, and two repositories created with the same name in sequence (the first
       deleted between) have different identities.
 - [ ] AC2: A name outside the grammar `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, longer than 63
-      characters, equal to a reserved first path segment or a registered format name, or
-      beginning with `_` or `-`, is refused `validation` naming the rule; a fuzz test against
+      characters, equal to a reserved first path segment (`api`, `ui`, `healthz`, `readyz`,
+      `metrics`, `replication`), to the first segment of a listed root-anchored carve-out (`v2`)
+      or to a registered format name, or beginning with `_` or `-`, is refused `validation`
+      naming the rule; a fuzz test against
       the route table finds no accepted name that resolves to a route other than the
       repository's own.
 - [ ] AC3: The schema has no column referencing a repository by name: every foreign key into
@@ -707,8 +788,11 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       delete) calls `Writable` before opening its transaction, enforced by an architecture test
       on the sole write-transaction constructor; a `read_only` repository and a repository with
       an active replication link and a deleted repository are each refused through the same
-      predicate with distinct typed errors (`ErrReadOnly`, `ErrReplica`, `ErrDeleted`), and
-      cache materialisation does not consult it.
+      predicate with distinct typed errors (`ErrReadOnly`, `ErrReplica`, `ErrDeleted`), rendered
+      `405` `read-only`, `405` `replica` naming the leader and `not-found`; the constructor's one
+      further entry point waives `ErrReplica` alone, still refuses `ErrReadOnly` and
+      `ErrDeleted`, and is imported by `internal/replication` and no other package, asserted by
+      the same architecture test; and cache materialisation does not consult the predicate.
 - [ ] AC10: On a `read_only` `local`, a real client's publish and every management content
       operation, pointer operation and retention pass are refused `405` `read-only` on the API
       and on every binding, reads keep serving bit-identically, older untargeted snapshots still
@@ -780,12 +864,14 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       retrievable by digest until tombstone time, and its trust set revisions, verdicts, policy
       records, retirements and operations are unchanged and readable.
 - [ ] AC24: When the pruner drops a deleted repository's last snapshot, the `Package` rows,
-      trust set revisions, policy rules, signing key material and pointer documents are dropped
-      with it and the `Repository` row remains as a tombstone (identity, last name, format,
-      type, `deleted_at`, deleting principal, operation reference), listed only through the
-      deleted-repositories listing, and a credential or operation listing that names the
-      identity still renders the name; the tombstone survives every later pruning and sweep
-      cycle.
+      trust set revisions, the `policy` document and `advisory_ecosystem`, signing key material
+      and pointer documents are dropped with it, condemnation and refusal records stay readable
+      through the tombstone, and the `Repository` row remains as a tombstone (identity, last
+      name, format, type, `deleted_at`, deleting principal, operation reference), listed only
+      under `GET /api/v1/repositories?state=deleted` for the admin and never in the live
+      listing, and a credential or operation listing that names the identity still renders the
+      name; the pruner emits one `repository.reclaim` audit record at that moment; the
+      tombstone survives every later pruning and sweep cycle.
 - [ ] AC25: Changing a `remote`'s upstream keeps every cached reference and serves cached
       content with no upstream request, resets `last-checked` so the next request revalidates
       against the new upstream, and rejects an upstream `upstream.Validate` refuses with
@@ -795,10 +881,18 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       `repositories` entry can declare `read_only` and a `deleted` repository that a later entry
       recreates under the same name, and the seed path's dry run rejects an entry this spec's
       validation would refuse.
-- [ ] AC27: Every lifecycle operation, refused or not, emits exactly one audit line and every
-      completed one records one `Operation` of kind `lifecycle` carrying its sub-kind, the
-      identity and, for rename, both names; operations and audit lines listed by repository are
-      continuous across a rename.
+- [ ] AC27: Every lifecycle operation, refused or not, emits exactly one audit record through
+      `telemetry.Auditor.Emit` whose `event` is the registered `repository.*` name for it
+      (`repository.create`, `repository.configure`, `repository.freeze`, `repository.thaw`,
+      `repository.rename`, `repository.delete`, `repository.detach` for a member-list removal,
+      `repository.reclaim` from the pruner at tombstone time, this last asserted by AC24),
+      carrying `repository_id` (the `rep_` identity) and `repository` (the name) from the fixed
+      attribute set and, per event, `previous_name`, `reclaim` or `detach` from the registered
+      extension set; every completed one records one `Operation` of kind `lifecycle` carrying its
+      sub-kind, the identity and, for rename, both names; operations and audit records listed by
+      repository are continuous across a rename and resolvable after deletion; and the gauge
+      `repositories{format,repository_kind,state}` equals the table's counts after every
+      transition, exported by the leader alone.
 
 ## Test Plan
 
@@ -806,16 +900,16 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
 |-----------|-----------|---------------|
 | AC1 | integration + conformance | `internal/repository/create_test.go` (three types; identity shape and independence); `conformance/generic/lifecycle_test.go` and `conformance/oci/lifecycle_test.go` (first-request serving, both modes) |
 | AC2 | unit + fuzz | `internal/repository/name_test.go` (table of grammar cases); `internal/repository/name_fuzz_test.go` (against the route table) |
-| AC3 | schema introspection | `internal/model/schema_test.go` |
+| AC3 | schema introspection | `internal/model/schema_test.go` (shared with `data-model.md` AC38) |
 | AC4 | unit + integration | `internal/repository/capability_test.go` (fixture handler declaring `Virtual: unsupported`); `conformance/core/matrix_test.go` (exempt rendering) |
 | AC5 | integration | `internal/repository/virtual_test.go` (member validation table; rename-member stability) |
 | AC6 | integration | `internal/repository/remote_test.go` (`upstream.Validate` refusals, credential resolution); `internal/repository/settings_test.go` (`configure` inside the transaction; no-`Operator` refusal) |
 | AC7 | fault injection | `internal/repository/atomicity_test.go` (fault after each step of each operation) |
 | AC8 | architecture test | `internal/format/arch_test.go` |
-| AC9 | architecture test + integration | `internal/storage/arch_test.go` (sole write-transaction constructor calls `Writable`); `internal/repository/writable_test.go` (read-only, replica, deleted, and cache materialisation not consulting it) |
+| AC9 | architecture test + integration | `internal/storage/arch_test.go` (sole write-transaction constructor calls `Writable`; the `ErrReplica`-waiving entry point imported only by `internal/replication`; shared with `storage-and-gc.md` AC25 and `replication.md` AC12); `internal/repository/writable_test.go` (read-only, replica, deleted, their renderings, the waiving entry point still refusing `read_only` and `deleted`, and cache materialisation not consulting it) |
 | AC10 | conformance + integration | `conformance/generic/readonly_test.go` (real client publish refused 405, reads unchanged, thaw); `internal/storage/retention_test.go` (pruning under read-only on the injected clock) |
-| AC11 | conformance | `conformance/oci/readonly_remote_test.go` (network-layer assertion of zero upstream requests; not-found on miss; thaw); `internal/repository/readonly_test.go` (virtual refused) |
-| AC12 | conformance + integration | `conformance/<format>/rename_test.go` in every format's set, validated by the harness's per-kind case rule; `internal/repository/rename_test.go` (record survival table; `configure` receipt) |
+| AC11 | conformance + integration | `conformance/oci/readonly_remote_test.go` (network-layer assertion of zero upstream requests; not-found on miss; thaw); `internal/repository/readonly_remote_test.go` (eviction skipped over quota, freshness record unchanged, thaw restores fetching; shared with `proxy-cache.md` AC23); `internal/repository/readonly_test.go` (virtual refused) |
+| AC12 | conformance + integration | `conformance/<format>/rename_test.go` in every format's set, its presence enforced by the harness's per-kind case validator (`conformance-harness.md` AC26); `internal/repository/rename_test.go` (record survival table; `configure` receipt) |
 | AC13 | integration | `internal/repository/capability_test.go` (`Rename: unsupported`); `internal/replication/link_rename_test.go` (follower failure and link update) |
 | AC14 | architecture test + integration | `internal/storage/arch_test.go` (AC15 scan includes `internal/repository`); `internal/repository/delete_test.go` (final checkpoint snapshot; cached reference ends; member rows; no deletion call observed via the storage fake) |
 | AC15 | integration + conformance | `internal/repository/delete_test.go` (pointer release, name reuse, inheritance of nothing); `internal/storage/retention_test.go` (age-out and `reclaim: now` on the injected clock; shared blob survives); `conformance/generic/lifecycle_test.go` (not-found after delete) |
@@ -827,10 +921,10 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
 | AC21 | integration | `internal/repository/delete_jobs_test.go` (pending cancelled in-tx; running cancelled at checkpoint; grace hold until terminal on the injected clock; schedules disabled; self-ending job) |
 | AC22 | integration | `internal/replication/lifecycle_test.go` (replica deletion ends link; leader deletion observed by follower; takeover afterwards) |
 | AC23 | integration | `internal/repository/delete_records_test.go` (grants gone; credentials listed and inert; keys retired with public forms; untouched records readable) |
-| AC24 | integration | `internal/storage/retention_test.go` (tombstone at last-snapshot prune on the injected clock; dropped rows; survives further cycles); `internal/credential/listing_test.go` (name rendered from tombstone) |
+| AC24 | integration | `internal/storage/retention_test.go` (tombstone at last-snapshot prune on the injected clock; dropped rows including the `policy` document and `advisory_ecosystem`; condemnation and refusal records still readable; `repository.reclaim` record; survives further cycles; shared with `supply-chain-policy.md` AC22); `internal/manage/repository_delete_test.go` (`?state=deleted` admin-only, tombstones by identity, never in the live listing; `management-api.md` AC20's test, shared); `internal/credential/listing_test.go` (name rendered from tombstone; shared with `credential-management.md` AC20) |
 | AC25 | integration | `internal/repository/configure_remote_test.go` (cache kept, `last-checked` reset, `upstream-invalid`, format and type refused) |
-| AC26 | integration | `internal/repository/seed_parity_test.go` (column-by-column equality; `read_only` and recreate entries; dry-run rejection) |
-| AC27 | integration | `internal/repository/audit_test.go` (one line per operation; `Operation` fields; continuity across rename) |
+| AC26 | integration | `internal/repository/seed_parity_test.go` (column-by-column equality; `read_only` and recreate entries; dry-run rejection); `conformance/core/seed_test.go` (the `state: read_only` and recreate entries provisioned through the seed path; shared with `conformance-harness.md` AC24) |
+| AC27 | integration | `internal/repository/audit_test.go` on `telemetry.NewTestRecorder` (one record per operation in the registered vocabulary; `repository_id` on every record; `Operation` fields; continuity across rename and after deletion); `internal/repository/metrics_test.go` (`repositories{format,repository_kind,state}` after each transition; shared with `observability.md` AC4 and AC7) |
 
 ## Implementation Phases
 
@@ -1066,3 +1160,4 @@ Accepted cost: the follower's failure is the notification.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-27 | 21279d4 | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements `management-api.md` (repository administration, resolved Q7, Q10, AC19, AC20), `data-model.md` (`Repository`, `VirtualMember`, `Upstream`, `ReplicationLink`, the default pointer, the retention-pass write shape, the non-root table), `storage-and-gc.md` (fifth root, AC15, AC18, grace), `auth.md` (identity binding, AC29, the admin role, visibility), `credential-management.md` AC20, `signing-service.md` (per-repository keys), `artifact-verification.md` (per-repository trust sets), `upstream-adapters.md` (`Validate`, `UpstreamCredential`), `async-operations.md` (job repository ref, grace hold, cancellation), `replication.md` (link, follower writability, takeover), `proxy-cache.md` (eviction, quota), `conformance-harness.md` (`repositories` key, seed path), `format-handler-interface.md` (`Capabilities()`, reserved segments), `formats/hex.md` (was Q1) and consequences items management-api 3 and 4, async-operations 4, Open item 12 and theme 9 placed on this spec. Prior art fetched this run: Harbor's swagger (412 refusals), Pulp's settings and repository viewset, Gitea's storage doc and `DeleteUser`, Nexus cleanup policies, Distribution's `readonly` maintenance option; Artifactory's pages did not fetch and are not cited. Nine questions written in decision shape and adopted under the standing delegation; 27 criteria each with a Test Plan row; `node scripts/check-spec.js` run clean before this row was written. |
+| 2026-09-28 | 0b79dc8 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the charter reconciliation: Phase 1 at step 2, Phase 2 at step 3, Phase 3 at step 4, and the `shared:management` cost line. From the management-api reconciliation: the deleted listing is `GET /api/v1/repositories?state=deleted` (admin; its resolved was-Q11), in the state table, the tombstone paragraph and AC24, with `internal/manage/reads_test.go` shared. From web-ui: `Virtual` and `Rename` surfaced through `GET /api/v1/formats`. From format-handler-interface: the name grammar cites the full reserved table (`api`, `ui`, `healthz`, `readyz`, `metrics`, `replication`) and treats `v2` as OCI's carve-out, not a reserved segment (AC2). From the replication reconciliation: the sole constructor's `ErrReplica`-waiving entry point, imported by `internal/replication` alone, `ErrReplica` rendered `405` `replica` (Design, AC9, Test Plan shared with replication AC12 and storage-and-gc AC25); the link's updatable leader name and `ended`/`deleted` cited to its AC22. From the data-model reconciliation: "Repository identity and lifecycle state" cited; AC3's schema test shared with AC38. From the storage-and-gc reconciliation: "consequence" wording replaced by AC15, AC23, AC24 and AC25 citations, deletion named as AC25's single exemption. From the proxy-cache reconciliation: `internal/repository/readonly_remote_test.go` shared with its AC23 in AC11's row; the read-only remote paragraph cites AC23. From the supply-chain reconciliation: `policy` and `advisory_ecosystem` as core-held configuration rows, dropped at tombstone, in the Configuration table, deletion step 11, the tombstone paragraph and AC24, with `internal/storage/retention_test.go` shared with its AC22. From the conformance-harness reconciliation: AC12's rename case enforced by harness AC26; AC26's seed entries shared with harness AC24. From the observability authoring: a new "Audit and metrics" section (events `repository.create`, `.configure`, `.freeze`, `.thaw`, `.rename`, `.delete`, `.detach`, `.reclaim` through `telemetry.Auditor.Emit`, `repository_id` on every record, the `repositories{format,repository_kind,state}` gauge) asserted by AC27 with `audit_test.go` and `metrics_test.go` on `telemetry.NewTestRecorder`; `repository.configure` and the placement of `.detach` and `.reclaim` reported back to `observability.md`. Items 9, 10, 12 and 13 of this spec's authoring section remain queued for `signing-service.md`, `artifact-verification.md`, `async-operations.md` and `upstream-adapters.md`, which have not reconciled yet, and are phrased as queued rather than cited. No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
