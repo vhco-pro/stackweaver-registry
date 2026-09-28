@@ -14,9 +14,10 @@ the queues are empty.
   no marked spec can reach `planned`. As of 2026-09-28: 27 specs marked (17 Opus-authored formats,
   the cloud session's 10 foundation specs, whose model was not recorded).
 
-- **One agent at a time.** The owner tightened this on 2026-09-27 (budget: the cloud credits are
-  finite) from an earlier two-agent limit, itself set after parallel runs of nine to fifteen agents
-  exhausted the spend limit twice and killed work mid-write.
+- **At most two agents at a time, and no agent may start its own.** The owner's local limit
+  (2026-09-26, after parallel runs of nine to fifteen agents exhausted the spend limit twice and
+  killed work mid-write); the cloud session ran one at a time. On 2026-09-28 a sweep agent started
+  four extraction agents of its own, breaking the cap invisibly, so every brief now forbids it.
 - **Spec work runs on the `fable` tier** (authoring, folding, reconciliation, gate reviews), matching
   `.claude/commands/spec.md`'s `model:` pin. Pass the model explicitly when spawning an agent.
 - Every agent writes its Review Log row and status_description last, so an interrupted agent

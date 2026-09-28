@@ -396,7 +396,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - credential-management.md, CLOSING SWEEP: DONE 2026-09-28 at 3135d95 on Opus. Binding table with PyPI (AC19) and Open VSX api/-/trusted-publishing/token (wire not yet captured); binding-is-pure-translation AC25.
 - EVICTION CONTRADICTION: SETTLED 2026-09-28 at f0bfe75 on Opus. proxy-cache Q21 adopted (a remote's current metadata documents at every level are never LRU-evicted: fourth-root current documents; the quota bounds cached files only; cache_metadata_bytes{repository} gauge beside it; accepted cost: metadata grows with names ever requested, visible not bounded) and Q22 adopted (a per-package revision set's declared list lives on its package-level document, so adoptions of different packages never serialise). Folded through data-model (non-root row, AC44, AC37) and storage-and-gc (fourth root, property eviction op, AC16). AC29 added. Roots stay five. fable_recheck on all three.
 - observability.md, CLOSING SWEEP: DONE 2026-09-28 at 1848c7d on Opus. unbound_hosts in repository.rename's extension set (AC12); replication.link.*, replication.export, replication.import confirmed with emitting routes; policy.rule.update covers coordinate_exemptions. No question adopted.
-- management-surfaces-and-the-oracle.md: NOT DONE (agent handed back before writing rows).
+- management-surfaces-and-the-oracle.md: DONE 2026-09-28 on Opus, one row per format from all 32 specs; 14 items queued below.
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
 1. signing-service.md (~l.439, ~l.460): "`data-model.md`'s to add" -> "added in data-model.md (Design 'Freshness scoped to the pointer', AC36, AC37)"; ~l.437: "no retained snapshot holds" -> "no retained snapshot or pointer document holds" (data-model AC37).
@@ -743,3 +743,20 @@ SECOND-PASS NEEDED: auth.md and data-model.md were swept BEFORE later sweeps que
 1. replication.md and management-api.md: the replication sync and reseed POST routes and the link GET have no registered audit event, against management-api's rule that every request to its API emits one; the owner names them (e.g. replication.link.sync, .reseed), then observability adds them.
 2. management-api.md AC23: says every audit record is a manage.* event, but its own Design registers lifecycle, credential, replication and policy events under their owning specs; AC23 should say "a registered event".
 3. Early disagreements for the management-surfaces rows (confirm against the format specs): Chef's Supermarket DELETE routes (knife supermarket unshare) are bindings onto removal; Puppet's POST /v3/releases (PDK publish) is a binding, contrary to "no client trigger".
+
+## From the management-surfaces re-read (2026-09-28, on Opus)
+Found while writing one row per format into `analysis/management-surfaces-and-the-oracle.md`. Wording and coverage fixes, no decisions.
+1. puppet.md: "No client in the matrix triggers any of them" sits above the client-driven publish row; reword to "any of them but publish". Blocking preconditions calls POST /v3/releases a reference-API route while "Publish" calls it a client binding; make them agree (it is a client binding).
+2. management-api.md Puppet rows: bindings named for undeprecate, restore and hard delete, which puppet.md gives as none; align to puppet.md.
+3. conan.md: say delete-version has no client trigger (curl on the reference-server route only); add a named case for the recipe revision's binaries route to AC7 or record why none.
+4. hex.md: Context still says the one client-driven operation is a deprecation; revert and docs are client-driven too. Record that unretire has no rebar3 command.
+5. luarocks.md: heading "Removes are bindings" and the Scope bullet contradict "no binding exists"; rename. Blocking precondition routes hosted population through a management-API publish, but no publish kind is declared: either declare one or reword to luarocks upload.
+6. debian.md: "The dput binding" still says the scope-equality seam is management-api's to close; cite its was-Q13.
+7. vagrant.md and opam.md: stale descriptions of management-api's table (Vagrant under attach; opam "no package deletion").
+8. management-api.md: Terraform "deprecate" row should say providers only.
+9. nuget.md AC7: "relist through the management binding" -> through the management API or the reference-API relist route.
+10. hackage.md: AC16 Test Plan row needs an entry point; state whether configure is in Operations() or only on the signing-key routes.
+11. cpan.md: name script cases for annotate (author record, asserting 01mailrc) and the ownership configure, or narrow the "every declared kind" sentence.
+12. pypi.md: Design table yank action "delete on the version" vs Addressed objects' file-level withdraw; align.
+13. management-api.md "Bindings: one operation, two ways in": add ansible-galaxy collection publish and npm deprecate to the illustrative list.
+14. Wire-only effects to close or record as deliberate gaps: swift restore and rebind (no client resolve after), alpine and arch architecture-set configure (no client sees a change), cpan author record.
