@@ -283,7 +283,16 @@ function checkSpec(absPath) {
     warn(rel, 'never interrogated: no open questions, no resolved decisions, no review. Zero open is not the same as settled.');
   }
 
-  return { rel, status, acs: acs.length, open: openQs.length, resolved: resolved.length, lastSha, unexamined };
+  // Model-tier debt. Spec authoring and review are Fable work; when Fable is out of credit
+  // the loop runs on another model and marks what it touched, so the owner can queue a
+  // Fable pass later. The marker blocks `planned`, because a gate cleared on a lower tier is
+  // the rubber stamp the tier split exists to prevent. Only a Fable review removes it.
+  const fableRecheck = get('fable_recheck');
+  if (fableRecheck && status === 'planned') {
+    fail(rel, `status is planned but fable_recheck is set (${fableRecheck}); a Fable review must clear it first`);
+  }
+
+  return { rel, status, acs: acs.length, open: openQs.length, resolved: resolved.length, lastSha, unexamined, fableRecheck };
 }
 
 // Every spec's assertions, so a term this spec names but a sibling polices is not reported as a
@@ -374,12 +383,23 @@ console.log(
   `${specs.reduce((n, s) => n + s.open, 0)} open questions`,
 );
 
+{
+  const debt = specs.filter((s) => s && s.fableRecheck);
+  if (debt.length) {
+    console.log(yellow(`${debt.length} spec(s) awaiting a Fable recheck (fable_recheck frontmatter):`));
+    for (const s of debt.sort((a, b) => a.rel.localeCompare(b.rel))) {
+      console.log(`  ${s.rel.replace('docs/internal/plans/', '')}: ${s.fableRecheck}`);
+    }
+  }
+}
+
 if (gateMode) {
   const t = specs[0];
   if (!t) { console.error('gate mode needs exactly one spec path'); process.exit(2); }
   const blockers = [];
   if (t.open > 0) blockers.push(`${t.open} open question(s)`);
   if (t.unexamined) blockers.push('never interrogated (no questions, no decisions, no review)');
+  if (t.fableRecheck) blockers.push(`awaiting a Fable recheck (${t.fableRecheck})`);
   if (hardFailures > 0) blockers.push(`${hardFailures} mechanical failure(s)`);
   console.log('');
   if (blockers.length) {

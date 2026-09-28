@@ -37,3 +37,10 @@ For every open question (`### Qn:` under `## Open Questions`) in the files you O
 ## Report (a return value, compact)
 Per owned file: questions adopted (one line each: Qn -> option, the consequence), criteria added or
 rewritten, open questions remaining (should be 0). Then SIBLING CONSEQUENCES as a precise list.
+
+## Model tier (read this)
+Record the model you ran on in your Review Log lens, for example "authoring pass on Opus: ...".
+If you are not Fable, add `fable_recheck: "<what you did> on <model>, <date>"` to the spec's
+frontmatter (reconciliation and folding need it only when you adopted a new question). Never remove
+an existing `fable_recheck` unless you are Fable performing that recheck. Never set `planned` on a
+spec that carries one.

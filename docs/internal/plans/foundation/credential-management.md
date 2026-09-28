@@ -9,6 +9,7 @@ issue: 45
 created: 2026-09-27
 covers:
   - "internal/credential/**"
+fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate"
 ---
 
 # Plan: Credential management

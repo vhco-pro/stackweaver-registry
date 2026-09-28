@@ -49,3 +49,10 @@ boundary rule, per the constitution), Test Plan (a row per criterion), Implement
 ## Report (compact)
 Requirements gathered and from where; conflicts resolved (one line each); criteria count;
 questions adopted; sibling consequences.
+
+## Model tier (read this)
+Record the model you ran on in your Review Log lens, for example "authoring pass on Opus: ...".
+If you are not Fable, add `fable_recheck: "<what you did> on <model>, <date>"` to the spec's
+frontmatter (reconciliation and folding need it only when you adopted a new question). Never remove
+an existing `fable_recheck` unless you are Fable performing that recheck. Never set `planned` on a
+spec that carries one.

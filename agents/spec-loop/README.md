@@ -8,6 +8,12 @@ the queues are empty.
 
 ## Rules for running it
 
+- **Model tier.** Fable authors and reviews specs. When it is out of credit the loop runs on Opus
+  and marks every spec it authors or reviews with `fable_recheck` (see `CLAUDE.md`, model tiers).
+  `make check-spec` prints the recheck queue; it is the first thing to spend Fable credit on, and
+  no marked spec can reach `planned`. As of 2026-09-28: 27 specs marked (17 Opus-authored formats,
+  the cloud session's 10 foundation specs, whose model was not recorded).
+
 - **One agent at a time.** The owner tightened this on 2026-09-27 (budget: the cloud credits are
   finite) from an earlier two-agent limit, itself set after parallel runs of nine to fifteen agents
   exhausted the spend limit twice and killed work mid-write.

@@ -9,6 +9,7 @@ issue: 49
 created: 2026-09-27
 covers:
   - "internal/async/**"
+fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate"
 ---
 
 # Plan: Asynchronous Operations

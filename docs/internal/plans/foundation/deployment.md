@@ -14,6 +14,7 @@ covers:
   - "internal/server/**"
   - "deploy/**"
   - "scripts/check-config-keys.js"
+fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate"
 ---
 
 # Plan: Deployment, Configuration and Operations

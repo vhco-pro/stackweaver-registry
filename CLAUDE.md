@@ -330,3 +330,12 @@ job rather than by whatever `/model` happened to be set to. Do not remove those 
 not hand-switch models before running one of these commands. Judgment work (`/spec`,
 `/investigate`, `/triage`) runs on the higher tier; execution work already constrained by an
 approved spec (`/implement`, `/ship`) runs on the cheaper one.
+
+**When the judgment tier is unavailable, the work continues and the debt is recorded.** If Fable
+is out of credit, spec authoring and review may run on Opus, but every spec so touched carries a
+`fable_recheck: "<what was done, on which model, when>"` frontmatter field, and its Review Log
+lens names the model. `make check-spec` lists the marked specs as the recheck queue, and a marked
+spec can never reach `planned`: the gate refuses it, because a gate cleared on the lower tier is the
+rubber stamp the tier split exists to prevent. Only a Fable review removes the marker. Execution
+work that follows an approved decision (folding, reconciliation) does not need the marker unless
+it adopted a new question.

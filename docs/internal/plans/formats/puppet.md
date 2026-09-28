@@ -10,6 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/puppet/**"
   - "conformance/puppet/**"
+fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed"
 ---
 
 # Plan: Puppet modules (Puppet Forge API v3)

@@ -35,3 +35,10 @@ Your job is to apply every queued item that targets a file you OWN, precisely, t
 ## Report (compact)
 Per file: items applied, items found already done, items skipped and why. Any new question
 adopted. Final check-spec failure count for your files. Anything that still needs a new spec.
+
+## Model tier (read this)
+Record the model you ran on in your Review Log lens, for example "authoring pass on Opus: ...".
+If you are not Fable, add `fable_recheck: "<what you did> on <model>, <date>"` to the spec's
+frontmatter (reconciliation and folding need it only when you adopted a new question). Never remove
+an existing `fable_recheck` unless you are Fable performing that recheck. Never set `planned` on a
+spec that carries one.
