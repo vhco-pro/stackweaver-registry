@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at da0aecd (not a review): no queued item targets this file; verified consistent with the reconciled format specs. Folded 2026-09-26 under the owner's standing delegation: Git-backed split (33 across 33), Ansible promoted to Tier 1 with the gate binding Tiers 2 and 3 handler code but never speccing, client reach proven per client, and a named Terraform trigger. Totals 2 + 9 + 10 + 12 = 33. Zero open questions; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-28 at b31b889 with the foundation authoring wave (not a review): a table of the clients the format specs add beyond the multiplier floor (Ivy prove-or-strike, SUSE by the SLES BCI image, Pop!_OS built from ubuntu:24.04, OpenTofu, the Chef, Open VSX, Arch and Hex clients; provable reach about 60, advertised only from the matrix), virtual aggregation and verification recorded as per-ecosystem matrix columns (Hex the first Virtual: unsupported) with AC7, and AC8 requiring every ecosystem once in supply-chain-policy's binding table. Folded 2026-09-26 under the owner's standing delegation: Git-backed split (33 across 33), Ansible promoted to Tier 1 with the gate binding Tiers 2 and 3 handler code but never speccing, client reach proven per client, and a named Terraform trigger. Totals 2 + 9 + 10 + 12 = 33. Zero open questions; stays draft pending a gate review."
 description: "The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat."
 author: michielvha
 goal: "Fix the breadth target at 33 ecosystems, record which protocol families multiply client reach, and set the order and the gate that decide whether breadth is affordable."
@@ -55,11 +55,60 @@ What families *do* multiply is the **client and distribution surface** reached p
 Every entry in the "Reaches" column is a **claim to be proven by that real client**, not an
 illustration (AC2). Counted once each, with the six multiplier handlers' clients plus one client
 for each of the other 27 ecosystems and the `helm` CLI counted once although it appears under
-both Helm and OCI, the named reach is about 52. So **33 ecosystems across 33 implementations
-reach 50+ named client tools and distributions**, and the advertised figure is never larger than
-the number the conformance matrix shows passing (AC3). That is the honest version of the claim,
-and it is still the strongest position available: nobody free offers this breadth *with*
-upstream caching.
+both Helm and OCI, the named reach is about 52; the clients the format specs add below lift the
+provable figure to about 60. So **33 ecosystems across 33 implementations reach 50+ named client
+tools and distributions**, and the advertised figure is never larger than the number the
+conformance matrix shows passing (AC3). That is the honest version of the claim, and it is still
+the strongest position available: nobody free offers this breadth *with* upstream caching.
+
+### Named clients the format specs add
+
+The multiplier table is the floor, not the inventory. Each format spec names the clients it
+captured traffic from and proves, and every one of them appears in the matrix's Client column
+under its ecosystem's row, never as a row of its own (AC2). The ones that add to the count above,
+or qualify an entry in the table, as the specs record them:
+
+| Ecosystem | Clients the spec names | What it changes here |
+|---|---|---|
+| Maven | Maven, Gradle, sbt, Leiningen proven; **Apache Ivy was not run** | Ivy stays in the table as a claim `maven.md` AC19 makes prove-or-strike: it passes the same cases before Maven is advertised, or it is struck from the table and the reach figure falls by one |
+| RPM | eight pinned clients: dnf5, dnf 4 and zypper across the five distributions | SUSE is proven by the SLES 15 SP7 BCI image, not by openSUSE (`rpm.md`); the count stays at five distributions, the matrix lists all eight |
+| Debian | apt on Debian, Ubuntu, Linux Mint 22 and Pop!_OS 24.04 | Mint's and Pop!_OS's apt are Ubuntu's build; Pop!_OS has no official image, so its client image is built from the pinned `ubuntu:24.04` with its repository configured (`debian.md` AC25); both stay counted |
+| Terraform / OpenTofu | `terraform` and `tofu`, two releases each | OpenTofu is a distinct client and counts as one (+1) |
+| Chef | Berkshelf, chef-cli (Policyfile), knife | three clients under one row (+2) |
+| Open VSX | VS Code, VSCodium, code-server, `ovsx` | four clients under one row (+3) |
+| Arch | pacman on Arch Linux and on Manjaro | Manjaro counts once proven (+1) |
+| Hex | `mix`, `rebar3` | two clients under one row (+1) |
+
+That is eight more than the one-per-ecosystem floor, hence "about 60". Neither figure is
+advertised: `README.md` carries only what the matrix shows passing on both paths (AC3).
+
+### What the matrix carries per ecosystem beyond pass or fail
+
+Two properties vary per ecosystem and used to be assumed uniform. Both are rendered in the
+conformance matrix beside each ecosystem row, from mechanical sources, so this document never
+has to assert them by hand:
+
+- **Virtual aggregation is a per-format capability.** Every handler declares `Virtual` as
+  `supported` or `unsupported` in `Capabilities()` (`format-handler-interface.md` AC13,
+  `repository-lifecycle.md` AC4), and the matrix's virtual column renders `unsupported` as
+  exempt, citing the format's spec, never as passing (`conformance-harness.md` AC20). **Hex is
+  the first ecosystem to declare it unsupported**: its signed payload names exactly one
+  repository and every unmodified client checks that name, so a virtual repository has no name
+  it could sign under (`hex.md`, its resolved was-Q1 record). Conda shows the opposite, that
+  virtual works wherever nothing is signed with the repository name, which is why the capability
+  is per format rather than a rule. No row here promises virtual aggregation; the column does.
+- **Verification is per ecosystem too.** `artifact-verification.md` AC24 gives the matrix a
+  verification column: a format whose spec asked for a verification entry shows a passing hosted
+  and a passing proxied verification case, and a format whose spec asked for nothing shows
+  `none` with its spec cited (as of that spec's authoring: chef, composer, cran, debian,
+  go-modules, hex, opam, pub, cargo, conan and generic). A format asking for an entry without
+  both cases fails the matrix build, so the column cannot overstate.
+
+One more per-ecosystem obligation lives outside the matrix: `supply-chain-policy.md`'s table
+"When a refusal binds, per format" must list every ecosystem row of this document exactly once,
+because `deployment.md` generates its operator page from it (that spec's AC20). The structure
+check that parses the tier tables for AC6 is the same parser that check runs against, so adding,
+removing or promoting a row here fails `make verify` until the binding table follows (AC8).
 
 The moat is not arithmetic. It is that the conformance harness makes each of those 33
 implementations cheap enough to build and, crucially, cheap enough to *keep working* as each
@@ -197,6 +246,15 @@ had already given it without making the tier gate ceremonial.
 - [ ] AC6: The tier totals line equals the row counts of the four tier tables, and the distinct
       family count it states equals the number of distinct Family values across them; no Family
       value appears on two rows unless AC2's two-member proof exists for it.
+- [ ] AC7: The conformance matrix carries, for every ecosystem row, a virtual column generated
+      from the handler's `Capabilities()` `Virtual` declaration, rendered exempt with the spec
+      cited where it is `unsupported`, and a verification column per `artifact-verification.md`
+      AC24; and no advertised claim in `README.md` attributes virtual aggregation or artifact
+      verification to an ecosystem whose matrix column reads exempt or `none`.
+- [ ] AC8: Every ecosystem row of this document appears exactly once in
+      `supply-chain-policy.md`'s "When a refusal binds, per format" table, checked by `make
+      verify` with the same row parser AC6 uses, so a row added, removed or promoted here fails
+      the check until that table follows.
 
 ## Test Plan
 
@@ -208,6 +266,8 @@ had already given it without making the tier gate ceremonial.
 | AC4 | conformance | `conformance/<format>/hosted_test.go`, `proxied_test.go` |
 | AC5 | ci + manual | structure check in `make verify`: an `internal/format/<name>` for a Tier 2 or Tier 3 row fails without the gate verdict entry in `docs/internal/tasks/experiment-log.md`; the verdict's evidence is reviewed manually at Phase 3 against the charter's gate definition |
 | AC6 | ci | structure check in `make verify`: parses the tier tables and the totals line, and fails on any count mismatch or on a shared Family value without a two-member AC2 suite |
+| AC7 | unit + ci | `conformance/core/matrix_test.go` (virtual and verification columns from fixture handlers: supported, `Virtual: unsupported` rendered exempt with citation, verification `none` with citation; shared with `format-handler-interface.md` AC13, `conformance-harness.md` AC20 and `artifact-verification.md` AC24); the AC3 check in `make verify` extended to refuse a `README.md` virtual or verification claim for an exempt or `none` row |
+| AC8 | ci | structure check in `make verify` over `supply-chain-policy.md`'s binding table against this document's tier-table rows (shared with `supply-chain-policy.md` AC20; the row parser is AC6's) |
 
 ## Implementation Phases
 
@@ -365,3 +425,4 @@ the tested count.
 | 2026-09-22 | afbb4e4 | adversarial + constitution + count integrity | Arithmetic verified (33 = 2+8+10+13; exactly 31 distinct families; 50+ reach plausible at ~54); fixed Clojars misclassification, missing npm multiplier row, Tier 1 order vs Phase 2, AC1/AC5 wording; raised Q3/Q4/Q5; stays draft. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Adopted Q3 (B: Git-backed split into GOPROXY module proxy, Swift package registry and Julia Pkg server; headline now 33 ecosystems across 33 implementations), Q4 (A: Ansible collections promoted to Tier 1 third in order, AC5 extended to Tier 3, reconciled with the owner's spec-everything direction so the gate binds building only) and Q5 (A: client reach proven per named client in the matrix Client column), plus Q6 exposed by the fold (Terraform promotes only when Stackweaver adopts this registry as its module and provider backend). Body changes: family section and multiplier table rewritten (Git-backed row removed, uncountable entries reworded, reach recounted at about 52); promotion rule and spec-everything statement added; tier tables and totals line corrected to 2 + 9 + 10 + 12 = 33 with 33 distinct families; AC1 (all 33 specs before the gate), AC2 (client reach), AC3 (advertised figures bounded by the matrix) and AC5 (Tier 2 and 3 handler code gated, early builds only by promotion) rewritten, AC6 (mechanical totals and family check) added, each with a Test Plan row; Phase 0 (spec everything) added and Phase 2 lists the nine in order; Tasks placeholder added. Stays draft: no gate review has been run. |
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. No queued consequence targets this file, and check-spec reports none. Verified that the format specs now honour its resolved client-reach decision (npm AC21, PyPI AC17, OCI AC13 carry the multiplier table's named clients; pub records that it has no multiplier row) and its Git-backed split (go-modules cites it). No change beyond this record. Stays draft. |
+| 2026-09-28 | b31b889 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the source spec's current text before applying. Open items 11, 18, 19, 20, 24, 31 and 32 (maven, terraform, rpm, debian, chef, openvsx, arch) and `hex.md`'s two-client note: a new table "Named clients the format specs add" records Ivy as prove-or-strike (`maven.md` AC19), SUSE proven by the SLES 15 SP7 BCI image, Mint and Pop!_OS running Ubuntu's apt with the Pop!_OS image built from pinned `ubuntu:24.04` (`debian.md` AC25), and OpenTofu, Berkshelf, chef-cli, knife, VS Code, VSCodium, code-server, `ovsx`, Manjaro and `rebar3` as counted clients under their ecosystem rows; the reach paragraph now states both the table floor (about 52) and the provable figure (about 60), neither advertised ahead of the matrix. Repository-lifecycle item 16 and Open item 12 (theme 9): virtual aggregation recorded as a per-format `Capabilities()` declaration rendered as a matrix column, Hex the first `unsupported`. Artifact-verification item 16: the verification column and its `none` list cited to that spec's AC24. Both asserted by AC7 with a Test Plan row shared with the matrix test. Supply-chain reconciliation item 9: AC8 requires every ecosystem row exactly once in the binding table, checked with AC6's parser. Tier tables, totals and families unchanged. Stays draft. |

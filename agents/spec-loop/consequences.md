@@ -358,6 +358,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - proxy-cache.md: DONE 2026-09-28. Applied theme 7 (completion-only mode, Q15, AC20), Open item 16 (Q16, first-byte deadline, AC21), theme 1 cache half and signing-service 3, Open items 30, 32 (AC22), upstream-adapters 1-3 (seam, Q17 preconfigured nuget and maven, AC6), repository-lifecycle 14 (AC23), observability 10, deployment 4, management-api reconciliation 3 (AC24), and one removal event-class table covering Open items 7, 11, 13 and the format rows.
 - supply-chain-policy.md: DONE 2026-09-28. Applied artifact-verification 7, async-operations 7, repository-lifecycle 11, observability 12, deployment 7, web-ui 5, upstream-adapters 13, Open items 5, 9, 11-32 (policy halves), theme 2 (binding table, AC20), theme 5 (coverage table, AC17). Adopted Q9 (one OSV schema, several sources; revises delegation-adopted Q1) and Q10 (refusal status line via HTTP/1.1 hijack). New AC17-23.
 - replication.md: DONE 2026-09-28. Applied signing-service 5 (AC21), async-operations 8 (AC23), repository-lifecycle 7 (link states, AC22), observability 13, deployment 8 (AC24), format-handler-interface 1 (segment `replication`), Open item 23 (Q11, Vagrant sequencing). Open item 23's HANDOFF.md commitment (record the vagrantcloud.com corpus before 2026-12-31) is still owed in docs/internal/HANDOFF.md.
+- project-charter.md, write-triggered-services-prototype.md, formats/catalogue.md: DONE 2026-09-28. Charter build order cites every foundation phase at its step (queue core first in 4b; Maven first unsigned step-7 consumer), AC12 and AC6 rows updated, TypeScript/React named. Prototype: async-operations 11, Indexer and Operator answers as confirm-or-refute inputs, new AC13 (debian repoint, Open item 20). Catalogue: named-clients table, virtual and verification columns (AC7), binding-table check (AC8).
 
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
@@ -452,4 +453,13 @@ OWNER NOTE: supply-chain Q9 revises Q1 (single OSV feed) to one OSV schema from 
 7. async-operations.md kind table: `replication.sync` confirmed; the per-link period is `replication.sync_interval`; may cite replication AC23.
 8. signing-service.md AC23 row, observability.md AC6/AC20 rows: may cite replication AC21 and AC10.
 9. conformance-harness.md `replication` key: an entry may carry a per-link sync interval (no new key).
+
+## From charter, prototype and catalogue reconciliation (2026-09-28)
+1. docs/internal/conformance/matrix.md: charter+catalogue fold item 3 is still unapplied (l.24-27 "earns its Gradle row" -> "earns a Gradle entry in the Client column of the Maven row"); add the virtual and verification columns catalogue AC7 names (rendering rules: FHI AC13, harness AC20, artifact-verification AC24).
+2. docs/internal/tasks/experiment-log.md: credential-management.md and repository-lifecycle.md are charged to `shared:management` (charter "Measuring per-format cost").
+3. repository-lifecycle.md (~l.111): "lands its first three phases inside step 2 and step 3" -> "Phase 1 at step 2, Phase 2 at step 3, Phase 3 at step 4".
+4. async-operations.md Context (~l.28-31, ~l.49) and management-api.md's Scope line quoting it: the charter now builds the queue core at the start of step 4b and the deferred management operation at step 6a; drop "owed".
+5. debian.md "What this spec takes from the prototype" (~l.239-240): met; cite prototype AC13 and `conformance/debian/repoint_test.go`.
+6. supply-chain-policy.md AC20 Test Plan row: may cite catalogue AC8 as the sharing check.
+7. artifact-verification.md Phase 5 / AC24 row: may cite catalogue AC7.
 

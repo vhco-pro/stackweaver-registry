@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-26 at fe54272 with the Wave 1 folds (not a review): step 2's reason no longer claims the harness provisions through the management surface (setup is the seed subcommand; the core stays at step 2 as the operator API for generic's settings and token issuance); step 4a names both prototype halves, Debian signed indexes and the Galaxy-shaped async half on the Operation entity; step 9 no longer defers format management operations, which land with npm, PyPI and Ansible at steps 5, 6 and 6a, and AC12 asserts that. Earlier: Q1-Q3, Q6-Q8 adopted under the owner's standing delegation. Zero open questions; stays draft pending a gate review."
+status_description: "Reconciled 2026-09-28 at b31b889 with the foundation authoring wave (not a review): every build-order row now cites the phase of each foundation spec that lands there (management-api, credential-management, repository-lifecycle, deployment and observability at step 2; proxy-cache, upstream-adapters and packaging at step 4; management-api Phase 2 as the prototype's entry at 4a), the async queue core moves to the start of step 4b with only the deferred management operation at 6a (async-operations was-Q9), step 4b lands only verification's core and Sigstore entry, step 7 names Maven as the first unsigned signing-service consumer and Debian and RPM behind its Phase 2, AC12 and the phases follow, AC6 runs on scripts/bench-gate.sh, virtual aggregation is a per-format capability (Hex unsupported), and Design names the TypeScript/React frontend. Earlier: Q1-Q3, Q6-Q8 adopted under the owner's standing delegation. Zero open questions; stays draft pending a gate review."
 description: "The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work."
 author: michielvha
 goal: "Establish scope, positioning, the build order and the experiment's success metrics, so every downstream spec inherits a settled frame."
@@ -71,7 +71,14 @@ multi-format registry is plausible.
   and users arrive expecting. Virtual repositories aggregate local and remote members and their
   member order **is** the resolution order. This was previously deferred and returned to v1 on
   2026-09-23, because the alternative is an ad-hoc failover-ordering field that reimplements
-  aggregation badly (`data-model.md`, resolved upstream and repository structure).
+  aggregation badly (`data-model.md`, resolved upstream and repository structure). Virtual
+  aggregation is a **per-format capability**, not a promise every format keeps: a handler
+  declares `Virtual` `supported` or `unsupported` in `Capabilities()`
+  (`format-handler-interface.md` AC13, `repository-lifecycle.md`), and the conformance matrix
+  renders an `unsupported` declaration as exempt rather than passing. Hex is the first format to
+  declare it unsupported, because its signed payload names the repository and every unmodified
+  client checks that name (`formats/hex.md`); conda shows the opposite, that virtual works
+  wherever nothing is signed with the repository name, which is why the capability is per format.
 - A conformance harness driving real package clients in containers.
 - **Supply-chain policy and scanning** (`supply-chain-policy.md`), brought in 2026-09-23. The
   registry is the only place every artifact already passes, hosted and proxied alike, and a
@@ -158,19 +165,19 @@ existing steps take a letter rather than renumbering everything after them.
 | # | Step | Why here |
 |---|---|---|
 | 1 | **Conformance harness** | The harness is the product; the server is what satisfies it. Built before any handler, against a deliberately trivial format. |
-| 2 | **Generic format**, with the **management surface core**, the **configuration and deployment baseline** and the **observability baseline** | Trivial protocol. Its job is to prove the harness, the CAS, auth and the CI wiring end to end with nothing else in the way. The three subsystems land here because generic cannot run without them: generic's repository settings (the immutability switch, retention rules) are changed through an operator API and its clients present registry tokens someone must issue, so the management surface core (repository and token operations, the token half being the credential-management surface `auth.md` places ahead of OCI) must exist before generic is usable by anyone but the harness - the harness itself needs none of it, because its `setup` is applied by the server binary's seed subcommand through the shared layers (`conformance-harness.md`, the resolved decision on how `setup` is applied), which is also what lets a case provision state no management endpoint offers; the harness starts the server in a container from configuration, so loading and validating configuration is the first thing the binary does; and the fault-injection and benchmark evidence of steps 3 and 4 needs signals that exist before the components they observe, since concurrency, durability and performance have no client oracle (`CLAUDE.md`). |
-| 3 | **Shared data model, CAS + GC** | The schema all 33 ecosystems store against (`data-model.md`, what makes breadth affordable), plus the blob store and GC, which is where data loss lives. |
-| 4 | **OCI plus the proxy/cache layer and upstream adapters** | The official conformance suite is a pass/fail gate written by the standards body: hardest protocol, strongest oracle. The proxy layer is built here rather than after, because OCI is the first format that can be proxied and retrofitting it is what this charter forbids. Upstream adapters (per-upstream authentication, rate-limit handling, the preconfigured upstream set) are built with it for the same reason: Docker Hub pull-through is the first real upstream and it already needs token exchange and rate-limit handling; each later format adds its own upstream's specifics through the adapter seam rather than inside its handler. Deployment packaging (container image, chart, documented configuration) completes in this step, because the repository goes public at the first working format and a public first impression has to run. |
-| 4a | **Write-triggered services prototype, both halves, then the handler-interface re-open** | After OCI passes, `write-triggered-services-prototype.md` supplies the evidence the scheduled re-open needs from its two halves - a Debian-shaped signed-index half and a Galaxy-shaped asynchronous half built on `data-model.md`'s `Operation` entity - answering the six questions its finding records, and the re-open completes before any Tier 1 handler (`format-handler-interface.md` AC8). The re-open also settles the server-side ingest hook replication's freeze needs and how a management operation reaches a handler. The prototype is disposable; the production signing and index service is step 7's first item and the production asynchronous-operation subsystem step 6a's. |
-| 4b | **Artifact verification, then supply-chain policy** | Supply-chain policy consumes signature and attestation state that no other spec produces, so verification is built first, as a shared service rather than inside whichever format first meets a signature. Policy is placed after the re-open and **before npm**, for two reasons. Its evaluation hook and component inventory may bend the handler interface; landing that before npm puts any amendment before the measurement baseline rather than inside the Tier 1 series, where it would contaminate the N+1 comparison. And every format from npm onward is then built with enforcement on both paths from its first commit, which is the same no-retrofit reasoning that moved the proxy layer into step 4. Its proxied phase depends on the proxy layer, which step 4 has delivered. |
-| 5 | **npm** | Most-wanted proxy cache in real life, the first test of whether the proxy layer built for OCI generalises, and the **measurement baseline**: the cost procedure in "Measuring per-format cost" below is in force from npm's first commit (AC10). |
-| 6 | **PyPI** | The generalisation test. If npm-to-PyPI is cheaper than generic-to-npm, the experiment has its headline finding. |
-| 6a | **Asynchronous operations, then Ansible collections** | Ansible collections is promoted into Tier 1 (`catalogue.md`, the resolved tier-gate decision) and keeps its early slot, because it is the one ecosystem where hosting alone is differentiating. Its publish returns an import task the client polls, the first client-visible asynchronous operation in the build order, so the shared async-operation subsystem is built immediately before it rather than inside the handler. How an asynchronous operation is modelled is a question for the step 4a re-open, which has Ansible's evidence in hand; only its production form is built here. |
-| 7 | **Tier 1 remainder**, starting with the **shared signing and index service** | The service is the production form of what the step 4a prototype learned, built once before Helm, the first remaining format with a write-triggered generated index, so Helm, Debian and RPM consume one service rather than the first of them growing it inside a handler and charging a shared layer to its own cost line. Then, in the catalogue's order: Maven (unlocks the whole JVM in one handler), Go modules, NuGet, Helm, the full Debian and RPM handlers (signed-index formats last within the tier). |
+| 2 | **Generic format**, with the **management surface core**, the **configuration and deployment baseline** and the **observability baseline** | Trivial protocol. Its job is to prove the harness, the CAS, auth and the CI wiring end to end with nothing else in the way. The three subsystems land here because generic cannot run without them, and each is a named phase of its own foundation spec. **The management surface core** is `management-api.md` Phase 1 (the reserved `api` mount, repository, pointer and grant administration, the `Operator` consumer interface generic's `delete-file` is the first kind on), with `repository-lifecycle.md` Phase 1 as its repository half (the state machine and `local` repositories; its Phase 2, deletion against GC, lands at step 3 and its Phase 3, `remote` and `virtual`, at step 4) and `credential-management.md` Phase 1 as its token half (tokens and robots under `/api/v1/tokens`, the surface `auth.md` places ahead of OCI). It must exist here because generic's repository settings (the immutability switch, retention rules) are changed through an operator API and its clients present registry tokens someone must issue, so generic is unusable by anyone but the harness without it - the harness itself needs none of it, because its `setup` is applied by the server binary's seed subcommand through the shared layers (`conformance-harness.md`, the resolved decision on how `setup` is applied), which is also what lets a case provision state no management endpoint offers. **The configuration and deployment baseline** is `deployment.md` Phases 1 and 2 (configuration loading and validation, the CLI, the database and migration runner, the master key, the server listeners): the harness starts the server in a container from configuration, so loading and validating configuration is the first thing the binary does. **The observability baseline** is `observability.md` Phase 1 (the telemetry package, the request middleware, metrics, probes, the audit channel, the alert mechanism and the benchmark-gate mechanism `scripts/bench-gate.sh` that AC6 runs on): the fault-injection and benchmark evidence of steps 3 and 4 needs signals that exist before the components they observe, since concurrency, durability and performance have no client oracle (`CLAUDE.md`). |
+| 3 | **Shared data model, CAS + GC** | The schema all 33 ecosystems store against (`data-model.md`, what makes breadth affordable), plus the blob store and GC, which is where data loss lives (`storage-and-gc.md`). Landing with them: `repository-lifecycle.md` Phase 2 (deletion against GC, so the GC property suite covers repository deletion from the start) and `observability.md` Phase 2's storage and GC half (the GC metrics and alerts and the storage benchmark under the gate). |
+| 4 | **OCI plus the proxy/cache layer and upstream adapters** | The official conformance suite is a pass/fail gate written by the standards body: hardest protocol, strongest oracle. The proxy layer (`proxy-cache.md`, all three phases) is built here rather than after, because OCI is the first format that can be proxied and retrofitting it is what this charter forbids. Upstream adapters (`upstream-adapters.md` Phases 1 and 2: the seam, the `https` and `distribution` adapters, then the cloud credential kinds after OCI's conformance passes) are built with it for the same reason: Docker Hub pull-through is the first real upstream and it already needs token exchange and rate-limit handling; each later format adds its own upstream's specifics through the adapter seam rather than inside its handler. `repository-lifecycle.md` Phase 3 lands here too, because the first `remote` and `virtual` repositories exist here, as does `observability.md` Phase 2's proxy half. Deployment packaging (`deployment.md` Phase 3: container image, chart, documented configuration) completes in this step, because the repository goes public at the first working format and a public first impression has to run. |
+| 4a | **Write-triggered services prototype, both halves, then the handler-interface re-open** | After OCI passes, `write-triggered-services-prototype.md` supplies the evidence the scheduled re-open needs from its two halves - a Debian-shaped signed-index half and a Galaxy-shaped asynchronous half built on `data-model.md`'s `Operation` entity - answering the six questions its finding records, and the re-open completes before any Tier 1 handler (`format-handler-interface.md` AC8). Its entry is `management-api.md` Phase 2 (publish, upload sessions and the deferred-operation wire shape), because the prototype's `publish` and `configure` run on that spec's `Operator` interface and the re-open takes them as evidence (its AC27). The re-open also settles the server-side ingest hook replication's freeze needs, the three optional interfaces (`Operator`, `Indexer`, `surface.Declarer`: fold into the pin, keep optional, or consolidate) and the host binding's home. The prototype is disposable; the production signing and index service is step 7's first item, the production queue core is step 4b's first item and the production deferred management operation is step 6a's. |
+| 4b | **The asynchronous queue core, then artifact verification, then supply-chain policy** | The queue core is `async-operations.md` Phases 1 to 3 (the `Job` record, claims with leases and fencing, cancellation, pause and resume, the scheduler), placed first in this step, immediately after the re-open records its finding on the prototype's questions 4 to 6, because verification and policy are consumers of the one queue (its resolved build-placement decision, was Q9: the earlier 6a placement was a reconciliation act, not an owner decision, and the evidence the charter wanted first is in hand at 4a). Supply-chain policy consumes signature and attestation state that no other spec produces, so verification is built next, as a shared service rather than inside whichever format first meets a signature: `artifact-verification.md` Phase 1, which is **only the core and the Sigstore entry** (the verdict store, trust sets, the re-evaluation worker on the queue, Cosign over OCI); every per-format entry is built with its format in its Phases 2 to 4 and charged to that format under the cost procedure. Then `supply-chain-policy.md`, all three phases. Policy is placed after the re-open and **before npm**, for two reasons. Its evaluation hook and component inventory may bend the handler interface; landing that before npm puts any amendment before the measurement baseline rather than inside the Tier 1 series, where it would contaminate the N+1 comparison. And every format from npm onward is then built with enforcement on both paths from its first commit, which is the same no-retrofit reasoning that moved the proxy layer into step 4. Its proxied phase depends on the proxy layer, which step 4 has delivered. `management-api.md`'s job-administration routes and its trust, verdict and refusal reads land here with their owners, and `observability.md` Phase 3 begins here and runs to step 7. |
+| 5 | **npm** | Most-wanted proxy cache in real life, the first test of whether the proxy layer built for OCI generalises, and the **measurement baseline**: the cost procedure in "Measuring per-format cost" below is in force from npm's first commit (AC10). Its management operations ride `management-api.md` Phase 3, its upstream profile `upstream-adapters.md` Phase 3 and its provenance verification `artifact-verification.md` Phase 2, each charged to npm. |
+| 6 | **PyPI** | The generalisation test. If npm-to-PyPI is cheaper than generic-to-npm, the experiment has its headline finding. PyPI's trusted-publishing route is a binding onto `credential-management.md` Phase 3 (the OIDC exchange), which lands between OCI and this step, off OCI's critical path. |
+| 6a | **The deferred management operation on the async runner, then Ansible collections** | Ansible collections is promoted into Tier 1 (`catalogue.md`, the resolved tier-gate decision) and keeps its early slot, because it is the one ecosystem where hosting alone is differentiating. Its publish returns an import task the client polls, the first client-visible asynchronous operation in the build order, so the deferred management operation (`async-operations.md` Phase 4: the `manage.apply` worker, the repository grace hold, the pause-based conformance hold) is built immediately before it rather than inside the handler. The queue core it runs on already exists from step 4b; what waits until here is the client-visible half, which follows the prototype's evidence on questions 4 to 6 by a full step. |
+| 7 | **Tier 1 remainder**, starting with the **shared signing and index service** | The service is the production form of what the step 4a prototype learned (`signing-service.md` Phase 1: the index runtime, the `Indexer` generator contract, the `file` custody backend and the OpenPGP codecs), built once before any consumer, so that no format grows it inside a handler and charges a shared layer to its own cost line. Its consumers in this step, in the catalogue's order: **Maven first**, the unsigned consumer (`maven-metadata.xml` generated inside the triggering write), which proves the index half before any signed consumer; then Go modules and NuGet; then **Helm**, the first signed consumer with a write-triggered generated index; then the full **Debian** and **RPM** handlers, whose signed indexes wait on `signing-service.md` Phase 2 (pointer documents, cadence re-signing and the rotation profiles), which is why the signed-index formats come last within the tier. `artifact-verification.md` Phase 3 (the OpenPGP, RPM, CMS and Helm `.prov` entries) rides these formats and is charged to them. |
 | 8 | **Re-evaluate: the breadth gate** | The owner applies the pre-committed definition below to the Tier 1 rows and records `continue` or `shrink` (AC9). Continue to step 11 only on `continue`. |
-| 9 | **Surface: the rest of the management surface, the web UI, OIDC SSO and RBAC administration** | Not gated by the breadth verdict, because it is not breadth. Placed after Tier 1 for evidence: the UI renders the shared model's entities for every implemented format, and drawing its per-format rendering contract from nine real formats is better than guessing it from two. The management surface completes first because the UI is its client. Not deferred to here: token authentication and repository-scoped authorisation, which generic proves at step 2, and **format management operations**, which the Tier 1 formats need before their handlers are done - PyPI yank, unyank and deletion, npm unpublish and deprecation, Galaxy version and collection deletion - built with their formats at steps 5, 6 and 6a on the step-2 core, through the registry-owned management API the format specs settled on (owed as `management-api.md`) and the dispatch the step 4a re-open settles. |
-| 10 | **Replication** | Not gated by the breadth verdict. `replication.md` transfers snapshots of every format generically, so its hardest cases need formats that already exist: mutable metadata (npm, PyPI) and signed indexes (Debian, RPM), where a follower must serve indexes it did not sign. Before Tier 1 completes, those cases cannot be written against anything real. |
-| 11 | **Tiers 2 and 3** | Only after a `continue` verdict at step 8. The specs already exist; this step builds handlers, one per ecosystem, each re-reviewed against the then-current foundation before its `/tasks` run. |
+| 9 | **Surface: the rest of the management surface, the web UI, OIDC SSO and RBAC administration** | Not gated by the breadth verdict, because it is not breadth. Placed after Tier 1 for evidence: the UI renders the shared model's entities for every implemented format, and drawing its per-format rendering contract from nine real formats is better than guessing it from two. The management surface completes first (`management-api.md` Phase 4: registry-wide listings, search and the recipe reads) because the UI is its client; then `web-ui.md`, all five phases, ending in the flow AC11 names, with `credential-management.md` Phase 4 as its credential pages. Not deferred to here: token authentication and repository-scoped authorisation, which generic proves at step 2, and **format management operations**, which the Tier 1 formats need before their handlers are done - PyPI yank, unyank and deletion, npm unpublish and deprecation, Galaxy version and collection deletion - built with their formats at steps 5, 6 and 6a on the step-2 core, through the registry-owned management API (`management-api.md` Phase 3) and the `Operator` dispatch the step 4a re-open confirms. |
+| 10 | **Replication** | Not gated by the breadth verdict. `replication.md` (Phases 0 to 4) transfers snapshots of every format generically, so its hardest cases need formats that already exist: mutable metadata (npm, PyPI) and signed indexes (Debian, RPM), where a follower must serve indexes it did not sign. Before Tier 1 completes, those cases cannot be written against anything real. With it: `signing-service.md` Phase 5 (signing records on the replication read surface and the takeover precondition), `observability.md` Phase 4 and the replication half of `repository-lifecycle.md` Phase 4. |
+| 11 | **Tiers 2 and 3** | Only after a `continue` verdict at step 8. The specs already exist; this step builds handlers, one per ecosystem, each re-reviewed against the then-current foundation before its `/tasks` run. The foundation phases that exist only for these tiers land here with their first consumer: `artifact-verification.md` Phase 4, `upstream-adapters.md` Phase 4 (the `git` adapter, with Terraform), `credential-management.md` Phase 2 (registered public keys, before Chef's private reads) and `signing-service.md` Phase 3 (KMS, PKCS #11 and operator-held keys, completing the TUF root chain for Hackage). |
 
 ### Measuring per-format cost
 
@@ -182,7 +189,9 @@ line, `format:<name>`, one per catalogue ecosystem; or a shared line, `shared:<l
 foundation subsystem (`harness`, `data-model`, `storage`, `proxy`, `upstream`, `auth`,
 `interface`, `verification`, `policy`, `async`, `signing`, `management`, `observability`,
 `deploy`, `ui`, `replication`). The list lives in the experiment log and grows only by a dated
-entry there.
+entry there. A spec that is one half of a listed subsystem shares its line rather than adding
+one: `credential-management.md` and `repository-lifecycle.md` are the token and repository
+halves of the management surface core and are charged to `shared:management`.
 
 **The path rule decides the line, not the author.** Work under `internal/format/<name>/`,
 `conformance/<name>/` or the format's own spec is `format:<name>`. Everything else is shared.
@@ -266,6 +275,12 @@ and the revised definition.
 
 Rust would be a legitimate *different* experiment ("can agents do Rust"). It is not this one.
 
+**TypeScript and React for the frontend**, under `web/`, as `CLAUDE.md` records and `web-ui.md`
+designs (Vite, React Aria Components, a Playwright suite under `web/e2e/` that AC11 runs). The
+frontend is a client of the management API and asserts nothing the API does not already
+assert, so its language choice shapes no format handler and touches no cost line but `shared:ui`.
+There is no `web/` directory yet; it is created at step 9.
+
 ### Licence
 
 Apache 2.0, including SSO and RBAC. The entire pitch is "the free one"; a source-available
@@ -309,12 +324,17 @@ licence collapses that claim on contact with Harbor (Apache 2.0) and Gitea (MIT)
       implemented format, and creates a remote repository with its upstream, which then serves
       a proxied install to a real client.
 - [ ] AC12: No format handler reaches `main` before every shared subsystem the build order
-      places ahead of it has met its own criteria: npm's handler follows artifact verification
-      and supply-chain policy enforcement on both paths (step 4b), Ansible collections' handler
-      follows the asynchronous operations subsystem (step 6a), and Helm's handler follows the
-      shared signing and index service (step 7); and npm's, PyPI's and Ansible collections'
-      handlers each follow the management operations their own specs require through the
-      registry-owned management API. Tier 2 and Tier 3 handlers additionally follow AC9.
+      places ahead of it has met its own criteria: npm's handler follows the asynchronous queue
+      core (`async-operations.md` Phases 1 to 3), artifact verification's core and Sigstore entry
+      (`artifact-verification.md` Phase 1) and supply-chain policy enforcement on both paths, in
+      that order (step 4b); Ansible collections' handler follows the deferred management
+      operation on the async runner (`async-operations.md` Phase 4, step 6a); Maven's handler,
+      the first and unsigned consumer, follows the shared signing and index service's runtime
+      (`signing-service.md` Phase 1), Helm's follows the same, and Debian's and RPM's follow its
+      pointer documents and rotation profiles as well (`signing-service.md` Phase 2), all within
+      step 7; and npm's, PyPI's and Ansible collections' handlers each follow the management
+      operations their own specs require through the registry-owned management API
+      (`management-api.md` Phase 3). Tier 2 and Tier 3 handlers additionally follow AC9.
 
 ## Test Plan
 
@@ -325,7 +345,7 @@ licence collapses that claim on contact with Harbor (Apache 2.0) and Gitea (MIT)
 | AC3 | conformance | `conformance/oci/` |
 | AC4 | conformance | `conformance/<format>/hosted_test.go`, `proxied_test.go` |
 | AC5 | property / fault injection | `internal/storage/gc_test.go` |
-| AC6 | benchmark | `internal/storage/bench_test.go` + CI gate |
+| AC6 | benchmark | `internal/storage/bench_test.go` (each benchmark carrying the `// gate:` comment naming its budget) compared against the checked-in baseline by `scripts/bench-gate.sh` in the `main`-gated CI job (`observability.md` AC24 and AC25, `storage-and-gc.md` AC7) |
 | AC7 | integration | `internal/auth/oidc_test.go` |
 | AC8 | ci | `scripts/cost-report.js --check` in `make verify`: recomputes the experiment log's per-format table from the ledger and fails when the committed table differs |
 | AC9 | ci + manual | structure check in `make verify`: an `internal/format/<name>` for a Tier 2 or Tier 3 catalogue row fails without a `continue` verdict entry, and a `shrink` entry fails while any unbuilt Tier 2 or 3 spec is not `parked`; the verdict's content is reviewed by the owner against "The breadth gate's definition" at step 8 |
@@ -340,21 +360,34 @@ bets on rather than stopping short of it.
 
 ### Phase 1: Foundation (steps 1 to 3)
 - Conformance harness spec and implementation
-- Generic format as the harness's first subject, with the management surface core, the
-  configuration and deployment baseline and the observability baseline it needs to run
-- Shared data model, CAS and GC (specs exist; implementation lands here), with the benchmark gate
+- Generic format as the harness's first subject, with the management surface core
+  (`management-api.md` Phase 1, `repository-lifecycle.md` Phase 1, `credential-management.md`
+  Phase 1), the configuration and deployment baseline (`deployment.md` Phases 1 and 2) and the
+  observability baseline (`observability.md` Phase 1, the benchmark-gate mechanism included) it
+  needs to run
+- Shared data model, CAS and GC (specs exist; implementation lands here), with the storage
+  benchmarks under the gate, `repository-lifecycle.md` Phase 2 and `observability.md` Phase 2's
+  storage half
 
 ### Phase 2: The hard oracle (steps 4 and 4a)
 - OCI handler against the official conformance suite
-- The proxy/cache layer and upstream adapters, built with it rather than after it
-- Deployment packaging, before the repository goes public at the first working format
+- The proxy/cache layer (`proxy-cache.md`) and upstream adapters (`upstream-adapters.md` Phases 1
+  and 2), built with it rather than after it; `repository-lifecycle.md` Phase 3 with the first
+  `remote`
+- Deployment packaging (`deployment.md` Phase 3), before the repository goes public at the first
+  working format
+- `management-api.md` Phase 2 (publish and the deferred-operation wire shape), the prototype's
+  entry
 - The write-triggered services prototype, its Debian signed-index half and its Galaxy-shaped
   asynchronous half (entry for the latter: `data-model.md`'s `Operation` entity), then the
   scheduled handler-interface re-open
 
 ### Phase 3: Enforcement before the baseline (step 4b)
 - Entry: the re-open is complete (`format-handler-interface.md` AC8)
-- Artifact signature and attestation verification
+- The asynchronous queue core (`async-operations.md` Phases 1 to 3), first, as the consumer
+  subsystems below run on it
+- Artifact signature and attestation verification, core and Sigstore entry only
+  (`artifact-verification.md` Phase 1)
 - Supply-chain policy: scanning, evaluation, and the proxied path, exercised over OCI
 
 ### Phase 4: The differentiator and the baseline (step 5)
@@ -364,26 +397,33 @@ bets on rather than stopping short of it.
   management operations through the registry-owned management API
 
 ### Phase 5: The generalisation test (steps 6 and 6a)
-- PyPI, measuring cost against npm, with its management operations
-- Asynchronous operations, then Ansible collections with its management operations (entry: the
-  async subsystem's criteria met)
+- PyPI, measuring cost against npm, with its management operations (its trusted-publishing
+  binding on `credential-management.md` Phase 3)
+- The deferred management operation on the async runner (`async-operations.md` Phase 4), then
+  Ansible collections with its management operations (entry: that phase's criteria met)
 
 ### Phase 6: Tier 1 remainder (step 7)
-- The shared signing and index service (entry for Helm, Debian and RPM)
-- Maven, Go modules, NuGet, Helm, Debian, RPM, in that order
+- The shared signing and index service runtime (`signing-service.md` Phase 1; entry for Maven
+  and Helm), then its pointer documents and rotation profiles (Phase 2; entry for Debian and RPM)
+- Maven (the unsigned consumer, first), Go modules, NuGet, Helm, Debian, RPM, in that order
 
 ### Phase 7: The breadth gate (step 8)
 - The owner's verdict against the pre-committed definition, recorded in the experiment log
 
 ### Phase 8: Surface (step 9, not gated by the verdict)
-- The rest of the management surface (format operations already landed with their formats),
-  then the web UI, OIDC SSO and RBAC administration
+- The rest of the management surface (`management-api.md` Phase 4; format operations already
+  landed with their formats), then the web UI (`web-ui.md`, with `credential-management.md`
+  Phase 4), OIDC SSO and RBAC administration
 
 ### Phase 9: Replication (step 10, not gated by the verdict)
-- Pull replication, air-gapped export and import, retention coordination (`replication.md`)
+- Pull replication, air-gapped export and import, retention coordination (`replication.md`),
+  with `signing-service.md` Phase 5 and `observability.md` Phase 4
 
 ### Phase 10: Tiers 2 and 3 (step 11, only on `continue`)
-- One handler per ecosystem against its existing spec, each spec re-reviewed first
+- One handler per ecosystem against its existing spec, each spec re-reviewed first, with the
+  foundation phases that exist only for these tiers (`artifact-verification.md` Phase 4,
+  `upstream-adapters.md` Phase 4, `credential-management.md` Phase 2, `signing-service.md`
+  Phase 3) landing beside their first consumer
 
 ## Tasks
 
@@ -405,10 +445,14 @@ collections keeps its early slot **by promotion into Tier 1** rather than as an 
 order, because `catalogue.md` adopted that promotion in the same pass. The build order now also
 places every subsystem that had no step: replication (step 10), supply-chain policy and artifact
 verification (step 4b), the write-triggered services prototype (step 4a, unchanged), the async
-operation subsystem (step 6a), the shared signing and index service (step 7), the management
-surface (core at step 2, the rest at step 9), upstream adapters (step 4), observability and
-deployment (baselines at step 2, packaging at step 4), and the web UI (step 9). Each step's
-reason is in its row. AC12 asserts the ordering where it matters for evidence.
+operation subsystem (placed at step 6a in this fold; on 2026-09-28 its queue core moved to the
+start of step 4b under `async-operations.md`'s resolved build-placement decision, was Q9, with
+only the deferred management operation staying at 6a), the shared signing and index service
+(step 7), the management surface (core at step 2, the rest at step 9), upstream adapters (step
+4), observability and deployment (baselines at step 2, packaging at step 4), and the web UI
+(step 9). Each step's reason is in its row, and each row cites the phase of the foundation
+spec that lands there, so a step never depends on a later one. AC12 asserts the ordering where
+it matters for evidence.
 
 Accepted cost: Tier 1 grows to nine and absorbs a format whose case is market position rather
 than adoption volume, and the build order grows three lettered steps so that sibling citations
@@ -615,3 +659,4 @@ deliverable, not a side note.
 | 2026-09-23 | 9c971d4 | cross-spec consistency (build sequencing) | Scheduled the Debian signed-index prototype and handler-interface re-open after OCI and before npm, distinguished the later full Debian handler, and corrected stale step numbers; existing open questions still keep the charter draft. |
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Adopted Q1 (append phases; Ansible early by Tier 1 promotion, not exception), Q2 (C: pre-committed definition, owner adjudicates), Q3 (B: shared-line ledger, format = handler + conformance, C kept as a reported column) and Q6 (A: thin UI criterion), and two questions the fold exposed: Q7 (supply-chain policy before npm) and Q8 (gate thresholds: second-half median at most 70% of first-half, with intervention and defect vetoes). Body changes: recorded the owner's spec-everything decision (speccing ungated, building gated); build order extended to steps 4b, 6a, 9, 10, 11 with a reason per placement for replication, supply-chain policy, artifact verification, the write-triggered prototype, async operations, the signing and index service, the management surface, upstream adapters, observability, deployment and the web UI; step 7 reordered to the catalogue's order; new Design sections for the cost procedure and the gate definition; AC8 (reproducible ledger), AC9 (gate verdict and parking) and AC10 (Cost-Line tagging) rewritten or added, AC11 (web UI) and AC12 (shared subsystems before their first consumer) added, each with a Test Plan row; phases extended to ten, one per build step group; breadth headline corrected to 33 implementations. Stays draft: no gate review has been run. |
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the harness and generic fold: step 2's reason said the harness `setup` provisions repositories and tokens through the management surface, which the harness's resolved seed-path decision made untrue; rewritten so the management surface core stays at step 2 as the operator API generic's settings (immutability, retention rules) and token issuance need, while the harness provisions through the seed subcommand. From the format-management fold: step 4a and Phase 2 now name both prototype halves (Debian signed indexes, Galaxy-shaped asynchronous operations on `data-model.md`'s `Operation` entity) and what the re-open also settles (the ingest hook, management dispatch); step 9 and Phase 8 no longer defer format management operations, which land with npm, PyPI and Ansible collections at steps 5, 6 and 6a through the registry-owned management API, with AC12 extended to assert it and Phases 4 and 5 updated. Items found already done: the 33-implementation headline, and supply-chain policy (step 4b) and replication (step 10) placements. |
+| 2026-09-28 | b31b889 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the source spec's current text before applying. Build order: step 2 cites `management-api.md` Phase 1, `repository-lifecycle.md` Phase 1 (Phases 2 and 3 placed at steps 3 and 4), `credential-management.md` Phase 1, `deployment.md` Phases 1 and 2 and `observability.md` Phase 1 by name (management-api item 10, credential-management item 9, repository-lifecycle item 17, observability item 16); steps 3, 4, 5, 6, 9, 10 and 11 cite the sibling phases landing there so no step depends on a later one; step 4a takes `management-api.md` Phase 2 as its entry and names the three optional interfaces the re-open rules on; step 4b becomes queue core, then verification's core and Sigstore entry only, then policy (async-operations item 10 and its was-Q9, artifact-verification item 15); step 6a becomes the deferred management operation then Ansible collections; step 7 names Maven as the first, unsigned consumer, Helm, and Debian and RPM behind `signing-service.md` Phase 2 (signing-service item 14, Open items 11 and 19). AC12 rewritten to assert those orderings; AC6's Test Plan row runs on `scripts/bench-gate.sh`; Phases 1 to 3, 5, 6, 8, 9 and 10 updated; the was-Q1 record notes the 4b move as a later decision. Scope: virtual aggregation recorded as a per-format `Capabilities()` declaration, Hex the first `unsupported` (Open item 12). Design "Language": the TypeScript/React frontend under `web/` (web-ui item 7). Cost lines: credential-management and repository-lifecycle charged to `shared:management`. Already done: harness item 5 and format-management item 5 (applied at fe54272); charter fold item 13's placements, which every new foundation spec cites consistently except the async move recorded above. Stays draft. |
