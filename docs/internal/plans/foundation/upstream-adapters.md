@@ -1,7 +1,7 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-28 at 9ebf6e9 with the foundation authoring wave (not a review): the Upstream row and UpstreamCredential store are cited as data-model.md's (AC40) instead of owed; a referenced credential's deletion is refused in-use and a changed remote binding keeps its cache with last-checked reset, with the Router resolving row and credential per fetch (AC30, shared with repository-lifecycle AC20 and AC25, management-api AC21); upstream-invalid is 422; traceparent and tracestate join the forbidden outbound set (AC4), MarkSecret precedes every credential use and the redaction list is held equal to telemetry.RedactURL's (AC20); the six upstream_* series and the two alerts under observability's names (AC31); the three upstream.* keys in the checked table shape with User-Agent computed from server.public_url (AC32); the nuget and maven profiles are shipped rows under proxy-cache's was-Q17. 32 criteria, each with a Test Plan row; zero open questions; stays draft pending a gate review. Earlier: authored 2026-09-27 at d9510af as a grounded first draft, not yet reviewed. Gathers the upstream requirements of 27 format specs, the queued consequences (Open items 7, 11, 13 and every line naming this file, cross-cutting themes 2 and 7), format-handler-interface.md's ownership gap for the adapter axis, proxy-cache.md's routing of provider quirks to adapters and management-api.md's administration of upstream credentials; grounds the design in Harbor's adapter package, the distribution token-auth specification, Docker Hub's pull-limit documentation, the ECR GetAuthorizationToken API, the GCE metadata server and Artifact Registry authentication pages, GitHub's rate-limit documentation, Pulp's Remote model and zot's sync configuration fetched this run (Nexus and Artifactory pages unreachable, recorded); fixes one transport seam (two adapters, a credential-kind axis, a per-upstream host allowlist, typed rate-limit errors, truthful completion) and states the split against proxy-cache.md line by line. Seven questions written in decision shape and adopted under the owner's standing delegation; zero open. 29 criteria, each with a Test Plan row. Awaits a /spec review pass."
-description: "Spec for the upstream adapter axis: the seam between the proxy cache and every upstream it fetches from. Two transport adapters (a plain HTTPS adapter and an OCI distribution adapter) behind one small interface, a separate credential-kind axis (none, Basic, Bearer, vendor header, path token, distribution token exchange, AWS ECR, Google Cloud), a per-upstream off-origin host allowlist with per-host credential roles, redirect following that never reaches a client, typed rate-limit errors with a bounded cool-down, truthful body completion for the completion-only fetch mode, and credential redaction; with the preconfigured upstream profiles and the adapter half of the nightly real-upstream job."
+status_description: "Closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): Q8 adopted under the standing delegation, a basic-exchange credential kind for Conan-shaped upstreams (Basic GET at a stored path, text/plain token, Bearer to the root and its root entries, one re-exchange on a fresh 401; AC33, Phase 3 with Conan); Q9 adopted, the Router selecting the adapter per location so a Terraform https remote hands a commit-pinned git location to the git adapter under the same row's allowlist, bound and cool-down, never a credential, with a row naming git refused (AC34, AC23, Phase 4); a Cargo requirements row and the crates.io and ConanCenter operator recipes; the Docker Hub CDN hosts captured at oci.md's Phase 4 (AC24). 34 criteria, each with a Test Plan row; zero open questions; fable_recheck extended; stays draft pending a gate review. Earlier: Reconciled 2026-09-28 at 9ebf6e9 with the foundation authoring wave (not a review): the Upstream row and UpstreamCredential store are cited as data-model.md's (AC40) instead of owed; a referenced credential's deletion is refused in-use and a changed remote binding keeps its cache with last-checked reset, with the Router resolving row and credential per fetch (AC30, shared with repository-lifecycle AC20 and AC25, management-api AC21); upstream-invalid is 422; traceparent and tracestate join the forbidden outbound set (AC4), MarkSecret precedes every credential use and the redaction list is held equal to telemetry.RedactURL's (AC20); the six upstream_* series and the two alerts under observability's names (AC31); the three upstream.* keys in the checked table shape with User-Agent computed from server.public_url (AC32); the nuget and maven profiles are shipped rows under proxy-cache's was-Q17. 32 criteria, each with a Test Plan row; zero open questions; stays draft pending a gate review. Earlier: authored 2026-09-27 at d9510af as a grounded first draft, not yet reviewed. Gathers the upstream requirements of 27 format specs, the queued consequences (Open items 7, 11, 13 and every line naming this file, cross-cutting themes 2 and 7), format-handler-interface.md's ownership gap for the adapter axis, proxy-cache.md's routing of provider quirks to adapters and management-api.md's administration of upstream credentials; grounds the design in Harbor's adapter package, the distribution token-auth specification, Docker Hub's pull-limit documentation, the ECR GetAuthorizationToken API, the GCE metadata server and Artifact Registry authentication pages, GitHub's rate-limit documentation, Pulp's Remote model and zot's sync configuration fetched this run (Nexus and Artifactory pages unreachable, recorded); fixes one transport seam (two adapters, a credential-kind axis, a per-upstream host allowlist, typed rate-limit errors, truthful completion) and states the split against proxy-cache.md line by line. Seven questions written in decision shape and adopted under the owner's standing delegation; zero open. 29 criteria, each with a Test Plan row. Awaits a /spec review pass."
+description: "Spec for the upstream adapter axis: the seam between the proxy cache and every upstream it fetches from. Two transport adapters (a plain HTTPS adapter and an OCI distribution adapter) behind one small interface, a separate credential-kind axis (none, Basic, Bearer, vendor header, path token, Conan-shaped Basic exchange, distribution token exchange, AWS ECR, Google Cloud), a per-upstream off-origin host allowlist with per-host credential roles, redirect following that never reaches a client, typed rate-limit errors with a bounded cool-down, truthful body completion for the completion-only fetch mode, and credential redaction; with the preconfigured upstream profiles and the adapter half of the nightly real-upstream job."
 author: michielvha
 goal: "Make every upstream a configuration row rather than a code change: one OCI handler serves Docker Hub, ECR, GCR, GHCR, Quay, Artifactory and Nexus because authentication, redirects, rate limits and transport quirks live behind one adapter seam that no handler and no proxy-core code can bypass, so that format N+1 adds an upstream profile and never an HTTP client."
 priority: "critical"
@@ -9,7 +9,7 @@ issue: 48
 created: 2026-09-27
 covers:
   - "internal/upstream/**"
-fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate"
+fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate; closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q8 (basic-exchange credential kind for Conan-shaped upstreams) and Q9 (per-location dispatch of git locations on an https upstream, a row naming git refused), never Fable-reviewed"
 ---
 
 # Plan: Upstream adapters
@@ -91,11 +91,13 @@ the only place in the tree that can open an outbound connection on the proxied p
   Open VSX, Swift, Puppet, Vagrant, conda, Composer, npm, PyPI, Galaxy, NuGet, GOPROXY and the
   checksum database all speak at the transport level); and `distribution`, for OCI registries,
   carrying the token-exchange challenge flow and the pull-limit headers Docker Hub and its
-  siblings add. A third adapter, `git`, for a commit-pinned tree fetch, lands with Terraform.
-- The credential-kind axis: `none`, `basic`, `bearer`, `header`, `path-token`, `token-exchange`,
-  `aws-ecr`, `gcp`, and client TLS as an orthogonal transport setting. What each kind stores, how
-  it is presented, and when it is refreshed. The kinds are this spec's; the store and its
-  administration are `data-model.md`'s and `management-api.md`'s.
+  siblings add. A third adapter, `git`, for a commit-pinned tree fetch, lands with Terraform; it is
+  a per-location transport of an `https` upstream, never the adapter a row names (the resolved
+  git-location decision, was Q9).
+- The credential-kind axis: `none`, `basic`, `bearer`, `header`, `path-token`, `basic-exchange`,
+  `token-exchange`, `aws-ecr`, `gcp`, and client TLS as an orthogonal transport setting. What each
+  kind stores, how it is presented, and when it is refreshed. The kinds are this spec's; the store
+  and its administration are `data-model.md`'s and `management-api.md`'s.
 - Credential scoping: an upstream's credential reaches the upstream's root host and nothing else
   unless an allowlist entry says otherwise, per host, with a role.
 - The per-upstream **off-origin host allowlist**, default empty, enforced before any connection:
@@ -177,7 +179,8 @@ the only place in the tree that can open an outbound connection on the proxied p
   names it, and it is a new credential kind, never a new adapter.
 - **Materialising Go modules or Cargo crates from git origins.** `go-modules.md` and `cargo.md`
   both weighed and rejected it for correctness reasons; the `git` adapter here fetches one
-  commit-pinned tree for Terraform and synthesises nothing.
+  commit-pinned tree for Terraform and synthesises nothing, and a row naming `git` as its adapter
+  is refused at configuration so no remote can be built over a git origin (was Q9, AC34).
 
 ## Design
 
@@ -206,11 +209,12 @@ silently unbuilt.
 | `cran.md` (item 15) | Fixed non-R `User-Agent` on every upstream request | AC5 |
 | `julia.md` (item 16) | Cross-host redirects `301` then `302` to `storage.julialang.net`; credential only to the configured host; `Accept-Encoding: zstd, gzip` only on request; no `Julia-CI-Variables` | AC4, AC5, AC6, AC7, AC8 |
 | `swift.md` (item 17) | Follow `303` to presigned object-store URLs (600 s); pagination to completion; upstream Bearer or Basic | AC8 (presigned never stored), AC19; pagination is the handler's derivation |
-| `terraform.md` (item 18) | Artifact-host allowlist; both download-location forms; commit-pinned VCS fetch, collision-detecting SHA-1, size bound, no credential | AC7, AC28; location forms are the handler's |
+| `terraform.md` (item 18; format batch 5 item 6, its AC18) | Artifact-host allowlist; both download-location forms; commit-pinned VCS fetch, collision-detecting SHA-1, size bound, no credential; how an `https` remote hands a commit-pinned module location to the `git` adapter under the same allowlist | AC7, AC28, AC34 ("Selecting an adapter", the resolved git-location decision, was Q9); location forms are the handler's |
+| `cargo.md` "The upstream binding" (format batch 3 item 11, its AC21) | An `https://` sparse root with the `sparse+` prefix removed; the `dl` host as an off-origin allowlist entry (`static.crates.io` with role `none` for crates.io, plus `crates.io` with role `none` when `dl` is the `api` download path that redirects to it); a private sparse upstream's bare token as the `header` kind with header `Authorization`, to the root only | AC6, AC7, AC8, AC19, AC22 (the recipe row under "Preconfigured profiles"; crates.io is not a profile) |
 | `rpm.md` (item 19) | Mirror-root joining; cross-host redirect allowlist; conditional revalidation; metalink fetch | AC7, AC15; joining is the handler's; metalink hash check is `artifact-verification.md`'s |
 | `debian.md` (item 20) | Per-upstream OpenPGP keyring | Trust set, `artifact-verification.md` (Scope) |
 | `alpine.md`, `arch.md` (items 21, 32) | Root-host-only credential; redirect allowlist; `If-None-Match` and `If-Modified-Since`; `http://` roots refused; upstream `Last-Modified` returned per revision | AC6, AC7, AC14, AC15, AC22 |
-| `conan.md` (item 22) | ConanCenter adapter covering `center2.conan.io` and the frozen `center.conan.io` | Two `https` upstreams, one per remote, aggregated in a `virtual` (`data-model.md`); AC1 |
+| `conan.md` (item 22; format batch 4 item 10) | ConanCenter adapter covering `center2.conan.io` and the frozen `center.conan.io`; a private Conan upstream that issues its token only through a Basic exchange at `users/authenticate` | Two `https` upstreams, one per remote, aggregated in a `virtual` (`data-model.md`); AC1; the `basic-exchange` kind (the resolved Conan-exchange decision, was Q8), AC33 |
 | `vagrant.md` (item 23) | Catalog path template; Bearer or Basic to the root only; redirect chains up to ten hops to an allowlist; never cache a presigned target | AC6, AC7, AC8, AC19; the template is the handler's |
 | `chef.md` (item 24) | Supermarket adapter: cross-host `302` to S3; `If-None-Match` revalidation | AC7, AC8, AC15 |
 | `puppet.md` (item 25) | Base-relative resolution; absolute `file_uri` on an allowlisted host; Bearer to the root only; conditional revalidation; identifying `User-Agent` | AC5, AC6, AC7, AC15; resolution is the handler's |
@@ -343,6 +347,26 @@ The set is deliberately small (the resolved granularity decision, was Q1):
   one HTTP exchange; it is not a route to materialising modules or crates, which `go-modules.md`
   and `cargo.md` rejected.
 
+**How a location reaches the `git` adapter** (the resolved git-location decision, was Q9). A
+Terraform remote's `Upstream` row names `https`: its discovery document, version lists, download
+documents and provider archives are HTTPS exchanges. A module version whose upstream location is
+`git::https://{host}/{path}?ref={40 hex}` is not, and it is not a second upstream either: the host
+is whatever the module author published, so no operator could pre-create a remote per git host.
+The `Router` therefore selects the adapter **per location, not per row**. `Request` carries a
+location in one of three forms: a path under the root, an absolute URL, or a **git location**
+`{url, commit}` (an `https://` repository URL and the 40-digit commit id; the handler parses the
+module source and keeps `//subdir` for itself). A path or URL goes to the row's adapter; a git
+location goes to the `git` adapter, and only when the row's adapter is `https`, under the same
+row's allowlist, concurrency bound and cool-down: the repository URL's host must match an entry of
+that row's `hosts` (any role) or the fetch fails with `HostNotAllowedError` before any connection,
+and whatever the entry's role, the `git` adapter presents no credential (it accepts `none` only, per
+`terraform.md`'s no-credential rule). The response body is the commit's tree as an uncompressed tar
+stream in tree order, file modes kept and timestamps zeroed, under the same truthful-completion
+rule (`ErrTruncated`, `ErrStalled`), which the handler re-packs canonically as it does a hosted
+archive. A git location on a `distribution` row, and any `Upstream` row naming `git` as its own
+adapter, is refused (the second at configuration, AC23), so the `git` transport is reachable only
+as a location of an `https` remote and never as a way to build a remote over a git origin (AC34).
+
 Why not one adapter per vendor: the vendors listed under `distribution` differ in how a
 credential is obtained (a static token, an exchange at a challenge realm, an IAM call, a metadata
 server) and in which hosts their blobs redirect to. Both are already configuration on the
@@ -369,8 +393,9 @@ Validator  Validate(ctx, Upstream) error                 optional, type-asserted
 
 That is the whole pin (AC2). `Request` carries: the upstream (its row, resolved credential
 handle, allowlist, limits); the method (`GET`, `HEAD`, `POST`); the location, either a path under
-the upstream root or an absolute URL the handler took from upstream metadata (which the allowlist
-must admit); the `Options` the handler set through fetch-and-cache: `Accept`, `Accept-Encoding`
+the upstream root, an absolute URL the handler took from upstream metadata (which the allowlist
+must admit), or a git location `{url, commit}` the `Router` sends to the `git` adapter ("How a
+location reaches the `git` adapter" above); the `Options` the handler set through fetch-and-cache: `Accept`, `Accept-Encoding`
 opt-in, a `User-Agent` override, a `Range`, and the request body for a forwarded `POST`; and the
 conditional validators the proxy holds (`ETag`, `Last-Modified`). It has no `*http.Request`, no
 `http.Header` and no field that could carry an inbound header wholesale (AC4): the outbound
@@ -390,7 +415,7 @@ connection (AC7). Errors are wrapped with a gerund phrase and no prefix (`CLAUDE
 
 The `Router` in `internal/upstream` is what the proxy layer holds: given a `remote` repository it
 loads the `Upstream` row, resolves the credential handle from the store, selects the adapter from
-the registry, applies the per-upstream concurrency bound and cool-down state, and calls `Fetch`.
+the registry (the row's adapter, or `git` for a git location on an `https` row), applies the per-upstream concurrency bound and cool-down state, and calls `Fetch`.
 It is a concrete struct; the proxy layer's `Fetcher` interface is satisfied by `*Router`.
 
 ### Configuration on the `Upstream` row
@@ -459,15 +484,29 @@ review procedure lists them and the redactor below in its review surface.
 | `bearer` | token | `Authorization: Bearer <token>` (HCP Vagrant, prefix.dev, the Forge, Swift registries, GitHub for Packagist dists) | never |
 | `header` | header name, value | the named header verbatim (`X-JFrog-Art-Api`, `X-NuGet-ApiKey`, `X-ApiKey`) for upstreams that are themselves Artifactory, Nexus or Hackage-shaped | never |
 | `path-token` | token, template (`/t/{token}/` after the host for anaconda.org) | the token inserted into the URL path of requests to the root host only; never into an off-origin URL | never |
+| `basic-exchange` | username, password, exchange path under the root (`v2/users/authenticate` for a Conan 2 server, `v1/users/authenticate` for Conan 1) | a `GET` of the exchange path with `Authorization: Basic` and the stored pair, whose `200` body (`text/plain`, the token and nothing else, trimmed) is then presented as `Authorization: Bearer` on every request to the root and to entries of role `root`; the exchange is made only against the root host, never an off-origin one | on a fresh `401` from the root: one re-exchange and one retry; a second `401`, or an exchange answering anything but `200` with a non-empty body, is `Refused` |
 | `token-exchange` | optional username and password (or nothing) | on a `401` `WWW-Authenticate: Bearer` challenge, a token request at the realm with `service` and `scope` from the challenge, Basic with the stored pair when present, anonymous otherwise; then `Authorization: Bearer` on the retry; the token cached per `(realm, service, scope)` for `expires_in` (60 seconds when absent, per the specification) less a margin | on expiry or a fresh `401` |
 | `aws-ecr` | either static access key id, secret and optional session token, or `ambient` (the SDK default chain: environment, shared config, IMDS, web identity, ECS task role), plus region | `GetAuthorizationToken` once, decoded to `AWS:<password>`, presented as Basic | at `expiresAt` minus 5 minutes, never later than 12 hours |
 | `gcp` | either `ambient` (metadata server) or a service-account JSON key | ambient: `GET .../service-accounts/default/token` with `Metadata-Flavor: Google`, presented as Basic `oauth2accesstoken:<access_token>`; key: a stdlib-signed RS256 JWT exchanged at the token endpoint, presented the same way | at `expires_in` minus 5 minutes (the metadata server's own refresh point) |
 
 Client TLS (`tls.client_cert`) is orthogonal and may accompany any kind. The `distribution`
 adapter accepts `none`, `basic`, `token-exchange`, `aws-ecr` and `gcp`; the `https` adapter
-accepts `none`, `basic`, `bearer`, `header` and `path-token`; the `git` adapter accepts `none`
-only. A kind an adapter does not accept is refused at configuration (AC23), so an operator learns
-at creation, not at the first miss.
+accepts `none`, `basic`, `bearer`, `header`, `path-token` and `basic-exchange`; the `git` adapter
+accepts `none` only and is never a row's adapter (a git location on an `https` row presents no
+credential whatever the row's kind). A kind an adapter does not accept is refused at configuration
+(AC23), so an operator learns at creation, not at the first miss.
+
+`basic-exchange` exists because Conan servers issue tokens only through their own exchange (the
+resolved Conan-exchange decision, was Q8): `conan.md` captured the client sending Basic to
+`GET /v2/users/authenticate` (Conan 1.66.0 to `/v1/users/authenticate`), receiving the token as a
+`text/plain` body, and presenting it as Bearer afterwards, with no `WWW-Authenticate` challenge on
+either side. `token-exchange` does not cover it: that kind is driven by a distribution `401` Bearer
+challenge naming a realm, which no Conan server sends. The exchanged token is cached per
+credential and upstream in memory only, never persisted, and never presented to a host other than
+the root and the row's `root` entries; its failures count under
+`upstream_token_exchange_failures_total{form="basic-exchange"}` (AC31). A private sparse Cargo
+upstream needs no exchange: its bare token is the `header` kind with header `Authorization`
+(`cargo.md`, "The upstream binding").
 
 Realm hosts: a `token-exchange` challenge may name a realm on another host (Docker Hub's realm is
 `auth.docker.io` for `registry-1.docker.io`). The exchange is made only when the realm host is
@@ -702,7 +741,7 @@ neither spec can add an upstream the other does not know.
 
 | Format | Upstream | Adapter | Credential | Allowlist |
 |---|---|---|---|---|
-| oci | `https://registry-1.docker.io` | `distribution` | `none` (anonymous exchange) | `auth.docker.io: root` (the realm); the blob CDN hosts as **captured at Phase 1**, not recalled: Docker Hub answers blob `GET`s with a cross-host redirect, and the hosts go in this row from the capture |
+| oci | `https://registry-1.docker.io` | `distribution` | `none` (anonymous exchange) | `auth.docker.io: root` (the realm); the blob CDN hosts as **captured at `oci.md`'s Phase 4** (its proxied phase, AC16 there), not recalled: Docker Hub answers blob `GET`s with a cross-host redirect, and the hosts go in this row from the capture |
 | npm | `https://registry.npmjs.org` | `https` | `none` | empty until npm's capture says otherwise |
 | pypi | `https://pypi.org/simple/` | `https` | `none` | `files.pythonhosted.org: none` (`pypi.md`: the index anchors point at a different host) |
 | ansible-collections | `https://galaxy.ansible.com` | `https` | `none` | as captured with the format |
@@ -714,7 +753,12 @@ as excluded until their formats are authorized), ghcr.io (Homebrew's upstream is
 configured, with `pkg-containers.githubusercontent.com: none` in its allowlist as the recipe),
 Packagist (operator configured, with `composer.md`'s default dist-host list `api.github.com`,
 `codeload.github.com`, `github.com`, `gitlab.com`, `bitbucket.org`, all role `none` until the
-operator attaches a GitHub token as `own` on `api.github.com`).
+operator attaches a GitHub token as `own` on `api.github.com`), crates.io (operator configured as
+`cargo.md` "The upstream binding" gives the recipe: root `https://index.crates.io/`, the `sparse+`
+prefix removed, allowlist `static.crates.io: none` plus `crates.io: none` when the `dl` template is
+the `api` download path; a private sparse upstream adds the `header` kind with header
+`Authorization`), and ConanCenter (two operator-configured `https` remotes, `center2.conan.io` and
+`center.conan.io`, credential `none`; a private Conan upstream takes `basic-exchange` or `bearer`).
 
 ### Conformance against real upstreams
 
@@ -888,15 +932,17 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       certificate configured on the upstream is presented in the handshake.
 - [ ] AC23: `Validate` runs on `management-api.md`'s create and `PATCH` of a `remote`'s upstream
       and refuses an unregistered adapter, a non-`https` root without `allow_http`, a credential
-      kind the adapter does not accept (`bearer` on `distribution`, `token-exchange` on `https`,
-      anything but `none` on `git`), an `own` entry naming no credential and a bare-wildcard host,
+      kind the adapter does not accept (`bearer` on `distribution`, `token-exchange` on `https`),
+      a row naming `git` as its own adapter (the resolved git-location decision, was Q9), an `own`
+      entry naming no credential and a bare-wildcard host,
       each with problem type `upstream-invalid` and status 422 and nothing committed; an
       unreachable but well-formed upstream is accepted.
 - [ ] AC24: The preconfigured profile table in `internal/upstream/preconfigured` and the
       fresh-install seeding `proxy-cache.md` AC19 asserts name the same set of upstreams, format
       by format, proven by one test that reads both; every profile names its adapter, URL,
       credential kind `none` and allowlist; the Docker Hub profile's allowlist contains
-      `auth.docker.io` with role `root` and the blob CDN hosts captured at Phase 1.
+      `auth.docker.io` with role `root` and the blob CDN hosts captured at `oci.md`'s Phase 4
+      (its proxied phase, its AC16).
 - [ ] AC25: A real `docker pull` through a remote repository succeeds against a Docker-Hub-shaped
       stand-in that challenges to a realm on a second hostname, redirects blobs to a third and
       counts pulls; with the stand-in's budget exhausted the pull fails with the client reporting
@@ -945,6 +991,28 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       tabled here, reach the package as a typed `upstream.Config`, are used by every `Upstream`
       row that leaves `limits` unset, and are the only `upstream.` keys the schema knows, held by
       `scripts/check-config-keys.js` under `make verify`.
+- [ ] AC33: The `basic-exchange` kind, against a fake Conan-shaped server that sends no
+      challenge, makes one `GET` of the configured exchange path with the stored Basic pair, then
+      presents the returned `text/plain` body as `Authorization: Bearer` on every later request to
+      the root and to allowlist entries of role `root` and on no other host (network layer); on a
+      fresh `401` it re-exchanges once and retries once, and a second `401` or an exchange
+      answering other than `200` with a non-empty body yields `Refused` and increments
+      `upstream_token_exchange_failures_total{form="basic-exchange"}`; the exchanged token is
+      registered with `telemetry.MarkSecret` before its first use and occurs zero times in logs
+      and the error chain; the exchange is never made against an off-origin host; and a real
+      `conan install` through a remote repository bound to a reference `conan_server` stand-in
+      that requires authentication succeeds under this kind (the resolved Conan-exchange
+      decision, was Q8).
+- [ ] AC34: On a remote whose row names `https`, a git location `{url, commit}` is fetched by the
+      `git` adapter under that row's allowlist, concurrency bound and cool-down: with the git host
+      allowlisted (under any role) the tree of the commit arrives as a tar stream and no
+      credential reaches the git host even when the row carries one (network layer); with the host
+      absent it fails `HostNotAllowedError` before any connection; the same location on a
+      `distribution` row is refused before any connection; a truncated smart-HTTP answer surfaces
+      `ErrTruncated`; and a real `terraform init` through a remote repository installs a module
+      whose upstream location is a commit-pinned `git::https` URL, from an archive the handler
+      re-packed from that tree (`terraform.md` AC18 is the client half; the resolved
+      git-location decision, was Q9).
 
 ## Test Plan
 
@@ -972,7 +1040,7 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
 | AC20 | unit + fuzz + integration | `internal/upstream/redact_test.go` (table over kinds and shapes, `FuzzRedact`; the parameter list equal to `telemetry.RedactURL`'s, importing both); `internal/upstream/credential_scope_test.go` (`MarkSecret` before first use per kind, through `telemetry.NewTestRecorder`); `internal/proxy/credentials_test.go` (`proxy-cache.md` AC6's case through the redactor) |
 | AC21 | unit | `internal/upstream/credential_boundary_test.go` (exported-identifier scan, reflection walk over `Response` and error chains) |
 | AC22 | integration + unit | `internal/upstream/tls_test.go` (private-CA stand-in with and without the bundle, client certificate in the handshake, startup-log naming); `internal/upstream/validate_test.go` (`http://` refusal and override) |
-| AC23 | integration | `internal/manage/upstream_validate_test.go` (create and `PATCH` through the management API, each refusal with `upstream-invalid`, unreachable accepted) |
+| AC23 | integration | `internal/manage/upstream_validate_test.go` (create and `PATCH` through the management API, each refusal with `upstream-invalid` including a row naming `git`, unreachable accepted) |
 | AC24 | unit | `internal/upstream/preconfigured/profiles_test.go` (reads the profile table and the seeding set `proxy-cache.md` AC19 tests, asserts equality and field completeness) |
 | AC25 | conformance | `conformance/oci/upstream_dockerhub_test.go` (Docker-Hub-shaped stand-in: realm on a second host, blob redirect to a third, pull budget, `429` message visible to the client); `conformance/composer/upstream_dist_host_test.go` (dist on a second host, `302` to a third, allowlist removal) |
 | AC26 | ci + manual procedure | scheduled nightly workflow rows in `.github/workflows/` (one per profile plus the two real-cloud rows); transcript diff and issue creation proven by a written manual-dispatch procedure; the unfunded table in this spec |
@@ -982,6 +1050,8 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
 | AC30 | integration | `internal/upstream/router_test.go` (per-fetch resolution, realm-keyed token cache, cool-down not carried); `internal/repository/configure_remote_test.go` (shared with `repository-lifecycle.md` AC25: cache kept, `last-checked` reset); `internal/manage/upstream_credential_test.go` (shared with `management-api.md` AC21 and `repository-lifecycle.md` AC20: rotation at the network layer, `in-use` while referenced) |
 | AC31 | integration | `internal/upstream/metrics_test.go` (every series and label set through `telemetry.NewTestRecorder` against the Docker-Hub-shaped stand-in; `UpstreamCooldown` once; the `observability.md` AC6 and AC18 rows for this package) |
 | AC32 | unit + script | `internal/upstream/config_test.go` (defaults, typed struct, row-level override); `scripts/check-config-keys.js` under `make verify` (`deployment.md`'s two-way check) |
+| AC33 | integration + conformance | `internal/upstream/basicexchange_test.go` (fake Conan-shaped server without a challenge: exchange path, Bearer on root and `root` entries only at the network layer, one re-exchange on a fresh `401`, second `401` and empty body `Refused`, failure counter under its form, `MarkSecret` through `telemetry.NewTestRecorder`, off-origin exchange refused); `conformance/conan/proxied_test.go` (a real `conan install` through a remote bound to an authenticating `conan_server` stand-in under `basic-exchange`, shared with `conan.md`'s proxied criterion) |
+| AC34 | integration + conformance | `internal/upstream/router_git_test.go` (git location on an `https` row: allowlisted host under each role with no credential at the git host, absent host refused before connect, `distribution` row refused, truncated answer; concurrency bound and cool-down shared with the row); `conformance/terraform/module_vcs_test.go` (shared with `terraform.md` AC18: a git stand-in serving a commit over smart HTTP, restricted-network installs) |
 
 ## Implementation Phases
 
@@ -1005,8 +1075,9 @@ an adapter.
 - The cool-down
 - The architecture enforcers: `forbidigo` egress rule and fixture, import-graph test,
   credential-material and request-shape tests
-- The Docker Hub profile with its allowlist filled from the Phase 1 capture; the profile table
-  test against `proxy-cache.md`'s seeding
+- The Docker Hub profile with its realm entry; its blob CDN hosts are filled from the capture at
+  `oci.md`'s Phase 4 (its proxied phase, AC16 there), since AC25 runs against stand-ins; the
+  profile table test against `proxy-cache.md`'s seeding
 - Transport stand-ins and the OCI conformance case (AC25's Docker Hub half)
 
 ### Phase 2: Cloud credential kinds and the nightly rows (step 4, after OCI conformance passes)
@@ -1027,10 +1098,16 @@ an adapter.
   resolved second extension, was Q17)
 - The Packagist recipe (`own` credential on `api.github.com`) and the Composer conformance cases
   (AC25's second half, AC27)
+- The `basic-exchange` kind with Conan's proxied phase, its only consumer and the source of its
+  evidence (the resolved Conan-exchange decision, was Q8; AC33); the crates.io recipe with Cargo's
+  proxied phase (`cargo.md` AC21)
 
 ### Phase 4: The `git` adapter (with Terraform)
 - `internal/upstream/git` with go-git and collision-detecting SHA-1, the size bound, the no-exec
   test
+- The git location form on `Request` and the `Router`'s per-location dispatch to `git` on an
+  `https` row under that row's allowlist, bound and cool-down; the configuration refusal of a row
+  naming `git` (the resolved git-location decision, was Q9; AC34, AC23)
 
 ## Tasks
 
@@ -1039,8 +1116,10 @@ Left empty by `/spec`. Populated by `/tasks` once the spec reaches `planned`.
 ## Open Questions
 
 None remain open. Seven questions were written in the template's decision shape during authoring
-on 2026-09-27 and adopted at their recommendations under the owner's standing delegation
+on 2026-09-27, and two more (Q8, Q9) during the closing reconciliation sweep on 2026-09-28 on
+Opus, and each was adopted at its recommendation under the owner's standing delegation
 (`CLAUDE.md`); each is reversible by the owner, and `grep -rn "standing delegation"` finds them.
+Q8 and Q9 carry this spec's `fable_recheck`.
 Resolved decisions are kept rather than deleted, so the reasoning survives the next time someone
 asks why it was done this way.
 
@@ -1224,9 +1303,86 @@ one consumer and its evidence (Terraform's captures) arrives with that format.
 
 Accepted cost: the second phase inside step 4.
 
+Later note (2026-09-28): the seventh non-cloud kind, `basic-exchange` (was Q8), lands with Conan's
+proxied phase in Phase 3, and the `git` adapter's per-location dispatch (was Q9) in Phase 4; both
+follow this record's rule that a transport with one consumer lands with that consumer's evidence.
+
+### Resolved: a Conan-shaped token exchange (was Q8)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option B: a new credential kind,
+`basic-exchange` (username, password, an exchange path under the root; a `GET` with Basic whose
+`200` `text/plain` body is the token, presented as Bearer to the root and its `root` entries;
+re-exchanged once on a fresh `401`), accepted by the `https` adapter only. Folded into Scope,
+"The requirements, gathered" (the Conan row), "Credential kinds", "Preconfigured profiles" (the
+ConanCenter recipe line), AC33, Phase 3. Raised by format batch 4 item 10 in
+`agents/spec-loop/consequences.md` from `conan.md`'s proxied path.
+
+`conan.md` binds a private Conan upstream with the `bearer` kind and reports that a Conan server
+issuing tokens only through its Basic exchange at `users/authenticate` needs a kind this spec does
+not have: `token-exchange` is driven by a distribution `401` Bearer challenge naming a realm, and
+no Conan server sends one (captured: the client sends Basic to `GET /v2/users/authenticate`, or
+`/v1/users/authenticate` on Conan 1.66.0, reads the token from a `text/plain` body and presents it
+as Bearer afterwards). Should this spec add a Conan-shaped exchange kind, or state that Conan
+upstreams take `bearer` only in v1?
+
+**Recommendation:** B. The exchange is the Conan protocol's own login (the reference server
+captured in `conan.md` exposes no other), and that server's tokens carry a server-configured
+expiry (`jwt_expire_minutes` in its configuration; to be confirmed by capture with the kind's
+conformance case), so `bearer` alone means an operator pasting a token that stops working on the
+upstream's schedule, a failure that looks like an upstream outage. The shape is small and captured, it is a kind and not an adapter (Q1's rule),
+and scope is not a reason to leave it out (`CLAUDE.md`).
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. `bearer` only for Conan upstreams in v1, stated as a limit** | No new kind; the ConanCenter case (anonymous) is unaffected | Every private Conan upstream needs an out-of-band token that expires on the upstream's schedule; the remote fails silently at expiry and serve-stale hides it until a miss; the limit is a deferral for effort, which `CLAUDE.md` rules out |
+| **B. A `basic-exchange` kind: Basic `GET` at a stored path, token body, Bearer after, re-exchange on `401`** | A private Conan upstream configured once with a username and password, exactly as the client itself is; refresh on the upstream's own signal; the same root-only scoping and redaction as every kind | One more kind in the review surface of `auth.md` AC10 and in `management-api.md`'s kind list; the exchanged token held in memory per upstream; the kind's shape fitted to Conan's exchange, so a future exchange with a JSON body is a further kind rather than an option here |
+| **C. Generalise `token-exchange` to a challenge-less mode with a configurable path and body parser** | One exchange kind | An OCI-shaped state machine with a Conan branch and a body-format option, the option-surface growth Q1's accepted cost warns about; the distribution adapter's tests carry a format it never serves |
+
+**Why this is yours:** it adds an outward secret handler (one more thing `auth.md` AC10's external
+review covers) and decides whether private Conan proxying is a v1 capability.
+
+Accepted cost: the kind, its entry in `management-api.md`'s upstream-credential kind list and in
+AC10's review surface (both reported as consequences), and an in-memory token per upstream that a
+restart re-exchanges.
+
+### Resolved: how a location reaches the `git` adapter (was Q9)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option A: the `Router` selects the
+adapter per location. `Request` carries a git location `{url, commit}` beside the path and URL
+forms; on an `https` row it goes to the `git` adapter under that row's allowlist (any role, never a
+credential), concurrency bound and cool-down; on a `distribution` row it is refused; a row naming
+`git` as its own adapter is refused at configuration. Folded into Scope, "Selecting an adapter",
+"The interface", "Credential kinds", AC23, AC34, Phase 4. Raised by format batch 5 item 6 in
+`agents/spec-loop/consequences.md` from `terraform.md` AC18.
+
+`terraform.md` proxies modules whose upstream location is a commit-pinned `git::https` URL, fetched
+by this spec's `git` adapter. But a Terraform remote's row names `https` (discovery, version lists
+and provider archives are HTTPS exchanges), the `Router` selected one adapter per row, and the git
+host is whatever each module author published. How does a module location reach the `git` adapter,
+and under whose allowlist?
+
+**Recommendation:** A. The git host is metadata-derived exactly like a provider's
+`releases.hashicorp.com`, so the rule that already governs metadata-derived hosts (the row's
+allowlist, Q3) should govern it; the transport is the only thing that differs, and the location
+already says which one it needs.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Per-location dispatch: a git location form on `Request`, routed to `git` on an `https` row under that row's allowlist, bound and cool-down** | One remote per Terraform registry; the git hosts the operator admits are visible on the same row as the artifact hosts; no credential ever reaches a git host; a remote over a git origin stays impossible | A third location form in `Request` (the AC4 pin changes with it) and a dispatch branch in the `Router`; `proxy-cache.md`'s fetch-and-cache request gains the same form (reported) |
+| **B. A second `Upstream` per git host, named from the remote** | No location form | Unknowable in advance: every module author's host needs a row before the first `init`; two allowlists to keep equal; the remote-to-upstream relation becomes one-to-many, which `data-model.md` does not model |
+| **C. A row naming `git` as its adapter, one remote per git host, aggregated by a `virtual`** | Reuses per-row selection | A module location on an unconfigured host fails outright; a virtual per Terraform registry; and a row over a git origin is the materialisation route `go-modules.md` and `cargo.md` rejected |
+
+**Why this is yours:** it widens the `Request` shape this spec pins and decides that git hosts are
+admitted per upstream by the operator rather than per git host.
+
+Accepted cost: the third location form and its dispatch branch, and the operator listing each git
+host a proxied Terraform registry's modules use (a module on an unlisted host is passed through
+verbatim and recorded as uncached, `terraform.md`'s rule).
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-27 | d9510af | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements of 27 citing format specs from their "what this format requires of `upstream-adapters.md`" sections, `format-handler-interface.md`'s resolved adapter-axis record and its 2026-09-25 ownership note, `proxy-cache.md`'s Design and resolved records, `data-model.md`'s `Upstream` entity, `management-api.md`'s repository administration and AC21, `conformance-harness.md`'s upstream bindings, `project-charter.md`'s step 4, and `agents/spec-loop/consequences.md` (Open items 7, 11, 13 and every line naming this file; themes 2 and 7; the `artifact-verification.md` and `signing-service.md` requirements on `proxy-cache.md`). Grounded prior art in Harbor's adapter, model and ECR/GCR/native sources, the distribution token-auth specification, Docker Hub's pull-limit page, the ECR `GetAuthorizationToken` reference, the GCE metadata-server and Artifact Registry authentication pages, GitHub's rate-limit page, Pulp's `Remote` model and zot's sync example, all fetched this run; Nexus and Artifactory pages did not render and no claim about them is made. Fixed the design: two transport adapters plus a credential-kind axis, a one-method interface pin, an `Upstream`-held off-origin allowlist with per-host credential roles enforced at connect time, typed rate-limit errors with a capped cool-down, truthful body completion as the adapter's half of the completion-only mode, a redactor covering every credential shape, compile-time preconfigured profiles held equal to `proxy-cache.md`'s set by test, and the adapter half of the nightly job with an explicit unfunded-row table. Stated the adapter-versus-proxy-cache split as a table. Seven questions written in decision shape and adopted under the standing delegation; zero open. 29 criteria, each with a Test Plan row and a named enforcer for every boundary rule. `node scripts/check-spec.js` run against this file with zero failures; the unasserted-duty advisories acted on. |
 | 2026-09-28 | 9ebf6e9 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. From `repository-lifecycle.md` (authoring item 13; its AC20, AC25): a new Design section "Lifecycle of an upstream binding" - deleting a credential an `Upstream` or `ReplicationLink` references is refused `409` `in-use`, changing a `remote`'s upstream keeps every cached reference and resets `RemoteFile.last-checked`, and the adapter's half is per-fetch resolution of the row and its credential with realm-keyed tokens and no carried cool-down; AC30 added with rows shared with that spec and `management-api.md` AC21. From `observability.md` (item 7): `traceparent` and `tracestate` on the forbidden outbound set with the transport built without the propagating round-tripper (AC4 extended, its AC20 row shared); `telemetry.MarkSecret` before every credential use and the redactor's parameter list held equal to `telemetry.RedactURL`'s (AC20 extended); the six `upstream_*` series and the `UpstreamRateLimitLow` and `UpstreamCooldown` alerts by their catalogue names (AC31 added). From `deployment.md` (item 5): a "Configuration keys" section tabling `upstream.default_concurrency`, `upstream.default_cooldown_cap` and `upstream.connect_timeout` in the three-column shape `scripts/check-config-keys.js` parses, the `User-Agent` computed from `server.public_url` and stated as not a key (AC5, AC32 added), the row-level `limits` falling back to the instance defaults. From the `management-api.md` reconciliation (item 6): `upstream-invalid` is 422 (AC23, "Configuration-time validation"). From the `data-model.md` reconciliation (item 3): "Configuration on the `Upstream` row" and the credential store cite "Upstream configuration and upstream credentials" and AC40 instead of a consequence. From the `proxy-cache.md` reconciliation (item 5): the nuget and maven rows are shipped under its resolved second extension (was Q17), the split table cites its AC20 and AC22, Phase 3 follows. The charter's step citations and `auth.md` AC10's review surface cited as applied. Already done at authoring: every Open item and format line naming this file; the format specs' "to be authored" wording (authoring item 12) is still queued on their side. 32 criteria, each with a Test Plan row; `node scripts/check-spec.js` on this file: zero failures. Stays draft pending a gate review. |
+| 2026-09-28 | 3135d95 | closing reconciliation sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show applied, verified against the current text of the spec that raised it (`cargo.md`, `conan.md`, `terraform.md`, `oci.md`). Applied: format batch 3 item 11 (a Cargo row in "The requirements, gathered": `https://` sparse root, the `dl` host on the allowlist with role `none`, the `header` kind with header `Authorization` for a private sparse upstream; the crates.io recipe under "Preconfigured profiles"); format batch 4 item 10 as **Q8, adopted under the standing delegation**: a `basic-exchange` kind (Basic `GET` at a stored exchange path, `text/plain` token presented as Bearer to the root and its `root` entries, one re-exchange on a fresh `401`), with the `bearer`-only option rejected as a deferral for effort; folded through Scope, the kinds table, the ConanCenter recipe line, AC33 and Phase 3; format batch 5 item 6 as **Q9, adopted**: `Request` carries a git location `{url, commit}` the `Router` sends to the `git` adapter on an `https` row under that row's allowlist, bound and cool-down, presenting no credential, refused on a `distribution` row, and a row naming `git` refused at configuration; folded through Scope, "Selecting an adapter", "The interface", "Credential kinds", AC23, AC34 and Phase 4; format batch 1 item 10 (the Docker Hub CDN hosts are captured at `oci.md`'s Phase 4, its proxied phase, in the profile row, AC24 and Phase 1). Found already done: management-api reconciliation 6 (`upstream-invalid` 422), proxy-cache reconciliation 5, repository-lifecycle authoring items 12 and 13. New consequences reported: `conan.md` (the Conan-shaped kind now exists, its proxied path and Phase 4 can cite was-Q8 and AC33), `terraform.md` (the gap is closed by was-Q9 and AC34), `management-api.md` (the upstream-credential kind list gains `basic-exchange`), `auth.md` (AC10's review list of upstream kinds gains the Conan-shaped exchange), `proxy-cache.md` and `format-handler-interface.md` (the fetch-and-cache location gains the git form). 34 criteria, each with a Test Plan row; `fable_recheck` extended; `node scripts/check-spec.js` zero failures on this file. Stays draft. |

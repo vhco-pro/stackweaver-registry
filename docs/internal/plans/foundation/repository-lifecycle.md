@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Sweep 2026-09-28 at 6e6d503 (not a review): deletion cancels jobs through CancelByRepository (async AC28, AC21 shared); the reserved segment `t` refused as a name (AC2); signing-service AC29, artifact-verification AC29 and proxy-cache AC23 cited where this spec had queued them. Reconciled 2026-09-28 at 0b79dc8 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. Every sibling consequence this spec reported to a reconciled sibling is now a citation: data-model.md carries the identity, lifecycle columns and tombstone (AC38, sharing AC3's schema test), storage-and-gc.md holds the deleter scan, the property suite and the sole write-transaction constructor with deletion as its named exemption (AC15, AC24, AC25), management-api.md carries the three problem types, the lifecycle routes and the admin-only ?state=deleted listing (was Q11), format-handler-interface.md declares Virtual and Rename (AC13) surfaced through GET /api/v1/formats, replication.md's applier is the one importer of the ErrReplica-waiving entry point (405 replica) and its link is updatable and ends with reason deleted (AC12, AC22), proxy-cache.md AC23 shares AC11's read-only remote case, supply-chain-policy.md's policy document and advisory_ecosystem are core-held configuration dropped at tombstone (AC22), the harness seeds read_only and recreated names and enforces rename_test.go (AC24, AC26), and observability.md's repository.* audit vocabulary and repositories{format,repository_kind,state} gauge are asserted by AC27; the charter places Phases 1 to 3 at steps 2, 3 and 4. Items for signing-service.md, artifact-verification.md, async-operations.md and upstream-adapters.md remain queued there. Nine questions adopted under the owner's standing delegation; zero open. 27 criteria, each with a Test Plan row. Awaits a gate review."
+status_description: "Closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): Q10 adopted under the standing delegation, server.hosts keeps binding by repository name, a rename commits and leaves such a binding at a missing repository (404 and the startup-style warning) until the operator edits and reloads it, and the rename names each unbound hostname in its repository.rename audit record and lifecycle Operation (unbound_hosts) (Renaming, AC28, AC27 extended); the name grammar cites oci was-Q8's name split; the audit paragraph's stale reported wording replaced by observability's applied vocabulary. 28 criteria, zero open questions; fable_recheck extended; stays draft pending a gate review. Earlier: Sweep 2026-09-28 at 6e6d503 (not a review): deletion cancels jobs through CancelByRepository (async AC28, AC21 shared); the reserved segment `t` refused as a name (AC2); signing-service AC29, artifact-verification AC29 and proxy-cache AC23 cited where this spec had queued them. Reconciled 2026-09-28 at 0b79dc8 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. Every sibling consequence this spec reported to a reconciled sibling is now a citation: data-model.md carries the identity, lifecycle columns and tombstone (AC38, sharing AC3's schema test), storage-and-gc.md holds the deleter scan, the property suite and the sole write-transaction constructor with deletion as its named exemption (AC15, AC24, AC25), management-api.md carries the three problem types, the lifecycle routes and the admin-only ?state=deleted listing (was Q11), format-handler-interface.md declares Virtual and Rename (AC13) surfaced through GET /api/v1/formats, replication.md's applier is the one importer of the ErrReplica-waiving entry point (405 replica) and its link is updatable and ends with reason deleted (AC12, AC22), proxy-cache.md AC23 shares AC11's read-only remote case, supply-chain-policy.md's policy document and advisory_ecosystem are core-held configuration dropped at tombstone (AC22), the harness seeds read_only and recreated names and enforces rename_test.go (AC24, AC26), and observability.md's repository.* audit vocabulary and repositories{format,repository_kind,state} gauge are asserted by AC27; the charter places Phases 1 to 3 at steps 2, 3 and 4. Items for signing-service.md, artifact-verification.md, async-operations.md and upstream-adapters.md remain queued there. Nine questions adopted under the owner's standing delegation; zero open. 27 criteria, each with a Test Plan row. Awaits a gate review."
 description: "Spec for the repository lifecycle: creation of local, remote and virtual repositories with their type-specific settings, configuration changes and which of them are completed writes, renaming and what it does to identities, tokens, grants, replication links and client URLs, the read-only state, deletion as a reference-ending write whose space returns only through pruning and the sweep, deletion's effect on pointers, snapshots, cached content, upload sessions, jobs, keys, trust sets, links and virtual membership, and the reuse of a name after deletion."
 author: michielvha
 goal: "Give every repository one lifecycle with one enforcement point, so that creating, renaming, freezing and deleting a repository of any format and type does exactly what the shared model says on both paths, deletes no object outside the sweep, never reattaches a stale grant or token, never leaves a virtual repository silently serving less, and is provable on an injected clock before the first handler that depends on it ships."
@@ -9,7 +9,7 @@ issue: 50
 created: 2026-09-27
 covers:
   - "internal/repository/**"
-fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate"
+fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate; closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q10 (a rename against a by-name server.hosts binding: bind by name, announce unbound hostnames), never Fable-reviewed"
 ---
 
 # Plan: Repository Lifecycle
@@ -303,7 +303,9 @@ identity column and no table carries a `repository_name` column (AC3).
 and in the API path `/api/v1/repositories/{name}`, and it is the only thing a rename changes.
 The grammar is the strictest one every client in the matrix accepts as a path component:
 `^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, 1 to 63 characters, which is the OCI distribution name
-component grammar `formats/oci.md` must satisfy and a subset of what every other client passes
+component grammar `formats/oci.md` must satisfy (its resolved name-split decision, was Q8, takes
+the first component of an OCI name as the registry repository, so this grammar is exactly what a
+Docker client sends in that position) and a subset of what every other client passes
 through unchanged. Uppercase is refused rather than folded (two names differing only in case
 would resolve identically on a case-folding client and differently on another). A name may not
 be a reserved first path segment from `format-handler-interface.md`'s reserved table (`api`,
@@ -457,6 +459,22 @@ record and for clients, stated so no sibling has to derive it:
   conformance suite's rename case proves its served documents were never name-bound. The
   conformance case is the same for every format: rename, then a real client installs from the
   new name in both modes, and a request to the old name is `not-found` (AC12).
+- **Hostname bindings name the repository, not its identity** (the resolved hostname-binding
+  decision, was Q10). `deployment.md`'s `server.hosts` is a file-only list of `{hostname,
+  repository}` whose `repository` is a name, because a hostname binding is a deployment fact an
+  operator writes beside DNS and a certificate, not a registry record. A rename therefore leaves
+  every binding naming the old name pointing at a repository that no longer exists: from the
+  commit, root-anchored requests on that hostname answer `404` and the binding logs the same
+  warning `deployment.md` AC12 asserts for a binding to a missing repository, until the operator
+  edits the binding to the new name and reloads it with `SIGHUP`. The rename is not refused for
+  it. What the core adds is that the break is announced where the admin is looking: the rename's
+  `repository.rename` audit record and the `lifecycle` `Operation` list every hostname the
+  process's loaded `server.hosts` bound to the old name (`unbound_hosts`), and the process logs
+  one warning per such hostname at the commit. A repository later created, or renamed, under the
+  old name is bound by that hostname from then on, exactly as a client URL naming the old name
+  reaches it (the risk "Uniqueness is among live repositories" accepts, one only the admin can
+  create); `terraform.md` AC26 and `puppet.md` AC27 carry the real-client half, and the operator
+  documentation puts the edit-and-reload step beside the rename step (AC28).
 - **Audit.** The audit line and the `lifecycle` `Operation` carry both names and the identity.
   Listings of operations and audit lines by repository resolve through the identity, so a
   repository's history is continuous across its names.
@@ -632,15 +650,16 @@ vocabulary and with its fixed attribute set, which carries `repository` (the nam
 `repository_id` (the `rep_` identity) on every record so a rename or a deletion leaves every line
 resolvable. The events: `repository.create`, `repository.configure` (any change from the
 Configuration table, naming the changed fields), `repository.freeze`, `repository.thaw`,
-`repository.rename` (extension attribute `previous_name`), `repository.delete` (extension
+`repository.rename` (extension attributes `previous_name` and `unbound_hosts`, the hostnames
+`server.hosts` bound to the old name, was Q10), `repository.delete` (extension
 attributes `reclaim` and `detach`, the latter listing the virtual repositories detached),
 `repository.detach` (a member removed from a `virtual` through its member-list configuration,
 so a virtual's resolution set never changes without a line naming it) and `repository.reclaim`
 (emitted by the pruner at tombstone time, the one lifecycle record not tied to an operator's
-request). `observability.md`'s vocabulary table already lists `repository.create`, `.delete`,
-`.freeze`, `.thaw`, `.rename`, `.detach` and `.reclaim` with `previous_name`, `reclaim` and
-`detach` as extension attributes; `repository.configure` and the placement of `.detach` on the
-member-list change and `.reclaim` on the pruner are what this pass reports back to it. A line
+request). `observability.md`'s vocabulary table lists all eight, `repository.configure` with
+`changed_fields`, `.detach` on the member-list change and `.reclaim` on the pruner, with
+`previous_name`, `reclaim` and `detach` as extension attributes; `unbound_hosts` on
+`repository.rename` is the one extension this spec's was-Q10 adds to it (reported). A line
 for a refused operation carries `outcome: refused` and the `problem_type`.
 
 The gauge `repositories{format,repository_kind,state}` (`stackweaver_registry_` namespace;
@@ -890,13 +909,20 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       `repository.rename`, `repository.delete`, `repository.detach` for a member-list removal,
       `repository.reclaim` from the pruner at tombstone time, this last asserted by AC24),
       carrying `repository_id` (the `rep_` identity) and `repository` (the name) from the fixed
-      attribute set and, per event, `previous_name`, `reclaim` or `detach` from the registered
-      extension set; every completed one records one `Operation` of kind `lifecycle` carrying its
+      attribute set and, per event, `previous_name` and `unbound_hosts`, `reclaim` or `detach`
+      from the registered extension set; every completed one records one `Operation` of kind `lifecycle` carrying its
       sub-kind, the identity and, for rename, both names; operations and audit records listed by
       repository are continuous across a rename and resolvable after deletion; and the gauge
       `repositories{format,repository_kind,state}` equals the table's counts after every
       transition, exported by the leader alone.
 
+- [ ] AC28: Renaming a repository that `server.hosts` binds by its old name commits (the binding
+      does not refuse it); from the commit a root-anchored request on that hostname answers `404`
+      and the missing-repository warning is logged, the `repository.rename` audit record and the
+      `lifecycle` `Operation` list the hostname under `unbound_hosts`, and after the binding is
+      edited to the new name and reloaded with `SIGHUP` the hostname serves the renamed repository
+      with no restart; a hostname bound to no renamed repository is untouched and never listed
+      (the resolved hostname-binding decision, was Q10).
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
@@ -928,6 +954,7 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
 | AC25 | integration | `internal/repository/configure_remote_test.go` (cache kept, `last-checked` reset, `upstream-invalid`, format and type refused) |
 | AC26 | integration | `internal/repository/seed_parity_test.go` (column-by-column equality; `read_only` and recreate entries; dry-run rejection); `conformance/core/seed_test.go` (the `state: read_only` and recreate entries provisioned through the seed path; shared with `conformance-harness.md` AC24) |
 | AC27 | integration | `internal/repository/audit_test.go` on `telemetry.NewTestRecorder` (one record per operation in the registered vocabulary; `repository_id` on every record; `Operation` fields; continuity across rename and after deletion); `internal/repository/metrics_test.go` (`repositories{format,repository_kind,state}` after each transition; shared with `observability.md` AC4 and AC7) |
+| AC28 | integration + conformance | `internal/repository/rename_hosts_test.go` (a hostname bound to the old name: `404` and the warning from the commit, `unbound_hosts` on the audit record and the `Operation` through `telemetry.NewTestRecorder`, an unrelated binding untouched, the `SIGHUP` reload rebinding without restart; the reload half shared with `deployment.md` AC12's `internal/server/hosts_test.go`); `conformance/terraform/rename_test.go` and `conformance/puppet/rename_test.go` (the real-client half, `terraform.md` AC26, `puppet.md` AC27) |
 
 ## Implementation Phases
 
@@ -967,7 +994,9 @@ Left empty by `/spec`. Populated by `/tasks` once the spec reaches `planned`.
 ## Open Questions
 
 None open. Nine questions were written in decision shape and adopted under the owner's standing
-delegation; each is recorded below with its alternatives, and each is reversible by the owner.
+delegation at authoring, and a tenth (Q10) during the closing reconciliation sweep on 2026-09-28
+on Opus; each is recorded below with its alternatives, and each is reversible by the owner. Q10
+carries this spec's `fable_recheck`.
 
 ### Resolved: whether a rename exists at all (was Q1)
 
@@ -1158,6 +1187,40 @@ resolved retention-gap decision for a marginal gain.
 
 Accepted cost: the follower's failure is the notification.
 
+### Resolved: a rename against a hostname binding that names the old name (was Q10)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option A: `server.hosts` keeps
+binding by repository name; a rename commits and leaves a binding naming the old name pointing at
+a missing repository (`404` and the startup-style warning) until the operator edits and reloads
+it; the rename announces each such hostname in its audit record, its `lifecycle` `Operation`
+(`unbound_hosts`) and a log warning at commit. Folded into Design ("Renaming"), AC28, and
+`deployment.md`'s "Host binding" and AC12. Raised by format batch 5 item 7 in
+`agents/spec-loop/consequences.md` from `terraform.md` AC26, with `puppet.md` AC27 the same shape.
+
+`deployment.md`'s resolved host-binding decision made `server.hosts` a file-only list of
+`{hostname, repository}` naming the repository by name. Every other record binds a repository by
+identity so that a rename breaks nothing but client URLs. A hostname binding is a client-facing
+address too, but it lives in configuration, not in the model. What happens to it on a rename?
+
+**Recommendation:** A. A hostname binding is written by the same operator, in the same change
+window, as the DNS record and certificate that make the hostname reachable; a name is what that
+operator can write and read, and the rename is an admin act the operator coordinates with
+consumers anyway (the resolved rename-alias decision, was Q2, already breaks client URLs at the
+commit). Making the break visible at the moment it happens is what binding by name lacked.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Bind by name; the rename commits and announces every hostname it unbinds** | Configuration an operator can read; one rule for client URLs and hostnames (both break at the commit, both are the operator's to update); the break named in the rename's own record rather than discovered by a consumer | A hostname answers `404` between the rename and the reload; a repository later created under the old name is served on that hostname, the same accepted risk as a client URL naming it |
+| **B. Bind by identity: the file names `rep_` identities, or the loader resolves names to identities and keeps them** | The hostname follows the repository through a rename with no outage | An operator-written file of opaque identities, or a binding that silently diverges from its file: a loader that kept the identity would keep serving after a rename and then break at the next unrelated restart or reload, a latent failure far from its cause |
+| **C. Refuse the rename while a binding names the repository** | No silent unbinding | No outage-free order exists (the new name cannot be bound before it exists), so the operator must unbind first and suffers the same `404`; a configuration file vetoes an API operation, and replicas with different files disagree |
+
+**Why this is yours:** it decides whether configuration or the model is the authority for a
+client-facing address, and accepts a window in which a bound hostname answers `404`.
+
+Accepted cost: the window between the rename and the reload, and the old name's hostname serving
+whatever repository next takes that name, both stated in the operator documentation beside the
+rename step.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1165,3 +1228,4 @@ Accepted cost: the follower's failure is the notification.
 | 2026-09-27 | 21279d4 | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements `management-api.md` (repository administration, resolved Q7, Q10, AC19, AC20), `data-model.md` (`Repository`, `VirtualMember`, `Upstream`, `ReplicationLink`, the default pointer, the retention-pass write shape, the non-root table), `storage-and-gc.md` (fifth root, AC15, AC18, grace), `auth.md` (identity binding, AC29, the admin role, visibility), `credential-management.md` AC20, `signing-service.md` (per-repository keys), `artifact-verification.md` (per-repository trust sets), `upstream-adapters.md` (`Validate`, `UpstreamCredential`), `async-operations.md` (job repository ref, grace hold, cancellation), `replication.md` (link, follower writability, takeover), `proxy-cache.md` (eviction, quota), `conformance-harness.md` (`repositories` key, seed path), `format-handler-interface.md` (`Capabilities()`, reserved segments), `formats/hex.md` (was Q1) and consequences items management-api 3 and 4, async-operations 4, Open item 12 and theme 9 placed on this spec. Prior art fetched this run: Harbor's swagger (412 refusals), Pulp's settings and repository viewset, Gitea's storage doc and `DeleteUser`, Nexus cleanup policies, Distribution's `readonly` maintenance option; Artifactory's pages did not fetch and are not cited. Nine questions written in decision shape and adopted under the standing delegation; 27 criteria each with a Test Plan row; `node scripts/check-spec.js` run clean before this row was written. |
 | 2026-09-28 | 0b79dc8 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the charter reconciliation: Phase 1 at step 2, Phase 2 at step 3, Phase 3 at step 4, and the `shared:management` cost line. From the management-api reconciliation: the deleted listing is `GET /api/v1/repositories?state=deleted` (admin; its resolved was-Q11), in the state table, the tombstone paragraph and AC24, with `internal/manage/reads_test.go` shared. From web-ui: `Virtual` and `Rename` surfaced through `GET /api/v1/formats`. From format-handler-interface: the name grammar cites the full reserved table (`api`, `ui`, `healthz`, `readyz`, `metrics`, `replication`) and treats `v2` as OCI's carve-out, not a reserved segment (AC2). From the replication reconciliation: the sole constructor's `ErrReplica`-waiving entry point, imported by `internal/replication` alone, `ErrReplica` rendered `405` `replica` (Design, AC9, Test Plan shared with replication AC12 and storage-and-gc AC25); the link's updatable leader name and `ended`/`deleted` cited to its AC22. From the data-model reconciliation: "Repository identity and lifecycle state" cited; AC3's schema test shared with AC38. From the storage-and-gc reconciliation: "consequence" wording replaced by AC15, AC23, AC24 and AC25 citations, deletion named as AC25's single exemption. From the proxy-cache reconciliation: `internal/repository/readonly_remote_test.go` shared with its AC23 in AC11's row; the read-only remote paragraph cites AC23. From the supply-chain reconciliation: `policy` and `advisory_ecosystem` as core-held configuration rows, dropped at tombstone, in the Configuration table, deletion step 11, the tombstone paragraph and AC24, with `internal/storage/retention_test.go` shared with its AC22. From the conformance-harness reconciliation: AC12's rename case enforced by harness AC26; AC26's seed entries shared with harness AC24. From the observability authoring: a new "Audit and metrics" section (events `repository.create`, `.configure`, `.freeze`, `.thaw`, `.rename`, `.delete`, `.detach`, `.reclaim` through `telemetry.Auditor.Emit`, `repository_id` on every record, the `repositories{format,repository_kind,state}` gauge) asserted by AC27 with `audit_test.go` and `metrics_test.go` on `telemetry.NewTestRecorder`; `repository.configure` and the placement of `.detach` and `.reclaim` reported back to `observability.md`. Items 9, 10, 12 and 13 of this spec's authoring section remain queued for `signing-service.md`, `artifact-verification.md`, `async-operations.md` and `upstream-adapters.md`, which have not reconciled yet, and are phrased as queued rather than cited. No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
 | 2026-09-28 | 6e6d503 | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. Applied the items raised against this file after its own 2026-09-28 pass, each verified against the source's current text. From the upstream-adapters and async-operations reconciliation (async AC28): deletion step 8 cancels through `Runner.CancelByRepository(ctx, tx, repo)` inside the deletion transaction, and AC21's row shares `internal/async/cancel_test.go`. From the proxy-cache reconciliation: the `delete (remote)` row cites its AC23. From the sweep of `format-handler-interface.md`'s reserved table: `t` (auth's root path token) joins the reserved segments the name grammar refuses, in Design and AC2. The three "queued, not yet applied there" sentences in deletion steps 8, 10 and 11 now cite `async-operations.md` AC28, `signing-service.md` AC29 and `artifact-verification.md` AC29, all reconciled since. Items already applied at 0b79dc8 re-verified (management-api 1, supply-chain 4, replication 3 and 5, harness 8, charter 3). No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
+| 2026-09-28 | 3135d95 | closing reconciliation sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show applied, verified against the current text of `terraform.md` (its rename paragraph and AC26), `puppet.md` (its rename paragraph and AC27), `deployment.md` ("Host binding", its resolved host-binding decision) and `oci.md`. Applied: format batch 5 item 7 as **Q10, adopted under the standing delegation**: bind by name (option A) over bind by identity (a latent break at the next unrelated reload) and refusing the rename (no outage-free order exists), with the break announced in the `repository.rename` audit record and the `lifecycle` `Operation` as `unbound_hosts`; folded into "Renaming", "Audit and metrics", AC27 and new AC28 with a Test Plan row shared with `deployment.md` AC12 and the Terraform and Puppet rename cases; `deployment.md`'s Host binding and AC12 updated in the same sweep. Format batch 1 item 4 (the name grammar cites `oci.md`'s name-split decision, was Q8). The audit paragraph's 'what this pass reports back' wording replaced: `observability.md`'s vocabulary already lists all eight events with `changed_fields`. Found already done: management-api reconciliation 1, conformance-harness reconciliation 8, proxy-cache reconciliation 7, supply-chain reconciliation 4, replication reconciliation 3 and 5, charter reconciliation 3, upstream and async reconciliation 2. New consequences reported: `observability.md` (`unbound_hosts` joins `repository.rename`'s extension set), `data-model.md` or `management-api.md` (the `lifecycle` rename `Operation` records `unbound_hosts`), `terraform.md` and `puppet.md` (their rename paragraphs can cite was-Q10 instead of the queued alternative). `fable_recheck` extended; `node scripts/check-spec.js` zero failures on this file. Stays draft. |

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-28 at 0b79dc8 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. Every sibling consequence this spec reported is now a citation: the four entities live in data-model.md (AC39, meeting AC24's gate), the two problem types are 422 in management-api.md's closed list, the audit line goes through observability.md's Auditor in its registered credential.* vocabulary with the credentials{state,owner_kind} gauge, deployment.md tables the eight keys and the first mint, the harness seeds the expiring token and the registered key (AC25 there), repository-lifecycle.md keeps the tombstone AC20 renders from and deletes grants but never credentials, auth.md cites the robot account and AC34 holds Chef's signed requests, and the robot trust policy doubles as artifact-verification.md's identity source with exchange and attestation bound to one robot (its AC28). Seven questions adopted under the owner's standing delegation, none open; 24 criteria, each with a Test Plan row. Awaits a gate review."
+status_description: "Closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): the OIDC exchange tables its format-side bindings, PyPI's (its AC19, the first) and Open VSX's api/-/trusted-publishing/token (openvsx was-Q19, AC33), whose wire shape is still to be captured from ovsx 1.2.0 before the binding is written; a binding is a pure translation onto the exchange, minting nothing itself, held by the existing handler import boundary (new AC25, Phase 3). 25 criteria, zero open questions; stays draft pending a gate review. Earlier: Reconciled 2026-09-28 at 0b79dc8 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. Every sibling consequence this spec reported is now a citation: the four entities live in data-model.md (AC39, meeting AC24's gate), the two problem types are 422 in management-api.md's closed list, the audit line goes through observability.md's Auditor in its registered credential.* vocabulary with the credentials{state,owner_kind} gauge, deployment.md tables the eight keys and the first mint, the harness seeds the expiring token and the registered key (AC25 there), repository-lifecycle.md keeps the tombstone AC20 renders from and deletes grants but never credentials, auth.md cites the robot account and AC34 holds Chef's signed requests, and the robot trust policy doubles as artifact-verification.md's identity source with exchange and attestation bound to one robot (its AC28). Seven questions adopted under the owner's standing delegation, none open; 24 criteria, each with a Test Plan row. Awaits a gate review."
 description: "Spec for the credential-management surface: issuing, listing, rotating and revoking registry tokens under /api/v1/tokens, the robot-account principal that lets automation outlive the people who set it up, the expiry states that make a dying token visible before it fails, registered public keys for clients that sign requests, and an OIDC exchange that mints short-lived tokens for CI without a stored secret."
 author: michielvha
 goal: "Give every user, human or robot, one way to obtain, see, rotate and kill the credential their package client presents, so that no format ships before its users can get a token and no token dies without warning."
@@ -71,7 +71,10 @@ specs that cite it:
 - **`formats/pypi.md`** and **`formats/openvsx.md`** each declined to build their ecosystem's
   trusted-publishing flow (an OIDC identity token exchanged for a registry credential) because
   "credential issuance belongs to the token surface `auth.md` places in
-  `foundation/credential-management.md`".
+  `foundation/credential-management.md`"; both now serve their client's route as a binding onto
+  this spec's exchange (`formats/pypi.md` AC19; `formats/openvsx.md`'s resolved
+  trusted-publishing decision, was Q19, AC33, whose route `api/-/trusted-publishing/token` is
+  still to be captured), which "OIDC exchange" tables and AC25 holds.
 - **`project-charter.md`** builds this at step 2, with generic and the management surface core:
   generic's "clients present registry tokens someone must issue, so the management surface core
   (repository and token operations, the token half being the credential-management surface
@@ -440,10 +443,20 @@ the issuer's entry in this package's trusted-issuer table (the same table that s
 `repository_owner_id` is mandatory for GitHub), not in a fixed table of either spec; adding an
 issuer adds one row carrying its required claims and its mapping (AC13).
 
-The exchange is Phase 3, after OCI: no Tier 1 client needs it to run, and the first consumers
-(`formats/pypi.md`'s and `formats/openvsx.md`'s trusted publishing, whose clients call a
-format-shaped route that binds onto this exchange) are format-side bindings written when those
-formats' management surfaces are.
+The exchange is Phase 3, after OCI: no Tier 1 client needs it to run, and its first consumers
+are format-side bindings, each a format-shaped route the ecosystem's client calls, translated by
+the handler into this exchange and nothing else, so there is one exchange however many ways in:
+
+| Format | Binding route | Wire shape | Criterion |
+|---|---|---|---|
+| PyPI | the token-mint route PyPI's publishing clients call (`formats/pypi.md`, "Trusted publishing is a binding onto the OIDC exchange") | as that spec records it | `formats/pypi.md` AC19, the first binding |
+| Open VSX | `api/-/trusted-publishing/token`, which ovsx 1.2.0 calls in trusted-publishing mode (`formats/openvsx.md`'s resolved trusted-publishing decision, was Q19; its "Trusted publishing is a binding onto the OIDC exchange") | **not yet captured**: the authoring pass recorded no ovsx 1.2.0 exchange, so the request and response shape is grounded in a capture against the pinned reference server before the binding is written (its Phase 2's first step, a local capture needing ovsx 1.2.0 in a container); nothing here assumes it | `formats/openvsx.md` AC33 |
+
+What every binding inherits from this route, whatever its wire shape (AC25): the identity token
+it forwards is verified and matched exactly as steps 1 to 4 state, the token it returns is minted
+here and nowhere else, a binding never mints, caches or widens a token itself, and a request
+matching no trust policy is refused with nothing minted. A binding is served only on a hosted
+repository; against a remote or virtual it answers `405` as the format's other write routes do.
 
 ### Last used
 
@@ -657,6 +670,15 @@ Per the constitution, every boundary this spec introduces names the test that ho
       referenced only through a credential's scoped repository is collected while the credential
       row stays readable.
 
+- [ ] AC25: Every trusted-publishing binding is a pure translation onto `POST
+      /api/v1/tokens/exchange`: for the PyPI and Open VSX bindings (`formats/pypi.md` AC19,
+      `formats/openvsx.md` AC33), an identity token from the harness's fixture OIDC issuer
+      matching one robot's trust policy yields exactly one token row owned by that robot, minted
+      by the exchange with its lifetime and scope rules, and returned in the binding's captured
+      wire shape; an identity token matching no policy mints no row; no handler package imports
+      `internal/credential`, so a binding reaches a token only through the exchange; and the Open VSX binding
+      is written only after its wire shape is captured from ovsx 1.2.0, its case not expected to
+      pass before.
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
@@ -685,6 +707,7 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | AC22 | architecture test | `internal/credential/arch_test.go` |
 | AC23 | e2e | `web/e2e/credentials.spec.ts` (Playwright: list states, display-once, revoke, robot page); lands with the UI at charter step 9 |
 | AC24 | review + integration | `data-model.md` "Principals, credentials and grants" and AC39 (present since 2026-09-27; re-checked at this spec's gate review); `internal/model/credential_records_test.go` (`data-model.md` AC39); `internal/model/gc_roots_test.go`'s non-root table extended with the four entities (`data-model.md` AC34's shape) |
+| AC25 | integration + conformance + architecture | `internal/credential/exchange_binding_test.go` (a fixture binding translating into the exchange: one row per matching identity token, none for no match, the row's owner, lifetime and scopes as AC13's); `internal/credential/arch_test.go` (the existing import-graph rule that no handler package imports `internal/credential`, with a fixture binding package that does failing); `conformance/pypi/trusted_publishing_test.go` and `conformance/openvsx/trusted_publishing_test.go` (shared with `formats/pypi.md` AC19 and `formats/openvsx.md` AC33; the fixture issuer through `conformance-harness.md` AC25's `trust_policy` sub-entry) |
 
 ## Implementation Phases
 
@@ -705,6 +728,8 @@ Per the constitution, every boundary this spec introduces names the test that ho
 
 ### Phase 3: OIDC exchange (after OCI; before the first trusted-publishing binding)
 - `TrustPolicy`, `PUT /api/v1/robots/{name}/trust`, `POST /api/v1/tokens/exchange` (AC13)
+- The binding rule and its architecture test (AC25); the PyPI and Open VSX bindings themselves
+  land with their formats, the Open VSX one after its ovsx 1.2.0 capture
 
 ### Phase 4: The UI (charter step 9)
 - Token list, creation, revocation and robot administration in the web UI (AC23)
@@ -905,3 +930,4 @@ Accepted cost: the `curl` first mint. B lost because it diverges from a same-wee
 |------|----------|---------------|---------|
 | 2026-09-27 | 69c8159 | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements `auth.md` (resolved Q15, Q20, Q21, Q22; AC6, AC16, AC29, AC30; "Token expiry"), `formats/oci.md` (resolved Q3, AC1, Phase 1), `management-api.md` (the `api` reservation, wire conventions, audit, the grant and upstream-credential exclusions), `formats/chef.md` (resolved Q1 and Q2), `formats/terraform.md`, `formats/conda.md`, `formats/luarocks.md`, `formats/pypi.md`, `formats/openvsx.md`, `conformance-harness.md` (the `credentials` key and the seed path) and `project-charter.md` step 2 placed on this surface, plus consequences items 4, 5 and 14 and Open items 14, 18 and 24 with cross-cutting theme 8. Grounded prior art this run against Harbor, GitHub, GitLab, JFrog, Sonatype Nexus, npm, Docker Hub, PyPI trusted publishing, Zitadel and Gitea; Pulp not reached. Verified against the tree: no `internal/` exists, `data-model.md`'s entity table carries no principal, credential or grant entity (reported as a sibling consequence, AC24), and the OCI suite's `OCI_NAMESPACE` / `OCI_CROSSMOUNT_NAMESPACE` variables at v1.1.1. Raised and adopted Q1 to Q7 under the standing delegation. 24 criteria, each with a Test Plan row. Stays draft pending a gate review. |
 | 2026-09-28 | 0b79dc8 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the data-model reconciliation: the "entity table has none of these three" claim replaced by a citation of "Principals, credentials and grants" and AC39, AC24's gate recorded as met, its Test Plan row naming `internal/model/credential_records_test.go`. From the management-api reconciliation: `scope-exceeds-owner` and `lifetime-policy` recorded as `422` (Design, AC15) and the Context bullet updated to the applied mount, endpoint-table and OpenAPI coverage. From the observability authoring: the audit line goes through `telemetry.Auditor.Emit` in the `credential.<object>.<action>` vocabulary with the registered extension attributes (`credential`, `owner`, `owner_kind`, `multi_repository`, `issuer`), AC4 and AC18 scan through `telemetry.NewTestRecorder`, and the gauge `credentials{state,owner_kind}` (leader-exported, `CredentialsExpiring`) is asserted by AC5 with `internal/credential/metrics_test.go`; the robot `.update`, `.read`, `.list`, key `.read`, `.list` and `credential.trust.*` events are reported back to `observability.md` as vocabulary additions. From the conformance-harness reconciliation: AC5's `expiring` token and AC12's registered key are seeded through `credentials` sub-entries (harness AC25). From the repository-lifecycle authoring: AC20 now states the tombstone-rendered name and that deletion removes grants and touches no credential, with `internal/credential/listing_test.go` shared with lifecycle AC24. From the artifact-verification authoring: the trust policy as an identity source, exchange and attestation bound to one robot (its AC28), the issuer-specific mapping beside the trusted-issuer table; AC13 extended and `internal/verify/identity_test.go` shared. From the deployment authoring: the configuration table and the was-Q7 cost cite the `credentials.` inventory row and "First run and first mint". Stale quotations of `auth.md` ("owed and not yet written", "defines no robot-account principal") rewritten as history with the current citations; Phase 2 cites `auth.md` AC34. No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
+| 2026-09-28 | 3135d95 | closing reconciliation sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show applied, verified against the current text of `openvsx.md` ("Trusted publishing is a binding onto the OIDC exchange", its resolved trusted-publishing decision was Q19, AC33) and `pypi.md` (its binding section and AC19). Applied: format batch 6 item 11 (a binding table under "OIDC exchange" naming Open VSX's `api/-/trusted-publishing/token` with its wire shape recorded as not yet captured, a local capture of ovsx 1.2.0 owed before the binding is written, and nothing assumed about it); format batch 1 item 8 (PyPI's binding cited as the first, its AC19); the Context line on both formats updated from 'declined' to 'binds'; new AC25 (every binding a pure translation onto the exchange, no handler importing `internal/credential`) with a Test Plan row shared with the two formats' trusted-publishing cases and `conformance-harness.md` AC25's new `trust_policy` sub-entry; Phase 3. Found already done: management-api reconciliation 7, conformance-harness reconciliation 7, artifact-verification authoring item 12. No question raised; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |

@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Reconciled 2026-09-28 at 3a82b21 with the foundation authoring wave (not a review): the re-evaluation worker is the verify.reevaluate kind on internal/async with a checkpoint per page and its bound in async.kind_limits (verify.workers retired, deployment's decision), the TUF and revocation refreshes are the verify.tuf_refresh and verify.revocation_refresh schedules, trust and verdict reads are pull with only trust writes and import admin (management-api's table), trust set revisions drop at tombstone time while verdicts never do and rename changes nothing (AC29), metrics and the VerificationFailed alert named from observability's catalogue, the bench gate comment, and every owed record or hook (data-model AC34, storage-and-gc AC21 and AC22, proxy-cache AC20, conformance-harness trust key, catalogue AC7) cited as applied. 29 criteria, each with a Test Plan row; zero open questions. Earlier: authored 2026-09-27 at ab22b0d as a grounded first draft. Gathers the verification entries 26 format specs asked for, the verdict interface supply-chain-policy.md pinned on the consuming side, and the queued consequences (PEP 740 in-upload verification, Galaxy signatures, NuGet author and repository signatures, clients that verify nothing), grounds the design in Sigstore's client specification and trusted-root format, PEP 740, CEP-27, cosign's storage layout, npm's signature conventions, NuGet's trust model, zot, Harbor and the pulp_ansible and ansible-galaxy sources fetched this run, and fixes one verifier with one stored verdict per (repository, digest, scheme) under a revisioned per-repository trust set. Eleven questions written in decision shape and adopted under the owner's standing delegation; zero open. 28 criteria, each with a Test Plan row. Awaits a /spec review pass."
+status_description: "Closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): a raw RSA-SHA512 entry (PKCS #1 v1.5 over SHA-512 of Hex's Signed payload, public_key:sign/3's form) run through Check as an integrity call in the proxied verifier hook, refusing the commit on mismatch and recording no verdict, with an RSA type under raw-keys (2048 bits or more, the SPKI PEM identified by its OpenSSH SHA256 fingerprint) (AC30, Phase 4); Hex's row split out of the Nothing row to mean nothing on artifacts; the npm, PyPI, Galaxy and OCI positions cite their landed criteria (npm AC22, pypi AC14 and AC18, ansible AC11, oci AC14) instead of queued consequences. 30 criteria, zero open questions; stays draft. Earlier: Reconciled 2026-09-28 at 3a82b21 with the foundation authoring wave (not a review): the re-evaluation worker is the verify.reevaluate kind on internal/async with a checkpoint per page and its bound in async.kind_limits (verify.workers retired, deployment's decision), the TUF and revocation refreshes are the verify.tuf_refresh and verify.revocation_refresh schedules, trust and verdict reads are pull with only trust writes and import admin (management-api's table), trust set revisions drop at tombstone time while verdicts never do and rename changes nothing (AC29), metrics and the VerificationFailed alert named from observability's catalogue, the bench gate comment, and every owed record or hook (data-model AC34, storage-and-gc AC21 and AC22, proxy-cache AC20, conformance-harness trust key, catalogue AC7) cited as applied. 29 criteria, each with a Test Plan row; zero open questions. Earlier: authored 2026-09-27 at ab22b0d as a grounded first draft. Gathers the verification entries 26 format specs asked for, the verdict interface supply-chain-policy.md pinned on the consuming side, and the queued consequences (PEP 740 in-upload verification, Galaxy signatures, NuGet author and repository signatures, clients that verify nothing), grounds the design in Sigstore's client specification and trusted-root format, PEP 740, CEP-27, cosign's storage layout, npm's signature conventions, NuGet's trust model, zot, Harbor and the pulp_ansible and ansible-galaxy sources fetched this run, and fixes one verifier with one stored verdict per (repository, digest, scheme) under a revisioned per-repository trust set. Eleven questions written in decision shape and adopted under the owner's standing delegation; zero open. 28 criteria, each with a Test Plan row. Awaits a /spec review pass."
 description: "Spec for artifact signature and attestation verification: one shared verifier behind the handlers and the proxy layer, per-repository trust sets, Sigstore, OpenPGP, CMS, apk, RPM, JWS, Ed25519 and TUF entries for the ecosystems the format specs raise, and a stored per-digest verdict that supply-chain-policy.md consumes."
 author: michielvha
 goal: "Make 'verified' a stored, explainable fact about a digest under a named trust set, produced once by a shared service on both paths, so that no handler ever holds a signature primitive and policy can require a verified identity for any format that has one."
@@ -43,7 +43,7 @@ fold, and open items 9, 11, 14, 16 to 22, 24 to 28 and 30 to 32, plus cross-cutt
 
 | Format spec | What it requires of this spec |
 |---|---|
-| `formats/oci.md` | Nothing yet by name; it declares signature verification enforcement out of scope for v1 and models Cosign referrers on `data-model.md`'s `Reference` edge. The supply-chain fold (consequences item 3) names Cosign and Sigstore over OCI referrers as this spec's first entry, and the charter builds this spec alongside OCI's policy phase |
+| `formats/oci.md` | Cosign and Sigstore over OCI referrers and the `sha256-<hex>.sig` tag convention as this spec's first entry (supply-chain fold item 3); the handler's half, discovery and the hand-off through `Deps`' `Verifier`, is its AC14, sharing `conformance/oci/cosign_test.go` with AC6 here; the charter builds this spec alongside OCI's policy phase |
 | `formats/npm.md` | Provenance attestation verification "lands there or in its consumer"; consequences item 3 names npm provenance and registry signatures |
 | `formats/pypi.md` | PEP 740 verification **inside the upload request, before anything commits**; a publisher-identity trust model per repository and project; a home for the verified attestation from which both index serializations serve provenance, with `api-version` rising only when the field is served; a position on proxied provenance (pass through, verify or re-host); a criterion shape for lifting its AC14 refusal (valid accepted and served, tampered refused) |
 | `formats/ansible-collections.md` | A decision between user attachment and server-side signing; if attachment, an endpoint of `management-api.md`, never a Galaxy route; the served entry shape grounded in Galaxy's real traffic; a position on proxied signatures it passes through unverified (its resolved Q7); a criterion shape for its AC11 revision; a verdict policy consumes |
@@ -65,7 +65,8 @@ fold, and open items 9, 11, 14, 16 to 22, 24 to 28 and 30 to 32, plus cross-cutt
 | `formats/luarocks.md` | An optional detached OpenPGP verdict source over exact file bytes, keys per repository, no LuaRocks-specific logic |
 | `formats/helm.md` | Nothing until this producer exists; a stored `.prov` is "that producer's raw material, retrievable by digest" |
 | `formats/conan.md` | Nothing in v1; the input for a future plugin scheme is the two manifest files beside the artifact files |
-| `formats/cargo.md`, `composer.md`, `cran.md`, `debian.md`, `go-modules.md`, `hex.md`, `opam.md`, `pub.md`, `chef.md` | Nothing: no artifact signature or attestation reaches the registry in those ecosystems (Debian and Hex sign the repository, which is `signing-service.md`'s; Go's checksum database is a passthrough) |
+| `formats/hex.md` | Nothing on artifacts: Hex signs the registry, never the tarball, whose only integrity primitives are the two checksums the registry advertises. On the proxied path, the check of an upstream `Signed` payload (`/names`, `/versions`, `/packages/{name}`) against the upstream's RSA public key in the remote's trust set, RSA PKCS #1 v1.5 over SHA-512 as `public_key:sign/3` produces, run as an integrity call in the post-receipt verifier hook that refuses the commit on `mismatch` (its resolved trust-anchor decision, was Q9, AC17, AC21) |
+| `formats/cargo.md`, `composer.md`, `cran.md`, `debian.md`, `go-modules.md`, `opam.md`, `pub.md`, `chef.md` | Nothing: no artifact signature or attestation reaches the registry in those ecosystems (Debian signs the repository, which is `signing-service.md`'s; Go's checksum database is a passthrough) |
 
 Three queued consequences shape the design beyond the entry list. **PyPI's PEP 740 verification is
 synchronous** and inside the upload, since twine expects the verdict on the upload response
@@ -262,7 +263,9 @@ Every entry answers one of two questions, and the answer's kind decides whether 
 
 An **integrity result** answers "are these bytes the bytes a record promised": a size, a digest,
 a tree hash, a metalink digest, apk's `C:`, `S:` and `datahash`, Arch's `%CSIZE%` and
-`%SHA256SUM%`, Puppet's and Vagrant's checksums, Terraform's `h1:`. It is `match`, `mismatch` or
+`%SHA256SUM%`, Puppet's and Vagrant's checksums, Terraform's `h1:`, and the signature over a
+proxied Hex registry document (the raw RSA-SHA512 entry: a signed index whose only role is to make
+the checksums inside it trustworthy, so its check is integrity, not a verdict). It is `match`, `mismatch` or
 `weak` (a match under an algorithm the ecosystem itself calls weak: MD5, SHA-1 as a checksum), it
 is returned synchronously to the caller, and it is never stored: the proxy layer refuses to
 commit on `mismatch` and a hosted ingest refuses to commit on `mismatch`, so after the call there
@@ -347,7 +350,7 @@ change increments a **revision** the verdicts record. Its entries:
 | `nuget-trusted-signers` | `author` and `repository` entries by certificate fingerprint, `allowUntrustedRoot`, `owners`, imported from a `nuget.config` fragment or a repository's `RepositorySignatures` resource | NuGet |
 | `sigstore-root` | A `TrustedRoot` document: the public-good root maintained by the TUF updater, or a fixture or private instance's root imported as a file | Sigstore (Cosign, PEP 740, npm provenance, CEP-27) |
 | `identity-policy` | Which identities may vouch for what: entries of `(issuer, subject)` with the subject exact or matched by a bounded glob on one path segment, optionally scoped to a package name pattern, plus a `log-required` flag (default on for keyless); or a reference to a robot's trust policy in `credential-management.md`, from which the expected issuer and subject are derived | Sigstore; NuGet owners; Swift signing entity |
-| `raw-keys` | Named public keys by digest with an algorithm: Ed25519 (Open VSX), RSA for JWS (Homebrew, `kid`), ECDSA P-256 for npm registry signatures (`keyid`) | Ed25519, JWS, npm-keys |
+| `raw-keys` | Named public keys by digest with an algorithm: Ed25519 (Open VSX), RSA for JWS (Homebrew, `kid`), ECDSA P-256 for npm registry signatures (`keyid`), RSA for a raw PKCS #1 v1.5 SHA-512 signature (Hex, imported as the SPKI PEM the upstream publishes at `public_key`, identified by the OpenSSH `SHA256:` fingerprint `mix hex.repo add --fetch-public-key` compares; 2048 bits or more) | Ed25519, JWS, npm-keys, raw RSA-SHA512 |
 | `tuf-root` | Root key ids and threshold (Hackage), with the current root document | TUF |
 
 **Sources, and the rule that no source is consulted at verdict time.** A trust set is filled
@@ -452,7 +455,8 @@ a method per scheme, so the pinned method set is untouched and the interface doe
 one method per format:
 
 - `Check(ctx, IntegrityRequest) (IntegrityResult, error)`: an integrity request names the entry
-  (`digest`, `size`, `tree-hash`, `apk-package`, `arch-record`, `metalink`, `h1`, `checksum`),
+  (`digest`, `size`, `tree-hash`, `apk-package`, `arch-record`, `metalink`, `h1`, `checksum`,
+  `raw-rsa-sha512` with the key name and signature bytes),
   the expected values, and a reader over the bytes; the result is `match`, `mismatch` or `weak`
   with the computed values. It streams: no entry reads the bytes twice, and the handler passes
   the same reader it is committing from.
@@ -502,6 +506,7 @@ primitive is allowed to know about a format.
 | CMS SignedData | `cms` | Swift profile (exactly one signer, SHA-256 over the archive, ECDSA P-256, code-signing EKU, metadata and manifests signed by the same signer, roots from `x509-roots`, signing entity extracted) and NuGet profile (author signature and repository countersignature, RFC 3161 timestamp, code-signing EKU, chain to `x509-roots` or the imported SDK fallback bundle, match against `nuget-trusted-signers` including `owners`; untrusted root is `failed` with `untrusted-key` unless `allowUntrustedRoot`) |
 | JWS | `jws` | General JSON serialization, PS512, `b64: false` with `crit`, `kid` against `raw-keys`; `repository-chain` for the bottle whose digest a verified document names |
 | Raw Ed25519 | `raw` | Open VSX `.signature.sig` over the exact package bytes against the key the metadata names, pinned per remote |
+| Raw RSA-SHA512 | `raw` | Hex's `Signed` protobuf: RSA PKCS #1 v1.5 over SHA-512 of the uncompressed `payload` bytes (the form Erlang's `public_key:sign/3` produces), against an RSA `raw-keys` entry; an **integrity call** through `Check` in the proxied verifier hook, answering `match` or `mismatch` and recording no verdict, since no artifact digest is vouched for (`hex.md` AC17, AC21) |
 | TUF chain | `tuf` | hackage-security's chain (root, timestamp, snapshot, mirrors, index) with canonical JSON and the root-update rule, threshold from `tuf-root`; first failing link and its reason; `repository-chain` for a tarball matched by a verified index entry |
 | Integrity: digest, size, checksum set | `internal/verify` | sha256, sha512, sha384, sha1, md5 (the last two answer `weak`), case-insensitive comparison where the client compares so (Vagrant) |
 | Integrity: tree hash | `internal/verify/treehash` | Julia's git tree hash with collision-detecting SHA-1, resource-kind flag, streaming over the compressed archive |
@@ -540,7 +545,8 @@ signature manifest's layers to the verifier, which records a verdict for the **s
 Discovery covers both the referrers query and the tag convention, because cosign without
 `--registry-referrers-mode=oci-1-1` still writes the tag and reads it back. The conformance
 case signs with a real cosign against a fixture Sigstore and pulls with a policy rule requiring
-the identity, on both paths; the refusal is rendered as `oci.md`'s `DENIED` shape (AC6).
+the identity, on both paths; the refusal is rendered as `oci.md`'s `DENIED` shape (AC6, sharing
+`conformance/oci/cosign_test.go` with `oci.md` AC14, the handler's half).
 
 **npm.** Proxied: the packument's `dist.signatures` verify against the pinned upstream keys
 (`repository-chain`), and `dist.attestations` are fetched, verified and re-hosted. Hosted: a
@@ -549,8 +555,7 @@ policy and refused on `failed`; the attestation is stored as a file of the versi
 under `/-/npm/v1/attestations/{name}@{version}` with `dist.attestations` pointing at it; a
 publish without attestations commits with verdict absent. Hosted `dist.signatures` are
 `signing-service.md`'s (its ECDSA P-256 profile and keys document, Phase 5 there). `npm.md`
-records this as a Design section and a criterion mirroring AC20 (artifact-verification item 10 in
-`agents/spec-loop/consequences.md`, queued for that spec's reconciliation).
+records this as a Design section and its AC22, which mirrors AC20 here.
 
 **PyPI.** The upload path verifies every `attestations` entry synchronously before commit: the
 statement's subject must name the uploaded file and its `sha256`; the certificate identity must
@@ -561,8 +566,8 @@ shape). The verified attestation is stored as a file of the version and the prov
 rendered from it with the publisher derived from the certificate's identity (`kind` and `claims`
 as PEP 740 shows for GitHub), served under `provenance` in JSON and `data-provenance` in HTML,
 and only then does the JSON `api-version` claim 1.3. Proxied provenance follows the rule above.
-The AC14 revision and the proxied re-host rule are queued for `pypi.md` (artifact-verification
-item 8 in `agents/spec-loop/consequences.md`).
+`pypi.md` carries both: its AC14 is lifted to this shape and its AC18 is the proxied re-host
+rule (AC7 and AC8 here are this side of them).
 
 **Galaxy.** Hosted collections acquire signatures by **user attachment**: an `attach` operation on
 the version carrying a detached OpenPGP signature over the version's stored `MANIFEST.json`. The
@@ -574,8 +579,8 @@ exactly what a client that "requires valid signatures" will act on. The version 
 pulp_ansible serializes and of which the client reads `signature`; `signing_service` is `null`
 because `signing-service.md` decided not to build server-side signing (its resolved Galaxy
 decision, was Q10 there), which this spec does not decide. Proxied signatures pass through with
-a verdict. `ansible-collections.md` AC11's revision to its stated shape is queued
-(artifact-verification item 9 in `agents/spec-loop/consequences.md`). Server-side signing was not
+a verdict. `ansible-collections.md` AC11 carries the revision in this shape (attach, served
+entries, a tampered attachment refused, proxied pass-through with a verdict). Server-side signing was not
 chosen because it brings key generation and rotation into a step that owns no keys; it stays
 available to `signing-service.md` as a producer of attachments through the same verified `attach`
 path, a capability that spec names and leaves unbuilt (the resolved Galaxy decision, was Q6).
@@ -608,9 +613,20 @@ hosted path, as each spec states; a policy rule requiring a **publisher** identi
 accept `repository-chain`, and one requiring any verified verdict does, so the distinction is
 policy-visible without a fourth state.
 
-**Formats with nothing to verify.** Chef, Composer, CRAN, Debian, Go modules, Hex, opam, pub,
-Cargo, Conan and generic answer absent for every digest; the conformance matrix records them as
-`none` for verification rather than as untested (AC24).
+**Hex.** Nothing on artifacts: the tarball carries no signature and its checksums are the
+registry's own, so every Hex artifact digest answers absent and the verification column renders
+`none` (AC24). What is verified is the registry's own documents on the proxied path: each upstream
+`Signed` payload is checked by the raw RSA-SHA512 entry against the RSA key the operator imported
+into the remote's `raw-keys` (never pinned from the upstream's own `public_key` route, `hex.md`'s
+resolved trust-anchor decision, was Q9 there), as an **integrity call** in the post-receipt
+verifier hook: a `mismatch`, an absent key or a payload whose `repository` field differs refuses
+the commit, the cached revision keeps serving within the stale limit, and the next request fetches
+again (AC30). It records no verdict, because no artifact digest is being vouched for; the
+payload's integrity is what makes the checksums inside it trustworthy.
+
+**Formats with nothing to verify.** Chef, Composer, CRAN, Debian, Go modules, opam, pub, Cargo,
+Conan and generic answer absent for every digest, and so does every Hex artifact (above); the
+conformance matrix records them as `none` for verification rather than as untested (AC24).
 
 ### Identity policies and the credential-management link
 
@@ -892,6 +908,15 @@ where it cannot (real `.nupkg`, `.rpm`, `.apk`, Swift archives captured from the
       the trust set and all its revisions are dropped while every verdict stays readable by the
       repository's identity, with the name rendered from the tombstone.
 
+- [ ] AC30: The raw RSA-SHA512 entry, called through `Check` as an integrity call, answers `match`
+      for a Hex `Signed` payload whose signature is RSA PKCS #1 v1.5 over SHA-512 of the exact
+      payload bytes under the named RSA `raw-keys` entry, and `mismatch` for a tampered payload, a
+      tampered signature, a signature by another key, a PSS signature and a SHA-256 one; an RSA
+      key below 2048 bits is refused at trust-set import; and on a proxied Hex repository a
+      payload answering `mismatch`, or fetched while the remote's trust set holds no RSA key, is
+      never committed, the cached revision keeps serving and no verdict record is written, proven
+      with a real `mix deps.get` against a stand-in signing with a fixture key (`hex.md` AC17 and
+      AC21 are the client half).
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
@@ -925,6 +950,7 @@ where it cannot (real `.nupkg`, `.rpm`, `.apk`, Swift archives captured from the
 | AC27 | integration | `internal/manage/reads_test.go` (verdict read and listing under `pull`, shared with `management-api.md` AC28); `internal/verify/alert_test.go` (`verify_verdicts_total` and `VerificationFailed` through `telemetry.NewTestRecorder` on failed at ingest and at commit) |
 | AC28 | integration | `internal/verify/sigstore/robot_identity_test.go` (exchange as robot A, attest as A and as B; explicit entry admits a non-exchanging identity) |
 | AC29 | integration | `internal/verify/lifecycle_test.go` (rename keeps records and triggers no re-evaluation; deletion cancels the pending job and keeps records; tombstone drops the trust set and keeps verdicts readable by identity) |
+| AC30 | unit + integration + conformance | `internal/verify/raw/rsa_sha512_test.go` (fixture key pair signing through the same PKCS #1 v1.5 SHA-512 form as `public_key:sign/3`; tampered payload, tampered signature, foreign key, PSS and SHA-256 signatures; under-2048-bit key refused at import); `internal/proxy/verifier_hook_test.go` (mismatch and empty trust set commit nothing and write no verdict); `internal/format/hex/proxied_integrity_test.go` (shared with `hex.md` AC17: the tampered payload and tampered `repository` field through the hook); `conformance/hex/proxied_test.go` (a real `mix deps.get` through a remote whose stand-in signs with a fixture key, with and without the key in the trust set; `hex.md` AC21's client half) |
 
 ## Implementation Phases
 
@@ -960,10 +986,11 @@ where it cannot (real `.nupkg`, `.rpm`, `.apk`, Swift archives captured from the
   library chosen and recorded here
 - Helm `.prov` as an optional cleartext verdict source
 
-### Phase 4: Tier 2 and Tier 3 entries, each with its format (AC11, AC12, AC15 to AC19)
+### Phase 4: Tier 2 and Tier 3 entries, each with its format (AC11, AC12, AC15 to AC19, AC30)
 - Swift CMS profile; apk stream and integrity; Arch `all`; Terraform `SHA256SUMS` and `h1:`;
   CPAN cleartext; Hackage TUF chain; Homebrew JWS; Open VSX Ed25519 and key pinning; Julia tree
-  hash; Puppet and Vagrant checksum entries; conda CEP-27; LuaRocks optional source
+  hash; Puppet and Vagrant checksum entries; conda CEP-27; LuaRocks optional source; the Hex raw
+  RSA-SHA512 integrity entry and the RSA `raw-keys` type, with Hex's proxied phase (AC30)
 
 ### Phase 5: Matrix and closure (AC24)
 - Verification column in the conformance matrix with `none` citations (`catalogue.md` AC7
@@ -1207,3 +1234,4 @@ case then depends on.
 |------|----------|---------------|---------|
 | 2026-09-27 | ab22b0d | authoring pass: grounded first draft, not a review | Gathered the requirements of 26 citing format specs, `supply-chain-policy.md`'s consumer interface and AC15, `project-charter.md`'s step 4b, the boundaries `management-api.md`, `credential-management.md`, `data-model.md`, `proxy-cache.md`, `format-handler-interface.md` and `auth.md` already settle, and consequences items 3, 2, 9 and the open items and theme 4 named in the brief. Grounded prior art fetched this run: the Sigstore client specification and `TrustedRoot` protobuf, the root-signing TUF repository, `sigstore-go` and its `VirtualSigstore`, cosign's storage specification and keyless flags, PEP 740, CEP-27, npm's `audit signatures` conventions, NuGet's trusted-signers model, zot's stored verification results, Harbor's presence-based deployment security, Gitea's silence, pulp_ansible's signature serializer and ansible-galaxy 2.18's client source; Artifactory's reachable page covered Distribution only and Sonatype's and Pulp's pages answered 404, recorded as silence. Design: two products (integrity results returned, verdicts stored), a verdict keyed by repository, digest and scheme outside the format model and not a mark root, revisioned per-repository trust sets whose sources write and whose verification only reads, ingest and cache-commit timing with fail-closed re-evaluation, a two-method `Verifier` through `Deps`, the entry catalogue for every requested scheme, the vouched-provenance versus client-checked-signature rule, per-format positions including PEP 740 in-upload verification, Galaxy verified attachment and NuGet trust and revocation. Eleven questions written in decision shape and adopted under the standing delegation. 28 criteria, each with a Test Plan row; `node scripts/check-spec.js` run against this file with zero failures. Stays draft; awaits an independent review. |
 | 2026-09-28 | 3a82b21 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. From `async-operations.md` (item 6) and `deployment.md` (items 2 and 9): the re-evaluation worker is the `verify.reevaluate` job kind enqueued in the trust-set revision's transaction with exclusivity key `verify:{repository}` and a checkpoint per page, its bound `async.kind_limits` `verify.reevaluate: 4` (the `verify.workers` row removed; deployment's resolved worker-limit decision, was Q11 there), the two refreshes the `verify.tuf_refresh` and `verify.revocation_refresh` schedules with `verify.sigstore.refresh` and `verify.revocation.refresh` as their periods, disabled under `proxy.offline`; AC3 and AC22 rewritten, the four remaining keys cited to deployment's inventory. From `management-api.md`'s reconciliation (item 5): trust and verdict reads are `pull`, trust writes and import admin, the routes cited to its endpoint table and AC28 (AC27 and its row). From `repository-lifecycle.md` (item 10): a new "Repository lifecycle" paragraph and AC29 (rename changes nothing; deletion keeps records and cancels the pending job; tombstone drops trust set revisions, never verdicts). From `observability.md` (item 14): `verify_verdicts_total{scheme,state}`, `verify_duration_seconds`, `verify_reevaluation_pending`, the `VerificationFailed` alert via `telemetry.Alert`, `// gate:` on `bench_test.go` (AC26, AC27). From `upstream-adapters.md` (item 8) and `signing-service.md` (item 8): per-upstream trust anchors are the remote's trust set; the `openpgp` and `raw` schemes answer debian item 6 and hex item 5; signing-service's self-check consumes `Verifier` with public material. Wording: every "sibling consequence" now a citation of the applied criterion (`data-model.md` AC34, `storage-and-gc.md` AC21 and AC22, `proxy-cache.md` was-Q15 and AC20, `conformance-harness.md`'s `trust` key, `catalogue.md` AC7 in AC24's row); the per-format revisions of `npm.md`, `pypi.md` and `ansible-collections.md` are still queued and are cited as such. Already done at authoring: supply-chain fold item 3, format-management fold item 2, the Open items and theme 4. `node scripts/check-spec.js` on this file: zero failures. Stays draft; awaits an independent review. |
+| 2026-09-28 | 3135d95 | closing reconciliation sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show applied, verified against the current text of `hex.md` (its verification-entry item 5, resolved trust-anchor decision was Q9, AC17, AC21), `npm.md` AC22, `pypi.md` AC14 and AC18, `ansible-collections.md` AC11 and `oci.md` AC14. Applied: format batch 5 item 2 (a `Raw RSA-SHA512` entry in the catalogue, an RSA key type under `raw-keys`, `raw-rsa-sha512` among `Check`'s integrity entries, a Hex paragraph under "Per-format positions", Hex named among integrity results, the Hex row split out of the "Nothing" row and qualified to mean nothing on artifacts; new AC30 with a Test Plan row shared with `hex.md` AC17 and AC21; Phase 4); format batch 1 item 7 (the npm, PyPI and Galaxy paragraphs and the OCI context row cite the landed criteria instead of 'queued'). Integrity, not verdict, follows `hex.md`'s own design and the existing rule that a signed index whose role is to make its checksums trustworthy is checked before commit; no question raised. Found already done: management-api reconciliation 5, charter reconciliation 7, credential-management and repository-lifecycle reconciliation 3. `node scripts/check-spec.js` zero failures on this file. Stays draft. |
