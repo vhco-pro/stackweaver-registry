@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 as a grounded first draft: the Supermarket API captured from Berkshelf 8.1.23 and 8.0.5, knife 19.3.2 and 17.10.0 and chef-cli (Policyfile) 6.1.39 and 5.6.9, run from two Cinc Workstation images pinned by digest on a dedicated Podman network against two logging, rule-injecting stubs that implement the Supermarket routes from the open-source Supermarket source; captured signed requests verified with the Go standard library; checked against the live supermarket.chef.io, the client, mixlib-authentication and Supermarket sources, and OSV. Ten questions written in decision shape and adopted under the owner's standing delegation; none open. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at b43c566 with the foundation wave on Opus (not a review), this spec's first reconciliation: the universe is this format's Indexer generator output (internal/format/chef/index) under signing-service's write-path runtime, unsigned, served through ServeDocument with the serve-time URL expansion under server.public_url in the generator package (serve-time expansion gap reported), merged for a virtual as the index.merge job and regenerated on the proxied path through FromUpstream (AC17, AC24); signed writes are auth.md AC34's verifier against credential-management's /api/v1/keys (AC6, AC7), X-Jfrog-Art-Api a route-scoped presentation form with off-route presentations refused (AC11); removals and deprecation are management-api kinds delete-package, delete-version and annotate through Operator with the two Supermarket DELETE routes as bindings, retirement core-held, 405 repository-type (AC8, AC9); the universe stays none under the descriptor kind; refusals through WriteRefusal on a holds binding row (AC13); the proxied path on the https adapter with the object-storage host on the allowlist, creation with no probe and the shape checked at first request, the completion-only verifier with the pinned digest refetched in declared-digest mode, the cache-scoped Last-Modified (AC20 to AC22); read-path verification cited for a client that verifies nothing; Capabilities with Virtual and Rename supported (AC26). No new question. Earlier: authored 2026-09-26 from captures of Berkshelf 8.1.23 and 8.0.5, knife 19.3.2 and 17.10.0 and chef-cli 6.1.39 and 5.6.9; ten questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for the Chef cookbook format (the Supermarket API): a write-triggered repository-wide /universe document, cookbook and version documents, tarball downloads, knife supermarket share and unshare authenticated by Chef's signed-header scheme against registered public keys, private reads through the one header every resolver sends, a verifying supermarket.chef.io cache, and per-name virtual repositories that close the dependency confusion Berkshelf's source union opens, with Berkshelf, Policyfile and knife on two generations as the oracles."
 author: michielvha
 goal: "Serve Chef teams a private Supermarket whose cookbooks every resolver reads with one credential and publishes with the knife they already have, and a supermarket.chef.io cache that never delivers a tarball whose identity disagrees with its coordinate, with the real Berkshelf, Policyfile and knife as the oracle on both paths."
@@ -126,37 +126,50 @@ recorded here anyway, from this side, because a gate enforced on one side only i
 nowhere.
 
 **The shared signing and index service must be `planned` before Phase 1.** The universe is a
-write-triggered generated document produced by `docs/internal/plans/foundation/signing-service.md`
-(to be authored in the spec loop), which the charter builds at step 7 as the production form of
-what the step 4a prototype learned. What this format requires of that service is stated in
-Design ("What the signing and index service must provide"), never designed here; nothing is
-asked of its signing half, because nothing on this wire is signed.
+write-triggered generated document produced by `docs/internal/plans/foundation/signing-service.md`,
+which the charter builds at step 7 as the production form of what the step 4a prototype learned:
+this handler declares the optional `Indexer` interface and its generator lives in
+`internal/format/chef/index`. How this format's six requirements map onto that spec is stated in
+Design ("What the signing and index service provides"); nothing is asked of its signing half,
+because nothing on this wire is signed, and a format whose profile declares no signing profile
+gets no key (its AC24).
 
-**`auth.md` must carry two presentation forms before Phase 1's private reads and Phase 2.** The
-resolved publish-authentication and private-read decisions below add a registered-public-key
-credential verified from Chef's signed headers and the `X-Jfrog-Art-Api` header as a way to
-present a registry token. Both are revisions of `auth.md` and of the owed
-`foundation/credential-management.md`, raised as sibling consequences, never assumed here. Until
-they land, Phase 1 serves anonymously readable repositories only.
+**`auth.md` and `credential-management.md` must be `planned` before Phase 1's private reads and
+Phase 2.** The resolved publish-authentication and private-read decisions below needed a
+registered-public-key credential verified from Chef's signed headers and the `X-Jfrog-Art-Api`
+header as a way to present a registry token. Both have landed as specs: `auth.md` carries the
+`X-Jfrog-Art-Api` row of its presentation-form table, route-scoped to this format's read routes,
+and the signed-request row, route-scoped to its write routes, with the verifier in "Signed
+requests: the one client that carries no token" (its AC31 and AC34), and
+`credential-management.md` carries the registered public key at `/api/v1/keys` (its AC12). Until
+both reach `planned`, Phase 1 serves anonymously readable repositories only.
 
 **The management API must be `planned` before Phase 3.** Removing a version, removing a cookbook
-and deprecating a cookbook are operations of `docs/internal/plans/foundation/management-api.md`
-(to be authored in the spec loop), whose core the charter builds at step 2 and completes at step
-9; `knife supermarket unshare` and the Supermarket version route are bindings onto them.
+and deprecating a cookbook are kinds of `docs/internal/plans/foundation/management-api.md`'s
+closed vocabulary (`delete-version`, `delete-package`, `annotate`), declared through its optional
+`Operator` interface, whose core the charter builds at step 2 and completes at step 9;
+`knife supermarket unshare` and the Supermarket version route are bindings onto them (that spec's
+reconciliation table: "the two Supermarket `DELETE` routes").
 
-**The proxy layer must offer a completion-only fetch with a handler-supplied verifier, and the
-upstream adapters a Supermarket adapter, before Phase 4.** A Supermarket tarball carries no digest
-on any read surface, so what binds it is a check the handler can compute only over the complete
-body (Design, "The proxied path"). The completion-only mode is already requested of
-`proxy-cache.md` by `go-modules.md`, `nuget.md` and `conan.md`, the verifier hook by `conan.md`;
-this spec adds no new shape to that request. The adapter, which follows the upstream's cross-host
-`302` to object storage and revalidates the universe with `If-None-Match`, is requested of
-`docs/internal/plans/foundation/upstream-adapters.md` (to be authored in the spec loop; charter
-step 4).
+**The proxy layer's completion-only fetch and the upstream adapters must be `planned` before
+Phase 4.** A Supermarket tarball carries no digest on any read surface, so what binds it is a
+check the handler can compute only over the complete body (Design, "The proxied path").
+`proxy-cache.md` now offers exactly that: the completion-only mode with a handler-supplied
+verifier run in its post-receipt hook before any commit (its resolved completion-only decision,
+was Q15 there, AC20), which eight formats requested and this spec needs in no new shape. What
+this format called "the Supermarket adapter" is `docs/internal/plans/foundation/upstream-adapters.md`'s
+`https` adapter under a profile (its "Selecting an adapter": "What the formats called 'the
+Supermarket adapter' ... is this adapter under a profile"), built at charter step 4: it follows
+the upstream's cross-host `302` to object storage under the upstream's host allowlist and
+revalidates the universe with `If-None-Match` (its AC7, AC8 and AC15); the protocol half stays in
+this handler.
 
 Nothing is required of `docs/internal/plans/foundation/async-operations.md` (a share completes
-inside its request, captured `201`) or of `docs/internal/plans/foundation/artifact-verification.md`
-(the ecosystem has no artifact signature or attestation; charter step 4b is not a dependency).
+inside its request, captured `201`; the virtual merge is `signing-service.md`'s `index.merge` job
+kind, which that spec owns) or of `docs/internal/plans/foundation/artifact-verification.md` (the
+ecosystem has no artifact signature or attestation, so that spec lists `chef.md` in its
+"Nothing" row and its verification column renders `none` for Chef, its AC24; charter step 4b is
+not a dependency).
 
 ## Scope
 
@@ -174,9 +187,12 @@ inside its request, captured `201`) or of `docs/internal/plans/foundation/artifa
   `metadata.json` and checked against the request, immutability of a version, the retirement of
   deleted versions, and the write-boundary declaration `data-model.md` requires.
 - Chef's signed-header authentication for the write routes against registered public keys,
-  protocol versions 1.0, 1.1 and 1.3; private reads by a registry token in the `X-Jfrog-Art-Api`
-  header or as Basic; the uniform challenge; per-route addressed objects and the pattern-refusal
-  case `auth.md` AC8 requires; the rendering of a shared policy refusal.
+  protocol versions 1.0, 1.1 and 1.3 (`auth.md` AC34, `credential-management.md` AC12); private
+  reads by a registry token in the `X-Jfrog-Art-Api` header or as Basic (`auth.md`'s
+  presentation-form table, AC31); the uniform challenge; per-route addressed objects and the
+  pattern-refusal case `auth.md` AC8 requires; the rendering of a shared policy refusal through
+  the shared refusal writer.
+- The handler's `Capabilities()` declaration, repository rename and virtual aggregation (AC26).
 - Removal of a version and of a cookbook, and deprecation, as bindings onto registry-owned
   management operations.
 - The proxied path against supermarket.chef.io or any Supermarket: classification per route, URL
@@ -260,7 +276,11 @@ stored as acme-base-1.1.0 with `"version": "1.0.0"` inside (captured). Policyfil
 `Policyfile.lock.json` and checks it only when a lock is later exported or pushed
 (`CookbookLocks#refresh!`: `chef export` failed with `CachedCookbookModified` after a tampered
 re-download, captured), never at `install`, and never on the first resolution, which trusts what
-it is served. This registry is therefore where a cookbook's name, version and bytes are bound.
+it is served. This registry is therefore where a cookbook's name, version and bytes are bound,
+and its own read path is the only integrity check a Chef client ever gets: the CAS verifies a
+blob's digest while streaming it on every read and aborts with an operator alert on a mismatch
+(`storage-and-gc.md` AC21; `artifact-verification.md`'s resolved serve-time-verification decision, was Q5 there, whose question names
+Chef among the clients that verify nothing).
 
 **Berkshelf unions every source and prefers the highest version.** `Resolver::Graph#populate`
 merges every source's universe (`cookbooks |= source.universe`) and the solver picks the highest
@@ -331,7 +351,10 @@ The levels are exactly those `data-model.md` provides; no table is added.
   was first published under is kept in the package-level document and rendered in the universe
   and every document, while every route matches case-insensitively (the resolved name-spelling
   decision below). The package-level document also holds the category, `deprecated` and its
-  `replacement`, and the **retirement set** of deleted versions.
+  `replacement`. Deleted versions are core-held `Retirement` records, written by
+  `management-api.md`'s `Submit` in the removing operation's transaction and never pruned
+  (`data-model.md` AC35; `management-api.md`, "Retirement is core-held"), so no handler document
+  carries them and no repoint can lose them.
 - **`Version.version` is the canonical `x.y.z`.** The version-level document holds the parsed
   `metadata.json` fields the documents render (`dependencies` with any self-dependency removed,
   as `Universe.generate` and the upload path both do; `platforms` as `supports`; `license`;
@@ -352,43 +375,64 @@ version records on request**, and it is **stored without URLs**:
 
 - The stored form is `{spelling: {version: {"dependencies": {...}}}}`, with names in byte order of
   their lowercased form and versions in Chef version order, produced inside the write that
-  changes it: a share, a version removal, a cookbook removal. Deprecation does not touch it.
-- On a request the handler streams the stored document and inserts, into each entry,
+  changes it (a share, a version removal, a cookbook removal) by this format's generator
+  (`internal/format/chef/index`, pure) run by `signing-service.md`'s write-path runtime before
+  commit (its "The write path dispatches; the handler cannot forget", AC1). Deprecation does not
+  touch it: the generator's `Affects` returns no key for an `annotate`.
+- On a request the stored document is streamed with, inserted into each entry,
   `"location_type": "opscode"`, `"location_path": "{base}/api/v1"` and
   `"download_url": "{base}/api/v1/cookbooks/{spelling}/versions/{version}/download"` under the
-  externally visible base URL of the repository, the dependency `composer.md` and `npm.md` already
-  have. The URLs are absolute because Policyfile resolves a relative `download_url` into a
-  `NoMethodError` and knife resolves a relative `file` against its `chef_server_url` (both
-  captured), and the insertion is a linear stream transform with no per-entry lookup.
+  externally visible base URL of the repository, read from `deployment.md`'s `server.public_url`
+  through `Deps` as `npm.md` and `cargo.md` read it (a re-open input `format-handler-interface.md`
+  records) and joined with the repository's current name. The URLs are absolute because
+  Policyfile resolves a relative `download_url` into a `NoMethodError` and knife resolves a
+  relative `file` against its `chef_server_url` (both captured), and the insertion is a linear
+  stream transform with no per-entry lookup. The transform is this format's, so it lives in the
+  generator package beside the renderer that wrote the stored form, never in the handler
+  package, and the universe is served through `index.ServeDocument`, which sets the headers
+  (`signing-service.md` AC11 holds that no handler package sets `Last-Modified` or `ETag`).
+  `signing-service.md` does not yet state a serve-time expansion a profile may declare for
+  `ServeDocument` to apply, a gap raised against that spec by this pass.
 - It is served `Content-Type: application/json; charset=utf-8`, gzip-encoded when the client
   accepts it (every capture sent `Accept-Encoding: gzip`), with a strong `ETag` derived from the
   stored bytes and the base URL, so an unchanged repository serves identical bytes and the same
-  `ETag` across snapshots, and a conditional request answers `304` although no pinned client sends
-  one.
+  `ETag` across snapshots, and a conditional request answers `304` on a matching `ETag` although
+  no pinned client sends one; its `Last-Modified` is the serving pointer's forward-moving
+  freshness record (`data-model.md` AC36), which no Chef client reads.
 - A repoint restores it, since it lives in the snapshot delta at the repository level; a
   rollback therefore serves exactly the universe of the snapshot it targets (Design, "Rollback and
   promotion").
 
-**What the signing and index service must provide.** Stated so the dependency on
-`docs/internal/plans/foundation/signing-service.md` (to be authored in the spec loop) cannot be
-lost, and precisely enough that the service can be specced against it:
+**What the signing and index service provides.** The six requirements this spec placed on
+`docs/internal/plans/foundation/signing-service.md`, each checked against what that spec now
+says:
 
 1. **Unsigned generation** of the stored universe from the version-level records of every current
    version in the repository, in the ordering above; nothing is signed and the service's signing
-   half is not used.
+   half is not used. Met: that spec lists Chef among the consumers that "use generation with no
+   key", and a profile with no signing profile makes the format an unsigned consumer with no key
+   created (its "Two halves, one write", AC24).
 2. **Regeneration inside the triggering write**, landing in the same completed logical write and
    the same snapshot, so no snapshot serves a universe naming a version whose tarball it does not
-   hold (`data-model.md`'s one-write-one-snapshot rule; the prototype's question 3), under the
-   revision-token retry `data-model.md` makes mandatory, so two concurrent shares both land.
+   hold (`data-model.md`'s one-write-one-snapshot rule; the prototype's question 3), and two
+   concurrent shares both land. Met by the pre-commit dispatch (its AC1) and by its per-document
+   transaction lock with the revision-token retry behind it ("Contention", AC3, AC28).
 3. **Incremental cost**: a write touching one cookbook reworks that cookbook's entries and copies
    the rest by stream, so a share into a Supermarket-sized repository (31,345 versions) does not
-   re-read every version record (AC19 holds the budget).
+   re-read every version record. Met by the generator's `Affects` and the streaming writer
+   `Generate` may return (its AC4); this spec's AC19 holds the budget.
 4. **Storage as CAS-backed metadata above the inline threshold** (the fourth mark root,
-   `storage-and-gc.md` AC16), since a hosted universe reaches megabytes and a proxied one is eight.
+   `storage-and-gc.md` AC16), since a hosted universe reaches megabytes and a proxied one is
+   eight. Met (its "Storage" section, AC5).
 5. **The virtual merge**, per name in member order (below), re-run when a member's universe
-   changes.
+   changes. Met by the generator's `Merge` run as the `index.merge` job kind on
+   `internal/async`: enqueued by a member's write through the pre-commit hook, coalesced within
+   `index.virtual_merge_window`, the first merge enqueued at virtual creation, the previous merged
+   universe serving until the new one commits (its "Virtual merges", AC19).
 6. **The same generation on the proxied path** from the records parsed out of an upstream
    universe, so hosted, proxied and virtual repositories share one generator and one stored form.
+   Met by `FromUpstream`, whose result is stored unsigned as the remote's current document with
+   `proxy-cache.md`'s cache-scoped freshness (its "The proxied path", AC20).
 
 ### The publish path and what counts as a write
 
@@ -402,12 +446,16 @@ only. `data-model.md` requires each format spec to declare its write boundaries:
   its tarball and the regenerated universe. It is synchronous, so no `Operation` is recorded.
 - **A refused share writes nothing**: authentication failure (`401`), missing authorization
   (`403`, or `404` for a pattern refusal), invalid tarball (`400`), existing or retired version
-  (`409`), policy refusal (`403`). Every refusal carries Supermarket's error body
+  (`409`), policy refusal (`403`, written through `WriteRefusal`), and a share to a proxied or
+  virtual repository (`405`, the status `management-api.md` fixed for every content write there,
+  its problem type `repository-type`). Every refusal carries Supermarket's error body
   `{"error_code": ..., "error_messages": [...]}` as `application/json`, because knife prints
   `error_messages[0]` and fails on anything else (captured).
 - **A version is immutable, and a deleted version is retired** (the resolved re-share decision
   below): a share of a version that exists answers `409` with Supermarket's wording, whatever its
-  bytes, and so does a share of a version in the retirement set. Identical re-shares cannot be made
+  bytes, and so does a share of a coordinate with a `Retirement` record, which the shared write
+  path refuses and this handler renders in Supermarket's shape (`data-model.md` AC35;
+  `management-api.md`, "Retirement is core-held"). Identical re-shares cannot be made
   idempotent here, because knife rebuilds the tarball on every share and the bytes differ each time
   (captured: two shares of the same `acme-app` 1.0.0 had different content hashes).
 - **A cookbook keeps its first spelling**: a share whose `metadata.json` name matches an existing
@@ -422,34 +470,47 @@ version produce one `201` and one `409`.
 
 ### Removes and deprecation are bindings
 
-Per the cross-format precedent (`pypi.md`, `npm.md`, `cargo.md`, `conan.md`), each is an operation
-of the registry-owned management API, `docs/internal/plans/foundation/management-api.md` (to be
-authored in the spec loop), and the wire routes are **bindings onto the same operations**:
+Per the cross-format precedent (`pypi.md`, `npm.md`, `cargo.md`, `conan.md`), each is a kind of
+the registry-owned management API's closed vocabulary,
+`docs/internal/plans/foundation/management-api.md` (its "Cross-format reconciliation" table
+carries the Chef rows), submitted at `POST /api/v1/repositories/{name}/operations`, and the wire
+routes are **bindings onto the same operations**. The handler declares them through the optional
+`Operator` interface (`Operations()`, `Bindings()`, `Authorize`, `Apply`), and every entry point
+calls the core's one `Submit` (`management-api.md`, "Dispatch: the optional `Operator`
+interface"). The version route is no knife command's, but it is the reference Supermarket's own
+route, which that spec's binding rule admits when the format spec records it ("a route of the
+ecosystem's published reference API"):
 
-| Operation | Client binding | Effect a client sees | Action |
-|---|---|---|---|
-| Remove a cookbook | `DELETE /api/v1/cookbooks/{name}` from `knife supermarket unshare {name}` | The name leaves the universe and its documents answer `404`; every version enters the retirement set | `delete` |
-| Remove a version | `DELETE /api/v1/cookbooks/{name}/versions/{version}` (Supermarket route, `curl`) | The version leaves the universe and the cookbook's `versions`; it enters the retirement set | `delete` |
-| Deprecate or undeprecate a cookbook, with an optional replacement | none | The cookbook document's `deprecated` and `replacement`, which knife's download reports | `push` |
+| Operation | Kind | Client binding | Effect a client sees | Action |
+|---|---|---|---|---|
+| Remove a cookbook | `delete-package` | `DELETE /api/v1/cookbooks/{name}` from `knife supermarket unshare {name}` | The name leaves the universe and its documents answer `404`; every version is retired | `delete` |
+| Remove a version | `delete-version` | `DELETE /api/v1/cookbooks/{name}/versions/{version}` (Supermarket route, `curl`) | The version leaves the universe and the cookbook's `versions`; it is retired | `delete` |
+| Deprecate or undeprecate a cookbook, with an optional replacement | `annotate` | none | The cookbook document's `deprecated` and `replacement`, which knife's download reports | `push` |
 
 Rules, applying the precedent rather than re-deciding it: each operation is one completed logical
 write, exactly one snapshot, none for a refused one, and no blob-store object deleted directly
-(`storage-and-gc.md` AC15); authorization is the settled `(repository, action)` vocabulary with no
-new action; hosted only, a proxied or virtual repository answering `405`; a removal of something
-absent answers `404`, which knife reports as "The object you are looking for could not be found"
-(captured); removing a cookbook's last version is allowed and leaves the `Package` row and its
-retirement set (`data-model.md` AC33), where Supermarket refuses it with `409`, a divergence on the
-exception list. What this format requires of `management-api.md`: the three operations on the
-object `{name}`, the version as an argument where it applies, the retirement set carried forward
-by every later write and preserved across a backwards repoint, and identical semantics and
-authorization from either entry point.
+(`management-api.md`, "Every operation is one completed logical write"; `storage-and-gc.md`
+AC15); authorization is the settled `(repository, action)` vocabulary with the action following
+the kind, never the format (`management-api.md` AC9); hosted only, a proxied or virtual
+repository answering `405` with problem type `repository-type` through both entry points; a
+removal of something absent answers `404`, which knife reports as "The object you are looking
+for could not be found" (captured). `delete-package` and `delete-version` return the
+`{name}/{version}` coordinates they remove in their `Outcome` and `Submit` writes a `Retirement`
+record for each, which a backwards repoint cannot undo because it is not snapshot content;
+`annotate` retires nothing. Removing a cookbook's last version is allowed and leaves the
+`Package` row (`data-model.md` AC33), where Supermarket refuses it with `409`, a divergence on the
+exception list. Every declared kind has a `script`-driven conformance case (`management-api.md`
+AC24, enforced by `conformance-harness.md` AC26), and the same semantics and authorization hold
+from either entry point (`management-api.md` AC8).
 
 ### Authentication: signed writes and a header for private reads
 
-The client table in `auth.md` has no Chef row, and neither of the two things Chef clients send is
-one of the verifier's four presentation forms. This section reconciles them explicitly, per the
-two resolved decisions below, and the reconciliation is a revision request to `auth.md`, not a
-per-handler exception: every check below runs in the shared authentication layer.
+Neither of the two things Chef clients send was one of the verifier's presentation forms when
+this spec was authored. The reconciliation it requested, per the two resolved decisions below,
+has landed in `auth.md`, not as a per-handler exception: its client table carries the `knife`
+and `berks` / `chef-cli` rows these captures grounded, its presentation-form table carries the
+`X-Jfrog-Art-Api` and signed-request rows, and every check below runs in the shared
+authentication layer. This section is this format's side of that design.
 
 **Writes: Chef's signed-header requests against registered public keys.** knife signs `share`
 and `unshare` with the RSA private key named by `client_key`, as the user named by `node_name`
@@ -458,15 +519,18 @@ unshare on both knife versions, `X-Ops-Userid`, `X-Ops-Timestamp`, `X-Ops-Conten
 signature split across `X-Ops-Authorization-1` to `-6`). There is no field in which a bearer token
 could travel. So:
 
-- **A principal registers an RSA public key** as a credential, through the credential surface
-  `auth.md` assigns to `foundation/credential-management.md`. The registry never sees a private
-  key, and what it stores, a public key, is not a secret, so `auth.md`'s "never stored
-  recoverable" rule holds by construction. The key has a non-secret **key name**, unique on the
-  instance, which the user sets as knife's `node_name` and which arrives as `X-Ops-Userid`. It
-  carries scopes exactly as a registry token does: bound to one repository unless the
-  multi-repository opt-in was used, never exceeding its owner's grants, expiring by default,
-  revocable on the next request.
-- **Verification uses the standard library only.** For protocols 1.0 and 1.1 the signature is a
+- **A principal registers an RSA public key** as a credential through
+  `credential-management.md`'s `POST /api/v1/keys` (its AC12): a PEM RSA key of at least 2048
+  bits, with an immutable, instance-unique, non-secret **key name**, which the user sets as
+  knife's `node_name` and which arrives as `X-Ops-Userid`; rotation is registering a new key
+  and then `DELETE /api/v1/keys/{name}` on the old one. The registry never sees a private key,
+  and what it stores, a public key, is not a secret, so `auth.md`'s "never stored recoverable"
+  rule holds by construction. The key carries scopes exactly as a registry token does: bound to
+  one repository unless the multi-repository opt-in was used, never exceeding its owner's grants
+  (`auth.md` AC30), expiring by default, revocable on the next request.
+- **The verifier is `auth.md`'s** ("Signed requests: the one client that carries no token", AC34),
+  and what follows restates it only as this format's requirements, checked against it.
+  **Verification uses the standard library only.** For protocols 1.0 and 1.1 the signature is a
   PKCS #1 v1.5 signature over the raw canonical string (mixlib's `private_encrypt`), verified by
   `rsa.VerifyPKCS1v15` with `crypto.Hash(0)`; for 1.3 it is PKCS #1 v1.5 over the SHA-256 of the
   canonical string. The canonical string is mixlib-authentication's
@@ -476,8 +540,9 @@ could travel. So:
   `X-Ops-Server-Api-Version` in 1.3. Every captured request verified this way and failed when
   altered (Context). Building a canonical string is request parsing, not a cryptographic
   primitive, so `auth.md` AC9 holds; it is the ecosystem's published scheme, not one this registry
-  designs, so "Nothing is invented" holds; and the canonicalisation joins the scope of `auth.md`
-  AC10's external review.
+  designs, so "Nothing is invented" holds; and `auth.md` names canonical-string construction in
+  its AC10 external-review scope "by name", because a canonicalisation mistake is a signature
+  bypass.
 - **The checks, all before anything is written:** the sign description is one of `sha1;1.0`,
   `sha1;1.1` or `sha256;1.3`; the timestamp is within 15 minutes of the server clock
   (mixlib's `authenticate_request` default); the key name resolves to an unexpired, unrevoked key;
@@ -485,9 +550,13 @@ could travel. So:
   request's file part for a multipart request (mixlib's `hashed_body` rule, which the capture
   confirms: `X-Ops-Content-Hash` equalled the SHA-1 of the tarball part, not of the whole body)
   and of the whole body otherwise. The signature and timestamp are checked when the headers
-  arrive; the content hash is known only at the end of the tarball part, so it is checked there,
-  and a mismatch aborts the write before commit, exactly as a failed digest does on an upload.
-  Every failure answers `401` with Supermarket's `AUTHENTICATION_FAILED` body.
+  arrive; the content hash is known only at the end of the tarball part, so the shared layer
+  checks it there, and a mismatch aborts the write before commit, exactly as a failed digest does
+  on an upload. How the pinned interface lets the shared layer see the end of a multipart part
+  whose object the handler took from the part's filename is a re-open input
+  `format-handler-interface.md` records under "Route-scoped and URL-borne credential
+  declarations" (the Galaxy precedent). Every failure answers `401` with Supermarket's
+  `AUTHENTICATION_FAILED` body.
 - **The accepted costs**, named rather than discovered: protocols 1.0 and 1.1 hash with SHA-1,
   and knife uses them for share and unshare on both generations, so refusing them refuses the
   client; the signature binds the tarball and not the `cookbook` category part, which is display
@@ -512,8 +581,15 @@ credential on the universe, the version document and the download. Captured, per
 | knife `-m https://u:{token}@host/chef/repo` | Basic on the cookbook and version documents; the download URL goes out bare |
 
 Per the resolved private-read decision below, **the central verifier accepts a registry token in
-the `X-Jfrog-Art-Api` header** as a fifth presentation form, resolving to the same principal and
-scopes as the other four, and accepts Basic wherever a client sends it. The documented recipe for
+the `X-Jfrog-Art-Api` header**, resolving to the same principal and scopes as every other form
+(`auth.md` AC31), and accepts Basic wherever a client sends it. In `auth.md`'s presentation-form
+table the header is **route-scoped** to this format's read routes: the handler declares, beside
+its route-to-scope mapping, every `pull` route of this format (the universe, the cookbook,
+version, search and list documents and the download) as accepting it, and the header presented on
+the share or unshare route, or on any other format's route, is an authentication failure, never
+anonymous (`auth.md`'s resolved off-route decision, was Q24 there). The signed-request form is
+route-scoped the other way, to the two write routes and the version-removal route. The
+documented recipe for
 a private repository is the `artifactory` source type on Berkshelf and Policyfile, with the token
 in `ARTIFACTORY_API_KEY`. On Berkshelf 8.1.23 the unbraced DSL form `source artifactory: "..."`
 fails to parse under Ruby 3.4 ("wrong number of arguments (given 0, expected 1)", captured), while
@@ -557,10 +633,14 @@ whatever version it goes on to name:
 What that gives and costs, applying `auth.md`'s rules rather than re-deciding them:
 
 - **A patterned `pull` cannot resolve anything**, because both resolvers start at the universe,
-  whose object is none (the same consequence `cargo.md` and `conan.md` accepted for their
-  discovery routes). The working recipe is an **unpatterned `pull` beside a patterned `push` and
-  `delete`**: `acme-*` shares and unshares `acme-tool` and nothing else. A patterned `pull` reads
-  in-pattern documents and tarballs through `curl`.
+  whose object is none. `auth.md`'s fourth object kind, `descriptor` (its resolved
+  name-free-document decision, was Q23 there), does not change that: the universe names every
+  cookbook, version and dependency in the repository, so it fails the sentinel test by
+  construction and stays none, exactly as Helm's `index.yaml` does, whereas the discovery routes
+  `cargo.md` and `conan.md` first accepted the same limitation for are now descriptors. The
+  working recipe is an **unpatterned `pull` beside a patterned `push` and `delete`**: `acme-*`
+  shares and unshares `acme-tool` and nothing else. A patterned `pull` reads in-pattern documents
+  and tarballs through `curl`. No route of this format is a descriptor.
 - **A pattern refusal is answered as absence**, `404` with the not-found body, indistinguishable
   from a cookbook that does not exist, so a pattern is never an oracle over names outside it. On a
   version document Berkshelf then moves to its next source; on a share knife prints the message
@@ -574,7 +654,13 @@ What that gives and costs, applying `auth.md`'s rules rather than re-deciding th
 When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on a
 version document or a download of either path, the handler answers `403` with
 `{"error_code": "FORBIDDEN", "error_messages": ["{policy and rule, or the signal}"]}` as
-`application/json`. `403` rather than the existence rule's `404`, because the caller is authorized
+`application/json`, written through the shared refusal writer `WriteRefusal` in
+`internal/format` (`format-handler-interface.md` AC14), which on an HTTP/1.1 connection also
+writes the status line `HTTP/1.1 403 Refused by policy: {condition}` (`supply-chain-policy.md`'s
+resolved refusal-status-line decision, was Q10 there, and AC18). Berkshelf's download refusal
+prints `Net::HTTPClientException 403` with the reason phrase in quotes (captured with the
+canonical `"Forbidden"`), so the phrase is the one place the condition can reach a Berkshelf
+user, which AC13's case captures. `403` rather than the existence rule's `404`, because the caller is authorized
 and the content is what is refused, and on this format the difference decides whether the client
 goes elsewhere: a `404` on the version document sent Berkshelf to a second source holding the
 same version (captured), while a `403` halted it on both generations even with that source
@@ -586,7 +672,11 @@ another source's copy; search and listings keep naming it too (the no-elision pr
 prints the body ("HTTP 403 Forbidden: refused by policy P: rule licence-deny", captured), Berkshelf
 prints a generic failure without it, and knife a misleading authorization message without it
 (captured); the operator documentation explains the last two. A policy refusal at share time
-(a byte-dependent rule at ingest) uses the same body, which knife prints (captured).
+(a byte-dependent rule at ingest) uses the same body, which knife prints (captured). This format's
+row of `supply-chain-policy.md`'s "When a refusal binds, per format" table is `holds` ("Berkshelf
+halts on `403` and falls through on any other universe status"), filled from these captures,
+which AC13 asserts; that spec's warning that Berkshelf took a higher version from a second source
+is closed by the virtual repository as the only source (Design, "Virtual repositories").
 
 ### Rollback and promotion
 
@@ -637,34 +727,57 @@ directly.
 A Supermarket signs nothing and serves no signed document; Chef clients verify no signature on a
 cookbook. The universe is write-triggered and generated but unsigned, so only the generation half
 of the shared signing and index service is involved, and
-`docs/internal/plans/foundation/artifact-verification.md` (to be authored in the spec loop) has no
-Chef scheme to verify: nothing is required of it. Policyfile's lock `identifier` is a
+`docs/internal/plans/foundation/artifact-verification.md` has no Chef scheme to verify: that spec
+lists `chef.md` in its "Nothing" row and the conformance matrix's verification column renders
+`none` for Chef (its AC24; `catalogue.md` AC7). Policyfile's lock `identifier` is a
 client-computed content hash the registry neither produces nor sees.
 
-**Advisory coverage is absent.** OSV has no Chef ecosystem (Context), so the policy engine's
-coordinate-level matching finds nothing for a Chef coordinate, an advisory-dependent rule attached
-to a Chef repository is refused at configuration as `supply-chain-policy.md` requires of an
-ecosystem the feed does not cover, and the feed channel of the shared security-signal rule never
-condemns a Chef coordinate. What remains is the byte-level cataloguer, which sees Ruby source and
-whatever files a cookbook vendors, and licence rules, which depend on its coverage of a cookbook
-tarball and are refused at configuration where it has none; the operator documentation says so,
-and the consequence is listed for `supply-chain-policy.md`.
+**Advisory coverage is absent.** OSV has no Chef ecosystem (Context), and
+`supply-chain-policy.md`'s coverage table records it ("Vagrant, Chef, Puppet, LuaRocks: no
+ecosystem", its AC17), so the policy engine's coordinate-level matching finds nothing for a Chef
+coordinate, an advisory-dependent rule attached to a Chef repository is refused at configuration
+as `validation` naming the uncovered ecosystem (its AC11) unless an operator declares an
+OSV-schema source that covers it through `policy.feed.sources` (its resolved advisory-sources
+decision, was Q9 there), and the feed channel of the shared security-signal rule never condemns a
+Chef coordinate. What remains is the byte-level cataloguer, which sees Ruby source and whatever
+files a cookbook vendors, and licence rules, which depend on its coverage of a cookbook tarball
+and are refused at configuration where it has none (the same AC11); the operator documentation
+says so.
 
 ### The proxied path
 
 The handler owns the request and classifies for the proxy layer's fetch-and-cache API per the
-settled decisions in `proxy-cache.md`. The upstream is a Supermarket base URL
-(`https://supermarket.chef.io`, or any Supermarket or Supermarket-compatible repository),
-validated at configuration by fetching `/api/v1/cookbooks?items=1` and requiring a JSON body with
-`total` and `items`. An upstream credential, where the upstream needs one, is presented by the
-adapter, and the client's credential is never forwarded.
+settled decisions in `proxy-cache.md`. The upstream is an `https://` Supermarket base URL
+(`https://supermarket.chef.io`, or any Supermarket or Supermarket-compatible repository) on
+`upstream-adapters.md`'s `https` adapter, validated at creation and `PATCH` by that spec's adapter
+rules alone: an unreachable but well-formed upstream is accepted and no format probe runs inside
+the creation transaction (its AC23; the same finding `cargo.md` answered in its resolved
+sparse-only decision, was Q7 there). What this spec first checked at configuration, a JSON body
+with `total` and `items` at `/api/v1/cookbooks?items=1`, is therefore checked at the first request
+that needs the upstream: an upstream whose universe or listing is not the Supermarket shape answers
+`502` with an error naming the requirement. The object-storage host the upstream's download
+redirects to (S3 for supermarket.chef.io) is an entry of the upstream's host allowlist with role
+`none`; the adapter follows the `302` inside itself, connects to no host off the list, never
+records a presigned target as provenance or as a cached resolution, and lets no `Location`
+reach a client (`upstream-adapters.md` AC7, AC8). An upstream credential, where the upstream needs
+one, is presented by the adapter to the root host only (its AC6), and the client's credential is
+never forwarded.
 
 | Route | Classification |
 |---|---|
-| `/universe` | Mutable metadata with a TTL, revalidated with `If-None-Match` (the upstream answers `304`, captured), parsed into records and regenerated into the stored form by the shared service |
+| `/universe` | Mutable metadata with a TTL, revalidated with `If-None-Match` (the upstream answers `304`, captured; `upstream-adapters.md` AC15), parsed into records and regenerated into the stored form through the generator's `FromUpstream`, stored unsigned (`signing-service.md` AC20) |
 | Cookbook document, version document, search, list | Mutable metadata with a TTL, fetched from the upstream and rendered with this registry's URLs |
 | Download | An immutable artifact: fetched through the upstream's `302` to object storage by the adapter, verified before commit (below), cached indefinitely, served `200` |
-| Share, unshare, version removal | `405` |
+| Share, unshare, version removal | `405` with problem type `repository-type` |
+
+**Freshness of the proxied universe.** Every document a remote serves carries the cache-scoped
+`Last-Modified`, never the upstream's (`proxy-cache.md`, "Freshness of what a remote serves",
+AC22; `data-model.md` AC44). supermarket.chef.io sends no `Last-Modified` and no version counter
+in the universe (captured), so the layer has no ordering by which to recognise an older upstream
+revision, and every revalidation answering `200` with a new `ETag` is adopted; the
+regression-not-adopted rule has nothing to bind to on this wire, which is stated rather than
+assumed. No Chef client revalidates the universe conditionally, so the record's only reader is
+the transcript.
 
 **URL rewriting is mandatory.** Every upstream URL (`location_path`, `download_url`,
 `latest_version`, `versions`, `file`, `cookbook`) names the upstream, and a client given the
@@ -672,19 +785,24 @@ upstream's universe verbatim through this registry fetched the version document 
 supermarket.chef.io directly (captured: the stub saw only `/universe`). Rewriting happens where
 the stored form is expanded, so no upstream URL survives into any served document.
 
-**Verification before commit.** No upstream document carries a digest, so the fetch uses the
-completion-only mode with a handler-supplied verifier (Blocking preconditions): the verifier
-checks the size against the version document's `tarball_file_size` as the body streams, and at the
-end of the body unpacks the tar index to apply ingest rules 1 to 3 and check that `metadata.json`
-names the requested cookbook and version. Nothing is committed unless it passes; the initiating
-client's connection is aborted before its final bytes on a failure, and coalesced waiters receive
-bytes only from the CAS after the verified commit, as the settled waiter rule requires. The
-captured version swap is therefore never delivered through this registry (AC22). **The first
-verified fetch pins the coordinate**: its CAS digest is recorded on the `File`, and a refetch after
-eviction producing a different digest is an integrity failure, so one coordinate serves one set of
-bytes for its life here even though the upstream promises nothing. What this cannot catch is the
-captured tamper that keeps the name and version: with no upstream digest there is nothing to catch
-it against on first fetch, which is stated as the ecosystem's limit rather than assumed away.
+**Verification before commit.** No upstream document carries a digest, so the fetch uses
+`proxy-cache.md`'s completion-only mode with a handler-supplied verifier (its resolved
+completion-only decision, was Q15 there, AC20): the verifier checks the size against the version
+document's `tarball_file_size`, and over the complete spooled body unpacks the tar index to apply
+ingest rules 1 to 3 and check that `metadata.json` names the requested cookbook and version, a
+handler-local structural check in that spec's sense. Nothing is committed and no `Blob` row exists
+unless it passes; a refusal creates no negative entry and is recorded for the operator under
+`cache_fetch_failures_total`; the initiating client receives the body as it arrives but its
+response completes only after the verifier passes, so a refusal is a short-closed transfer no
+client accepts as the artifact; and coalesced waiters receive bytes only from the CAS after the
+verified commit. The captured version swap is therefore never delivered through this registry
+(AC22). **The first verified fetch pins the coordinate**: its CAS digest is recorded on the
+`File`, and a refetch after eviction is made in the declared-digest mode against that pinned
+digest, so a different body fails stream-and-verify as an integrity failure and one coordinate
+serves one set of bytes for its life here even though the upstream promises nothing. What this
+cannot catch is the captured tamper that keeps the name and version: with no upstream digest there
+is nothing to catch it against on first fetch, which is stated as the ecosystem's limit rather
+than assumed away.
 
 **Upstream records that cannot be served.** A universe version key that is not canonical `x.y.z`
 (the four live keys ending in a newline) is left out of the proxied universe with a divergence
@@ -705,10 +823,15 @@ Upstream removal maps onto the settled purge-or-flag table as Chef's side of tha
 | The cookbook answers `404` where it previously existed | Keep serving cached content by coordinate, drop it from the proxied universe, record a divergence |
 | A refetched tarball's digest differs from the pinned one, its size differs from `tarball_file_size`, or its `metadata.json` names another coordinate | An **integrity failure at fetch**: never committed, `proxy-cache.md`'s serve-stale rules apply to metadata, and the operator is alerted |
 
-Detection happens at revalidation, passively, per `proxy-cache.md`'s resolved passive-detection
-decision (was Q12). **No row is an explicit security signal**: the Supermarket wire has none, and
-with no OSV data the advisory feed has none either, so nothing condemns a Chef coordinate under the
-shared security-signal rule; this is stated as a coverage gap.
+These rows are Chef's instances of `proxy-cache.md`'s event classes ("Upstream removal or
+replacement", which lists Supermarket under **removal with no signal**): a new version or changed
+dependency set is an **ordinary metadata change**, a vanished version or cookbook is **removal
+with no signal**, and a mismatched tarball is an **integrity failure at fetch**; the
+regression-not-adopted class has no ordering to bind to on this wire (above). Detection happens at
+revalidation, passively, per `proxy-cache.md`'s resolved passive-detection decision (was Q12).
+**No row is an explicit security signal**: the Supermarket wire has none, and with no OSV data
+the advisory feed has none either, so nothing condemns a Chef coordinate under the shared
+security-signal rule; this is stated as a coverage gap.
 
 ### Virtual repositories
 
@@ -725,12 +848,29 @@ resolution is **per cookbook name, in member order**:
 - **Cookbook documents, version documents and downloads** resolve in the member that supplied the
   name, so a version document never mixes members.
 - **Search and list** are the union by name, first member wins.
-- A virtual repository creates no snapshots: its universe is re-merged by the shared service when
-  a member's changes, and shares and removes against it answer `405`.
+- A virtual repository creates no snapshots: its universe is the generator's `Merge` over the
+  members' current universes, run as `signing-service.md`'s `index.merge` job when a member's
+  changes and first at the virtual's creation, the previous merged universe serving until the new
+  one commits (its "Virtual merges", AC19), unsigned like every Chef document; shares and removes
+  against it answer `405` with problem type `repository-type`.
 
 The accepted cost: a private cookbook shadows every upstream version of that name, including ones
 the private repository never published, so a team that wants both must rename; the operator
-documentation states it beside the recipe.
+documentation states it beside the recipe, and a member write is visible in the virtual only
+within the merge staleness bound `signing-service.md` configures.
+
+**Capabilities and rename.** `Capabilities()` declares proxy support `supported`,
+reference-implementation availability `available` (the omnibus Supermarket, Design,
+"Conformance, the clients and the corpus"), `Virtual: supported` and `Rename: supported`
+(`format-handler-interface.md` AC13). A rename changes no stored byte: the stored universe carries
+no URL, every absolute URL a document names is rendered at serve time from `server.public_url`
+and the repository's current name, and every grant, retirement and snapshot resolves to the
+repository by identity (`repository-lifecycle.md` AC12, whose rule for documents that embed the
+name is met by rendering at serve time); the old name answers exactly what a never-existing
+repository answers. The cost is the client configuration's, stated for operators: a Berksfile
+`source` or a Policyfile `default_source` naming the old URL, and a Berksfile lock recording it,
+must be updated. `repository-lifecycle.md` AC12 requires `conformance/chef/rename_test.go`,
+enforced by the harness's case-set validator (`conformance-harness.md` AC26); AC26 carries it.
 
 ### Conformance, the clients and the corpus
 
@@ -765,7 +905,8 @@ refusal of a respelled share, retirement of deleted versions, removal of a cookb
 the stored spelling kept, the `X-Jfrog-Art-Api` read form, and `quality_metrics` absent.
 
 `Capabilities()` declares proxy support and the reference implementation `available`
-(`format-handler-interface.md` AC13), the implementation being the omnibus Supermarket above.
+(`format-handler-interface.md` AC13), the implementation being the omnibus Supermarket above, with
+`Virtual` and `Rename` `supported` (Design, "Virtual repositories", its capabilities paragraph).
 
 ## Acceptance Criteria
 
@@ -809,23 +950,30 @@ the stored spelling kept, the `X-Jfrog-Art-Api` read form, and `quality_metrics`
       lacks any signed header, is refused `401` with the authentication-failed body, never treated
       as anonymous, with no snapshot; requests signed with protocol 1.0 and 1.1 by knife and with
       1.3 by mixlib-authentication directly are accepted; and a signed request over a connection
-      this registry did not terminate with TLS is refused per `auth.md` AC27.
-- [ ] AC7: A registered public-key credential is accepted only as an RSA public key of at least
-      2048 bits, stores no private key material, is bound to one repository unless created with
-      the multi-repository opt-in, is refused at creation with a scope its owner does not hold,
-      expires by default, and after revocation or after its owner's grant is revoked is refused on
-      the next signed request.
+      this registry did not terminate with TLS is refused per `auth.md` AC27: this format's side of
+      `auth.md` AC34, run through the real knife on both generations.
+- [ ] AC7: A registered public-key credential created through `POST /api/v1/keys` is accepted
+      only as a PEM RSA public key of at least 2048 bits under an unused key name, stores no
+      private key material, is bound to one repository unless created with the multi-repository
+      opt-in, is refused at creation with a scope its owner does not hold, expires by default, and
+      after `DELETE /api/v1/keys/{name}`, after expiry or after its owner's grant is revoked is
+      refused on the next signed request, while a new key registered under a new name signs a
+      share at once: this format's side of `credential-management.md` AC12.
 - [ ] AC8: `knife supermarket unshare {name}` on knife 19.3.2 and 17.10.0, and a `DELETE` of a
       version through `curl`, each remove exactly what they name in exactly one snapshot, after
       which the universe, the cookbook document and the version document no longer name it and a
       fresh resolution fails or falls back to a lower version; removing a cookbook's last version is
-      allowed and leaves the `Package` row; a principal holding `push` without `delete` is refused
-      `403` with knife printing its maintainer message; a removal of something absent answers `404`;
-      and every removal against a proxied or virtual repository answers `405`.
+      allowed and leaves the `Package` row; each removal writes a `Retirement` record per removed
+      version, readable at `GET .../retirements`; a principal holding `push` without `delete` is
+      refused `403` with knife printing its maintainer message; a removal of something absent
+      answers `404`; and every removal against a proxied or virtual repository answers `405` with
+      problem type `repository-type` and creates nothing.
 - [ ] AC9: Each removal and a deprecation with a replacement, driven through the registry-owned
-      management endpoint, produce the same served documents, exactly one snapshot each, and the
-      same authorization outcome as the same operation through its client binding where one
-      exists; a deprecated cookbook's document carries `deprecated` and `replacement`, which knife's
+      management endpoint (`POST /api/v1/repositories/{name}/operations`, kinds
+      `delete-package`, `delete-version` and `annotate`), produce the same served documents,
+      exactly one snapshot each, and the same authorization outcome as the same operation through
+      its client binding where one exists; a deprecation is accepted under `push` and writes no
+      `Retirement` record; a deprecated cookbook's document carries `deprecated` and `replacement`, which knife's
       download reports, and the universe bytes are unchanged by it.
 - [ ] AC10: A share of a removed version is refused `409` with the same or different content, after
       the removal's snapshot has been pruned out of retention, after a whole-cookbook removal, and
@@ -839,7 +987,8 @@ the stored spelling kept, the `X-Jfrog-Art-Api` read form, and `quality_metrics`
       authenticates its universe request with Basic; a rejected token answers `401` and is never
       served as anonymous; a valid token lacking `pull` answers `404`; and the same token presented
       as `X-Jfrog-Art-Api`, Bearer, Basic password, `Token` and scheme-less resolves to the same
-      principal and scopes.
+      principal and scopes; and `X-Jfrog-Art-Api` presented on the share route is rejected with
+      an authentication error and never served as anonymous (the route-scoped rule).
 - [ ] AC12: A signing key and token holding unpatterned `pull` with `push` and `delete` patterned
       `acme-*` share and unshare `acme-tool` through knife and are refused `404` with no snapshot on
       `other-tool`; a token holding only `pull` patterned `acme-*` is refused the universe, so
@@ -847,7 +996,9 @@ the stored spelling kept, the `X-Jfrog-Art-Api` read form, and `quality_metrics`
       version document and tarball and is refused `other-tool`'s; and in proxied mode the same
       patterned `pull` reads an in-pattern upstream cookbook through `curl` and is refused another.
 - [ ] AC13: A version document or download the shared policy layer refuses answers `403` with
-      Supermarket's JSON error body naming the policy, on the hosted and the proxied path;
+      Supermarket's JSON error body naming the policy, written through `WriteRefusal` with the
+      status line `403 Refused by policy: {condition}` on an HTTP/1.1 connection, on the hosted
+      and the proxied path, the Berkshelf download failure printing that phrase;
       Berkshelf on both generations exits non-zero with a second source holding the same version
       configured and makes no request to that source for it, asserted at the network layer;
       Policyfile on both generations prints the body and stops; the universe, search and listings
@@ -871,9 +1022,11 @@ the stored spelling kept, the `X-Jfrog-Art-Api` read form, and `quality_metrics`
       versions.
 - [ ] AC17: The universe of an unchanged repository is byte-identical with an unchanged `ETag`
       across snapshots, answers `304` to `If-None-Match`, gives every entry the `location_type`
-      `opscode`, carries only absolute URLs under the
-      configured base URL, and after the base URL is changed carries the new URLs with no write
-      and no snapshot.
+      `opscode`, carries only absolute URLs under `server.public_url` and the repository's
+      current name, and after the base URL is changed carries the new URLs with no write and no
+      snapshot; it is served through `index.ServeDocument`, the handler package setting neither
+      `ETag` nor `Last-Modified`, and the URL expansion lives in `internal/format/chef/index`,
+      not in the handler package.
 - [ ] AC18: Two concurrent shares of different cookbooks, and of different versions of one, both
       land with each universe listing both once they are complete; two concurrent shares of one
       version produce exactly one `201` and one `409`; and under fault injection at each write
@@ -885,11 +1038,17 @@ the stored spelling kept, the `X-Jfrog-Art-Api` read form, and `quality_metrics`
 - [ ] AC20: The proxied path installs cookbooks from a supermarket.chef.io stand-in serving recorded
       answers, including its `302` to a second host, on all six clients, with every URL in every
       served document naming this registry and no client request reaching the stand-in, asserted
-      at the network layer; from fresh client homes a second install reaches this registry while
-      the stand-in receives no tarball request; and every tarball is byte-identical to the
+      at the network layer; the object-storage host is reached only because it is on the
+      upstream's allowlist with role `none`, receives no upstream credential, and no `Location`
+      reaches a client; from fresh client homes a second install reaches this registry while the
+      stand-in receives no tarball request; and every tarball is byte-identical to the
       upstream's.
-- [ ] AC21: A proxied universe is revalidated after its TTL and not before, with `If-None-Match`,
-      and a `304` keeps the stored universe; a version published upstream becomes resolvable after
+- [ ] AC21: Creating a remote whose upstream is a well-formed `https://` root succeeds with no
+      upstream request inside the creation, and its first request against an upstream that does
+      not answer the Supermarket shape answers `502` naming the requirement; a proxied universe
+      is revalidated after its TTL and not before, with `If-None-Match`, and a `304` keeps the
+      stored universe; every proxied document carries the cache-scoped `Last-Modified`, never the
+      upstream's; a version published upstream becomes resolvable after
       the TTL; cached tarballs are never revalidated; an upstream `404` is negatively cached so a
       second request within the negative TTL makes no upstream request; an upstream `429` or `5xx`
       is neither cached as absence nor surfaced as not-found; upstream version keys that are not
@@ -898,9 +1057,11 @@ the stored spelling kept, the `X-Jfrog-Art-Api` read form, and `quality_metrics`
 - [ ] AC22: A stand-in serving a tarball whose size differs from `tarball_file_size`, whose
       `metadata.json` names another version or cookbook (the captured version swap), which is not
       gzip tar or is truncated, or which after eviction arrives with a digest other than the pinned
-      one, never has it committed or delivered in full to any client through this registry; the
-      installing Berkshelf and Policyfile clients fail where a direct client installed the swapped
-      bytes; and the real failure reason is recorded observably to the operator.
+      one, never has it committed or delivered in full to any client through this registry, the
+      completion-only verifier refusing the first four and the pinned digest the last, with no
+      `Blob` row and no negative entry created; the installing Berkshelf and Policyfile clients
+      fail where a direct client installed the swapped bytes; and the real failure reason is
+      recorded observably to the operator under `cache_fetch_failures_total`.
 - [ ] AC23: A version vanishing from the upstream universe or answering `404`, and a cookbook
       answering `404` where it existed, leave the cached tarball served by coordinate, drop the name
       or version from the proxied universe, and record a divergence; and an ordinary upstream
@@ -910,12 +1071,19 @@ the stored spelling kept, the `X-Jfrog-Art-Api` read form, and `quality_metrics`
       remote, configured as the only source, resolves a cookbook name held by the hosted member
       only from that member on both Berkshelf and both chef-cli versions even when the remote holds
       a higher version of the name; resolves names only the remote holds from it; serves every
-      version document and download from the member that supplied the name; and answers `405` to
-      shares and removals.
+      version document and download from the member that supplied the name; reflects a member's
+      new version after the merge job runs, the previous merged universe serving until then; and
+      answers `405` with problem type `repository-type` to shares and removals.
 - [ ] AC25: Replay-match passes against a corpus recorded from supermarket.chef.io and from the
       pinned omnibus Supermarket covering the recorded surface named in Design, with every
       divergence named in Design on the exception list, `X-Remote-Request-Id` normalised, and no
       signed-header, `X-Jfrog-Art-Api`, Basic or session-cookie value in the committed corpus.
+- [ ] AC26: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
+      availability `available`, `Virtual: supported` and `Rename: supported`; after a rename, a
+      fresh `berks install` and `cinc install` on both generations resolve from the repository
+      under its new name, every URL in the universe and the version documents naming the new
+      name, in both modes, while the old name answers exactly what a never-existing repository
+      answers.
 
 ## Test Plan
 
@@ -926,74 +1094,80 @@ the stored spelling kept, the `X-Jfrog-Art-Api` read form, and `quality_metrics`
 | AC3 | conformance | `conformance/chef/hosted_knife_test.go` (both knife images; a `state` seed of 150 cookbooks for list and search; each read command; `latest` through `curl`) |
 | AC4 | conformance + integration | `conformance/chef/share_test.go` (both knife images; with and without category; duplicate share; follow-up installs); `internal/format/chef/share_test.go` (one snapshot holding version, tarball and universe; refusal creates none) |
 | AC5 | integration + conformance | `internal/format/chef/ingest_test.go` (each crafted tarball and part order through the handler); `conformance/chef/share_test.go` (a real-client share of a respelled name and of a README-less cookbook, message printed) |
-| AC6 | integration + conformance | `internal/auth/chefsig_test.go` (each tampered header and body, each key state, each protocol version including a 1.3 fixture signed by mixlib-authentication in the client image, clock injection); `conformance/chef/auth_test.go` (knife with an unregistered key; plaintext refusal) |
-| AC7 | integration | `internal/auth/chefkey_test.go` (key size and type refusal, stored columns, scope binding, owner bound, expiry and revocation under an injected clock) |
-| AC8 | conformance + integration | `conformance/chef/remove_test.go` (both knife images; `curl` version removal; last-version removal; `push`-only refusal; absent target; proxied and virtual `405`); `internal/format/chef/remove_test.go` (one snapshot per operation, retirement set written) |
-| AC9 | conformance + integration | `conformance/chef/manage_binding_test.go` (twin cookbooks, one per entry point, served documents compared; deprecation reported by knife download); `internal/format/chef/manage_binding_test.go` (snapshot count, authorization per entry point, universe bytes unchanged by deprecation) |
+| AC6 | integration + conformance | `internal/auth/signed_request_test.go` (the file `auth.md` AC34 names: each tampered header and body, each key state, each protocol version including a 1.3 fixture signed by mixlib-authentication in the client image, clock injection, the content-hash mismatch aborting before commit); `conformance/chef/auth_test.go` (knife with an unregistered key; plaintext refusal; the real `knife supermarket share` and `unshare` `auth.md` AC34 points at) |
+| AC7 | integration + conformance | `internal/credential/public_key_test.go` (the file `credential-management.md` AC12 names: key size and type refusal, duplicate name, stored columns, scope binding, owner bound, expiry and revocation under an injected clock); `conformance/chef/signed_publish_test.go` (a registered key seeded as a `credentials` sub-entry with its private half delivered to the client container as a file, `conformance-harness.md` AC25; a share inside and outside scope, after expiry, after `DELETE /api/v1/keys/{name}`, and with a newly registered key) |
+| AC8 | conformance + integration | `conformance/chef/remove_test.go` (both knife images; `curl` version removal; last-version removal; `push`-only refusal; absent target; proxied and virtual `405` `repository-type`); `internal/format/chef/remove_test.go` (one snapshot per operation, one `Retirement` row per removed version) |
+| AC9 | conformance + integration | `conformance/chef/manage_binding_test.go` (twin cookbooks, one per entry point, served documents compared; deprecation reported by knife download; the `script`-driven cases `management-api.md` AC24 requires for `delete-package`, `delete-version` and `annotate`, their presence enforced by `conformance-harness.md` AC26); `internal/format/chef/manage_binding_test.go` (snapshot count, authorization per entry point, universe bytes unchanged by deprecation; the cross-handler binding table test is `management-api.md` AC8's) |
 | AC10 | conformance + integration | `conformance/chef/retirement_test.go` (re-share after removal through knife); `internal/format/chef/retirement_test.go` (after pruning under an injected clock, after whole-cookbook removal, across a backwards repoint) |
-| AC11 | conformance + integration | `conformance/chef/auth_test.go` (private repository; both Berkshelf images with the `artifactory` source, both chef-cli images with `default_source :artifactory`; userinfo source; challenge equality; rejected and `pull`-less tokens; header assertions at the network layer); `internal/auth/verifier_test.go` (five presentation forms, one principal) |
+| AC11 | conformance + integration | `conformance/chef/auth_test.go` (private repository; both Berkshelf images with the `artifactory` source, both chef-cli images with `default_source :artifactory`; userinfo source; challenge equality; rejected and `pull`-less tokens; header assertions at the network layer; `X-Jfrog-Art-Api` on the share route refused); `internal/auth/credential_form_test.go` (the file `auth.md` AC31 names: every form resolving to one principal, the off-route presentation rejected) |
 | AC12 | conformance + unit | `conformance/chef/auth_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, in both modes; patterned key and token through the `credentials` key; knife share and unshare; resolver refusal at the universe; `curl` reads); `internal/format/chef/scope_object_test.go` (the object table per route, `format-handler-interface.md` AC12) |
-| AC13 | conformance + integration | `conformance/chef/policy_test.go` (hosted and proxied modes; rules through the `policies` key; a second-source stand-in holding the version; both Berkshelf and both chef-cli images; network-layer assertion); `internal/format/chef/policy_config_test.go` (advisory-dependent rule refused at configuration) |
+| AC13 | conformance + integration | `conformance/chef/policy_test.go` (hosted and proxied modes; rules through the `policies` key, admitted by the harness because this format's binding-table row is `holds`, `conformance-harness.md` AC26; a second-source stand-in holding the version; both Berkshelf and both chef-cli images; the raw status line and the Berkshelf output asserted; network-layer assertion); `internal/format/chef/policy_config_test.go` (advisory-dependent rule refused at configuration, `supply-chain-policy.md` AC11); `internal/format/refusal_writer_test.go` (the writer, `format-handler-interface.md` AC14 and `supply-chain-policy.md` AC18) |
 | AC14 | integration | `internal/format/chef/download_binding_test.go` (download digest equals the shared tarball's across later writes, repoints and concurrent shares; property test over random write sequences) |
 | AC15 | conformance + integration | `conformance/chef/rollback_test.go` (rollback through the management surface; `cinc update` on both chef-cli images; cold and warm Berkshelf with both remedies; promotion case); `internal/format/chef/pointer_universe_test.go` (universe bytes per pointer) |
 | AC16 | conformance + unit | `conformance/chef/names_test.go` (`curl` for each case and version spelling; a mixed-case cookbook resolved by both Berkshelf images); `internal/format/chef/route_test.go` (segment grammar) |
-| AC17 | integration | `internal/format/chef/universe_test.go` (byte stability and `ETag` across unrelated writes, `304`, absolute URLs, base-URL change without a snapshot) |
+| AC17 | integration + architecture test | `internal/format/chef/universe_test.go` (byte stability and `ETag` across unrelated writes, `304`, absolute URLs, base-URL change without a snapshot); `internal/format/chef/arch_test.go` (no URL expansion in the handler package); `internal/format/freshness_boundary_test.go` (no header setting in any handler package, `signing-service.md` AC11) |
 | AC18 | integration | `internal/format/chef/concurrent_share_test.go` (two writers per case, fault injection at each write boundary, final universe and snapshot contents asserted) |
 | AC19 | benchmark | `internal/format/chef/universe_bench_test.go` (a generated Supermarket-sized repository; share and universe serve; budgets and tolerance in the benchmark gate) |
-| AC20 | conformance + integration | `conformance/chef/proxied_test.go` (stand-in serving recorded supermarket.chef.io answers and a second-host tarball; all six client images; network-layer assertions from fresh homes; byte comparison); `internal/format/chef/proxied_rewrite_test.go` (no upstream URL in any served document) |
-| AC21 | conformance + integration | `conformance/chef/proxied_ttl_test.go` (mutating stand-in with `ETag`; installs before and after the TTL); `internal/format/chef/proxied_universe_test.go` (non-canonical keys, mixed case, negative caching, throttling responses) |
-| AC22 | integration + conformance | `internal/format/chef/proxied_integrity_test.go` (each bad tarball variant and a truncated body; CAS and reference assertions; the pinned-digest refetch after eviction; operator record); `conformance/chef/proxied_integrity_test.go` (the captured version swap through both Berkshelf and both chef-cli images, failing through this registry) |
+| AC20 | conformance + integration | `conformance/chef/proxied_test.go` (stand-in serving recorded supermarket.chef.io answers and a second-host tarball declared as a `hosts` sub-entry of the `upstreams` entry, `conformance-harness.md` AC23; all six client images; network-layer assertions from fresh homes, including no credential at the object-storage host; byte comparison); `internal/format/chef/proxied_rewrite_test.go` (no upstream URL or `Location` in any served document or response) |
+| AC21 | conformance + integration | `conformance/chef/proxied_ttl_test.go` (mutating stand-in with `ETag`; installs before and after the TTL); `internal/format/chef/proxied_universe_test.go` (creation with no upstream request and the first-request `502`, `upstream-adapters.md` AC23; the cache-scoped `Last-Modified`, `proxy-cache.md` AC22; non-canonical keys, mixed case, negative caching, throttling responses) |
+| AC22 | integration + conformance | `internal/format/chef/proxied_integrity_test.go` (each bad tarball variant and a truncated body through the completion-only verifier; CAS, `Blob` row and reference assertions; the pinned-digest refetch after eviction in the declared-digest mode; operator record, `proxy-cache.md` AC20); `conformance/chef/proxied_integrity_test.go` (the captured version swap through both Berkshelf and both chef-cli images, failing through this registry) |
 | AC23 | integration | `internal/format/chef/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
-| AC24 | conformance | `conformance/chef/virtual_test.go` (hosted then remote members; a higher upstream version of the private name; both Berkshelf and both chef-cli images; provenance from the network layer; `405` on writes) |
+| AC24 | conformance + integration | `conformance/chef/virtual_test.go` (hosted then remote members; a higher upstream version of the private name; both Berkshelf and both chef-cli images; provenance from the network layer; `405` on writes); `internal/index/virtual_merge_test.go` (shared with `signing-service.md` AC19: the `index.merge` job for a Chef-shaped virtual, the previous universe serving until commit) |
 | AC25 | conformance | `conformance/chef/replay_test.go` |
+| AC26 | unit + conformance | `internal/format/chef/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/chef/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; Berkshelf and Policyfile resolving under the new name in both modes, old name `not-found`) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their visibility and type, including a
 virtual repository's member order; `credentials`, patterned ones included, where the Chef cases
-additionally need a registered public key issued as a credential (a sibling consequence for the
-harness, since the key's private half must reach the client container as a file); an `upstreams`
-stand-in (a fixture server serving recorded supermarket.chef.io answers, the object-storage
-second host, the bad tarball variants, and a second-source stand-in for the fall-through and
-refusal cases); `state` for pre-shared cookbooks, removed versions with their retirement set, and
-the stored universe carried verbatim in the repository-level document; and `policies` for AC13.
-The runner-enforced obligations, both modes and the unauthenticated, unauthorized and
-pattern-refusal cases in each, apply from the sibling specs and are not restated per criterion
-here.
+additionally need a registered public key under a key name, a `credentials` sub-entry whose
+private half the runner delivers to the client container as a file (`conformance-harness.md`
+AC25; `credential-management.md` AC12); an `upstreams` stand-in (a fixture server serving
+recorded supermarket.chef.io answers with the object-storage second host as a `hosts`
+sub-entry, the bad tarball variants, and a second-source stand-in for the fall-through and
+refusal cases); `state` for pre-shared cookbooks and the `Retirement` records removed versions
+would have left, the universe coming out of the seeded write through the write-path hook with no
+seed-side code (`signing-service.md` AC21; `conformance-harness.md` AC24); and `policies` for
+AC13. The runner-enforced obligations, both modes and the unauthenticated, unauthorized and
+pattern-refusal cases in each, a `script`-driven case per declared management kind and
+`rename_test.go`, apply from the sibling specs and the harness's case-set validator
+(`conformance-harness.md` AC26) and are not restated per criterion here.
 
 ## Implementation Phases
 
 ### Phase 1: Hosted reads and the universe
 - Waits on `docs/internal/plans/foundation/signing-service.md` reaching `planned`, and, for
-  private repositories, on the `auth.md` revision adding the `X-Jfrog-Art-Api` form (Blocking
-  preconditions)
-- The format-first mount, the stored URL-free universe and its streamed expansion under the base
-  URL, the cookbook, version, search and list documents rendered through the pointer, the direct
-  download, name and version route grammar, the per-route addressed objects, the `403` policy
-  rendering, the universe benchmark
+  private repositories, on `auth.md` reaching `planned` with its route-scoped `X-Jfrog-Art-Api`
+  form (Blocking preconditions)
+- The format-first mount, the `Indexer` and its generator package `internal/format/chef/index`,
+  the stored URL-free universe served through `index.ServeDocument` with its expansion under
+  `server.public_url`, the cookbook, version, search and list documents rendered through the
+  pointer, the direct download, name and version route grammar, the per-route addressed objects,
+  the `403` policy rendering through `WriteRefusal`, the universe benchmark
 
 ### Phase 2: Share
-- Waits on the `auth.md` and `credential-management.md` revisions for registered public keys
-  (Blocking preconditions)
-- Signed-request verification in the shared layer with the end-of-part content-hash check, ingest
-  validation, immutability and spelling rules, the write-boundary declaration exercised end to end
-  under concurrency
+- Waits on `auth.md` (AC34) and `credential-management.md` (`/api/v1/keys`, AC12) reaching
+  `planned` (Blocking preconditions)
+- The signed-request route declaration with the end-of-part content-hash check in the shared
+  layer, ingest validation, immutability and spelling rules, the write-boundary declaration
+  exercised end to end under concurrency
 
 ### Phase 3: Removes and deprecation
 - Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
   preconditions)
-- The three operations with unshare and the version route bound onto them, the retirement set and
-  its preservation across a backwards repoint
+- The `Operator` declaration (`delete-package`, `delete-version`, `annotate`) with unshare and the
+  version route as bindings, `Retirement` records through `Submit`
 
 ### Phase 4: Proxied path
-- Waits on `proxy-cache.md` offering the completion-only mode with a handler-supplied verifier and
-  on the Supermarket adapter in `upstream-adapters.md` (Blocking preconditions)
-- Upstream validation, classification per route, universe revalidation and regeneration from
-  parsed records, URL rewriting, tarball verification and digest pinning, negative caching, the
-  removal table, `405` on remote writes
+- Waits on `proxy-cache.md` (its completion-only mode, AC20) and `upstream-adapters.md` (its
+  `https` adapter) reaching `planned` (Blocking preconditions)
+- Creation with no upstream probe and the first-request shape check, the object-storage host on
+  the allowlist, classification per route, universe revalidation and regeneration through
+  `FromUpstream`, the cache-scoped `Last-Modified`, URL rewriting, tarball verification and
+  digest pinning, negative caching, the removal table, `405` `repository-type` on remote writes
 
-### Phase 5: Virtual repositories
-- The per-name merge in the shared service, member-scoped document and download resolution, `405`
-  on virtual writes
+### Phase 5: Virtual repositories and rename
+- The per-name `Merge` as the `index.merge` job, member-scoped document and download resolution,
+  `405` `repository-type` on virtual writes, `Capabilities()` with the rename case (AC26)
 
 ### Phase 6: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate) against
@@ -1021,7 +1195,7 @@ with the content hash checked at the end of the tarball part (Design, "Authentic
 AC7, AC12).
 
 The question: knife signs `share` and `unshare` with an RSA private key (captured, protocol 1.0 and
-1.1), and `auth.md` knows only registry tokens in four presentation forms, none of which knife can
+1.1), and `auth.md` then knew only registry tokens in four presentation forms, none of which knife can
 send. Supermarket verifies against a public key it obtained from a Chef Infra Server sign-in.
 
 **Recommendation:** A. It serves the real client's publish command, so trigger and effect stay
@@ -1037,14 +1211,20 @@ entirely; and verification needs nothing but `crypto/rsa`, proven on the capture
 **Why this is yours:** it adds a credential kind to the security foundation you settled on tokens,
 and accepts SHA-1 on a write path because the client leaves no alternative.
 
-Accepted cost: the `auth.md` and `credential-management.md` revisions, both sibling consequences,
-the SHA-1 and replay costs named in Design, and a larger external review.
+Accepted cost: the `auth.md` and `credential-management.md` revisions, the SHA-1 and replay costs
+named in Design, and a larger external review. Both revisions have landed: `auth.md` owns the
+verifier ("Signed requests: the one client that carries no token", AC34) and names
+canonical-string construction in its AC10 review scope, and `credential-management.md` carries the
+registered public key at `/api/v1/keys` (PEM RSA of at least 2048 bits, an immutable
+instance-unique key name that knife sends as `X-Ops-Userid`, rotation by registering a new key and
+deleting the old; its AC12).
 
 ### Resolved: how a private repository is read (was Q2)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: the central verifier accepts
-a registry token in `X-Jfrog-Art-Api` as a fifth presentation form, Basic keeps working where a
-client sends it, every served URL stays absolute, and no download capability is minted; knife
+a registry token in `X-Jfrog-Art-Api` as a presentation form (the fifth at the time; `auth.md`'s
+table now holds it as a row route-scoped to this format's read routes), Basic keeps working where
+a client sends it, every served URL stays absolute, and no download capability is minted; knife
 reads private repositories not at all (Scope; Design, "Authentication"; AC11).
 
 The question: Berkshelf's and Policyfile's `supermarket` sources send Basic from URL userinfo to
@@ -1065,7 +1245,10 @@ the universe per-caller and mint one capability per version per request.
 **Why this is yours:** it admits a vendor-named header into the security foundation and gives up
 private knife reads.
 
-Accepted cost: the `auth.md` revision and the documented knife limitation.
+Accepted cost: the `auth.md` revision and the documented knife limitation. The revision has
+landed: the header is a route-scoped row of `auth.md`'s presentation-form table, asserted by its
+AC31, and a presentation off those routes is an authentication failure (its resolved off-route
+decision, was Q24 there).
 
 ### Resolved: how the universe is stored and where its URLs come from (was Q3)
 
@@ -1089,7 +1272,12 @@ with no lookup, and a base-URL change needs no write.
 **Why this is yours:** it fixes the split of work between the shared service and the handler for
 this format's index.
 
-Accepted cost: the serve-time transform and the `ETag` rule.
+Accepted cost: the serve-time transform and the `ETag` rule. `signing-service.md` has since
+placed the renderer in this format's generator package (its resolved renderer-placement decision,
+was Q3 there) and requires every generated document to be served through `index.ServeDocument`
+(its AC11), so the transform lives beside the renderer, not in the handler; that spec does not yet
+state a profile-declared serve-time expansion, a gap raised against it by this pass (Design, "The
+universe").
 
 ### Resolved: virtual repositories (was Q4)
 
@@ -1114,7 +1302,9 @@ and its tarball from different members apart.
 **Why this is yours:** it sets the precedence between private and public content, a supply-chain
 posture.
 
-Accepted cost: the documented shadowing.
+Accepted cost: the documented shadowing. The merge runs as `signing-service.md`'s `index.merge`
+job (its "Virtual merges"), so a member's new version reaches the virtual within the configured
+staleness bound rather than at once.
 
 ### Resolved: re-shares and removed versions (was Q5)
 
@@ -1159,7 +1349,12 @@ being an oracle.
 **Why this is yours:** it accepts a client-wide limitation rather than bending a security rule you
 settled.
 
-Accepted cost: the documented recipe and limitation.
+Accepted cost: the documented recipe and limitation. `auth.md` has since added a fourth object
+kind, `descriptor`, for repository-wide documents that name no object (its resolved
+name-free-document decision, was Q23 there), which lifted the same limitation for Cargo's
+`config.json` and Conan's probe; it does not lift it here, because the universe names every
+cookbook and would fail the kind's sentinel test, so it stays none as Helm's `index.yaml` does
+(Design, "Addressed objects and pattern scopes").
 
 ### Resolved: how a policy refusal is rendered (was Q7)
 
@@ -1241,3 +1436,4 @@ recording session.
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 34a974d | authoring pass: grounded first draft, not a review | Grounded four ways: captured traffic from Berkshelf 8.1.23 and 8.0.5, chef-cli 6.1.39 and 5.6.9 and knife 19.3.2 and 17.10.0, from two Cinc Workstation images pinned by digest, on a dedicated Podman network against two logging, rule-injecting stubs implementing the Supermarket routes from its source (cold and warm installs, lockfile installs sending nothing, the underscored and dotted version spellings, Policyfile using `download_url` alone, direct `200` downloads accepted, knife download, show, search, list and install, share with and without a category, a duplicate share, unshare and the pasted version path, `401`, `403` and `409` renderings in JSON and text, a tampered and a version-swapped tarball installing silently, Policyfile's lock identifier failing only at export, Berkshelf's store keeping a rolled-back version while Policyfile adopted it, Berkshelf falling through on every universe status and on a version-document `404` but halting on `403`, Policyfile refusing conflicting sources, the captured dependency confusion, Basic from userinfo reaching only the universe, `X-Jfrog-Art-Api` reaching every URL, the Ruby 3.4 DSL failure, and `berks upload` targeting the Chef Infra Server); the captured signatures re-verified with Go's `crypto/rsa` alone; the Berkshelf, knife, mixlib-authentication, chef-cli, cookbook-omnifetch, Chef and Supermarket sources; the live supermarket.chef.io (universe size, shape, `ETag` and `304`, mixed-case names and newline versions, version document fields, the `302` to S3, case-insensitive routes, error shape); and OSV (no Chef ecosystem). The reference Supermarket was not run (no container image; uploads need a Chef Infra Server sign-in). Design built from that: the wire table; four decisive client behaviours; ingest and proxied verification rules; the shared-model mapping; the universe as a stored, URL-free, write-triggered document with the signing service's requirements; share as one write; removes and deprecation as management bindings; the auth.md reconciliation (registered public keys for signed writes, `X-Jfrog-Art-Api` for private reads); name objects with `404` pattern refusals; `403` policy refusals without elision; rollback served exactly, adopted by Policyfile and cold Berkshelf; the proxied classification with URL rewriting and verification; Chef's removal-table rows; per-name virtual repositories. Ten questions written in decision shape and adopted under the standing delegation: registered public keys (AC6, AC7), `X-Jfrog-Art-Api` reads (AC11), a URL-free stored universe (AC17), per-name virtual resolution (AC24), `409` and retirement (AC10), name objects and `404` pattern refusals (AC12), `403` without elision (AC13), size and identity verification with a digest pin (AC22), the first spelling kept (AC5), supermarket.chef.io user-configured. Twenty-five criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here. Stays draft; awaits an independent review. |
+| 2026-09-28 | b43c566 | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec and of this file (Open item 24's requests, now met; themes 4, 5 and 8; auth reconciliation 4 and 6; credential-management 11; conformance-harness reconciliation 6; signing-service 11; upstream-adapters 12; management-api 11 and 12; artifact-verification 16; proxy-cache reconciliation 4, applied here though that item did not list this file; sweep 1 item 6). Applied: the universe as the `Indexer` generator's output, unsigned (`signing-service.md` AC24), served through `ServeDocument` with the URL expansion under `server.public_url` moved into the generator package (AC17), merged as the `index.merge` job (AC24) and regenerated through `FromUpstream`; the six index requirements checked one by one; signed writes cited as `auth.md` AC34 and `credential-management.md` AC12 (AC6, AC7 and their Test Plan rows now name those specs' files), the canonical-string review scope in `auth.md` AC10, the end-of-part content-hash check a recorded re-open input; `X-Jfrog-Art-Api` route-scoped with the off-route refusal (AC11); the management table carrying kinds through `Operator`, the version route admitted as a reference-API binding, `Retirement` core-held, `405` `repository-type` (AC8, AC9); the universe kept none under the descriptor kind, recorded in Design and the Q6 record; `WriteRefusal`, the reason phrase Berkshelf prints and the `holds` binding row (AC13); the proxied path on the `https` adapter with the object-storage host on the allowlist, the shape checked at first request under `cargo.md`'s was-Q7 precedent, the completion-only mode as offered with the pin refetched in declared-digest mode, the cache-scoped `Last-Modified` and the event-class mapping (AC20 to AC23); storage-and-gc AC21's read-path verification cited for a client that verifies nothing; the advisory gap cited to the coverage table; the public key seeded as a `credentials` sub-entry; new AC26 (`Capabilities()`, rename). Mismatches found, not queued: the configuration-time probe contradicts `upstream-adapters.md` AC23 (moved to first request, no judgement left); the handler-side URL expansion contradicts `signing-service.md` AC11 (moved to the generator package, with the missing serve-time expansion in `ServeDocument` reported). No new question; `fable_recheck` unchanged. Stays draft. |

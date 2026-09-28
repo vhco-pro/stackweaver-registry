@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-26 as a grounded first draft: the Hex repository and API contract captured from Hex 2.5.1 (Elixir 1.18.4, hex_core 0.18.0), Hex 2.0.6 (Elixir 1.14.5) and rebar3 3.27.0 (hex_core 0.12.2, with rebar3_hex 7.0.11 for publish, retire and docs) run in containers pinned by digest against a logging stub, checked against the hexpm/specifications documents, the hex_core protobuf schemas and source, the Hex and rebar3 client sources, and the live repo.hex.pm and hex.pm API. Eight questions written in decision shape and adopted under the owner's standing delegation; none open. Awaits a /spec review pass."
+status_description: "Reconciled 2026-09-28 at b43c566 with the foundation wave on Opus (not a review), this spec's first reconciliation: the three registry resources are this format's Indexer generator (internal/format/hex/index) run by signing-service's write-path runtime, stored payloads with Signature records assembled into Signed on read and served through ServeDocument, rotation the atomic-resign profile as one signature batch with no snapshot on the signing-key routes (AC22); the five signing requirements mapped onto signing-service, the verification entry routed to artifact-verification's raw scheme (gap reported); retire, unretire, revert and the docs operations are management-api kinds annotate, delete-version, attach and detach through Operator with the client routes as bindings, retirement core-held, 405 repository-type on remotes (AC8); public_key, installs and the identity routes are descriptors (AC11); refusals through WriteRefusal with the binding row filled by the policy case (AC12); the proxied payload verified in the completion-only hook, cache-scoped Last-Modified with the regression row, builds.hex.pm on the allowlist, the organization key a header credential (AC14, AC16, AC21); Capabilities with Virtual and Rename unsupported refused capability-unsupported (AC24). Q9 adopted (upstream key in the remote's trust set, checked at first fetch) and Q10 adopted (identity routes as pull descriptors, revising Q7). Earlier: authored 2026-09-26 from captures of Hex 2.5.1 and 2.0.6 and rebar3 3.27.0; eight questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for the Hex (Elixir and Erlang) format: the signed protobuf registry resources, the package tarball with its inner and outer checksums, the HTTP API that mix and rebar3 publish and retire through, hosted and proxied, with the shared signing service producing every hosted registry document and hex.pm's signed payloads served unmodified on the proxied path."
 author: michielvha
 goal: "Serve Elixir and Erlang teams a private Hex repository whose registry is signed by a key the handler never holds, and a hex.pm cache whose signed payloads verify in an unmodified client, with mix and rebar3 as the oracles for reads, publish, retirement and revert alike."
@@ -10,6 +10,7 @@ created: 2026-09-26
 covers:
   - "internal/format/hex/**"
   - "conformance/hex/**"
+fable_recheck: "cross-spec reconciliation with the foundation wave on Opus 2026-09-28 adopted Q9 (the upstream key as an operator-imported trust-set entry checked at the first fetch) and Q10 (identity routes as pull descriptors, revising Q7); neither adoption was Fable-reviewed"
 ---
 
 # Plan: Hex registry format
@@ -111,23 +112,31 @@ on one side only is enforced nowhere.
 
 **The shared signing and index service must be `planned` before Phase 1.** Every registry
 resource a hosted repository serves is a signed, write-triggered generated document produced by
-`docs/internal/plans/foundation/signing-service.md` (to be authored in the spec loop), which the
-charter builds at step 7 as the production form of what the step 4a prototype learned
-(`write-triggered-services-prototype.md`). What this format requires of that service is stated
-in Design ("What the signing service must provide"), never designed here; a Hex handler without
-it can serve nothing, so Phase 1 waits on that spec.
+`docs/internal/plans/foundation/signing-service.md`, which the charter builds at step 7 as the
+production form of what the step 4a prototype learned (`write-triggered-services-prototype.md`):
+this handler declares the optional `Indexer` interface and its generator lives in the sibling
+package `internal/format/hex/index` (that spec's "The generator contract, and where a generator
+lives", its resolved renderer-placement decision, was Q3 there). How this format's five
+requirements map onto that spec is stated in Design ("What the signing service provides"); a Hex
+handler without it can serve nothing, so Phase 1 waits on that spec reaching `planned`.
 
 **The management API must be `planned` before Phase 2's management half.** Retire, unretire,
-revert and docs deletion are operations of
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), with the
-clients' own routes served as bindings onto them (Design, "Retire, unretire and revert are
-bindings"). AC6, AC7 and AC8 are untestable until that surface exists.
+revert and the docs operations are kinds of `docs/internal/plans/foundation/management-api.md`'s
+closed vocabulary, declared through its optional `Operator` interface, with the clients' own
+routes served as bindings onto them (Design, "Retire, unretire and revert are bindings"). AC6,
+AC7 and AC8 are untestable until that surface exists.
 
-**Upstream signature verification and the trust anchor per upstream** are requested of the
-signing service's verification entry and of `docs/internal/plans/foundation/upstream-adapters.md`
-(to be authored in the spec loop) respectively, and are not assumed: the proxied path verifies
-every cached payload against the upstream's configured public key before committing it (Design,
-"The proxied path").
+**Upstream signature verification and the trust anchor per upstream** are
+`docs/internal/plans/foundation/artifact-verification.md`'s: the upstream's public key is an
+entry of the remote repository's trust set, never a field on `upstream-adapters.md`'s `Upstream`
+record (artifact-verification's "Sources" paragraph; `upstream-adapters.md`, its Scope), and the
+check of a fetched payload against it is that spec's `raw` scheme run as an integrity call in the
+proxy layer's post-receipt verifier hook, which may refuse the commit (its "When verification
+runs"; `signing-service.md`'s resolved produce/verify decision, was Q5 there, routed this
+format's requested verification entry there). The transport, including the `installs` redirect
+to `builds.hex.pm`, is `docs/internal/plans/foundation/upstream-adapters.md`'s `https` adapter
+under the upstream's host allowlist; the protocol half stays in this handler (Design, "The
+proxied path").
 
 ## Scope
 
@@ -142,9 +151,10 @@ every cached payload against the upstream's configured public key before committ
   and user documents the publish flow and `mix hex.info` read, and the organization-prefixed
   forms of each; Erlang term format and JSON content negotiation on that surface.
 - Signing: every hosted registry resource produced and signed inside the write by the shared
-  signing service, the public key served at `public_key` with the OpenSSH-style fingerprint
-  `mix hex.repo add --fetch-public-key` compares against, and the requirements this places on
-  `signing-service.md`.
+  signing service's write-path runtime from this format's generator, the public key served at
+  `public_key` with the OpenSSH-style fingerprint `mix hex.repo add --fetch-public-key` compares
+  against, key rotation under the service's `atomic-resign` profile, and how this format's
+  requirements map onto `signing-service.md`.
 - The tarball contract: version 3 tarballs stored byte-identical, the inner and outer
   checksums computed server-side and advertised in the signed payload, and the addressed
   object taken from `metadata.config` with a bounded peek.
@@ -154,9 +164,10 @@ every cached payload against the upstream's configured public key before committ
 - Name and version rules exactly as hex.pm enforces them, and the repository-name binding the
   signed payload imposes on how clients configure a repository.
 - Non-interactive authentication in the form both clients send (the bare token as the whole
-  `Authorization` value on repository reads and on the API), the per-route addressed objects
-  `auth.md`'s pattern scopes evaluate (AC11), and the `403` rendering of a shared policy
-  refusal (AC12).
+  `Authorization` value on repository reads and on the API, the scheme-less row of `auth.md`'s
+  presentation-form table), the per-route addressed objects `auth.md`'s pattern scopes evaluate,
+  descriptors included (AC11), and the `403` rendering of a shared policy refusal through the
+  shared refusal writer (AC12).
 - The proxied path against hex.pm or a private Hex repository: classification per resource,
   no URL rewriting and no re-signing, verification of the upstream's signature before caching,
   stream-and-verify tarballs against the payload's `outer_checksum`, conditional revalidation,
@@ -178,12 +189,18 @@ of done requires the deliberately unimplemented surface to be named:
   the supply-chain policy `supply-chain-policy.md` already evaluates centrally; a second policy
   language served to one client would be a parallel enforcement path. Revisited by revising
   this spec when a consumer exists.
-- **Virtual repositories.** A signed payload names exactly one repository and carries exactly
-  one signature, and the client checks that name against the repository it configured, so a
-  virtual repository could serve a hosted member's payload (named after itself) or an upstream
-  member's (named `hexpm`) but never both under one client configuration. Not effort: the
-  format's own verification rules make the merge unverifiable, and a configuration that creates
-  one is refused (AC21; the resolved repository-name decision below).
+- **Virtual repositories and repository rename.** A signed payload names exactly one
+  repository and carries exactly one signature, and the client checks that name against the
+  repository it configured, so a virtual repository could serve a hosted member's payload (named
+  after itself) or an upstream member's (named `hexpm`) but never both under one client
+  configuration, and a renamed repository would sign a name no existing client configured. Not
+  effort: the format's own verification rules make the merge unverifiable and the rename
+  client-breaking, so `Capabilities()` declares `Virtual: unsupported` and `Rename: unsupported`
+  (`format-handler-interface.md` AC13), creating a `virtual` of this format or renaming a
+  repository of it is refused `capability-unsupported` (422) with this format's reason
+  (`repository-lifecycle.md`, its creation step 2 and its rename rule for documents that embed
+  the name; `management-api.md`'s problem table), and the conformance matrix renders the virtual
+  column exempt citing this spec (AC24; the resolved repository-name decision below).
 - **Re-signing proxied content.** The captured reason is in Design; a client configured for
   hex.pm refuses a payload signed by anyone else (AC13), and a re-signed payload would carry
   our signature over content we did not author.
@@ -326,9 +343,12 @@ The levels are exactly those `data-model.md` provides; no table is added.
 - `Package.name` holds the package name as hex.pm's rule defines it: `^[a-z][a-z0-9_]*$`,
   two to 255 bytes, so there is no folding and no display spelling; a request under any other
   case answers `404` as repo.hex.pm does for `packages/Decimal`. The package-level document
-  holds the **retirement set** (every reverted `{name}/{version}` coordinate, never
-  republishable), the package's `updated_at` for the `names` resource, and the stored
-  `packages/{name}` document (below).
+  holds the package's `updated_at` for the `names` resource and the generated
+  `packages/{name}` payload (below). Every reverted `{name}/{version}` coordinate is a
+  **core-held `Retirement` record**, never republishable: written by `management-api.md`'s
+  `Submit` in the reverting operation's transaction, outside snapshot content, never pruned
+  (`data-model.md` AC35; `management-api.md`, "Retirement is core-held"), so no handler document
+  carries it and no repoint can lose it.
 - `Version.version` holds the version string verbatim; hex.pm validates it as a semantic
   version (`Hexpm.Version.validate`), and this registry does the same at publish, refusing a
   string `Version.parse` would reject. The version-level document holds the parsed
@@ -348,78 +368,122 @@ The levels are exactly those `data-model.md` provides; no table is added.
   publish a version nobody can install.
 - The docs tarball is a second, replaceable `File` of the version (Design, "Docs are a
   replaceable file").
-- The repository-level document holds the stored `names` and `versions` documents (below) and
-  the identity of the repository's signing key as the signing service reports it; a `remote`
-  repository's document caches the upstream's `names`, `versions` and `public_key` instead.
+- The repository-level document holds the generated `names` and `versions` payloads (below); the
+  repository's key is a `SigningKey` record the signing service holds, never a field of any
+  handler document (`data-model.md`, "Freshness scoped to the pointer, and the documents that
+  hang on it"). A `remote` repository caches the upstream's `names`, `versions`, `packages/{name}`
+  and `public_key` as its current documents instead, with the cache-scoped freshness record
+  `proxy-cache.md` owns (`data-model.md` AC44).
 
 ### Every hosted resource is a signed, write-triggered document
 
-Per the resolved generation decision below, the three resources are produced by the shared
-signing and index service inside the write that changes them, **stored, never rendered on
-request**: `packages/{name}` in the package-level document, `names` and `versions` in the
-repository-level document, each inline below `data-model.md`'s size threshold and as a CAS
-blob above it, protected by the fourth GC mark root (`storage-and-gc.md`). hex.pm's `versions`
-is 372 KB and its `names` 367 KB, so a repository proxying or mirroring at that scale crosses
-the threshold; a private repository of a few dozen packages does not. Rendering on request
-was rejected because a render is a signing operation, and signing on the read path puts key
-material on the hot path of every resolution.
+Per the resolved generation decision below, the three resources are produced inside the write
+that changes them, **stored, never rendered on request**, by `signing-service.md`'s write-path
+runtime: every write transaction on a repository whose handler declares an `Indexer` ends, before
+commit, with the runtime asking this format's generator (`internal/format/hex/index`, pure,
+importing no key material and no signing library) which document keys the change affects,
+generating them, signing what the profile signs and storing the result in the same delta
+(`signing-service.md`, "The write path dispatches; the handler cannot forget", its AC1; the
+pre-commit hook is `data-model.md` AC37's and `storage-and-gc.md` AC25's). The stored **body** of
+each resource is its serialised protobuf payload: `packages/{name}` at the package level,
+`names` and `versions` at the repository level, each inline below `data-model.md`'s size
+threshold and a CAS blob above it, protected by the fourth GC mark root (`storage-and-gc.md`
+AC16). hex.pm's `versions` is 372 KB and its `names` 367 KB, so a repository proxying or
+mirroring at that scale crosses the threshold; a private repository of a few dozen packages
+does not. The **signature** is a `Signature` record keyed by the body's digest and the key,
+never snapshot content, and the served resource is **assembled** at serve time by this
+format's assembly rule, the `Signed{payload, signature}` protobuf framing gzip-compressed,
+which is a framing and never a cryptographic operation (`signing-service.md`, "Storage: bodies
+in the snapshot, signatures as records, envelopes on the pointer", its resolved
+signature-placement decision, was Q2 there, and AC6). Rendering on request was rejected because
+a render is a signing operation, and signing on the read path puts key material on the hot path
+of every resolution; assembly on read is not signing.
 
-The rules the service applies for this format, stated as this format's requirements rather than
-as the service's design:
+The rules the service applies for this format, stated as this format's requirements and where
+the service meets each:
 
 - **Regeneration inside the write.** A publish regenerates `packages/{name}`, `names` and
   `versions`; a retirement or unretirement regenerates `packages/{name}` and `versions`; a
-  revert regenerates all three; a docs publish regenerates none. Each lands in the same
-  completed logical write and the same snapshot as the change that triggered it, so no
-  snapshot serves a `versions` that disagrees with the `packages/{name}` beside it
-  (`data-model.md`'s one-write-one-snapshot rule; the prototype's question 3).
+  revert regenerates all three; a docs publish or deletion regenerates none (the generator's
+  `Affects` returns no key for it, which `signing-service.md` names as the case "when nothing it
+  changed is indexed (a docs-only Hex publish)"). Each lands in the same completed logical write
+  and the same snapshot as the change that triggered it, so no snapshot serves a `versions` that
+  disagrees with the `packages/{name}` beside it (`data-model.md`'s one-write-one-snapshot rule;
+  the prototype's question 3).
 - **Under contention, both land.** Two concurrent publishes into one repository each produce
   `names` and `versions` documents that include the other's package once both are complete,
-  through the revision-token retry `data-model.md` makes mandatory, applied by the service.
+  through the service's per-document transaction lock with the revision-token retry behind it
+  (`signing-service.md`, "Contention: serialise per document, then retry", AC3 and AC28).
 - **Publish order is the order.** `Package.releases` and `Versions.Package.versions` list
   versions in publish order, as hex_core's builders emit them and as hex.pm serves them; the
   client sorts, the registry does not.
-- **The `ETag` of a stored document is derived from its bytes**, so identical documents across
-  snapshots share a tag, a repoint that changes the document changes it, and a `304` costs no
-  signing.
-- **A repoint restores the documents.** Because the documents live in the snapshot delta, a
-  rollback serves exactly the signed resources of the snapshot it targets, signatures intact;
-  a pointer moved backwards across a revert must preserve the retirement set
-  (`data-model.md` AC33's obligation on the management surface).
+- **Served through the shared helper.** Every hosted resource is served through
+  `index.ServeDocument`: its `ETag` derives from the assembled bytes, so identical documents
+  across snapshots share a tag, a repoint or a re-sign that changes the bytes changes it, and a
+  `304` costs no signing; its `Last-Modified` is the serving pointer's forward-moving freshness
+  record (`data-model.md` AC36), and the handler package sets neither header itself
+  (`signing-service.md` AC11). Hex 2.0.6 and rebar3 revalidate with `If-None-Match`; Hex 2.5.1
+  sends no conditional request (Design, "The wire surface").
+- **A repoint restores the documents.** Because the bodies live in the snapshot delta, a
+  rollback serves exactly the payloads of the snapshot it targets; a body with no `Signature`
+  record under the current key gets one inside the repoint write, so no client ever meets a
+  signature by a retired key (`signing-service.md` AC9). The retirement set cannot be lost across
+  a backwards repoint, because it is core-held and not snapshot content (`management-api.md`,
+  "Retirement is core-held"; `data-model.md` AC35).
 
-### What the signing service must provide
+### What the signing service provides
 
-Stated so the dependency on `docs/internal/plans/foundation/signing-service.md` (to be
-authored in the spec loop) cannot be lost, and precisely enough that the service can be
-specced against it:
+The five requirements this spec placed on `docs/internal/plans/foundation/signing-service.md`,
+each checked against what that spec now says, so the dependency cannot be lost:
 
-1. **One RSA key pair per hosted Hex repository** of at least 2048 bits, and a signing
-   operation that takes payload bytes and returns the RSA signature over their SHA-512 digest
-   in the form `public_key:sign/3` produces, so that `hex_registry:decode_and_verify_signed/2`
-   accepts it. The handler submits the serialised protobuf payload and receives the `Signed`
-   message's signature; it never sees the private key, which an architecture test asserts as
-   `write-triggered-services-prototype.md` AC5 does for Debian (AC22).
+1. **One RSA key per hosted Hex repository** of at least 2048 bits, signing the serialised
+   payload's SHA-512 digest with PKCS #1 v1.5 in the form `public_key:sign/3` produces, so that
+   `hex_registry:decode_and_verify_signed/2` accepts it. Met: the service holds per-repository
+   keys and no instance key (its resolved key-scope decision, was Q6 there), constrains Hex to
+   "RSA of at least 2048 bits, SHA-512" in the format's signing profile ("Key custody", the
+   RSA-SHA512 raw envelope), and produces the signature through the `Signing` handle inside
+   the transaction; neither the handler nor the generator package can import a signing library
+   or reach a key (its AC2), which AC22's architecture test asserts from this side as
+   `write-triggered-services-prototype.md` AC5 does for Debian.
 2. **The public key in SubjectPublicKeyInfo PEM**, served at `public_key` and shown in the
-   management surface and UI together with its OpenSSH-style `SHA256:` fingerprint, because
-   that fingerprint is what `mix hex.repo add --fetch-public-key` takes and `mix hex.repo list`
-   prints; a wrong fingerprint form is a usability failure the captures showed (a SubjectPublicKeyInfo
-   or PKCS #1 DER hash is refused).
-3. **Synchronous signing inside a write**, three documents per publish, with the latency
-   budget of a client's publish request; there is no asynchronous half on this format.
-4. **Rotation as one write that re-signs every stored document of the repository** under the
-   new key, exposed through the management API, together with the fact this spec records for
-   operators: a Hex client pins exactly one key per repository and cannot hold two, so rotation
-   is client-visible and every consumer re-adds the repository; the service's rotation
-   operation is what makes the cutover atomic on the server side.
-5. **A verification entry** that checks a `Signed` payload against a supplied public key PEM,
-   used by the proxied path against the upstream's configured key (below), so that trust
-   anchors and verification live in one place rather than in a handler.
+   management surface and the UI with its OpenSSH-style `SHA256:` fingerprint, because that
+   fingerprint is what `mix hex.repo add --fetch-public-key` takes and `mix hex.repo list`
+   prints; a wrong fingerprint form is a usability failure the captures showed (a
+   SubjectPublicKeyInfo or PKCS #1 DER hash is refused). Met: the SPKI PEM with the OpenSSH
+   `SHA256:` fingerprint is one of the service's public forms, byte-checked against
+   `ssh-keygen -lf` (its AC12), listed on `GET /api/v1/repositories/{name}/signing-keys`
+   (`management-api.md`'s endpoint table) and rendered by `web-ui.md`'s Trust and Version pages.
+3. **Synchronous signing inside a write**, three documents per publish, within the latency
+   budget of a client's publish request; there is no asynchronous half on this format. Met by the
+   pre-commit dispatch (its AC1) and budgeted by its AC28 benchmark; a Hex repository has no
+   virtual, so no `index.merge` job exists for it.
+4. **Rotation as an atomic cutover**, under the service's `atomic-resign` profile: activating a
+   new key re-signs every served body under it in one batch of `Signature` records and retires
+   the old key in the same transaction, with **no snapshot**, since a signature is not content
+   (its "Rotation profiles" and resolved rotation decision, was Q11 there; AC7, AC8). This
+   rewords this spec's earlier "one write that re-signs every stored document": the effect is
+   the same, the mechanism is a signature batch. The operation is admin-only, through
+   `POST /api/v1/repositories/{name}/signing-keys` and `.../signing-keys/{id}/activate` and
+   `.../retire` (`management-api.md`, the `configure` kind), never a Hex wire route. The fact
+   this spec records for operators stands: a Hex client pins exactly one key per repository and
+   cannot hold two, so rotation is client-visible and every consumer re-adds the repository with
+   the new fingerprint.
+5. **A verification entry** that checks a `Signed` payload against a supplied public key, used
+   by the proxied path against the upstream's key. Routed away from the signing service:
+   verifying is `artifact-verification.md`'s, and that spec names its `raw` scheme as what this
+   item asked for (`signing-service.md`'s resolved produce/verify decision, was Q5 there;
+   `artifact-verification.md`, its Scope). Its entry catalogue does not yet list an RSA-SHA512
+   PKCS #1 v1.5 `raw` entry or an RSA key type under `raw-keys`, only Ed25519, JWS and npm's
+   ECDSA, which is a gap raised against that spec rather than filled here (Design, "The proxied
+   path").
 
-Nothing is required of `docs/internal/plans/foundation/artifact-verification.md` (to be
-authored in the spec loop): Hex signs the registry, never the artifact, and the tarball's only
-integrity primitives are the two checksums the registry advertises. Advisory matching for Hex
-coordinates is the policy engine's coordinate-level path (OSV carries the `Hex` ecosystem,
-which is where hex.pm's own `SecurityAdvisory` entries point) and needs no handler cooperation.
+On the artifact side nothing is asked of `artifact-verification.md`: Hex signs the registry,
+never the artifact, and the tarball's only integrity primitives are the two checksums the
+registry advertises, which is why that spec lists `hex.md` in its "Nothing" row and its
+verification column renders `none` for Hex (its AC24; `catalogue.md` AC7). Advisory matching for
+Hex coordinates is the policy engine's coordinate-level path: OSV covers the `Hex` ecosystem,
+which is where hex.pm's own `SecurityAdvisory` entries point (`supply-chain-policy.md`'s coverage
+table, AC17), and it needs no handler cooperation.
 
 ### The publish path and what counts as a write
 
@@ -442,14 +506,21 @@ generations send. What this registry enforces on ingest:
   forever and both lockfiles pin by both checksums (`mix.lock`'s fourth and eighth fields,
   `rebar.lock`'s `pkg_hash` and `pkg_hash_ext`); a replacement would make every existing
   lockfile fail its checksum comparison against this registry.
-- **A retired coordinate is refused the same way**: a reverted version joins the package's
-  retirement set and is never republishable, with the same bytes or different ones, the
-  cross-format rule `npm.md`, `pypi.md`, `nuget.md` and `maven.md` adopted.
+- **A retired coordinate is refused the same way**: a reverted version is a core-held
+  `Retirement` record and is never republishable, with the same bytes or different ones, the
+  cross-format rule `npm.md`, `pypi.md`, `nuget.md` and `maven.md` adopted. The shared write path
+  refuses the claim (`data-model.md` AC35; `management-api.md`, "Retirement is core-held", whose
+  one check covers a handler's own publish route by the object `Scope(r)` reports), and this
+  handler renders that refusal on its wire as the same term-format `422` it uses for an existing
+  coordinate, because the clients print a term-format error and nothing else.
 - The response is `201` with an Erlang-term release document (`version`, `url`, `html_url`,
   `checksum` as the outer checksum in lowercase hex, `has_docs`, `retirement`, `inserted_at`,
   `updated_at`, `meta`, `requirements`, `publisher`), the shape the blueprint documents and
   the clients print from ("Package published to {html_url} ({checksum})").
-- A publish to a proxied repository answers `405`.
+- A publish to a proxied repository answers `405` with the term-format error body naming the
+  repository type, the status `management-api.md` fixed for every content write against a
+  `remote` (its problem type `repository-type`, its resolved remote-refusal decision, was Q10
+  there); there is no `virtual` of this format to refuse.
 
 `data-model.md` requires each format spec to declare its ecosystem's write boundaries and makes
 metadata-only mutations snapshot-creating writes. Hex's declaration:
@@ -463,11 +534,12 @@ metadata-only mutations snapshot-creating writes. Hex's declaration:
   on all three clients: Hex prints `RETIRED!` with the reason and message and "Found retired
   packages, see above for details"; rebar3 prints "Warning: package {name}-{version} is
   retired: ({reason}) {message}"), and `HEX_IGNORE_RETIREMENTS` silences the warning.
-- **A revert is one removal write**: the version leaves the head snapshot, its coordinate
-  enters the retirement set in the same write, and all three documents are regenerated.
+- **A revert is one removal write**: the version leaves the head snapshot, its coordinate's
+  `Retirement` record is written in the same transaction, and all three documents are
+  regenerated.
 - **Each docs publish is one write replacing the version's docs file**, and a docs deletion is
-  one write removing it; neither regenerates a registry document, because no registry resource
-  names docs.
+  one write removing it (the `attach` and `detach` kinds, below); neither regenerates a registry
+  document, because no registry resource names docs.
 - A proxied repository creates no snapshots at all; payload arrival and revalidation are cache
   materialisation.
 
@@ -477,32 +549,46 @@ metadata-only mutations snapshot-creating writes. Hex's declaration:
 --revert` are real client commands, so this format is in npm's and Cargo's category in
 `docs/internal/analysis/management-surfaces-and-the-oracle.md`: trigger and effect are both
 oracle-testable. Per the cross-format precedent (`pypi.md`'s resolved hosted-yank decision,
-with `npm.md`, `ansible-collections.md`, `cargo.md` and `nuget.md`), each operation is an
-operation of the registry-owned management API,
-`docs/internal/plans/foundation/management-api.md` (to be authored in the spec loop), and the
-clients' routes are **bindings onto the same operation**, one implementation behind two ways
-in:
+with `npm.md`, `ansible-collections.md`, `cargo.md` and `nuget.md`), each operation is a kind of
+the registry-owned management API's closed vocabulary,
+`docs/internal/plans/foundation/management-api.md` ("The operation vocabulary"; its "Cross-format
+reconciliation" table carries the Hex rows), submitted at
+`POST /api/v1/repositories/{name}/operations` with the kind and the target `{name}/{version}`,
+and the clients' routes are **bindings onto the same operation**, one implementation behind two
+ways in. The handler declares them through the optional `Operator` interface
+(`Operations()`, `Bindings()`, `Authorize`, `Apply`), and every entry point calls the core's one
+`Submit` (`management-api.md`, "Dispatch: the optional `Operator` interface"):
 
-| Operation | Client binding | Effect a client sees | Action |
-|---|---|---|---|
-| Retire a version (reason, message) | `POST .../releases/{version}/retire` from `mix hex.retire` and `rebar3 hex retire` | `retired` on the release in `packages/{name}` and the version's index in `versions.retired`; both resolvers warn and still select it | `push` |
-| Unretire a version | `DELETE .../releases/{version}/retire` from `mix hex.retire --unretire` (no rebar3 binding exists) | The status clears | `push` |
-| Revert a version | `DELETE .../releases/{version}` from `mix hex.publish --revert` and `rebar3 hex publish --revert` | The version leaves every document, the tarball answers `404`, the coordinate is retired forever | `delete` |
-| Delete docs | `DELETE .../releases/{version}/docs` from `rebar3 hex publish docs --revert` and `mix hex.publish docs --revert` | `docs/{name}-{version}.tar.gz` answers `404`, `has_docs` is false | `push` |
+| Operation | Kind | Client binding | Effect a client sees | Action |
+|---|---|---|---|---|
+| Retire a version (reason, message) | `annotate` | `POST .../releases/{version}/retire` from `mix hex.retire` and `rebar3 hex retire` | `retired` on the release in `packages/{name}` and the version's index in `versions.retired`; both resolvers warn and still select it | `push` |
+| Unretire a version | `annotate` | `DELETE .../releases/{version}/retire` from `mix hex.retire --unretire` (no rebar3 binding exists) | The status clears | `push` |
+| Revert a version | `delete-version` | `DELETE .../releases/{version}` from `mix hex.publish --revert` and `rebar3 hex publish --revert` | The version leaves every document, the tarball answers `404`, the coordinate is retired forever | `delete` |
+| Publish docs | `attach` | `POST .../releases/{version}/docs` from `rebar3 hex publish docs` and after `rebar3 hex publish` | `docs/{name}-{version}.tar.gz` serves the new tarball, `has_docs` is true | `push` |
+| Delete docs | `detach` | `DELETE .../releases/{version}/docs` from `rebar3 hex publish docs --revert` and `mix hex.publish docs --revert` | `docs/{name}-{version}.tar.gz` answers `404`, `has_docs` is false | `push` |
 
 Rules, applying the precedent rather than re-deciding it: each operation is one completed
 logical write through the shared write path, exactly one snapshot, none for a refused one, no
-blob-store object deleted directly; authorization is the settled `(repository, action)`
-vocabulary with no new action, retirement and docs deletion being metadata-class and revert
-removal-class (the resolved retirement-action decision below); hosted only, a proxied
-repository taking its retirements and removals from the upstream per the removal table; the
-trigger is verified by the real clients through the bindings and by this registry's
-integration tests through the management endpoint, and every effect by a real resolve. What
-this format requires of `management-api.md`: the four operations above on the object
-`{name}/{version}`, retirement carrying one of the five reasons (`other`, `invalid`,
-`security`, `deprecated`, `renamed`) and a message of at most 140 characters as hex.pm bounds
-it, the retirement set carried forward by every later write and preserved across a backwards
-repoint, and the same semantics and authorization from either entry point (AC8).
+blob-store object deleted directly (`management-api.md`, "Every operation is one completed
+logical write"; `storage-and-gc.md` AC15); authorization is the settled `(repository, action)`
+vocabulary with no new action, the action following the kind, never the format: `annotate`,
+`attach` and `detach` are metadata-class under `push` and `delete-version` removal-class under
+`delete` (the resolved retirement-action decision below, which `management-api.md` AC9 now
+asserts: "a Hex retirement [is] accepted under `push`"); hosted only, a proxied repository
+answering `405` `repository-type` through both entry points and taking its retirements and
+removals from the upstream per the removal table; `delete-version` returns the reverted
+coordinate in its `Outcome` and `Submit` writes the `Retirement` record, while `annotate`,
+`attach` and `detach` retire nothing (the kind table's "Retires" column). The trigger is verified
+by the real clients through the bindings and by this registry's integration tests through the
+endpoint, and every effect by a real resolve; every declared kind has a `script`-driven
+conformance case (`management-api.md` AC24, enforced by `conformance-harness.md` AC26). What this
+format asks of each kind's `args`: retirement carries one of the five reasons (`other`,
+`invalid`, `security`, `deprecated`, `renamed`) and a message of at most 140 characters as
+hex.pm bounds it; `attach` carries the committed docs tarball's digest and **replaces** a docs
+file the version already holds, the Hex coherence rule for this kind, where Helm's refuses a
+second `.prov` (`management-api.md`'s `attach` row names Hex docs; the "Publish docs" row of its
+reconciliation table is a consequence of this pass). The same semantics and authorization hold
+from either entry point (AC8; `management-api.md` AC8).
 
 hex.pm's own restriction that a package cannot be reverted after its window is hex.pm policy,
 not enforced, as `npm.md` decided for the same class of rule.
@@ -511,10 +597,12 @@ not enforced, as `npm.md` decided for the same class of rule.
 
 hex.pm lets documentation be re-published at any time, and `rebar3 hex publish` uploads docs
 after every package publish, so the docs tarball is the one coordinate on this format whose
-bytes may legitimately change. It is stored as its own `File` of the version, replaced whole by
-each docs publish, served byte-identical at `docs/{name}-{version}.tar.gz` with an `ETag`
-derived from its bytes, and removed by docs deletion; the version's `has_docs` in the API's
-release document follows it. On the proxied path it is mutable metadata with a TTL for the
+bytes may legitimately change. It is stored as its own `File` of the version, attached and
+replaced whole by each docs publish (`attach`) and removed by docs deletion (`detach`), which is
+exactly `management-api.md`'s definition of an auxiliary file "that no coordinate binds and no
+client verifies as the version's bytes"; it is served byte-identical at
+`docs/{name}-{version}.tar.gz` with an `ETag` derived from its bytes, and the version's
+`has_docs` in the API's release document follows it. On the proxied path it is mutable metadata with a TTL for the
 same reason (below). Nothing in a registry resource references it, so its replacement is never
 a registry regeneration.
 
@@ -561,10 +649,12 @@ Both clients present a credential as **the token string alone, the whole `Author
 value, with no scheme**: on repository reads, `authorization: {auth key}` from `mix hex.repo
 add --auth-key` or rebar3's `repo_key` (or `HEX_REPOS_KEY`), sent preemptively on every package,
 tarball, docs and public-key request once configured; on the API, `authorization: {api key}` from
-`HEX_API_KEY` or the user-auth task. That is exactly the scheme-less form `auth.md` added to its
-client table and verifier for Cargo (its AC31), so no new presentation form is needed; the
-client table needs a `mix` and a `rebar3` row, listed in this spec's sibling consequences. How
-this meets `auth.md`, whose rules this spec does not bend:
+`HEX_API_KEY` or the user-auth task. That is exactly the universal **scheme-less** row of
+`auth.md`'s presentation-form table, which its AC31 asserts ("a scheme-less `Authorization:
+<token>`"), so no new presentation form is needed. `auth.md`'s client table has no `mix` or
+`rebar3` row yet, and the scheme-less row's "Needed by" column names only cargo and r10k; both
+omissions are consequences of this pass on that spec, not gaps in the verifier. How this meets
+`auth.md`, whose rules this spec does not bend:
 
 - **The challenge is uniform and not an existence oracle.** A credential-less request under a
   repository that is not anonymously readable answers `401` whether the repository is private,
@@ -602,92 +692,135 @@ scopes" there; `format-handler-interface.md` AC12). The canonical object is the 
 and `{name}/{version}` where a version is addressed; both are literal on every route, and no
 folding is needed because the ecosystem has none.
 
-| Route | Object kind | Canonical object |
-|---|---|---|
-| `names`, `versions` | none | - (they enumerate the repository) |
-| `packages/{name}` | named | `{name}` |
-| `tarballs/{name}-{version}.tar`, `docs/{name}-{version}.tar.gz` | named | `{name}/{version}` |
-| `public_key`, `installs/hex-1.x.csv` | none | - (repository-wide) |
-| `repos/{org}/...` forms | as the unprefixed route | as the unprefixed route |
-| Publish (both routes) | named | `{name}/{version}`, from `metadata.config` in a **bounded peek** at the tarball's leading entries in the streamed body (the resolved publish-object decision below); a body whose `metadata.config` is not found within the bound is refused before any byte reaches the CAS |
-| Retire, unretire, revert, docs publish and deletion | named | `{name}/{version}`, from the URL |
-| `api/packages/{name}` | named | `{name}` |
-| `api/users/me`, `api/auth` | none | - (identity routes, no object) |
+| Route | Action | Object kind | Canonical object |
+|---|---|---|---|
+| `names`, `versions` | `pull` | none | - (they enumerate the repository) |
+| `packages/{name}` | `pull` | named | `{name}` |
+| `tarballs/{name}-{version}.tar`, `docs/{name}-{version}.tar.gz` | `pull` | named | `{name}/{version}` |
+| `public_key` | `pull` | descriptor | - (a signing-key document, naming no object) |
+| `installs/hex-1.x.csv` | `pull` | descriptor | - (Hex client builds, naming no object of the repository; a hosted repository answers `404`) |
+| `repos/{org}/...` forms | as the unprefixed route | as the unprefixed route | as the unprefixed route |
+| Publish (both routes) | `push` | named | `{name}/{version}`, from `metadata.config` in a **bounded peek** at the tarball's leading entries in the streamed body (the resolved publish-object decision below); a body whose `metadata.config` is not found within the bound is refused before any byte reaches the CAS |
+| Retire, unretire, docs publish and deletion | `push` | named | `{name}/{version}`, from the URL |
+| Revert | `delete` | named | `{name}/{version}`, from the URL |
+| `api/packages/{name}` | `pull` | named | `{name}` |
+| `api/users/me`, `api/auth` | `pull` | descriptor | - (the caller's own identity or a validity answer, naming no object; the resolved identity-route decision below, was Q10) |
+
+The descriptor rows are `auth.md`'s fourth object kind (its resolved name-free-document
+decision, was Q23 there): a patterned scope authorizes a descriptor for `pull` only, and a route
+may carry the kind only while the sentinel test holds, so the per-handler object test seeds a
+package whose name, version and checksums are sentinels and fails if any sentinel appears in
+the body of `public_key`, `installs/hex-1.x.csv`, `api/users/me` or `api/auth`
+(`format-handler-interface.md` AC12; `auth.md` AC32). `names` and `versions` name every package
+and stay none.
 
 What that gives and costs, applying `auth.md`'s rules rather than re-deciding them. Nothing on
-the read side fetches a repository-wide document first, so a credential holding only a
-patterned `pull` under `acme_*` resolves every `acme_*` package and its in-pattern dependencies
-through a real `mix deps.get` or `rebar3 get-deps`, fails on the first dependency outside it, and
-is refused `names`, `versions` and `public_key` (so a patterned credential cannot use
-`--fetch-public-key`; the fingerprint is pasted instead). On the write side the client
-generation decides: rebar3_hex 7.0.11 and Hex 2.0.6 publish without touching an identity route,
-so a `push` patterned `acme_*/**` publishes and retires through them, while Hex 2.5.1 fetches
-`api/users/me` first and a patterned-only credential fails there, which AC11 asserts rather than
-leaving implied, and which the operator documentation records beside the recipe (a patterned
-`push` beside an unpatterned `pull` on the same token does not help, since the identity route
-is under `push`'s action).
+the read side fetches an enumerating document first, so a credential holding only a patterned
+`pull` under `acme_*` resolves every `acme_*` package and its in-pattern dependencies through a
+real `mix deps.get` or `rebar3 get-deps`, fails on the first dependency outside it, reads
+`public_key` (so `--fetch-public-key` works under it), and is refused `names` and `versions`. On
+the write side a token holding `pull` and `push` both patterned `acme_*/**` publishes and
+retires `acme_tool` on every client generation: rebar3_hex 7.0.11 and Hex 2.0.6 touch no
+identity route, and the `api/users/me` fetch Hex 2.5.1 makes before every write is a descriptor
+its patterned `pull` authorizes. A token holding `push` alone, patterned or not, fails at that
+fetch on Hex 2.5.1, which is no new cost: a 2.5.1 publish without `--yes` already reads
+`api/packages/{name}` under `pull`. AC11 asserts both, and the operator documentation's recipe
+for a CI publish credential is `pull` and `push` under the same pattern.
 
 ### Policy refusals on the wire
 
 When a shared resolution call returns the typed refusal `supply-chain-policy.md` defines, on a
 package, tarball or docs route of either path, the handler answers `403` with a `text/plain`
 body naming the policy and rule, or naming the signal for a coordinate condemned under the
-shared security-signal rule. `403` rather than the existence rule's `404`, because the caller is
-authorized and the content is what is refused. The body reaches nobody through the pinned
-clients: Hex prints its generic three-cause message for a refused package resource and
-`Request failed (403)` for a refused tarball, and rebar3 its generic failure, all captured for
-the same rendering paths with other statuses, so the body is for `curl` and the transcript.
-That is the reason-phrase risk `pypi.md` named and `maven.md` confirmed, confirmed here for two
-more clients and carried to `supply-chain-policy.md` as a finding rather than worked around.
+shared security-signal rule, written through the shared refusal writer `WriteRefusal` in
+`internal/format` (`format-handler-interface.md` AC14), which on an HTTP/1.1 connection also
+writes the status line `HTTP/1.1 403 Refused by policy: {condition}`
+(`supply-chain-policy.md`'s resolved refusal-status-line decision, was Q10 there, and AC18;
+`deployment.md` keeps the main listener on HTTP/1.1 by default). `403` rather than the existence
+rule's `404`, because the caller is authorized and the content is what is refused. The body
+reaches nobody through the pinned clients: Hex prints its generic three-cause message for a
+refused package resource and `Request failed (403)` for a refused tarball, and rebar3 its
+generic failure, all captured for the same rendering paths with other statuses, so the body is
+for `curl` and the transcript. That is the reason-phrase finding `pypi.md` named and `maven.md`
+confirmed, confirmed here for two more clients and recorded in `supply-chain-policy.md`'s
+"Rendering a refusal"; whether `mix` or `rebar3` prints the phrase is what AC12's case captures.
+The same case captures whether either client falls back to another configured repository on the
+refusal, filling Hex's `pending` row of that spec's "When a refusal binds, per format" table in
+the same change (its AC20; the harness refuses a policy case while the row is `pending`,
+`conformance-harness.md` AC26). Hex's own cross-repository behaviour (Design, "The proxied path")
+already shows `rebar3` asking each configured repository in order after a `404`, so the capture
+must cover `403` specifically.
 
 ### The proxied path
 
 The handler owns the request and classifies for the proxy layer's fetch-and-cache API per the
-settled decisions in `proxy-cache.md`; the upstream is a repository base URL (`https://repo.hex.pm`,
-`https://repo.hex.pm/repos/{org}` with the organization key as the upstream credential, or a
-private Hex repository) together with the upstream's public key PEM, defaulting to hex.pm's,
-validated at configuration by fetching `public_key` and `names` and verifying the latter
-against the former (AC21).
+settled decisions in `proxy-cache.md`. The upstream is an `https://` repository base URL
+(`https://repo.hex.pm`, `https://repo.hex.pm/repos/{org}`, or a private Hex repository) on
+`upstream-adapters.md`'s `https` adapter, validated at creation and `PATCH` by that spec's
+adapter rules alone (its AC23: an unreachable but well-formed upstream is accepted, and no
+format probe runs inside the creation transaction). Per the resolved upstream-key decision below
+(was Q9), the upstream's public key is an entry of the remote repository's trust set, imported
+by the operator through `PUT` or `POST .../trust/import` (`artifact-verification.md`'s
+`raw-keys` entry kind; `management-api.md`'s trust routes), with hex.pm's published key the
+documented default for a repo.hex.pm remote, and never pinned silently from the upstream it
+verifies; what AC21 checks at configuration moves to the first fetch:
 
 - **Every registry resource is served byte for byte**, verified before caching. `packages/{name}`,
   `names` and `versions` are mutable metadata with a TTL; repo.hex.pm serves `ETag`,
   `Last-Modified` and `Cache-Control: public, max-age=3600` and answers `304` to
-  `If-None-Match` (captured), so revalidation uses the entity tag and an unchanged payload
-  costs a `304` upstream. Before a fetched payload is committed, its signature is verified
-  against the upstream's configured key through the signing service's verification entry and
-  its `repository` field is checked against the upstream's expected name (`hexpm`, or the
-  organization); a payload failing either is never committed, the serve-stale rules of
-  `proxy-cache.md` apply, and the operator is alerted, because on this format that is what an
-  upstream key rotation looks like. Clients' own conditional requests are answered `304` from
-  the cache under this registry's `ETag` inside the TTL.
+  `If-None-Match` (captured), so revalidation uses the entity tag (`upstream-adapters.md` AC15)
+  and an unchanged payload costs a `304` upstream. A payload carries no digest a stream can check,
+  so it is fetched in the proxy layer's completion-only mode (its resolved completion-only
+  decision, was Q15 there, AC20), whose post-receipt verifier hook runs, over the complete body
+  and before any commit, the `raw` scheme's integrity call against the trust set's key and this
+  handler's check of the payload's `repository` field against the upstream's expected name
+  (`hexpm`, or the organization); a payload failing either commits nothing, creates no negative
+  entry, the previous verified revision keeps serving under `proxy-cache.md`'s serve-stale rules,
+  and the operator is alerted with the real reason, because on this format that is what an
+  upstream key rotation looks like. A remote whose trust set holds no key answers every registry
+  resource `502` with a body naming the missing trust-set entry and fetches nothing. Clients' own
+  conditional requests are answered `304` from the cache under this registry's `ETag`, and the
+  served `Last-Modified` is the cache-scoped record, never repo.hex.pm's header: forward-moving,
+  `304` only on an exact `If-Modified-Since` match or a matching `ETag`, and an upstream revision
+  older than the adopted one by upstream `Last-Modified` is not adopted (`proxy-cache.md`,
+  "Freshness of what a remote serves", AC22; `data-model.md` AC44). Hex's clients never send
+  `If-Modified-Since`, so the regression rule is the part that binds here.
 - **Tarballs are immutable artifacts**, cached indefinitely (repo.hex.pm serves them with a
   seven-day `max-age` and the coordinate is immutable by the ecosystem's own rule outside
   hex.pm's one-hour window), fetched **stream-and-verify against the `outer_checksum`** the
-  cached `packages/{name}` payload advertises for that version, never committed on a mismatch
-  or a truncated body. No completion-only mode is needed: every version on this wire carries a
-  digest.
+  cached, verified `packages/{name}` payload advertises for that version, handed to
+  fetch-and-cache as the request's declared digest, never committed on a mismatch or a
+  truncated body (`upstream-adapters.md`'s `ErrTruncated`, its AC13). No completion-only mode is
+  needed for tarballs: every version on this wire carries a digest.
 - **Docs tarballs are mutable metadata with a TTL** revalidated on the upstream's `ETag`, because
   hex.pm replaces them at any time (its one-day `max-age` says as much).
 - **`public_key` is mutable metadata with a long TTL**, served verbatim so that
   `--fetch-public-key` against a proxied repository yields the upstream's key, which is the key
   the client needs for payloads it will receive unmodified.
 - **`installs/hex-1.x.csv` is mutable metadata with a TTL**, fetched by following the
-  upstream's redirect to `builds.hex.pm` in the adapter, because a client whose `hexpm`
+  upstream's `301` to `builds.hex.pm` inside the adapter, because a client whose `hexpm`
   repository points here asks for it on every command and the `404` alternative prints a
-  warning on every run.
+  warning on every run. `builds.hex.pm` is an entry of the upstream's host allowlist with role
+  `none`, so no upstream credential reaches it, and no `Location` reaches the client
+  (`upstream-adapters.md` AC6, AC7, AC8); a remote whose allowlist lacks the entry answers the
+  route `502` naming the host, which the operator documentation's repo.hex.pm recipe prevents.
 - **No URL rewriting exists on this format.** No payload carries a registry URL: tarball and
   docs paths are derived by the client from the repository URL, and the only URLs in a
   `Package` payload are advisory links to osv.dev. Like Maven, this format has no
   externally-visible-base-URL dependency on the proxied path.
 - **Organization upstreams need nothing new.** A remote repository bound to
   `https://repo.hex.pm/repos/{org}` fetches `packages/{name}` under that base with the
-  organization key as its upstream credential; its payloads name `{org}` and clients consume the
-  repository under that name (above). The client's own key is never forwarded; the upstream
+  organization key as its upstream credential, an `UpstreamCredential` of the `header` kind
+  whose header is `Authorization` and whose value is the bare key, sent to the root host only
+  (`upstream-adapters.md`, "Credential kinds", AC6); its payloads name `{org}` and clients consume
+  the repository under that name (above). The client's own key is never forwarded; the upstream
   credential is the adapter's.
 - **Missing packages are negatively cached** with the short TTL: repo.hex.pm answers `404`
   with a `text/plain` body and both clients treat it as "no such package"; a `429` or `5xx`
   is never cached as absence (`proxy-cache.md` AC9).
-- **Publish and every management operation against a `remote` repository answer `405`.**
+- **Publish and every management operation against a `remote` repository answer `405`** with
+  problem type `repository-type` on the management API and the term-format body on the
+  bindings, identically (`management-api.md`'s resolved remote-refusal decision, was Q10 there).
 
 **Cross-repository dependencies are a client-side routing directive.** A `Dependency` whose
 `repository` field is set names another repository, and the two clients read it differently:
@@ -708,13 +841,19 @@ Upstream removal maps onto the settled purge-or-flag table as Hex's side of that
 | A release vanishes from `packages/{name}` (hex.pm's revert within its window, or an administrative removal) | Keep serving, record an operator-visible divergence; the wire carries no reason |
 | `packages/{name}` answers `404` where it previously existed | Keep serving, record a divergence |
 | A release's `outer_checksum` or `inner_checksum` changes (hex.pm's replace within its window) | An **immutability violation** treated as the explicit signal: purge the cached tarball for that version and alert, then re-fetch and verify against the new digest on demand, because every consumer that locked the old checksums would otherwise disagree with this registry; hex.pm's replace is legitimate for an hour, which is why the alert says what happened rather than only that it happened |
-| The payload's signature no longer verifies against the upstream's configured key, or its `repository` field changes | An integrity failure at fetch: not committed, serve stale within the limit, alert; the operator updates the upstream's key if the upstream rotated |
+| The payload's signature no longer verifies against the key in the remote's trust set, or its `repository` field changes | An integrity failure at fetch: not committed, serve stale within the limit, alert; the operator updates the trust set's key through the trust routes if the upstream rotated, which is one trust-set revision (`artifact-verification.md` AC3) |
+| A revalidation returns a payload whose upstream `Last-Modified` is older than the adopted revision's | **Regression not adopted**: the adopted payload keeps serving, its cache-scoped record is unchanged, and a divergence is recorded; an upstream that legitimately rolled back reaches clients through the operator's refresh after the divergence is read (`proxy-cache.md` AC22, AC24) |
 
-Detection happens at revalidation, passively, per `proxy-cache.md`'s resolved passive-detection
-decision (was Q12); the active channel is the policy engine's advisory feed, which carries the
-`Hex` ecosystem through OSV, and it is the only channel that condemns a Hex coordinate as
-malicious under the shared security-signal rule. Nothing on this wire is an explicit security
-signal.
+These rows are Hex's instances of `proxy-cache.md`'s event classes ("Upstream removal or
+replacement", its one table): a checksum change is the **coordinate-bound immutability
+violation** that spec lists for `hex.md`, a vanished release is **removal with no signal**, a
+retirement or advisory change is an **ordinary metadata change** (that spec's flag-mirroring
+row notes that Hex `retired` is ordinary on this wire), a failed signature is an **integrity
+failure at fetch**, and an older revision is a **regression not adopted**. Detection happens at
+revalidation, passively, per `proxy-cache.md`'s resolved passive-detection decision (was Q12);
+the active channel is the policy engine's advisory feed, which carries the `Hex` ecosystem
+through OSV, and it is the only channel that condemns a Hex coordinate as malicious under the
+shared security-signal rule. Nothing on this wire is an explicit security signal.
 
 ### Conformance, the three clients and the corpus
 
@@ -745,6 +884,14 @@ name. Every deliberate divergence from hex.pm (replacement refused, revert allow
 window, no advisories in hosted payloads, no `installs` on a hosted repository, `405` on remote
 writes, and the rebar3_hex 7.3.0 exclusion) goes on the recorded exception list before its flow
 is expected to replay.
+
+`Capabilities()` declares proxy support `supported`, reference-implementation availability
+`available` (the pinned private Hex reference server above), `Virtual: unsupported` and
+`Rename: unsupported` (`format-handler-interface.md` AC13). The case set still carries
+`conformance/hex/rename_test.go`, which the harness requires of every format
+(`conformance-harness.md` AC26); for this format it proves the refusal: the rename is answered
+`capability-unsupported` and the repository keeps serving, under its old name, payloads a real
+client verifies (AC24).
 
 ## Acceptance Criteria
 
@@ -802,12 +949,16 @@ is expected to replay.
       retrieves byte-identical and flips the release's `has_docs` to true, a second docs
       publish replaces it, and `publish docs --revert` removes it and flips `has_docs` back,
       none of the three touching a registry document.
-- [ ] AC8: A retirement, an unretirement, a revert and a docs deletion driven through the
-      registry-owned management endpoint produce the same served documents, exactly one
-      snapshot each, and the same authorization outcome as the same operation driven through
-      the client bindings; a principal holding `pull` alone is refused retirement and docs
-      deletion, one holding `push` without `delete` is refused revert, through both entry points
-      with no snapshot created; and every operation against a proxied repository answers `405`.
+- [ ] AC8: A retirement, an unretirement, a revert, a docs publish and a docs deletion driven
+      through the registry-owned management endpoint (`POST
+      /api/v1/repositories/{name}/operations`, kinds `annotate`, `delete-version`, `attach` and
+      `detach`, target `{name}/{version}`) produce the same served documents, exactly one
+      snapshot each, and the same authorization outcome as the same operation driven through the
+      client bindings; a principal holding `pull` alone is refused retirement and the docs
+      operations, one holding `push` without `delete` is refused revert, through both entry
+      points with no snapshot created; only the revert writes a `Retirement` record, readable at
+      `GET .../retirements`; and every operation against a proxied repository answers `405` with
+      problem type `repository-type` through both entry points and creates nothing.
 - [ ] AC9: `packages/{Name}` in any other case, `packages/../x`, and a tarball path whose name
       part is not a valid name each answer `404`; a hosted `repos/{org}/...` route answers as the
       unprefixed route when `{org}` is the repository name and `404` otherwise, and
@@ -828,17 +979,24 @@ is expected to replay.
       connection this registry did not terminate with TLS is refused per `auth.md` AC27.
 - [ ] AC11: A token holding only `pull` under the pattern `acme_*/**` resolves `acme_tool` and
       its in-pattern dependency through real `mix deps.get` (both generations) and `rebar3
-      get-deps` and is refused `other_tool`'s package resource and tarball, `names`, `versions`
-      and `public_key`; a token holding `push` under the same pattern publishes and retires
-      `acme_tool` through rebar3_hex 7.0.11 and Hex 2.0.6 and is refused `other_tool`, with no
-      snapshot created by a refusal, while Hex 2.5.1 under the same token fails at
-      `api/users/me`, all asserted from the transcript; a tarball whose `metadata.config` lies
-      beyond the bounded peek is refused before any byte reaches the CAS; and in proxied mode
-      the patterned-`pull` token fetches an in-pattern package and is refused another.
+      get-deps`, reads `public_key` so that `mix hex.repo add --fetch-public-key` succeeds under
+      it, and is refused `other_tool`'s package resource and tarball, `names` and `versions`; a
+      token holding `pull` and `push` under the same pattern publishes and retires `acme_tool`
+      through rebar3_hex 7.0.11, Hex 2.0.6 and Hex 2.5.1 and is refused `other_tool`, with no
+      snapshot created by a refusal, while a token holding `push` alone fails Hex 2.5.1's
+      publish at `api/users/me`, all asserted from the transcript; the descriptor sentinel check
+      finds no seeded sentinel name, version or checksum in the bodies of `public_key`,
+      `installs/hex-1.x.csv`, `api/users/me` and `api/auth`; a tarball whose `metadata.config`
+      lies beyond the bounded peek is refused before any byte reaches the CAS; and in proxied
+      mode the patterned-`pull` token fetches an in-pattern package and is refused another.
 - [ ] AC12: A package, tarball or docs request the shared policy layer refuses answers `403`
-      with a `text/plain` body naming the policy, on the hosted and the proxied path, and real
-      `mix deps.get` and `rebar3 get-deps` of the refused version exit non-zero naming the
-      status, with the body captured in the transcript.
+      with a `text/plain` body naming the policy, written through `WriteRefusal`, whose status
+      line on an HTTP/1.1 connection is `403 Refused by policy: {condition}`, on the hosted and
+      the proxied path; real `mix deps.get` and `rebar3 get-deps` of the refused version exit
+      non-zero, with the status line and body captured in the transcript; and the same case
+      records whether either client then fetches the version from another configured
+      repository, the finding that fills Hex's row of `supply-chain-policy.md`'s "When a refusal
+      binds, per format" table in the same change.
 - [ ] AC13: The proxied path serves a hex.pm stand-in's `packages/{name}` payload byte-identical
       to the upstream's, and both Hex generations under `HEX_MIRROR` and `mix hex.repo set hexpm
       --url`, and rebar3 under `rebar_packages_cdn` and a `hexpm` `repo_url`, verify it with
@@ -852,8 +1010,10 @@ is expected to replay.
       `If-None-Match` so an unchanged payload costs a `304` upstream; a version published
       upstream becomes visible to `mix deps.get` and `rebar3 get-deps` after the TTL and, absent
       an explicit refresh, not before; a client's own `If-None-Match` (Hex 2.0.6, rebar3 on
-      tarballs) inside the TTL is answered `304` without an upstream request; and a proxied docs
-      tarball replaced upstream is served anew after its TTL.
+      tarballs) inside the TTL is answered `304` without an upstream request; a proxied docs
+      tarball replaced upstream is served anew after its TTL; and every proxied registry resource
+      carries the cache-scoped `Last-Modified`, never the upstream's header, later on each
+      adopted revision than on the previous one whatever the upstream's date says.
 - [ ] AC15: A remote repository bound to an organization upstream stand-in (`.../repos/{org}`)
       with an upstream credential serves its payloads unmodified, the upstream receives that
       credential and never the client's, a client consuming the repository under the name
@@ -864,10 +1024,12 @@ is expected to replay.
       the next revalidation with no divergence recorded; a release vanishing from the payload,
       or the payload answering `404`, keeps serving with a divergence recorded; a changed
       `outer_checksum` purges that version's cached tarball, raises the operator alert, and the
-      next fetch verifies against the new digest; and a payload that no longer verifies against
-      the upstream's key is not committed, is served stale within the limit, and raises the
-      alert: Hex's side of the settled removal table in `proxy-cache.md` (its AC13), with a
-      coordinate condemned through the advisory feed refused with no upstream request.
+      next fetch verifies against the new digest; a payload that no longer verifies against
+      the key in the remote's trust set is not committed, is served stale within the limit, and
+      raises the alert; and a revalidation returning an older upstream `Last-Modified` than the
+      adopted revision's is not adopted and records a divergence: Hex's side of the settled
+      removal table in `proxy-cache.md` (its AC13, AC22), with a coordinate condemned through the
+      advisory feed refused with no upstream request.
 - [ ] AC17: A stand-in payload with a tampered signature, a tampered `repository` field, or a
       tarball whose bytes disagree with the advertised `outer_checksum`, is never committed to
       the CAS and attaches no cached reference, the client receives the same failure it would
@@ -884,29 +1046,45 @@ is expected to replay.
       same repository as its parent on every client.
 - [ ] AC20: Replay-match passes against a corpus recorded from repo.hex.pm and from the pinned
       private Hex reference server covering the recorded surface named in Design.
-- [ ] AC21: Configuring a remote repository whose upstream does not answer a PEM `public_key`
-      and a `names` payload that verifies against it is refused at configuration with a message
-      naming the requirement; configuring a virtual repository of format `hex` is refused with
-      a message naming the signed-repository rule; and a hosted `installs/hex-1.x.csv` answers
-      `404` while a proxied one passes the upstream's CSV through, following its `301` to the
-      `builds.hex.pm` stand-in, so that a `hexpm`-named client pointed at the proxied
-      repository prints no update-check warning.
-- [ ] AC22: Every hosted registry resource is produced and signed by the shared signing service
-      inside the triggering write, never by the handler, proven by an architecture test that the
-      handler package imports neither key material nor a signing primitive; two concurrent
-      publishes into one repository both land and the served `names` and `versions` enumerate
-      both, each regenerated document committing in the same snapshot as the file that
-      triggered it, proven by repointing to that snapshot's predecessor and reading the previous
-      documents with their previous signatures; a `versions` document above the inline size
-      threshold is stored as a CAS blob, protected across a GC sweep by the CAS-backed-metadata
-      mark root, and served to a real client afterwards; and a key rotation through the
-      management surface re-signs every stored document in one write, after which a client that
-      re-adds the repository with the new fingerprint resolves and one holding the old key gets
-      its signature failure.
+- [ ] AC21: Creating a remote repository of format `hex` whose upstream URL is a well-formed
+      `https://` root succeeds with no upstream request inside the creation, whatever the
+      upstream would answer; its first registry-resource request with no key in the remote's
+      trust set answers `502` naming the missing trust-set entry and contacts no upstream; after
+      the operator imports the upstream's public key through the trust routes, a payload that
+      verifies against it and names the expected repository is served and one that does not is
+      never committed; and a hosted `installs/hex-1.x.csv` answers `404` while a proxied one
+      passes the upstream's CSV through, following its `301` to the `builds.hex.pm` stand-in
+      declared on the upstream's allowlist with role `none`, which receives no upstream
+      credential, so that a `hexpm`-named client pointed at the proxied repository prints no
+      update-check warning.
+- [ ] AC22: Every hosted registry resource is produced by this format's generator through the
+      signing service's write-path runtime inside the triggering write and assembled from its
+      stored payload and a `Signature` record, never signed by the handler, proven by an
+      architecture test that neither the handler package nor `internal/format/hex/index` imports
+      key material or a signing library; two concurrent publishes into one repository both land
+      and the served `names` and `versions` enumerate both, each regenerated document committing
+      in the same snapshot as the file that triggered it, proven by repointing to that snapshot's
+      predecessor and reading the previous payloads, verified under the current key; a
+      `versions` document above the inline size threshold is stored as a CAS blob, protected
+      across a GC sweep by the CAS-backed-metadata mark root, and served to a real client
+      afterwards; every hosted resource is served through `index.ServeDocument` with the
+      pointer's forward-moving `Last-Modified` and an `ETag` over the assembled bytes, the
+      handler package setting neither header; and activating a new key through the
+      signing-key routes re-signs every served payload in one atomic batch of signature records
+      with the old key retired in the same transaction and no snapshot created, after which a
+      client that re-adds the repository with the new fingerprint resolves and one holding the
+      old key gets its signature failure.
 - [ ] AC23: A hosted `packages/{name}` carries no `SecurityAdvisory` entries in `advisories`
       and `versions` no `with_advisories` indexes, `mix hex.audit` against a hosted repository
       reports nothing; a proxied payload carrying upstream advisories is served verbatim and
       both Hex generations print the advisory on resolve and `mix hex.audit` reports it.
+- [ ] AC24: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
+      availability `available`, `Virtual: unsupported` and `Rename: unsupported`; creating a
+      `virtual` repository of format `hex` through the management API answers `422`
+      `capability-unsupported` naming the signed-repository rule and creates nothing; renaming a
+      hosted Hex repository answers `422` `capability-unsupported` and leaves the repository
+      serving under its old name payloads a real `mix deps.get` verifies; and the conformance
+      matrix renders Hex's virtual column as exempt citing this spec, never as passing.
 
 ## Test Plan
 
@@ -918,69 +1096,82 @@ is expected to replay.
 | AC4 | conformance + integration | `conformance/hex/publish_test.go` (duplicate with and without `--replace` per client; reverted coordinate republish through real clients); `internal/format/hex/immutability_test.go` (retirement with same and different bytes, after pruning under an injected clock; name and version refusals) |
 | AC5 | conformance + unit | `conformance/hex/api_test.go` (`mix hex.info` on both generations; `curl` with and without the term-format `Accept`, and with no `User-Agent`); `internal/format/hex/etf_test.go` (encoder and safe decoder round-trips, atom creation refused) |
 | AC6 | conformance + integration | `conformance/hex/retire_test.go` (retire through each client, resolve on every client with the warning text asserted, `HEX_IGNORE_RETIREMENTS`, unretire); `internal/format/hex/retire_test.go` (one snapshot per operation, tarball retained, `versions.retired` indexes) |
-| AC7 | conformance + integration | `conformance/hex/revert_docs_test.go` (revert through each client, pinned resolve fails; rebar3_hex docs publish, `mix hex.docs fetch` byte comparison, docs replace and revert); `internal/format/hex/revert_test.go` (one snapshot, retirement set, docs writes touching no registry document) |
-| AC8 | conformance + integration | `conformance/hex/manage_binding_test.go` (twin packages in one `script`: one operated through the management endpoint, one through the client binding; served documents compared); `internal/format/hex/manage_binding_test.go` (snapshot count per entry point, `pull`-only and `push`-only refusals, `405` on remote) |
+| AC7 | conformance + integration | `conformance/hex/revert_docs_test.go` (revert through each client, pinned resolve fails; rebar3_hex docs publish, `mix hex.docs fetch` byte comparison, docs replace and revert); `internal/format/hex/revert_test.go` (one snapshot, the `Retirement` record written in its transaction, docs writes touching no registry document) |
+| AC8 | conformance + integration | `conformance/hex/manage_binding_test.go` (twin packages in one `script`: one operated through the management endpoint, one through the client binding, for each of `annotate`, `delete-version`, `attach` and `detach`; served documents compared; this is the `script`-driven case `management-api.md` AC24 requires per declared kind, its presence enforced by `conformance-harness.md` AC26); `internal/format/hex/manage_binding_test.go` (snapshot count per entry point, `pull`-only and `push`-only refusals, `Retirement` rows only for the revert, `405` `repository-type` on a remote; the cross-handler binding table test is `management-api.md` AC8's) |
 | AC9 | conformance + unit | `conformance/hex/names_test.go` (`curl` for the case, traversal and invalid-name paths; `--organization` publish and retire through real `mix`); `internal/format/hex/route_test.go` (`repos/{org}` equality rule) |
 | AC10 | conformance + integration | `conformance/hex/auth_test.go` (private repository on all three clients; challenge equality across existing and missing repositories; keyed retry; `pull`-less token; rejected token; `HEX_API_KEY` right and wrong; the `--no-oauth-exchange` case from the transcript); `internal/format/hex/auth_test.go` (plaintext refusal under `auth.md` AC27) |
-| AC11 | conformance + unit | `conformance/hex/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; reads on all three clients, writes on rebar3_hex 7.0.11 and Hex 2.0.6, the Hex 2.5.1 `users/me` failure asserted; a deep-`metadata.config` fixture through `curl`); `internal/format/hex/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
-| AC12 | conformance | `conformance/hex/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; `mix` and `rebar3` transcripts) |
+| AC11 | conformance + unit | `conformance/hex/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; reads and `--fetch-public-key` on all three clients, writes on all three generations under patterned `pull` and `push`, the Hex 2.5.1 `users/me` failure under `push` alone asserted; a deep-`metadata.config` fixture through `curl`; shared with `auth.md` AC32); `internal/format/hex/scope_object_test.go` (the object table, per route, with the descriptor sentinel check on the four descriptor routes through the shared helper in `internal/format/scope_test.go`, `format-handler-interface.md` AC12) |
+| AC12 | conformance + integration | `conformance/hex/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; `mix` and `rebar3` transcripts with the raw status line; a second configured repository holding the version, observed at the network layer; the case fills Hex's binding-table row, `supply-chain-policy.md` AC20); `internal/format/refusal_writer_test.go` (the writer's status line, `format-handler-interface.md` AC14 and `supply-chain-policy.md` AC18) |
 | AC13 | conformance + integration | `conformance/hex/proxied_test.go` (stand-in serving recorded repo.hex.pm payloads and tarballs; all three clients under each configuration form; network-level assertion from fresh caches; byte comparison; the re-signed variant refused); `internal/format/hex/proxied_verify_test.go` (outer-checksum verification before commit) |
-| AC14 | conformance | `conformance/hex/proxied_ttl_test.go` (mutating stand-in serving `ETag`; upstream `304` and client `304` at the network layer; docs replacement) |
+| AC14 | conformance | `conformance/hex/proxied_ttl_test.go` (mutating stand-in serving `ETag` and a backdated `Last-Modified`; upstream `304` and client `304` at the network layer; docs replacement; served `Last-Modified` strictly increasing across adopted revisions, the cache-scoped half being `proxy-cache.md` AC22's `internal/proxy/freshness_test.go`) |
 | AC15 | conformance | `conformance/hex/proxied_org_test.go` (organization stand-in with an upstream credential; consumption under the organization name and under a wrong one; mirror variables on both clients with the credential absence asserted) |
-| AC16 | integration | `internal/format/hex/removal_test.go` (stand-in presenting each event class, including a key change; the shared-layer half is `proxy-cache.md` AC13's) |
-| AC17 | integration | `internal/format/hex/proxied_integrity_test.go` (tampered signature, tampered name, mismatched tarball; CAS and reference assertions; operator record) |
+| AC16 | integration | `internal/format/hex/removal_test.go` (stand-in presenting each event class, including a key change and an older revision after a newer one; the shared-layer half is `proxy-cache.md` AC13's and AC22's) |
+| AC17 | integration | `internal/format/hex/proxied_integrity_test.go` (tampered signature and tampered name through the completion-only verifier hook, mismatched tarball through stream-and-verify; CAS and reference assertions; no negative entry; operator record under `cache_fetch_failures_total`, `proxy-cache.md` AC20) |
 | AC18 | conformance | `conformance/hex/proxied_test.go` (missing name and throttling stand-in responses, network-level counts) |
 | AC19 | conformance | `conformance/hex/cross_repo_test.go` (a hosted package depending on a proxied hex.pm package; Hex and rebar3 transcripts; the same-repository default) |
 | AC20 | conformance | `conformance/hex/replay_test.go` |
-| AC21 | integration + conformance | `internal/format/hex/upstream_config_test.go` (non-PEM key, unverifiable `names`, virtual refusal); `conformance/hex/installs_test.go` (hosted `404`, proxied pass-through with the redirect stand-in, a `hexpm`-named client's output asserted free of the warning) |
-| AC22 | architecture test + integration | `internal/format/hex/arch_test.go` (no key material or signing primitive in the handler); `internal/format/hex/concurrent_publish_test.go` (two writers, documents and predecessor repoint); `internal/storage/metadata_root_test.go` (threshold crossing, sweep, serve); `internal/format/hex/rotation_test.go` (re-sign in one write, old and new key verification through a real client in the conformance half) |
+| AC21 | integration + conformance | `internal/format/hex/upstream_config_test.go` (creation of a well-formed remote with no upstream request, `upstream-adapters.md` AC23; the first-fetch `502` with an empty trust set; a key imported through the trust routes and a payload verifying, one not; `artifact-verification.md` AC3 for the revision); `conformance/hex/installs_test.go` (hosted `404`; proxied pass-through with the `builds.hex.pm` stand-in declared as a `hosts` sub-entry of the `upstreams` entry, `conformance-harness.md` AC23, receiving no credential; a `hexpm`-named client's output asserted free of the warning) |
+| AC22 | architecture test + integration + conformance | `internal/format/hex/arch_test.go` (no key material or signing library in the handler or generator package, `signing-service.md` AC2); `internal/format/freshness_boundary_test.go` (no `Last-Modified` or `ETag` set by the handler, `signing-service.md` AC11); `internal/format/hex/concurrent_publish_test.go` (two writers, documents and predecessor repoint verified under the current key, `signing-service.md` AC9); `internal/storage/metadata_root_test.go` (threshold crossing, sweep, serve); `internal/signing/rotation_profiles_test.go` (the `atomic-resign` row, `signing-service.md` AC7 and AC8, no snapshot); `conformance/hex/rotation_test.go` (activate through the signing-key routes in the `script`, a real client re-adding with the new fingerprint and one holding the old key) |
 | AC23 | conformance | `conformance/hex/advisories_test.go` (hosted payload fields asserted with `curl` and a decoder; `mix hex.audit` on hosted and proxied repositories, the stand-in carrying a recorded advisory) |
+| AC24 | unit + integration + conformance | `internal/format/hex/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `internal/manage/repository_test.go` (the `virtual` create refusal, `repository-lifecycle.md` AC4); `conformance/hex/rename_test.go` (`repository-lifecycle.md` AC12's shared case, here the `capability-unsupported` refusal with the repository still serving; presence enforced by `conformance-harness.md` AC26); `conformance/core/matrix_test.go` (the exempt virtual column, `conformance-harness.md` AC20) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their visibility and type,
 `credentials`, an `upstreams` stand-in (a fixture server serving recorded repo.hex.pm payloads,
-tarballs, `public_key` and the `installs` redirect, and an organization variant), `state` for
-pre-published, pre-retired and pre-reverted versions, and `policies` with `advisories` for AC12
-and AC23. One obligation on the seed path is recorded rather than assumed: a `state` entry for a
-hosted Hex version must be signed to be servable, so the seed path invokes the same signing
-service the write path does, which is a requirement on `conformance-harness.md`'s provisioner
-listed in the sibling consequences. The issued credential reaches the clients as `--auth-key`
-and `HEX_API_KEY` (Hex) and as `repo_key` and `HEX_API_KEY` (rebar3). The runner-enforced
-obligations, both modes and the unauthenticated, unauthorized and pattern-refusal cases in each,
-apply from the sibling specs and are not restated per criterion here.
+tarballs, `public_key` and the `installs` redirect, with `builds.hex.pm` as a `hosts`
+sub-entry, and an organization variant carrying a `header` credential), `trust` for the
+remote's upstream key (`artifact-verification.md` AC25 lands its provisioner), `state` for
+pre-published and pre-retired versions and the `Retirement` records a revert would have left,
+and `policies` with `advisories` for AC12 and AC23. Seeded hosted state comes out generated and
+signed with no seed-side code: a `repositories` entry's `signing` sub-entry supplies the key (a
+fixture private key file or `generate`), and the `state` write passes through the same
+write-path hook a publish does (`signing-service.md` AC21; `conformance-harness.md` AC24), so
+the case reads the repository's public key and fingerprint from the server before the client
+runs. The issued credential reaches the clients as `--auth-key` and `HEX_API_KEY` (Hex) and as
+`repo_key` and `HEX_API_KEY` (rebar3). The runner-enforced obligations, both modes and the
+unauthenticated, unauthorized and pattern-refusal cases in each, a `script`-driven case per
+declared management kind and `rename_test.go`, apply from the sibling specs and the harness's
+case-set validator (`conformance-harness.md` AC26) and are not restated per criterion here.
 
 ## Implementation Phases
 
 ### Phase 1: Hosted reads and the signed documents
 - Waits on `docs/internal/plans/foundation/signing-service.md` reaching `planned` (Blocking
   preconditions)
-- The format-first mount with the `repos/{org}` equality rule, `packages/{name}`, `names` and
-  `versions` through the signing service with `ETag` and `304`, tarballs and docs through the
-  CAS, `public_key` with the fingerprint in the management surface, the name rule, the
-  challenge and scope mapping, the per-route addressed objects and the `403` policy rendering
+- The format-first mount with the `repos/{org}` equality rule, the `Indexer` and its generator
+  package `internal/format/hex/index`, `packages/{name}`, `names` and `versions` assembled from
+  stored payloads and `Signature` records and served through `index.ServeDocument`, tarballs
+  and docs through the CAS, `public_key` with the fingerprint, the name rule, the challenge and
+  scope mapping, the per-route addressed objects with the descriptor sentinel check, the `403`
+  policy rendering through `WriteRefusal`, and `Capabilities()` with the virtual and rename
+  refusals (AC24)
 
 ### Phase 2: The API, publish and management
 - Both publish routes with the bounded peek, tarball validation and both checksums, duplicate
   and retirement refusals, term-format content negotiation and the safe decoder, the user and
-  package documents, `api/auth`, docs publish and deletion, the write-boundary declaration
-  exercised end to end under concurrency
-- Retire, unretire, revert and docs deletion as bindings onto the registry-owned operations,
-  the retirement set, key rotation as a management operation: waits on
+  package documents, `api/auth`, the write-boundary declaration exercised end to end under
+  concurrency
+- The `Operator` declaration (`annotate`, `delete-version`, `attach`, `detach`) with the client
+  routes as bindings, `Retirement` records through `Submit`, key rotation through the
+  signing-key routes under the `atomic-resign` profile: waits on
   `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
   preconditions; AC6, AC7, AC8, AC22's rotation half)
 
 ### Phase 3: Proxied path
-- Upstream validation with the key and the `names` probe, verification of every payload
-  against the upstream's key before commit, classification per resource, stream-and-verify
-  tarballs against `outer_checksum`, `ETag` revalidation, negative caching, organization
-  upstreams, the `installs` redirect pass-through, the removal table with the checksum and key
-  rows, `405` on remote writes
+- The `https` upstream with `builds.hex.pm` on its allowlist, the upstream key in the remote's
+  trust set checked at the first fetch, verification of every payload in the completion-only
+  verifier hook through the `raw` scheme before commit, classification per resource,
+  stream-and-verify tarballs against `outer_checksum`, `ETag` revalidation, the cache-scoped
+  `Last-Modified` with the regression row, negative caching, organization upstreams with a
+  `header` credential, the `installs` redirect pass-through, the removal table with the checksum
+  and key rows, `405` `repository-type` on remote writes
 
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate) against
   repo.hex.pm and the pinned private reference server, replay-match, the second pinned Hex
   generation and rebar3 with rebar3_hex 7.0.11, the exception-list entries named in Design, the
-  matrix rows for the deliberately unimplemented policies, registry v1 and virtual repositories
+  matrix rows for the deliberately unimplemented policies and registry v1, and the virtual column
+  rendered exempt from `Virtual: unsupported`
 
 ## Tasks
 
@@ -990,9 +1181,86 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 None open. The eight questions this draft raised were each written in the template's decision
 shape and then adopted at their own recommendation under the owner's standing delegation of
-2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided,
-folded through Scope, Design, the criteria and the Test Plan in the same pass, and reversible
-by the owner at any time. `grep -rn "standing delegation"` is the owner's review queue.
+2026-09-26, and the cross-spec reconciliation of 2026-09-28 raised and adopted two more (Q9 and
+Q10, the second revising Q7), so the loop can continue; each is recorded below as adopted rather
+than decided, folded through Scope, Design, the criteria and the Test Plan in the same pass, and
+reversible by the owner at any time. `grep -rn "standing delegation"` is the owner's review
+queue.
+
+### Resolved: identity routes under the descriptor kind (was Q10, raised and adopted 2026-09-28; revises was-Q7)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option A: `api/users/me` and
+`api/auth` are reported as `pull` descriptors, so a token holding `pull` and `push` under one
+pattern publishes through Hex 2.5.1; `public_key` and `installs/hex-1.x.csv` are descriptors too
+(Design, "Addressed objects and pattern scopes"; AC11 and its Test Plan row).
+
+The question: the resolved identity-route decision (was Q7) reported the two identity routes as
+none under `push`, because `auth.md` then had no kind for a document that names no object, and
+accepted that Hex 2.5.1, which fetches `api/users/me` before every write, cannot publish under a
+patterned credential, noting that "a future `auth.md` revision could add the kind". That
+revision landed: `auth.md` adopted a fourth object kind, `descriptor`, for "a repository-wide
+document whose body carries no name, version or digest of any object the repository holds",
+authorized for `pull` only by a patterned scope and held by the sentinel test (its resolved
+name-free-document decision, was Q23 there; AC32). Under the new kind the identity routes can be
+descriptors, but only under `pull`, since a patterned scope never authorizes a descriptor for
+`push`.
+
+**Recommendation (adopted):** A, because it applies the kind `auth.md` defined rather than
+bending a rule, the sentinel test proves the routes name nothing, and the one client generation
+most people run gains patterned publishing. The action change is the honest one: both routes are
+reads that change nothing.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Identity routes as `pull` descriptors** | Patterned `pull` plus `push` publishes and retires on every client generation; a patterned `pull` reads `public_key` and so `--fetch-public-key` works under it | A token holding `push` without `pull` fails Hex 2.5.1's publish at `api/users/me`, where under Q7 an unpatterned `push`-only token passed it |
+| **B. Keep Q7: none under `push`** | An unpatterned `push`-only token publishes on 2.5.1 | Patterned publishing stays impossible on 2.5.1 although the kind that fixes it now exists |
+| **C. Descriptor under `push`** | No action change | Nothing: a patterned scope never authorizes a descriptor for `push`, so this is B with a different label |
+
+**Why this is yours:** it revises a delegation-adopted security answer on the strength of a
+sibling revision, and moves two routes from one action to another.
+
+Accepted cost: the `push`-only case on Hex 2.5.1, which is no new restriction in practice, since
+a 2.5.1 publish without `--yes` already reads `api/packages/{name}` under `pull`; the operator
+documentation's CI recipe is `pull` and `push` under one pattern. B lost because it keeps a
+limitation its own record said a later `auth.md` revision would lift; C lost because it is B.
+
+### Resolved: where a Hex remote's upstream key comes from, and when it is checked (was Q9, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation.** Option A: the upstream's public key
+is an operator-imported entry of the remote repository's trust set, with hex.pm's published key
+the documented default for a repo.hex.pm remote; the remote is created with no upstream request,
+and the key and the payload checks run at the first fetch, a remote with no key answering `502`
+naming the missing entry (Design, "The proxied path"; AC21; Phase 3).
+
+The question: this spec's AC21 validated a remote at configuration by fetching `public_key` and
+`names` and verifying one against the other, and kept "the upstream's public key PEM" beside the
+upstream URL. Both premises moved. `upstream-adapters.md` validates an upstream by adapter rules
+alone and accepts "an unreachable but well-formed upstream" (its AC23), which
+`management-api.md` calls on create and `PATCH`, so no format probe runs inside the creation
+transaction (the same finding `cargo.md` answered in its resolved sparse-only decision, was Q7
+there); and `artifact-verification.md` places every per-upstream trust anchor, "Hex's upstream
+public key" by name, in the remote's trust set, never on `Upstream`. Its trust-set sources
+include upstream key pinning, which records a key the upstream itself publishes on first sight.
+
+**Recommendation (adopted):** A, because a Hex client's trust in hex.pm's key is out of band (the
+key ships with the client), so a cache that pinned whatever key the upstream first served would
+trust less carefully than the clients it serves, and because one creation rule for every format
+keeps the management API free of per-format probes.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Operator-imported trust-set key; checks at first fetch** | The same out-of-band trust the clients use; one creation rule across formats; the key visible, revisioned and auditable in the trust set | A remote is unusable until its key is imported, discovered at the first request rather than at creation; one more step in the repo.hex.pm recipe |
+| **B. Pin the key from the upstream's own `public_key` on first fetch** | Zero configuration | Trust on first use from the very host the key is meant to check, so a hijacked first fetch installs the attacker's key for good |
+| **C. A handler-side configuration hook that fetches and verifies at creation, as AC21 first said** | The failure at creation | A new optional interface for the re-open and a network request inside the creation transaction, which `management-api.md` declined for every format |
+
+**Why this is yours:** it sets how a proxied signed repository earns its trust anchor, and trades
+an earlier failure for one uniform creation rule.
+
+Accepted cost: a remote configured without a key fails at its first request, and the operator
+documentation must show the import step with hex.pm's fingerprint. The RSA-SHA512 `raw` entry and
+an RSA `raw-keys` type this needs are not yet in `artifact-verification.md`'s catalogue, raised
+against that spec by this pass. B lost on trust-on-first-use from the checked host; C lost for
+the reasons `cargo.md`'s was-Q7 record gives.
 
 ### Resolved: the repository name in the signature, and what a proxied repository serves (was Q1)
 
@@ -1024,7 +1292,12 @@ proxied repository rather than adding it under a new name.
 it proxies, a trust-posture call, and it removes virtual repositories from one format.
 
 Accepted cost: the recipe and the exception-list entry for virtual repositories, and a hosted
-repository that cannot be renamed without every consumer re-adding it.
+repository that cannot be renamed without every consumer re-adding it. Both costs are now
+mechanical refusals rather than silent breaks: `Capabilities()` declares `Virtual: unsupported`
+and `Rename: unsupported` (`format-handler-interface.md` AC13), a `virtual` of this format or a
+rename of a repository of it is refused `capability-unsupported` (`repository-lifecycle.md`,
+creation step 2 and its rename rule; its AC4), and the matrix's virtual column renders exempt
+(AC24).
 
 ### Resolved: replacement and revert against the immutability rule (was Q2)
 
@@ -1079,7 +1352,11 @@ removes, is `delete`.
 **Why this is yours:** it places an ecosystem's operation on a vocabulary you settled, and it is
 an input to the reconciliation `management-api.md` owes.
 
-Accepted cost: one more row for that reconciliation, recorded in the sibling consequences.
+Accepted cost: one more row for that reconciliation. `management-api.md` has since made it: its
+reconciliation table places Hex retire and unretire on the `annotate` kind under `push`, revert
+on `delete-version` under `delete` and docs deletion on `detach` under `push`, and its AC9
+asserts "a Hex retirement [is] accepted under `push`". Docs publish joins as `attach` under
+`push` (Design, "Retire, unretire and revert are bindings").
 
 ### Resolved: where the signed documents are produced (was Q4)
 
@@ -1106,7 +1383,13 @@ as Maven's and Helm's documents are, and the service is built at the same step f
 **Why this is yours:** it sequences this format behind a shared service and decides that a
 signing key never serves a read.
 
-Accepted cost: the precondition, and the requirement list on the signing service.
+Accepted cost: the precondition, and the requirement list on the signing service. That service
+now exists as `signing-service.md` and generalises this decision: the payloads are stored bodies
+in the snapshot and the signatures `Signature` records outside it, assembled on read by framing
+alone, so a read still never signs, and rotation re-signs without a snapshot (its resolved
+signature-placement and rotation decisions, was Q2 and Q11 there; its option C, "sign on read",
+cites this decision as already rejected). Design, "What the signing service provides", maps the
+five requirements onto it.
 
 ### Resolved: hex.pm as a preconfigured upstream (was Q5)
 
@@ -1156,9 +1439,19 @@ than a second request.
 **Why this is yours:** it prices a false all-clear against a missing warning, a security-posture
 claim the product will be held to.
 
-Accepted cost: hosted audit is documentation until the `Deps` advisory read lands.
+Accepted cost: hosted audit is documentation until this spec is revised to fill the field. The
+`Deps` advisory read now exists in the specs: `supply-chain-policy.md`'s advisory reader,
+declared in `internal/format` and returning advisory records and standing condemnations for a
+coordinate without reading bytes (its AC19; `format-handler-interface.md` AC14), which removes
+option A's first cost. Its second cost stands, since a stored signed payload carrying advisories
+would change on every feed sync and need a regeneration write each time, so B remains adopted;
+a revision adopting A would render the field at generation time from the reader.
 
 ### Resolved: identity routes under the repository mount report no object (was Q7)
+
+**Revised 2026-09-28 by the resolved identity-route decision above (was Q10).** The identity
+routes are now `pull` descriptors, the kind this record anticipated; the record below is kept as
+the reasoning Q10 revised.
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: `api/users/me` and
 `api/auth` report `none`, so a patterned credential is refused them, and the consequence that
@@ -1217,3 +1510,4 @@ Accepted cost: the bound is a configured constant, recorded with the refusal mes
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 9669f4b | authoring pass: grounded first draft, not a review | Grounded the wire contract three ways: captured traffic from Hex 2.5.1 (Elixir 1.18.4, OTP 28), Hex 2.0.6 (Elixir 1.14.5, OTP 26) and rebar3 3.27.0 (OTP 27, hex_core 0.12.2) with rebar3_hex 7.0.11, all pinned by image digest, run in containers against a logging stub serving registry resources built and signed with the client's own vendored hex_core under a run-local RSA key in three name variants, plus real repo.hex.pm payloads and tarballs for the proxied cases (cold and warm resolves with the `304` behaviour per client generation, offline, `deps.update`, wrong key and wrong name with each client's message, the two escape hatches, `--fetch-public-key` with the fingerprint form, auth-key reads with and without a key, the mirror forms of both clients with and without credentials, the OAuth-exchange hang and `--no-oauth-exchange`, hex.pm-shaped organizations through `mix hex.organization auth` and rebar3's `hexpm:org`, the real hex.pm payload verifying unmodified on all three clients and the re-signed one refused, publish on both routes with `--replace`, `--organization`, `--dry-run`, a `422` refusal and a wrong key, retire and unretire with their term-format bodies, revert, rebar3_hex docs publish and revert, `mix hex.docs fetch`, `mix hex.package fetch --unpack`, `mix hex.info`, `mix hex.audit`, a corrupt tarball on both clients, a missing package, a 3 MB tarball, a retired newest version and an exact pin on it, `HEX_IGNORE_RETIREMENTS`, a cross-repository dependency on both clients, and rebar3_hex 7.3.0 failing before any request); the hexpm/specifications documents, the hex_core protobuf schemas and source, the Hex, rebar3 and rebar3_hex sources (which explain the Hex 2.5.1 conditional-request regression and the `--unretire` gap), and hex.pm's name validation; and the live repo.hex.pm and hex.pm API (headers, `304`, `404` on case and absence, `public_key`, the `installs` redirect, the JSON shapes, rate-limit headers, the unauthenticated `403` and the `400` without a `User-Agent`). Design built from that: the signed protobuf resources and what the client verifies; the repository name inside the signature with its two consequences (hosted name pinned, proxied served unmodified under `hexpm`); the shared model mapping with both checksums; the three write-triggered signed documents produced by the shared signing service with a five-item requirement list; the publish path with both routes, the bounded peek and immutability; retirement as a deprecation-class binding under `push` and revert under `delete`; docs as a replaceable file; term-format content negotiation; the bare-token auth form already in `auth.md`'s verifier; the addressed-object table with the Hex 2.5.1 `users/me` consequence; the `403` rendering; the proxied classification with signature verification before commit, stream-and-verify against `outer_checksum`, organization upstreams, the `installs` redirect, no rewriting and no re-signing, the cross-repository directive read two ways by the two clients, and Hex's rows of the removal table. Eight questions written in decision shape and adopted under the standing delegation: the name-in-signature rule with no re-signing and no virtual repositories (AC2, AC13, AC15, AC21), replacement refused and revert retiring (AC4, AC7), retirement under `push` (AC8), the signing service producing stored documents (AC22), repo.hex.pm not preconfigured, no hosted advisories (AC23), identity routes as `none` (AC11), and the bounded-peek publish object (AC11). Twenty-three criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here: `auth.md` client-table rows for `mix` and `rebar3`; the `management-api.md` operations and the retirement row for its action reconciliation; the `signing-service.md` requirement list including the verification entry; the `upstream-adapters.md` per-upstream public key and the `builds.hex.pm` redirect; the `conformance-harness.md` seed path signing hosted `state`; Hex's rows in `proxy-cache.md`'s removal table; the reason-phrase finding for `supply-chain-policy.md` and a second consumer for its `Deps` advisory read; and a Hex row in the management-surfaces analysis. Stays draft; awaits an independent review. |
+| 2026-09-28 | b43c566 | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec and of this file (Open item 12's requests, now met or routed; signing-service 9, 10 and 11; upstream-adapters 12; artifact-verification 16; management-api 11 and 12; repository-lifecycle 16; conformance-harness reconciliation 4; theme 9). Applied: the signed documents as the `Indexer` generator's output under `signing-service.md`'s write-path runtime, bodies stored and `Signature` records assembled into `Signed` on read, served through `ServeDocument` (Design; AC22 rewritten, rotation the `atomic-resign` batch with no snapshot); the five signing requirements checked one by one against that spec, the verification entry routed to `artifact-verification.md`'s `raw` scheme; the retirement set core-held (`Retirement`, `data-model.md` AC35); the management table carrying kinds (`annotate`, `delete-version`, `attach`, `detach`) through `Operator`, `405` `repository-type` (AC8); `public_key` and `installs` as descriptors with the sentinel check (AC11); `WriteRefusal`, the reason phrase and the `pending` binding row filled by the policy case (AC12); the proxied payload verified in the completion-only hook, the cache-scoped `Last-Modified` and a regression row (AC14, AC16, AC17), `builds.hex.pm` on the allowlist, the organization key a `header` credential; seeding through the `signing` sub-entry and the write-path hook; new AC24 (`Capabilities()`, virtual and rename refused `capability-unsupported`, the rename case proving the refusal). Mismatches found, not queued: AC21's configuration-time fetch contradicts `upstream-adapters.md` AC23 and the upstream key belongs in the remote's trust set, so Q9 raised and adopted (operator-imported key, checks at first fetch; AC21 rewritten); the descriptor kind now exists, so Q10 raised and adopted, revising Q7 (identity routes as `pull` descriptors; AC11 inverted for Hex 2.5.1). Gaps reported rather than filled: no `mix` or `rebar3` row in `auth.md`'s client table, no RSA-SHA512 `raw` entry in `artifact-verification.md`, no Hex docs-publish `attach` row in `management-api.md`'s reconciliation table. `fable_recheck` added. Stays draft. |
