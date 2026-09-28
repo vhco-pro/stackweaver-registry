@@ -1,12 +1,13 @@
 ---
 status: draft
-status_description: "Sweep 2026-09-28 at 6e6d503 (not a review): the cache-scoped freshness record cited as data-model.md's (AC44), freshness_test.go shared. Reconciled 2026-09-28 at f6da6ad with the foundation authoring wave (not a review): Q15 (the completion-only fetch mode with a handler-supplied verifier hook, the client streaming with completion withheld until the verifier passes, verdicts after commit), Q16 (a per-fetch FirstByteWithin exception to the waiter rule for julia's captured deadline) and Q17 (api.nuget.org and repo.maven.apache.org preconfigured by the was-Q14 rule) adopted under the owner's standing delegation. Design gained the adapter seam over upstream-adapters.md, the cache-scoped half of forward-moving freshness (never adopt an older revision, db and signature as one revision), the removal event-class table with every reconciled format's rows, the read_only and deletion halves of repository-lifecycle.md, the proxy.offline key, the management-api refresh route and observability.md's metric names. AC20 to AC24 added; 24 criteria, zero open questions; stays draft pending a gate review. Earlier: Q14 adopted 2026-09-26; Q10, Q12 and Q13 adopted, Q11 answered by the owner."
+status_description: "Closing reconciliation sweep 2026-09-28 at 181a63b on Opus (not a review), applying every format batch 4 to 8 and signing-service closing-sweep item placed here: AC22 and 'Freshness of what a remote serves' reworded into the two conditional rules signing-service adopted (exact by default, not-earlier declared per format, brew's API remote), rendered through its serving door with cached files through ServeFile; the adoption commit is one transaction with a hook the index runtime's Adopt registers on, fed by the handler's adoption check (ordering, event classes, parsed records) now in the fetch-and-cache request (AC25); Q18 adopted: a remote reached only through a virtual is revalidated by the proxy.revalidate job, coalesced per remote, enqueued by virtual reads past the TTL and by virtual creation or member addition, replaying the handler's own route below the authorizer at one asserted call site (AC26; AC18 qualified); the event-class table gains the conda, Vagrant, Hackage, CPAN, Composer, opam, Swift, pub, Hex, Terraform and LuaRocks rows, both revision-bound variants and the ordinary-change divergence (AC13 extended); Alpine and six other formats named as completion-only consumers. 26 criteria, zero open questions; stays draft pending a gate review, and carries fable_recheck. Earlier: sweep 2026-09-28 at 6e6d503 (not a review): the cache-scoped freshness record cited as data-model.md's (AC44), freshness_test.go shared. Reconciled 2026-09-28 at f6da6ad with the foundation authoring wave (not a review): Q15 (the completion-only fetch mode with a handler-supplied verifier hook, the client streaming with completion withheld until the verifier passes, verdicts after commit), Q16 (a per-fetch FirstByteWithin exception to the waiter rule for julia's captured deadline) and Q17 (api.nuget.org and repo.maven.apache.org preconfigured by the was-Q14 rule) adopted under the owner's standing delegation. Design gained the adapter seam over upstream-adapters.md, the cache-scoped half of forward-moving freshness (never adopt an older revision, db and signature as one revision), the removal event-class table with every reconciled format's rows, the read_only and deletion halves of repository-lifecycle.md, the proxy.offline key, the management-api refresh route and observability.md's metric names. AC20 to AC24 added; 24 criteria, zero open questions; stays draft pending a gate review. Earlier: Q14 adopted 2026-09-26; Q10, Q12 and Q13 adopted, Q11 answered by the owner."
 description: "Spec for the upstream proxy and cache layer - the project's actual differentiator, covering cache policy, negative caching, offline mode and upstream credentials."
 author: michielvha
 goal: "Deliver the one capability no free multi-format registry has, so the project is not a slower Gitea with fewer formats."
 priority: "high"
 issue: 5
 created: 2026-09-21
+fable_recheck: "closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q18 (a remote reached only through a virtual revalidated by a proxy.revalidate job replaying the handler's own route below the authorizer) under the standing delegation, and reworded AC22 to signing-service's adopted conditional rules; that judgement needs a Fable recheck"
 covers:
   - "internal/proxy/**"
 ---
@@ -53,7 +54,8 @@ build reliability, egress cost and supply-chain control.
 - Fetch verification in two modes selected by the handler per fetch: stream-and-verify against a
   digest declared before the fetch, and the **completion-only mode** for content whose binding
   check exists only over the complete body (a Go module zip's dirhash, a Conan manifest, a
-  digest-less Maven, NuGet, CRAN or Packagist file, a LuaRocks rock), where a handler-supplied
+  digest-less Maven, NuGet, CRAN or Packagist file, a LuaRocks rock, an Alpine package whose `C:`
+  is a SHA-1 over the control stream rather than a whole-file digest), where a handler-supplied
   verifier runs in a post-receipt hook before anything commits (the resolved completion-only
   decision below, was Q15). Signature verdicts are computed in the same hook after the commit
   and never gate it (`artifact-verification.md`, "When verification runs").
@@ -70,7 +72,19 @@ build reliability, egress cost and supply-chain control.
   `data-model.md` states for pointers ("Freshness scoped to the pointer"): a remote's served
   `Last-Modified` is the cache's own forward-moving record, never the upstream's, a remote never
   adopts an older upstream revision, and a database and its detached signature are adopted as
-  one revision (below, "Freshness of what a remote serves").
+  one revision (below, "Freshness of what a remote serves"). The conditional answer rendered from
+  that record follows the rule each document declares, `exact` by default and `not-earlier`
+  where the format declares it (`signing-service.md`'s resolved later-condition decision, was its
+  Q12).
+- The adoption commit: adopting a new upstream revision is one transaction, and it exposes a hook
+  on which `signing-service.md`'s index runtime registers, so a remote's regenerated documents and
+  the re-merge of every virtual listing it happen inside the adoption (its resolved remote-member
+  decision, was its Q16).
+- Revalidation outside the request for a remote reached only through a `virtual`: a job kind,
+  `proxy.revalidate`, coalesced per remote, enqueued when a virtual's read finds a merged input
+  from the remote past its TTL and when a virtual's creation or member-list change adds a remote
+  never adopted, which replays the handler's own proxied route rather than a second path (the
+  resolved revalidation-replay decision below, was Q18).
 - The `read_only` state of a `remote` and the deletion of one, as `repository-lifecycle.md`
   defines them (its resolved read-only-remote decision, was its Q7, and its deletion table):
   this layer's half is no fetch, no revalidation and no eviction while read-only, and deletion
@@ -158,7 +172,13 @@ digest that can be verified while streaming. A Go module zip is bound by its dir
 extracted tree; a Conan revision by a manifest that names every file; a NuGet `.nupkg`, a Maven
 file without a sidecar, a CRAN binary tree and a Packagist dist with an empty `shasum` carry no
 digest at all on the read surface; a LuaRocks rock is bound by the identity of the rockspec inside
-it. The resolved integrity-and-streaming decision assumed a stream digest, so it needs one
+it. The format reconciliations since then added consumers of the same mode, each named in its own
+spec: `alpine.md` (the index's `C:` is a SHA-1 over a package's control stream, not a digest of
+the whole file, so the handler supplies the check as a verifier with `S:` as the size bound),
+`swift.md` (manifests), `vagrant.md` (boxes with no upstream checksum), `chef.md` (tarballs
+checked for size and `metadata.json` identity), `julia.md` (the tree hash), `hex.md` (signed
+registry payloads through the `raw` scheme's integrity call) and `homebrew.md` (JWS API
+documents). `openvsx.md` and `opam.md` use the declared-digest form of the same request. The resolved integrity-and-streaming decision assumed a stream digest, so it needs one
 generalisation, adopted as the resolved completion-only decision (was Q15) rather than taken
 silently: **the fetch-and-cache request carries either a declared digest or a handler-supplied
 verifier, never neither, and the commit waits for whichever one it carries.**
@@ -341,10 +361,26 @@ pointer"):
   document and each paired document set of a remote carries a cache-scoped freshness record:
   `adopted_at`, set when this layer adopts a new upstream revision, to the later of the adoption
   time and one second after the record's previous value, so it never moves backwards whatever the
-  clock or the upstream's own dates do. A response is `304` only when `If-Modified-Since` equals
-  the record exactly or `If-None-Match` equals the byte-derived `ETag`; otherwise the body is sent
-  with a `Last-Modified` later than anything the client can hold. A `200` is never sent with a
-  `Last-Modified` at or before the request's `If-Modified-Since` (`homebrew.md`). The record is
+  clock or the upstream's own dates do. A matching `If-None-Match` against the byte-derived `ETag`
+  answers `304`. An `If-Modified-Since` is answered under the **conditional rule** the document
+  declares in its serve policy, the two rules `signing-service.md`'s resolved later-condition
+  decision (was its Q12) defines for hosted and remote documents alike, because two captured
+  client populations need opposite answers to a condition later than the served value:
+  - **`exact`, the default.** `304` only when `If-Modified-Since` equals the record exactly; any
+    other condition, earlier **or later**, receives the body with the current value. This is what
+    clients that echo the served date need (apt, pacman, `wget` and `curl` under LuaRocks, cpm and
+    Carton), and what CPAN.pm's fallback needs when it sends a later file time left by a refused
+    host (`cpan.md`, captured).
+  - **`not-earlier`, declared per format.** `304` when `If-Modified-Since` is not earlier than
+    the record, the body otherwise, so a `200` is never sent with a `Last-Modified` at or before
+    the request's `If-Modified-Since`. This is what a client whose condition is its own clock
+    needs: brew's `curl --time-cond` discards such a `200` mid-transfer (`homebrew.md`, its
+    resolved freshness decision, was Q5 there, AC4), so `homebrew.md` declares it for its API
+    remote.
+
+  Both rules are safe only because the record moves forward, which is this layer's half; the
+  answer itself is rendered by `signing-service.md`'s serving door, with the cache record as the
+  freshness source ("Everything a remote serves goes through the serving door", below). The record is
   `data-model.md`'s, on the remote's current-document entry ("Freshness scoped to the pointer,
   and the documents that hang on it", its AC44: `adopted_at` and the paired-set id, written
   only by this layer, absent on hosted documents, dropped with the entry); it is metadata on
@@ -353,11 +389,12 @@ pointer"):
 - **A remote never adopts an older upstream revision.** The adapter returns the upstream's
   `Last-Modified` and `ETag` verbatim with each response (`upstream-adapters.md`, "The
   interface"), and a handler's revision has its own ordering where the format defines one (Conan's
-  revision `time`, Homebrew's `generated_at`, a TUF `version`). A revalidation whose result is
+  revision `time`, Homebrew's `generated_at`, a TUF `version`), which its adoption check returns
+  (Obligation section). A revalidation whose result is
   older than the adopted revision by the format's ordering, or by upstream `Last-Modified` where
   the format has none, is **not adopted**: the cached revision keeps serving, its record is
-  unchanged, and the regression is recorded for the operator as a divergence (`arch.md`,
-  `homebrew.md` rows). An upstream that legitimately rolls back reaches clients through the
+  unchanged, and the regression is recorded for the operator as a divergence (the "Regression not
+  adopted" row of the event-class table names the formats that record it). An upstream that legitimately rolls back reaches clients through the
   operator's "refresh now" after the divergence is read, never silently.
 - **A database and its detached signature are adopted as one revision.** pacman downloads a
   `.db` and its `.sig` separately with no shared version, revalidating one conditionally and the
@@ -367,21 +404,97 @@ pointer"):
   together, committed in one transaction and served under one freshness record, so no request can
   observe one member of the pair without the other. The same shape covers `repomd.xml` and its
   `.asc`, and `Release` with `Release.gpg`.
+- **An adoption is one transaction, and it has a hook.** Adopting a new upstream revision (a
+  paired set counting as one) writes the new body or bodies as the remote's current documents,
+  advances `adopted_at`, and runs every hook registered on the **adoption commit** inside that
+  same transaction, so a failing hook commits nothing and the previous revision keeps serving,
+  the shape of the write path's pre-commit hook (`data-model.md` AC37, `storage-and-gc.md` AC25).
+  Adoption is cache materialisation, not a write, so the pre-commit hook never sees it; this hook
+  is how a sibling reacts to one. The hook is registered at construction, never through a global,
+  and receives the remote, the adopted document keys and what the handler's adoption check
+  returned for the revision (Obligation section). `signing-service.md`'s index runtime registers
+  its `Adopt` on it (its resolved remote-member decision, was its Q16): inside the adoption it runs
+  the format's `FromUpstream` where the format regenerates and enqueues `index.merge` for every
+  virtual listing the remote. A revision that is not adopted (a regression, an integrity failure)
+  runs no hook.
 - **Regenerated documents on the proxied path are unsigned and carry this record.** Where a
   format regenerates its index from records parsed out of the upstream (CRAN, LuaRocks, Chef,
-  opam), `signing-service.md`'s `FromUpstream` produces the document, stored as the remote's
-  current document with this record's freshness and no `Signature` row (its AC20). Rendering goes
-  through the same shared serving helper hosted documents use, with the cache record in place of
-  the pointer record, so `signing-service.md`'s freshness-boundary architecture test (no handler
-  sets `Last-Modified`, `ETag` or reads `If-Modified-Since`) covers remotes without a second test.
+  opam, Vagrant's catalogs), `signing-service.md`'s `FromUpstream` produces the document inside
+  the adoption transaction through the hook above, stored as the remote's current document with
+  this record's freshness and no `Signature` row (its AC20).
+- **Everything a remote serves goes through the serving door.** A cached metadata document,
+  verbatim or `FromUpstream` output, is served through `signing-service.md`'s `ServeDocument`
+  with the cache record as its freshness source, and a cached file through its `ServeFile`, with
+  a strong `ETag` from the CAS digest and byte ranges (`rpm.md`'s zchunk multi-range,
+  `hackage.md`'s index by `Range`; its AC30); a per-request virtual reads each remote member's
+  record for the name through `ServeRendered` (its resolved handler-rendered decision, was its
+  Q14, AC11). So `signing-service.md`'s freshness-boundary architecture test (no handler sets
+  `Last-Modified` or `ETag` or reads a conditional header) covers remotes without a second test.
 - **Read-only and offline freeze the record.** A `read_only` remote (`repository-lifecycle.md`,
   its resolved read-only-remote decision, was its Q7) does no fetch, no revalidation and no
   eviction, so nothing is adopted and the record stands; offline mode (below) has the same effect
-  instance-wide. A client revalidating against a frozen remote receives `304` on an exact match
-  and the unchanged body otherwise; the stale header of the serve-stale rule is not set, because a
-  frozen cache is not a failed revalidation.
+  instance-wide. A client revalidating against a frozen remote receives the answer its document's
+  conditional rule gives against the unchanged record; the stale header of the serve-stale rule is
+  not set, because a frozen cache is not a failed revalidation.
 
-AC22 asserts the whole of this at the wire, with the real clients that found it.
+AC22 asserts the whole of this at the wire, with the real clients that found it, and AC25 the
+adoption commit and its hook.
+
+### Revalidation outside the request: remotes reached through a virtual
+
+This layer's revalidation is driven by requests: a handler's proxied route calls fetch-and-cache,
+and a metadata document past its TTL is revalidated then. `opam.md` found the case that never
+happens: a `remote` reached only through a `virtual` receives no request of its own, because the
+virtual serves a merged document built from the remote's cached documents, so after the TTL
+nothing ever revalidates it, and a remote added to a virtual before anyone fetched through it
+contributes nothing at all. `signing-service.md` settled that the virtual's own reads are the
+demand (its resolved remote-member decision, was its Q16, AC35) and left the seam to this spec;
+the resolved revalidation-replay decision below (was Q18) fixes it:
+
+- **A job kind, `proxy.revalidate`, owned here and run by `async-operations.md`.** Its only
+  argument is the remote. It is enqueued through `EnqueueRevalidation(ctx, remote)`, which this
+  layer exports, with coalesce key and exclusivity key `revalidate:{repository}`, so any number of
+  virtual reads inside one pending window enqueue one job per remote and a read during a running
+  job yields at most one more. Three callers enqueue it: `signing-service.md`'s `ServeDocument`
+  when it serves a virtual's merged document whose input record names this remote at a freshness
+  value past the remote's metadata TTL (the read is then served the current merged set, never
+  delayed); a virtual's creation; and a member-list change adding a remote whose documents were
+  never adopted, the last two inside the transaction that makes the change.
+- **The job replays the handler's own proxied route; it is not a second revalidation path.** For
+  each metadata document of the remote that some virtual's merged input record names and that is
+  past its TTL, the job dispatches an in-process `GET` for the document's route on the remote to
+  the remote's handler, below the shared authorizer, with the document's current `ETag` as
+  `If-None-Match` and a response writer that discards the body. The handler therefore runs exactly
+  the path a direct client of the remote would drive: its location derivation, fetch-and-cache
+  with its classification, its adoption check, its event classification, and a `304` from the
+  serving door when nothing changed. An adoption the replay produces commits through the adoption
+  hook above, so the re-merge follows with no further mechanism. For a remote never adopted, the
+  routes replayed are the paths at which the format's generator profile declares the documents a
+  `Merge` reads from a member (`signing-service.md`'s `Profile`, reported to it), which is the
+  first fetch that lets a fresh remote contribute before the first client asks. The route of each
+  cached document is recorded with its entry at first fetch, so a later replay needs no
+  declaration.
+- **The replay is marked and bounded.** Its request context carries a revalidation-replay marker
+  and no principal, so nothing it causes is attributed to a caller; it is the only entry into a
+  handler that does not pass the shared authorizer, and `internal/proxy/arch_test.go` holds it to
+  that one call site. Access times are updated as for any read, since a virtual really did read
+  the content. A `*upstream.RateLimitError` ends the job with its `run_at` moved past
+  `RetryAfter`; any other failure ends it under the queue's ordinary retry policy, and the virtual
+  keeps serving its previous merged set in both cases (`signing-service.md`, "Never a gap").
+- **Nothing here polls.** The job is never scheduled: it runs only because a virtual was read or
+  created or changed, which is demand, so the resolved signal-detection decision (was Q12) holds
+  and a signal on a remote reached only through a virtual is noticed when the virtual's reads
+  cause its revalidation, exactly as a direct client's reads would. While `proxy.offline` is set,
+  or the remote is `read_only` or deleted, `EnqueueRevalidation` enqueues nothing, and a job
+  already pending ends without a request when it observes either state.
+- **A per-request virtual needs none of this.** Formats whose virtual resolves a name per request
+  across members (`composer.md`, `homebrew.md`, `pub.md`, `vagrant.md`, `julia.md`) reach a
+  remote member through that member's own fetch-and-cache inside the virtual's request, which is
+  request-driven revalidation already; only formats with a `Merge` enqueue the job.
+
+The accepted cost is `signing-service.md`'s: an upstream change reaches a virtual's clients within
+the remote's TTL plus the revalidation plus the merge's staleness bound, against the TTL alone for
+a direct client of the remote. AC26 asserts it.
 
 ### Negative caching
 
@@ -394,7 +507,9 @@ TTL, and an explicit invalidation path: the same "refresh now" action settled fo
 decision, was its Q12, and its AC29). On this layer's side a refresh marks every cached metadata
 document **and every negative entry** of the remote due for revalidation on its next request,
 fetches nothing itself and creates no snapshot (AC24); the next real request revalidates inside
-the TTL, which is what an operator who knows the upstream just changed is asking for.
+the TTL, which is what an operator who knows the upstream just changed is asking for. A document
+marked due counts as past its TTL for `EnqueueRevalidation`, so on a remote reached only through a
+virtual the refresh takes effect at the virtual's next read (Revalidation outside the request).
 
 Negative caching applies only to an authoritative not-found (404, 410). A rate-limit or server
 error (429, 5xx, a timeout) is never negatively cached and is never presented to the client as
@@ -458,20 +573,25 @@ stays one table across formats rather than a per-format mechanism:
 | Class | What the layer does | Formats that produce it (each format spec carries its full rows) |
 |---|---|---|
 | **Explicit security signal** | The security-signal rule below: refuse, purge, one refusal record, one alert | npm's security-holding replacement; PyPI's PEP 792 `quarantined`; Packagist's malware list (`composer.md`); Open VSX's control-document `malicious` list (`openvsx.md`); a Cargo index file answering `451` (`cargo.md`); Go's checksum database disagreeing with served bytes (`go-modules.md`) |
-| **Immutability violation, coordinate-bound** | Treated as the explicit signal: purge the cached content and alert; a later request re-fetches and verifies against the new digest on demand. Chosen where the ecosystem's rule is that the coordinate implies its bytes and every client verifies against a digest the coordinate declares, so the old bytes would fail every consumer | `nuget.md` (a re-fetched `.nupkg` differs), `maven.md` (a release file or its sidecar disagrees), `cargo.md` (`cksum` changes), `cran.md` (`MD5sum` changes), `debian.md` (a pool file's bytes change), `hex.md` (a checksum changes) |
-| **Immutability violation, revision-bound** | Recorded and alerted, **no purge**: the new bytes are fetched and verified as a new blob, the old blob stays servable to clients holding the older metadata revision while that revision is retained, and the route serves the bytes matching the revision the client holds. Chosen where the client verifies against the metadata revision it was given, so serving the other bytes fails every install (captured) | `rpm.md`, `alpine.md`, `arch.md` (a new revision lists a different checksum at a cached location); `terraform.md`, `puppet.md`, `homebrew.md` (cached bytes kept, divergence recorded and alerted) |
+| **Immutability violation, coordinate-bound** | Treated as the explicit signal: purge the cached content and alert; a later request re-fetches and verifies against the new digest on demand. Chosen where the ecosystem's rule is that the coordinate implies its bytes and every client verifies against a digest the coordinate declares, so the old bytes would fail every consumer | `nuget.md` (a re-fetched `.nupkg` differs), `maven.md` (a release file or its sidecar disagrees), `cargo.md` (`cksum` changes), `cran.md` (`MD5sum` changes), `debian.md` (a pool file's bytes change), `hex.md` (`outer_checksum` or `inner_checksum` changes), `conda.md` (a record's `sha256` changes for the same filename, or a re-fetched file disagrees with it), `pub.md` (`archive_sha256` changes, pub.dev included) |
+| **Immutability violation, revision-bound** | Recorded and alerted, **no purge**, in one of two variants the format chooses. **New blob beside the old:** the new bytes are fetched and verified as a new blob, the old blob stays servable while a retained metadata revision names it, and the route serves the bytes matching the revision the handler resolves the request against (the one the client holds where the route can tell, the current one where the path carries no digest). **Kept bytes:** the cached bytes keep serving, the new upstream bytes are never committed under the old coordinate, and the divergence is recorded and alerted. Chosen where the client verifies against the metadata revision it was given, or where lock files recorded the old bytes, so serving other bytes fails every install (captured) | New blob beside the old: `rpm.md`, `alpine.md`, `arch.md` (a new revision lists a different checksum, `C:` or `S:` at a cached location); `hackage.md` (a new revision gives a cached release a different SHA-256, the route following the current revision); `cpan.md` (a `CHECKSUMS` entry names a different SHA-256, the route following the upstream `CHECKSUMS`). Kept bytes: `terraform.md` (a cached provider's `SHA256SUMS`, signature, keys or zip differ), `puppet.md`, `homebrew.md`, `swift.md` (an archive or release metadata re-fetched after eviction advertises another `checksum`), `vagrant.md` (a new catalog revision lists another checksum or URL for a cached box, or a digest-less box re-fetches as other bytes) |
 | **Re-materialisation with a divergence** | The recorded digest is replaced and the divergence is operator-visible; no purge, because the ecosystem makes no byte promise for the file | `composer.md` (a dist whose upstream published an empty `shasum`) |
-| **Flag mirroring** | Keep serving, mirror the upstream's flag faithfully, record an operator-visible divergence; the client's own semantics exclude it from new resolutions | PyPI yank; Cargo `yanked` (`cargo.md`); NuGet `listed: false` (`nuget.md`); the Forge's `deleted_at` withdrawal (`puppet.md`); Hex `retired` and Julia `yanked` are ordinary metadata changes on their wires |
-| **Removal with no signal** | Keep serving, record an operator-visible divergence and alert once; the backstop for a takedown that arrives without a detectable signal | An author unpublish; a version or package vanishing from the index or answering `404` or `410` where it existed, on every wire that carries no reason (Maven Central, nuget.org, crates.io, CRAN's archive, Debian suites, ConanCenter, General, Supermarket, opam-repository, the Forge) |
-| **Ordinary metadata change** | Propagated at the next revalidation; no divergence | Supersession by a newer build (Maven SNAPSHOT pruning, Debian point releases, Alpine and Arch builds, RPM `updates`), deprecation and advisory fields, `latest` moving, retract directives |
-| **Integrity failure at fetch** | Nothing committed, no negative entry, the previous verified revision or cached copy keeps serving within the stale-if-error limit, the operator alerted with the real reason, the next request tries again | A signature or checksum failing at fetch on every wire; a Debian envelope or Alpine index failing its keyring; a Conan manifest not hashing to its revision; a truncated body |
-| **Regression not adopted** | The cached revision stands, the record is unchanged, a divergence is recorded (Freshness of what a remote serves) | An upstream revision older than the adopted one (`arch.md`, `homebrew.md`) |
+| **Flag mirroring** | Keep serving, mirror the upstream's flag faithfully, record an operator-visible divergence; the client's own semantics exclude it from new resolutions | PyPI yank; Cargo `yanked` (`cargo.md`); NuGet `listed: false` (`nuget.md`); the Forge's `deleted_at` withdrawal (`puppet.md`); pub's `retracted: true` (`pub.md`). Hex `retired`, Julia `yanked`, conda `revoked` and Swift's `problem` are ordinary metadata changes on their wires |
+| **Removal with no signal** | Keep serving, record an operator-visible divergence and alert once; the backstop for a takedown that arrives without a detectable signal | An author unpublish; a version or package vanishing from the index or answering `404` or `410` where it existed, on every wire that carries no reason (Maven Central, nuget.org, crates.io, CRAN's archive, Debian suites, ConanCenter, General, Supermarket, opam-repository, the Forge, Packagist, hex.pm, luarocks.org, the Terraform registries, conda-forge (a filename moving to `removed`, a subdir answering `404`), Hackage (entries a rebased index drops, a tarball answering `404`), CPAN (a `CHECKSUMS` entry disappearing), a Vagrant catalog losing a version or provider (HCP Vagrant included), a Swift registry's list, and pub.dev, where a vanished version is always administrative moderation yet not machine-distinguishable). A coordinate that can no longer be re-materialised after eviction answers `404` with its cached metadata kept, so the removal stays visible (`swift.md`) |
+| **Ordinary metadata change** | Propagated at the next revalidation; no divergence unless the handler records one alongside (an index line moving to another author's directory in `cpan.md`, the shape a hijack takes; a version's changed checksums or source in `opam.md`) | Supersession by a newer build (Maven SNAPSHOT pruning, Debian point releases, Alpine and Arch builds, RPM `updates`), deprecation and advisory fields, `latest` moving, retract directives; conda `revoked` and conda-forge hotfix patches; Swift's `problem`; pub's advisories, `isDiscontinued` and `replacedBy`; Hackage's appended revisions and preferred versions; CPAN index lines; opam's routine bound tightening; Terraform `warnings`; Composer `abandoned` and moved branch references; a new LuaRocks version or constraint |
+| **Integrity failure at fetch** | Nothing committed, no negative entry, the previous verified revision or cached copy keeps serving within the stale-if-error limit, the operator alerted with the real reason, the next request tries again | A signature or checksum failing at fetch on every wire; a Debian envelope or Alpine index failing its keyring (an Alpine index signed by a key outside the configured set carries the key name in the operator record); a Conan manifest not hashing to its revision; a Hackage root, chain or expired timestamp failing verification; a Hex payload whose signature fails or whose `repository` field changes; a Vagrant box failing its checksum or the structural verifier; a truncated body |
+| **Regression not adopted** | The cached revision stands, the record is unchanged, a divergence is recorded (Freshness of what a remote serves) | An upstream revision older than the adopted one: `arch.md`, `homebrew.md`, `hex.md` (a payload), `terraform.md` (a version list), `luarocks.md` (a manifest), `hackage.md` (a TUF version that decreases), `cpan.md` (the index), `composer.md` (a package or `~dev` file), `opam.md` (the index) |
 
 The two immutability classes are one decision per format, made in its spec from its client's
 captured verification behaviour, and the layer offers both because both are correct for the
-wires that chose them. The Maven, NuGet and Composer rows this reconciliation added were requested
-by the consequences queue (Open items 7, 11 and 13); the others are recorded here so that the
-class a format chose is visible in the layer that executes it.
+wires that chose them. The Maven, NuGet and Composer rows were requested by the consequences queue
+(Open items 7, 11 and 13); the conda, Vagrant, Hackage, CPAN, Composer, opam, Swift, pub, Hex,
+Terraform and LuaRocks rows were added by the closing reconciliation sweep from each format's own
+removal table (format batches 4 to 8); the others are recorded here so that the class a format
+chose is visible in the layer that executes it. One event is deliberately in no class: an
+upstream-signed document whose signature stops verifying under the remote's trust set is a
+verdict, recorded and alerted by `artifact-verification.md`, while serving continues (`cpan.md`'s
+`CHECKSUMS` row).
 
 A malware advisory can reach this registry through two channels: the upstream, observed here on
 revalidation, and the advisory feed in `supply-chain-policy.md`. The two specs therefore state
@@ -511,8 +631,10 @@ second one. This amends only the mechanics of the owner's settled purge rule, no
 security-signalled content still stops serving at once and is removed from the store.
 
 **This layer detects signals passively** (the resolved signal-detection question). A signal is
-noticed when TTL revalidation of that metadata happens, driven by a client request or by a
-configured sync, and never by a background job polling the upstream, which against the
+noticed when TTL revalidation of that metadata happens, driven by a client request, by a
+virtual's read that replays the request a remote reached only through it never receives (the
+`proxy.revalidate` job, Revalidation outside the request), or by a configured sync, and never by a
+scheduled job polling the upstream, which against the
 rate-limited preconfigured trio would be an immediate support surface. The exposure is stated
 plainly in the operator documentation: on this channel alone, a cached package whose metadata
 nobody re-requests is never condemned, and during a serve-stale outage nothing is detected for
@@ -607,6 +729,13 @@ statement of it (the method set stays pinned; this is the entry's request, not a
 
 - the coordinate and the handler's classification of the response (immutable artifact or mutable
   metadata, and for metadata the TTL class), which decides caching and freshness;
+- for mutable metadata, the handler's **adoption check**: a function over a new upstream revision's
+  complete body, run before anything is adopted, that returns the revision's ordering value where
+  the format defines one, the event classes it observed against the cached revision (the
+  event-class table), and the records `FromUpstream` consumes where the format regenerates. The
+  layer applies the regression rule and the classes from what it returns and hands the records to
+  the adoption hook, so the handler reads its own wire and the layer decides what happens
+  (Freshness of what a remote serves);
 - the upstream location, or an ordered list of candidate locations, each a path under the
   upstream root or an absolute URL the adapter's allowlist must admit;
 - the `upstream.Options` for the exchange (`Accept`, `Accept-Encoding` opt-in, `User-Agent`
@@ -614,6 +743,9 @@ statement of it (the method set stays pinned; this is the entry's request, not a
 - exactly one of a declared digest set and a handler-supplied verifier (Completion-only mode);
 - an optional paired-document declaration (Freshness of what a remote serves) and an optional
   `FirstByteWithin` deadline (Miss coalescing);
+- nothing about who asked: the same request is made whether a client's request or a
+  `proxy.revalidate` replay drove the handler (Revalidation outside the request), which is why the
+  replay needs no entry of its own;
 - a typed refusal in return where the request is refused before any upstream request: the
   condemnation record, offline mode, a `read_only` remote, a missing verifier, a policy refusal
   from `supply-chain-policy.md` (its AC4 forbids handlers importing `internal/policy`, so the
@@ -689,10 +821,13 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       keep serving and record an operator-visible divergence (`cache_divergences_total`,
       `UpstreamDivergence`). Every class of the event table under "Upstream removal or
       replacement" produces its stated response from a handler's classification, including a
-      coordinate-bound immutability violation (purged as the signal) and a revision-bound one
-      (recorded and alerted, both blobs servable, the route serving the bytes matching the
-      metadata revision the client holds), a flag mirrored with a divergence, and a fetch-time
-      integrity failure that commits nothing and creates no negative entry.
+      coordinate-bound immutability violation (purged as the signal), a revision-bound one in
+      each variant (recorded and alerted with no purge: both blobs servable and the route serving
+      the bytes matching the revision the handler resolves the request against; or the cached
+      bytes kept with the new bytes never committed under the old coordinate), a flag mirrored
+      with a divergence, an ordinary change with and without a handler-recorded divergence, a
+      regression not adopted, and a fetch-time integrity failure that commits nothing and
+      creates no negative entry.
 - [ ] AC14: A repository exceeding its storage quota evicts least-recently-accessed cached
       content until the bytes it still references are back within quota - without waiting for a
       GC sweep, since the quota accounts referenced bytes - an evicted artifact is transparently
@@ -712,10 +847,11 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       every waiter receives its first byte after the verified CAS commit and is served from the
       CAS, and a fetch that fails verification or is truncated gives every waiter an error with
       zero bytes received, the initiating client alone seeing a mid-stream abort.
-- [ ] AC18: This layer never polls an upstream in the background: with no client traffic and no
-      configured sync, a remote repository makes no upstream request across several metadata
-      TTLs (asserted at the network layer), and an upstream security signal is acted on at the
-      first revalidation that observes it.
+- [ ] AC18: This layer never polls an upstream in the background: with no client traffic on the
+      remote or on any virtual listing it, no virtual created or member added, and no configured
+      sync, a remote repository makes no upstream request across several metadata TTLs (asserted
+      at the network layer), no `proxy.revalidate` job is ever enqueued in that window, and an
+      upstream security signal is acted on at the first revalidation that observes it.
 - [ ] AC19: A fresh installation with no operator configuration carries, for each shipped
       format among npm, PyPI, OCI, Ansible collections, NuGet and Maven, exactly one enabled
       remote repository bound to that format's preconfigured upstream (npm's public registry,
@@ -744,17 +880,22 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       response with no client accepting the bytes as the artifact; the declaration is visible in
       the handler's request and absent from every format that did not capture such a deadline.
 - [ ] AC22: A `remote` serves every cached metadata document with a `Last-Modified` taken from
-      its cache-scoped record, never the upstream's header: on adopting a new revision the value
-      is later than the previous one whatever the upstream's date or the clock says, a
-      conditional request answers `304` only on an exact `If-Modified-Since` match or a matching
-      `ETag`, and no `200` carries a `Last-Modified` at or before the request's
-      `If-Modified-Since`. An upstream revision older than the adopted one by the format's
+      its cache-scoped record, never the upstream's header, through `signing-service.md`'s serving
+      door with that record as the freshness source: on adopting a new revision the value is later
+      than the previous one whatever the upstream's date or the clock says, and a matching `ETag`
+      answers `304`. Under the default `exact` rule an `If-Modified-Since` equal to the record
+      answers `304` and any other, earlier or later, receives the body with the current value;
+      under a `not-earlier` rule the format declares, a condition not earlier than the record
+      answers `304` and an earlier one the body, so no `200` carries a `Last-Modified` at or
+      before the condition. An upstream revision older than the adopted one by the format's
       ordering or by upstream `Last-Modified` is not adopted and is recorded as a divergence; a
       handler-declared paired set (a database and its detached signature) is committed in one
       transaction and served under one record, with no request able to observe one member new and
       the other old; a regenerated document of a remote carries the record and no `Signature`
-      row. Proven with the real clients whose behaviour found it: apt, pacman on both captured
-      releases, brew's `--time-cond`, and one `If-Modified-Since` client.
+      row. Proven with the real clients whose behaviour found it: apt and pacman on both captured
+      releases seeing a rollback under `exact`, a LuaRocks client whose later, unequal condition
+      receives the body under `exact`, and brew 7.0.6's `--time-cond` receiving `304` to a later,
+      unequal condition against the Homebrew API remote under `not-earlier`.
 - [ ] AC23: On a `read_only` remote, fetch-and-cache refuses with a typed refusal before any
       upstream request, TTL revalidation does not run, the eviction pass skips the repository
       however far over quota it is, the freshness record is unchanged across the read-only
@@ -767,6 +908,28 @@ one direction only is how a Phase 4 discovers it has no counterparty.
       client request revalidates upstream inside the metadata TTL and a name negatively cached
       before the refresh is looked up upstream again inside the negative TTL (both asserted at
       the network layer), while a remote that received no refresh keeps both TTLs.
+- [ ] AC25: Adopting a new upstream revision commits the new body or paired bodies, the advanced
+      `adopted_at` and the effects of every hook registered on the adoption commit in one
+      transaction: with `signing-service.md`'s `Adopt` registered, a remote's `FromUpstream`
+      document and the `index.merge` job of every virtual listing the remote exist exactly when
+      the adoption does; a hook that fails leaves the previous revision serving under its
+      unchanged record and enqueues nothing; and a revision refused by the regression rule or an
+      integrity failure runs no hook. The hook receives the records the handler's adoption check
+      returned, and the check runs before any adoption.
+- [ ] AC26: A remote reached only through a virtual is kept fresh by the virtual's reads: serving
+      the virtual's merged document whose input from the remote is past the remote's TTL (or
+      marked due by a refresh) enqueues, through `EnqueueRevalidation`, exactly one
+      `proxy.revalidate` job per remote however
+      many reads arrive in its window, the read itself is served the current merged set with no
+      upstream request on its path, and the job's replay of the remote's own route makes one
+      conditional upstream request per due document and, when the upstream changed, adopts it
+      so the change is visible in the virtual within the merge's staleness bound. A virtual's
+      creation and a member-list change adding a never-adopted remote enqueue that remote's
+      first fetch, so the virtual lists the remote's content with no request ever made to the
+      remote's own URL. Under `proxy.offline`, or with the remote `read_only` or deleted, no job
+      is enqueued and a pending one ends without an upstream request. The replay is the only
+      call into a handler that does not pass the shared authorizer, and the job is never
+      scheduled.
 
 ## Test Plan
 
@@ -784,17 +947,19 @@ one direction only is how a Phase 4 discovers it has no counterparty.
 | AC10 | integration + fault injection | `internal/proxy/fetch_integrity_test.go` (mismatch, truncation and stall each asserted through the adapter's typed errors; `cache_fetch_failures_total{condition}` and `FetchIntegrityFailure` read through `telemetry.NewTestRecorder`) |
 | AC11 | integration | `internal/proxy/singleflight_test.go` (network-level assertion; stalled upstream versus a slow but progressing one) |
 | AC12 | integration | `internal/proxy/stale_test.go` |
-| AC13 | integration | `internal/proxy/upstream_removal_test.go` (test upstream presenting each event class of the table, including both immutability classes with a client holding the older metadata revision, flag mirroring and a fetch-time integrity failure; a second remote repository of the same ecosystem and a hosted repository holding the same coordinate; network-level no-fetch assertion, record queried after a sweep, alert count across repeated revalidations; `cache_condemnations_total`, `cache_divergences_total`, `CachePurgedOnSignal`, `UpstreamDivergence` and the `cache.purge` audit event read through `telemetry.NewTestRecorder`) |
+| AC13 | integration | `internal/proxy/upstream_removal_test.go` (test upstream presenting each event class of the table, including both immutability classes with a client holding the older metadata revision, both revision-bound variants, flag mirroring, an ordinary change with and without a handler-recorded divergence, a regression not adopted and a fetch-time integrity failure; a second remote repository of the same ecosystem and a hosted repository holding the same coordinate; network-level no-fetch assertion, record queried after a sweep, alert count across repeated revalidations; `cache_condemnations_total`, `cache_divergences_total`, `CachePurgedOnSignal`, `UpstreamDivergence` and the `cache.purge` audit event read through `telemetry.NewTestRecorder`) |
 | AC14 | integration | `internal/proxy/eviction_test.go` (`cache_referenced_bytes`, `cache_quota_bytes`, `cache_evictions_total`, `cache_refetch_after_eviction_total` and the `CacheThrash` rule evaluated through `telemetry.NewTestRecorder`) |
 | AC15 | ci | scheduled nightly workflow, proven by a written manual-dispatch procedure |
 | AC16 | integration | `internal/proxy/eviction_test.go` (re-fetch between eviction and sweep, object-store delete assertion) |
 | AC17 | integration + fault injection | `internal/proxy/singleflight_test.go` (per-client byte timelines against the commit, corrupt and truncated upstream bodies) |
-| AC18 | integration | `internal/proxy/passive_detection_test.go` (injected clock across several TTLs with no traffic, network-level assertion, then one request revalidating into a signal) |
+| AC18 | integration | `internal/proxy/passive_detection_test.go` (injected clock across several TTLs with no traffic on the remote or on a virtual listing it, network-level assertion and an empty `proxy.revalidate` queue, then one request revalidating into a signal) |
 | AC19 | integration | `internal/proxy/preconfigured_test.go` (fresh-install upstream set per shipped format, read from `internal/upstream/preconfigured`; `internal/upstream/preconfigured/profiles_test.go` is `upstream-adapters.md` AC24's equality test over the same set) |
 | AC20 | integration + fault injection + architecture test | `internal/proxy/completion_mode_test.go` (neither-digest-nor-verifier refusal at the network layer; truncated, stalled and verifier-refused bodies against stand-ins; no `Blob` row and no negative entry; per-client byte timeline showing first byte before completion and completion after the verifier; short-close observed by `go`, `dotnet`, `mvn`, `composer` and `luarocks` in `conformance/<format>/proxied_test.go`; verdict recorded after commit with the client timeline unchanged; ordered candidates with an off-allowlist stand-in that fails on any connection) |
 | AC21 | integration + conformance | `internal/proxy/singleflight_test.go` (waiter timelines with and without `FirstByteWithin`; short-close of attached waiters on a failing body); `conformance/julia/proxied_slow_test.go` (`julia.md` AC19's case: forty-second stand-in, two cold clients, one upstream fetch); a table test asserting which handlers declare the deadline |
-| AC22 | integration + conformance | `internal/proxy/freshness_test.go` (record monotonic under a backwards clock and a backwards upstream date; exact-match `304`; no `200` at or before `If-Modified-Since`; older revision not adopted and divergence recorded; paired set committed atomically under concurrent reads; regenerated document has no `Signature` row, shared with `signing-service.md` AC20's assertion; the record's fields shared with `data-model.md` AC44); `conformance/debian/`, `conformance/arch/`, `conformance/homebrew/` and `conformance/luarocks/` proxied rollback cases with the real clients |
+| AC22 | integration + conformance | `internal/proxy/freshness_test.go` (record monotonic under a backwards clock and a backwards upstream date; under `exact`, equal, earlier and later-unequal conditions; under `not-earlier`, the same three with no `200` at or before the condition; older revision not adopted and divergence recorded; paired set committed atomically under concurrent reads; regenerated document has no `Signature` row, shared with `signing-service.md` AC20's assertion; the record's fields shared with `data-model.md` AC44; the rendering half is `signing-service.md` AC11's `internal/index/freshness_test.go` with the cache-scoped source); `conformance/debian/`, `conformance/arch/` and `conformance/luarocks/` proxied rollback cases with the real clients; `conformance/homebrew/freshness_test.go` (shared with `homebrew.md` AC4 and `signing-service.md` AC11: brew 7.0.6 against the API remote under `not-earlier`) |
 | AC23 | integration | `internal/repository/readonly_remote_test.go` (shared with `repository-lifecycle.md` AC11: network-level assertion, eviction pass skipped over quota, record unchanged, `thaw`); `internal/proxy/eviction_test.go` (remote deletion ends references through the eviction call, object-store delete assertion, blob gone only after the sweep) |
+| AC25 | integration + fault injection | `internal/proxy/adoption_test.go` (a registered hook's effects exist exactly when the adoption commits; an injected hook failure leaves the previous revision and record serving and no job enqueued; a regression and an integrity failure run no hook; the adoption check runs before commit and its records reach the hook); `internal/index/proxied_generation_test.go` (shared with `signing-service.md` AC20: `FromUpstream` inside the adoption through `Adopt`) |
+| AC26 | integration + architecture test + conformance | `internal/proxy/revalidate_job_test.go` (many virtual reads past the remote's TTL or after a refresh enqueue one job per window; the read path makes no upstream request; the replay's conditional requests and adoption counted at the network layer; creation and member addition enqueue a first fetch; `proxy.offline`, `read_only` and deletion enqueue nothing and end a pending job without a request; no `Schedule` of the kind exists), shared with `signing-service.md` AC35's `internal/index/virtual_remote_member_test.go`; `internal/proxy/arch_test.go` (the replay is the sole call into a handler below the shared authorizer); `conformance/opam/virtual_test.go` (shared with `opam.md` AC26 and `signing-service.md` AC35: the virtual lists a remote's packages with no request to the remote's own URL) |
 | AC24 | integration + conformance | `internal/manage/refresh_test.go` (shared with `management-api.md` AC29: metadata and negative entries marked due, no fetch, no snapshot); `conformance/oci/refresh_test.go` (a real client's next pull revalidates inside the TTL, and a negatively cached tag is looked up again, observed at the upstream stand-in) |
 
 ## Implementation Phases
@@ -813,8 +978,14 @@ is this layer's first proving ground, and npm at step 5 tests whether it general
 
 ### Phase 2: Policy
 - TTLs, conditional revalidation, negative caching, serve-stale bounded and marked, the
-  cache-scoped freshness record with paired document sets and never adopting an older revision
-  (AC22), the cache refresh's layer half (AC24)
+  cache-scoped freshness record with paired document sets and never adopting an older revision,
+  rendered through `signing-service.md`'s serving door under each document's declared
+  conditional rule (AC22), the handler's adoption check and the adoption commit with its hook
+  (AC25), the `proxy.revalidate` job kind with `EnqueueRevalidation` and the replay of the
+  handler's route below the authorizer (AC26), the cache refresh's layer half (AC24). The job kind
+  needs `async-operations.md`'s queue core, which lands at the start of charter step 4b; the
+  replay has its first caller only when a format with a `Merge` builds its virtual phase, so
+  AC26's conformance half waits on that format
 
 ### Phase 3: Operability
 - Instance-wide offline mode (`proxy.offline`), encrypted upstream credentials through the
@@ -834,8 +1005,12 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None remain open. Q15, Q16 and Q17 were raised and adopted on 2026-09-28 by the foundation-wave
-reconciliation, under the owner's standing delegation: the completion-only fetch mode with its
+None remain open. Q18 was raised and adopted on 2026-09-28 by the closing reconciliation sweep,
+on Opus, under the owner's standing delegation: how a remote reached only through a virtual is
+revalidated outside a request (the `proxy.revalidate` job replaying the handler's own route),
+which `signing-service.md`'s adopted remote-member decision left to this spec; the owner may
+reverse it, and it awaits a Fable recheck. Q15, Q16 and Q17 were raised and adopted on 2026-09-28
+by the foundation-wave reconciliation, under the owner's standing delegation: the completion-only fetch mode with its
 verifier hook (eight formats' request, cross-cutting theme 7), the first-byte-deadline exception
 for coalesced waiters (`julia.md`'s captured conflict with the resolved Q10), and the second
 extension of the preconfigured set to api.nuget.org and repo.maven.apache.org; the owner may
@@ -850,6 +1025,44 @@ acceptance criteria and the Test Plan above. All earlier questions (Q1-Q9) were 
 owner and are folded into Design, Scope and the acceptance criteria above.
 Resolved decisions are kept rather than deleted, so the reasoning survives the next time someone
 asks why it was done this way.
+
+### Resolved: revalidating a remote reached only through a virtual (was Q18, raised and adopted 2026-09-28)
+
+**Adopted 2026-09-28 under the owner's standing delegation**, in the closing reconciliation sweep,
+on Opus. Option A: a job kind, `proxy.revalidate`, coalesced per remote, enqueued by a virtual's
+read of a merged input past the remote's TTL and by a virtual's creation or a member-list change
+adding a never-adopted remote, which replays the handler's own proxied route in process, below the
+shared authorizer, with the current validators and a discarding writer. Folded into Scope, Design
+("Revalidation outside the request", the adoption-commit bullet, the passive-detection paragraph,
+negative caching's refresh, the Obligation section), AC18, AC26, Phase 2, and an extension note
+on the was-Q12 record.
+
+The question: `signing-service.md` adopted that the virtual's reads drive a remote member's
+revalidation off the request path and that creation fetches a new remote (its resolved
+remote-member decision, was its Q16, AC35), and left the seam here. A job has no request, but this
+layer's revalidation is request-shaped: the upstream location is the handler's derivation, the
+regression rule needs the format's ordering, the event classes are read off the format's own
+wire, and `FromUpstream` needs the records the handler parses. Something must reach the handler.
+
+**Recommendation:** A, because it makes the job a client of the remote rather than a second
+revalidation path, which is the duplicated-path trap `CLAUDE.md` names, and it changes no pinned
+method.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Replay the handler's own route in process, below the authorizer** | One revalidation path for direct clients and virtuals; the handler's derivation, adoption check and classification run unchanged; no new interface, the pin stays five; a conditional replay is a `304` with no render when nothing changed | A second call into a handler that does not pass the shared authorizer, held to one call site by an architecture test; each cached document's route recorded at first fetch, and for a never-adopted remote the member-input routes declared in the format's generator profile; discarded rendering work when a document did change |
+| **B. A fourth optional handler interface, `Revalidator`, discovered at registration** | An explicit call with typed arguments; no synthetic request | A parallel metadata path in every format with a `Merge` that must stay equal to its request path, and a `format-handler-interface.md` re-open input against its three-interfaces verdict |
+| **C. Revalidate in this layer alone from the recorded location and validators** | Nothing reaches a handler; a `304` costs one upstream request | A changed body cannot be classified, ordered or parsed without the handler, so signals and regressions on a remote reached only through a virtual go undetected, or the format knowledge moves into the layer |
+
+**Why this is yours:** it opens an entry into handlers that bypasses the shared authorizer, a
+boundary `CLAUDE.md` says must have a named enforcer, and it sets who pays for keeping a virtual's
+remote members fresh.
+
+Accepted cost: the below-authorizer entry (no principal, a replay marker, one call site asserted
+in `internal/proxy/arch_test.go`, nothing returned to anyone), the recorded routes, the profile
+declaration reported to `signing-service.md`, and discarded rendering when a document changed. B
+lost to the duplicated path it creates in every merging format; C to the signals and regressions it
+cannot see.
 
 ### Resolved: the completion-only fetch mode and its verifier hook (was Q15, raised and adopted 2026-09-28)
 
@@ -1021,6 +1234,11 @@ active channel, re-matching new advisories against stored coordinates at sync ti
 condemns through the same security-signal rule, so content nobody requests is condemned within
 a feed sync interval once that spec lands. Folded into Scope, the serve-stale and
 upstream-removal sections of Design, AC13, AC18 and Phase 3.
+
+Extended 2026-09-28, outcome unchanged: a remote reached only through a virtual is revalidated
+when the virtual is read, by the `proxy.revalidate` replay (the resolved revalidation-replay
+decision, was Q18). That is client demand arriving through the virtual, never a schedule, so no
+upstream is polled that no client is reading.
 
 Accepted cost: until `supply-chain-policy.md` lands, and on the upstream channel alone after it,
 a cached package whose metadata nobody re-requests is never condemned, and a serve-stale outage
@@ -1251,3 +1469,4 @@ What each entry is (adapter, URL, credential kind, allowlist) is a profile in
 | 2026-09-23 | 3e3ae0a | folded-decision application + decision-interaction adversarial + constitution + go-spec-reviewer (claim verification against code vacuous pre-implementation; siblings re-read at this sha) | The six 09-23 decisions were recorded but not applied: stale Q6/Q7/Q8 references and the two-root GC claim in Design fixed, Design gained coalescing/serve-stale/removal/eviction/nightly sections, Scope, Context and Phases updated for build-with-OCI, AC3/AC10 tightened, AC11-AC15 added with Test Plan rows; Q10-Q13 raised on interactions between the settled decisions; stays draft. |
 | 2026-09-23 | 9c971d4 | cross-spec consistency (data model, generic exemption, GC roots) | AC8 now applies to proxy-capable formats, AC10 preserves pre-existing remote metadata on a failed fetch, the resolved cache-location text names all three GC roots, and cached files retain remote provenance; existing open questions still keep the spec draft. |
 | 2026-09-28 | 6e6d503 | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. Applied sweep 1 item 2, verified against `data-model.md`'s current text: the cache-scoped freshness record is cited as that spec's ("Freshness scoped to the pointer, and the documents that hang on it", AC44) instead of "reported as a sibling consequence", and AC22's Test Plan row records `internal/proxy/freshness_test.go` as shared with AC44. `management-api.md` reconciliation 3 and proxy-cache reconciliation 6 were already this spec's own text (AC24). No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
+| 2026-09-28 | 181a63b | closing reconciliation sweep of the format batch 3 to 8 items and the signing-service closing-sweep item, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through "From the signing-service.md closing sweep" verified against the current text of the spec that raised it and of the format spec each row concerns. Signing-service closing sweep item 1: AC22 and "Freshness of what a remote serves" reworded so its two clauses are the two conditional rules of `signing-service.md`'s resolved later-condition decision (was its Q12), matched to its Design text and AC11 (`exact` default, `not-earlier` declared, brew's API remote per `homebrew.md` AC4), rendered through its serving door, cached files through `ServeFile`; the adoption commit made one transaction with a hook `Adopt` registers on (its was-Q16), fed by a new adoption check in the fetch-and-cache request (AC25); the revalidation seam adopted as Q18 (the `proxy.revalidate` job, coalesced per remote, enqueued by virtual reads past the TTL and by creation or member addition, replaying the handler's route below the authorizer; Option B, a fourth optional interface, and C, layer-only revalidation, rejected), folded through Scope, Design, the passive-detection paragraph, the refresh paragraph, AC18, AC26 and Phase 2, with an extension note on the was-Q12 record. Batch 7 item 2 is the same rewording and batch 7 item 5 the same seam. Event-class table: batch 4 item 6 (conda), batch 5 item 9 (hex, terraform, luarocks; luarocks.org and the Terraform registries), batch 6 item 13 (hackage, cpan), batch 7 item 13 (vagrant, composer, opam), batch 8 item 11 (swift, pub, pub.dev), each row read from that format's own removal table; the revision-bound class now names its two variants and the ordinary class a handler-recorded divergence (cpan, opam), AC13 and its row extended; `cpan.md`'s signature-verdict row recorded as in no class. Batch 4 item 6's Alpine half: named as a completion-only verifier consumer with swift, vagrant, chef, julia, hex and homebrew. Earlier items found already done: every item before format batch 3 is in the progress log and verified in the text (Open items 12 to 32 rows and requests, theme 7, upstream-adapters 1 to 3, repository-lifecycle 14, sweep 1 item 2); puppet's per-module gating (Open item 25) is handler-local in `puppet.md` and needs nothing here. Consequences for `async-operations.md` (the new kind), `signing-service.md`, `format-handler-interface.md`, `auth.md` and `homebrew.md` reported, not applied. One question adopted on Opus, so `fable_recheck` added. `node scripts/check-spec.js`: zero failures on this file. Stays draft pending a gate review. |
