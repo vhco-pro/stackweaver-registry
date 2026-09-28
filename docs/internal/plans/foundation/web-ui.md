@@ -1,6 +1,6 @@
 ---
 status: draft
-status_description: "Authored 2026-09-27 at b98090c as a grounded first draft, not yet reviewed. Gathers the requirements project-charter.md (AC11, build step 9, the resolved web-UI-criterion decision), management-api.md (the UI is a client of /api/v1 and asserts nothing the API does not expose), credential-management.md (Phase 4, AC23), repository-lifecycle.md, artifact-verification.md, supply-chain-policy.md, signing-service.md, observability.md, async-operations.md, auth.md, proxy-cache.md, storage-and-gc.md, deployment.md, conformance-harness.md, format-handler-interface.md and fourteen format specs placed on the web UI; fixes the serving model (embedded in the binary under a reserved ui segment, strict CSP), the page inventory, the shared per-format surface declaration that feeds both the UI's client snippets and the conformance cases, the accessibility bar (WCAG 2.2 AA, axe-enforced) and the Playwright strategy. Nine questions adopted under the owner's standing delegation; zero open. Carries sibling consequences for management-api.md, auth.md, format-handler-interface.md, conformance-harness.md, supply-chain-policy.md, deployment.md, project-charter.md, data-model.md and repository-lifecycle.md, reported to the loop rather than applied here."
+status_description: "Reconciled 2026-09-28 at ff7966e with the foundation authoring wave (not a review). Authored 2026-09-27 at b98090c as a grounded first draft. Every sibling consequence this spec reported is now applied elsewhere and cited here as the sibling's criterion: the six reads in management-api.md's endpoint table (AC28) with the remote refresh as POST .../refresh under push (AC29) and the anonymous session answer, the deleted listing as ?state=deleted (was its Q11), the ui and exactly-/ reservations and surface.Declarer in format-handler-interface.md, the recipe field and two validator rules in conformance-harness.md AC26, the search index in data-model.md AC42, the browser routes in auth.md, the frontend named in the charter, and the build step owned by deployment.md AC32. The two ui.* keys are tabled in the three-column shape. Nine questions adopted under the standing delegation, zero open. 26 criteria, each with a Test Plan row. Awaits /spec review."
 description: "Spec for the web UI: a TypeScript/React single-page application embedded in the server binary and served under a reserved ui segment, that signs a user in through OIDC or the local admin, browses and searches repositories, packages and versions of every implemented format through the management API alone, shows every user the client-configuration snippet for their tool generated from the same per-format declaration the conformance cases run, and gives an administrator repositories, upstreams, pointers, tokens, robots, grants, trust sets, verdicts, policy refusals, operations and pinned-storage visibility, at WCAG 2.2 AA, proven in a real browser by Playwright against a real server."
 author: michielvha
 goal: "Give the registry the human surface the positioning promises (multi-format plus proxy plus UI plus SSO, free) as a pure client of the management API, so that no capability exists only in the UI, every implemented format is browsable and configurable from the day its handler lands, and the UI is proven in a real browser with the same rigour the package clients get from the conformance harness."
@@ -49,10 +49,10 @@ the UI is its client." Its cost line is `shared:ui` in the charter's closed list
 | Spec | What it requires of the UI |
 |---|---|
 | `project-charter.md` | AC11 (above); step 9; the UI renders the shared model's entities for every implemented format |
-| `management-api.md` | The UI "is a client of this API and asserts nothing this spec does not already expose"; the API is API-first with the OpenAPI document as the contract; its Phase 4 (step 9) adds "registry-wide operation listing and filters, retirement and pointer reads the UI needs" and "nothing new in the write path" |
+| `management-api.md` | The UI "is a client of this API and asserts nothing this spec does not already expose"; the API is API-first with the OpenAPI document as the contract; its endpoint table carries the reads a browser client needs (`GET /api/v1/session`, `GET /api/v1/formats`, `GET /api/v1/search?q=`, `GET /api/v1/repositories/{name}/recipes`, `GET .../refusals`, `GET /api/v1/repositories?state=deleted`; its AC28), the `remote` refresh as `POST /api/v1/repositories/{name}/refresh` under `push` (its AC29, resolved refresh-action decision, was Q12) and the session cookie with CSRF on `/api/v1` (its AC30); its Phase 4 (step 9) adds "nothing new in the write path" |
 | `credential-management.md` | Its Phase 4 "The UI (charter step 9)" and AC23: token list with state and `expires_at`, `expiring` visually distinct from `active`, display-once secret "never again after navigation", revoke moves to `revoked`, the admin's robot page creates, disables and mints; Test Plan row `web/e2e/credentials.spec.ts` "lands with the UI at charter step 9" |
 | `auth.md` | The human surface: OIDC Authorization Code with PKCE, local admin fallback (AC2), the session cookie with HttpOnly, Secure, SameSite and CSRF defense on state-changing UI routes (AC22), a brand-new identity holds no grants (AC14), the existence oracle (AC17: missing and forbidden indistinguishable), the human grant vocabulary and the single admin role |
-| `repository-lifecycle.md` | Deletion confirmed by identity (`confirm: rep_...`, AC19), the `in-use` refusal naming each virtual member, `freeze` and `thaw`, rename with `Rename: unsupported` refused `capability-unsupported`, the deleted listing by identity; "a web UI or CLI for lifecycle operations" is out of its scope and "both are clients of the same API" |
+| `repository-lifecycle.md` | Deletion confirmed by identity (`confirm: rep_...`, AC19), the `in-use` refusal naming each virtual member, `freeze` and `thaw`, rename with `Rename: unsupported` refused `capability-unsupported`, the deleted listing by identity under `GET /api/v1/repositories?state=deleted` (admin; `management-api.md`'s resolved deleted-listing decision, was Q11), rename and virtual capability read from `GET /api/v1/formats`; "a web UI or CLI for lifecycle operations" is out of its scope and "both are clients of the same API" |
 | `artifact-verification.md` | "The web UI's rendering of verdicts: charter step 9; the verdict is exposed through the management API so the UI has something to render" (AC27, `GET /api/v1/repositories/{name}/verdicts/{digest}` and the trust routes) |
 | `signing-service.md` | "The web UI's rendering of keys and fingerprints: charter step 9"; `formats/hex.md` wants the public key "shown in the management surface and UI together with its OpenSSH-style `SHA256:` fingerprint" |
 | `supply-chain-policy.md` | AC5: every refusal recorded and "queryable afterwards", including after the blob is gone; AC14's operator alert; the condemnation record with its sources |
@@ -60,23 +60,24 @@ the UI is its client." Its cost line is `shared:ui` in the charter's closed list
 | `async-operations.md` | Operator controls "list, cancel, pause, resume" as `management-api.md` routes; the poll route `GET /api/v1/operations/{id}`; cancel refused `not-found` without the originating write's authorization |
 | `proxy-cache.md` | Its resolved metadata-TTL decision: "an explicit refresh now action in both UI and API" |
 | `storage-and-gc.md` | AC19: pointers whose target is outside the retention window are reported "so a forgotten environment pointer is discoverable from the API before it is discovered from storage growth"; the cost of the fifth mark root "was priced on the pin being visible and attributable" |
-| `deployment.md` | "The web UI's packaging. It ships inside the binary at step 9 and needs nothing here beyond `server.public_url`"; the single-binary role table; `server.public_url` "used in every generated absolute URL" |
-| `conformance-harness.md` | "Testing the web UI. That is Playwright's job, later"; `setup` provisions server-side state only and "everything client-side lives in the client container"; cases carry a `client` image and a `script` |
-| `format-handler-interface.md` | Shared-layer routes mount under reserved first path segments the registration layer holds (AC11); non-root mounts are exactly `/{Name()}/`; the pinned method set is five and grows only by the owner |
+| `deployment.md` | Owns the build step ("The web UI build", its AC32): `make build` depends on `make web`, a GoReleaser `before` hook and a Node 22 Dockerfile stage, so no release artefact carries the placeholder; carries `ui.instance_name` and `ui.help_url` in its key inventory (the `ui.` row); the single-binary role table; `server.public_url` "used in every generated absolute URL" |
+| `conformance-harness.md` | "Testing the web UI. That is Playwright's job, later"; `setup` provisions server-side state only and "everything client-side lives in the client container"; cases carry a `client` image, a `script` and now a `recipe:` naming a surface recipe id, with the two validator rules (undeclared id rejected before any container starts; every declared recipe named by a passing case) in its AC26 |
+| `format-handler-interface.md` | Shared-layer routes mount under reserved first path segments the registration layer holds (AC11), `ui` and exactly `/` among them with this spec as owner; non-root mounts are exactly `/{Name()}/`; the pinned method set is five and grows only by the owner, and `surface.Declarer` is one of the three optional interfaces its resolved optional-interfaces decision (was Q10) keeps beside the pin until the scheduled re-open |
 | Format specs | `puppet.md`: "The registry's UI is where modules are browsed" and README rendering "is a presentation concern the UI owns"; `swift.md`: the signing entity extracted "so the UI and the corpus can show" it; `conda.md`: `channeldata.json` is served for "a UI"; `generic.md`: flat listing, "a UI derives one from the flat list"; `conan.md`: the UI reads the package name and version string; `terraform.md`: the richer module document "returns with the web UI"; `ansible-collections.md`: the bare collection list, if built for the UI, "is integration-tested, not conformance material"; `openvsx.md`: "this registry's web UI ... renders the shared model, not these documents"; `cargo.md`, `composer.md`, `chef.md`, `nuget.md`, `cran.md`, `maven.md`, `hex.md`, `npm.md`: their reference registries' browsing, download-count and login surfaces are "UI-era work" with no client oracle |
 
 **The constitution's stack line.** `CLAUDE.md` fixes the stack as "Go 1.26. TypeScript/React
-frontend (later; there is no `web/` yet)". The charter's "Language" section records the Go decision
-only and says nothing about the frontend; the sibling consequence below asks it to name the
-frontend language so the two do not read as a disagreement.
+frontend (later; there is no `web/` yet)". The charter's "Language" section now names the same:
+"TypeScript and React for the frontend, under `web/`, as `CLAUDE.md` records and `web-ui.md`
+designs" (applied 2026-09-28), so the two read as one decision.
 
 **State of the tree at b98090c.** No `web/` directory exists (`ls web` fails), `cmd/stackweaver-registry/main.go`
 is a stub, and no `internal/` directory exists. `.github/workflows/ci.yml` already runs
 `actions/setup-node@v6` with Node 22 for the docs job, so a Node toolchain in CI is not new. Chromium
 is preinstalled in the agent environment at `/opt/pw-browsers` (`chromium-1194`,
 `chromium_headless_shell-1194`), which is the layout `PLAYWRIGHT_BROWSERS_PATH` expects. A stray
-2.4 MB executable `artifactory` sits at the repository root, committed in `9a8f86d`; it is unrelated
-to this spec and is reported below for removal.
+2.4 MB executable `artifactory` sits at the repository root, committed in `9a8f86d` and still
+tracked at `ff7966e`; it is unrelated to this spec and its removal is an owner note in
+`agents/spec-loop/consequences.md` (repo hygiene, not a spec item).
 
 **Prior art consulted this run** (WebFetch, 2026-09-27), and what was taken and rejected:
 
@@ -194,10 +195,12 @@ each is mechanically held:
 1. **No private endpoint.** The server package `internal/ui` registers the static asset routes
    and nothing else. It imports `embed`, `net/http`, `io/fs` and the shared middleware, and never
    `internal/manage`, `internal/model`, `internal/storage` or any handler package. Data the UI
-   needs and the API does not expose is a **sibling consequence on `management-api.md`**, never a
-   route here. This pass found six such reads, listed under "Sibling consequences" below, and the
-   UI is specified against them as if present.
-2. **Two non-API routes exist**, both browser-only and both under the reserved `ui` segment:
+   needs and the API does not expose is a change to `management-api.md`, never a route here. The
+   six reads this spec's authoring found (`GET /api/v1/session`, `GET /api/v1/formats`,
+   `GET /api/v1/search?q=`, `GET /api/v1/repositories/{name}/recipes`, `GET .../refusals` and the
+   `remote` "refresh now" as `POST .../refresh`) are in that spec's endpoint table (its AC28 and
+   AC29), and the pages below are written against it.
+2. **Three non-API routes exist**, all browser-only and all under the reserved `ui` segment:
    `/ui/auth/login` (starts the OIDC flow or shows the local admin form), `/ui/auth/callback` (the
    OIDC redirect target) and `/ui/auth/logout`. They are mounted by `internal/auth`, which owns the
    flow, under the segment this spec owns (the resolved browser-route decision below). Everything
@@ -208,13 +211,14 @@ each is mechanically held:
 
 ### Serving and mounting
 
-- **Reserved segment.** `ui` joins `format-handler-interface.md`'s reserved list beside `api`,
-  `healthz`, `readyz` and replication's segment, so no handler may be named `ui` or claim a
-  root-anchored mount under it (its AC11 refuses both at registration). The exact root path `/` is
-  served by `internal/ui` as a `302` to `/ui/`; the registration layer's mount rule already admits
-  no handler mount at exactly `/` (non-root mounts are `/{Name()}/`, root-anchored claims are
-  listed carve-outs and `/` is not one), and the sibling consequence asks the interface spec to
-  record `/` as reserved so the next reader does not take the gap for an accident.
+- **Reserved segment.** `ui` is in `format-handler-interface.md`'s reserved table beside `api`,
+  `healthz`, `readyz`, `metrics` and `replication`, with this spec as owner, so no handler may be
+  named `ui` or claim a root-anchored mount under it (its AC11 refuses both at registration, with
+  a fixture handler named `ui`). The exact root path `/` is served by `internal/ui` as a `302` to
+  `/ui/`; the registration layer's mount rule already admits no handler mount at exactly `/`
+  (non-root mounts are `/{Name()}/`, root-anchored claims are listed carve-outs and `/` is not
+  one), and the same table records exactly `/` as reserved with this spec's AC1 as owner, so the
+  next reader does not take the gap for an accident.
 - **SPA routing.** Under `/ui/`, a request for an existing asset serves it; any other path serves
   `index.html` so the client router owns the URL. Content-hashed assets are served with
   `Cache-Control: public, max-age=31536000, immutable`; `index.html` with `Cache-Control: no-store`
@@ -230,9 +234,11 @@ each is mechanically held:
 - **Build.** `web/` is an npm workspace with a committed lockfile: TypeScript, React, Vite, Node
   22 (the version CI already installs). `make web` runs `npm ci` and `vite build` into
   `internal/ui/dist`; `make build` depends on it; `deploy/goreleaser.yaml` gains a `before` hook
-  running it; the Dockerfile gains a Node build stage whose output is copied into the Go build
-  stage. `make verify` runs the web unit tests, the type check, the lint and the bundle checks
-  below, scoped to staged files exactly as it is for Go.
+  running it; the Dockerfile gains a Node 22 build stage whose output is copied into the Go build
+  stage. `deployment.md` owns those three release paths ("The web UI build", its AC32: no release
+  artefact carries the placeholder), and AC1 here is the same guarantee seen from the UI. `make
+  verify` runs the web unit tests, the type check, the lint and the bundle checks below, scoped to
+  staged files exactly as it is for Go.
 
 ### Security headers and the Content Security Policy
 
@@ -275,8 +281,9 @@ Cross-Origin-Opener-Policy: same-origin
   admin form (auth AC2). The UI never sees an ID token, an access token or a password after the
   form submits; it sees a cookie it cannot read.
 - **The API accepts the session.** A `/api/v1` request may authenticate with a bearer token or with
-  the session cookie; the same authorizer decides, and the principal is the same shape (the
-  sibling consequence to `auth.md` and `management-api.md` records that acceptance). Because a
+  the session cookie; the same authorizer decides, and the principal is the same shape (`auth.md`,
+  "The two surfaces", its AC22; `management-api.md` AC30, whose `internal/manage/csrf_test.go`
+  tables every route under cookie and bearer authentication). Because a
   cookie is an ambient credential and a bearer token is not, **a cookie-authenticated request with
   an unsafe method must carry a CSRF token** and a bearer-authenticated one never does.
 - **CSRF** is the double-submit pattern: at session issue the server also sets a non-HttpOnly
@@ -286,11 +293,12 @@ Cross-Origin-Opener-Policy: same-origin
   `unauthenticated` (auth AC22 asserts the refusal; this spec's AC13 asserts the browser side).
   `SameSite=Lax` is defense in depth, not the defense: it does not cover top-level `GET`-initiated
   navigations that some flows turn into state changes, so no state changes on `GET` anywhere.
-- **Who am I.** On load the client calls `GET /api/v1/session` (a sibling consequence) and receives
-  the principal (display name, `(issuer, subject)` never shown as an identifier to other users,
-  admin flag) and the grants it holds, from which the client decides what to render. An anonymous
-  visitor receives an anonymous principal with no grants and sees what visibility allows (the
-  resolved anonymous-access decision below).
+- **Who am I.** On load the client calls `GET /api/v1/session` (`management-api.md`'s endpoint
+  table, any caller; its AC28) and receives the principal (display name, `(issuer, subject)`
+  never shown as an identifier to other users, `principal_kind`, admin flag) and the grants it
+  holds, from which the client decides what to render. An anonymous visitor is answered `200`
+  with `principal_kind: anonymous` and no grants, never a `401`, so the first paint needs no
+  error branch, and sees what visibility allows (the resolved anonymous-access decision below).
 - **Sign-out** calls `/ui/auth/logout` with the CSRF token, which invalidates the session
   server-side (auth AC22) and clears both cookies; the client then drops its state and returns to
   the repositories page as anonymous.
@@ -361,7 +369,10 @@ display:
 - **How the shared layer reaches it** without a sixth pinned method: the optional interface
   `surface.Declarer` with one method, `Surface() surface.Declaration`, type-asserted at
   registration, the same shape `management-api.md` adopted for its optional operation interface
-  (the resolved declaration-home decision below). A handler without it renders generically and
+  (the resolved declaration-home decision below); `format-handler-interface.md` records it in its
+  optional-interfaces table ("Optional interfaces discovered at registration", its resolved
+  optional-interfaces decision, was Q10) as one of the three kept beside the pin until the
+  scheduled re-open judges each. A handler without it renders generically and
   offers no recipe, which AC17 turns into a failure: every registered format must declare at least
   one recipe, because a format with no way to configure its client from the UI is Gitea's feature
   set, not ours.
@@ -371,16 +382,17 @@ display:
 
 **The two consumers.**
 
-1. **The API** serves `GET /api/v1/repositories/{name}/recipes` (a sibling consequence): every
-   recipe of the repository's format rendered for that repository with `Token` left as the
-   placeholder, plus the raw templates. Automation gets the same snippet a human does; the UI's
-   setup page is a rendering of this response and holds no template of its own.
-2. **The conformance runner.** A case's `client` block gains a `recipe:` field naming a recipe id;
-   the runner renders it through `internal/surface` with the case's registry URL and credential and
-   runs the rendered steps inside the client container before `script` (a sibling consequence to
-   `conformance-harness.md`; `setup` stays server-side and closed). Two validator rules complete
-   the loop: a case naming an undeclared recipe id is rejected before any container starts, and
-   every declared recipe is named by at least one passing case in the format's suite, so no
+1. **The API** serves `GET /api/v1/repositories/{name}/recipes` under `pull` (`management-api.md`'s
+   endpoint table, its AC28): every recipe of the repository's format rendered for that repository
+   with `Token` left as the placeholder, plus the raw templates. Automation gets the same snippet a
+   human does; the UI's setup page is a rendering of this response and holds no template of its own.
+2. **The conformance runner.** A case's `client` block carries a `recipe:` field naming a recipe
+   id; the runner renders it through `internal/surface` with the case's registry URL and credential
+   and runs the rendered steps inside the client container before `script`
+   (`conformance-harness.md`, "Case definition"; `setup` stays server-side and closed). Two
+   validator rules complete the loop, both in that spec's AC26: a case naming an undeclared recipe
+   id is rejected before any container starts, and every declared recipe is named by at least one
+   passing case in the format's suite (a recipe named only by failing cases fails the run), so no
    snippet reaches the setup page without a real client having run it.
 
 The AC11 flow closes the loop from the other side: the e2e suite copies the snippet the setup page
@@ -412,9 +424,16 @@ container, and installs through the proxy.
   information is colour-only (WCAG 1.4.1). Contrast is 4.5:1 for text and 3:1 for UI components in
   both schemes, checked by axe.
 - **Configuration**, following the `cobra-viper` skill through `deployment.md`'s schema, typed into
-  `ui.Config`: `ui.instance_name` (default `Stackweaver Registry`; the header and document title)
-  and `ui.help_url` (default the project's documentation site; the help link WCAG 3.2.6 needs in a
-  consistent place). No key disables the UI (charter AC11: "behind no licence or feature flag").
+  `ui.Config`. The keys this spec owns, in the three-column shape `scripts/check-config-keys.js`
+  parses against that schema (`deployment.md` carries them in its key inventory as the `ui.` row):
+
+  | Key | Default | Meaning |
+  |---|---|---|
+  | `ui.instance_name` | `Stackweaver Registry` | The instance name in the header and the document title (AC26) |
+  | `ui.help_url` | `https://github.com/vhco-pro/stackweaver-registry/tree/main/docs` | The help link WCAG 3.2.6 needs in a consistent place on every page (AC26) |
+
+  No key disables the UI (charter AC11: "behind no licence or feature flag"), and no third `ui.`
+  key exists.
 
 ### Page inventory
 
@@ -424,9 +443,9 @@ anonymous principal, subject to visibility.
 
 | Page | Who | What it shows and does | API |
 |---|---|---|---|
-| **Repositories** (`/ui/`) | anyone | Every repository the caller may read: name, format, type (`local`, `remote`, `virtual`), visibility, read-only flag; filters by format and type; the admin additionally sees the deleted listing by identity, awaiting reclamation | repository listing; formats listing |
-| **Search** (`/ui/search`) | anyone | Package name search across every readable repository, results grouped by format with the coordinate rendered by the format's display hint | `GET /api/v1/search` |
-| **Repository** (`/ui/r/{name}`) | `pull` | Tabs: Packages, Set up client, Pointers, Operations, Trust, Refusals, and for the admin Settings, Grants, Audit; a `remote` shows its upstream and a "refresh now" action; a `virtual` its ordered members | repository read; package listing; recipes; pointers; operations; trust; refusals |
+| **Repositories** (`/ui/`) | anyone | Every repository the caller may read: name, format, type (`local`, `remote`, `virtual`), visibility, read-only flag; filters by format and type; the admin additionally sees the deleted listing by identity, awaiting reclamation, read through `GET /api/v1/repositories?state=deleted` (a filter value on the collection route, never a path of its own) | `GET /api/v1/repositories` (`?state=deleted` for the admin); `GET /api/v1/formats` |
+| **Search** (`/ui/search`) | anyone | Package name search across every readable repository, results grouped by format with the coordinate rendered by the format's display hint; a caller with no readable repository gets an empty page, never a refusal | `GET /api/v1/search?q=` (`management-api.md` AC28; `data-model.md` AC42's index) |
+| **Repository** (`/ui/r/{name}`) | `pull` | Tabs: Packages, Set up client, Pointers, Operations, Trust, Refusals, and for the admin Settings, Grants, Audit; a `remote` shows its upstream and, to a caller holding `push`, a "refresh now" action that marks its cached metadata due for revalidation and leaves one `refresh` operation; a `virtual` its ordered members | repository read; package listing; recipes; pointers; operations; trust; refusals; `POST /api/v1/repositories/{name}/refresh` (`push`, `remote` only; `management-api.md` AC29) |
 | **Package** (`/ui/r/{name}/p/{package}`) | `pull` | Versions newest first with withdrawn and retired state, the package-level document (npm dist-tags, Maven `latest`) through the display hints, the client snippet for this package | package and version listings; recipes with `Package` |
 | **Version** (`/ui/r/{name}/p/{package}/v/{version}`) | `pull` | Files with digest and size, the version document (description, licence, homepage, README via hints, else the tree), verdicts per file (verified, failed, absent, with scheme, identity and reason), refusals, references, provenance and upstream origin of cached files, Swift's signing entity, Hex's key fingerprint; actions by grant: withdraw, restore, annotate, delete version, retire | version and file reads; verdicts; refusals; `POST .../operations` |
 | **Set up client** (`/ui/r/{name}/setup`) | `pull` | One card per recipe family; the client picker within a family (Maven, Gradle, SBT, Ivy, Leiningen); each step rendered with copy buttons; the `Token` placeholder links to token creation | recipes |
@@ -516,8 +535,8 @@ boundary enforced only by review is not enforced:
 | No UI-only capability: every browser request during the e2e suite is `/ui/*` or `/api/v1/*` | `web/e2e/network-audit.ts`, a fixture every spec installs |
 | No API call outside the OpenAPI document | generated `schema.d.ts` type check; `make verify` regeneration diff |
 | Security headers on `/ui/*` only; no inline script or style in the bundle | `internal/ui/headers_test.go`; `web/scripts/check-bundle.mjs` in `make verify` |
-| `ui` is a reserved segment and `/` is not claimable | `format-handler-interface.md` AC11's `internal/format/register_test.go`, with a fixture handler named `ui` |
-| Every registered format declares at least one recipe; every recipe renders with the closed variable set; every recipe is named by a passing conformance case | `internal/surface/declaration_test.go` over the handler registry; `conformance/core/case_validate_test.go` (the two validator rules the harness gains) |
+| `ui` is a reserved segment and `/` is not claimable | `format-handler-interface.md` AC11's `internal/format/register_test.go`, with a fixture handler named `ui` (its reserved table lists `ui` and exactly `/` with this spec as owner) |
+| Every registered format declares at least one recipe; every recipe renders with the closed variable set; every recipe is named by a passing conformance case | `internal/surface/declaration_test.go` over the handler registry; `conformance/core/case_validate_test.go` (the two validator rules, `conformance-harness.md` AC26) |
 | Missing and forbidden render identically | `web/e2e/existence-oracle.spec.ts` (DOM and request-sequence equality) |
 | Cookie-authenticated unsafe requests carry CSRF; bearer ones need not | `internal/auth/session_test.go` (auth AC22); `web/e2e/csrf.spec.ts` (a cross-site form post is refused) |
 | WCAG 2.2 AA | `@axe-core/playwright` in every page spec; the targeted specs in the table above |
@@ -567,7 +586,9 @@ Each criterion is independently testable and states an end state.
 - [ ] AC10: Freeze, thaw and rename are performed from the settings page; a frozen repository shows
       its read-only state on every page that names it; renaming a repository whose format declares
       `Rename: unsupported` is refused with the format's reason shown; and a `remote` repository's
-      "refresh now" action completes and is recorded as an operation.
+      "refresh now" action sends `POST /api/v1/repositories/{name}/refresh`, is offered only to a
+      caller holding `push`, completes, and is recorded as a `refresh` operation the Operations
+      tab then lists.
 - [ ] AC11: The pointers tab lists each pointer with target, write time and reach, flags a pointer
       whose target is outside the retention window with how far it has aged and flags none inside
       it; creating, repointing, rolling back and deleting a named pointer succeed by grant and an
@@ -593,7 +614,7 @@ Each criterion is independently testable and states an end state.
       recipe referencing a variable outside the closed set, or a display hint naming a key type the
       renderer does not know, fails registration; and every declared recipe is named by at least
       one passing conformance case of its format, with a case naming an undeclared recipe rejected
-      before any container starts.
+      before any container starts (the two validator rules of `conformance-harness.md` AC26).
 - [ ] AC18: The version page renders each file's verdict (verified, failed or absent, with scheme,
       identity and reason), the repository's refusals with rule, advisory or signal and sources
       after the refused blob has been purged, the trust set with keys shown with the fingerprint
@@ -619,8 +640,10 @@ Each criterion is independently testable and states an end state.
       `internal/manage/openapi/v1.yaml`, and a UI module calling a path absent from it fails the
       type check.
 - [ ] AC25: The pinned-storage view shows every deleted repository awaiting reclamation by
-      identity and every out-of-window pointer with its age to the admin, and neither to a
-      non-admin, and no page renders a rate, latency or other time series.
+      identity (read through `GET /api/v1/repositories?state=deleted`) and every out-of-window
+      pointer with its age to the admin, and neither to a non-admin (whose `?state=deleted`
+      request the API refuses and the page never sends), and no page renders a rate, latency or
+      other time series.
 - [ ] AC26: The header on every page shows `ui.instance_name` as the instance name and the document
       title, and a help link to `ui.help_url` in the same position on every page, with both keys
       carrying their defaults when unset and neither able to disable the UI.
@@ -638,14 +661,14 @@ Each criterion is independently testable and states an end state.
 | AC7 | e2e + unit | `web/e2e/setup.spec.ts` (page text versus API body); `internal/surface/render_test.go` |
 | AC8 | e2e | `web/e2e/charter-ac11.spec.ts` (create remote, copy snippet, run in the client container, assert install) |
 | AC9 | e2e | `web/e2e/delete.spec.ts` (name typed, identity sent, recreate race, `in-use`, detach) |
-| AC10 | e2e | `web/e2e/lifecycle.spec.ts` (freeze, thaw, rename, unsupported rename, refresh now) |
+| AC10 | e2e | `web/e2e/lifecycle.spec.ts` (freeze, thaw, rename, unsupported rename; refresh now as `POST .../refresh` under `push`, hidden from a `pull`-only principal, the `refresh` operation listed) |
 | AC11 | e2e | `web/e2e/pointers.spec.ts` (injected clock for the out-of-window pin) |
 | AC12 | e2e | `web/e2e/credentials.spec.ts` (the row `credential-management.md` AC23 names) |
 | AC13 | e2e + integration | `web/e2e/csrf.spec.ts`; `internal/auth/session_test.go` |
 | AC14 | e2e | `web/e2e/grants.spec.ts` (three principals; forged request) |
 | AC15 | e2e | `web/e2e/existence-oracle.spec.ts` (DOM and request-sequence equality) |
 | AC16 | unit + e2e | `web/src/components/Problem.test.tsx`; `web/e2e/errors.spec.ts` |
-| AC17 | unit + integration | `internal/surface/declaration_test.go` over the registry; `conformance/core/case_validate_test.go` (undeclared id; unexercised recipe) |
+| AC17 | unit + integration | `internal/surface/declaration_test.go` over the registry; `conformance/core/case_validate_test.go` (undeclared id; unexercised recipe; shared with `conformance-harness.md` AC26) |
 | AC18 | e2e | `web/e2e/supply-chain.spec.ts` (verdicts, refusals after purge, trust keys); `web/e2e/operations.spec.ts` |
 | AC19 | unit + e2e | `web/src/lib/markdown.test.ts`; `web/e2e/readme.spec.ts` with a CSP violation listener |
 | AC20 | e2e | `@axe-core/playwright` fixture in every spec; `web/e2e/keyboard.spec.ts` |
@@ -700,8 +723,10 @@ standing delegation, each reversible by the owner.
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: an embedded
 `surface.yaml` in the handler package, exposed through the optional `surface.Declarer` interface,
-type-asserted at registration. Folded through Design ("The surface declaration"), AC7, AC17 and the
-sibling consequences for `format-handler-interface.md` and `conformance-harness.md`.
+type-asserted at registration. Folded through Design ("The surface declaration"), AC7 and AC17;
+`format-handler-interface.md` records the interface in its optional-interfaces table (resolved
+optional-interfaces decision, was Q10) and `conformance-harness.md` carries the `recipe:` field
+and the two validator rules (its AC26), both applied 2026-09-28.
 
 The judgment call it settles: the hint requires snippets "generated from the same source as the
 conformance client recipes, never hand-written per format", and the pinned method set is five.
@@ -789,8 +814,9 @@ without asking a human to transcribe an opaque id; typing the name is the delibe
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: a server-side
 `GET /api/v1/search` over package names, scoped to what the caller may read, with an index over
-`Package.name` and no new entity. Folded through the page inventory, AC6 and the sibling consequences
-for `management-api.md` and `data-model.md`.
+`Package.name` and no new entity. Folded through the page inventory and AC6; `management-api.md`
+carries the route in its endpoint table (its AC28) and `data-model.md` the index (its AC42, "The
+search index"), both applied 2026-09-28.
 
 **Recommendation (adopted):** A, because a client-side search would have to list every repository
 the caller may read on every keystroke, which is slow and, at the edge of the existence oracle,
@@ -839,8 +865,8 @@ would produce two binaries with different route tables and let the flag-less one
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: `/ui/auth/login`,
 `/ui/auth/callback` and `/ui/auth/logout`, mounted by `internal/auth` under the reserved `ui`
-segment. Folded through Design ("Position", "Authentication in the browser") and the sibling
-consequence for `auth.md`.
+segment. Folded through Design ("Position", "Authentication in the browser"); `auth.md` names the
+three routes and their mounting in "The two surfaces" (applied 2026-09-27).
 
 **Recommendation (adopted):** A, because the whole browser surface then sits under one reserved
 segment, the code stays with the spec that owns the flow, and `/api/v1` keeps its contract of
@@ -857,3 +883,4 @@ JSON in and JSON out (a redirect-driven flow does not belong in an OpenAPI docum
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-27 | b98090c | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements `project-charter.md` (AC11, step 9, its resolved web-UI-criterion decision), `management-api.md`, `credential-management.md` (AC23), `auth.md` (AC2, AC14, AC17, AC22), `repository-lifecycle.md` (AC19), `artifact-verification.md` (AC27), `signing-service.md`, `supply-chain-policy.md` (AC5), `observability.md`, `async-operations.md`, `proxy-cache.md`, `storage-and-gc.md` (AC19), `deployment.md`, `conformance-harness.md`, `format-handler-interface.md` (AC11) and fourteen format specs placed on the web UI; grounded prior art in Gitea, Nexus, pulp-ui, Harbor and WCAG 2.2 by fetch this run (Artifactory's portal returned no text; no claim made). Fixed the embedded serving under a reserved `ui` segment with a strict CSP, the pure-API-client posture with its network audit and architecture test, the surface declaration feeding both the setup page and the conformance runner, the page inventory, the WCAG 2.2 AA table and the Playwright strategy. Nine questions adopted under the standing delegation; zero open; 26 criteria, each with a Test Plan row. Sibling consequences reported to the loop for `management-api.md`, `auth.md`, `format-handler-interface.md`, `conformance-harness.md`, `supply-chain-policy.md`, `deployment.md`, `project-charter.md`, `data-model.md` and `repository-lifecycle.md`. Claim verification vacuous pre-code: no `web/`, no `internal/` exists at b98090c. |
+| 2026-09-28 | ff7966e | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. `management-api.md` reconciliation item 2: the Repositories page and AC25 read the deleted listing as `GET /api/v1/repositories?state=deleted` (its resolved deleted-listing decision, was Q11); "refresh now" is `POST /api/v1/repositories/{name}/refresh` under `push` in the Repository row, AC10 and its Test Plan row (its AC29); `GET /api/v1/session` answers an anonymous caller `200` with `principal_kind: anonymous` (its AC28). `conformance-harness.md` reconciliation item 8: the two validator rules cite its AC26 in Design, AC17, its Test Plan row and the enforcer table. `replication.md` reconciliation item 5: "replication's segment" is `replication`. `format-handler-interface.md` reconciliation item 5: `surface.Declarer` cites its optional-interfaces table (was Q10); exactly `/` is recorded reserved there. `data-model.md` reconciliation item 9: the resolved search decision cites AC42. Every "sibling consequence" phrase rewritten as a citation of the applied text (auth.md "The two surfaces" and AC22, management-api AC30 for the session on `/api/v1`, the charter's frontend line). Added the `ui.instance_name` and `ui.help_url` key table in the three-column shape for `scripts/check-config-keys.js`, and the `deployment.md` row now names its "The web UI build" and AC32. "Two non-API routes" corrected to three. No em-dashes or en-dashes. `node scripts/check-spec.js`: zero failures for this file. Stays `draft`. |

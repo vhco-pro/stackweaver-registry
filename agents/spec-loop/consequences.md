@@ -362,6 +362,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - credential-management.md, repository-lifecycle.md: DONE 2026-09-28. Every item targeting them applied (422 statuses, harness seeding, telemetry audit and gauges, tombstone rendering, robot-identity binding, `?state=deleted`, full reserved table, `ErrReplica` waiver, policy and advisory_ecosystem as core-held configuration, phase/step fix).
 - artifact-verification.md, signing-service.md: DONE 2026-09-28. verify.workers retired into async.kind_limits, verify.reevaluate and refreshes on the queue, pull-level trust and verdict reads, lifecycle AC29 in each, telemetry names, master key from deployment, signing.resign and index.merge on the production runtime, `generate` defined, all owed-consequence wording cited. Deployment item 9(c) needs no rename: kinds `verify.tuf_refresh`/`verify.revocation_refresh`, periods `verify.sigstore.refresh`/`verify.revocation.refresh`.
 - upstream-adapters.md, async-operations.md: DONE 2026-09-28. Applied repository-lifecycle 12-13, observability 7-8, deployment 5 and 9, data-model reconciliation 2-3, storage-and-gc 3, management-api 6, proxy-cache 5, supply-chain 8, replication 7, charter 4. Adopted async Q10 (unknown kinds skipped, not refused). New ACs: upstream-adapters 30-32, async-operations 27-28.
+- observability.md, deployment.md, web-ui.md: DONE 2026-09-28. Applied storage-and-gc 2-3, data-model 9, auth 3, supply-chain 2 and 6, replication 4-5 and 8, management-api 2, conformance-harness 8-9, credential-management/lifecycle 1, upstream/async 3-4, FHI 4-5, web-ui authoring 6. Deployment inventory exhaustive (84 sibling keys, 14 prefixes, none reserved; new AC32 web UI build). Observability catalogue already held every sibling name; audit vocabulary +9 events.
 
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
@@ -477,4 +478,8 @@ OWNER NOTE: supply-chain Q9 revises Q1 (single OSV feed) to one OSV schema from 
 3. deployment.md, "Upgrade and rollback policy" (~l.632): cite async-operations' resolved unknown-kind decision (was Q10) and AC26; "Multi-replica constraints" (~l.663): async AC14 and storage-and-gc AC26 take their locks through `internal/db/lock`; `upstream.` rows may cite upstream-adapters AC32.
 4. observability.md, "Propagation policy" (~l.657-660): applied, cite upstream-adapters AC4; `UpstreamRateLimitLow`/`UpstreamCooldown` may cite upstream-adapters AC31; `SchedulerLeaderless` may cite async AC20.
 5. generic.md: async authoring item 9 still unapplied: the retention pass is kind `retention.pass`, one `Schedule` per repository with rules, exclusive key `repo:{repository}`, disabled while `read_only` or deleted.
+
+## From observability, deployment and web-ui reconciliation (2026-09-28)
+1. auth.md (~l.215): `GET /api/v1/session` answers "401 with no session" -> "answers the signed-in principal, its kind and its grant summary, or 200 with `principal_kind: anonymous` and no grants for a caller with no session (management-api AC28)".
+2. web-ui.md and deployment.md: `ui.help_url` defaults to `https://github.com/vhco-pro/stackweaver-registry/tree/main/docs`; change both if a docs site is fixed later (note only).
 
