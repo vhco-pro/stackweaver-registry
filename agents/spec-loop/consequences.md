@@ -355,6 +355,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - auth.md: DONE 2026-09-27. Applied Open items 6, 11, 13, 14, 15, 18, 19, 24, 25, 26, 27, 31 (client table), theme 8 (Presentation forms table, AC31, AC27, AC7), management-api 5, credential-management 2-5, signing-service 16, upstream-adapters 9 (AC10 review surface listed, AC10 not weakened), observability 6, deployment 3 (auth.* keys), web-ui 2. Adopted Q24 (off-route credential is an authentication failure). New AC33 (Terraform capability), AC34 (Chef signed requests).
 - management-api.md: DONE 2026-09-28. One exhaustive endpoint table and a closed 19-type problem table; applied credential-management 6-7, artifact-verification 5, signing-service 4, upstream-adapters 5, async-operations 3, repository-lifecycle 5, observability 4, deployment 13, web-ui 1, data-model 5, storage-and-gc 3, format-handler-interface 5. Adopted Q11 (deleted listing is `?state=deleted`), Q12 (remote refresh). New AC28-32.
 - conformance-harness.md: DONE 2026-09-28. Applied artifact-verification 4, signing-service 6, credential-management 8, upstream-adapters 7, repository-lifecycle 15, deployment 12, management-api 9 and reconciliation 9, async-operations 13, observability 17, web-ui 4, Open items 10, 12, 14-16, 18-28, 30, 32 (harness halves). Adopted Q6 (every client container confined to the case network). New AC23-27. Stays draft pending its gate review.
+- proxy-cache.md: DONE 2026-09-28. Applied theme 7 (completion-only mode, Q15, AC20), Open item 16 (Q16, first-byte deadline, AC21), theme 1 cache half and signing-service 3, Open items 30, 32 (AC22), upstream-adapters 1-3 (seam, Q17 preconfigured nuget and maven, AC6), repository-lifecycle 14 (AC23), observability 10, deployment 4, management-api reconciliation 3 (AC24), and one removal event-class table covering Open items 7, 11, 13 and the format rows.
 
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
@@ -411,4 +412,17 @@ Wording only unless stated.
 8. management-api.md (~l.886, ~l.934), web-ui.md (~l.381), repository-lifecycle.md (~l.818): the per-kind case validator rule is conformance-harness AC26.
 9. deployment.md (~l.563): the `podman --internal` network is the harness's resolved client-confinement decision (was Q6), AC23.
 10. signing-service.md: confirm `generate` for the `signing` sub-entry means key generation under the `file` backend at repository creation; name it if absent.
+
+## From proxy-cache.md reconciliation (2026-09-28)
+1. data-model.md, "Freshness scoped to the pointer", remote current-document entry: add the cache-scoped freshness record on a remote's current-document and paired-set entry: `adopted_at` (forward-moving, later of now and previous+1s) and a paired-set id; metadata, not a root; cite proxy-cache AC22.
+2. go-modules.md, resolved zip-verification decision: the accepted cost "the client waits for the full upstream fetch before its first byte" is stricter than proxy-cache requires; cite proxy-cache's resolved completion-only decision (was Q15, AC20; the client streams, completion withheld until the verifier passes); go may keep buffering by choice.
+3. julia.md (~l.277-279, AC19 row): resolved by proxy-cache's first-byte-deadline decision (was Q16); the handler declares `FirstByteWithin` (20 s) on tarball fetches; `conformance/julia/proxied_slow_test.go` shared with proxy-cache AC21.
+4. nuget.md, maven.md, composer.md, cran.md, luarocks.md, conan.md, openvsx.md, opam.md: "requested of proxy-cache.md" / "must offer before Phase 4" -> offered: proxy-cache was-Q15, AC20 (opam's ordered candidates and declared digest set are in the same section).
+5. upstream-adapters.md, "Preconfigured profiles": drop "(queued ... awaiting proxy-cache.md's extension record)" from the nuget and maven rows (proxy-cache was-Q17); the split table may cite proxy-cache AC20 and AC22.
+6. management-api.md, AC29 and "Cache refresh": a refresh also marks the remote's negative-cache entries due (proxy-cache AC24); `internal/manage/refresh_test.go` shared with AC24.
+7. repository-lifecycle.md: AC11's row shares `internal/repository/readonly_remote_test.go` with proxy-cache AC23; the `delete (remote)` row may cite AC23.
+8. signing-service.md, freshness split: cite proxy-cache AC22 for the cache-scoped half.
+9. format-handler-interface.md, re-open inputs: the fetch-and-cache request shape (digest-or-verifier, ordered candidates, paired set, `FirstByteWithin`, typed refusal) is in proxy-cache's Obligation section.
+10. arch.md, homebrew.md: their "not adopted / regression" rows cite proxy-cache AC22.
+11. conformance-harness.md (wording): proxy-cache AC22 names proxied rollback cases under `conformance/debian|arch|homebrew|luarocks/`; AC20 names short-close observation in `conformance/<format>/proxied_test.go` for go, dotnet, mvn, composer, luarocks.
 
