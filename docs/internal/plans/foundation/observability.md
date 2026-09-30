@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Closing reconciliation 2026-09-28 at 1848c7d on Opus (not a review): repository.rename gains unbound_hosts in its extension set (repository-lifecycle was-Q10, AC28), and the replication.link.create/.update/.delete/.takeover, replication.export, replication.import and policy.rule.update events left by SWEEP 2 are confirmed against replication.md AC10, management-api.md's endpoint table and supply-chain-policy.md AC5/AC25, with policy.rule.update's attributes stated; AC12 and its Test Plan row name them. No question adopted. Reconciled 2026-09-28 at ff7966e with the foundation authoring wave (not a review). Authored 2026-09-27 at 677aa69 as a grounded first draft. Every metric, alert and audit-event name a sibling now asserts in its own criteria was re-verified against the catalogue (all present); the audit vocabulary gained credential-management's robot, key and trust events and repository-lifecycle's repository.configure with the detach and reclaim placements; every dependency row and alert source cites the sibling's applied criterion (storage-and-gc AC21/AC22/AC28, supply-chain AC9, upstream-adapters AC4/AC31, async AC20/AC26/AC27, replication AC10/AC21, data-model AC41) instead of an owed consequence, and deployment.md is cited as carrying the 17 telemetry.* keys. Eight conflicts resolved under the standing delegation, zero open. 29 criteria, each with a Test Plan row. Awaits /spec review."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-01 at 4fcbbd4: a full review pass over the cloud-authored whole (claim verification of every sibling citation at HEAD, adversarial lens at full strength, constitution compliance, go-spec-reviewer inline) plus the re-examination of the eight questions adopted without Fable. Verdicts: Q4 confirmed; Q1, Q2, Q3, Q5, Q6, Q7 and Q8 confirmed and amended (the exporter translation pinned concretely; the alert Error record once per minute with suppressed; a stream attribute on every record and the recorder failing a test on a rejected emission; the repository-name disclosure stated and made the reason the telemetry listener is never public, with repository_label_limit: 0 as the opt-out; a configuration-bounded label never taken from the request; the benchmark gate refusing a threshold tighter than the baseline's variance; no url.query on the request span). None superseded. Brought current first: cache_metadata_bytes{repository} with the dual-held rule and a rule-only CacheMetadataLarge; the middleware ResponseWriter wrapper as a Hijacker accepting WriteRefusal's reported status and size (new AC30); AdvisoryFeedDegraded on the last completed sync or declared export time, per source; replication.link.sync, .reseed and policy.feed.import registered; every-write-past-the-authorizer wording from management-api AC23 and credential-management AC18; the replay labelled by job kind and absent principal, never the marker (new AC31). Refuted and fixed: the authorizer listed in Deps, two counters used by criteria and rules but absent from the catalogue, a histogram _count AC17 forbade, a replication listener that does not exist, MarkSecret on an immutable context, Secret without an accessor. 31 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Eight sibling consequences reported. Earlier: closing reconciliation 2026-09-28 at 1848c7d on Opus (unbound_hosts, the replication and policy.rule.update events confirmed); reconciled 2026-09-28 at ff7966e with the foundation authoring wave; authored 2026-09-27 at 677aa69 as a grounded first draft with eight decisions adopted under the standing delegation."
 description: "Spec for the observability baseline: one metric catalogue with a naming convention and mechanically enforced cardinality bounds, structured operational and request logs with credential redaction at the handler, a separate audit channel for security-relevant events with a closed event vocabulary, OpenTelemetry tracing across the request, Deps and storage boundaries with W3C propagation and X-Request-Id correlation, health and readiness endpoints, a named alert catalogue shipped as Prometheus rules, and the shared CI benchmark-gate mechanism the sibling specs' benchmark criteria run on."
 author: michielvha
 goal: "Make every failure the constitution says has no client oracle visible to an operator before a user reports it: no metric without a bounded label set, no log line that can carry a credential, no security-relevant event outside the audit channel, no request without a correlation id, and no alert that is only a log line."
@@ -11,7 +11,6 @@ covers:
   - "internal/telemetry/**"
   - "scripts/bench-gate.sh"
   - ".github/workflows/**"
-fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate"
 ---
 
 # Plan: Observability
@@ -52,17 +51,18 @@ than owing them to this file. Each is asserted by a criterion in this spec; the 
 
 | Citing spec | What it places on this spec | Where |
 |---|---|---|
-| `credential-management.md` (its AC5, AC18, "Token expiry") | The gauge `credentials{state,owner_kind}` with the informational `CredentialsExpiring` alert (its AC5); the token value in no log line, metric or error body (its AC4); one audit line per request on its routes carrying `event`, `request_id`, `principal`, `credential`, `owner`, `outcome`, `problem_type`, under the `credential.token.*`, `credential.robot.*`, `credential.key.*`, `credential.trust.*` and `credential.exchange` events (its AC18); `X-Request-Id` echoed (its AC15) | AC6, AC12, AC16, AC19 |
+| `credential-management.md` (its AC5, AC18, "Token expiry") | The gauge `credentials{state,owner_kind}` with the informational `CredentialsExpiring` alert (its AC5); the token value in no log line, metric or error body (its AC4); one audit line per request that passes the shared authorizer on its routes, reads and listings included (the channel's one read exception, stated there), none for a request the authorizer refuses, carrying `event`, `request_id`, `principal`, `credential`, `owner`, `outcome`, `problem_type`, under the `credential.token.*`, `credential.robot.*`, `credential.key.*`, `credential.trust.*` and `credential.exchange` events (its AC18 as amended on Fable 2026-10-01); `X-Request-Id` echoed (its AC15) | AC6, AC12, AC16, AC19 |
 | `signing-service.md` (its "Observability" paragraph, AC14, AC15, AC17, AC19, AC22) | The `signing_*` and `index_*` series by this catalogue's names; the alerts `SigningFailed`, `SigningDocumentExpiring`, `VirtualMergeFailed`, `VirtualMergeStalenessBreach`; the `signing.key.*` audit events; private material in no log line or metric label (its AC14); the `external` key expiry alert at `signing.external_expiry_lead` (its AC22) | AC6, AC12, AC18 |
 | `upstream-adapters.md` (its AC31, AC4, AC20) | Exactly the six `upstream_*` series by this catalogue's names, `upstream` always the configured name, never a URL, with `UpstreamRateLimitLow` and `UpstreamCooldown` (its AC31); no `traceparent` or `tracestate` on an outbound request (its AC4); every log line and error passes its redactor (its AC20) | AC6, AC9, AC18, AC20 |
-| `async-operations.md` (its AC20, AC14, AC26, AC27) | The `async_*` series by this catalogue's names and the merge worker's `index_virtual_merge_staleness_breaches_total`; the alerts `JobFailed`, `ScheduleOverdue`, `VirtualMergeStalenessBreach` and `SchedulerLeaderless`, each once per driving scenario (its AC20); the leader runs the state-gauge collector (its AC14); a skipped unknown-kind job still counts in `async_jobs{kind}` (its AC26); `trace_context` and `request_id` recorded at enqueue with a span link (its AC27) | AC6, AC7, AC16, AC18 |
-| `proxy-cache.md` (its AC10, AC13, AC14, "What ends a cached reference's life") | The `cache_*` series by this catalogue's names: utilisation as `cache_referenced_bytes` over `cache_quota_bytes` (`CacheQuotaNearFull`), thrash as `cache_refetch_after_eviction_total` over `cache_evictions_total` (`CacheThrash`), `cache_fetch_failures_total{format,condition}` with `FetchIntegrityFailure`, one `cache_condemnations_total` increment, one `CachePurgedOnSignal` and one `cache.purge` audit event per condemnation, `cache_divergences_total` with `UpstreamDivergence` | AC6, AC12, AC18 |
+| `async-operations.md` (its AC20, AC14, AC26, AC27, AC30) | The `async_*` series by this catalogue's names and the merge worker's `index_virtual_merge_staleness_breaches_total`; the alerts `JobFailed`, `ScheduleOverdue`, `VirtualMergeStalenessBreach` and `SchedulerLeaderless`, each once per driving scenario (its AC20); the leader runs the state-gauge collector (its AC14); a skipped unknown-kind job still counts in `async_jobs{kind}` (its AC26); `trace_context` and `request_id` recorded at enqueue with a span link (its AC27); no job receives a principal from the queue, so a record emitted under a job carries none (its AC30) | AC6, AC7, AC16, AC18, AC31 |
+| `proxy-cache.md` (its AC10, AC13, AC14, AC29, "What ends a cached reference's life") | The `cache_*` series by this catalogue's names: utilisation as `cache_referenced_bytes` over `cache_quota_bytes` (`CacheQuotaNearFull`), thrash as `cache_refetch_after_eviction_total` over `cache_evictions_total` (`CacheThrash`), `cache_fetch_failures_total{format,condition}` with `FetchIntegrityFailure`, one `cache_condemnations_total` increment, one `CachePurgedOnSignal` and one `cache.purge` audit event per condemnation, `cache_divergences_total` with `UpstreamDivergence`; `cache_metadata_bytes{repository}` for a remote's current and retained metadata outside the quota, the only signal of the operator's only lever (its resolved metadata-eviction decision, was Q21, and AC29), a cached file a declared list of the remote also holds counted there and not in `cache_referenced_bytes` while declared (`rpm.md` was-Q11 as folded into its AC14 and AC29) | AC6, AC12, AC18 |
 | `storage-and-gc.md` (its "Observability" section, AC19, AC21, AC22, AC28) | The `gc_*` and `storage_*` series with exactly this catalogue's names and labels, moving under a driven sweep, cancelled intent, aged pin, aborted read and expired session, with `GCSweepStale` (twice `gc.sweep_interval`), `PinnedStorageOutOfWindow` and `BlobDigestMismatch` evaluating true in those states (its AC28); the read-path digest verification that increments `storage_blob_digest_mismatches_total{format}` once per aborted read (its AC21) under a `// gate:` budget (its AC22) | AC6, AC18, AC25 |
-| `supply-chain-policy.md` (its AC5, AC6, AC9, AC25) | `policy_refusals_total{format,condition}` and the `policy.refusal`, `policy.condemnation` and `policy.rule.update` audit events (its AC5), the last also on a `coordinate_exemptions` change (its AC25); `policy_unscanned_past_bound` as the input of `ArtifactUnscannedPastBound` past `policy.scan.unscanned_alert_after` (its AC6); the operator alerted when advisory data is older than `policy.feed.staleness_threshold` (its AC9, `AdvisoryFeedDegraded`) | AC6, AC12, AC18 |
-| `replication.md` (its AC10, AC21, "What a monitor sees") | The four `replication_*` series, the one-hot link state over six values, the four alerts `ReplicationLinkFailed`, `ReplicationReseeding`, `ReplicationDiverged`, `ReplicationLagHigh`, the six `replication.*` audit events carrying `link` and `leader`, and trace propagation to the leader so one trace spans both instances (its AC10); a linked follower signs nothing, so `signing_*` series stay flat on it for a replicated repository (its AC21) | AC6, AC12, AC18, AC20 |
-| `management-api.md` (its AC23; "Audit: the `Operation` record and the audit line") | The audit line as a structured `log/slog` record with a fixed attribute set, emitted through the request logger `Deps` carries, surviving the `Operation` prune, credential-free, sharing `request_id` with the `Operation`; `X-Request-Id` on every response, echoing the client's when sent | AC12, AC14, AC16 |
-| `auth.md` (its AC7, AC15) | A token or password never in logs, error responses or metrics, asserted on a real success and a real failure; the first-start admin credential emitted exactly once by design | AC9, AC10, AC11 |
-| `format-handler-interface.md` ("The pinned method set") | `Deps` carries "the request logger"; a handler holds no capability it was not handed; shared-layer routes need reserved mounts (its AC11) | AC3, AC15, AC22 |
+| `supply-chain-policy.md` (its AC5, AC6, AC9, AC16, AC18, AC25) | `policy_refusals_total{format,condition}` and the `policy.refusal`, `policy.condemnation` and `policy.rule.update` audit events (its AC5), the last also on a `coordinate_exemptions` change (its AC25); `policy_unscanned_past_bound` as the input of `ArtifactUnscannedPastBound` past `policy.scan.unscanned_alert_after` (its AC6); the operator alerted when a source's freshness, the completion of its last successful sync or the export time its import declared, is older than `policy.feed.staleness_threshold` (its AC9 and its resolved freshness-measure decision, was Q13; `AdvisoryFeedDegraded`); the `policy.feed.import` audit event on the local import (its AC16); a hijacked refusal write counted in `http_server_request_duration_seconds` and present in the request log exactly as a non-hijacked response would be, which needs this middleware's `ResponseWriter` wrapper to be a `Hijacker` and to accept the status and size the writer reports (its AC18 as extended on Fable 2026-09-30) | AC6, AC12, AC18, AC30 |
+| `replication.md` (its AC10, AC21, "What a monitor sees") | The four `replication_*` series, the one-hot link state over six values, the four alerts `ReplicationLinkFailed`, `ReplicationReseeding`, `ReplicationDiverged`, `ReplicationLagHigh`, the `replication.*` audit events carrying `link` and `leader` (`replication.link.sync` and `.reseed` named by `management-api.md`'s endpoint table on Fable 2026-09-30 for this spec and `replication.md` to register), and trace propagation to the leader so one trace spans both instances (its AC10); a linked follower signs nothing, so `signing_*` series stay flat on it for a replicated repository (its AC21) | AC6, AC12, AC18, AC20 |
+| `management-api.md` (its AC23, AC33, AC34; "Audit: the `Operation` record and the audit line") | The audit line as a structured `log/slog` record with a fixed attribute set, emitted through `telemetry.Auditor.Emit`, surviving the `Operation` prune, credential-free, sharing `request_id` with the `Operation`; one line for every write past the shared authorizer under a registered event, none for a read and none from that surface for an authorizer refusal (its AC23 as amended on Fable 2026-09-30); `replication.link.sync`, `replication.link.reseed` and `policy.feed.import` named for registration here (its endpoint table, AC33, AC34); `X-Request-Id` on every response, echoing the client's when sent | AC12, AC14, AC16 |
+| `auth.md` (its AC7, AC15, AC36) | A token or password never in logs, error responses or metrics, asserted on a real success and a real failure; the first-start admin credential emitted exactly once by design; the revalidation replay carries no principal and its marker is a context value no package outside the composition root can read (its AC36), so nothing here labels a replay by the marker | AC9, AC10, AC11, AC31 |
+| `format-handler-interface.md` ("The pinned method set", AC14, AC18) | `Deps` carries "the request logger" and no authorizer (corrected there 2026-10-01); a handler holds no capability it was not handed; shared-layer routes need reserved mounts (its AC11); `WriteRefusal` hijacks on HTTP/1.1, emits the pre-set headers and reports its status and size to this middleware, which must be reachable as a `Hijacker` (its AC14); the replay entry dispatches a handler below the router with a discarding writer, a marker unreadable outside the composition root and no principal (its AC18) | AC3, AC15, AC22, AC30, AC31 |
+| `deployment.md` (its AC13, AC27) | The telemetry listener bound only to `telemetry.listen`, never on the chart's Service or Ingress, which is what makes repository names as label values acceptable on it (its AC13); `alerts.yaml` installed as a PrometheusRule with its templated values (its AC27) | AC17, AC23 |
 | `artifact-verification.md` (its AC26, AC27) | `verify_verdicts_total{scheme,state}`, `verify_duration_seconds{scheme}`, `verify_reevaluation_pending`; `VerificationFailed` on a `failed` verdict at ingest or cache commit (its AC27); the ingest-overhead benchmark under the shared gate (its AC26) | AC6, AC18, AC25 |
 | `repository-lifecycle.md` (its AC27, AC28) | The `repository.*` audit events with `repository_id` on every record, `repository.rename` carrying `previous_name` and `unbound_hosts` (its resolved hostname-binding decision, was Q10); the leader-exported gauge `repositories{format,repository_kind,state}` | AC7, AC12 |
 | `data-model.md` (its AC41) | `Job.trace_context` and `Job.request_id` set at enqueue and equal to the enqueuing request's | AC16 |
@@ -226,20 +226,42 @@ Its exported surface, small on purpose:
   `Metrics.Manage`), each a struct of methods with typed parameters (Design, "Cardinality").
 - `Telemetry.Middleware(next http.Handler) http.Handler`: the request middleware, one per
   listener, doing request id, span, request log, HTTP metrics and per-request secret scrubbing
-  in that order.
+  in that order. It is this package's own middleware rather than `otelhttp`, because it also
+  owns the request id, the request log line, the secret set and the two labels (`format`,
+  `listener`) the semconv instruments carry here, and because it must survive a hijack (next
+  paragraph); `otelhttp`'s two-phase `http.route` read is copied, not imported.
+- **The `ResponseWriter` wrapper** the middleware installs records the status code and body
+  size for the log line, the histogram and the span. It implements `http.Flusher` (a streamed
+  blob needs `Flush`), `http.Hijacker` and `Unwrap() http.ResponseWriter`, so both a direct
+  type assertion and `http.NewResponseController(w).Hijack()` reach the connection through it,
+  and it implements the one-method reporter interface `format-handler-interface.md` declares
+  beside `WriteRefusal` (a consequence reported to that spec: `format.HijackReporter`, found by
+  the writer through the `Unwrap` chain), through which the refusal writer hands back the status
+  it wrote on the hijacked connection and the bytes it sent. Once hijacked, the wrapper takes
+  no further writes, the middleware completes the request from the reported values, and the
+  request log line, `http_server_request_duration_seconds`, `requests_total` and the request
+  span show the refusal exactly as they would a written response (AC30). Without this, every
+  policy refusal on HTTP/1.1 would vanish from the metrics, `HighErrorRate` and the log, which
+  `supply-chain-policy.md` AC18 and `format-handler-interface.md` AC14 both rely on this spec
+  to prevent.
 - `Telemetry.Instrument(deps format.Deps) format.Deps`: wraps every consumer interface in
   `Deps` with a tracing and metrics decorator (Design, "Tracing").
 - `Telemetry.Health() *Health`: the readiness registry; `Handler()` for the telemetry listener,
   `Probe()` for the main listener.
 - `MarkSecret(ctx, value)`, `Secret(value)`, `Disclose(value)`, `RedactURL(*url.URL)`,
-  `Alert` (Design, "Redaction", "Alerts").
+  `Alert`, `WithJob(ctx, id, kind, requestID)` (Design, "Redaction", "Alerts", "Structured
+  logging").
 
 The consumer interfaces this package decorates are the ones `format-handler-interface.md` says
-`Deps` carries (the blob store, the metadata store, fetch-and-cache, the authorizer, the request
-logger); their signatures belong to the specs that own the layers, and this spec adds no method
-to any of them. `Deps`'s "request logger" is a `*slog.Logger` whose handler reads the request
-attributes from the context (Design, "Structured logging"), so the interface `Deps` carries for
-logging is the standard library's.
+`Deps` carries: the blob store, the metadata store, fetch-and-cache, the `Verifier`, the
+advisory reader, the host-binding lookup, the `Documents` serving door and the request logger
+(its "The pinned method set"; there is no authorizer in `Deps`, a listing that spec corrected on
+2026-10-01 and that an earlier draft of this spec had copied). Their signatures belong to the
+specs that own the layers, and this spec adds no method to any of them. `Deps`'s "request
+logger" is a `*slog.Logger` whose handler reads the request attributes from the context (Design,
+"Structured logging"), so the interface `Deps` carries for logging is the standard library's.
+The authorizer is not decorated here because it is not in `Deps`; its span (`auth.authorize`)
+is produced inside `internal/auth` through the tracer handle (Design, "Tracing").
 
 Four boundary rules, each with its enforcer, per the constitution's rule that a boundary held
 only by review is not enforced:
@@ -270,6 +292,15 @@ registry-specific series are unmistakable:
   operator running both would get a merged series. The subsystem word is one of the fourteen
   `Metrics` fields above, lower-cased (`http` is never used for a registry-specific metric; the
   semconv family owns it).
+- **How the namespace is applied, pinned.** The prefix lives in the OTel instrument name
+  itself (`stackweaver.registry.cache.referenced` with unit `By` renders as
+  `stackweaver_registry_cache_referenced_bytes`), never in the exporter's `WithNamespace`
+  option, which would prefix the semconv family too. The exporter is constructed with
+  `WithoutScopeInfo()`, so no `otel_scope_name` or `otel_scope_version` label reaches a series
+  (both would fall outside the closed attribute vocabulary), and `target_info` is the one
+  exporter-generated series admitted beside the catalogue. The standard collectors' families
+  (`go_*`, `process_*`, `promhttp_*`) are admitted by prefix and are not catalogue rows. AC4
+  holds all of this: a library upgrade that changes the translation shows as a catalogue diff.
 - Units are base units in the name (`_seconds`, `_bytes`), never in a label. Counters end in
   `_total`. Timestamps are `_timestamp_seconds` gauges (Unix seconds), never durations "since",
   so that `time() - metric` is computed by the rules engine and the gauge does not need
@@ -277,11 +308,13 @@ registry-specific series are unmistakable:
   0 or 1 (one-hot), never an integer-coded enum, because an enum cannot be summed or alerted on
   by name. Metadata is an `_info` gauge with value 1.
 - Label names come from a closed attribute vocabulary shared with the log schema (below):
-  `format`, `repository`, `repository_kind`, `upstream`, `link`, `kind`, `schedule`, `outcome`,
-  `state`, `component`, `operation`, `backend`, `profile`, `scheme`, `condition`, `form`,
-  `decision`, `owner_kind`, `direction`, `alert`, `event`, `route` (as semconv `http.route`).
-  A metric introducing a label outside this list is a spec change to this table, not a code
-  change.
+  `format`, `repository`, `repository_kind`, `upstream`, `link`, `kind`, `schedule`, `source`,
+  `outcome`, `state`, `component`, `operation`, `backend`, `profile`, `scheme`, `condition`,
+  `form`, `decision`, `owner_kind`, `direction`, `alert`, `event`, `stream`, `level`,
+  `mechanism`, `label`, `listener`, `route` (as semconv `http.route`). A metric introducing a
+  label outside this list is a spec change to this table, not a code change (`source`, the
+  advisory feed's source name, was added on the Fable recheck of 2026-10-01 when
+  `supply-chain-policy.md`'s freshness became per source).
 
 Log attribute keys use the same vocabulary, snake_case, with the semconv keys (`http.request.method`
 and friends) rendered as `slog` groups (`http.request.method` is the `method` attribute inside the
@@ -302,20 +335,38 @@ two classes:
   value set, and the typed instrument methods take them as parameters, so an arbitrary string
   cannot reach a label at all.
 - **Configuration-bounded labels**, whose values are operator-created names: `repository`,
-  `upstream`, `link`, `schedule`, and `route`. Their cardinality is the number of rows an
-  operator created, which is bounded in practice but not in principle, so each passes through a
-  `Bounded` limiter at emission: a per-label cap (`telemetry.metrics.repository_label_limit`,
-  default 1000, and 200 for `upstream`, `link` and `schedule`) past which every further distinct
-  value is emitted as `_other`, and a gauge `stackweaver_registry_telemetry_label_overflow_total{label}`
-  counts the collapses so the operator sees the cap bite instead of losing series silently. The
-  limiter is per process and resets on restart. `route` needs no cap because its values are
-  route patterns, bounded by the registered routes (below), but it goes through the same code
-  path so the rule has one implementation.
+  `upstream`, `link`, `schedule`, `source`, and `route`. Their cardinality is the number of rows
+  an operator created, which is bounded in practice but not in principle, so each passes through
+  a `Bounded` limiter at emission: a per-label cap (`telemetry.metrics.repository_label_limit`,
+  default 1000, and `telemetry.metrics.name_label_limit`, default 200, for `upstream`, `link`,
+  `schedule` and `source`) past which every further distinct value is emitted as `_other`, and
+  a counter `stackweaver_registry_telemetry_label_overflow_total{label}` counts the collapses
+  so the operator sees the cap bite instead of losing series silently. A cap of `0` collapses
+  every value to `_other`, which is the operator's opt-out from per-name series without a
+  second key (Design, "The telemetry listener", on why an operator might want it). The limiter
+  is per process and resets on restart. `route` needs no cap because its values are route
+  patterns, bounded by the registered routes (below), but it goes through the same code path
+  so the rule has one implementation.
+- **A configuration-bounded value is never taken from the request.** `repository` on a
+  request-driven series (`requests_total`, the request log's correlation attribute) is the name
+  of the repository row the authorizer resolved, never the path segment as the client sent it;
+  a request that resolves no repository is counted under `repository="_none"` and a request
+  that reaches no handler mount under `format="_none"`. Otherwise a client enumerating
+  guessed names would fill the cap with garbage and collapse the real repositories into
+  `_other`, which is the label-cardinality attack the rule above exists to close, arriving
+  through the one label that looks operator-controlled (AC5).
+- **`_other` on a state-derived per-repository gauge** is an aggregate, not a first-come
+  residue: the leader's collector orders repositories by identity, exports the first
+  `repository_label_limit` by name and folds the rest into `_other` with the aggregation the
+  catalogue row names (a sum for bytes and counts, the minimum for an expiry timestamp, the
+  maximum for a staleness age), so the residue still means something to a rule.
 
 The `repository` label is admitted only on metrics whose meaning is per repository (cache bytes
-and quota, pinned snapshots, merge staleness, repository request counts) and the catalogue marks
-each. Harbor labels its quota gauges by `project_name` and this spec follows that shape, with the
-cap Harbor lacks.
+and quota, metadata bytes, pinned snapshots, merge staleness, document expiry, repository request
+counts) and the catalogue marks each. Harbor labels its quota gauges by `project_name` and this
+spec follows that shape, with the cap Harbor lacks. The value is the repository's name, which is
+private information on a private registry; "The telemetry listener" below says why that is
+acceptable on that listener and nowhere else.
 
 **`http.route`.** Handlers receive the raw `*http.Request` and route inside their own package,
 so the server's mux knows only the mount. The semconv rule is that `http.route` is a
@@ -348,7 +399,7 @@ italics are configuration-bounded (capped); all others are enumerated.
 
 | Metric | Type | Labels | Notes |
 |---|---|---|---|
-| `http_server_request_duration_seconds` | histogram | `http_request_method`, `url_scheme`, `http_response_status_code`, `http_route`, `error_type`, `format`, `listener` | `format` is the handler that served it or `api`, `replication`, `telemetry`; `listener` is `main` or `telemetry`. Extended boundaries (below) |
+| `http_server_request_duration_seconds` | histogram | `http_request_method`, `url_scheme`, `http_response_status_code`, `http_route`, `error_type`, `format`, `listener` | `format` is the handler that served it or `api`, `ui`, `replication`, `telemetry`, or `_none` for a request reaching no mount; `listener` is `main` or `telemetry` (the replication routes are a mount on `main`). A hijacked refusal is observed from the status the writer reported (AC30). Extended boundaries (below) |
 | `http_server_active_requests` | up-down counter | `http_request_method`, `url_scheme`, `format` | |
 | `http_server_request_body_size_bytes`, `http_server_response_body_size_bytes` | histogram | as duration | Byte boundaries (below) |
 | `http_client_request_duration_seconds` | histogram | `http_request_method`, `server_address`, `server_port`, `http_response_status_code`, `error_type`, *`upstream`* | Emitted by the upstream adapter's decorated transport; `server_address` is the upstream host or an allowlisted off-origin host, bounded by the allowlists |
@@ -365,6 +416,8 @@ italics are configuration-bounded (capped); all others are enumerated.
 | `telemetry_label_overflow_total` | counter | `label` | Cardinality cap |
 | `telemetry_log_records_total` | counter | `stream` (`operational`, `request`, `audit`), `level` | Lets a silent audit sink be alerted on |
 | `telemetry_redactions_total` | counter | `mechanism` (`typed`, `key`, `scrub`, `url`) | A non-zero `scrub` count in production is a finding: something reached the log as a plain string |
+| `telemetry_disclosures_total` | counter | | The one sanctioned disclosure (`auth.md` AC15); reads 1 after a first start and never more (AC10) |
+| `telemetry_audit_sink_failures_total` | counter | | A failed write on the audit sink; feeds `AuditSinkFailing` (AC13) |
 | `repositories` | gauge | `format`, `repository_kind` (`local`, `remote`, `virtual`), `state` (`active`, `read_only`, `deleted`) | `repository-lifecycle.md`; state-derived, leader-exported |
 | `requests_total` | counter | `format`, *`repository`*, `operation` (`pull`, `push`, `delete`, `list`, `other`), `outcome` (`ok`, `refused`, `denied`, `not_found`, `error`) | The per-repository request count (Harbor `harbor_artifact_pulled` in bounded form); `operation` is the `Scope(r)` action |
 | `content_delivery_duration_seconds` | histogram | `format`, `outcome` | Time to first byte to last byte for a blob or document served, separate from API latency (Pulp's split) |
@@ -381,7 +434,8 @@ italics are configuration-bounded (capped); all others are enumerated.
 | `gc_pinned_out_of_window_snapshots` | gauge | *`repository`* | `storage-and-gc.md` AC19: pointers pinning aged-out snapshots, per repository; the API lists which |
 | `gc_pinned_out_of_window_bytes` | gauge | | Registry-wide retained bytes attributable to out-of-window pins; not per repository because attribution of shared blobs is not additive |
 | `cache_requests_total` | counter | `format`, `outcome` (`hit`, `miss`, `revalidated`, `stale_served`, `refused`, `upstream_error`) | Hit ratio |
-| `cache_referenced_bytes`, `cache_quota_bytes` | gauge | *`repository`* | `proxy-cache.md` AC14: quota utilisation is the ratio |
+| `cache_referenced_bytes`, `cache_quota_bytes` | gauge | *`repository`* | `proxy-cache.md` AC14: quota utilisation is the ratio; cached files only, `_other` sums |
+| `cache_metadata_bytes` | gauge | *`repository`* | `proxy-cache.md` AC29 (its resolved metadata-eviction decision, was Q21): the inline bodies, CAS-backed bodies and declared blobs of a remote's current and retained metadata, outside the quota, so a remote whose metadata dwarfs its files is found from metrics; a blob held by a cached reference and by a declared list at once (`rpm.md` was-Q11) counts here and not in `cache_referenced_bytes` while declared, and moves between the two gauges at the adoption that drops it. Deleting the remote is the only lever, so `CacheMetadataLarge` rides it; state-derived, leader-exported, `_other` sums |
 | `cache_evictions_total` | counter | *`repository`* | |
 | `cache_refetch_after_eviction_total` | counter | *`repository`* | Thrash: a refetch of something evicted earlier; the ratio of this to evictions is the thrash signal `proxy-cache.md` asks for |
 | `cache_coalesced_requests_total` | counter | `format` | Requests joined to an in-flight fetch (`proxy-cache.md` AC11) |
@@ -416,8 +470,8 @@ italics are configuration-bounded (capped); all others are enumerated.
 | `policy_refusals_total` | counter | `format`, `condition` (`advisory`, `licence`, `security_signal`, `stale_feed`, `unscanned`, `verdict`) | `supply-chain-policy.md` AC5's records are the queryable side; this is the rate |
 | `policy_scans_total` | counter | `outcome` (`clean`, `violation`, `failed`) | |
 | `policy_unscanned_past_bound` | gauge | | Artifacts unscanned past the window (`supply-chain-policy.md` AC6) |
-| `policy_advisory_feed_last_sync_timestamp_seconds` | gauge | | |
-| `policy_advisory_feed_degraded` | gauge (0/1) | | |
+| `policy_advisory_feed_freshness_timestamp_seconds` | gauge | *`source`* | The source's freshness as `supply-chain-policy.md` measures it (its resolved freshness-measure decision, was Q13): the completion of its last successful sync, or the export time its import declared; one series per configured source (`policy.feed.sources` plus the default feed), never the newest record's date; state-derived, leader-exported |
+| `policy_advisory_feed_degraded` | gauge (0/1) | *`source`* | 1 while that source's freshness is older than `policy.feed.staleness_threshold` (its AC9); feeds `AdvisoryFeedDegraded` per source, so the operator sees which one |
 | `verify_verdicts_total` | counter | `scheme`, `state` (`verified`, `failed`, `absent`) | `artifact-verification.md` |
 | `verify_duration_seconds` | histogram | `scheme` | |
 | `verify_reevaluation_pending` | gauge | | |
@@ -449,12 +503,20 @@ audit sink is configured otherwise:
 
 - **The operational log** is `Telemetry.Logger()` and the `*slog.Logger` in `Deps`. Its handler
   chain is: the **context handler** (adds `request_id`, `trace_id`, `span_id`, `principal`,
-  `repository`, `format` from the request context when present, so a handler logging with
-  `InfoContext(ctx, ...)` gets correlation for free and never passes them by hand); the
-  **redaction handler** (below); the sink (`JSONHandler` or `TextHandler` at
-  `telemetry.log.level`, default `info`). Level guidance is the `go` skill's: `Debug` for
-  internal state, `Info` for lifecycle, `Warn` for recoverable problems, `Error` for what needs
-  attention; the alert mechanism reserves `Error` records with an `alert` attribute.
+  `repository`, `format` from the request context when present, and `job_id`, `kind` and the
+  enqueuing `request_id` under a job, so a handler logging with `InfoContext(ctx, ...)` gets
+  correlation for free and never passes them by hand); the **redaction handler** (below); the
+  sink (`JSONHandler` or `TextHandler` at `telemetry.log.level`, default `info`). The job
+  attributes come from `telemetry.WithJob(ctx, id, kind, requestID)`, which
+  `async-operations.md`'s runner calls once per job before `Work` (a consequence reported to
+  it); a job's records therefore say which kind produced them, and a record under
+  `kind=proxy.revalidate` with no `principal` is how a replayed dispatch is recognised in the
+  log (Design, "Tracing", on why nothing here reads the replay marker). Level guidance is the
+  `go` skill's: `Debug` for internal state, `Info` for lifecycle, `Warn` for recoverable
+  problems, `Error` for what needs attention; the alert mechanism reserves `Error` records with
+  an `alert` attribute. Every record on every stream carries `stream` (`operational`,
+  `request`, `audit`), so a collector reading one descriptor can route by field even when two
+  streams share it (below, "The audit log", on why the default sink shares standard output).
 - **The request log** is one `Info` record per request, emitted by the middleware when the
   response completes, on its own logger so an operator can silence it (`telemetry.log.request`,
   default `true`) without silencing lifecycle records. Its fixed schema, semconv keys as groups:
@@ -463,9 +525,14 @@ audit sink is configured otherwise:
   `duration_ms`, `client.address` (the connecting peer, or the last trusted proxy's
   `X-Forwarded-For` hop when `telemetry.log.trusted_proxies` names it), `user_agent.original`
   truncated to 256 bytes, `request_id`, `trace_id`, `principal` (the principal's id or name and
-  `anonymous`, never a credential), `format`, `repository`, `operation`, `outcome`. The query
-  string is never logged: too many ecosystems carry credentials in it (`vagrant.md`'s access
-  token parameter, presigned `X-Amz-*`), and no case in any format spec needs it.
+  `anonymous`, never a credential), `format`, `repository` (the resolved row's name, Design,
+  "Cardinality"), `operation`, `outcome`. The query string is never logged: too many
+  ecosystems carry credentials in it (`vagrant.md`'s access token parameter, presigned
+  `X-Amz-*`), and no case in any format spec needs it. A response written on a hijacked
+  connection gets its line from the status and size the writer reported (AC30), so a policy
+  refusal is never the request that left no trace. A replayed dispatch
+  (`format-handler-interface.md` AC18) passes no listener middleware and gets no line: it is not
+  a request, and its record is the job's (AC31).
 - **The audit log** (next section).
 
 **Redaction** is layered, because each layer catches what the others cannot, and `auth.md` AC7
@@ -474,16 +541,21 @@ is the end-to-end proof for all of them:
 1. **Typed secrets.** `telemetry.Secret` is a string type implementing `slog.LogValuer` whose
    `LogValue` returns `[redacted]` and whose `String` and `%v` renderings do the same, so a
    secret that reaches a log, an error message or a problem body through the type is redacted
-   without anyone remembering to. The auth verifier, the credential store, the upstream
-   credential kinds and the signing backends hold material in this type or in their own
-   `LogValuer` types (the `go` skill's password example).
+   without anyone remembering to; the value itself is read only through `Secret.Expose()`, the
+   one accessor, so every site that handles the plaintext is one grep away. The auth verifier,
+   the credential store, the upstream credential kinds and the signing backends hold material
+   in this type or in their own `LogValuer` types (the `go` skill's password example).
 2. **Key denylist.** The redaction handler's `ReplaceAttr` replaces the value of any attribute
    whose key, at any group depth, matches the denylist (`authorization`, `proxy_authorization`,
    `password`, `passwd`, `secret`, `token`, `access_token`, `id_token`, `refresh_token`,
    `api_key`, `apikey`, `private_key`, `pin`, `cookie`, `set_cookie`, and every vendor header
    name `auth.md` AC31 lists, lower-cased and snake-cased), whatever its type.
-3. **Per-request scrubbing.** `telemetry.MarkSecret(ctx, value)` registers a value on the
-   request context; the redaction handler replaces every occurrence of every marked value in
+3. **Per-request scrubbing.** `telemetry.MarkSecret(ctx, value)` registers a value in the
+   secret set the middleware installs on the request context (a context value is immutable, so
+   the set is a pointer the middleware places and `MarkSecret` appends to; the job runner
+   installs one per job through `WithJob`, since the upstream adapter marks credentials under
+   `proxy.revalidate` and `replication.sync` too, and a context carrying no set is treated as
+   holding none); the redaction handler replaces every occurrence of every marked value in
    every string attribute and in the message of every record emitted under that context,
    including the request log line and the audit line. The auth verifier marks every credential
    it extracts (Bearer and Basic values, path-segment tokens, vendor header values, capability
@@ -523,11 +595,18 @@ same reason). The resolved audit-channel question records the choice.
 
 - **Sink.** `telemetry.audit.sink` is `stdout` (default), `stderr` or `file` with
   `telemetry.audit.file`; a file sink is opened append-only and reopened on `SIGHUP` so an
-  external rotator can work. Level is not configurable: every audit record is emitted. A write
-  failure on the audit sink is an `Error` on the operational log and an `AuditSinkFailing`
-  alert, and the request that produced the event still completes, because a registry that
-  refuses service when its audit file is full trades one incident for two; the choice is
-  recorded in the resolved audit-channel question with the alternative.
+  external rotator can work. Level is not configurable: every audit record is emitted. With the
+  default sink the audit stream shares standard output with the operational and request logs,
+  so what separates it there is the `stream: audit` attribute on every record, its closed
+  schema and its independence from `telemetry.log.level`, not a descriptor of its own; an
+  operator who wants the descriptor sets `stderr` (a container runtime tags the two streams
+  apart) or `file`. This is stated plainly because the resolved audit-channel question rejected
+  the "one stream with a field" option, and the default sink is that shape at the descriptor
+  level while keeping every other property the option lacked. A write failure on the audit sink
+  is an `Error` on the operational log and an `AuditSinkFailing` alert, and the request that
+  produced the event still completes, because a registry that refuses service when its audit
+  file is full trades one incident for two; the choice is recorded in the resolved audit-channel
+  question with the alternative.
 - **Schema.** Every record has `time`, `msg` equal to the event name, and the fixed attribute
   set `management-api.md` names: `event`, `request_id`, `trace_id`, `operation_id` (when an
   `Operation` exists), `principal` and `principal_kind` (`user`, `robot`, `admin`, `anonymous`),
@@ -541,11 +620,17 @@ same reason). The resolved audit-channel question records the choice.
 - **Emission.** `Auditor.Emit(ctx, event, attrs...)` is the only way to write to the channel.
   It reads the correlation fields from the context (the same context handler as the
   operational log), runs the redaction chain, checks the event against the vocabulary and the
-  attributes against the event's extension set, and rejects at test time (panics under the
-  race-enabled test build, drops with an operational `Error` in production) an unregistered
-  event or attribute. `management-api.md`'s "exactly one audit line per request" is enforced
-  where that spec puts it (its AC23 in `internal/manage/audit_test.go`) using the
-  `Auditor`'s test recorder; this spec provides the recorder.
+  attributes against the event's extension set, and drops an unregistered event or attribute
+  with an operational `Error`; under test, `telemetry.NewTestRecorder(t)` holds the
+  `testing.TB` and fails the test on any such drop, so a mis-registered emission cannot pass a
+  suite (an earlier draft said "panics under the race-enabled build", which is not a mechanism
+  Go offers and would have left production and test behaviour undefined). Which requests emit
+  a line is the owning surface's rule, not this channel's: `management-api.md` AC23 (every
+  write past the shared authorizer under a registered event, reads never, nothing from that
+  surface for an authorizer refusal) and `credential-management.md` AC18 (the same, with its
+  reads as the one recorded exception) are enforced where those specs put them
+  (`internal/manage/audit_test.go`, `internal/credential/audit_test.go`) using the `Auditor`'s
+  test recorder; this spec provides the recorder and the vocabulary.
 - **Vocabulary.** Event names are `<subsystem>.<object>.<action>`, a closed Go table
   (`internal/telemetry/audit_events.go`) with each event's extension attributes. The initial
   set, gathered from the siblings:
@@ -555,14 +640,15 @@ same reason). The resolved audit-channel question records the choice.
 | `auth.credential.refused` (plaintext or malformed presentation), `auth.credential.invalid` (unknown, expired or revoked), `auth.access.denied` | `form`, `reason` | `auth.md` AC27, the existence oracle; rate-limited to one record per (`client_address`, minute) with a `suppressed` count so a brute-force attempt is visible but cannot flood the sink |
 | `admin.first_start.credential_issued` | none (the value itself is on the operational log, once) | `auth.md` AC15 |
 | `credential.token.create`, `.rotate`, `.revoke`, `.read`, `.list`; `credential.robot.create`, `.update`, `.delete`, `.read`, `.list`; `credential.key.register`, `.delete`, `.read`, `.list`; `credential.trust.set`, `.delete`, `.read`; `credential.exchange` | `credential`, `owner`, `owner_kind`, `multi_repository`, `issuer` (exchange) | `credential-management.md` AC18: every request to its surface, refused or not, emits one line, so every read and listing is an event too |
-| `manage.operation` | `kind`, `idempotency_replay` | `management-api.md` AC23, every binding included |
+| `manage.operation` | `kind`, `idempotency_replay` | `management-api.md` AC23, every binding included: one line per write past the authorizer, none for a read |
 | `manage.grant.create`, `.delete`; `manage.upstream_credential.create`, `.update`, `.delete`; `manage.upstream.create`, `.update`, `.delete`; `manage.trust.update`, `.import` | `grant`, `credential`, `upstream`, `trust_revision` | `management-api.md`, `artifact-verification.md` |
 | `repository.create`, `.configure`, `.freeze`, `.thaw`, `.rename`, `.delete`, `.detach`, `.reclaim` | `changed_fields` (configure: the names of the changed fields, never their values), `previous_name` and `unbound_hosts` (rename: the hostnames the loaded `server.hosts` bound to the old name, empty when none), `reclaim` and `detach` (delete) | `repository-lifecycle.md` AC27, AC28 (its resolved hostname-binding decision, was Q10); `.detach` is a member removed from a `virtual` through its member-list configuration, and `.reclaim` is the pruner's record at tombstone time, the one lifecycle event not tied to an operator's request |
 | `signing.key.create`, `.activate`, `.retire`, `.import`, `.submit_external` | `key_id`, `backend`, `profile` | `signing-service.md` AC15 |
 | `async.job.cancel`, `async.kind.pause`, `async.kind.resume`, `manage.operation.cancel` | `job_id`, `kind` | `async-operations.md` AC21 |
 | `policy.refusal`, `policy.condemnation`, `policy.rule.update` | `condition`, `rule`, `advisory`, `coordinate`, `digests` | `supply-chain-policy.md` AC5; `policy.rule.update` is every accepted change to a repository's `policy` document through `PATCH /api/v1/repositories/{name}` (`management-api.md`'s repository administration), a `coordinate_exemptions` entry added or removed included (its AC25), with `rule` naming the rules changed and `coordinate` the exempted name, never a rule body |
+| `policy.feed.import` | `source`, `exported_at`, `records` | `supply-chain-policy.md` AC16 and its resolved freshness-measure decision (was Q13); emitted by `POST /api/v1/system/advisories/import` (`management-api.md` AC34), refused or applied, with no `Operation`; `exported_at` is the declared export time the source's freshness becomes, `records` the count imported (zero on a refusal) |
 | `verify.verdict.failed`, `verify.trust.update` | `scheme`, `identity`, `reason` | `artifact-verification.md` AC27 |
-| `replication.link.create`, `.update`, `.delete`, `.takeover`, `replication.export`, `replication.import` | `link`, `leader` | `replication.md` "What a monitor sees" and AC10; `management-api.md`'s endpoint table emits each from its route (`PUT`, `PATCH`, `DELETE .../replication`, `POST .../replication/takeover`, `GET .../export`, `POST .../import`), with no `Operation` |
+| `replication.link.create`, `.update`, `.delete`, `.takeover`, `.sync`, `.reseed`, `replication.export`, `replication.import` | `link`, `leader` | `replication.md` "What a monitor sees" and AC10; `management-api.md`'s endpoint table emits each from its route (`PUT`, `PATCH`, `DELETE .../replication`, `POST .../replication/takeover`, `.../replication/sync`, `.../replication/reseed`, `GET .../export`, `POST .../import`), with no `Operation` (its AC33); `.sync` and `.reseed` were named there on Fable 2026-09-30 and registered here on 2026-10-01, and a re-seed lists the snapshots it discards in the fixed `objects` attribute; the link `GET` is the request log's only |
 | `cache.purge` | `condition`, `coordinate`, `digests` | `proxy-cache.md` AC13 (one per condemnation) |
 
 Adding an event is a row here and a table entry in the same commit, with the sibling's Design
@@ -583,7 +669,13 @@ alert-mechanism question records why no notifier is built in.
 `telemetry.Alert(ctx, name, attrs...)` is the only emission path, `name` is a value of a closed
 Go type, and the "exactly one alert per condemnation" shape `proxy-cache.md` AC13 requires is the
 caller's to honour and the caller's test to count; this spec provides the recorder that makes
-the count assertable.
+the count assertable. The counter increments on every call; the `Error` record is emitted at
+most once per (`alert`, minute) per process with a `suppressed` count on the next one, in the
+shape the `auth.credential.*` audit events use, because an event condition under load (a
+thousand `FetchIntegrityFailure`s from one bad mirror) must not turn the operational log into
+the incident. State conditions with no emitting call site (`CacheQuotaNearFull`,
+`CacheMetadataLarge`, `HighErrorRate`, `ComponentDown`) exist only as rules over their gauges,
+and the table says so by their source.
 
 The catalogue, gathered from the siblings; each row is a rule in the shipped file and AC17
 asserts the file and the table agree in both directions:
@@ -603,18 +695,19 @@ asserts the file and the table agree in both directions:
 | `BlobDigestMismatch` | `increase(storage_blob_digest_mismatches_total[5m]) > 0` | `storage-and-gc.md` AC21, AC28 |
 | `VerificationFailed` | `increase(verify_verdicts_total{state="failed"}[5m]) > 0` | `artifact-verification.md` AC27 |
 | `ArtifactUnscannedPastBound` | `policy_unscanned_past_bound > 0` | `supply-chain-policy.md` AC6 |
-| `AdvisoryFeedDegraded` | `policy_advisory_feed_degraded == 1` for 30m | `supply-chain-policy.md` AC9: the gauge is 1 while any source's newest record is older than `policy.feed.staleness_threshold` |
+| `AdvisoryFeedDegraded` | `policy_advisory_feed_degraded == 1` for 30m, one alert per `source` | `supply-chain-policy.md` AC9 and its resolved freshness-measure decision (was Q13): the gauge is 1 while that source's freshness, the completion of its last successful sync or the export time its import declared, is older than `policy.feed.staleness_threshold`; never the newest record's date, since a quiet ecosystem is not stale |
 | `ReplicationLinkFailed`, `ReplicationReseeding`, `ReplicationDiverged` | `replication_link_state{state="failed"} == 1` (and the other two states) | `replication.md` AC10 |
 | `ReplicationLagHigh` | `time() - replication_last_sync_timestamp_seconds > 15m` | `replication.md` AC10 |
 | `CacheQuotaNearFull` | `cache_referenced_bytes / cache_quota_bytes > 0.9` for 15m | `proxy-cache.md` AC14 |
 | `CacheThrash` | `increase(cache_refetch_after_eviction_total[1h]) / increase(cache_evictions_total[1h]) > 0.5` | `proxy-cache.md` (thrash detectable from metrics) |
-| `UpstreamRateLimitLow` | `upstream_rate_limit_remaining < 10% of its observed 24h maximum` | `upstream-adapters.md` AC31 |
+| `CacheMetadataLarge` | `cache_metadata_bytes > <bytes>` for 1h (the threshold templated from packaging, default 10 GiB per repository, like the signing lead; rule only, no emitting site) | `proxy-cache.md` AC29 and its resolved metadata-eviction decision (was Q21): metadata is outside the quota and deleting the remote is the only lever, so the gauge is the thing to alert on; a busy npm or PyPI remote crosses 10 GiB only after gigabytes of packuments, which is the moment an operator wants to know about |
+| `UpstreamRateLimitLow` | `upstream_rate_limit_remaining < 0.1 * max_over_time(upstream_rate_limit_remaining[24h])` | `upstream-adapters.md` AC31 |
 | `UpstreamCooldown` | `upstream_cooldown == 1` | `upstream-adapters.md` AC31 (once per cool-down) |
 | `GCSweepStale` | `time() - gc_last_sweep_completed_timestamp_seconds > 2 * gc.sweep_interval` (the lead templated from configuration at packaging, like the signing lead) | `storage-and-gc.md` AC28 |
 | `PinnedStorageOutOfWindow` | `gc_pinned_out_of_window_snapshots > 0` for 24h | `storage-and-gc.md` AC19, AC28 |
 | `CredentialsExpiring` | `credentials{state="expiring"} > 0` | `credential-management.md` AC5 (informational) |
 | `ComponentDown` | `component_up == 0` for 2m | Readiness |
-| `HighErrorRate` | 5xx share of `http_server_request_duration_seconds_count` over 5m above 5% | Baseline |
+| `HighErrorRate` | 5xx share of `http_server_request_duration_seconds_count` over 5m above 5% (a histogram's `_count`, `_sum` and `_bucket` series are the catalogue entry's own for AC17) | Baseline; hijacked refusals are counted, so a policy incident shows here too (AC30) |
 | `AuditSinkFailing` | `increase(telemetry_audit_sink_failures_total[5m]) > 0` | This spec |
 | `LabelOverflow` | `increase(telemetry_label_overflow_total[1h]) > 0` | This spec |
 
@@ -632,16 +725,20 @@ asserts the file and the table agree in both directions:
   makes the request span a child of the caller's, an invalid or missing one starts a new trace
   and drops `tracestate`. The request span is named `{METHOD} {http.route}` per the semconv (the
   route read after the handler returns, as otelhttp does), and carries the semconv HTTP
-  attributes, `format`, `repository`, `principal` (id or name, never a credential) and
-  `request_id`. `trace_id` and `span_id` go on every log record under the request so logs and
-  traces meet in either direction.
+  attributes with `url.path` after the same scrubbing the request log applies and no
+  `url.query` or `url.full` at all (the query-string rule holds for spans as it does for the
+  log, since AC9 scans both), `format`, `repository`, `principal` (id or name, never a
+  credential) and `request_id`. `trace_id` and `span_id` go on every log record under the
+  request so logs and traces meet in either direction.
 - **Child spans** exist at every boundary the constitution names as a shared concern: the
   authorizer (`auth.authorize`), the metadata store (`metadata.<method>`, with `db.*` spans
   beneath it from the pgx tracer, `db.operation.name` and `db.collection.name` set and query text
   never recorded), the blob store (`blob.<operation>` with `backend`), fetch-and-cache
   (`proxy.fetch` with `outcome`), the upstream adapter's exchange (`upstream.request` as a client
   span with `server.address`, `http.request.method`, `http.response.status_code` and `url.full`
-  after `RedactURL`), signing (`signing.sign` with `backend`, `profile`), verification
+  after `RedactURL`, which is admitted on the client span alone because a fetch URL is the
+  operator's configuration and the adapter's redactor, never a client's input), signing
+  (`signing.sign` with `backend`, `profile`), verification
   (`verify.<scheme>`), policy evaluation (`policy.evaluate`). The decorators in `Instrument`
   produce them for everything `Deps` carries, which is the decorator-completeness enforcer's
   scope; the others are produced inside their packages through the tracer handle
@@ -653,6 +750,19 @@ asserts the file and the table agree in both directions:
   it, not as a child, since a job may run hours later and a parent span cannot stay open. A job
   that emits an audit line carries the originating `request_id` from the same row, so the audit
   trail of a deferred `manage.apply` still names the request that asked for it.
+- **A replayed dispatch is a job's, not a request's.** The `proxy.revalidate` job reaches a
+  handler through the replay entry (`format-handler-interface.md` AC18, `proxy-cache.md` AC26)
+  with a discarding writer, below the router and so below every listener middleware. It
+  therefore produces no request log line, no `http_server_*` sample and no `requests_total`
+  increment; its `Deps` decorators produce child spans of the job's span, the upstream adapter's
+  client span and `upstream_*` series move as for any fetch, and every log record under it
+  carries the job's `job_id`, `kind=proxy.revalidate` and the enqueuing `request_id`, with no
+  `principal`, because the queue gives a job none (`async-operations.md` AC30). That is how an
+  operator tells replay activity from client traffic: by the job kind and the absent principal,
+  never by the replay marker, whose key lives in the composition root package and which nothing
+  under `internal/telemetry` can read or is permitted to import (AC31; `auth.md` AC36). A
+  discarded response body never reaches a log record either, which `async-operations.md` AC30
+  asserts for `last_error` and this package's recorder confirms for its own outputs.
 - **Propagation policy** (the resolved propagation question): outbound requests to **upstreams
   carry no `traceparent` or `tracestate`**, and outbound requests to **replication peers carry
   both**. An upstream is a third party: propagating to it changes the captured traffic the
@@ -712,6 +822,25 @@ label. The pprof routes exist because a registry that streams gigabytes needs it
 goroutine profiles reachable without a rebuild, and they are only ever on the telemetry
 listener.
 
+**What the listener discloses, and why that is the reason it is never public.** Every
+per-repository series (`cache_referenced_bytes`, `cache_metadata_bytes`, `repositories`,
+`gc_pinned_out_of_window_snapshots`, `signing_earliest_document_expiry_timestamp_seconds`,
+`index_virtual_merge_staleness_seconds`, `requests_total`) carries repository names as label
+values, and on a private registry those names are private: `auth.md`'s existence oracle (its
+AC17) exists precisely so a client cannot learn them. A reader of `:9464` learns all of them at
+once. The three answers weighed on the Fable recheck of 2026-10-01 (`auth.md`'s recheck raised
+it): hashing the value would keep the series and lose the one thing an operator needs from it,
+which repository is thrashing or pinned; an opt-in flag would default the quota and thrash
+signals off, defeating `proxy-cache.md` AC14; so the label carries the name, and the disclosure
+is the stated reason the telemetry listener is never exposed (`deployment.md` AC13: bound only
+to `telemetry.listen`, no Service, no Ingress, a `ServiceMonitor` that targets the pod port
+inside the cluster network), why the main-listener mount needs an admin token (an admin can list
+every repository already, so the route discloses nothing new to its only reader) and answers
+`not-found` to everyone else (AC23), and why an operator whose scrape path is less trusted than
+their admin sets `telemetry.metrics.repository_label_limit: 0`, which collapses every
+repository value to `_other` and keeps the aggregate signals (Design, "Cardinality"). The
+resolved per-repository-labels question (was Q6) records this as its accepted cost.
+
 ### Multi-replica semantics
 
 Counters and histograms are per process and Prometheus sums them; `build_info` and
@@ -720,7 +849,8 @@ Counters and histograms are per process and Prometheus sums them; `build_info` a
 `cache_referenced_bytes`, `cache_quota_bytes`, `signing_keys`,
 `signing_earliest_document_expiry_timestamp_seconds`, `index_virtual_merge_staleness_seconds`,
 `policy_unscanned_past_bound`, `verify_reevaluation_pending`, `replication_*`) describe shared
-state in PostgreSQL, and if every replica exported them a `sum()` would multiply them by the
+state in PostgreSQL (`cache_metadata_bytes` and the per-source `policy_advisory_feed_*` gauges
+among them), and if every replica exported them a `sum()` would multiply them by the
 replica count. They are therefore computed on an interval (`telemetry.metrics.state_interval`,
 default `30s`) by **the process holding the async scheduler leadership** (`async-operations.md`'s
 leader) and by no other; a replica that loses leadership stops exporting them within one
@@ -743,8 +873,8 @@ policy.
 | `telemetry.listen` | `:9464` | The telemetry listener; empty disables it (then `/metrics` is reachable only through `on_main_listener`) |
 | `telemetry.metrics.enabled` | `true` | Serve `/metrics` |
 | `telemetry.metrics.on_main_listener` | `false` | Also mount `/metrics` on the main listener, admin token required |
-| `telemetry.metrics.repository_label_limit` | `1000` | Cap on distinct `repository` label values per process |
-| `telemetry.metrics.name_label_limit` | `200` | Cap on distinct `upstream`, `link` and `schedule` values |
+| `telemetry.metrics.repository_label_limit` | `1000` | Cap on distinct `repository` label values per process; `0` collapses every value to `_other` |
+| `telemetry.metrics.name_label_limit` | `200` | Cap on distinct `upstream`, `link`, `schedule` and `source` values; `0` collapses every value to `_other` |
 | `telemetry.metrics.state_interval` | `30s` | State-derived gauge collection interval on the leader |
 | `telemetry.log.level` | `info` | Operational log level |
 | `telemetry.log.format` | `json` | `json` or `text` |
@@ -771,10 +901,16 @@ gate that drifts:
   regresses beyond the threshold its owning spec stated in a `// gate: <metric> <threshold>`
   comment beside the benchmark (`benchstat`'s significance test guards against noise; a result
   the test does not find significant is not a regression). Baselines are refreshed by a
-  deliberate commit that says so, never by the gate itself. The CI job runs on pushes to `main`
-  beside the conformance job (`.github/workflows/ci.yml`), not on pull requests, per the
-  CI-economy rule, on a runner class recorded in the baseline's header so a runner change is
-  visible as such.
+  deliberate commit that says so, never by the gate itself, and the baseline records each
+  benchmark's run-to-run variance (`benchstat`'s ± figure over the six runs); a `// gate:`
+  threshold tighter than that variance is refused by the script with a message naming both
+  numbers, because a gate that can trip on noise is the gate an operator disables, and a
+  disabled gate is the "correct-and-slow, noticed in two months" outcome the constitution
+  names. The CI job runs on pushes to `main` beside the conformance job
+  (`.github/workflows/ci.yml`), not on pull requests, per the CI-economy rule, on a runner
+  class recorded in the baseline's header so a runner change is visible as such; a regression
+  is therefore found on `main` after the merge, the same accepted shape as conformance, and the
+  fix is a revert or a fix on `main`, never a gate relaxed to pass.
 - **Owned here:** the mechanism, its CI job, and this package's own budgets: the middleware's
   overhead per request (request id, span creation unsampled, metrics, request log with
   redaction) and the redaction handler's cost with one, three and ten marked secrets, both as
@@ -824,15 +960,29 @@ during implementation with evidence.
       gauge with `version`, `commit`, `go_version`; `content_delivery_duration_seconds`,
       `storage_blob_operation_duration_seconds`, `async_job_duration_seconds`,
       `verify_reevaluation_pending`, `component_up{component}` over `db`, `schema`, `blob_store`,
-      `async`, `signing_backend`, and `repositories{format,repository_kind,state}`);
-      `docs/operations/observability.md` regenerated from the table equals the checked-in copy.
+      `async`, `signing_backend`, and `repositories{format,repository_kind,state}`), the
+      catalogue's own counters included (`telemetry_disclosures_total`,
+      `telemetry_audit_sink_failures_total`, `telemetry_label_overflow_total{label}`); the
+      standard collectors' families (`go_*`, `process_*`, `promhttp_*`) and `target_info` are
+      the only series admitted outside the table, no `otel_scope_*` label appears on any series,
+      and the exporter is constructed without a namespace option (the prefix is in each
+      registry-specific instrument's name); `docs/operations/observability.md` regenerated from
+      the table equals the checked-in copy.
 - [ ] AC5: For every enumerated label the instrument methods accept only the label's Go type, so
       a string cannot reach the label; for every configuration-bounded label, the
       (`repository_label_limit` + 1)th distinct value renders as `_other` and
       `telemetry_label_overflow_total{label}` increments, with `telemetry.metrics.repository_label_limit`
-      and `telemetry.metrics.name_label_limit` as the caps; `http.route` is the `Request.Pattern`
-      a handler's `ServeMux` set, or the value an explicit `SetRoute` set, and after a format's
-      conformance suite runs no `http_route` value observed for that format equals its bare mount.
+      and `telemetry.metrics.name_label_limit` as the caps, and a cap of `0` renders every value
+      as `_other`; a state-derived per-repository gauge over the cap exports the first
+      `repository_label_limit` repositories by identity and folds the rest into `_other` with
+      the catalogue row's aggregation (`cache_referenced_bytes` summed,
+      `signing_earliest_document_expiry_timestamp_seconds` at its minimum); a thousand requests
+      naming a thousand non-existent repositories leave `requests_total` with one series under
+      `repository="_none"` and the overflow counter unmoved, and a request denied on a private
+      repository is counted under that repository's own name; `http.route` is the
+      `Request.Pattern` a handler's `ServeMux` set, or the value an explicit `SetRoute` set, and
+      after a format's conformance suite runs no `http_route` value observed for that format
+      equals its bare mount.
 - [ ] AC6: Each of the following is present on `/metrics` with the catalogue's labels and moves
       under a driven scenario in the owning package's integration test using this package's
       recorder: `credentials{state,owner_kind}`; `signing_earliest_document_expiry_timestamp_seconds`,
@@ -842,10 +992,17 @@ during implementation with evidence.
       `async_oldest_pending_age_seconds`, `async_lease_expiries_total`, `async_retries_total`,
       `async_jobs_total{outcome="failed"}`, `async_scheduler_leader`,
       `index_virtual_merge_staleness_breaches_total`; `cache_referenced_bytes`, `cache_quota_bytes`,
-      `cache_evictions_total`, `cache_refetch_after_eviction_total`; `gc_sweep_state`,
+      `cache_evictions_total`, `cache_refetch_after_eviction_total`, `cache_metadata_bytes` (a
+      remote's metadata counted there and not in `cache_referenced_bytes`, a blob on a cached
+      reference and a declared list at once counted there only while declared and moving to
+      `cache_referenced_bytes` at the adoption that drops it, `proxy-cache.md` AC29); `gc_sweep_state`,
       `gc_last_sweep_completed_timestamp_seconds`, `gc_bytes_reclaimed_total`,
       `gc_pinned_out_of_window_snapshots`; `policy_refusals_total{condition}`,
-      `policy_unscanned_past_bound`; `replication_link_state{link,state}`,
+      `policy_unscanned_past_bound`, `policy_advisory_feed_freshness_timestamp_seconds{source}`
+      and `policy_advisory_feed_degraded{source}` (one series per configured source, the gauge
+      moving to 1 on an injected clock past `policy.feed.staleness_threshold` from the last
+      completed sync or the declared export time, not from the newest record's date;
+      `supply-chain-policy.md` AC9); `replication_link_state{link,state}`,
       `replication_last_sync_timestamp_seconds`, `replication_snapshots_behind`;
       `requests_total{format,repository,operation,outcome}` with `outcome` over `ok`, `refused`,
       `denied`, `not_found`, `error`; `auth_attempts_total{form,outcome}` with `outcome` over
@@ -880,8 +1037,10 @@ during implementation with evidence.
       rendered as nested groups by `JSONHandler` and as dotted keys by `TextHandler` according to
       `telemetry.log.format`, and never a query string; a path-segment token in the path is
       scrubbed in the recorded `url.path`; `client.address` is the peer unless the peer is in
-      `telemetry.log.trusted_proxies`, in which case it is the last `X-Forwarded-For` hop; and
-      `telemetry.log.request: false` silences the request log without silencing lifecycle records.
+      `telemetry.log.trusted_proxies`, in which case it is the last `X-Forwarded-For` hop;
+      every record on the three streams carries `stream` as `operational`, `request` or
+      `audit`; and `telemetry.log.request: false` silences the request log without silencing
+      lifecycle records.
 - [ ] AC12: `Auditor.Emit` writes a record with the fixed attribute set (`event`, `request_id`,
       `trace_id`, `operation_id`, `principal`, `principal_kind`, `client_address`, `repository`,
       `repository_id`, `format`, `kind`, `objects`, `outcome`, `problem_type`, `snapshot`) plus only
@@ -889,21 +1048,25 @@ during implementation with evidence.
       audit-event table in Design lists, `.create`, `.update`, `.delete`, `.import` and the other
       actions included (`credential.robot.update`, `.read`, `.list`, `credential.key.read`,
       `.list`, `credential.trust.set`, `.delete`, `.read`, `repository.configure`,
-      `replication.link.create`, `.update`, `.delete`, `.takeover`, `replication.export`,
-      `replication.import` and `policy.rule.update` among them), with the extension sets stated
-      there (`credential`, `owner`, `reason`, `coordinate`, `digests`, `changed_fields`, `link`,
-      `leader`, and `previous_name` with `unbound_hosts` on `repository.rename`, among them), so a
-      `repository.rename` record listing `unbound_hosts` and a `policy.rule.update` record naming
-      `rule` and `coordinate` are accepted; an unregistered event or attribute is rejected (panic
-      under test, dropped with an operational `Error` in production); `objects` truncates at 100
-      with a `truncated` flag; `auth.credential.*` events are rate-limited per client address per
-      minute with a `suppressed` count.
+      `replication.link.create`, `.update`, `.delete`, `.takeover`, `.sync`, `.reseed`,
+      `replication.export`, `replication.import`, `policy.rule.update` and `policy.feed.import`
+      among them), with the extension sets stated there (`credential`, `owner`, `reason`,
+      `coordinate`, `digests`, `changed_fields`, `link`, `leader`, `source`, `exported_at`,
+      `records`, and `previous_name` with `unbound_hosts` on `repository.rename`, among them), so
+      a `repository.rename` record listing `unbound_hosts`, a `policy.rule.update` record naming
+      `rule` and `coordinate`, a `replication.link.reseed` record listing the discarded snapshots
+      in `objects` and a `policy.feed.import` record naming `source` and `exported_at` are
+      accepted; an unregistered event or attribute is dropped with an operational `Error` and,
+      under `telemetry.NewTestRecorder(t)`, fails the test; `objects` truncates at 100 with a
+      `truncated` flag; `auth.credential.*` events are rate-limited per client address per minute
+      with a `suppressed` count.
 - [ ] AC13: The audit sink is separate from the operational log: with `telemetry.log.level` at
       `error` every audit record is still written; `telemetry.audit.sink` selects `stdout`
       (default), `stderr` or `file`, and with `file` the path in `telemetry.audit.file` is opened
       append-only and a `SIGHUP` reopens it; a write failure on the sink raises `AuditSinkFailing`,
       increments `telemetry_audit_sink_failures_total` and does not fail the request.
-- [ ] AC14: Every response on the main, replication and telemetry listeners carries
+- [ ] AC14: Every response on both listeners, the main listener's format, `api`, `ui` and
+      `replication` mounts and the telemetry listener alike, carries
       `X-Request-Id`; a client value of 1 to 128 bytes from `[A-Za-z0-9._-]` is echoed and any
       other value (including one with a control character) is replaced by a generated id; the
       echoed id equals the `request_id` of the request log line, the audit line and the
@@ -913,22 +1076,33 @@ during implementation with evidence.
       `repository` and `format` it never set by hand, with `trace_id` and `span_id` present only
       when the request is sampled; a request with a valid inbound `traceparent` produces a
       request span named `{METHOD} {http.route}` that is its child, an invalid one starts a new
-      trace and drops `tracestate`, and each `Deps` call produces a child span named per AC3.
+      trace and drops `tracestate`, the request span carries `url.path` scrubbed as the request
+      log's is and no `url.query` or `url.full` attribute, and each `Deps` call produces a child
+      span named per AC3.
 - [ ] AC16: Enqueueing a job records the current `traceparent` and `request_id` on the `Job`; the
       job's span carries a link to the enqueuing span (not a parent), and an audit line emitted by
       the job carries the originating `request_id`.
 - [ ] AC17: `deploy/observability/alerts.yaml` parses as Prometheus rules, contains exactly one
       rule per alert in the catalogue and no rule for an alert outside it, and every metric name
-      in every rule expression is in the metric catalogue; `telemetry.Alert` accepts only
-      catalogue names and each call increments `alerts_total{alert}` and emits one `Error` record
-      with `alert=<Name>`.
+      in every rule expression is in the metric catalogue (a histogram's `_count`, `_sum` and
+      `_bucket` series resolving to their entry, the templated values `<lead>`, the GC sweep
+      interval and the `CacheMetadataLarge` threshold each named in the file's header for the
+      packaging to fill); `telemetry.Alert` accepts only catalogue names, each call increments
+      `alerts_total{alert}`, the first call per (`alert`, minute) emits one `Error` record with
+      `alert=<Name>` and the next carries `suppressed` with the count, so a thousand calls in a
+      minute leave the counter at a thousand and the log with two records.
 - [ ] AC18: Each of the following alert conditions fires exactly once in its driving scenario,
       asserted through the recorder in the owning package's test: `JobFailed`, `ScheduleOverdue`
       (a schedule idle for twice its period), `VirtualMergeStalenessBreach`, `SigningDocumentExpiring`
       (at the configured lead), `CachePurgedOnSignal` (once however many revalidations observe
       the signal), `FetchIntegrityFailure`, `BlobDigestMismatch`, `VerificationFailed`,
-      `ArtifactUnscannedPastBound`, `AdvisoryFeedDegraded`, `ReplicationLinkFailed`,
-      `ReplicationReseeding`, `ReplicationDiverged`, `UpstreamCooldown`, `PinnedStorageOutOfWindow`.
+      `ArtifactUnscannedPastBound`, `AdvisoryFeedDegraded` (per source, on the freshness measure
+      `supply-chain-policy.md` AC9 states: a source whose last sync completed inside the
+      threshold with no new record stays clear, one whose sync failed partway past it fires),
+      `ReplicationLinkFailed`, `ReplicationReseeding`, `ReplicationDiverged`, `UpstreamCooldown`,
+      `PinnedStorageOutOfWindow`; and the rule-only conditions `CacheQuotaNearFull`,
+      `CacheMetadataLarge`, `CacheThrash`, `HighErrorRate` and `ComponentDown` evaluate true
+      against recorded samples in their driving states and false outside them.
 - [ ] AC19: A token minted through `credential-management.md`'s routes appears in the `201`
       response and in no metric, span, log or audit record of the create, rotate, list, read,
       replay or refusal that follows, asserted through this package's recorder in that spec's
@@ -953,8 +1127,9 @@ during implementation with evidence.
 - [ ] AC24: `make bench` runs every benchmark in the module and `scripts/bench-gate.sh` fails
       when any benchmark's mean regresses beyond the threshold in its `// gate:` comment against
       `benchmarks/baseline.txt` with `benchstat` significance, passes on an insignificant change,
-      and fails on a benchmark with no `// gate:` comment; the CI job runs it on pushes to `main`
-      and not on pull requests.
+      fails on a benchmark with no `// gate:` comment, and refuses a `// gate:` threshold tighter
+      than the variance the baseline records for that benchmark, naming both; the CI job runs it
+      on pushes to `main` and not on pull requests.
 - [ ] AC25: `storage-and-gc.md` AC7's and AC22's, `async-operations.md` AC25's,
       `artifact-verification.md` AC26's and `signing-service.md` AC28's benchmarks carry `// gate:`
       comments and are compared by the same job, so that a regression in any of them fails the
@@ -981,6 +1156,27 @@ during implementation with evidence.
       and the other transfer-bearing durations carry the extended set through `1800`, API and
       database durations the semconv default, and byte histograms powers of four from 1 KiB to
       16 GiB, read off `/metrics`.
+- [ ] AC30: The middleware's `ResponseWriter` wrapper implements `http.Flusher`,
+      `http.Hijacker`, `Unwrap() http.ResponseWriter` and the reporter interface
+      `format-handler-interface.md` declares beside `WriteRefusal`, so a fixture handler that
+      hijacks through `http.NewResponseController(w).Hijack()` or a direct assertion, writes a
+      status line on the raw connection and reports the status and size, leaves the request with
+      exactly one request log line carrying that status and size, one
+      `http_server_request_duration_seconds` sample and one `requests_total` increment with
+      `outcome="refused"` under it, a request span ended with that status, and
+      `http_server_active_requests` decremented; a hijack followed by no report leaves a line and
+      a sample with status `0` and an operational `Error` naming the route, never a missing
+      request; the same flow through `WriteRefusal` on a real HTTP/1.1 socket is the shared
+      assertion of `supply-chain-policy.md` AC18 and `format-handler-interface.md` AC14.
+- [ ] AC31: A replayed dispatch through the replay entry (`format-handler-interface.md` AC18)
+      under a `proxy.revalidate` job produces no request log record, no `http_server_*` sample
+      and no `requests_total` increment, while its `Deps` spans are children of the job's span,
+      its upstream fetch moves `upstream_requests_total` and `http_client_request_duration_seconds`
+      as any fetch does, and every log record emitted under it carries `job_id`,
+      `kind="proxy.revalidate"`, the enqueuing `request_id` and no `principal`; no string from the
+      discarded response body appears in any record the recorder captured; and `internal/telemetry`
+      imports neither the composition root package nor `internal/proxy` and references no
+      replay-marker symbol, asserted by the boundary walk.
 
 ## Test Plan
 
@@ -992,21 +1188,21 @@ procedure.
 | AC1 | architecture test + lint | `internal/telemetry/boundary_test.go` (import walk); `.golangci.yml` `depguard` rule, run by `make verify` |
 | AC2 | architecture test + lint | `internal/telemetry/boundary_test.go` (fixture handler under `internal/format/testdata`); the same `depguard` rule |
 | AC3 | unit (reflection) | `internal/telemetry/decorator_test.go` |
-| AC4 | integration | `internal/telemetry/catalogue_test.go` (fixture exercise, `/metrics` scrape, both-direction diff); `internal/telemetry/docgen_test.go` (regenerated reference equals checked-in) |
-| AC5 | unit + conformance | `internal/telemetry/labels_test.go` (typed labels, cap and `_other`, overflow counter); `conformance/core/route_label_test.go` (post-suite `http_route` values per format) |
-| AC6 | integration | `internal/telemetry/catalogue_test.go` (presence and labels); the owning packages' tests using `telemetry.NewTestRecorder`: `internal/credential/metrics_test.go`, `internal/signing/metrics_test.go`, `internal/upstream/metrics_test.go`, `internal/async/metrics_test.go`, `internal/proxy/metrics_test.go`, `internal/storage/gc_metrics_test.go`, `internal/policy/metrics_test.go`, `internal/replication/metrics_test.go`, `internal/repository/metrics_test.go` (`repository-lifecycle.md` AC27) |
+| AC4 | integration | `internal/telemetry/catalogue_test.go` (fixture exercise, `/metrics` scrape, both-direction diff with the standard collectors and `target_info` allowlisted by prefix, no `otel_scope_*` label, the exporter's option set pinned); `internal/telemetry/docgen_test.go` (regenerated reference equals checked-in) |
+| AC5 | unit + integration + conformance | `internal/telemetry/labels_test.go` (typed labels, cap and `_other`, a cap of `0`, overflow counter, the state-derived `_other` aggregation per row); `internal/telemetry/request_log_test.go` (a thousand non-existent names under `_none`, a denied private repository under its own name; shared with `auth.md` AC17's existence-oracle fixture); `conformance/core/route_label_test.go` (post-suite `http_route` values per format) |
+| AC6 | integration | `internal/telemetry/catalogue_test.go` (presence and labels); the owning packages' tests using `telemetry.NewTestRecorder`: `internal/credential/metrics_test.go`, `internal/signing/metrics_test.go`, `internal/upstream/metrics_test.go`, `internal/async/metrics_test.go`, `internal/proxy/metrics_test.go`, `internal/storage/gc_metrics_test.go`, `internal/policy/metrics_test.go` and `internal/policy/feed_staleness_test.go` (`supply-chain-policy.md` AC9's per-source gauges), `internal/proxy/metadata_eviction_test.go` (`cache_metadata_bytes` and the dual-held blob, `proxy-cache.md` AC29), `internal/replication/metrics_test.go`, `internal/repository/metrics_test.go` (`repository-lifecycle.md` AC27) |
 | AC7 | integration | `internal/telemetry/state_gauges_test.go` (two processes, one database, leadership handover) |
 | AC8 | lint | `.golangci.yml` `sloglint` and `forbidigo` configuration, run by `make verify`; `internal/telemetry/lint_config_test.go` asserts the configuration is present with the stated options |
 | AC9 | integration | `internal/telemetry/redact_test.go` (typed, key, scrub, URL layers, one counter each); `internal/auth/leak_test.go` (`auth.md` AC7's scan extended to spans and audit records, every AC31 form); `internal/upstream/redact_test.go` (every kind through the handler) |
 | AC10 | unit + integration | `internal/telemetry/disclose_test.go` (AST walk); `cmd/stackweaver-registry/first_start_test.go` (two starts, one emission) |
 | AC11 | integration | `internal/telemetry/request_log_test.go` (schema, one record per request, no query string, scrubbed path token, trusted proxies) |
-| AC12 | unit + integration | `internal/telemetry/audit_test.go` (schema, extension sets, rejection, truncation, rate limit; the vocabulary table diffed against the Design table in both directions, `unbound_hosts` on `repository.rename`, the six `replication.*` events and `policy.rule.update` included); the owners' emissions through `telemetry.NewTestRecorder`: `internal/repository/rename_hosts_test.go` (`repository-lifecycle.md` AC28), `internal/replication/metrics_test.go` (`replication.md` AC10), `internal/policy/audit_test.go` and `internal/policy/hosted_match_test.go` (`supply-chain-policy.md` AC5, AC25) |
+| AC12 | unit + integration | `internal/telemetry/audit_test.go` (schema, extension sets, rejection dropped in production and failing the test under the recorder, truncation, rate limit; the vocabulary table diffed against the Design table in both directions, `unbound_hosts` on `repository.rename`, the eight `replication.*` events, `policy.rule.update` and `policy.feed.import` included); the owners' emissions through `telemetry.NewTestRecorder`: `internal/repository/rename_hosts_test.go` (`repository-lifecycle.md` AC28), `internal/replication/metrics_test.go` (`replication.md` AC10), `internal/manage/replication_routes_test.go` (`management-api.md` AC33: `.sync` and `.reseed`, none for the link `GET`), `internal/manage/advisory_import_test.go` (`management-api.md` AC34: one `policy.feed.import` record, refused or applied), `internal/policy/audit_test.go` and `internal/policy/hosted_match_test.go` (`supply-chain-policy.md` AC5, AC25) |
 | AC13 | integration | `internal/telemetry/audit_sink_test.go` (level independence, file append and `SIGHUP`, sink failure alert and request success) |
 | AC14 | integration + conformance | `internal/telemetry/request_id_test.go` (validation, generation, correlation with request log, audit line and `Operation`); `conformance/core/request_id_test.go` (every response of a real client's session carries the header) |
 | AC15 | integration | `internal/telemetry/context_handler_test.go` (fixture handler logging with `InfoContext`); `internal/telemetry/trace_test.go` (valid, invalid and missing `traceparent`; child spans per `Deps` call) |
 | AC16 | integration | `internal/async/trace_link_test.go` (enqueue, run, link, audit `request_id`) |
-| AC17 | unit | `internal/telemetry/alerts_test.go` (rules file parse, both-direction catalogue diff, metric names in expressions, `Alert` typing and effects) |
-| AC18 | integration | The owning packages' tests using the recorder: `internal/async/metrics_test.go`, `internal/index/virtual_merge_test.go`, `internal/signing/cadence_test.go`, `internal/proxy/upstream_removal_test.go`, `internal/proxy/integrity_test.go`, `internal/storage/read_verify_test.go`, `internal/verify/alert_test.go`, `internal/policy/scan_window_test.go`, `internal/policy/feed_test.go`, `internal/replication/status_test.go`, `internal/upstream/cooldown_test.go`, `internal/model/pointer_test.go` |
+| AC17 | unit | `internal/telemetry/alerts_test.go` (rules file parse, both-direction catalogue diff, metric names in expressions with histogram-derived series resolved and the templated values named in the header, `Alert` typing, counter on every call, the `Error` record once per minute with `suppressed`) |
+| AC18 | integration | The owning packages' tests using the recorder: `internal/async/metrics_test.go`, `internal/index/virtual_merge_test.go`, `internal/signing/cadence_test.go`, `internal/proxy/upstream_removal_test.go`, `internal/proxy/integrity_test.go`, `internal/storage/read_verify_test.go`, `internal/verify/alert_test.go`, `internal/policy/scan_window_test.go`, `internal/policy/feed_staleness_test.go` (`supply-chain-policy.md` AC9's row: injected clock, quiet source stays clear, partial sync fires), `internal/replication/status_test.go`, `internal/upstream/cooldown_test.go`, `internal/model/pointer_test.go`; the rule-only conditions in `internal/telemetry/alerts_test.go` (rules evaluated with `promql` over recorded samples in and out of the driving state) |
 | AC19 | integration | `internal/credential/display_once_test.go` (through the recorder); `internal/credential/metrics_test.go` |
 | AC20 | integration | `internal/upstream/hygiene_test.go` and `conformance/core/upstream_hygiene_test.go` (header set at a recording stand-in under an active server span; shared with `upstream-adapters.md` AC4); `internal/replication/trace_test.go` (two instances, one trace) |
 | AC21 | integration | `internal/telemetry/health_test.go` (unreachable dependencies, schema mismatch, both renderings, redaction, no repository or principal in any body, probe-storm cache) |
@@ -1018,13 +1214,17 @@ procedure.
 | AC27 | unit | `cmd/stackweaver-registry/serve_test.go` (in-process command with flag, env and file sources); `internal/telemetry/boundary_test.go` (no Viper or Cobra import) |
 | AC28 | integration | `internal/telemetry/shutdown_test.go` under `go.uber.org/goleak` |
 | AC29 | integration | `internal/telemetry/catalogue_test.go` (bucket boundaries read off `/metrics`) |
+| AC30 | integration + architecture test | `internal/telemetry/hijack_test.go` (fixture handler hijacking through `http.ResponseController` and by assertion, reporting and not reporting; the line, sample, `requests_total`, span and active-requests gauge through the recorder; compile-time assertion that the wrapper satisfies the reporter interface); `internal/format/refusal_writer_test.go` (the real `WriteRefusal` on a raw HTTP/1.1 socket, shared with `supply-chain-policy.md` AC18 and `format-handler-interface.md` AC14) |
+| AC31 | integration + architecture test | `internal/proxy/revalidate_job_test.go` on the production runner through the recorder (no request log line, no `http_server_*` sample, no `requests_total` increment, the `Deps` and upstream spans under the job span, `job_id`, `kind` and `request_id` on every record and no `principal`, the discarded body's marker string absent; shared with `proxy-cache.md` AC26 and `async-operations.md` AC30); `internal/telemetry/boundary_test.go` (no import of the composition root package or `internal/proxy`, no reference to the marker symbol) |
 
 ## Implementation Phases
 
 ### Phase 1: The baseline (charter step 2, with generic)
 - `internal/telemetry`: `Config`, `New`, `Shutdown`, the operational logger with the context and
   redaction handlers, `Secret`, `MarkSecret`, `Disclose`, `RedactURL` (AC8, AC9, AC10, AC27, AC28)
-- The middleware: request id, request span, request log, HTTP semconv metrics (AC11, AC14, AC15)
+- The middleware: request id, request span, request log, HTTP semconv metrics, the
+  `ResponseWriter` wrapper with `Flusher`, `Hijacker`, `Unwrap` and the reporter interface
+  (AC11, AC14, AC15, AC30)
 - The catalogue table, the typed instrument handles for `HTTP`, `Storage`, `Auth`, `Manage`,
   `Repositories`, the Prometheus exporter, the telemetry listener, `/metrics` (AC4, AC5, AC23,
   AC29)
@@ -1040,7 +1240,9 @@ procedure.
   the blob store, metadata store and fetch-and-cache; the pgx tracer (AC3, AC6, AC7)
 - The propagation policy at the upstream adapter and the storage benchmark under the gate
   (AC20, AC25)
-- The GC, cache, upstream and integrity alerts (AC18)
+- The GC, cache (`CacheMetadataLarge` included), upstream and integrity alerts (AC18)
+- `WithJob` and the per-job secret set on the runner, the replay's signal shape with
+  `proxy.revalidate` (AC31)
 
 ### Phase 3: Verification, policy, async, signing (charter steps 4b to 7)
 - `Metrics.Verify`, `Metrics.Policy`, `Metrics.Async`, `Metrics.Signing`, `Metrics.Credentials`
@@ -1086,6 +1288,17 @@ enforce.
 **Why this is yours:** a dependency choice at the foundation that every package inherits and that
 cannot be swapped without touching every instrument.
 
+Rechecked on Fable 2026-10-01: confirmed, and amended in its fold, which had under-stated the
+"translation strategy is pinned" cost. The Prometheus exporter's `WithNamespace` option would
+prefix the semconv family as well, so the `stackweaver_registry_` namespace has to live in each
+registry-specific instrument's OTel name and never in an exporter option; the exporter adds
+`otel_scope_name` and `otel_scope_version` labels to every series unless constructed with
+`WithoutScopeInfo()`, which would have failed AC4's closed vocabulary on day one; and
+`target_info` plus the standard collectors' families are the only series outside the table. All
+three are now stated in Design ("Naming convention") and asserted by AC4, so a library upgrade
+that changes any of them fails the catalogue diff rather than renaming a dashboard's series.
+Option A still wins for the reason given: tracing needs the OTel SDK regardless.
+
 ### Resolved: how alerts exist (was Q2)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: an alert is a catalogue
@@ -1106,6 +1319,16 @@ tested without standing up the destinations. Option C lost because a gauge alone
 | **C. Gauges only** | Simplest | No once-only semantics, no record after the condition clears |
 
 **Why this is yours:** it fixes what "raises an operator alert" means in eleven sibling specs.
+
+Rechecked on Fable 2026-10-01: confirmed, and amended in one under-stated cost. An `Error`
+record per call is right for a condemnation and wrong for an event condition under load: one
+bad mirror can raise `FetchIntegrityFailure` a thousand times a minute, and the operational log
+would become the incident. The counter still increments on every call, which is what the rules
+fire on; the `Error` record is now emitted once per (`alert`, minute) per process with a
+`suppressed` count on the next, the same shape the `auth.credential.*` audit events already use
+(Design, "Alerts"; AC17). The record also now says which conditions are rule-only with no
+emitting site, so "exactly once per driving scenario" is asserted where a call site exists and
+the rule's truth value where none does (AC18).
 
 ### Resolved: the audit channel (was Q3)
 
@@ -1132,6 +1355,20 @@ blocking.
 **Why this is yours:** it trades availability against audit completeness, which is a posture
 decision.
 
+Rechecked on Fable 2026-10-01: confirmed, with its cost stated more honestly. Option B was
+rejected for being "one stream a SIEM can only separate by a field", yet the adopted default
+sink is `stdout`, which the operational and request logs also write to, so at the descriptor
+level the default is exactly that shape. What A keeps that B lacked is the level-independence,
+the closed schema and the `file` and `stderr` sinks; what it did not have was a field to route
+on, which every record on every stream now carries as `stream` (Design, "Structured logging",
+"The audit log"; AC11). The default stays `stdout` because a container runtime collects it
+without configuration and the rule against a silenceable audit trail is about the level, not
+the descriptor; an operator who wants separate descriptors sets `stderr` or `file`. Also
+amended: `Emit`'s rejection of an unregistered event was written as "panics under the
+race-enabled build", which is not a Go mechanism; the recorder now holds the `testing.TB` and
+fails the test, production drops with an `Error` (AC12). The write-through alternative stays
+recorded as the owner's to choose.
+
 ### Resolved: trace propagation to upstreams (was Q4)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: no `traceparent` or
@@ -1149,6 +1386,15 @@ party, and gives the upstream a correlation handle across requests it has no nee
 | **B. Propagate everywhere** | Every hop joinable | Header set changes under the corpus; `tracestate` leaks; a correlation handle handed to third parties |
 
 **Why this is yours:** what the registry sends to someone else's server is a privacy posture.
+
+Rechecked on Fable 2026-10-01: confirmed. Verified against `upstream-adapters.md` AC4 as it
+stands (the pair on the forbidden outbound set, the transport built without the propagating
+round-tripper, the conformance case shared with AC20 here) and `replication.md` AC10 (a
+follower's requests carry both). One clarification the record lacked: a follower's sync runs as
+a `replication.sync` job, so the trace the leader joins is the job's, linked to the enqueuing
+request where one exists and a root of its own for a scheduled sync (Design, "Across the
+queue"); "one trace spans both instances" holds either way. Nothing else in the 2026-09-30 and
+2026-10-01 Fable decisions touches this propagation boundary.
 
 ### Resolved: where `/metrics` lives (was Q5)
 
@@ -1173,6 +1419,18 @@ rate limits.
 
 **Why this is yours:** a deployment-surface decision every packaging recipe inherits.
 
+Rechecked on Fable 2026-10-01: confirmed, and amended in what the record left implicit.
+`auth.md`'s recheck of 2026-09-30 raised that the per-repository labels reveal private
+repository names to any reader of `:9464`, which the listener decision had used as an argument
+against options B and C without saying that A discloses the same names to whoever reaches the
+second port. Design ("The telemetry listener") now states the disclosure and makes it the
+reason the listener is never public (`deployment.md` AC13 holds the chart to that), the reason
+the main-listener mount needs an admin token (an admin can already list every repository, so
+the route adds nothing to its only reader) and answers `not-found` to everyone else under the
+existence oracle (AC23), and names the `repository_label_limit: 0` collapse as the opt-out for
+an operator whose scrape path is less trusted than their admin. Hashing and an opt-in default
+were weighed there and lost. The decision itself stands.
+
 ### Resolved: per-repository labels (was Q6)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: `repository` is admitted
@@ -1194,6 +1452,23 @@ would be the first thing an operator of a large installation disables.
 | **C. Unbounded** | Full detail always | Series explosion on large installations |
 
 **Why this is yours:** a cost that lands on the operator's Prometheus, not on the registry.
+
+Rechecked on Fable 2026-10-01: confirmed, and amended in three places where the fold was
+incomplete. First, the accepted cost omitted the disclosure: a repository name is private
+information on a private registry, and every per-repository series carries it to whoever reads
+the telemetry listener; that is now the stated cost, answered by the listener never being public
+(the resolved listener question as amended) and by a cap of `0`, which collapses every value to
+`_other` and is the opt-out an operator with a less-trusted scrape path takes (Design,
+"Cardinality"; AC5). Second, a configuration-bounded label was, as written, fillable from the
+wire: `requests_total{repository}` on a request naming a non-existent repository would have
+taken the path segment, so a client enumerating guesses could exhaust the cap and collapse the
+real repositories into `_other`; the value is now the resolved row's name only, with `_none` for
+the rest (AC5). Third, "the first thousand it touches" had no meaning for a state-derived gauge
+the leader recomputes every interval; the collector now exports the first N by identity and
+folds the rest into `_other` with an aggregation the row names, so the residue is still a
+number a rule can use. `cache_metadata_bytes{repository}` joins the admitted set under the same
+rule (`proxy-cache.md` AC29). Option A stands: per-repository where the meaning is per
+repository, capped, counted, and now not client-fillable.
 
 ### Resolved: the benchmark-gate mechanism's home (was Q7)
 
@@ -1218,6 +1493,18 @@ anything is packaged.
 **Why this is yours:** ownership of a cross-cutting piece of CI that the constitution names but
 no spec claimed.
 
+Rechecked on Fable 2026-10-01: confirmed, and amended in one under-stated cost. A gate on
+shared CI runners detects only regressions larger than the runner's own noise, and a `// gate:`
+threshold tighter than that noise trips on nothing, gets disabled, and leaves the
+"correct-and-slow, noticed in two months" outcome the constitution names with a gate that looks
+present. The baseline now records each benchmark's run-to-run variance and the script refuses a
+threshold tighter than it, naming both numbers (Design, "Benchmark gates"; AC24), so every
+sibling's budget is either honest or refused. Also stated: a regression is found on `main` after
+the merge, the same accepted shape as conformance, and is answered by a revert or fix, never a
+relaxed gate. The five siblings' `// gate:` comments verified present at HEAD
+(`storage-and-gc.md` AC7 and AC22, `async-operations.md` AC25, `artifact-verification.md`
+AC26, `signing-service.md` AC28) and `project-charter.md` AC6 cites this mechanism by name.
+
 ### Resolved: the query string in the request log (was Q8)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: never log the query
@@ -1238,6 +1525,15 @@ spec's criteria need the query logged.
 
 **Why this is yours:** a diagnosability-versus-leak trade the operator lives with.
 
+Rechecked on Fable 2026-10-01: confirmed, and amended in its fold. The rule was written for the
+request log and left the request span unstated, while the semconv server span carries
+`url.query` as a conditionally required attribute and AC9 scans spans as an output; the span
+now carries `url.path` scrubbed as the log's is and no `url.query` or `url.full` (Design,
+"Tracing"; AC15). The upstream client span keeps `url.full` after `RedactURL`, which is the
+adapter's redactor and a different rule (a fetch URL is the operator's configuration, not a
+client's input), and that difference is now stated where the spans are listed. Option A
+stands: absence cannot fall behind.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1245,3 +1541,4 @@ spec's criteria need the query logged.
 | 2026-09-27 | 677aa69 | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements of thirteen citing foundation specs and twelve format specs (grep over `docs/internal/plans` for `metric`, `gauge`, `alert`, `audit line`, `slog`, `X-Request-Id`, `observab`), the queued consequences naming this file (credential-management item 14, signing-service item 15, upstream-adapters item 14, async-operations item 14) and the foundation.tsv hints, and `project-charter.md`'s step 2 placement. Grounded the design in OpenTelemetry HTTP and database semantic conventions, Prometheus naming guidance, the OTel Prometheus exporter's translation, Harbor's exporter and registry metrics, Artifactory's Open Metrics enablement, Nexus's metrics and health endpoints, Gitea's metrics and request-id settings, Pulp's OTel telemetry, Go's `log/slog` and W3C Trace Context, all fetched this run. Wrote eight decisions in the template shape and adopted each under the standing delegation. 29 criteria, each with a Test Plan row. Tree claims are vacuous at this sha (stub `main.go` only) and are stated as design. Sibling consequences reported to the spec loop rather than applied. Stays `draft`. |
 | 2026-09-28 | ff7966e | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. Catalogue completeness: every metric name in `upstream-adapters.md` AC31, `async-operations.md` AC20, `signing-service.md` "Observability", `proxy-cache.md` "What ends a cached reference's life", `storage-and-gc.md` AC28, `supply-chain-policy.md` AC5/AC6, `artifact-verification.md` AC27, `replication.md` AC10, `credential-management.md` AC5 and `repository-lifecycle.md` AC27, and every alert name those specs raise, was grepped against the metric and alert tables; all present, none added. Audit vocabulary extended per credential-management and repository-lifecycle reconciliation item 1: `credential.robot.update`, `.read`, `.list`, `credential.key.read`, `.list`, `credential.trust.set`, `.delete`, `.read`, `repository.configure` (extension `changed_fields`), with `.detach` and `.reclaim` placed; AC12 names them. Citations turned from owed consequences into applied criteria: the dependency table (every row), the boundary table (`internal/format/arch_test.go` now asserts the handler import rule), `storage_blob_digest_mismatches_total` and `BlobDigestMismatch` (storage-and-gc AC21, AC28), `GCSweepStale` and `PinnedStorageOutOfWindow` (AC28), `AdvisoryFeedDegraded` (supply-chain AC9), `UpstreamRateLimitLow`/`UpstreamCooldown` (upstream-adapters AC31), `SchedulerLeaderless` (async AC20), `ReplicationLagHigh` (replication AC10), the queue's `trace_context`/`request_id` (data-model AC41), the propagation policy (upstream-adapters AC4, sharing `conformance/core/upstream_hygiene_test.go` with AC20), the benchmark list and AC25 (storage-and-gc AC22), `deployment.md` no longer "owed" for the `telemetry.*` keys, the charter's Phase 1 and Phase 2 placement. AC6's Test Plan row gained `internal/repository/metrics_test.go`. No em-dashes or en-dashes. `node scripts/check-spec.js`: zero failures for this file. Stays `draft`. |
 | 2026-09-28 | 1848c7d | closing reconciliation on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the two items in `agents/spec-loop/consequences.md` targeting this file that the progress log does not show applied, each verified against the owning spec's settled text. (1) The six-spec closing sweep item 4: `unbound_hosts` joins `repository.rename`'s extension set beside `previous_name` (`repository-lifecycle.md`'s resolved hostname-binding decision, was Q10, its "Audit and metrics", AC27 and AC28); the audit table row, the dependency-table row and AC12 name it, and AC12's Test Plan row cites `internal/repository/rename_hosts_test.go`. (2) SWEEP 2's leftover: `replication.link.create`, `.update`, `.delete`, `.takeover`, `replication.export` and `replication.import` confirmed present with `link` and `leader` against `replication.md` ("What a monitor sees", AC10) and `management-api.md`'s endpoint table, and `policy.rule.update` against `supply-chain-policy.md` AC5 and AC25; the audit table now cites the routes that emit each and states that `policy.rule.update` covers a `coordinate_exemptions` change with `rule` and `coordinate` from the existing extension set (no new attribute); AC12 names all seven and its Test Plan row adds the owners' recorder tests. Every other item targeting this file (data-model 9, storage-and-gc 3, supply-chain 6, replication 8, credential-management and repository-lifecycle 1, upstream-adapters and async-operations 4) re-checked as already applied. Found and reported, not applied: the replication `sync` and `reseed` routes and the link `GET` have no registered audit event although `management-api.md` says every request to its API emits one, and `management-api.md` AC23 says every such record is a `manage.*` event while its own Design registers lifecycle, credential, replication and policy events under their owners; both are the owning specs' to settle first, per this spec's rule that an event is named by its owner before it is added here. No question adopted, so no `fable_recheck` change. `node scripts/check-spec.js`: zero failures for this file. Stays `draft`. |
+| 2026-10-01 | 4fcbbd4 | Fable recheck: full review (claim verification at HEAD of every sibling citation: `supply-chain-policy.md` AC5, AC6, AC9, AC16, AC18, AC25 and its was-Q13 and was-Q10 as amended; `management-api.md` "Audit", AC23 as amended, AC33, AC34 and its endpoint table; `credential-management.md` AC4, AC5, AC18 as amended and its `credential.prune` job; `format-handler-interface.md` "The pinned method set" with the authorizer removed from `Deps`, the `WriteRefusal` contract, AC11, AC14, AC15, AC18; `proxy-cache.md` AC10, AC13, AC14, AC29 and its was-Q21 as amended for the dual-held blob; `rpm.md` was-Q11; `auth.md` AC7, AC15, AC17, AC31, AC36; `async-operations.md` AC14, AC20, AC26, AC27, AC30 and its no-principal rule; `replication.md` "What a monitor sees", AC10, AC21; `storage-and-gc.md` AC7, AC19, AC21, AC22, AC28; `signing-service.md` "Observability", AC14, AC15, AC17, AC19, AC22, AC28; `upstream-adapters.md` AC4, AC20, AC31; `artifact-verification.md` AC26, AC27; `repository-lifecycle.md` AC27, AC28; `data-model.md` AC41; `deployment.md` AC13, AC27 and its `telemetry.` inventory row of 17 keys; `conformance-harness.md` AC13 and its core-case list; `project-charter.md` steps 2, 3, 10 and AC6; the tree still holds only `cmd/stackweaver-registry/main.go`, so no code claim was checkable) + adversarial lens at full strength on the cloud-authored whole + constitution + go-spec-reviewer inline + re-examination of the eight adoptions made without Fable | Brought current first: every open consequence against this file applied and verified against its source's current text (eviction-settlement item 1 and proxy-cache recheck item 2: `cache_metadata_bytes{repository}` in the catalogue, AC6, the multi-replica list and a rule-only `CacheMetadataLarge`, the dual-held blob counted there only while declared; format closing sweep batch 2 item 3, the same; supply-chain recheck item 3: the `Hijacker` wrapper (AC30) and `AdvisoryFeedDegraded` on the last completed sync or the declared export time, per source, with `policy.feed.import` registered; management-api recheck item 1: `replication.link.sync`, `.reseed` and `policy.feed.import` registered and "every request" corrected to "every write past the authorizer" in the dependency row, the vocabulary row and the Emission paragraph, credential-management's reads named as the exception; auth recheck item 5: the disclosure stated as the reason the listener is never public, with the `repository_label_limit: 0` collapse as the opt-out; format-handler-interface recheck item 1: the wrapper and the replay labelled by job kind and absent principal, never the marker (AC31); the closing sweep's own items 1 and 2 found settled upstream). Verdicts: Q1 confirmed and amended (the exporter's translation pinned concretely: prefix in the instrument name, `WithoutScopeInfo()`, `target_info` and the standard collectors as the only series outside the table; AC4); Q2 confirmed and amended (the `Error` record once per alert per minute with `suppressed`, the counter on every call; rule-only conditions named; AC17, AC18); Q3 confirmed and amended in cost (the default `stdout` sink shares the descriptor, so every record on every stream carries `stream`; `Emit`'s "panic under the race build" replaced by the recorder failing the test; AC11, AC12); Q4 confirmed (a sync's trace is the job's); Q5 confirmed and amended (the disclosure stated and made the reason); Q6 confirmed and amended in three places (the disclosure as its cost, the `repository` value taken from the resolved row and never the path so the cap cannot be filled from the wire, the state-derived `_other` as an aggregation the row names; AC5); Q7 confirmed and amended (the baseline records variance and the script refuses a gate tighter than it; AC24); Q8 confirmed and amended (the request span carries no `url.query` or `url.full`; AC15). None superseded. Refuted and fixed beyond the adoptions: `Deps` was said to carry "the authorizer", which `format-handler-interface.md` corrected out on 2026-10-01 and this spec had copied, and the decorated set now lists what `Deps` carries at HEAD; `telemetry_audit_sink_failures_total` and `telemetry_disclosures_total` were used by AC13, AC10 and a rule without being catalogue rows, so AC4 and AC17 would have failed themselves; `HighErrorRate` read a histogram's `_count`, which AC17 forbade as written; `UpstreamRateLimitLow` was prose, not an expression; AC14 named a "replication listener" that does not exist (the replication routes are a mount on `main`, `deployment.md` "Listeners"); `MarkSecret` registered a value "on the context", which is immutable, so the middleware and the job runner now install the set; `Secret` had no accessor for its own value; the `format` label lacked `ui` and `_none`. go-spec-reviewer inline: consumer-side interfaces (the reporter declared in `internal/format`, the recorder holding `testing.TB`), the wrapper reachable through `Unwrap` for `http.ResponseController`, errors and context explicit, every goroutine with `Shutdown` as its path, one package with one domain; approved after the fixes. Constitution: both paths (the hosted and proxied request shapes both pass one middleware and the replay is accounted for separately), the shared model (no table here, `Job.trace_context` is `data-model.md`'s), no handler owns a signal (AC2), a named enforcer per boundary (four, plus the wrapper's compile-time assertion), the conformance gate untouched, findings in the doc; nothing weakens `auth.md` AC10. 31 criteria, each with a Test Plan row; Open Questions empty; `node scripts/check-spec.js`: zero failures on this file; no em-dashes on touched lines. Sibling consequences reported to the orchestrator, not applied: `format-handler-interface.md` (the reporter interface beside `WriteRefusal`), `deployment.md` (two more templated values for `alerts.yaml`), `supply-chain-policy.md` (the `source` label and the import event's attributes), `replication.md` (`.sync`, `.reseed`, "listener" wording), `async-operations.md` (`WithJob` and the per-job secret set), `proxy-cache.md` (AC26's shared replay-signal assertions), `web-ui.md` (`format=ui`), `question-triage.md`. `fable_recheck` cleared; draft to planned. |
