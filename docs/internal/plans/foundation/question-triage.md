@@ -487,7 +487,7 @@ decision:
 | `foundation/repository-lifecycle.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10 |
 | `foundation/upstream-adapters.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9 |
 | `foundation/signing-service.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19 |
-| `foundation/storage-and-gc.md` | Q11, Q12 |
+| `foundation/storage-and-gc.md` | Q11, Q12 (rechecked on Fable 2026-09-30: both confirmed and amended; spec planned) |
 
 ## Closed without an owner decision
 
