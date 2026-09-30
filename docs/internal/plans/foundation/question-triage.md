@@ -480,7 +480,7 @@ decision:
 | `foundation/async-operations.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 (rechecked on Fable 2026-10-01: Q1, Q2, Q3, Q6, Q8, Q9, Q11 confirmed, Q4, Q5, Q7, Q10 amended; spec planned) |
 | `foundation/format-handler-interface.md` | Q10, Q11 (rechecked on Fable 2026-10-01: both confirmed and amended; spec planned) |
 | `foundation/supply-chain-policy.md` | Q9, Q10, Q11, Q12 (rechecked on Fable 2026-09-30: all four confirmed and amended; Q13 adopted on Fable; spec planned) |
-| `foundation/deployment.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13 |
+| `foundation/deployment.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13 (rechecked on Fable 2026-10-01: six confirmed, Q3, Q4, Q5, Q6, Q7, Q8, Q10 amended; spec planned) |
 | `foundation/observability.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8 (rechecked on Fable 2026-10-01: Q4 confirmed, the other seven confirmed and amended; spec planned) |
 | `foundation/management-api.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16 (rechecked on Fable 2026-09-30: twelve confirmed, Q2, Q5, Q12, Q14 amended; spec planned) |
 | `foundation/auth.md` | Q23, Q24, Q25 (rechecked on Fable 2026-09-30: Q23 confirmed, Q24 and Q25 confirmed and amended; spec planned) |

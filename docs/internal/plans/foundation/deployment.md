@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): index.render_memo_bytes (256 MiB, signing-service was-Q13) added to the index. row, which now holds 5 keys, so signing-service's 14 keys are 9 signing. plus 5 index. and the inventory reads 85 sibling keys under 13 prefixes (the earlier 14-prefix count was wrong; every owner's table recounted at this sha); a server.hosts list naming one hostname twice fails config validate and serve and is refused on SIGHUP with the previous binding kept, and a rename leaves a by-name binding at a missing repository until edited and reloaded (repository-lifecycle was-Q10), both in AC12; server.public_url names its readers; ui.help_url's default stated. 32 criteria, zero open questions; stays draft. Earlier: Reconciled 2026-09-28 at ff7966e with the foundation authoring wave (not a review). Authored 2026-09-27 at ff566dd as a grounded first draft. The key inventory is now exhaustive against every sibling key table: 84 sibling keys under 14 prefixes (auth. 9, credentials. 8, gc. 6, signing. 9, index. 4, async. 11, telemetry. 17, management. 4, verify. 4, policy. 5, replication. 2, upstream. 3, ui. 2) beside the 29 this spec owns; no prefix stays reserved, and auth.allow_plaintext and the three upstream.* defaults moved to their owners' rows. Added the storage check subcommand, the web UI build step as a packaging duty (AC32), and citations of the applied sibling decisions (host binding through Deps, the harness client-confinement decision, the supply-chain refusal status line, async unknown-kind skipping, the internal/db/lock constants, the replication key recipe). Thirteen questions adopted under the standing delegation, zero open; Q13 recorded as met. 32 criteria, each with a Test Plan row. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-01 at 3247f69: a full review pass over the cloud-authored whole (claim verification of every sibling citation at HEAD, adversarial lens at full strength with the design judgement treated as unreviewed, constitution compliance, go-spec-reviewer inline) plus the re-examination of all thirteen questions adopted without Fable. Verdicts: Q1, Q2, Q9, Q11, Q12, Q13 confirmed (Q1, Q2, Q12 with under-stated costs added); Q3, Q4, Q8, Q10 confirmed with their folds amended; Q5, Q6, Q7 confirmed with fold and cost amended (Q5: the rotation was self-contradictory, a process cannot read records under a key it never received, so security.previous_master_key joins the owned keys, both keys are held for the rotation's duration and the AEAD is fixed as AES-256-GCM; Q6: a marked non-transactional class for CREATE INDEX CONCURRENTLY, the chart hook pre-install as well as pre-upgrade, readiness tolerating a schema ahead of the binary, the compat job skipped by name before the first minor; Q7: http.Server.Protocols, reason-phrase pass-through as a second proxy requirement, the ingress list gated by the kind e2e proof). None superseded. Brought current first: the async.job_retention relational check dropped and the connection budget restated per role (async recheck), alerts.yaml's three templated values with the lead and sweep interval read from the chart's config subtree and alerts.cacheMetadataBytes 10 GiB (observability recheck), the :9464 disclosure stated as the reason it is never public (auth and observability rechecks), the air-gap recipe carrying the export's Last-Modified into POST /api/v1/system/advisories/import?exported_at= (supply-chain and management-api rechecks), management.deferred_threshold gone and the management. row at three (84 sibling keys under 13 prefixes beside 30 owned), storage check --verify --restore-dangling repairing digest mismatches from the newest verifying version (storage-and-gc recheck), the unbound-host 404 as AC10's denial through a Scope(r) error (FHI recheck), and the first mint stated as the local admin's own credential presented as HTTP Basic resolving to the local admin human principal (credential-management recheck). Further adversarial findings fixed: a ServiceMonitor that needed the Service AC13 forbids (now a PodMonitor); the first-mint docs copying commands against the documentation rule (now a cited deploy/recipes/first-mint/ test); the two-way key check parsing any backticked first column (now gated on the Key/Default/Meaning header); AC2 asserting four sources for --config, which is no key; the environment-boundary test catching test fixtures. 32 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Consequences reported for puppet, signing-service, data-model, auth, management-api, observability and question-triage. Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus, reconciliation 2026-09-28 at ff7966e, authored 2026-09-27 at ff566dd in the cloud session with thirteen questions adopted under the standing delegation."
 description: "Spec for deployment, configuration and operations: one binary whose roles are configuration, one validated configuration schema behind file, environment and flags with a mechanical check that every key a spec defines is present and documented, PostgreSQL and S3-compatible object storage as the only runtime dependencies, the instance master key, TLS termination and the HTTP/1.1 reason-phrase constraint, host binding for hostname-addressed formats, the container image, Helm chart and Compose file, forward-only migrations with rollback by previous-minor compatibility, multi-replica constraints and the advisory-lock singletons, backup and restore of PostgreSQL plus the CAS, and resource sizing derived from the benchmark gate."
 author: michielvha
 goal: "Make the registry runnable, upgradable and recoverable by an operator who reads one configuration reference and one chart, with every key a spec defines present, validated and documented by construction, every multi-replica hazard held by a named mechanism, and no dependency beyond PostgreSQL and object storage."
@@ -14,7 +14,6 @@ covers:
   - "internal/server/**"
   - "deploy/**"
   - "scripts/check-config-keys.js"
-fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate"
 ---
 
 # Plan: Deployment, Configuration and Operations
@@ -40,7 +39,7 @@ and the mitigation it records is "a genuinely good single-command deployment"
 written down.
 
 Nothing exists in the tree yet: `cmd/stackweaver-registry/main.go` prints "not implemented" and
-exits 1, there is no `internal/`, no `deploy/`, and `make run` already invokes
+exits 1, `internal/` is an empty directory, there is no `deploy/`, and `make run` already invokes
 `./cmd/stackweaver-registry serve` (Makefile, the `run` target), so the `serve` subcommand this
 spec fixes is the one the Makefile expects. The module is `github.com/vhco-pro/stackweaver-registry`
 at Go 1.26.
@@ -51,13 +50,14 @@ criterion.
 
 | Citing spec | What it places here | Where it lands |
 |---|---|---|
-| `credential-management.md` (its Configuration table, resolved API-only decision, was Q7) | The eight `credentials.*` keys; the first-mint procedure (a `curl` with the local admin credential; no CLI in v1) | Key inventory; "First run and first mint" |
+| `credential-management.md` (its Configuration table, resolved API-only decision, was Q7; "How who reaches the authorizer") | The eight `credentials.*` keys; the first-mint procedure (a `curl` with the local admin credential; no CLI in v1); the credential routes' third route requirement, a human principal (a session or the local admin account, never a token), which is what the first mint's credential form must satisfy | Key inventory; "First run and first mint" |
 | `signing-service.md` (its Configuration table, AC13, AC14, AC26, AC31) | The 14 `signing.*` and `index.*` keys (`index.render_memo_bytes`, 256 MiB, its was-Q13 memo bound, among them) plus the citation of `security.master_key`; master-key and PIN handling ("never a flag value", "never a flag or a logged value"); a SoftHSM2 recipe; a replicated-repository key recipe (its AC23, `replication.md` AC21) | Key inventory; "The instance master key"; Recipes |
 | `upstream-adapters.md` (its Configuration keys table, AC5, AC32) | The three `upstream.*` instance defaults it tables (concurrency 10, cool-down cap 1h, connect timeout 10s), the computed `User-Agent`, `HTTPS_PROXY`/`NO_PROXY` honoured once instance-wide | Key inventory; "Not keys, on purpose" |
 | `async-operations.md` (its Configuration table, AC22, AC26, its resolved worker-placement decision, was Q8) | The eleven `async.*` keys and the `async.workers: 0` web-replica recipe; "one binary and one deployment story"; a job of an unknown kind skipped, never failed, during a rolling upgrade (its resolved unknown-kind decision, was Q10) | Key inventory; "Roles"; Helm chart; "Upgrade and rollback policy" |
-| `observability.md` (its Configuration table, AC17, AC27) | The 17 `telemetry.*` keys and defaults; the second listener `:9464` not exposed publicly; `deploy/observability/alerts.yaml` packaging with the templated signing lead; a Grafana dashboard reading the generated catalogue; log collection and rotation; `SIGHUP` for the audit file | Key inventory; Listeners; Packaging; Signals |
-| `storage-and-gc.md` (its Configuration table, AC26, AC27, AC29) | The six `gc.*` keys; the sweep lock through `internal/db/lock.LockSweep`; the consistency checker as `stackweaver-registry storage check` with `--restore-dangling`; bucket versioning as the requirement the restore relies on | Key inventory; CLI shape; Singletons; Backup and restore |
-| `supply-chain-policy.md` (its Configuration table, AC18, AC20, AC23) | The five `policy.*` keys; the operator page "When a refusal actually blocks an install" generated from its "When a refusal binds, per format" table; the refusal status line written by a hijacked HTTP/1.1 write in the shared refusal path (its resolved refusal-status-line decision, was Q10) | Key inventory; "Refusal enforceability"; "HTTP/1.1 on the main listener" |
+| `observability.md` (its Configuration table, AC17, AC27, "What the listener discloses") | The 17 `telemetry.*` keys and defaults; the second listener `:9464` never exposed publicly, because its per-repository label values are repository names; `deploy/observability/alerts.yaml` packaging with three templated values (the signing lead, the GC sweep interval for `GCSweepStale`, the `CacheMetadataLarge` threshold); a Grafana dashboard reading the generated catalogue; log collection and rotation; `SIGHUP` for the audit file | Key inventory; Listeners; Packaging; Signals |
+| `storage-and-gc.md` (its Configuration table, AC26, AC27, AC29) | The six `gc.*` keys; the sweep lock through `internal/db/lock.LockSweep`; the consistency checker as `stackweaver-registry storage check` with `--verify` and `--restore-dangling`, the latter repairing dangling rows and digest mismatches alike from the newest verifying bucket version; bucket versioning as the requirement the restore relies on | Key inventory; CLI shape; Singletons; Backup and restore |
+| `supply-chain-policy.md` (its Configuration table, AC16, AC18, AC20, AC23; its resolved freshness-measure decision, was Q13) | The five `policy.*` keys; the operator page "When a refusal actually blocks an install" generated from its "When a refusal binds, per format" table; the refusal status line written by a hijacked HTTP/1.1 write in the shared refusal path (its resolved refusal-status-line decision, was Q10); an air-gapped instance's advisory feed fed by an OSV export whose declared export time is the source's freshness | Key inventory; "Refusal enforceability"; "HTTP/1.1 on the main listener"; Recipes (air gap) |
+| `management-api.md` (AC34) | `POST /api/v1/system/advisories/import?exported_at=&source=`: the import route the air-gap recipe calls, `exported_at` required and carried across the gap beside the archive as the export's `Last-Modified` | Recipes (air gap) |
 | `replication.md` (its Configuration table, AC21, AC24) | The two `replication.*` keys; the replicated-repository key recipe's follower half | Key inventory; Recipes |
 | `web-ui.md` (its "Serving and mounting", "The stack", AC1, AC26) | `make build` depends on `make web` (`npm ci` and `vite build` into `internal/ui/dist`), a GoReleaser `before` hook and a Node 22 Dockerfile build stage, so no release artefact carries the placeholder; the two `ui.*` keys; `ui` as a reserved first segment | CLI shape and packaging ("The web UI build"); Key inventory |
 | `auth.md` (its Configuration table, AC2, AC13, AC15, AC27) | The nine `auth.*` keys, `auth.allow_plaintext` and its flag `--allow-plaintext-auth` among them; TLS required on every credential-bearing path, enforced by the server; the plaintext flag doubles as the behind-a-terminating-proxy declaration, never inferred from `X-Forwarded-Proto`; the first-start local admin credential emitted to the log once (AC15) | TLS; Key inventory (the `auth.` row); "First run and first mint" |
@@ -68,16 +68,18 @@ criterion.
 | `format-handler-interface.md` | Root-anchored carve-outs for hostname-addressed formats (its "Host-bound claims"); the host binding `server.hosts` passed at construction through `Deps` and reloadable on `SIGHUP`, with its home a re-open input (its "The scheduled re-open"); reserved first path segments (AC11) | Host binding |
 | `supply-chain-policy.md` ("When a refusal binds, per format", AC20) | Refusals are enforceable only where client egress is restricted to the registry: a deployment precondition per format, tabled per ecosystem | "Refusal enforceability is a deployment precondition" |
 | `supply-chain-policy.md` (its resolved refusal-status-line decision, was Q10; AC18) | Reason-phrase-only clients need HTTP/1.1 on refusal routes: HTTP/2 has no reason phrase; "affects reverse proxies and TLS terminators" | "HTTP/1.1 on the main listener" |
-| `management-api.md` | The server binary is a Cobra CLI (`cmd/stackweaver-registry`) with a `serve` command and no management subcommands; configuration "follows the cobra-viper skill: a Viper instance created in the root factory, keys unmarshalled into a typed `manage.Config` the package receives (never Viper itself), every key with a default, bound to `STACKWEAVER_REGISTRY_` environment variables"; the four `management.*` keys; no key may disable the API | CLI shape; Configuration design; Key inventory |
+| `management-api.md` | The server binary is a Cobra CLI (`cmd/stackweaver-registry`) with a `serve` command and no management subcommands; configuration "follows the cobra-viper skill: a Viper instance created in the root factory, keys unmarshalled into a typed `manage.Config` the package receives (never Viper itself), every key with a default, bound to `STACKWEAVER_REGISTRY_` environment variables"; the three `management.*` keys (its Fable recheck removed `management.deferred_threshold`, a key nothing read); no key may disable the API | CLI shape; Configuration design; Key inventory |
 | `conformance-harness.md` | The `seed` subcommand of the server binary, run "against the instance's isolated database schema and storage prefix" (its resolved seed-path decision; AC18); the `repositories` hostname binding written through `server.hosts`' loader and every client container confined to the case network (its resolved client-confinement decision, was Q6; AC23) | CLI shape; `database.schema`, `storage.s3.prefix`; Host binding; "Refusal enforceability" |
 | `artifact-verification.md` (its Configuration table) | The four `verify.*` keys; the former `verify.workers` is `async.kind_limits` (the resolved worker-limit decision below, applied there) | Key inventory |
 | `replication.md` | A follower is an ordinary instance configured per repository; no instance identity | Roles (nothing to add to the binary) |
 | `repository-lifecycle.md` | Repository settings live in the repository record, not in this surface | Scope boundary between configuration and records |
 | `repository-lifecycle.md` (its resolved hostname-binding decision, was Q10; AC28) | `server.hosts` keeps binding by repository name; a rename leaves a binding naming the old name at a missing repository (warning and `404`) until the operator edits and reloads it | Host binding; AC12 |
 | `formats/puppet.md` AC8 (format batch 8 item 7) | A configuration listing one hostname twice is refused at load | Host binding; AC12 |
+| `format-handler-interface.md` AC10 and "Host-bound claims" (as amended on its Fable recheck) | On an unbound hostname the claiming handler's `Scope(r)` returns an error and the request is denied as AC10 says, the handler never invoked; the `404` is the shared denial `auth.md` renders, not a handler-rendered response | Host binding; AC12 |
 
-**The standing grounding.** Every claim about a sibling above is cited to that spec's text as
-read at `ff566dd`; every claim about prior art below was fetched this run. Two sources
+**The standing grounding.** Every claim about a sibling above was re-read against that spec's
+text at `3247f69` on the Fable recheck of 2026-10-01; every claim about prior art below was
+fetched in the authoring run of 2026-09-27 and was not re-fetched on the recheck. Two sources
 answered with nothing usable and are recorded as silence rather than recollection: JFrog's help
 pages for Artifactory HA and system requirements render client-side and returned empty bodies,
 and the Pulp operator's install guide answered 403. Where this spec says "Artifactory does X"
@@ -100,8 +102,9 @@ it says so only from `docs/internal/research/prior-art-artifact-repositories.md`
   default, its owner and its secret classification, plus the keys this spec owns (`server.*`,
   `database.*`, `storage.*`, `security.*`, `proxy.offline`). No prefix is reserved for an owner
   that has not tabled its keys: every sibling that owns configuration now tables it.
-- The instance master key: format, sourcing, envelope encryption, rotation, and the boundary
-  test that keeps it out of flags and logs.
+- The instance master key: format, sourcing, envelope encryption, rotation with a previous key
+  held alongside the current one for its duration, and the boundary test that keeps both out of
+  flags and logs.
 - Runtime dependencies and their requirements: PostgreSQL (version, extensions, connection
   budget, `LISTEN`/`NOTIFY`, advisory locks) and S3-compatible object storage (operations
   used, consistency assumptions, versioning for restore).
@@ -119,7 +122,7 @@ it says so only from `docs/internal/research/prior-art-artifact-repositories.md`
   step every release path runs first (`web-ui.md`'s frontend built into `internal/ui/dist`).
 - Resource sizing as a method tied to the benchmark gate, not a guessed table.
 - The recipes the siblings asked for: web-only replicas, SoftHSM2, replicated-repository keys,
-  first mint, air gap.
+  first mint, air gap (its advisory import included).
 - Mechanical enforcers for every boundary this spec introduces.
 
 **Out of scope, with reasons that are not effort**
@@ -266,7 +269,9 @@ second command.
 `cmd/stackweaver-registry` is a Cobra CLI built as the cobra-viper skill prescribes: a
 `NewRootCmd()` factory that creates its own `*viper.Viper`, `SilenceUsage` and `SilenceErrors`
 on the root, `RunE` everywhere, `PersistentPreRunE` on the root that loads configuration and
-binds flags after parsing, `ExecuteContext` with a `signal.NotifyContext` for `SIGINT` and
+binds flags after parsing (skipped, by a command annotation, for the two commands that need no
+configuration, `version` and `keys generate`, so a missing `database.url` cannot stop an
+operator from generating a key), `ExecuteContext` with a `signal.NotifyContext` for `SIGINT` and
 `SIGTERM` in `main.go`, output through `cmd.OutOrStdout()`, and tests that execute the factory
 in-process. No package under `internal/` other than `internal/config` imports Cobra or Viper;
 every package receives a typed configuration struct (`server.Config`, `async.Config`,
@@ -283,8 +288,8 @@ Commands, grouped in help as the skill's `cobra.Group` allows:
 | `config show` | Admin | Prints the effective configuration in the file format, every `secret` key rendered as `<redacted>` |
 | `config schema` | Admin | Prints the schema registry as JSON or Markdown (`--format`); the generated reference under `docs/` is this output |
 | `keys generate` | Admin | Prints a fresh 32-byte master key, base64, to stdout, nothing else |
-| `keys rotate-master --new-key-file` | Admin | Re-wraps every data key under the new master key (below); refuses while any other process holds the rotation lock |
-| `storage check [--restore-dangling]` | Admin | `storage-and-gc.md`'s consistency checker (its AC27) as a subcommand: compares references, blob rows and objects under the instance's prefix and reports orphans, dangling rows and digest mismatches; `--restore-dangling` restores each dangling row's object from its latest non-current bucket version ("Backup and restore" below) |
+| `keys rotate-master` | Admin | Re-wraps every data key wrapped under `security.previous_master_key` under `security.master_key` (below), reading both from configuration; refuses while any other process holds the rotation lock, and refuses when no previous key is configured |
+| `storage check [--verify] [--restore-dangling]` | Admin | `storage-and-gc.md`'s consistency checker (its AC27) as a subcommand: compares references, blob rows and objects under the instance's prefix and reports orphans, dangling rows and digest mismatches (the mismatches the read path marked, or every object's when `--verify` hashes the store); `--restore-dangling` repairs both loss classes from bucket versions: a dangling row's object from its newest non-current version and a mismatching object from the newest version whose bytes hash to the key, verifying each against the key and clearing the mark, and reports a row unrecoverable when no version verifies ("Backup and restore" below) |
 | `seed` | Harness | `conformance-harness.md`'s seed subcommand, unchanged here; it shares the configuration loader so the harness's isolated `database.schema` and `storage.s3.prefix` are ordinary keys |
 | `version` | Core | Cobra's built-in `--version` with `-ldflags` populated `version`, `commit`, `date`; the subcommand form adds `--json` |
 
@@ -337,7 +342,8 @@ a flag, and a schema test asserts the registry cannot mark a flagged key secret.
 `signing-service.md`'s "never a flag value" for the master key and PIN and generalises it.
 
 **Secrets.** A key marked `secret` (`database.url`, `storage.s3.secret_key`,
-`security.master_key`, `auth.oidc.client_secret`, the pkcs11 PIN, and any future one) accepts
+`security.master_key`, `security.previous_master_key`, `auth.oidc.client_secret`, the pkcs11
+PIN, and any future one) accepts
 its value from the file or the environment, and additionally from a **`_file` sibling**
 (`security.master_key_file`, `database.url_file`, ...) that names a path whose trimmed contents
 are the value. The `_file` form is the recommended one and the one the chart and Compose file
@@ -345,17 +351,23 @@ use; it is Gitea's `__FILE` and Pulp's key file generalised to every secret. Set
 is an error. Secret values are redacted by `config show`, absent from the startup configuration
 log line, and passed through `observability.md`'s `telemetry.Secret` type so the redaction
 chain sees them (`observability.md`'s redaction design). `signing.pkcs11.pin_file` already has
-the `_file` shape and keeps it.
+the `_file` shape and keeps it; it is the one secret with no inline sibling, by
+`signing-service.md`'s choice ("never a flag or a logged value"), and the schema records it as
+file-only rather than deriving an inline form for it.
 
 **Validation** runs before any listener opens and reports every violation together: type,
 range and enum checks from the schema; group constraints (`server.tls.cert_file` and
 `server.tls.key_file` both or neither; `telemetry.audit.file` required when
 `telemetry.audit.sink: file`; `signing.pkcs11.*` all or none); the required set
 (`server.public_url`, `database.url`, `storage.s3.bucket`, `security.master_key`); relational
-checks other specs fixed (`async.job_retention` not shorter than `management.operation_retention`,
-`async-operations.md`; `credentials.exchange_token_lifetime` capped at `1h`,
-`credential-management.md`); and the file's unknown keys. `config validate` is the same pass
-without starting anything, for CI and pre-deploy checks.
+checks other specs fixed (`credentials.exchange_token_lifetime` capped at `1h`,
+`credential-management.md`; `auth.token_service.lifetime` refused above `15m`, `auth.md`); and
+the file's unknown keys. There is deliberately no check relating `async.job_retention` to
+`management.operation_retention`: a job referencing an `Operation` is kept until that
+`Operation` is pruned by a per-row rule (`async-operations.md` AC18, and its AC22 states that
+the defaults, 7 days against 90, start a server with no such check), so a configuration check
+would refuse the very defaults. `config validate` is the same pass without starting anything,
+for CI and pre-deploy checks.
 
 **Reload.** `SIGHUP` reopens the audit file (`observability.md`) and reloads TLS certificates
 and `server.hosts`; every other key needs a restart, and the startup log names which keys are
@@ -364,17 +376,23 @@ generated reference prints it.
 
 **The generated reference.** `docs/deployment/configuration.md` is the Markdown rendering of
 `config schema`, one table per prefix, each row the key, type, default or `required`, whether
-secret, whether reloadable, the owning spec and the meaning. CI regenerates it and fails when
-the committed copy differs, the same shape as the docs index check in `.github/workflows/ci.yml`.
+secret, whether reloadable, the owning spec and the meaning, under the frontmatter the docs
+index requires (`description`, `covers: [internal/config/**]`) so the generated file is indexed
+rather than silently dropped. CI regenerates it and fails when the committed copy differs, the
+same shape as the docs index check in `.github/workflows/ci.yml`.
 
-**The two-way spec check.** `scripts/check-config-keys.js` parses every table row of the form
-`| \`prefix.key\` | default | meaning |` under `docs/internal/plans/` and compares the set
-against `config schema --format json`: a key a spec tables that the schema lacks fails, a key
-the schema holds that no spec tables fails, and a default that differs between the two fails.
-It runs in `make verify` and in CI's docs job. This is the mechanical check the brief asked
-for, and it is what makes "every key a spec defines is present and documented" a property the
-build holds rather than a review item. Its regex is the reason every spec's key table must keep
-the three-column shape with the key in backticks in the first column.
+**The two-way spec check.** `scripts/check-config-keys.js` parses, under `docs/internal/plans/`,
+every table whose header row is exactly `| Key | Default | Meaning |` (the shape every owning
+spec's table already has at this sha) and reads each row of the form
+`| \`prefix.key\` | default | meaning |`, then compares the set against
+`config schema --format json`: a key a spec tables that the schema lacks fails, a key the
+schema holds that no spec tables fails, and a default that differs between the two fails. The
+header requirement is what keeps a CLI table or a values table whose first column happens to
+be a backticked word from being read as keys. It runs in `make verify` and in CI's docs job.
+This is the mechanical check the brief asked for, and it is what makes "every key a spec
+defines is present and documented" a property the build holds rather than a review item. Its
+parser is the reason every spec's key table must keep the three-column shape, that header, and
+the key in backticks in the first column.
 
 ### Key inventory
 
@@ -413,7 +431,8 @@ that differs from the owner's table is a defect the two-way check catches. Durat
 | `storage.s3.force_path_style` | `false` | Path-style addressing for stores without virtual-host buckets |
 | `storage.s3.part_size` | `16MiB` | Multipart upload part size; minimum `5MiB` |
 | `storage.s3.ca_bundle_file` | none | Extra CA bundle trusted for the store endpoint |
-| `security.master_key` | required, secret | The instance master key: 32 bytes, base64; accepts `security.master_key_file`; encrypts every data key that encrypts secrets at rest |
+| `security.master_key` | required, secret | The instance master key: 32 bytes, base64; accepts `security.master_key_file`; wraps every data key that encrypts secrets at rest, and is the key new records are wrapped under |
+| `security.previous_master_key` | none, secret | The master key being rotated out: 32 bytes, base64; accepts `security.previous_master_key_file`; set only for the duration of a rotation, during which a process unwraps records carrying either key's id and `keys rotate-master` re-wraps them under `security.master_key`; refused when equal to the current key |
 | `proxy.offline` | `false` | `proxy-cache.md`'s one instance-wide offline switch, whose row lives here by that spec's statement ("Offline mode"); the schema has no per-repository or per-upstream variant (its AC5) |
 
 **Owned by sibling specs.** Each row is the owner's own three-column table, verified against its
@@ -429,15 +448,15 @@ the count is what `scripts/check-config-keys.js` must find in that spec.
 | `index.` | `lock_wait` `30s`, `max_retries` `8`, `virtual_merge_window` `5s`, `virtual_staleness_bound` `60s`, `render_memo_bytes` `256 MiB` (its was-Q13 memo bound) | `signing-service.md`, 5 (14 keys in its one table with the nine `signing.`) |
 | `async.` | `workers` `8`, `kind_limits` `{verify.reevaluate: 4}`, `poll_interval` `5s`, `lease` `60s`, `max_attempts` `8`, `backoff_base` `2s`, `backoff_cap` `15m`, `drain_timeout` `30s`, `job_retention` `168h`, `scheduler` `true`, `scheduler_interval` `10s` | `async-operations.md`, 11 (its AC22) |
 | `telemetry.` | `listen` `:9464`, `metrics.enabled` `true`, `metrics.on_main_listener` `false`, `metrics.repository_label_limit` `1000`, `metrics.name_label_limit` `200`, `metrics.state_interval` `30s`, `log.level` `info`, `log.format` `json`, `log.request` `true`, `log.trusted_proxies` none, `audit.sink` `stdout`, `audit.file` none, `trace.exporter` `none`, `trace.endpoint` none, `trace.sample_ratio` `0.05`, `health.timeout` `2s`, `pprof` `true` | `observability.md`, 17 (its AC27) |
-| `management.` | `operation_retention` `2160h`, `publish_spool_limit` `1GiB`, `upload_chunk_limit` `256MiB`, `deferred_threshold` `10s` | `management-api.md`, 4 |
+| `management.` | `operation_retention` `2160h`, `publish_spool_limit` `1GiB`, `upload_chunk_limit` `256MiB` | `management-api.md`, 3 (`deferred_threshold` removed on its Fable recheck: a handler declares inline or deferred per kind, so nothing read it) |
 | `verify.` | `sigstore.tuf_url` `https://tuf-repo-cdn.sigstore.dev`, `sigstore.refresh` `24h`, `revocation.refresh` `12h`, `keyserver` `hkps://keyserver.ubuntu.com` | `artifact-verification.md`, 4; the former `verify.workers` is `async.kind_limits` (the resolved worker-limit decision below, applied there) |
 | `policy.` | `feed.url` `https://osv-vulnerabilities.storage.googleapis.com`, `feed.sources` `[]` (list of `{name, url, ecosystems}`, file-only), `feed.sync_interval` `1h`, `feed.staleness_threshold` `24h`, `scan.unscanned_alert_after` `1h` | `supply-chain-policy.md`, 5 (its AC23) |
 | `replication.` | `sync_interval` `60s`, `blob_concurrency` `8` | `replication.md`, 2 (its AC24); it states there is no checkpoint-interval key |
 | `upstream.` | `default_concurrency` `10`, `default_cooldown_cap` `1h`, `connect_timeout` `10s` | `upstream-adapters.md`, 3 (its AC32: the only `upstream.` keys the schema knows) |
 | `ui.` | `instance_name` `Stackweaver Registry`, `help_url` `https://github.com/vhco-pro/stackweaver-registry/tree/main/docs` (changed in both specs if a docs site is fixed later) | `web-ui.md`, 2 (its AC26; neither can disable the UI) |
 
-That is 85 sibling keys under 13 prefixes beside the 29 this spec owns. **No prefix is
-reserved.** Every sibling that owns configuration tables it, so the schema's rule is simpler
+That is 84 sibling keys under 13 prefixes beside the 30 this spec owns (`_file` siblings not
+counted: they are a form of their key, not a key). **No prefix is reserved.** Every sibling that owns configuration tables it, so the schema's rule is simpler
 than a reservation: a key under a sibling's prefix that the sibling's table does not carry is
 unregistered and fails startup with a message naming the owning spec, which is what stops a
 handler or a hurried fix squatting a sibling's namespace (AC3). The prefix-to-owner map is the
@@ -465,21 +484,33 @@ container filesystems and forks the key across replicas, which is exactly the fa
 `not-a-secure-key` default and Pulp's default key path invite.
 
 **Envelope encryption.** The master key never encrypts a record directly. Each encrypted
-record carries its own random data key, wrapped by the master key with an AEAD (XChaCha20-
-Poly1305 or AES-256-GCM, one algorithm fixed in `internal/security`) and a **master key id**
-(the first 8 bytes of the master key's SHA-256). Rotation is therefore a re-wrap, not a
-re-encrypt: `keys rotate-master --new-key-file` takes a session-level advisory lock, walks every
-wrapped data key in batches, re-wraps under the new key, and writes the new id; a process
-started with the new key reads records wrapped under either id while the rotation runs, because
-the old key is passed as `--old-key-file` to the rotation command and to no running process,
-and the rotation is idempotent and resumable (a record already carrying the new id is skipped).
-An operator who has lost the master key has lost every stored secret and nothing else: blobs,
-metadata, tokens (stored hashed, `auth.md`) and audit remain. That property is stated in the
-operator documentation because it is the honest answer to "what if".
+record carries its own random data key, wrapped by the master key with AES-256-GCM (the
+standard library's `crypto/aes` and `crypto/cipher`, which also run under Go's FIPS 140-3 mode
+for operators who need it; a 96-bit random nonce per wrap is safe here because the number of
+wraps under one master key is the number of encrypted records, nowhere near the 2^32 bound) and
+a **master key id** (the first 8 bytes of the master key's SHA-256). The data key encrypts its
+one record with the same AEAD. Rotation is therefore a re-wrap, not a re-encrypt, and it runs
+while every process can still read every record, which needs both keys in every process for
+the rotation's duration: the operator sets `security.previous_master_key` to the key being
+retired and `security.master_key` to the new one and restarts (a rolling restart is fine, since
+a process holding only the old key and one holding both each read every record until a re-wrap
+lands, which is why the command runs only once the rolling restart has completed), then runs
+`keys rotate-master`, which reads both keys from configuration, takes a
+session-level advisory lock, walks every wrapped data key in batches, re-wraps each record
+carrying the previous id under the current key, and writes the current id; the command is
+idempotent and resumable (a record already carrying the current id is skipped) and ends by
+reporting the ids still present, which is zero previous-id records when it is done. The
+operator then removes `security.previous_master_key` and restarts. A process reads a record
+whose id matches neither configured key as an error naming the id, never as a crash and never
+as an empty secret, so a rotation finished out of order is loud at the first use of such a
+record. Throughout, new records are wrapped under `security.master_key` only. An operator who
+has lost the master key has lost every stored secret and nothing else: blobs, metadata, tokens
+(stored hashed, `auth.md`) and audit remain. That property is stated in the operator
+documentation because it is the honest answer to "what if".
 
 **Boundary.** Only `internal/security` sees master-key bytes; it exposes `Seal`/`Open` over data
-keys. The master key is never a flag, never logged, never in `config show`, never in an error
-message; the enforcer table names the tests.
+keys and `Rotate` over the wrapped set. Neither master key is ever a flag, logged, in
+`config show`, or in an error message; the enforcer table names the tests.
 
 ### Runtime dependencies
 
@@ -493,9 +524,18 @@ per-session and a transaction pooler breaks all three (this is why Nexus forbids
 same reasoning applies to PgBouncer in transaction mode); statement-pooling is likewise out.
 Session-mode pooling is fine and is the recommended way to fit many replicas under
 `max_connections`. Extensions: none required; `pgcrypto` is not used because randomness and
-hashing happen in the process. Sizing rule: `replicas × (database.max_conns + 2)` must be below
-the server's `max_connections`; the two are the dedicated connections the leader lock and the
-`LISTEN` session hold. The startup log prints this budget.
+hashing happen in the process. Sizing rule: a process uses `database.max_conns` pool
+connections plus the dedicated connections its roles hold **outside the pool**, for the
+process's life: one for `LISTEN` when `async.workers` is above zero and one for the scheduler
+lock when `async.scheduler` is on (`async-operations.md`'s "Topology and shutdown", as amended
+on its Fable recheck), so an all-roles replica is `database.max_conns + 2` and a
+`workers: 0`, `scheduler: false` web replica is `database.max_conns`. The sweep's `LockSweep`
+and the migration and rotation locks take no extra connection: the sweep holds its session
+lock on a pool connection checked out for the run, the migration lock is transaction-level on a
+pool connection, and `keys rotate-master` is a separate process with its own pool. The
+deployment's sum over replicas, plus the pool of any `migrate up` Job or `storage check` run
+that may overlap, must be below the server's `max_connections`, and the startup log prints
+this process's share of the budget.
 
 **Object storage.** Any S3-compatible store implementing `PutObject`, `GetObject` with `Range`,
 `HeadObject`, `DeleteObject`, `ListObjectsV2` and multipart upload (`CreateMultipartUpload`,
@@ -506,8 +546,12 @@ orphan scan applies the grace period to object age. Two bucket settings are depl
 requirements, not suggestions: **object versioning or an equivalent soft-delete window at least
 as long as the database backup retention** (the restore contract below depends on it), and a
 **lifecycle rule aborting incomplete multipart uploads** after a period longer than the upload
-session's absolute cap (24 hours, `data-model.md`'s upload session definition), because an
-aborted client leaves parts that no LIST of objects shows. Readiness performs a `HeadBucket`
+session's absolute cap (24 hours by default, `data-model.md`'s upload session definition, which
+says the cap is configurable instance-wide without tabling a key for it; until a key exists the
+rule is stated against the default, and the documentation says so), because an aborted client
+leaves parts that no LIST of objects shows. Where versioning is configured, the lifecycle rule
+expiring non-current versions must keep them at least as long as the database backup
+retention, or the restore contract below silently loses its source. Readiness performs a `HeadBucket`
 and, once per `telemetry.metrics.state_interval` on the leader, a probe write and delete under
 `<prefix>/.probe/` so a store that accepts reads and refuses writes is reported before a push
 finds out. Private stores present a CA through `storage.s3.ca_bundle_file`; the chart's
@@ -518,8 +562,16 @@ finds out. Private stores present a CA through `storage.s3.ca_bundle_file`; the 
 **Two listeners**, per `observability.md`: the main listener (`server.listen`) for clients, the
 management API and status-only probes, and the telemetry listener (`telemetry.listen`, `:9464`)
 for `/metrics`, detailed `/readyz` and pprof, which the deployment never exposes publicly. The
-chart exposes only the main listener through its Service and Ingress; the telemetry port is a
-second container port with no Service by default and a `ServiceMonitor` value that targets it.
+reason is stated, not assumed: every per-repository series on that listener carries repository
+names as label values, and on a private registry those names are exactly what `auth.md`'s
+existence oracle (its AC17) keeps from clients, so a reader of `:9464` learns them all at once
+(`observability.md`, "What the listener discloses, and why that is the reason it is never
+public"; `telemetry.metrics.repository_label_limit: 0` is the opt-out that collapses the label).
+The chart exposes only the main listener through its Service and Ingress; the telemetry port is
+a second container port with no Service at all, and the scrape value renders a `PodMonitor`
+(which targets the container port directly, inside the cluster network) rather than a
+`ServiceMonitor`, because a `ServiceMonitor` needs a Service and a Service is the thing AC13
+says the chart never renders for that port.
 
 **TLS.** Two shapes, and the server knows which it is in from configuration alone:
 
@@ -542,14 +594,22 @@ that many clients print only the reason phrase of a refusal (Maven, Gradle, R, r
 CPAN clients among those confirmed), and HTTP/2 has no reason phrase (RFC 9113 removes it). A
 per-route or per-format HTTP version is impossible: the version is negotiated by ALPN before
 any byte of the request names a route. The resolved HTTP-version decision below therefore turns
-`h2` **off on the main listener by default** (`server.http2: false`): Go's `http.Server` then
-advertises only `http/1.1`, every client speaks HTTP/1.1, and a refusal's status line carries
-its phrase. Operators whose formats' clients read bodies may set `server.http2: true`; the
+`h2` **off on the main listener by default** (`server.http2: false`): the server's
+`http.Server.Protocols` (Go 1.24 and later) holds HTTP/1 alone, so ALPN advertises only
+`http/1.1` and no cleartext `h2c` is accepted either; `server.http2: true` adds HTTP/2 over TLS
+and nothing else. Every client then speaks HTTP/1.1 and a refusal's status line carries its
+phrase. Operators whose formats' clients read bodies may set `server.http2: true`; the
 generated reference lists the formats whose refusal rendering depends on the phrase, drawn from
 `supply-chain-policy.md`'s per-format refusal rendering. Behind a proxy the registry cannot
-choose the client-facing protocol, so the documentation states the requirement for the proxy
-(client-facing HTTP/1.1, or accept bare status codes), and the Helm chart's ingress annotations
-for the ingress controllers it documents set it. The write half is `supply-chain-policy.md`'s
+choose the client-facing protocol, and the protocol is not the only hazard: a proxy must also
+**forward the phrase**, which one built on Go's `net/http` cannot (its `ResponseWriter` writes
+the canonical text, the very limitation that forces the registry's own hijacked write) and
+which Envoy-based controllers do not. So the documentation states two requirements for the
+proxy, client-facing HTTP/1.1 and reason-phrase pass-through, and names the alternative (accept
+bare status codes; the condition is still in the body). The Helm chart's `ingress.http1Only`
+sets the documented annotations only for the controllers the chart's kind e2e job has proved
+forward the phrase end to end (AC11's ingress clause), and the documentation lists every other
+controller as bare status codes rather than guessing. The write half is `supply-chain-policy.md`'s
 (its resolved refusal-status-line decision, was Q10; AC18): Go's `net/http` writes the canonical
 `http.StatusText` for every status and offers no API for a custom reason phrase, so the shared
 refusal writer in `internal/format` hijacks the HTTP/1.1 connection to write
@@ -569,9 +629,20 @@ right home or the construction contract should carry it explicitly as a re-open 
 from the Terraform and Puppet claims. Bindings are configuration, not repository settings (the resolved
 host-binding decision below), because a hostname is a deployment fact (DNS, a certificate SAN,
 an ingress rule) before it is a registry fact, and reloadable on `SIGHUP` so adding one is not
-a restart. A binding whose repository does not exist is a startup warning and a `404` on that
-host, not a startup error, because the repository is created through the management API after
-the process is up. A list naming one hostname twice is a startup error, because "each hostname
+a restart. A binding adds the format's root-anchored routes on that hostname and removes
+nothing: every ordinary mount (`/api/v1`, `/ui`, every format-first mount) keeps serving on a
+bound hostname as on any other. A binding whose repository does not exist is a startup warning
+and a `404` on that host, not a startup error, because the repository is created through the
+management API after the process is up. On a hostname no binding covers, or one bound to a
+repository of another format, a root-anchored request is not answered by the handler at all:
+the claiming handler's `Scope(r)` has no repository to report and returns an error, and the
+request is denied exactly as `format-handler-interface.md` AC10 says, with the response an
+unauthorized caller receives, which `auth.md` renders as a `404` indistinguishable from a
+missing resource, the handler never invoked (that spec's "Host-bound claims" as amended on its
+Fable recheck). The `404` is therefore the shared layer's denial and never a format's own
+error shape; a format spec that words its unbound-host case in the format's wire shape is
+describing what the client sees only where the shared `404` happens to fit that shape. A list
+naming one hostname twice is a startup error, because "each hostname
 binds exactly one repository" would otherwise be decided by list order: `config validate` and
 `serve` fail naming the hostname and both entries, and a `SIGHUP` reload of such a file is
 refused with an error log line naming them, the previously loaded binding staying in force
@@ -610,10 +681,11 @@ that allows the database, the object store and the telemetry collector and nothi
   last, so readiness cannot succeed before the process can serve.
 - **`/healthz`** (liveness): the process is running and its event loop responds. Nothing else,
   so a database outage does not make Kubernetes restart every replica into a thundering herd.
-- **`/readyz`** (readiness): database reachable, migrations at the binary's version, object
-  store `HeadBucket` succeeded within `telemetry.health.timeout`, spool free space above
-  `server.spool_min_free`. Status only on the main listener, detailed on the telemetry
-  listener (`observability.md`).
+- **`/readyz`** (readiness): database reachable, no migration this binary carries still
+  pending (a schema *ahead* of the binary is ready, by the compatibility rule below: that is
+  the previous binary's normal state during a rolling upgrade), object store `HeadBucket`
+  succeeded within `telemetry.health.timeout`, spool free space above `server.spool_min_free`.
+  Status only on the main listener, detailed on the telemetry listener (`observability.md`).
 - **`SIGTERM`.** Readiness flips to failing immediately, the main listener stops accepting,
   in-flight requests run to completion or `server.shutdown_timeout`, workers drain for
   `async.drain_timeout` (a job past the drain is lease-expired and reclaimed by another process,
@@ -629,11 +701,23 @@ that allows the database, the object store and the telemetry collector and nothi
 Schema migrations are numbered SQL files under `internal/db/migrations`, forward-only, each
 applied in one transaction, recorded in `schema_migrations(version, applied_at, binary_version)`.
 The runner takes a **transaction-level advisory lock** on a fixed key before checking and
-applying, so N replicas starting together apply once and the rest observe. `serve` runs the
-runner by default (Gitea's and Harbor's behaviour: "The schema upgrade and data migration of
-the database is performed by core when Harbor starts"); `migrate up` runs it alone for
-operators who want migration as a distinct, auditable step, and the Helm chart's pre-upgrade
-hook Job runs exactly that with `database.migrate_on_start: false` on the Deployment.
+applying, so N replicas starting together apply once and the rest observe. One class of
+statement cannot run inside a transaction, `CREATE INDEX CONCURRENTLY` and its `DROP`, which
+the compatibility rule below needs for indexes on large tables; a migration file carrying the
+marker `-- transaction: none` may contain only those two statement forms, each written with
+`IF NOT EXISTS` or `IF EXISTS` so the file is idempotent, and the runner, before applying such
+a file, drops any index it names that PostgreSQL reports `INVALID` (the state an interrupted
+concurrent build leaves), so a crash mid-build is retried cleanly rather than leaving a dirty
+state. Everything else is transactional, and a file that carries the marker with any other
+statement is refused by a test over the migration directory. `serve` runs the runner by
+default (Gitea's and Harbor's behaviour: "The schema upgrade and data migration of the database
+is performed by core when Harbor starts"); `migrate up` runs it alone for operators who want
+migration as a distinct, auditable step, and the Helm chart's hook Job runs exactly that with
+`database.migrate_on_start: false` on the Deployment. The hook is `pre-install,pre-upgrade`,
+not `pre-upgrade` alone: a fresh `helm install` with the Deployment's migration switched off
+would otherwise never migrate and never become ready. The runner is also where the first-start
+bootstrap lives (the local admin row, below), so under the chart the first-start credential is
+emitted by the hook Job, and the documentation says to read it from that Job's log.
 
 **The compatibility rule that makes rollback possible.** Every migration shipped in release
 `N` must leave a schema the binary of release `N-1` (the previous minor) runs correctly
@@ -650,7 +734,9 @@ when the shared model changes.
 the current tree: `serve` starts, `/readyz` passes, and the smoke slice of the conformance suite
 passes against it. A migration that breaks the previous binary fails CI here, not in someone's
 rollback. The job is cheap (the previous binary is a download) and runs on `main` pushes with
-the conformance job.
+the conformance job. Until the first minor release exists there is no previous binary, and the
+job reports itself skipped by name rather than passing vacuously; from the second minor on it
+is a hard gate.
 
 ### Upgrade and rollback policy
 
@@ -668,7 +754,11 @@ the conformance job.
   (its resolved unknown-kind decision, was Q10; AC26: the non-registering process logs the kind
   at warning and serves everything else).
 - **Rollback.** Redeploy the previous minor's binary or chart revision; no database action. A
-  rollback across two minors is not supported and the documentation says why.
+  rollback across two minors is not supported and the documentation says why. One visible
+  residue is stated honestly: jobs the newer binary enqueued under kinds the older one lacks
+  stay `pending` after the rollback, by the same unknown-kind rule, until a binary that knows
+  them is deployed again; the operator sees them in `GET /api/v1/system/jobs` and in
+  `async_oldest_pending_age_seconds`, and nothing fails on their account.
 - **Data-format changes in object storage** are forbidden: blobs are content-addressed bytes
   and the layout under the prefix is fixed by `storage-and-gc.md`; there is nothing to migrate
   and nothing to roll back.
@@ -687,7 +777,7 @@ twice, and what holds it:
 | State-derived gauges | Collected on the leader only | `observability.md` |
 | Schema migration | Transaction-level advisory lock in the runner | this spec |
 | Master-key rotation | Session-level advisory lock in `keys rotate-master` | this spec |
-| The local admin credential's first-start emission | Insert-if-absent on the admin row inside the migration transaction of the first start, so N replicas racing at first start emit it once | this spec, satisfying `auth.md` AC15 across replicas |
+| The local admin credential's first-start emission | Insert-if-absent on the admin row inside the migration transaction of the first start, under the migration lock, so N replicas racing at first start emit it once; under the chart the runner is the hook Job, so the Job emits it and no replica does | this spec, satisfying `auth.md` AC15 across replicas |
 
 Nothing is process-local that a second replica must see: sessions are rows (`auth.md` AC22's
 server-side logout needs them), the queue is rows, caches of upstream metadata are the CAS and
@@ -718,10 +808,18 @@ collects after grace; rows whose object the sweep deleted between `T` and `T'` a
 they are recoverable **only because bucket versioning (or soft delete) is a deployment
 requirement**: `storage check --restore-dangling` (the storage consistency checker
 `storage-and-gc.md` AC27 specifies, exposed as a subcommand in the CLI table above) lists
-dangling rows and restores each object from its latest non-current version. The documented restore procedure is: stop all
-replicas, restore PostgreSQL, run `storage check --restore-dangling`, start one replica, read
-its `/readyz`, scale up. The checker's report is also the post-restore acceptance test, and it
-is what makes the procedure verifiable rather than hopeful.
+dangling rows and restores each object from its newest non-current version, verifying the
+restored bytes against the key before declaring the row healed. A third class has the object
+present but wrong, a **digest mismatch** (bytes that do not hash to their key, carried as the
+read path's mark or found by `--verify`'s full hash of the store), which is the same loss with
+the object still there: the same flag repairs it the same way, walking the key's versions
+newest first, restoring the first whose bytes verify and clearing the mark, and reporting the
+row unrecoverable when no version verifies (that spec's AC21 and AC27, as amended on its Fable
+recheck). The documented restore procedure is: stop all replicas, restore PostgreSQL, run
+`storage check --restore-dangling`, start one replica, read its `/readyz`, scale up; a suspected
+storage corruption outside a restore is `storage check --verify --restore-dangling` on a
+running instance, which restores and never deletes. The checker's report is also the
+post-restore acceptance test, and it is what makes the procedure verifiable rather than hopeful.
 
 **Restore of a follower** (`replication.md`) needs no bucket procedure: a follower re-seeds
 from its leader by design.
@@ -745,25 +843,26 @@ GHCR namespace. Its values are shaped by the roles table and the resolved chart 
 | `workers.enabled` | `false` | Adds a second Deployment of the same image with `async.workers` set and the main listener bound for probes only; when on, the first Deployment gets `async.workers: 0` (the web-replica recipe) |
 | `workers.replicaCount`, `workers.count` | `2`, `8` | Worker Deployment size and `async.workers` per pod |
 | `config` | `{}` | Rendered into a ConfigMap as the YAML file; every non-secret key |
-| `existingSecret` | none | Secret holding `database-url`, `master-key`, `s3-secret-key`, `oidc-client-secret`, `pkcs11-pin`; mounted as files and referenced through `_file` keys |
+| `existingSecret` | none | Secret holding `database-url`, `master-key`, `s3-secret-key`, `oidc-client-secret`, `pkcs11-pin`, and during a rotation `master-key-previous`; mounted as files and referenced through `_file` keys, the previous key wired to `security.previous_master_key_file` only while the Secret carries it |
 | `postgresql.url` / `postgresql.existingSecret` | required | External PostgreSQL |
 | `storage.s3.*` | required | External object storage |
-| `service.port`, `ingress.*`, `ingress.http1Only` | `8080`, disabled, `true` | Main listener exposure; `http1Only` sets the documented annotations for nginx-ingress, Traefik and HAProxy ingress so refusals keep their phrase |
+| `service.port`, `ingress.*`, `ingress.http1Only` | `8080`, disabled, `true` | Main listener exposure; `http1Only` sets the documented annotations, for the ingress controllers the chart's kind e2e job has proved forward the reason phrase end to end (ingress-nginx and HAProxy ingress are the candidates at this sha; each is listed only once AC11's ingress clause has passed through it), so refusals keep their phrase; every other controller is documented as bare status codes |
 | `tls.native.existingSecret` | none | Native TLS from a `kubernetes.io/tls` Secret; sets `auth.allow_plaintext: false` |
 | `tls.terminatedUpstream` | `false` | Sets `auth.allow_plaintext: true` and requires the operator to set it explicitly; the values schema forbids both this and `tls.native` |
-| `telemetry.serviceMonitor.enabled` | `false` | ServiceMonitor for `:9464`; the port is never on the main Service |
+| `telemetry.podMonitor.enabled` | `false` | PodMonitor scraping the `:9464` container port directly; no Service is ever rendered for it |
 | `caBundleSecretName` | none | CA bundle for private upstreams and stores (Harbor's value, same name) |
-| `migrations.hook` | `true` | Pre-upgrade Job running `migrate up`; the Deployment then runs with `database.migrate_on_start: false` |
+| `migrations.hook` | `true` | A `pre-install,pre-upgrade` hook Job running `migrate up` (`hook-delete-policy: before-hook-creation`, so the last Job's log, which carries the first-start credential on an install, stays readable until the next hook); the Deployment then runs with `database.migrate_on_start: false` |
 | `networkPolicy.egress.registryOnly` | `false` | Egress restricted to database, store and collector (air gap) |
 | `podDisruptionBudget.minAvailable` | `1` | Rolling upgrades keep one replica serving |
 | `resources` | see Sizing | Requests and limits from the measured profile |
-| `alerts.enabled`, `alerts.signingLeadHours` | `false`, `336` | Installs `deploy/observability/alerts.yaml` as a PrometheusRule with the signing lead templated from `signing.external_expiry_lead` (`observability.md`) |
+| `alerts.enabled`, `alerts.cacheMetadataBytes` | `false`, `10GiB` | Installs `deploy/observability/alerts.yaml` as a PrometheusRule, filling the three values its header names for packaging (`observability.md` AC17): the signing lead from `config.signing.external_expiry_lead` and the GC sweep interval (for `GCSweepStale`, twice the interval) from `config.gc.sweep_interval`, each read from the same `config` subtree the ConfigMap renders and falling back to the owner's default when unset, so the rule and the running configuration cannot drift; and the `CacheMetadataLarge` threshold from `alerts.cacheMetadataBytes`, the one value with no configuration key behind it |
 | `dashboard.enabled` | `false` | ConfigMap with the Grafana dashboard generated from the metric catalogue |
 
 The chart's `values.schema.json` is generated from the configuration schema for the `config`
 subtree, so `helm lint` and `helm install` refuse an unknown key before the pod does.
 
-**Compose file** at `deploy/compose/docker-compose.yaml`: the registry, PostgreSQL 16 and MinIO,
+**Compose file** at `deploy/compose/docker-compose.yaml`: the registry, PostgreSQL (the newest
+major the CI matrix tests, pinned by tag) and MinIO,
 with a `secrets/` directory of generated files, `server.public_url: http://localhost:8080`,
 `auth.allow_plaintext: true` with a loud comment that this is the evaluation shape, and a
 one-line header stating it is not a production deployment. `make run` continues to run the bare
@@ -785,7 +884,9 @@ AC2), which the chart's ingress path rules honour by routing `/ui/` and `/api/` 
 path to the same Service.
 
 **Observability artefacts.** `deploy/observability/alerts.yaml` is `observability.md`'s (its
-AC17); this spec packages it into the chart and the Compose file's Prometheus. The Grafana
+AC17); this spec packages it into the chart and the Compose file's Prometheus, filling the
+three header-named values (the chart from its `config` subtree and `alerts.cacheMetadataBytes`,
+the Compose file with the owners' defaults and 10 GiB). The Grafana
 dashboard `deploy/observability/dashboard.json` is generated by `scripts/gen-dashboard.js` from
 the metric catalogue `observability.md` exposes, one panel per catalogue entry family, checked
 in and CI-verified against regeneration like the docs index; a hand edit fails the check, which
@@ -801,18 +902,38 @@ and its spool.
 ### First run and first mint
 
 On the first start against an empty schema, the migration transaction creates the local admin
-row and the process emits the generated credential to the log exactly once (`auth.md` AC15;
-the insert-if-absent above makes it once across replicas). The documented first-mint procedure,
-per `credential-management.md`'s resolved decision, is a `curl` against the management API with
-that credential as Basic, requesting the first token, followed by the OIDC configuration that
-names an admin identity and disables the local account (`auth.md` AC2). The documentation
-reproduces the two commands verbatim from an integration test that runs them, so the procedure
-in the docs is the one the build ran.
+row and the process running the migration emits the generated credential to the log exactly
+once (`auth.md` AC15; the insert-if-absent above makes it once across replicas, and under the
+chart that process is the `migrate up` hook Job, so the credential is in the Job's log). The
+documented first-mint procedure, per `credential-management.md`'s resolved decision (was Q7),
+is a `curl` against `POST /api/v1/tokens` presenting **the local admin credential as HTTP
+Basic**, the local admin account's name `admin` as the username and the emitted credential as
+the password, followed by the OIDC configuration that names an admin identity and disables the
+local account (`auth.md` AC2). The form is stated precisely because it is a third credential
+form on `/api/v1`, beside the bearer token and the session cookie `management-api.md`'s
+authentication paragraph admits, and it is not the Basic form `auth.md`'s client table
+describes (there the password is a registry token and the username is ignored): here the
+password is the local admin's own credential and the pair resolves, through the shared
+authorizer, to the **local admin human principal**, which is what `credential-management.md`'s
+credential routes require ("How who reaches the authorizer": a session or the local admin
+account, never a token). It is accepted only where a session would be, only while the local
+admin account is enabled, and only over a connection that satisfies `auth.md`'s TLS rule
+(`auth.allow_plaintext` governs it like any credential); a registry token presented in the
+same Basic slot is still a token and is refused by those routes as `credential-management.md`
+AC14 says. `auth.md` and `management-api.md` name this form on their queued Fable follow-ups
+(the seam `credential-management.md`'s recheck reported to both); this spec states it so the
+three agree. The procedure lives as `deploy/recipes/first-mint/` (a configuration fragment and
+the integration test that runs both commands), and the operator documentation references that
+test by path and step name rather than copying the commands, per the documentation rule that
+docs cite source files and never carry code blocks, so the procedure the docs point at is the
+one the build ran.
 
 ### Recipes
 
-Each recipe is a documented, tested configuration fragment under `docs/deployment/recipes/`,
-each with an integration test that applies it.
+Each recipe is a tested configuration fragment under `deploy/recipes/<name>/` (the fragment and
+its `test.sh`), documented by a page under `docs/deployment/` that describes it in sentences and
+cites the fragment and the test by path, never by copying them (the documentation rule); the
+test is what makes the page true.
 
 - **Web-only replicas and a worker pool.** `workers.enabled: true` in the chart; or by hand,
   `async.workers: 0` on the web processes and `async.scheduler: false` on all but the worker
@@ -832,7 +953,16 @@ each with an integration test that applies it.
 - **Air gap.** `proxy.offline: true`, `networkPolicy.egress.registryOnly: true`,
   `verify.sigstore.refresh` and the feed sync suspended by the offline switch
   (`artifact-verification.md`, `supply-chain-policy.md`), the CA bundle for the internal store,
-  and the image pulled from the operator's own OCI registry.
+  and the image pulled from the operator's own OCI registry. Advisory data still arrives, by
+  hand: on a connected machine the recipe downloads the OSV bulk export for the instance's
+  ecosystems **and records the export root's `Last-Modified` at download** beside the archive,
+  carries both across the gap, and imports with
+  `POST /api/v1/system/advisories/import?exported_at=<that time>&source=<name>` as admin
+  (`management-api.md` AC34); `exported_at` is required and becomes the source's freshness, so
+  the staleness threshold measures the export's age and not the import's, which is what makes
+  an old export on a fresh import fail closed as `supply-chain-policy.md`'s resolved
+  freshness-measure decision (was Q13) intends. The recipe's test imports a fixture export with
+  its recorded time and asserts the freshness gauge reads that time.
 - **Behind an ingress that terminates TLS.** `tls.terminatedUpstream: true`,
   `ingress.http1Only: true`, `telemetry.log.trusted_proxies` set to the ingress's CIDR.
 - **PgBouncer in session mode** with the connection budget computed for it.
@@ -858,20 +988,22 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | Boundary | Enforcer |
 |---|---|
 | Only `cmd/**` and `internal/config` import `github.com/spf13/cobra` or `github.com/spf13/viper` | `internal/config/arch_test.go` (module-wide import graph) |
-| No package outside `internal/config` calls `os.Getenv`, `os.LookupEnv` or `os.Environ`, except the three carve-outs (`http.ProxyFromEnvironment` in `internal/upstream`, the OTel SDK's `OTEL_*` reads, `GOMEMLIMIT` by the runtime) | `internal/config/env_boundary_test.go` (AST walk; carve-outs listed in the test) |
+| No non-test file outside `internal/config` calls `os.Getenv`, `os.LookupEnv` or `os.Environ`, except the three carve-outs (`http.ProxyFromEnvironment` in `internal/upstream`, the OTel SDK's `OTEL_*` reads, `GOMEMLIMIT` by the runtime); `_test.go` files may read the environment for their own fixtures | `internal/config/env_boundary_test.go` (AST walk over non-test files; carve-outs listed in the test) |
 | No `flag`/`pflag` definition outside `cmd/**` | `internal/config/arch_test.go` |
 | Every field of every typed `Config` struct handed to a package maps to exactly one schema key, and every schema key to a field | `internal/config/schema_struct_test.go` (reflection over the registered structs) |
 | A key marked `secret` has no flag; derived environment names are unique | `internal/config/schema_test.go` |
 | Secret values never appear in `config show`, the startup log, or any error message from the loader | `internal/config/redaction_test.go` (canary values planted in every secret key, output scanned) |
 | Every key in every spec table exists in the schema with the same default, and every schema key is tabled by exactly one spec | `scripts/check-config-keys.js`, run by `make verify` and CI's docs job |
 | `docs/deployment/configuration.md`, `values.schema.json` and `dashboard.json` equal their generated forms | CI docs job (`--check` mode of each generator) |
-| Only `internal/security` reads master-key bytes | `internal/security/arch_test.go` (no other package references the key field or the `_file` path) |
+| Only `internal/security` reads master-key bytes, current or previous | `internal/security/arch_test.go` (no other package references either key field or `_file` path) |
+| A migration file marked `-- transaction: none` contains only `CREATE INDEX CONCURRENTLY IF NOT EXISTS` and `DROP INDEX CONCURRENTLY IF EXISTS` statements | `internal/db/migrations_test.go` (statement scan of every marked file) |
 | Only `internal/db/lock` issues advisory-lock SQL | `internal/db/lock/arch_test.go` (string scan of every `.go` and `.sql` file for `pg_advisory` and `pg_try_advisory`) |
 | Only `internal/db/migrations` contains DDL, and no handler references it | `internal/db/migrations_test.go`, alongside `data-model.md`'s handler-DDL test |
 | Every migration applies in one transaction and the previous minor's binary runs against the result | `.github/workflows/ci.yml` job `compat-previous-minor` |
-| No process-local cache of shared state outside the allowlist | `internal/server/cache_boundary_test.go` (allowlisted types; any other `sync.Map`/map-with-mutex holding rows fails) |
+| No process-local cache of shared state outside the allowlist | `internal/server/cache_boundary_test.go` (allowlisted types; any other package-level or struct-field `sync.Map` or map whose element type comes from `internal/model` fails) |
 | `terminationGracePeriodSeconds` equals `server.shutdown_timeout + async.drain_timeout + 10s` | `deploy/helm/tests/lifecycle_test.yaml` (helm-unittest) |
-| The chart never exposes `telemetry.listen` on the main Service or Ingress | `deploy/helm/tests/listeners_test.yaml` |
+| The chart never renders a Service or Ingress port for `telemetry.listen`, with `telemetry.podMonitor.enabled` on or off | `deploy/helm/tests/listeners_test.yaml` |
+| `alerts.yaml`'s signing lead and GC sweep interval follow the chart's `config` subtree | `deploy/helm/tests/alerts_test.yaml` (set `config.gc.sweep_interval` and `config.signing.external_expiry_lead`, assert the rendered rules) |
 | `values.schema.json` refuses `tls.native` together with `tls.terminatedUpstream`, and refuses a per-repository offline key | `deploy/helm/tests/schema_test.yaml` |
 
 ## Acceptance Criteria
@@ -879,25 +1011,29 @@ Per the constitution, every boundary this spec introduces names the test that ho
 - [ ] AC1: `stackweaver-registry serve` starts from environment variables alone (no file, no
       flags) with `server.public_url`, `database.url`, `storage.s3.bucket` and
       `security.master_key` set, binds `server.listen`, answers `/readyz` `200` on both
-      listeners, logs one line of the connection budget (`database.max_conns` plus the two
-      dedicated connections, per replica), and with any one of the four unset exits non-zero
+      listeners, logs one line of the connection budget (`database.max_conns` plus the
+      dedicated `LISTEN` and scheduler-lock connections this process's roles hold: two with the
+      defaults, none with `async.workers: 0` and `async.scheduler: false`), and with any one of
+      the four unset exits non-zero
       before opening any listener with a message naming every missing required key at once; a
       `--config` path that does not exist is an error and an absent default path is not.
 - [ ] AC2: Precedence is flag over environment over file over default for every flagged key,
-      demonstrated for each of the eight flags (`--config`, `--listen`, `--public-url`,
+      demonstrated for each of the seven keyed flags (`--listen`, `--public-url`,
       `--allow-plaintext-auth`, `--log-level`, `--log-format`, `--workers`, `--no-scheduler`)
-      by setting all four sources to distinct values.
+      by setting all four sources to distinct values; `--config`, which names the file and is
+      no schema key, wins over `STACKWEAVER_REGISTRY_CONFIG`, which wins over the default path.
 - [ ] AC3: A misspelt key in the file, an environment variable with the prefix matching no key,
       and a key under a sibling-owned prefix (`gc.`, `policy.`, `replication.`, `ui.` among the
       thirteen) that the owner's table does not carry each fail `config validate` and `serve`
       naming the offending key and, for the sibling prefix, the owning spec.
 - [ ] AC4: Every secret-classified key (`database.url`, `storage.s3.secret_key`,
-      `security.master_key`, `auth.oidc.client_secret`, `signing.pkcs11.pin_file`'s contents)
-      accepts a `_file` sibling (`security.master_key_file`, `database.url_file`,
-      `storage.s3.secret_key_file`, ...) whose trimmed contents are the value, refuses both
-      forms set together, has no flag, and its planted canary value appears in no line of
-      `config show`, the startup log, or any loader error across a fixture that breaks every
-      validation rule at once.
+      `security.master_key`, `security.previous_master_key`, `auth.oidc.client_secret`,
+      `signing.pkcs11.pin_file`'s contents) accepts a `_file` sibling
+      (`security.master_key_file`, `security.previous_master_key_file`, `database.url_file`,
+      `storage.s3.secret_key_file`, ...) whose trimmed contents are the value (the PIN, by its
+      owner's choice, has the file form only), refuses both forms set together, has no flag,
+      and its planted canary value appears in no line of `config show`, the startup log, or
+      any loader error across a fixture that breaks every validation rule at once.
 - [ ] AC5: `config schema --format json` lists every key the inventory above names with the
       owner's default, and `scripts/check-config-keys.js` passes against the tree; adding a row
       to any spec's key table with no schema entry, or a schema entry with no row, or a
@@ -911,11 +1047,16 @@ Per the constitution, every boundary this spec introduces names the test that ho
 - [ ] AC8: Every typed `Config` struct handed to a package is covered field-for-field by the
       schema, and a field or key added on one side alone fails the reflection test.
 - [ ] AC9: The instance master key is required, is read only by `internal/security`, wraps a
-      per-record data key with an AEAD carrying the master key id, and
-      `keys rotate-master --new-key-file` re-wraps every record idempotently and resumably while
-      a process started with the new key reads records under either id throughout; a second
-      rotation started concurrently is refused by the rotation lock; a record's ciphertext in a
-      database dump is unreadable without the key.
+      per-record data key with AES-256-GCM carrying the master key id, and new records are
+      wrapped under `security.master_key` only; with `security.previous_master_key` also set, a
+      process reads records under either id, `keys rotate-master` re-wraps every previous-id
+      record under the current key idempotently and resumably (killed mid-run and re-run, it
+      finishes with zero previous-id records and reports the count) while a serving process
+      configured with both keys reads every record throughout; the command refuses without a
+      previous key configured, refuses a previous key equal to the current one, and a second
+      rotation started concurrently is refused by the rotation lock; after the previous key is
+      removed, a record still carrying its id is reported as an error naming the id at use, not
+      as an empty secret; a record's ciphertext in a database dump is unreadable without the key.
 - [ ] AC10: With `server.tls.cert_file` and `server.tls.key_file` set the main listener serves
       TLS at `server.tls.min_version` or above, reloads a replaced certificate pair on `SIGHUP`
       and on file change without dropping established connections, and one set without the
@@ -925,12 +1066,18 @@ Per the constitution, every boundary this spec introduces names the test that ho
       `auth.allow_plaintext: true` (the `--allow-plaintext-auth` flag) is authenticated
       normally, with the startup log naming the flag and the assertion it makes.
 - [ ] AC11: With `server.http2` at its default the main listener's ALPN offers only
-      `http/1.1`, and a real Maven client's and a real cpanm client's output on a policy
-      refusal contains the status line's reason phrase; with `server.http2: true` an `h2`
-      connection is negotiated by a Go client.
+      `http/1.1` and a cleartext `h2c` preface is not accepted, and a real Maven client's and a
+      real cpanm client's output on a policy refusal contains the status line's reason phrase;
+      with `server.http2: true` an `h2` connection is negotiated by a Go client over TLS; and
+      through each ingress controller the chart's `ingress.http1Only` documents, the same
+      Maven refusal in the CI kind cluster still shows the phrase, a controller failing that
+      being removed from the documented list rather than the criterion.
 - [ ] AC12: `server.hosts` binds each listed hostname to one repository passed to the handler at
-      construction; a root-anchored request on a bound hostname reaches that repository, the
-      same path on an unbound hostname is `404`, a binding to a non-existent repository logs a
+      construction; a root-anchored request on a bound hostname reaches that repository while
+      every ordinary mount still serves on that hostname, the same path on an unbound hostname
+      (or one bound to a repository of another format) is the shared `404` denial with the
+      handler never invoked (`format-handler-interface.md` AC10 through a `Scope(r)` error,
+      the log recording the real cause), a binding to a non-existent repository logs a
       warning and serves `404` without failing startup, and a `SIGHUP` after editing the file
       applies a new binding without restart; a file listing one hostname twice fails
       `config validate` and `serve` naming the hostname and both entries, and a `SIGHUP` reload
@@ -938,8 +1085,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
       serving; after a rename of a bound repository the binding answers `404` with the
       missing-repository warning until edited and reloaded (`repository-lifecycle.md` AC28).
 - [ ] AC13: The telemetry listener is bound only to `telemetry.listen`, the chart renders no
-      Service or Ingress port for it, and `/metrics` is absent from the main listener unless
-      `telemetry.metrics.on_main_listener` is set.
+      Service or Ingress port for it with `telemetry.podMonitor.enabled` off or on (on renders
+      a `PodMonitor` naming the container port and nothing else), and `/metrics` is absent from
+      the main listener unless `telemetry.metrics.on_main_listener` is set.
 - [ ] AC14: On `SIGTERM` readiness fails first, in-flight requests including an upload session's
       current chunk complete within `server.shutdown_timeout`, workers drain for
       `async.drain_timeout`, a running job past the drain is reclaimed by another process
@@ -957,12 +1105,16 @@ Per the constitution, every boundary this spec introduces names the test that ho
       empty schema apply every migration exactly once and all become ready; with
       `database.migrate_on_start: false` a `serve` against a schema behind the binary fails
       readiness naming the pending versions and `migrate up` applies them, `migrate status`
-      listing applied and pending; a migration that fails mid-way leaves the schema at the
-      prior version with no dirty state.
+      listing applied and pending; a transactional migration that fails mid-way leaves the
+      schema at the prior version with no dirty state; a `-- transaction: none` file killed
+      mid-build leaves an `INVALID` index that the next run drops and rebuilds, and such a
+      file carrying any statement other than the two concurrent index forms is refused by the
+      directory test.
 - [ ] AC17: The previous minor's released binary starts, passes `/readyz` and passes the
       conformance smoke slice against a database migrated by the current tree, run as a CI job
-      on `main`; the migration runner refuses in one run migrations spanning more than one minor
-      and names the intermediate release.
+      on `main` that reports itself skipped by name while no previous minor release exists and
+      is a hard gate from the second minor on; the migration runner refuses in one run
+      migrations spanning more than one minor and names the intermediate release.
 - [ ] AC18: Rolling back a running deployment from minor `N` to `N-1` by redeploying the
       previous image, with no database action, leaves every replica ready and the conformance
       smoke slice passing.
@@ -973,23 +1125,28 @@ Per the constitution, every boundary this spec introduces names the test that ho
       becomes leader however long the others are down; only `internal/db/lock` issues
       advisory-lock SQL.
 - [ ] AC20: Eight replicas racing the first start against an empty schema leave one local admin
-      row, whose credential appears in one replica's log once and authenticates against every
-      replica; no other replica logs a credential.
+      row, whose credential appears in exactly one process's log once (one replica, or the
+      `migrate up` Job when the chart's hook runs the migration) and authenticates against
+      every replica; no other process logs a credential.
 - [ ] AC21: The documented restore procedure, executed against a database snapshot taken before
       an upload, a cache fill and a completed sweep, ends with `storage check` reporting zero
-      dangling rows and zero unexplained objects: dangling rows are restored from bucket
-      versions and post-snapshot objects are collected as orphans after grace.
+      dangling rows, zero mismatches and zero unexplained objects: dangling rows are restored
+      from bucket versions, a corrupted object behind a live row (marked by a read, or found by
+      `--verify`) is restored from the newest verifying version with its mark cleared, a
+      key with no verifying version is reported unrecoverable and the command exits non-zero,
+      and post-snapshot objects are collected as orphans after grace.
 - [ ] AC22: The container image runs as UID 65532 with a read-only root filesystem and no
       shell, is built for `linux/amd64` and `linux/arm64`, carries a cosign signature and an
       SBOM attestation that verify, and `stackweaver-registry --version` inside it reports the
       tag, commit and date.
 - [ ] AC23: `helm install` with only the required values renders one Deployment, a ConfigMap
       from `config`, secret files mounted from `existingSecret` referenced through `_file` keys,
-      a pre-upgrade migration Job running `migrate up` with the Deployment carrying
-      `database.migrate_on_start: false`, a `caBundleSecretName` mount wired to
+      a `pre-install,pre-upgrade` migration Job running `migrate up` with the Deployment
+      carrying `database.migrate_on_start: false`, a `caBundleSecretName` mount wired to
       `storage.s3.ca_bundle_file` when set, and passes `helm lint` and the helm-unittest suite;
-      the rendered pod becomes ready against external PostgreSQL and MinIO in the CI kind
-      cluster.
+      on a fresh install in the CI kind cluster the hook Job runs before the Deployment, its
+      log carries the first-start credential, and the rendered pod becomes ready against
+      external PostgreSQL and MinIO.
 - [ ] AC24: `workers.enabled: true` renders a second Deployment of the same image with
       `async.workers` set and the first with `async.workers: 0`; a job enqueued through the web
       pods runs on a worker pod.
@@ -999,10 +1156,18 @@ Per the constitution, every boundary this spec introduces names the test that ho
       (no per-repository or per-upstream variant, `proxy-cache.md` AC5).
 - [ ] AC26: `docker compose up` from `deploy/compose` yields a ready registry against the
       bundled PostgreSQL and MinIO, prints the local admin credential once, and the documented
-      first-mint `curl` returns a token that authenticates a real client pull.
+      first-mint `curl` (`POST /api/v1/tokens` with `admin` and that credential as HTTP Basic)
+      returns a token that authenticates a real client pull; the same `curl` presenting a
+      registry token as the Basic password is refused by the route, and the same one after
+      OIDC has disabled the local account is refused.
 - [ ] AC27: `deploy/observability/alerts.yaml` installs through the chart as a PrometheusRule with
-      the signing lead templated from `alerts.signingLeadHours`, and `dashboard.json` equals its
-      regeneration from the metric catalogue, CI failing when either committed artefact is stale.
+      its three header-named values filled: the signing lead from
+      `config.signing.external_expiry_lead`, the `GCSweepStale` interval from
+      `config.gc.sweep_interval` (each following a changed `config` value and falling back to
+      the owner's default), and the `CacheMetadataLarge` threshold from
+      `alerts.cacheMetadataBytes` (default 10 GiB); the Compose Prometheus loads the same file
+      with the defaults; and `dashboard.json` equals its regeneration from the metric
+      catalogue, CI failing when either committed artefact is stale.
 - [ ] AC28: The `SIGHUP` handler reopens the audit file, and the systemd unit and logrotate
       snippet in `deploy/systemd/` rotate it without a lost or duplicated audit line under a
       write load.
@@ -1010,7 +1175,10 @@ Per the constitution, every boundary this spec introduces names the test that ho
       repository keys, air gap, terminated-upstream TLS, PgBouncer session mode) is applied by
       an integration test and produces the behaviour the recipe states; in the air-gap recipe
       (`proxy.offline: true`, `networkPolicy.egress.registryOnly: true`) no connection leaves
-      the registry pod except to the database, the store and the collector; in the
+      the registry pod except to the database, the store and the collector, and an OSV export
+      imported through `POST /api/v1/system/advisories/import` with the `exported_at` the
+      recipe recorded at download sets the source's freshness to that time and condemns a
+      fixture version afterwards; in the
       terminated-upstream recipe an `HTTPS_PROXY` set in the process environment is honoured by
       every upstream request through the one `http.ProxyFromEnvironment` transport and by
       nothing else.
@@ -1034,35 +1202,35 @@ Per the constitution, every boundary this spec introduces names the test that ho
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
-| AC1 | integration | `internal/config/required_test.go`; `cmd/stackweaver-registry/serve_test.go` (in-process factory, env-only start, missing-key aggregation) |
-| AC2 | unit | `cmd/stackweaver-registry/precedence_test.go` (four sources per flagged key) |
+| AC1 | integration | `internal/config/required_test.go`; `cmd/stackweaver-registry/serve_test.go` (in-process factory, env-only start, missing-key aggregation, the budget line under both role configurations) |
+| AC2 | unit | `cmd/stackweaver-registry/precedence_test.go` (four sources per keyed flag; the `--config` path's three sources) |
 | AC3 | unit | `internal/config/strict_test.go` (unknown file key, prefixed env with no key, unregistered key under a sibling-owned prefix) |
 | AC4 | unit | `internal/config/secret_test.go` (`_file` sibling, both-set refusal, no flag); `internal/config/redaction_test.go` (canary scan) |
 | AC5 | unit + script | `internal/config/schema_test.go`; `scripts/check-config-keys.js` with fixtures for each failure mode under `scripts/testdata/` |
 | AC6 | ci | `.github/workflows/ci.yml` docs job (`config schema --format markdown --check`) |
 | AC7 | architecture | `internal/config/arch_test.go`; `internal/config/env_boundary_test.go` |
 | AC8 | unit | `internal/config/schema_struct_test.go` |
-| AC9 | unit + integration | `internal/security/envelope_test.go`; `internal/security/rotate_test.go` (rotation under a concurrent reader with the new key); `internal/security/arch_test.go`; dump-unreadability check in `internal/security/dump_test.go` |
+| AC9 | unit + integration | `internal/security/envelope_test.go` (AES-256-GCM vectors, key id, unknown-id error); `internal/security/rotate_test.go` (rotation under a concurrent reader holding both keys, kill and resume, the refusals, the final count); `internal/security/arch_test.go`; dump-unreadability check in `internal/security/dump_test.go` |
 | AC10 | integration | `internal/server/tls_test.go` (min version, reload on `SIGHUP` and on file change, live connections); `internal/auth` plaintext refusal reused through `internal/server/plaintext_test.go` |
-| AC11 | integration + conformance | `internal/server/alpn_test.go`; `conformance/transport/reason_phrase_test.go` (real `mvn` and `cpanm` against a refusing route, stdout scanned for the phrase) |
-| AC12 | integration | `internal/server/hosts_test.go` (bound, unbound, missing repository, `SIGHUP` reload, a duplicated hostname refused at load and at reload with the previous binding kept, the post-rename `404` and warning shared with `repository-lifecycle.md` AC28); `internal/config/validate_test.go` (the duplicated-hostname case under `config validate`) |
-| AC13 | integration + chart | `internal/server/listeners_test.go`; `deploy/helm/tests/listeners_test.yaml` |
+| AC11 | integration + conformance + e2e | `internal/server/alpn_test.go` (ALPN set, `h2c` preface refused, `h2` over TLS when enabled); `conformance/transport/reason_phrase_test.go` (real `mvn` and `cpanm` against a refusing route, stdout scanned for the phrase); `deploy/helm/tests/e2e/reason_phrase_test.sh` (the Maven case through each documented ingress controller in the kind cluster) |
+| AC12 | integration | `internal/server/hosts_test.go` (bound, ordinary mounts on the bound host, unbound and other-format hosts answered by the shared denial with the handler's invocation counter at zero, missing repository, `SIGHUP` reload, a duplicated hostname refused at load and at reload with the previous binding kept, the post-rename `404` and warning shared with `repository-lifecycle.md` AC28); `internal/config/validate_test.go` (the duplicated-hostname case under `config validate`) |
+| AC13 | integration + chart | `internal/server/listeners_test.go`; `deploy/helm/tests/listeners_test.yaml` (both `podMonitor` states) |
 | AC14 | integration + chart | `internal/server/shutdown_test.go` (under `testing/synctest` with a real upload session); `deploy/helm/tests/lifecycle_test.yaml` |
 | AC15 | integration | `internal/server/probes_test.go` (database outage, `HeadBucket` refusal, spool below threshold) |
-| AC16 | integration | `internal/db/migrate_test.go` (eight concurrent starts against a real PostgreSQL; injected failure mid-migration) |
-| AC17 | ci | `.github/workflows/ci.yml` job `compat-previous-minor`; `internal/db/span_test.go` (multi-minor refusal) |
+| AC16 | integration | `internal/db/migrate_test.go` (eight concurrent starts against a real PostgreSQL; injected failure mid-migration; a concurrent-index file killed mid-build, `INVALID` index dropped and rebuilt on rerun); `internal/db/migrations_test.go` (marked-file statement scan) |
+| AC17 | ci | `.github/workflows/ci.yml` job `compat-previous-minor` (skipped by name with no prior minor tag); `internal/db/span_test.go` (multi-minor refusal) |
 | AC18 | e2e | `deploy/helm/tests/e2e/rollback_test.sh` in the CI kind cluster |
 | AC19 | integration + architecture | `internal/db/lock/singleton_test.go` (three processes, holder kill, hand-over bounds); `internal/db/lock/arch_test.go` |
-| AC20 | integration | `internal/db/bootstrap_test.go` (eight racing first starts, log scanned for exactly one emission) |
-| AC21 | integration | `internal/storage/restore_test.go` (snapshot, upload, cache fill, sweep, restore, `storage check --restore-dangling`, checker report) |
+| AC20 | integration | `internal/db/bootstrap_test.go` (eight racing first starts, log scanned for exactly one emission; the `migrate up` path emitting in the command's process and no replica afterwards) |
+| AC21 | integration | `internal/storage/restore_test.go` (snapshot, upload, cache fill, sweep, restore, `storage check --restore-dangling`, a corrupted object behind a live row restored by `--verify --restore-dangling`, an unrecoverable key, checker report; the same file `storage-and-gc.md` AC27 runs) |
 | AC22 | ci | `.github/workflows/release.yml` (GoReleaser, cosign verify, SBOM verify, `--version` inside the image) |
-| AC23 | chart + e2e | `helm lint`; `deploy/helm/tests/*.yaml` (helm-unittest); `deploy/helm/tests/e2e/install_test.sh` (kind, external PostgreSQL and MinIO) |
+| AC23 | chart + e2e | `helm lint`; `deploy/helm/tests/*.yaml` (helm-unittest, the hook annotations included); `deploy/helm/tests/e2e/install_test.sh` (kind, external PostgreSQL and MinIO, the hook Job's log read for the credential) |
 | AC24 | e2e | `deploy/helm/tests/e2e/workers_test.sh` (enqueue through web pod, observe execution on worker pod through the job's `Operation`) |
 | AC25 | unit + chart | `internal/config/values_schema_test.go` (generation); `deploy/helm/tests/schema_test.yaml` |
-| AC26 | e2e | `deploy/compose/test/up_test.sh` (compose up, readiness, credential emission, first-mint `curl`, real client pull) |
-| AC27 | chart + ci | `deploy/helm/tests/alerts_test.yaml`; `.github/workflows/ci.yml` docs job (`scripts/gen-dashboard.js --check`) |
+| AC26 | e2e | `deploy/compose/test/up_test.sh` (compose up, readiness, credential emission, first-mint `curl` as the local admin Basic form, the token-as-password refusal, the post-OIDC refusal, real client pull); shared with `deploy/recipes/first-mint/test.sh` |
+| AC27 | chart + ci | `deploy/helm/tests/alerts_test.yaml` (the three values, a changed `config` value followed, the defaults when unset); `deploy/compose/test/up_test.sh` (Prometheus loads the rules); `.github/workflows/ci.yml` docs job (`scripts/gen-dashboard.js --check`) |
 | AC28 | integration | `internal/telemetry` audit `SIGHUP` reuse through `deploy/systemd/test/rotate_test.sh` (write load, rotation, line count and continuity) |
-| AC29 | integration + e2e | `docs/deployment/recipes/*/test.sh`, one per recipe; air-gap egress asserted by the kind cluster's NetworkPolicy plus a connection log |
+| AC29 | integration + e2e | `deploy/recipes/*/test.sh`, one per recipe; air-gap egress asserted by the kind cluster's NetworkPolicy plus a connection log, and the advisory import shared with `management-api.md` AC34's `internal/manage/advisory_import_test.go` fixture export |
 | AC30 | ci | `.github/workflows/ci.yml` job `sizing-gate` (benchmark profile against a pod with the chart's default `resources`) |
 | AC31 | integration | `internal/config/isolation_test.go` (two instances, one database and bucket, cross-visibility and `storage check` per prefix); `conformance/harness` seed isolation reuse |
 | AC32 | ci + integration | `.github/workflows/release.yml` (web build step precedes GoReleaser; the image's `/ui/index.html` is not the placeholder); `deploy/compose/test/up_test.sh` (built UI served); `scripts/verify-local.sh` step running `go build ./... && go test ./internal/ui/...` with `PATH` stripped of `node`; `internal/config/schema_test.go` (the two `ui.*` keys, owner, defaults, no disabling key) |
@@ -1088,9 +1256,11 @@ Phases follow the charter's two placements: the baseline at step 2, packaging at
 - First-start admin emission inside the migration transaction.
 
 ### Phase 2: Operations baseline (still step 2)
-- `keys rotate-master` with the session-level lock and the dual-id read path.
-- `storage check --restore-dangling` as the subcommand surface over `storage-and-gc.md`'s
-  checker (its AC27), and the documented restore procedure with its integration test.
+- `keys rotate-master` with the session-level lock, `security.previous_master_key` and the
+  dual-id read path.
+- `storage check --verify --restore-dangling` as the subcommand surface over
+  `storage-and-gc.md`'s checker (its AC27), and the documented restore procedure with its
+  integration test.
 - The connection-budget line and the PgBouncer session-mode recipe.
 
 ### Phase 3: Packaging (charter step 4, with OCI and the proxy layer)
@@ -1105,9 +1275,10 @@ Phases follow the charter's two placements: the baseline at step 2, packaging at
 - `alerts.yaml` packaging and `scripts/gen-dashboard.js`.
 
 ### Phase 4: Recipes and reference (with each sibling's landing)
-- Each recipe lands with the subsystem it configures: SoftHSM2 with `signing-service.md`
-  Phase 1, air gap with `supply-chain-policy.md`'s offline behaviour, replicated keys with
-  `replication.md`; each with its integration test.
+- Each recipe lands under `deploy/recipes/` with the subsystem it configures: SoftHSM2 with
+  `signing-service.md` Phase 1, air gap with `supply-chain-policy.md`'s offline behaviour and
+  `management-api.md` AC34's import, replicated keys with `replication.md`; each with its
+  integration test and its `docs/deployment/` page citing it.
 - The per-format "when a refusal actually blocks" section generated from
   `supply-chain-policy.md`'s table.
 
@@ -1142,6 +1313,13 @@ deployment story".
 
 **Why this is yours:** it fixes the shape of every deployment recipe the project will ever ship.
 
+Rechecked on Fable 2026-10-01: confirmed. The options were framed fairly and B's cost is real
+(two commands whose configuration must agree is the class of drift this project's specs keep
+finding). Under-stated cost added to the body: a default replica's memory model includes the
+worker buffers, and a role turned off still costs what it shares (a `workers: 0` replica holds
+the pool and binds the listener; a worker pod binds the listener for probes), so the roles table
+is a table of what stops, never of what a process stops paying for.
+
 ### Resolved: PostgreSQL is the only coordination store (was Q2)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: no Redis, Valkey or
@@ -1160,6 +1338,14 @@ all replicas as no leader election is implemented") and Pulp's own default (`WOR
 | **B. Redis for locks, sessions and cache** | Familiar to Harbor operators | A second failure domain, a second secret, a second thing to back up or explain away |
 
 **Why this is yours:** it decides what an operator must run to run the registry.
+
+Rechecked on Fable 2026-10-01: confirmed. The cost as recorded ("two extra connections per
+replica") was imprecise and is restated in "Runtime dependencies": the dedicated connections are
+per role and outside the pool (`LISTEN` with workers, the lock as a scheduler candidate;
+`async-operations.md`'s recheck says the same), the sweep's and the migration's locks ride pool
+connections, and every CLI invocation (`migrate up`, `storage check`, `keys rotate-master`) is a
+further process with its own pool the budget must leave room for. The "no transaction-mode
+pooler" cost stands and is the one an operator is most likely to trip on.
 
 ### Resolved: configuration sources and the flag set (was Q3)
 
@@ -1182,6 +1368,13 @@ by hand.
 
 **Why this is yours:** the flag set is the product's command-line face.
 
+Rechecked on Fable 2026-10-01: confirmed, fold amended. The eight flags are seven keyed flags
+and `--config`, which names the file and is no schema key, so AC2's "four sources for each of the
+eight" was untestable for one of them and now states `--config`'s own three-source order. The
+root's `PersistentPreRunE` now skips configuration loading, by annotation, for `version` and
+`keys generate`, because a required `database.url` must not stand between an operator and the
+key they need before first start.
+
 ### Resolved: secret delivery by `_file` siblings (was Q4)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: every secret key accepts
@@ -1200,6 +1393,12 @@ credential for a problem the platform already solves.
 | **C. Secret-manager clients in the binary** | Direct fetch | Egress, a credential to the manager, N integrations |
 
 **Why this is yours:** it is how every operator will hand the registry its secrets.
+
+Rechecked on Fable 2026-10-01: confirmed, fold amended. `signing.pkcs11.pin_file` is the one
+secret with no inline sibling, by its owner's choice, and the schema records it as file-only
+rather than deriving an inline form the owner refused; the rule "every secret accepts a `_file`
+sibling" holds for every secret with an inline form, and the new `security.previous_master_key`
+(was-Q5 as amended) follows it.
 
 ### Resolved: one instance master key, owned here (was Q5)
 
@@ -1222,6 +1421,18 @@ Harbor's default `secretKey` and Pulp's default key path invite.
 | **C. Generated at first start and stored** | Zero-config start | Forks across replicas; fails on read-only roots; a default key in disguise |
 
 **Why this is yours:** it decides the one secret an operator cannot lose.
+
+Rechecked on Fable 2026-10-01: confirmed, fold amended (owner-facing). The adoption stands,
+but its rotation mechanics were self-contradictory: the body said a process started with only
+the new key "reads records wrapped under either id" while the old key was passed "to no running
+process", which no envelope scheme can do, and AC9 asserted it. The fold is rewritten so that
+both keys are held by every process for the rotation's duration through a second owned key,
+`security.previous_master_key` (with its `_file` form; the owned count becomes 30), the command
+reads both from configuration instead of flags, and the procedure is restart-with-both, rotate,
+remove-previous, restart; a record under an id neither key matches is a named error at use. The
+AEAD is fixed as AES-256-GCM from the standard library (FIPS-mode capable) rather than left as a
+choice of two. Accepted cost restated: a rotation is two rolling restarts and a command, not one
+command, which is the honest price of never handing a key to a process by flag.
 
 ### Resolved: migrations at startup, forward-only, previous-minor compatible (was Q6)
 
@@ -1246,6 +1457,19 @@ makes rollback a redeploy.
 
 **Why this is yours:** it is the promise operators hold the project to on every upgrade.
 
+Rechecked on Fable 2026-10-01: confirmed, fold amended. Four gaps between the decision and the
+body, each fixed: the "every migration in one transaction, so no dirty state" claim did not cover
+`CREATE INDEX CONCURRENTLY`, which the same section requires for large tables and which cannot
+run in a transaction (now a marked, statement-restricted, idempotent class whose `INVALID`
+residue the runner drops before retrying); the chart's migration Job was `pre-upgrade` only, so
+a fresh `helm install` with the Deployment's migration switched off would never have migrated
+(now `pre-install,pre-upgrade`, and the first-start credential is read from the Job's log);
+readiness required the schema "at the binary's version", which would have failed the previous
+binary against a migrated schema, the very state the rule exists to permit (now "no migration
+this binary carries pending"); and the CI enforcer had no previous binary to run before the
+first minor release (now skipped by name until one exists). The rollback record also states its
+one visible residue, jobs of kinds the older binary lacks staying `pending`.
+
 ### Resolved: HTTP/1.1 by default on the main listener (was Q7)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: `server.http2: false`
@@ -1269,6 +1493,15 @@ registry.
 **Why this is yours:** it trades transport performance for refusal legibility on every
 deployment.
 
+Rechecked on Fable 2026-10-01: confirmed, fold and cost amended. The mechanism is now named
+(`http.Server.Protocols` holding HTTP/1 alone, so no `h2c` either). The accepted cost
+under-stated the behind-a-proxy case: client-facing HTTP/1.1 is not enough, the proxy must also
+forward the reason phrase, and a proxy built on Go's `net/http` cannot (the same `ResponseWriter`
+limitation that forces the registry's hijacked write) while Envoy-based controllers do not, so
+the chart's `ingress.http1Only` list was claiming Traefik on no evidence. The list is now
+whatever the kind e2e job proves end to end (AC11's ingress clause), with ingress-nginx and
+HAProxy ingress as the candidates and every other controller documented as bare status codes.
+
 ### Resolved: host bindings are configuration, reloadable (was Q8)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: `server.hosts` in the
@@ -1287,6 +1520,16 @@ in the wrong place.
 
 **Why this is yours:** it decides who adds a hostname: the operator or the repository admin.
 
+Rechecked on Fable 2026-10-01: confirmed, fold amended. The unbound-host `404` is now stated as
+what it is under `format-handler-interface.md`'s Fable-amended AC10: the claiming handler's
+`Scope(r)` returns an error, the shared layer denies the request as `auth.md` renders a denial,
+and the handler is never invoked, so no format's own error shape applies (a consequence to
+`puppet.md`, whose AC8 words that case in the Forge's shape). Two facts the record left implicit
+are in the body: a binding adds the format's root-anchored routes on that hostname and removes
+no ordinary mount, and the harness writes a `hostname` sub-entry as configuration through this
+key's loader because it is not a record (`conformance-harness.md` AC23). Accepted cost
+unchanged.
+
 ### Resolved: the chart requires external PostgreSQL and object storage (was Q9)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: no bundled database or
@@ -1304,6 +1547,10 @@ someone owns.
 | **B. Optional subcharts** | `helm install` alone works | The optional path becomes the production path |
 
 **Why this is yours:** it decides what "install" means for the product.
+
+Rechecked on Fable 2026-10-01: confirmed. B's cost is the one Harbor's and Gitea's own HA guides
+document, and the Compose file carrying the evaluation shape keeps the "try it in one command"
+path without letting it become production. Nothing under-stated.
 
 ### Resolved: bucket versioning is a deployment requirement (was Q10)
 
@@ -1325,6 +1572,15 @@ needs it.
 
 **Why this is yours:** it is a bucket-level cost imposed on every deployment.
 
+Rechecked on Fable 2026-10-01: confirmed, fold amended. `storage-and-gc.md`'s recheck made
+`--restore-dangling` repair digest mismatches from the newest verifying version as well, so the
+restore contract here covers three classes (orphans, dangling rows, mismatches) and AC21 asserts
+all three. Two conditions the record left unsaid are now in "Object storage": the lifecycle
+rule expiring non-current versions must keep them at least as long as the database backup
+retention, or the contract silently loses its source; and the cost is the non-current versions
+of every object the sweep and the orphan scan delete for that window, not only of objects a
+restore might need.
+
 ### Resolved: `verify.workers` folds into `async.kind_limits` (was Q11)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: `verify.workers` is
@@ -1341,6 +1597,10 @@ check's first false positive.
 | **B. Keep both, alias one** | No sibling edit | Two keys, one meaning; the schema check must special-case it |
 
 **Why this is yours:** it is a cross-spec key ownership call.
+
+Rechecked on Fable 2026-10-01: confirmed. Applied in `artifact-verification.md` (four `verify.*`
+keys, no `workers`) and `async-operations.md` (`kind_limits` `{verify.reevaluate: 4}`) at this
+sha, verified by reading both tables.
 
 ### Resolved: sizing by measurement, not by tier table (was Q12)
 
@@ -1359,6 +1619,12 @@ regressions hide.
 | **B. A tier table from prior art** | Familiar | Unmeasured; wrong the moment the code changes |
 
 **Why this is yours:** it decides what the project promises about capacity.
+
+Rechecked on Fable 2026-10-01: confirmed. Cost stated more honestly: the one measured point is
+the CI runner's, under `main`-only gating (CI economy), so an operator on different hardware
+gets a method and a memory model, and the number transfers only as a ratio. That is still the
+constitution's position ("Performance is invisible to conformance"), and a tier table from prior
+art would have been the reverse trap.
 
 ### Resolved: the `auth.*` keys are carried here until `auth.md` tables them (was Q13)
 
@@ -1386,6 +1652,10 @@ hide the gap the check exists to find.
 
 **Why this is yours:** it lets a mechanical check fail `main` on a sibling's omission.
 
+Rechecked on Fable 2026-10-01: confirmed as history. `auth.md`'s table carries nine keys at this
+sha and the inventory's `auth.` row matches it key for key; the decision's only remaining effect
+is the schema's `owner` field naming `auth.md`, which the two-way check keeps honest.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1393,3 +1663,4 @@ hide the gap the check exists to find.
 | 2026-09-27 | ff566dd | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements placed on this file by `credential-management.md` (item 14), `signing-service.md` (item 15), `upstream-adapters.md` (item 14), `async-operations.md` (item 14), `observability.md` (item 18), the charter fold (item 13: baseline at step 2, packaging at step 4), cross-cutting theme 3 and item 28 (HTTP/1.1 reason phrases), theme 2 and item 16 (client egress as a precondition), items 18 and 25 (host binding), `auth.md`'s TLS paragraph and plaintext flag, `proxy-cache.md` AC5 and AC6, `storage-and-gc.md`'s sweep lock and single deleter, `data-model.md`'s no-handler-DDL rule and AC8, `management-api.md`'s CLI stance and configuration paragraph, `conformance-harness.md`'s seed path, and every foundation spec's key table (66 sibling keys across `credentials.`, `signing.`, `index.`, `async.`, `telemetry.`, `management.`, `verify.`). Prior art fetched this run: Harbor's `harbor.yml` reference, HA guide, Helm chart README and GC guide; Gitea's config cheat sheet, upgrade guide, Helm chart README and HA notes; the CNCF distribution configuration reference; Pulp's settings reference; Nexus system requirements; PostgreSQL's explicit-locking reference; golang-migrate's README. Recorded as silence: JFrog's Artifactory HA and requirements pages (empty client-rendered bodies) and the Pulp operator's install guide (403). Design: one binary with roles by configuration, a Cobra tree of `serve`, `migrate`, `config`, `keys`, `seed`, `version`, one schema registry driving defaults, explicit env binding, eight flags, `_file` secrets, strict decoding, aggregated validation and a generated reference, a two-way check between the schema and every spec's key table, one required master key with envelope encryption and re-wrap rotation, PostgreSQL and S3-compatible storage requirements, native TLS with reload and HTTP/1.1 by default, reloadable host bindings, forward-only previous-minor-compatible migrations with rollback by redeploy, singletons held by one advisory-lock constant block, a verifiable restore procedure on bucket versioning, a distroless multi-arch signed image, a Helm chart whose values schema is generated, a Compose file, systemd unit, and measured sizing. Three conflicts resolved: `signing.master_key` versus one instance key; `verify.workers` versus `async.kind_limits`; `auth.md`'s untabled configuration. Thirteen questions written in decision shape and adopted under the standing delegation. 31 criteria, each with a Test Plan row; `node scripts/check-spec.js` run against this file with zero failures. Stays draft; awaits an independent review. |
 | 2026-09-28 | ff7966e | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. Key inventory made exhaustive and single-homed: `auth.` (9, from `auth.md`'s new table; `auth.allow_plaintext` left this spec's owned table), `gc.` (6), `policy.` (5), `replication.` (2), `upstream.` (3, now `upstream-adapters.md` AC32's; left this spec's owned table) and `ui.` (2) joined the sibling table with counts verified by grep of each owner's table; `signing.` reads 9 plus `index.` 4 with the master-key citation, `verify.` 4 with `verify.workers` retired; the "Prefixes reserved" paragraph is gone and AC3 asserts the unregistered-key refusal under a sibling prefix instead. CLI table gained `storage check [--restore-dangling]` (`storage-and-gc.md` AC27). Host binding cites `Deps` and the re-open input (`format-handler-interface.md`); the `podman --internal` reference cites the harness's resolved client-confinement decision (was Q6) and AC23; the refusal page is generated from `supply-chain-policy.md`'s binding table (its AC20) and the status-line write half cites its was-Q10 and AC18; rolling upgrades cite `async-operations.md`'s was-Q10 and AC26; the singleton table cites async AC14 and storage-and-gc AC26 through `internal/db/lock`; the replicated-key recipe cites `replication.md` AC21 and `signing-service.md` AC23. Web UI packaging absorbed from `web-ui.md`: "The web UI build" (make web, Node 22 stage, GoReleaser hook), new AC32 with a Test Plan row, Scope and Context updated. Resolved Q13 annotated as met. No em-dashes or en-dashes. `node scripts/check-spec.js`: zero failures for this file. Stays `draft`. |
 | 2026-09-28 | 3135d95 | closing reconciliation sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show applied, verified against its source's current text. Applied: the signing-service closing sweep item 5 (`index.render_memo_bytes` `256 MiB` in the `index.` row, now 5 keys; the signing-service requirements row names it); format batch 8 item 7 (a `server.hosts` list naming one hostname twice is refused at load by `config validate` and `serve`, and on `SIGHUP` with the previous binding kept, asserted in AC12, `puppet.md` AC8 relying on it); format batch 5 item 7's deployment half (the rename behaviour of a by-name binding, citing `repository-lifecycle.md`'s was-Q10 adopted in the same sweep, AC12 extended); format batch 1 item 11 (`server.public_url`'s row names its readers: handlers through `Deps` and `signing-service.md`'s serve-time `Render`, its was-Q13); the observability, deployment and web-ui reconciliation item 2 (`ui.help_url`'s concrete default). Recounted every sibling table at this sha: 85 keys under 13 prefixes, correcting the earlier '14 prefixes' (there were 13 rows) and AC3's 'fourteen'. Found already done: conformance-harness reconciliation 9, supply-chain reconciliation 2, replication reconciliation 4, upstream and async reconciliation 3. Two requirement rows added (repository-lifecycle was-Q10, puppet AC8). No question raised here; `node scripts/check-spec.js` zero failures on this file. Stays draft. |
+| 2026-10-01 | 3247f69 | Fable recheck: full review (claim verification at HEAD of every sibling citation in the Context table against the current text of `auth.md`, `credential-management.md`, `storage-and-gc.md`, `signing-service.md`, `async-operations.md`, `observability.md`, `management-api.md`, `artifact-verification.md`, `supply-chain-policy.md`, `replication.md`, `upstream-adapters.md`, `web-ui.md`, `format-handler-interface.md`, `repository-lifecycle.md`, `conformance-harness.md`, `data-model.md`, `proxy-cache.md`, `project-charter.md` and `formats/puppet.md`, every owner's key table recounted row by row, the tree facts re-read; adversarial lens at full strength on the cloud-authored whole with its design judgement treated as unreviewed; constitution compliance; go-spec-reviewer inline, its codebase step vacuous since `internal/` is empty and the module's only Go file is `cmd/stackweaver-registry/main.go`; prior-art citations left as fetched at authoring, not re-fetched) + re-examination of the thirteen adoptions made without Fable (Q1 to Q13, all in the 2026-09-27 cloud session) | Brought current first: every open consequence against this file applied and verified against its source's current text (async recheck item 3: the `async.job_retention` versus `management.operation_retention` check dropped, async AC22 refusing it, and the budget restated per role from async's amended topology cost; observability recheck item 2: the three header-named `alerts.yaml` values, the lead and the `GCSweepStale` interval now read from the chart's `config` subtree so they cannot drift from the running configuration, `alerts.cacheMetadataBytes` 10 GiB the one value with no key; auth recheck item 5 and observability's disclosure paragraph: `:9464` never public because its label values are repository names; supply-chain recheck item 5 and management-api recheck item 4: the air-gap recipe records the export root's `Last-Modified` and imports through `POST /api/v1/system/advisories/import?exported_at=&source=`, `management.deferred_threshold` gone; storage-and-gc recheck item 6: `--restore-dangling` repairs mismatches from the newest verifying version, `--verify` named; FHI recheck item 7: the unbound-host `404` is AC10's denial through a `Scope(r)` error; credential-management recheck items 2 and 3: the first mint's form stated here, the local admin's own credential as HTTP Basic resolving to the human principal, reported to `auth.md` and `management-api.md` for their follow-ups; format batch 8 item 7 and the earlier sweeps found applied at 3135d95 as claimed). Verdicts: Q1, Q2, Q9, Q11, Q12, Q13 confirmed (each record gains the under-stated cost where there was one); Q3, Q4, Q8, Q10 confirmed and amended in fold; Q5, Q6, Q7 confirmed and amended in fold and cost, each record saying what changed. None superseded. Adversarial findings fixed directly: the master-key rotation asserted that a process holding only the new key reads records wrapped under the old one (AC9 as written was unimplementable), now `security.previous_master_key` held alongside for the rotation's duration, the command reading both from configuration, a named error for an unmatched id, AES-256-GCM fixed; `CREATE INDEX CONCURRENTLY`, required by the compatibility rule, cannot run in the one transaction the migration section promised, now a marked statement-restricted idempotent class with `INVALID`-index cleanup (AC16, a new enforcer row); the chart's migration Job was `pre-upgrade` only, so a fresh install with `migrate_on_start: false` would never have become ready (AC23), and the first-start credential under the chart is therefore the Job's (AC20); readiness demanded the schema at the binary's version, failing the previous binary the rule exists to keep running; the `compat-previous-minor` job had no binary to run before the first minor release (AC17); `ingress.http1Only` claimed Traefik, a Go `net/http` proxy that cannot forward a reason phrase, now a list the kind e2e job proves (AC11 gains the ingress clause); a `ServiceMonitor` for a port the chart renders no Service for, now a `PodMonitor` (AC13); the first-mint docs reproduced commands verbatim against the documentation rule that docs cite source and never carry code blocks, now `deploy/recipes/first-mint/` cited by path (AC26, AC29; recipes moved from `docs/deployment/recipes/` to `deploy/recipes/` for the same reason); the two-way key check would have read any table with a backticked first column as keys, now gated on the `Key | Default | Meaning` header every owner's table already has; AC2 asserted four sources for `--config`, which is no schema key; the environment-boundary test would have failed test fixtures; the generated reference lacked the frontmatter the docs index requires; the rollback record's residue of unknown-kind jobs stated; the non-current-version lifecycle bound and the multipart cap's configurability stated. Constitution: findings in the doc, CI economy (the compat and sizing jobs `main`-only), the named enforcers, no handler-owned table, both paths (not applicable to a deployment spec beyond the harness citation) all hold; the one contradiction found (code blocks in docs) was the spec's, and is fixed. go-spec-reviewer: approved after the fixes (factory-built commands, `RunE`, typed configs, explicit env binding, stdlib AEAD, a stated shutdown path for every goroutine owner, no third-party dependency without a stdlib alternative weighed). No em-dashes or en-dashes. 32 criteria, each with a Test Plan row; zero open questions; `node scripts/check-spec.js` zero mechanical failures on this file; `fable_recheck` cleared; draft -> planned. Sibling consequences reported, not applied. |

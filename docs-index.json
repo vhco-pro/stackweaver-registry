@@ -492,7 +492,7 @@
     "path": "docs/internal/plans/foundation/deployment.md",
     "description": "Spec for deployment, configuration and operations: one binary whose roles are configuration, one validated configuration schema behind file, environment and flags with a mechanical check that every key a spec defines is present and documented, PostgreSQL and S3-compatible object storage as the only runtime dependencies, the instance master key, TLS termination and the HTTP/1.1 reason-phrase constraint, host binding for hostname-addressed formats, the container image, Helm chart and Compose file, forward-only migrations with rollback by previous-minor compatibility, multi-replica constraints and the advisory-lock singletons, backup and restore of PostgreSQL plus the CAS, and resource sizing derived from the benchmark gate.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "52",
     "covers": [
       "cmd/**",

@@ -8,6 +8,20 @@ covers: []
 Newest first. Each entry records a mistake, its root cause, and the convention it produced.
 Anything learned that would otherwise live only in a chat session belongs here.
 
+## 2026-10-01 - A key rotation designed from the command's point of view could not run
+
+**What happened:** `deployment.md` Q5 described master-key rotation as a command that rewraps every
+record under the new key. The processes serving traffic during the rotation were configured with
+the new key only, so they could not read any record still wrapped under the old one, and AC9 as
+written was unimplementable. The cloud session wrote it and three reconciliation passes carried it.
+The Fable recheck found it by asking what each running process holds during the rotation window.
+
+**Root cause:** the design described the rotation command and never the fleet around it.
+
+**Convention:** every key-rotation design states, for each kind of process during the rotation
+window, which keys it holds and which records it can read. Adopted as
+`security.previous_master_key` with a two-restart procedure.
+
 ## 2026-10-01 - A dependency listed by enumeration survived four passes its own spec forbade
 
 **What happened:** `format-handler-interface.md` listed "the central authorizer" among the shared
