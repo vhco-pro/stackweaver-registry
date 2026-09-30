@@ -470,7 +470,7 @@ decision:
 | `formats/hackage.md` | Q16 |
 | `formats/opam.md` | Q16 |
 | `formats/swift.md` | Q11 |
-| `foundation/credential-management.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7 |
+| `foundation/credential-management.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7 (rechecked on Fable 2026-10-01: Q1, Q2, Q6, Q7 confirmed, Q3, Q4, Q5 amended; spec planned) |
 | `formats/openvsx.md` | Q19 |
 | `formats/hex.md` | Q9, Q10 |
 | `formats/pub.md` | Q6 |
