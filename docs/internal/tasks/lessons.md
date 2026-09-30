@@ -8,6 +8,23 @@ covers: []
 Newest first. Each entry records a mistake, its root cause, and the convention it produced.
 Anything learned that would otherwise live only in a chat session belongs here.
 
+## 2026-09-30 - One invariant restated in two specs drifted apart for three passes
+
+**What happened:** `management-api.md` said every request emits an audit line. `observability.md`,
+which owns the audit channel, said reads are never audit events. Both statements were written in
+the same week and survived three reconciliation passes side by side. Implemented as written, the
+management API would have emitted events the audit channel has no registration for, and an
+authorizer-refused write would have been audited twice. The Fable recheck of management-api found
+it.
+
+**Root cause:** the rule was restated in the consuming spec rather than cited from its owner. Each
+reconciliation pass checked that citations resolved, and a restatement contains no citation to
+check.
+
+**Convention:** a spec that relies on another spec's rule cites the owning rule by criterion or
+resolved record and does not paraphrase it. A paraphrase of a rule another spec owns is a review
+finding.
+
 ## 2026-09-30 - Freshness measured from the data's own dates fails closed on every quiet source
 
 **What happened:** `supply-chain-policy.md` Q7, adopted on Opus, judged an advisory source stale when
