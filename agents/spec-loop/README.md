@@ -38,11 +38,18 @@ the queues are empty.
 | `foundation-brief.md` | A new shared foundation spec. Its hints are its line in `foundation.tsv`. |
 | `fold-brief.md` | Adopting and folding open questions in existing specs. |
 | `reconcile-brief.md` | Applying the cross-spec changes queued in `consequences.md`. |
+| `recheck-brief.md` | A Fable recheck of one spec carrying `fable_recheck` (Fable back 2026-09-30). |
 
 A task prompt is one line: "Read `agents/spec-loop/<brief>` and follow it exactly. HEAD sha: <sha>.
 Author `docs/internal/plans/<dir>/<name>.md`; your hints are its line in `<queue>.tsv`."
 
-## Resume point (2026-09-28, monthly spend limit)
+## Resume point
+
+**2026-09-30: Fable is back.** Recheck order, one spec per agent with `recheck-brief.md`, two at a
+time: storage-and-gc, proxy-cache (data retention first), then signing-service (Q19 and the AC36
+signed-virtual admission), supply-chain-policy, auth, management-api, then the other foundation
+specs, then the formats. The remaining format sweep batches below run on Opus in between, since
+they are execution against decided rules, and each format's recheck waits for its sweep batch.
 
 Stopped by the owner at the spend limit, then the two interrupted items were finished the same
 day. Nothing is uncommitted. In order:
