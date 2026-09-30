@@ -39,6 +39,7 @@ the queues are empty.
 | `fold-brief.md` | Adopting and folding open questions in existing specs. |
 | `reconcile-brief.md` | Applying the cross-spec changes queued in `consequences.md`. |
 | `recheck-brief.md` | A Fable recheck of one spec carrying `fable_recheck` (Fable back 2026-09-30). |
+| `followup-brief.md` | A Fable follow-up on one planned spec: land the items queued against it since its recheck. |
 
 A task prompt is one line: "Read `agents/spec-loop/<brief>` and follow it exactly. HEAD sha: <sha>.
 Author `docs/internal/plans/<dir>/<name>.md`; your hints are its line in `<queue>.tsv`."
@@ -60,14 +61,18 @@ session ends). Each firing:
 
 ## Resume point
 
-**2026-10-01, Fable rechecks.** Done (planned on Fable): storage-and-gc, proxy-cache,
-signing-service, supply-chain-policy, auth, management-api, data-model, credential-management,
-format-handler-interface, async-operations, observability. Next, one spec per agent with
-`recheck-brief.md`: artifact-verification and deployment (running at 3247f69), then
-repository-lifecycle, upstream-adapters, web-ui. Then the "Fable follow-up pass owed" section of
-consequences.md: one short Fable pass per planned foundation spec applying every item queued
-against it since its recheck, with a Review Log row. Then the format sweep batches below (Opus is
-fine for these), then each format's Fable recheck after its batch.
+**2026-10-01, Fable rechecks.** Every foundation spec except web-ui is rechecked and planned
+(web-ui running at 13192da). Next, in order, two agents at a time:
+1. Follow-ups with `followup-brief.md`, one planned spec per agent, most-queued first: data-model,
+   storage-and-gc, signing-service, proxy-cache, auth, management-api, async-operations,
+   deployment, observability, format-handler-interface, credential-management,
+   supply-chain-policy, artifact-verification, repository-lifecycle, upstream-adapters. A
+   follow-up queues more items against other planned specs. Repeat rounds until a round queues
+   nothing against a planned foundation spec.
+2. Gate reviews (`agents/spec.md` review mode, on Fable) of the foundation drafts not carrying
+   `fable_recheck`: conformance-harness (a build-step gate), replication, project-charter.
+3. The format sweep batches below (Opus is fine), then each format's Fable recheck with
+   `recheck-brief.md` after its batch.
 
 Stopped by the owner at the spend limit, then the two interrupted items were finished the same
 day. Nothing is uncommitted. In order:
