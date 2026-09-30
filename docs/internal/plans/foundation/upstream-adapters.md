@@ -1,7 +1,7 @@
 ---
-status: draft
-status_description: "Closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): Q8 adopted under the standing delegation, a basic-exchange credential kind for Conan-shaped upstreams (Basic GET at a stored path, text/plain token, Bearer to the root and its root entries, one re-exchange on a fresh 401; AC33, Phase 3 with Conan); Q9 adopted, the Router selecting the adapter per location so a Terraform https remote hands a commit-pinned git location to the git adapter under the same row's allowlist, bound and cool-down, never a credential, with a row naming git refused (AC34, AC23, Phase 4); a Cargo requirements row and the crates.io and ConanCenter operator recipes; the Docker Hub CDN hosts captured at oci.md's Phase 4 (AC24). 34 criteria, each with a Test Plan row; zero open questions; fable_recheck extended; stays draft pending a gate review. Earlier: Reconciled 2026-09-28 at 9ebf6e9 with the foundation authoring wave (not a review): the Upstream row and UpstreamCredential store are cited as data-model.md's (AC40) instead of owed; a referenced credential's deletion is refused in-use and a changed remote binding keeps its cache with last-checked reset, with the Router resolving row and credential per fetch (AC30, shared with repository-lifecycle AC20 and AC25, management-api AC21); upstream-invalid is 422; traceparent and tracestate join the forbidden outbound set (AC4), MarkSecret precedes every credential use and the redaction list is held equal to telemetry.RedactURL's (AC20); the six upstream_* series and the two alerts under observability's names (AC31); the three upstream.* keys in the checked table shape with User-Agent computed from server.public_url (AC32); the nuget and maven profiles are shipped rows under proxy-cache's was-Q17. 32 criteria, each with a Test Plan row; zero open questions; stays draft pending a gate review. Earlier: authored 2026-09-27 at d9510af as a grounded first draft, not yet reviewed. Gathers the upstream requirements of 27 format specs, the queued consequences (Open items 7, 11, 13 and every line naming this file, cross-cutting themes 2 and 7), format-handler-interface.md's ownership gap for the adapter axis, proxy-cache.md's routing of provider quirks to adapters and management-api.md's administration of upstream credentials; grounds the design in Harbor's adapter package, the distribution token-auth specification, Docker Hub's pull-limit documentation, the ECR GetAuthorizationToken API, the GCE metadata server and Artifact Registry authentication pages, GitHub's rate-limit documentation, Pulp's Remote model and zot's sync configuration fetched this run (Nexus and Artifactory pages unreachable, recorded); fixes one transport seam (two adapters, a credential-kind axis, a per-upstream host allowlist, typed rate-limit errors, truthful completion) and states the split against proxy-cache.md line by line. Seven questions written in decision shape and adopted under the owner's standing delegation; zero open. 29 criteria, each with a Test Plan row. Awaits a /spec review pass."
-description: "Spec for the upstream adapter axis: the seam between the proxy cache and every upstream it fetches from. Two transport adapters (a plain HTTPS adapter and an OCI distribution adapter) behind one small interface, a separate credential-kind axis (none, Basic, Bearer, vendor header, path token, Conan-shaped Basic exchange, distribution token exchange, AWS ECR, Google Cloud), a per-upstream off-origin host allowlist with per-host credential roles, redirect following that never reaches a client, typed rate-limit errors with a bounded cool-down, truthful body completion for the completion-only fetch mode, and credential redaction; with the preconfigured upstream profiles and the adapter half of the nightly real-upstream job."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-01 at 7ffbd14: a full review pass over the cloud-authored whole (claim verification of every sibling citation at HEAD, the adversarial lens on the SSRF surface at full strength, go-spec-reviewer inline, constitution compliance) plus the re-examination of the nine questions adopted without Fable. Q1, Q4, Q6, Q7 confirmed; Q2 confirmed and amended (Validate takes model.Upstream); Q3 amended (the scheme rule, the path-joining rule and no credential over plain HTTP beside the host allowlist; allow_http refuses a credential at configuration); Q5 amended (Docker Hub's ratelimit-remaining: 0 starts no cool-down since it states no reset time; cool-down and concurrency are per process); Q8 and Q9 confirmed with their folds amended (bounded, rotation-keyed token cache and a path-rule exchange path; the git URL grammar, redirects through this package's client, no submodules, size bound during transfer). Q10 adopted on Fable under the standing delegation: loopback, link-local and unspecified destinations refused at dial time with a per-row allow_local for stand-ins (AC35). The egress boundary made module-wide with the egress inventory as its exclusion list (AC3); every exchanged token cache invalidated by rotation (AC30); the RubyGems row applied (Range revalidation, Repr-Digest and Content-Range verbatim, 416 as RangeNotSatisfiable). 35 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Sibling consequences reported for data-model, observability, proxy-cache, conformance-harness, rubygems, terraform and conan. Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (Q8 basic-exchange, Q9 per-location git dispatch, the Cargo row and recipes, the Docker Hub CDN hosts at oci.md's Phase 4); reconciled 2026-09-28 at 9ebf6e9 with the foundation authoring wave (AC30 to AC32, the traceparent and MarkSecret rules, the upstream_* series, the upstream.* keys); authored 2026-09-27 at d9510af as a grounded first draft gathering the upstream requirements of 27 format specs with seven questions adopted under the standing delegation."
+description: "Spec for the upstream adapter axis: the seam between the proxy cache and every upstream it fetches from. Two transport adapters (a plain HTTPS adapter and an OCI distribution adapter) behind one small interface, a separate credential-kind axis (none, Basic, Bearer, vendor header, path token, Conan-shaped Basic exchange, distribution token exchange, AWS ECR, Google Cloud), a per-upstream off-origin host allowlist with per-host credential roles plus the scheme, path-joining and local-address rules the host check alone leaves open, redirect following that never reaches a client, typed rate-limit errors with a bounded cool-down, truthful body completion for the completion-only fetch mode, and credential redaction; with the preconfigured upstream profiles and the adapter half of the nightly real-upstream job."
 author: michielvha
 goal: "Make every upstream a configuration row rather than a code change: one OCI handler serves Docker Hub, ECR, GCR, GHCR, Quay, Artifactory and Nexus because authentication, redirects, rate limits and transport quirks live behind one adapter seam that no handler and no proxy-core code can bypass, so that format N+1 adds an upstream profile and never an HTTP client."
 priority: "critical"
@@ -9,7 +9,6 @@ issue: 48
 created: 2026-09-27
 covers:
   - "internal/upstream/**"
-fable_recheck: "authored in the 2026-09-27 cloud session, whose model is not recorded; needs a Fable authoring-quality review before any gate; closing reconciliation sweep on Opus 2026-09-28 raised and adopted Q8 (basic-exchange credential kind for Conan-shaped upstreams) and Q9 (per-location dispatch of git locations on an https upstream, a row naming git refused), never Fable-reviewed"
 ---
 
 # Plan: Upstream adapters
@@ -122,7 +121,11 @@ the only place in the tree that can open an outbound connection on the proxied p
   (theme 7); the mode itself, its verifier hook and what is committed are `proxy-cache.md`'s.
 - Bounded per-upstream concurrency, a connect timeout and stall detection, per-upstream TLS
   trust (CA bundle, client certificate), and refusal of `http://` roots at configuration unless
-  an operator overrides it.
+  an operator overrides it, with no credential ever attached over plain HTTP.
+- The three connection rules the host allowlist does not cover: the scheme of every target, a
+  path location's inability to leave the root, and refusal of loopback, link-local and
+  unspecified destinations unless a row opts in for a stand-in (the resolved local-address
+  decision, was Q10).
 - Credential redaction in every log line and error this package produces, covering URL userinfo,
   path tokens, `access_token` and presigned query strings, and every credential header.
 - Configuration-time validation (`Validate`) that `management-api.md`'s create and update of a
@@ -227,7 +230,8 @@ silently unbuilt.
 | `helm.md` "The upstream adapter, not the handler, decides which host gets the upstream credential" | Credential to a third host only if the upstream configuration says so; default not | AC6 (`root` role on an allowlist entry) |
 | `oci.md` Phase 4, `npm.md` "The proxied path" | Docker Hub token exchange and rate limits belong to the adapter | AC9, AC16, AC24, AC25 |
 | `go-modules.md` "Two shared-layer amendments" | A checksum-database upstream adapter kind | An `https` upstream bound to its own `remote`; the handler reads it through `Deps` (its own design); AC1 |
-| `foundation.tsv` hint | Credential types incl. ECR `GetAuthorizationToken` and GCR metadata-server tokens; Docker Hub pull limits; conformance against real upstreams on the nightly job | AC17, AC18, AC9, AC25, AC26 |
+| `rubygems.md` "The upstream binding" and its proxied path (rubygems authoring item 9) | An `https://` root (`https://index.rubygems.org/` as the recipe, no off-origin host: every route answers `200` from that host, captured); the `basic` kind for a private gem server, root only; `/versions` revalidated by `Range: bytes={N-1}-` with `If-None-Match`, the `206` or `200` reported as such and the upstream `Repr-Digest` returned verbatim for the handler's check | AC6, AC14, AC15, AC19, AC22; the recipe line under "Preconfigured profiles" |
+| `agents/spec-loop/foundation.tsv` hint | Credential types incl. ECR `GetAuthorizationToken` and GCR metadata-server tokens; Docker Hub pull limits; conformance against real upstreams on the nightly job | AC17, AC18, AC9, AC25, AC26 |
 
 ### Prior art, and what is taken from it
 
@@ -360,12 +364,24 @@ location goes to the `git` adapter, and only when the row's adapter is `https`, 
 row's allowlist, concurrency bound and cool-down: the repository URL's host must match an entry of
 that row's `hosts` (any role) or the fetch fails with `HostNotAllowedError` before any connection,
 and whatever the entry's role, the `git` adapter presents no credential (it accepts `none` only, per
-`terraform.md`'s no-credential rule). The response body is the commit's tree as an uncompressed tar
-stream in tree order, file modes kept and timestamps zeroed, under the same truthful-completion
-rule (`ErrTruncated`, `ErrStalled`), which the handler re-packs canonically as it does a hosted
-archive. A git location on a `distribution` row, and any `Upstream` row naming `git` as its own
-adapter, is refused (the second at configuration, AC23), so the `git` transport is reachable only
-as a location of an `https` remote and never as a way to build a remote over a git origin (AC34).
+`terraform.md`'s no-credential rule). The location's grammar is checked before that: the URL is
+`https://` with a host, an optional port and a path, and nothing else; a URL carrying userinfo (a
+module author's `git::https://token@host/...` is a credential from metadata, the thing this seam
+exists to refuse), a query string, a fragment or another scheme is refused before any connection,
+and the commit is exactly 40 hexadecimal digits (Fable recheck 2026-10-01). The fetch is a
+single-commit smart-HTTP fetch of that id, no tags, no submodules (a `.gitmodules` file arrives as
+an ordinary file; a submodule's host is a second fetch the operator never admitted), made through
+the package's own client, so a redirect the git server answers passes the same allowlist check as
+any other hop with no credential, and a server that refuses a want by commit id (the smart
+protocol lets a server allow only advertised refs) fails with a named error rather than a fallback
+to a ref name. The size bound is applied to the packfile as it arrives and the fetch aborts on
+exceeding it, so no oversize tree is ever held whole. The response body is the commit's tree as an
+uncompressed tar stream in tree order, file modes kept, symbolic links emitted as link entries and
+never resolved, timestamps zeroed, under the same truthful-completion rule (`ErrTruncated`,
+`ErrStalled`), which the handler re-packs canonically as it does a hosted archive. A git location
+on a `distribution` row, and any `Upstream` row naming `git` as its own adapter, is refused (the
+second at configuration, AC23), so the `git` transport is reachable only as a location of an
+`https` remote and never as a way to build a remote over a git origin (AC34).
 
 Why not one adapter per vendor: the vendors listed under `distribution` differ in how a
 credential is obtained (a static token, an exchange at a challenge realm, an IAM call, a metadata
@@ -388,10 +404,12 @@ in `internal/upstream` because it has three implementors and two consumers (the 
 
 ```
 Adapter    Fetch(ctx, Request) (*Response, error)        required
-Validator  Validate(ctx, Upstream) error                 optional, type-asserted at configuration
+Validator  Validate(ctx, model.Upstream) error           optional, type-asserted at configuration
 ```
 
-That is the whole pin (AC2). `Request` carries: the upstream (its row, resolved credential
+That is the whole pin (AC2). The row type is `data-model.md`'s, `model.Upstream`, so nothing in
+this package stutters as `upstream.Upstream` (the `go` skill's naming rule; Fable recheck
+2026-10-01). `Request` carries: the upstream (its row, resolved credential
 handle, allowlist, limits); the method (`GET`, `HEAD`, `POST`); the location, either a path under
 the upstream root, an absolute URL the handler took from upstream metadata (which the allowlist
 must admit), or a git location `{url, commit}` the `Router` sends to the `git` adapter ("How a
@@ -401,12 +419,15 @@ conditional validators the proxy holds (`ETag`, `Last-Modified`). It has no `*ht
 `http.Header` and no field that could carry an inbound header wholesale (AC4): the outbound
 request is constructed from these fields and nothing else.
 
-`Response` carries: a status class (`OK`, `NotModified`, `PartialContent`, `NotFound`, `Gone`,
-`Refused`, `UpstreamError`), the numeric status for logging, the body as an `io.ReadCloser`
-whose `Read` returns `ErrTruncated` when the body ends before its declared length or before the
-chunked terminator and `ErrStalled` when no byte arrives for the stall period, the declared
-`Content-Length` when present, the upstream's `ETag`, `Last-Modified` and `Docker-Content-Digest`
-verbatim, the content type, and the requested location as provenance. Rate limits are not a status
+`Response` carries: a status class (`OK`, `NotModified`, `PartialContent`,
+`RangeNotSatisfiable`, `NotFound`, `Gone`, `Refused`, `UpstreamError`), the numeric status for
+logging, the body as an `io.ReadCloser` whose `Read` returns `ErrTruncated` when the body ends
+before its declared length or before the chunked terminator and `ErrStalled` when no byte arrives
+for the stall period, the declared `Content-Length` when present, the upstream's `ETag`,
+`Last-Modified`, `Docker-Content-Digest`, `Repr-Digest` and `Content-Range` verbatim (the last
+two are what `rubygems.md`'s ranged `/versions` revalidation checks a tail against; `hackage.md`'s
+index splice reads the second), the content type, and the requested location as provenance. Rate
+limits are not a status
 class: they are the typed error `*RateLimitError{RetryAfter time.Time, Source string}` returned
 from `Fetch`, because callers branch on them with `errors.As` and must never mistake one for a
 body (AC9). A host outside the allowlist is `*HostNotAllowedError{Host}`, returned before any
@@ -418,6 +439,18 @@ loads the `Upstream` row, resolves the credential handle from the store, selects
 the registry (the row's adapter, or `git` for a git location on an `https` row), applies the per-upstream concurrency bound and cool-down state, and calls `Fetch`.
 It is a concrete struct; the proxy layer's `Fetcher` interface is satisfied by `*Router`.
 
+Ownership and shutdown, stated so the `go` skill's concurrency rule holds by construction: no
+goroutine this package starts outlives the `Fetch` call that started it. A credential kind's
+refresh is lazy, performed on the next `Fetch` that finds its cached material expired, never by
+a background ticker; the stall detector is a timer armed per `Read` that cancels the request's
+context when it fires (which is how `ErrStalled` surfaces from a body Go's client is blocked on),
+disarmed by the next byte and by `Close`; the concurrency semaphore and the cool-down table are
+plain in-memory state of the `Router`, per process, so a fleet of N replicas holds N bounds and
+learns a rate limit N times, an accepted cost recorded under the resolved cool-down decision
+(was Q5) rather than a shared table that would make the queue a dependency of every fetch. A
+restart clears both, which is the right answer for a bound and a harmless one for a cool-down
+(the next request learns the limit again).
+
 ### Configuration on the `Upstream` row
 
 What `data-model.md`'s `Upstream` entity carries for this spec, core-parsed and never inside a
@@ -428,6 +461,17 @@ mark root):
 - `url`: the root. `https://` required; `http://` refused at configuration unless `allow_http` is
   set (AC22), because `alpine.md`, `arch.md` and `rpm.md` each captured live mirrors that answer
   plain HTTP and each asked for the refusal.
+- `allow_http`: admits an `http://` root and `http://` redirect targets on allowlisted hosts. It
+  never admits a credential over plain HTTP: a row setting it with a credential reference, or an
+  `own` entry, is refused at configuration (AC23), because a credential on a cleartext connection
+  is the dnf 4 capture `rpm.md` made, and the adapter attaches no credential to a plain-HTTP
+  connection whatever the row says (AC6). Named in the startup log like `insecure_skip_verify`.
+- `allow_local`: admits connections to loopback, link-local and unspecified destination addresses
+  for this upstream's fetches, which are otherwise refused before any connection (the resolved
+  local-address decision, was Q10, AC35). Set only for a stand-in on the loopback interface, never
+  for a real upstream; named in the startup log. `data-model.md`'s row does not yet carry
+  `allow_http` or `allow_local` (its "Upstream configuration and upstream credentials" lists
+  neither; reported as a consequence on the Fable recheck of 2026-10-01).
 - `credential`: a reference into the upstream-credential store, or none.
 - `hosts`: the off-origin allowlist, a list of `{host, role}` entries where `role` is `none`
   (reachable, no credential), `root` (reachable, the upstream's own credential is presented) or
@@ -496,6 +540,17 @@ accepts `none` only and is never a row's adapter (a git location on an `https` r
 credential whatever the row's kind). A kind an adapter does not accept is refused at configuration
 (AC23), so an operator learns at creation, not at the first miss.
 
+Every exchanged or fetched token (`basic-exchange`, `token-exchange`, `aws-ecr`, `gcp`) is
+cached in memory only and keyed by the credential record's identity **and its `rotated_at`**,
+so a rotation (`management-api.md` AC21) makes the next fetch exchange afresh under the new
+material rather than present a token minted under the old, which is what AC30's "the next fetch
+carries the new value" has to mean for an exchanging kind (Fable recheck 2026-10-01). A cached
+token is held no longer than the shorter of what its issuer said and one hour, except `aws-ecr`'s
+twelve-hour token, whose cap is its own row's; an issuer's `expires_in` of a year is a bug at
+the issuer, not a licence to keep a token that long. A token body is read under a bound (4 KiB)
+and must be printable ASCII, so an upstream cannot make the registry hold or send an arbitrary
+blob as a header.
+
 `basic-exchange` exists because Conan servers issue tokens only through their own exchange (the
 resolved Conan-exchange decision, was Q8): `conan.md` captured the client sending Basic to
 `GET /v2/users/authenticate` (Conan 1.66.0 to `/v1/users/authenticate`), receiving the token as a
@@ -519,8 +574,13 @@ Dependencies, justified per the `go-spec-reviewer` skill: `aws-ecr` uses the AWS
 (five sources) and SigV4 are what a hand-rolled client would most plausibly get subtly wrong, and
 an IAM bug is a security bug (the resolved cloud-dependency decision, was Q4). `gcp` needs no
 third-party code: the metadata server is plain HTTP and the JSON-key exchange is `crypto/rsa`,
-`encoding/json` and one `POST`. `git` uses go-git with its collision-detecting SHA-1, confined to
-`internal/upstream/git`. Everything else is the standard library.
+`encoding/json` and one `POST`; its ambient source dials the metadata server's link-local
+address through the kind's own client, which is not a location fetch and so is outside the
+address rule below. `git` uses go-git with its collision-detecting SHA-1, confined to
+`internal/upstream/git`, installed over this package's HTTP client so its redirects and dials
+obey the same rules as every other exchange. Host normalisation uses `golang.org/x/net/idna` for
+the A-label form (the standard library's copy is vendored and not importable). Everything else is
+the standard library.
 
 ### Credential scoping and the off-origin allowlist
 
@@ -548,6 +608,32 @@ Allowlist matching is on the host of the URL about to be connected to, after IDN
 and lower-casing, with the port required to match the entry's (default 443). A match is never
 made on the `Host` header or on an `X-Forwarded-Host`; only on where the socket would open.
 
+Three rules the Fable recheck of 2026-10-01 added, because the host check alone left the
+classic server-side request forgery shapes open (the resolved allowlist decision, was Q3, as
+amended, and the resolved local-address decision, was Q10):
+
+- **The scheme is part of the check.** A location or redirect target is `https://`; an
+  `http://` one is refused before any connection unless the row sets `allow_http`, and even then
+  no credential is attached to a plain-HTTP connection (AC6, AC7). A downgrade redirect from an
+  HTTPS root to `http://` on the same host is therefore refused on an ordinary row, which is the
+  hop that would have sent the credential in clear.
+- **A path location cannot leave the root.** A path is joined to the root by segment append
+  after normalisation, never by URL resolution: a path whose normalised form carries a dot
+  segment that would climb out of the root's path, begins with `//` (a scheme-relative host), or
+  carries a scheme, is refused before any connection (AC7), and the joined URL's host is the
+  root's by construction, never re-parsed from the path. A handler passing an absolute URL takes
+  the allowlist route instead. The same rule joins `basic-exchange`'s stored exchange path.
+- **A loopback, link-local or unspecified destination is refused** for every location fetch on
+  every adapter, checked on a literal IP in the host before any connection and on each resolved
+  address at dial time for a direct dial (under an egress proxy the proxy's own policy governs
+  where it connects, and only the literal check applies), unless the row sets `allow_local`,
+  which a stand-in on the loopback interface needs and a real upstream never does (AC35). This
+  is what closes the case the host check cannot: an allowlisted name whose DNS an attacker
+  controls resolving to `169.254.169.254`, the instance metadata address that answers plain
+  `GET`s with cloud credentials on exactly the deployments the `aws-ecr` and `gcp` kinds exist
+  for. On an ordinary row the scheme rule already stops it, since the metadata service speaks no
+  TLS; the address rule is what makes `allow_http` and `insecure_skip_verify` rows safe too.
+
 ### Redirects
 
 Followed inside the adapter, up to ten hops (Vagrant's own limit, `vagrant.md`), across `301`,
@@ -557,6 +643,11 @@ credential is recomputed per hop from the target host's role, so a `307` from `g
 `pkg-containers.githubusercontent.com` carries no `Authorization` unless that host is entered
 with a role (homebrew's capture), and a `302` from `api.github.com` to `codeload.github.com`
 carries the `own` credential of the first and the `none` of the second (composer's capture).
+Recomputed means exactly that: Go's client copies the initial request's headers onto each hop,
+so `CheckRedirect` first removes every credential-bearing header and the path token from the
+hop, then attaches what the target host's role says, which is nothing for `none`; the adapter
+never relies on the client's own cross-domain stripping, whose rule (same domain or a subdomain)
+is not this spec's.
 
 Two things about redirects never leave the adapter (AC8): the `Location` values, which no client
 response ever carries, because a client that follows one bypasses the registry and its refusals
@@ -572,10 +663,16 @@ Interpretation is one function over the response (AC9):
 
 - `429` with `Retry-After` (seconds or HTTP-date): `RateLimitError` with that time.
 - `429` without: `RateLimitError` with now plus a default (60 seconds).
-- A `2xx` or `4xx` carrying `ratelimit-remaining: 0` (Docker Hub) or `x-ratelimit-remaining: 0`
-  (GitHub): the response is returned as-is when it has a body (the last permitted request), and
-  the upstream enters cool-down until `ratelimit-limit`'s window or `x-ratelimit-reset` says the
-  budget returns.
+- A `2xx` carrying `x-ratelimit-remaining: 0` **with** `x-ratelimit-reset` (GitHub): the response
+  is returned as-is (it is the last permitted request) and the upstream enters cool-down until
+  the reset time, since the provider stated when the budget returns and the next request would
+  be a `403` that counts against its secondary limits.
+- A `2xx` carrying `ratelimit-remaining: 0` (Docker Hub) is returned as-is and enters **no**
+  cool-down: `ratelimit-limit: 100;w=21600` names the window's length, not when it ends, so a
+  pre-emptive cool-down here would be a guess taking the upstream offline for up to the cap after
+  a successful pull. The gauge falls to zero and `UpstreamRateLimitLow` fires; the next request,
+  if refused, is a `429` and takes the first rule. (Amended on the Fable recheck of 2026-10-01;
+  the authoring text cooled down on both headers.)
 - `403` with `x-ratelimit-remaining: 0`: `RateLimitError` with the reset time (GitHub's own
   documentation says a `403` is what an exceeded primary limit may return).
 - `403` without such headers: `Refused`, a plain upstream refusal. This distinction is a test
@@ -645,6 +742,12 @@ against the declared set, which is exactly the headers this section names and no
 
 ### Timeouts, concurrency and completion
 
+- **Transports**: one `http.Transport` per `Upstream` row, because TLS trust is per row (a CA
+  bundle, a client certificate, `insecure_skip_verify`, `http2`) and a transport carries one TLS
+  configuration; every one of them is built by a single constructor in this package that sets
+  `Proxy: http.ProxyFromEnvironment`, `DisableCompression`, the dialer below and the address rule,
+  so no transport can differ in anything but the row's TLS fields. `Router` rebuilds a row's
+  transport when its TLS fields change and closes the old one's idle connections.
 - **Connect timeout**: the instance's `upstream.connect_timeout` (default 10 seconds), a TCP
   and TLS handshake deadline through the dialer on every upstream request.
 - **Stall detection**: the body reader fails with `ErrStalled` when no byte arrives for the stall
@@ -683,7 +786,9 @@ registered in the configuration schema with this default and reaches the package
 
 Not keys, on purpose: the `User-Agent` (computed from `server.public_url`, above) and the
 egress proxy (`HTTPS_PROXY`, `HTTP_PROXY`, `NO_PROXY`, read once by `http.ProxyFromEnvironment`
-in the single upstream transport, Scope), so neither can diverge per upstream. The stall period
+in every transport this package's constructor builds, Scope; the same process environment
+`internal/trustsource` and every other egress package honours, `deployment.md`'s "Not keys, on
+purpose"), so neither can diverge per upstream. The stall period
 is not a key of this package either: it travels in `Options` as `proxy-cache.md`'s coalescing
 policy.
 
@@ -720,8 +825,10 @@ why this redactor runs first.
 
 `Validate(ctx, Upstream)` runs inside `management-api.md`'s create and `PATCH` of a `remote`'s
 upstream binding and refuses (AC23): an unregistered `adapter`; a non-`https` root without
-`allow_http`; a credential kind the adapter does not accept; an allowlist entry with a bare
-wildcard or an `own` role naming no credential; `insecure_skip_verify` without the explicit flag.
+`allow_http`; `allow_http` together with a credential reference or an `own` entry (no credential
+over cleartext); a credential kind the adapter does not accept; an allowlist entry with a bare
+wildcard or an `own` role naming no credential; a `basic-exchange` exchange path that the path
+rule would refuse; `insecure_skip_verify` without the explicit flag.
 It does not probe the upstream: a protocol-level probe (conda's "one of `noarch/repodata.json` or
 `noarch/repodata_shards.msgpack.zst` must parse") is the handler's `configure` operation
 (`management-api.md`'s `Operator`), which may call fetch-and-cache and therefore this adapter,
@@ -757,8 +864,11 @@ operator attaches a GitHub token as `own` on `api.github.com`), crates.io (opera
 `cargo.md` "The upstream binding" gives the recipe: root `https://index.crates.io/`, the `sparse+`
 prefix removed, allowlist `static.crates.io: none` plus `crates.io: none` when the `dl` template is
 the `api` download path; a private sparse upstream adds the `header` kind with header
-`Authorization`), and ConanCenter (two operator-configured `https` remotes, `center2.conan.io` and
-`center.conan.io`, credential `none`; a private Conan upstream takes `basic-exchange` or `bearer`).
+`Authorization`), ConanCenter (two operator-configured `https` remotes, `center2.conan.io` and
+`center.conan.io`, credential `none`; a private Conan upstream takes `basic-exchange` or `bearer`),
+and rubygems.org (`rubygems.md`'s resolved preconfigured-upstream decision, was its Q10, keeps it
+operator configured: root `https://index.rubygems.org/`, credential `none`, an empty allowlist
+because every route answers from that host; a private gem server takes `basic`, root only).
 
 ### Conformance against real upstreams
 
@@ -797,16 +907,22 @@ that is not running and why. `CLAUDE.md` forbids a silent skip; this is a loud o
 
 Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
 
-- **Egress boundary** (AC3): a `forbidigo` rule in `.golangci.yml`, scoped to `internal/proxy/**`
-  and `internal/format/**`, forbidding construction or use of `http.Client`, `http.Transport`,
-  `http.Get`, `http.Post`, `http.Head`, `http.DefaultClient`, `net.Dial` and `tls.Dial`, with a
-  violation fixture behind the `lintfixture` build tag and a test invoking the pinned golangci-lint
-  that fails unless the rule fires (the pattern `format-handler-interface.md` AC6 established).
-  `internal/upstream/**` is the only package on the proxied path allowed to open a connection; the
-  packages other specs own for their own egress (`internal/auth`'s OIDC client, `internal/policy`'s
-  advisory feed, `internal/verify`'s TUF updater and keyserver import, `internal/replication`,
-  `internal/signing`'s KMS backends) are named in the rule's scope exclusion, so a new package
-  wanting egress must edit the rule and the diff shows it.
+- **Egress boundary** (AC3): a `forbidigo` rule in `.golangci.yml` over the whole module
+  (`internal/**`, `cmd/**`), forbidding construction or use of `http.Client`, `http.Transport`,
+  `http.Get`, `http.Post`, `http.Head`, `http.DefaultClient`, `net.Dial`, `net.Dialer` and
+  `tls.Dial`, with a violation fixture behind the `lintfixture` build tag and a test invoking the
+  pinned golangci-lint that fails unless the rule fires (the pattern `format-handler-interface.md`
+  AC6 established). The rule's exclusion list is the module's inventory of egress, one line per
+  package with the spec that owns it: `internal/upstream/**` (this spec, the only egress on the
+  proxied path), `internal/storage` (the object-store client), `internal/auth` (the OIDC client,
+  which `credential-management.md`'s exchange also uses and which makes no request for an issuer
+  no trust policy names), `internal/trustsource` (`artifact-verification.md`'s keyserver import,
+  TUF updater and revocation refresh, kept out of `internal/verify`), `internal/policy` (the
+  advisory feed sync), `internal/replication` (the follower's requests to its leader),
+  `internal/signing/kms` (the KMS providers) and `internal/telemetry` (the OTLP exporter). A new
+  package wanting egress must edit the rule and the diff shows it; the earlier text scoped the
+  rule to two packages and then spoke of exclusions it could not have, corrected on the Fable
+  recheck of 2026-10-01.
 - **Import boundary** (AC29): `internal/upstream/import_boundary_test.go` walks the import graph
   with `go/packages` and fails if `internal/upstream/**` imports `internal/format/**` or
   `internal/proxy/**` (no sideways import; `main` wires them), or if any `internal/format/**`
@@ -830,10 +946,13 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       `Validate`; the proxy layer's `Fetcher` subset has exactly `Fetch` and is satisfied by
       `*upstream.Router`; a test enumerates the three method sets and fails on any other count, so
       the pin cannot grow without a spec change.
-- [ ] AC3: No code under `internal/proxy/**` or `internal/format/**` constructs or uses an HTTP
-      client, transport or dialer: the `forbidigo` rule fires on a violation fixture behind the
-      `lintfixture` build tag, proven by a test running the pinned golangci-lint against it, and
-      the rule's scope exclusion names every other package permitted egress.
+- [ ] AC3: No package in the module outside the egress inventory (`internal/upstream/**`,
+      `internal/storage`, `internal/auth`, `internal/trustsource`, `internal/policy`,
+      `internal/replication`, `internal/signing/kms`, `internal/telemetry`) constructs or uses an
+      HTTP client, transport or dialer: the module-wide `forbidigo` rule fires on a violation
+      fixture behind the `lintfixture` build tag under `internal/proxy` and under
+      `internal/format`, proven by a test running the pinned golangci-lint against it, and the
+      test asserts the exclusion list equals that inventory, so an added package fails it.
 - [ ] AC4: The outbound request is built only from the `Request` fields: against a recording
       stand-in, a real client sending `Julia-CI-Variables`, `X-Client-Anonymous-Id`, a registry
       `Authorization`, a `traceparent` and `tracestate` pair and an arbitrary `X-Test-Leak`
@@ -850,28 +969,39 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       a stand-in chain root -> hostB (allowlisted `none`) -> hostC (allowlisted `root`) ->
       hostD (allowlisted `own`) shows, at the network layer, no credential at hostB, the root
       credential at hostC, the second credential at hostD, and a `path-token` inserted only into
-      the root's URL and never into hostB's, hostC's or hostD's.
+      the root's URL and never into hostB's, hostC's or hostD's; and on a row with `allow_http`
+      and a `none` credential, an `http://` hop to an allowlisted host carries no credential
+      header of any kind, while an `http://` hop on a row without `allow_http` is refused before
+      any connection.
 - [ ] AC7: A fetch or redirect to a host absent from the upstream's allowlist makes no connection
       (a stand-in on that host fails the test on any accepted socket) and returns
       `HostNotAllowedError` naming the host, which the handler renders (Composer's `502` naming
       the host); an operator-created upstream has an empty allowlist by default; a bare wildcard
       entry is refused at configuration; matching is on the connect target after normalisation
-      and never on `Host` or `X-Forwarded-Host`.
+      and never on `Host` or `X-Forwarded-Host`; a path location that would leave the root
+      (a climbing dot segment, a leading `//`, a scheme) is refused before any connection and a
+      joined URL's host is always the root's; and a redirect target with a scheme other than
+      `https` is refused before any connection on a row without `allow_http`.
 - [ ] AC8: Redirects `301`, `302`, `303`, `307` and `308` are followed inside the adapter up to
       ten hops for `GET` and `HEAD`; the client response carries no `Location` and no upstream
       URL; the eleventh hop fails; a presigned redirect target (query carrying `X-Amz-Expires` or
       `access_token`) is never recorded as provenance or cached as a resolution, the requested
       location is, and a second fetch re-follows the chain, proven against a stand-in whose
       presigned target changes between fetches.
-- [ ] AC9: `429` with `Retry-After` (seconds and HTTP-date), `429` without, a `403` carrying
-      `x-ratelimit-remaining: 0` and `x-ratelimit-reset`, and a response carrying
-      `ratelimit-remaining: 0` with `ratelimit-limit: 100;w=21600` each yield `RateLimitError`
-      with the correct retry time; a `403` without those headers yields `Refused`; neither is ever
-      `NotFound`; `proxy-cache.md` AC9 consumes the error type by `errors.As`.
+- [ ] AC9: `429` with `Retry-After` (seconds and HTTP-date), `429` without, and a `403` carrying
+      `x-ratelimit-remaining: 0` and `x-ratelimit-reset` each yield `RateLimitError` with the
+      correct retry time; a `2xx` carrying `x-ratelimit-remaining: 0` and `x-ratelimit-reset` is
+      returned with its body and starts a cool-down until the reset time; a `2xx` carrying
+      `ratelimit-remaining: 0` with `ratelimit-limit: 100;w=21600` is returned with its body,
+      moves `upstream_rate_limit_remaining` to zero and starts no cool-down; a `403` without
+      those headers yields `Refused`; nothing here is ever `NotFound`; `proxy-cache.md` AC9
+      consumes the error type by `errors.As`.
 - [ ] AC10: After a `RateLimitError`, every request to that upstream for the retry period fails
       immediately with the same error and zero requests reach the upstream (network layer); the
       period is capped at `limits.cooldown_cap` however large the upstream's `Retry-After`; a
-      `5xx` and a connection failure trigger no cool-down; requests resume at the retry time.
+      `5xx`, a connection failure and Docker Hub's `ratelimit-remaining: 0` trigger no cool-down;
+      requests resume at the retry time; the state is per process, so a second `Router` in the
+      same test learns the limit on its own first request.
 - [ ] AC11: Under a flood of distinct misses against one upstream, at most `limits.concurrency`
       connections are open at once (network layer), a waiting request is released when one
       completes, and a waiting request whose context is cancelled returns promptly.
@@ -883,21 +1013,25 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       terminator, each surface `ErrTruncated` from the body's `Read` before any `io.EOF`; a
       complete body returns `io.EOF` exactly once; `proxy-cache.md` AC10's commit-nothing test
       passes against the same stand-in through the real seam.
-- [ ] AC14: `ETag`, `Last-Modified`, `Content-Length`, `Content-Type` and `Docker-Content-Digest`
-      are returned verbatim on `GET` and `HEAD`, including a `Last-Modified` earlier than the
-      validator sent, so the cache layer, not the adapter, decides adoption.
+- [ ] AC14: `ETag`, `Last-Modified`, `Content-Length`, `Content-Type`, `Content-Range`,
+      `Repr-Digest` and `Docker-Content-Digest` are returned verbatim on `GET` and `HEAD`,
+      including a `Last-Modified` earlier than the validator sent, so the cache layer, not the
+      adapter, decides adoption.
 - [ ] AC15: With an `ETag` held, the request carries `If-None-Match`; with a `Last-Modified`,
       `If-Modified-Since`; with both, both; a `304` maps to `NotModified` with no body; a `Range`
-      request answered `206` maps to `PartialContent` with the returned range and answered `200`
-      maps to `OK`, so a caller splicing an incremental index knows the upstream ignored the
-      range.
+      request answered `206` maps to `PartialContent` with the returned `Content-Range`, answered
+      `200` maps to `OK`, so a caller splicing an incremental index knows the upstream ignored the
+      range, and answered `416` maps to `RangeNotSatisfiable` (the answer `rubygems.md` sampled
+      from the live upstream for a range past the end after a rewrite), never to an error class.
 - [ ] AC16: The `distribution` adapter answers a `401` Bearer challenge by requesting a token at
       the realm with the challenge's `service` and `scope`, anonymously under `none` and with
       Basic under `token-exchange`, retries with `Authorization: Bearer`, caches the token per
-      `(realm, service, scope)` for `expires_in` (60 seconds when absent) less a margin,
-      re-exchanges on expiry and on a fresh `401`, never sends a placeholder token, and refuses a realm host
-      that is neither the root nor an allowlisted `root` entry with `HostNotAllowedError`, all
-      proven against a fake token server.
+      `(realm, service, scope)` and the credential's `rotated_at` for `expires_in` (60 seconds
+      when absent, one hour at most) less a margin, re-exchanges on expiry, on a fresh `401` and
+      on the first fetch after the credential is rotated, never sends a placeholder token, reads
+      the token response under a 4 KiB bound, and refuses a realm host that is neither the root
+      nor an allowlisted `root` entry with `HostNotAllowedError`, all proven against a fake token
+      server.
 - [ ] AC17: The `aws-ecr` kind obtains a token through `GetAuthorizationToken` against a fake ECR
       endpoint, presents it as Basic `AWS:<password>`, refreshes at `expiresAt` minus five minutes
       and never later than twelve hours, and works from static keys and from the ambient chain
@@ -927,14 +1061,16 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       every kind finds no credential bytes.
 - [ ] AC22: An upstream with an `http://` root is refused at configuration unless `allow_http` is
       set; a stand-in presenting a certificate from a private CA is fetched successfully only when
-      the upstream's `tls.ca_bundle` names that CA and fails otherwise; `insecure_skip_verify` is
-      refused unless set explicitly and, when set, is named in the startup log; a client
-      certificate configured on the upstream is presented in the handshake.
+      the upstream's `tls.ca_bundle` names that CA and fails otherwise; `insecure_skip_verify`,
+      `allow_http` and `allow_local` are each refused unless set explicitly and, when set, named
+      in the startup log; a client certificate configured on the upstream is presented in the
+      handshake.
 - [ ] AC23: `Validate` runs on `management-api.md`'s create and `PATCH` of a `remote`'s upstream
       and refuses an unregistered adapter, a non-`https` root without `allow_http`, a credential
       kind the adapter does not accept (`bearer` on `distribution`, `token-exchange` on `https`),
       a row naming `git` as its own adapter (the resolved git-location decision, was Q9), an `own`
-      entry naming no credential and a bare-wildcard host,
+      entry naming no credential, a bare-wildcard host, `allow_http` beside a credential
+      reference or an `own` entry, and a `basic-exchange` exchange path the path rule refuses,
       each with problem type `upstream-invalid` and status 422 and nothing committed; an
       unreachable but well-formed upstream is accepted.
 - [ ] AC24: The preconfigured profile table in `internal/upstream/preconfigured` and the
@@ -961,9 +1097,12 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       advisories endpoint exactly once per invocation.
 - [ ] AC28: The `git` adapter fetches the tree of one commit named by 40 hexadecimal digits over
       HTTPS from an allowlisted host with no credential, verifies every object with
-      collision-detecting SHA-1, refuses a tree over the configured size bound before storing
-      anything, refuses a branch or tag name, and shells out to nothing (no `os/exec` import under
-      `internal/upstream`).
+      collision-detecting SHA-1, aborts a fetch whose packfile exceeds the configured size bound
+      while it is still arriving and stores nothing, refuses a branch or tag name, fetches no
+      submodule (a `.gitmodules` file is emitted as an ordinary file and no second host is
+      contacted, network layer), emits a symbolic link as a link entry without resolving it,
+      fails with a named error against a fixture server that refuses a want by commit id, and
+      shells out to nothing (no `os/exec` import under `internal/upstream`).
 - [ ] AC29: `internal/upstream/**` imports nothing from `internal/format/**` or `internal/proxy/**`,
       and no `internal/format/**` package imports `internal/upstream`, proven by an import-graph
       test that fails on the first violation and names the edge.
@@ -973,7 +1112,9 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       old upstream's realm is presented, the old upstream's cool-down does not apply to the new
       one, and every cached reference is still served with `last-checked` reset
       (`repository-lifecycle.md` AC25); after a credential is rotated the next fetch carries the
-      new value (`management-api.md` AC21); and deleting a credential referenced by an
+      new value (`management-api.md` AC21), which for `basic-exchange`, `token-exchange`,
+      `aws-ecr` and `gcp` means a fresh exchange under the new material and never a token cached
+      under the old (network layer, against the fake exchange servers); and deleting a credential referenced by an
       `Upstream` or a `ReplicationLink` is refused `409` `in-use` naming each dependant
       (`repository-lifecycle.md` AC20), so no fetch ever finds its credential reference
       dangling.
@@ -997,9 +1138,11 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       the root and to allowlist entries of role `root` and on no other host (network layer); on a
       fresh `401` it re-exchanges once and retries once, and a second `401` or an exchange
       answering other than `200` with a non-empty body yields `Refused` and increments
-      `upstream_token_exchange_failures_total{form="basic-exchange"}`; the exchanged token is
+      `upstream_token_exchange_failures_total{form="basic-exchange"}`; a body over 4 KiB or
+      carrying a non-printable byte is `Refused` and never presented; the exchanged token is
       registered with `telemetry.MarkSecret` before its first use and occurs zero times in logs
-      and the error chain; the exchange is never made against an off-origin host; and a real
+      and the error chain; the exchange is never made against an off-origin host and its path is
+      joined under the path rule; and a real
       `conan install` through a remote repository bound to a reference `conan_server` stand-in
       that requires authentication succeeds under this kind (the resolved Conan-exchange
       decision, was Q8).
@@ -1008,11 +1151,22 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
       allowlisted (under any role) the tree of the commit arrives as a tar stream and no
       credential reaches the git host even when the row carries one (network layer); with the host
       absent it fails `HostNotAllowedError` before any connection; the same location on a
-      `distribution` row is refused before any connection; a truncated smart-HTTP answer surfaces
-      `ErrTruncated`; and a real `terraform init` through a remote repository installs a module
+      `distribution` row is refused before any connection; a git URL carrying userinfo, a query
+      string, a fragment or a non-`https` scheme, and a commit id that is not 40 hexadecimal
+      digits, are each refused before any connection; a redirect the git server answers to a host
+      outside the allowlist is refused with no connection to it; a truncated smart-HTTP answer
+      surfaces `ErrTruncated`; and a real `terraform init` through a remote repository installs a module
       whose upstream location is a commit-pinned `git::https` URL, from an archive the handler
       re-packed from that tree (`terraform.md` AC18 is the client half; the resolved
       git-location decision, was Q9).
+- [ ] AC35: A location or redirect target whose host is a literal loopback, link-local or
+      unspecified address, and an allowlisted name that resolves to one (a test resolver
+      answering `127.0.0.1` and `169.254.169.254` for the name), is refused before any connection
+      on every adapter, at the network layer (a stand-in on that address accepts no socket), on
+      `https` rows, `allow_http` rows and `insecure_skip_verify` rows alike; a row with
+      `allow_local` connects, which is how every loopback stand-in in this spec's own tests is
+      reached; the `gcp` kind's ambient source still reaches a fake metadata server on a
+      link-local address through its own client (the resolved local-address decision, was Q10).
 
 ## Test Plan
 
@@ -1020,38 +1174,39 @@ Every boundary rule above has a named mechanical enforcer, per `CLAUDE.md`:
 |-----------|-----------|---------------|
 | AC1 | unit + integration | `internal/upstream/registry_test.go` (selection, unregistered refusal); `internal/upstream/router_test.go` (two remotes, one adapter, independent resolution) |
 | AC2 | unit | `internal/upstream/pin_test.go` (reflection over `Adapter` and `Validator` method sets) |
-| AC3 | lint + unit | `forbidigo` rule in `.golangci.yml` scoped to `internal/proxy/**` and `internal/format/**`; fixture behind the `lintfixture` build tag; `internal/upstream/egress_boundary_test.go` runs the pinned golangci-lint against it and asserts the exclusion list |
+| AC3 | lint + unit | module-wide `forbidigo` rule in `.golangci.yml` with the egress inventory as its exclusion list; fixtures behind the `lintfixture` build tag under `internal/proxy` and `internal/format`; `internal/upstream/egress_boundary_test.go` runs the pinned golangci-lint against them and asserts the exclusion list equals the inventory this spec tables |
 | AC4 | integration + unit | `conformance/core/upstream_hygiene_test.go` (recording stand-in, real client with leak headers, active server span; the outbound header set against the declared set, shared with `observability.md` AC20); `internal/upstream/request_shape_test.go` (pinned field set) |
 | AC5 | integration | `internal/upstream/hygiene_test.go` (header-recording stand-in, both encodings, override) |
 | AC6 | integration | `internal/upstream/credential_scope_test.go` (four-host stand-in chain, every kind, network-layer header capture) |
-| AC7 | integration + unit | `internal/upstream/allowlist_test.go` (connection-refusing stand-in on the excluded host, normalisation, wildcard refusal, `Host` and `X-Forwarded-Host` ignored) |
+| AC7 | integration + unit | `internal/upstream/allowlist_test.go` (connection-refusing stand-in on the excluded host, normalisation, wildcard refusal, `Host` and `X-Forwarded-Host` ignored); `internal/upstream/location_test.go` (path-joining table: climbing dot segments, leading `//`, an embedded scheme, encoded separators; a scheme-downgrade redirect refused without `allow_http`) |
 | AC8 | integration | `internal/upstream/redirect_test.go` (five codes, ten-hop bound, no `Location` on the client response, presigned target rotation between fetches) |
-| AC9 | unit | `internal/upstream/ratelimit_test.go` (table over the response shapes, `errors.As`) |
-| AC10 | integration | `internal/upstream/cooldown_test.go` (injected clock, network-layer zero-request assertion, cap, `5xx` no cool-down) |
+| AC9 | unit | `internal/upstream/ratelimit_test.go` (table over the response shapes including the two `2xx` remaining-zero shapes with and without a reset time, `errors.As`) |
+| AC10 | integration | `internal/upstream/cooldown_test.go` (injected clock, network-layer zero-request assertion, cap, `5xx` and Docker Hub remaining-zero no cool-down, a second `Router` unaffected) |
 | AC11 | integration | `internal/upstream/concurrency_test.go` (flood of distinct misses, open-connection count at the stand-in, cancelled waiter) |
 | AC12 | integration + fault injection | `internal/upstream/timeout_test.go` (accept-and-hang, one byte per second, mid-body stall) |
 | AC13 | integration + fault injection | `internal/upstream/completion_test.go` (short `Content-Length`, unterminated chunked, clean body); `internal/proxy/fetch_integrity_test.go` re-run through the real seam |
-| AC14 | integration | `internal/upstream/validators_test.go` (verbatim headers on `GET` and `HEAD`, backwards `Last-Modified`) |
-| AC15 | integration | `internal/upstream/conditional_test.go` (three validator combinations, `304`, `206` and ignored-range `200`) |
-| AC16 | integration | `internal/upstream/distribution/token_test.go` (fake token server: anonymous and Basic exchange, per-scope cache, expiry, fresh `401`, disallowed realm, no placeholder) |
+| AC14 | integration | `internal/upstream/validators_test.go` (verbatim headers on `GET` and `HEAD` including `Content-Range` and `Repr-Digest`, backwards `Last-Modified`) |
+| AC15 | integration | `internal/upstream/conditional_test.go` (three validator combinations, `304`, `206` with `Content-Range`, ignored-range `200`, `416` as `RangeNotSatisfiable`) |
+| AC16 | integration | `internal/upstream/distribution/token_test.go` (fake token server: anonymous and Basic exchange, per-scope cache, expiry and the one-hour cap, fresh `401`, re-exchange after rotation, oversize response refused, disallowed realm, no placeholder) |
 | AC17 | integration + lint | `internal/upstream/awsecr/token_test.go` (fake `GetAuthorizationToken` endpoint, refresh timing, static and ambient); depguard allowlist entry in `.golangci.yml` |
 | AC18 | integration + unit | `internal/upstream/gcp/token_test.go` (fake metadata server, fake token endpoint, JWT signature check, refresh timing); an import-list assertion in the same file |
 | AC19 | integration | `internal/upstream/credential_scope_test.go` (presentation per kind at the network layer) |
 | AC20 | unit + fuzz + integration | `internal/upstream/redact_test.go` (table over kinds and shapes, `FuzzRedact`; the parameter list equal to `telemetry.RedactURL`'s, importing both); `internal/upstream/credential_scope_test.go` (`MarkSecret` before first use per kind, through `telemetry.NewTestRecorder`); `internal/proxy/credentials_test.go` (`proxy-cache.md` AC6's case through the redactor) |
 | AC21 | unit | `internal/upstream/credential_boundary_test.go` (exported-identifier scan, reflection walk over `Response` and error chains) |
-| AC22 | integration + unit | `internal/upstream/tls_test.go` (private-CA stand-in with and without the bundle, client certificate in the handshake, startup-log naming); `internal/upstream/validate_test.go` (`http://` refusal and override) |
-| AC23 | integration | `internal/manage/upstream_validate_test.go` (create and `PATCH` through the management API, each refusal with `upstream-invalid` including a row naming `git`, unreachable accepted) |
+| AC22 | integration + unit | `internal/upstream/tls_test.go` (private-CA stand-in with and without the bundle, client certificate in the handshake, startup-log naming of `insecure_skip_verify`, `allow_http` and `allow_local`); `internal/upstream/validate_test.go` (`http://` refusal and override) |
+| AC23 | integration | `internal/manage/upstream_validate_test.go` (create and `PATCH` through the management API, each refusal with `upstream-invalid` including a row naming `git`, `allow_http` beside a credential, a climbing exchange path; unreachable accepted) |
 | AC24 | unit | `internal/upstream/preconfigured/profiles_test.go` (reads the profile table and the seeding set `proxy-cache.md` AC19 tests, asserts equality and field completeness) |
 | AC25 | conformance | `conformance/oci/upstream_dockerhub_test.go` (Docker-Hub-shaped stand-in: realm on a second host, blob redirect to a third, pull budget, `429` message visible to the client); `conformance/composer/upstream_dist_host_test.go` (dist on a second host, `302` to a third, allowlist removal) |
 | AC26 | ci + manual procedure | scheduled nightly workflow rows in `.github/workflows/` (one per profile plus the two real-cloud rows); transcript diff and issue creation proven by a written manual-dispatch procedure; the unfunded table in this spec |
 | AC27 | integration + conformance | `internal/upstream/post_test.go` (single send, no retry, redirect is an error); `conformance/composer/audit_forward_test.go` (real client, stand-in counts one request) |
-| AC28 | integration + unit | `internal/upstream/git/fetch_test.go` (local smart-HTTP fixture repository, collision-detecting SHA-1 with a corrupted object, size bound, branch refusal); `internal/upstream/git/no_exec_test.go` (import scan) |
+| AC28 | integration + unit | `internal/upstream/git/fetch_test.go` (local smart-HTTP fixture repository, collision-detecting SHA-1 with a corrupted object, size bound exceeded mid-packfile, branch refusal, a fixture with a submodule and a symbolic link, a fixture server refusing wants by id); `internal/upstream/git/no_exec_test.go` (import scan) |
 | AC29 | unit | `internal/upstream/import_boundary_test.go` (`go/packages` walk, first violating edge named) |
-| AC30 | integration | `internal/upstream/router_test.go` (per-fetch resolution, realm-keyed token cache, cool-down not carried); `internal/repository/configure_remote_test.go` (shared with `repository-lifecycle.md` AC25: cache kept, `last-checked` reset); `internal/manage/upstream_credential_test.go` (shared with `management-api.md` AC21 and `repository-lifecycle.md` AC20: rotation at the network layer, `in-use` while referenced) |
+| AC30 | integration | `internal/upstream/router_test.go` (per-fetch resolution, realm-keyed token cache invalidated by `rotated_at` for each exchanging kind against its fake, cool-down not carried); `internal/repository/configure_remote_test.go` (shared with `repository-lifecycle.md` AC25: cache kept, `last-checked` reset); `internal/manage/upstream_credential_test.go` (shared with `management-api.md` AC21 and `repository-lifecycle.md` AC20: rotation at the network layer, `in-use` while referenced) |
 | AC31 | integration | `internal/upstream/metrics_test.go` (every series and label set through `telemetry.NewTestRecorder` against the Docker-Hub-shaped stand-in; `UpstreamCooldown` once; the `observability.md` AC6 and AC18 rows for this package) |
 | AC32 | unit + script | `internal/upstream/config_test.go` (defaults, typed struct, row-level override); `scripts/check-config-keys.js` under `make verify` (`deployment.md`'s two-way check) |
-| AC33 | integration + conformance | `internal/upstream/basicexchange_test.go` (fake Conan-shaped server without a challenge: exchange path, Bearer on root and `root` entries only at the network layer, one re-exchange on a fresh `401`, second `401` and empty body `Refused`, failure counter under its form, `MarkSecret` through `telemetry.NewTestRecorder`, off-origin exchange refused); `conformance/conan/proxied_test.go` (a real `conan install` through a remote bound to an authenticating `conan_server` stand-in under `basic-exchange`, shared with `conan.md`'s proxied criterion) |
-| AC34 | integration + conformance | `internal/upstream/router_git_test.go` (git location on an `https` row: allowlisted host under each role with no credential at the git host, absent host refused before connect, `distribution` row refused, truncated answer; concurrency bound and cool-down shared with the row); `conformance/terraform/module_vcs_test.go` (shared with `terraform.md` AC18: a git stand-in serving a commit over smart HTTP, restricted-network installs) |
+| AC33 | integration + conformance | `internal/upstream/basicexchange_test.go` (fake Conan-shaped server without a challenge: exchange path under the path rule, Bearer on root and `root` entries only at the network layer, one re-exchange on a fresh `401`, second `401`, empty body, oversize body and a non-printable body each `Refused`, failure counter under its form, `MarkSecret` through `telemetry.NewTestRecorder`, off-origin exchange refused); `conformance/conan/proxied_test.go` (a real `conan install` through a remote bound to an authenticating `conan_server` stand-in under `basic-exchange`, shared with `conan.md`'s proxied criterion) |
+| AC34 | integration + conformance | `internal/upstream/router_git_test.go` (git location on an `https` row: allowlisted host under each role with no credential at the git host, absent host refused before connect, `distribution` row refused, the URL grammar table (userinfo, query, fragment, scheme, short commit) refused before connect, an off-allowlist redirect from the git stand-in refused at the network layer, truncated answer; concurrency bound and cool-down shared with the row); `conformance/terraform/module_vcs_test.go` (shared with `terraform.md` AC18: a git stand-in serving a commit over smart HTTP, restricted-network installs) |
+| AC35 | integration | `internal/upstream/local_address_test.go` (literal loopback, link-local and unspecified hosts; a test resolver mapping an allowlisted name to `127.0.0.1` and `169.254.169.254`; a socket-counting stand-in on the address; `https`, `allow_http` and `insecure_skip_verify` rows; `allow_local` admitting; the `gcp` ambient fake on a link-local address reached through the kind's client) |
 
 ## Implementation Phases
 
@@ -1067,9 +1222,10 @@ an adapter.
   redactor with `MarkSecret` and the `RedactURL` list-equality test; `Validate`; the `upstream.`
   keys (AC32)
 - The `https` adapter: credential kinds `none`, `basic`, `bearer`, `header`, `path-token`;
-  allowlist and credential roles; redirects; conditional requests and `Range`; identity encoding
-  and the fixed `User-Agent`; rate-limit interpretation; connect timeout and stall detection;
-  truthful completion; TLS trust and `http://` refusal
+  allowlist and credential roles with the scheme, path-joining and local-address rules (AC35);
+  redirects; conditional requests and `Range`; identity encoding and the fixed `User-Agent`;
+  rate-limit interpretation; connect timeout and stall detection; truthful completion; TLS trust
+  and `http://` refusal
 - The `distribution` adapter: the challenge and token exchange under `none` and
   `token-exchange`; `Docker-Content-Digest` on `GET` and `HEAD`; `ratelimit-*` headers
 - The cool-down
@@ -1116,10 +1272,11 @@ Left empty by `/spec`. Populated by `/tasks` once the spec reaches `planned`.
 ## Open Questions
 
 None remain open. Seven questions were written in the template's decision shape during authoring
-on 2026-09-27, and two more (Q8, Q9) during the closing reconciliation sweep on 2026-09-28 on
-Opus, and each was adopted at its recommendation under the owner's standing delegation
-(`CLAUDE.md`); each is reversible by the owner, and `grep -rn "standing delegation"` finds them.
-Q8 and Q9 carry this spec's `fable_recheck`.
+on 2026-09-27, two more (Q8, Q9) during the closing reconciliation sweep on 2026-09-28 on
+Opus, and one (Q10) on the Fable recheck of 2026-10-01; each was adopted at its recommendation
+under the owner's standing delegation (`CLAUDE.md`); each is reversible by the owner, and
+`grep -rn "standing delegation"` finds them. The Fable recheck re-examined Q1 to Q9 as if deciding
+them fresh and recorded a verdict on each record below (confirmed, or amended with what changed).
 Resolved decisions are kept rather than deleted, so the reasoning survives the next time someone
 asks why it was done this way.
 
@@ -1150,6 +1307,12 @@ is realised, and it corrects the vocabulary of twenty format specs the owner has
 Accepted cost: the sibling consequences, and vigilance on the `https` option surface, which AC2's
 pin and the request-shape test make visible.
 
+Rechecked on Fable 2026-10-01: confirmed. The options were framed fairly (A is Harbor's real
+shape, C the real alternative) and the two-axis reading survives every format added since: Conan's
+exchange became a kind, Terraform's VCS fetch a per-location transport, and RubyGems, Cargo and
+the rest are the `https` adapter under a recipe. One under-statement: the `git` adapter is a third
+transport, so "two adapters" is the step-4 count, not the final one.
+
 ### Resolved: where the interface lives (was Q2)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: `Adapter`, `Validator`,
@@ -1176,6 +1339,10 @@ methods it does not call).
 
 Accepted cost: the exported interface in the implementor package, mitigated by the one-method
 subsets on the consuming side.
+
+Rechecked on Fable 2026-10-01: confirmed. Amended in one detail the record under-stated: the row
+type `Validate` takes is `data-model.md`'s `model.Upstream`, not a type of this package, so the
+consumers and this package share one row type and nothing stutters as `upstream.Upstream`.
 
 ### Resolved: the off-origin allowlist's home and enforcement (was Q3)
 
@@ -1205,6 +1372,17 @@ action rather than an automatic follow.
 Accepted cost: the operator action, softened by the preconfigured profiles carrying their hosts
 and by AC26's nightly contract case catching a CDN change the next morning.
 
+Rechecked on Fable 2026-10-01: **amended**. The home and the enforcement point stand, and option
+B's cost (the proxy never sees the leaking hop) is exactly right. What the record under-stated is
+that a host allowlist checks the host and nothing else, and the adversarial pass found three
+shapes it left open: a downgrade redirect to `http://` on an allowlisted host (the credential in
+clear, the dnf 4 capture), a handler-passed path that climbs out of the root or smuggles a
+scheme-relative host (`//evil/...`), and an allowlisted name resolving to a local address. The
+first two are folded into "Credential scoping and the off-origin allowlist" as the scheme and
+path-joining rules (AC6, AC7, AC23); the third became Q10 below. `allow_http` now refuses a
+credential at configuration, which narrows the operator relaxation the record promised: a
+plain-HTTP mirror is anonymous or it is not proxied.
+
 ### Resolved: the cloud dependency (was Q4)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: the AWS SDK for Go v2
@@ -1227,6 +1405,11 @@ an IAM security bug in the one code path no client oracle sees.
 size lands on every deployment whether or not it uses ECR.
 
 Accepted cost: the dependency tree, isolated so a future split into a build tag is mechanical.
+
+Rechecked on Fable 2026-10-01: confirmed. The cost is stated honestly (every binary carries the
+SDK) and B's cost is the decisive one: an EKS deployment with IRSA is the common case, not the
+edge. Two dependencies the record did not list are now named in Design: go-git for the `git`
+adapter and `golang.org/x/net/idna` for host normalisation; neither changes the verdict.
 
 ### Resolved: cool-down after a rate limit (was Q5)
 
@@ -1252,6 +1435,17 @@ minute after a `429`) and a judgement about trusting an upstream's stated retry 
 
 Accepted cost: the refused-but-would-have-succeeded request during a cool-down, bounded by the cap.
 
+Rechecked on Fable 2026-10-01: **amended**. The decision stands: a fleet that keeps hammering a
+throttled upstream is the worse outcome, and serve-stale covers the gap. Its fold was wrong in one
+place: "Rate limits and the cool-down" cooled down on Docker Hub's `ratelimit-remaining: 0`, whose
+`ratelimit-limit: 100;w=21600` gives a window length and no reset time, so the adapter would have
+guessed and taken the upstream offline for up to the cap after a *successful* pull, the option A
+cost the record thought was bounded to a bogus `Retry-After`. Now only a stated reset time
+(`x-ratelimit-reset`) or a `RateLimitError` starts a cool-down; Docker Hub's zero moves the gauge
+and fires `UpstreamRateLimitLow`, and the next `429` takes the ordinary rule (AC9, AC10). Two
+costs the record omitted are now stated in Design: the cool-down is per process, so N replicas
+learn a limit N times, and a restart clears it.
+
 ### Resolved: real-cloud nightly rows without funded accounts (was Q6)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: contract tests against
@@ -1276,6 +1470,12 @@ is allowed to mean.
 
 Accepted cost: the two declared-but-unfunded rows, visible in this spec until the owner funds or
 strikes them.
+
+Rechecked on Fable 2026-10-01: confirmed. The fakes exercise every branch the kinds have
+(`GetAuthorizationToken` decoding, refresh timing, the metadata header, the RS256 exchange), so
+what the real rows add is the provider's own drift, which is exactly what a nightly is for and
+exactly what cannot be tested without money; C is out of an agent's authority and B is how a gap
+is forgotten. The unfunded table is the visible record and remains owner-facing.
 
 ### Resolved: what ships at step 4 (was Q7)
 
@@ -1306,6 +1506,12 @@ Accepted cost: the second phase inside step 4.
 Later note (2026-09-28): the seventh non-cloud kind, `basic-exchange` (was Q8), lands with Conan's
 proxied phase in Phase 3, and the `git` adapter's per-location dispatch (was Q9) in Phase 4; both
 follow this record's rule that a transport with one consumer lands with that consumer's evidence.
+
+Rechecked on Fable 2026-10-01: confirmed. Sequencing the cloud kinds after OCI's first proving
+run is evidence sequencing, which `CLAUDE.md` allows, not deferral for effort, which it forbids;
+C would contradict the charter's step 4. The scheme, path and local-address rules (was Q3 as
+amended, Q10) are Phase 1 work, since a seam without them is the seam this spec's Context says
+must never ship.
 
 ### Resolved: a Conan-shaped token exchange (was Q8)
 
@@ -1345,6 +1551,17 @@ Accepted cost: the kind, its entry in `management-api.md`'s upstream-credential 
 AC10's review surface (both reported as consequences), and an in-memory token per upstream that a
 restart re-exchanges.
 
+Rechecked on Fable 2026-10-01: confirmed, with the fold amended. The framing is fair: A really is
+a deferral for effort dressed as a limit, and C is the option-surface growth Q1 warned about; the
+capture (`conan.md`, Basic to `users/authenticate`, a `text/plain` token, Bearer afterwards, no
+challenge either way) is the evidence, and both sibling entries the cost named have landed
+(`management-api.md`'s kind list, `auth.md` AC10's review list). Three things the record left
+open are now in Design and AC33: the exchange path is joined under the path rule so it cannot
+leave the root; the token body is bounded (4 KiB, printable) so an upstream cannot make the
+registry carry an arbitrary blob as a header; and the cached token is keyed by the credential's
+`rotated_at`, without which a rotation would keep presenting the token minted under the old pair
+until the upstream refused it, contradicting AC30.
+
 ### Resolved: how a location reaches the `git` adapter (was Q9)
 
 **Adopted 2026-09-28 under the owner's standing delegation.** Option A: the `Router` selects the
@@ -1379,6 +1596,55 @@ Accepted cost: the third location form and its dispatch branch, and the operator
 host a proxied Terraform registry's modules use (a module on an unlisted host is passed through
 verbatim and recorded as uncached, `terraform.md`'s rule).
 
+Rechecked on Fable 2026-10-01: confirmed, with the fold amended. Per-location dispatch is the
+right shape: the git host is metadata-derived like every other off-origin host, B is unknowable
+in advance and C is the materialisation route two specs rejected; the sibling entries the cost
+named have landed (`proxy-cache.md`'s Obligation and AC30, `format-handler-interface.md` AC8).
+The record treated the git location as a URL and a commit and stopped there, and the adversarial
+pass found what a module author can publish in that URL: userinfo (a credential from metadata,
+sent to a third-party host), a query or fragment, another scheme, a short or symbolic ref, a
+server redirect to an unlisted host, and submodules that are second fetches from hosts the
+operator never admitted. "Selecting an adapter", AC28 and AC34 now refuse each before any
+connection, route go-git through this package's client so its redirects pass the allowlist,
+fetch no submodule, emit links unresolved, and apply the size bound to the packfile as it arrives
+rather than to a tree already held.
+
+### Resolved: local-address refusal (was Q10, raised and adopted on the Fable recheck of 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation.** Option A: every location fetch on
+every adapter refuses a loopback, link-local or unspecified destination, checked on a literal IP
+before any connection and on each resolved address at dial time for a direct dial, unless the
+`Upstream` row sets `allow_local`, which is named in the startup log and exists for stand-ins on
+the loopback interface. Folded into Scope, "Configuration on the `Upstream` row", "Credential
+scoping and the off-origin allowlist", "Timeouts, concurrency and completion" (the transport
+constructor), AC22, AC35, Phase 1; the row field is a `data-model.md` consequence.
+
+The host allowlist decides which names the registry may connect to; it does not decide which
+addresses those names resolve to, and the upstream controls its own DNS. Should the adapter also
+refuse the local address ranges, so that an allowlisted name resolving to `127.0.0.1` or to the
+cloud instance-metadata address never opens a socket?
+
+**Recommendation:** A. On an ordinary `https` row the scheme rule already stops the attack, since
+the metadata service and most local listeners speak no TLS; the rows that need this are the ones
+that turn TLS off (`allow_http`, `insecure_skip_verify`), which are exactly the rows an operator
+creates for a LAN mirror and forgets. The check is a few lines in the dialer and its cost is one
+flag on stand-in rows.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Refuse loopback, link-local and unspecified at dial time; `allow_local` per row for stand-ins** | The metadata endpoint and the process's own listeners (`:9464`, the database) are unreachable through any upstream however its DNS behaves; the exemption is visible in configuration and in the startup log | A row field (`data-model.md`); every loopback stand-in in this spec's tests sets it; under an egress proxy only the literal check applies, since the proxy resolves |
+| **B. No address check; the host allowlist and TLS are the boundary** | Nothing to add | A LAN mirror row with `allow_http` whose allowlisted name is rebound to `169.254.169.254` fetches cloud credentials with a plain `GET` on the deployments the cloud kinds exist for |
+| **C. An instance-wide key instead of a row flag** | One switch | A fourth `upstream.` key against AC32's closed set, and a switch that, once set for a test, admits local addresses for every upstream in the process |
+
+**Why this is yours:** it adds a refusal an operator can hit legitimately (a mirror on
+`localhost` for a demo) and decides that the exemption is per upstream and logged rather than
+global.
+
+Accepted cost: the row field and the flag on stand-in rows, and that RFC 1918 ranges are
+deliberately *not* refused, since a private mirror on `10.0.0.0/8` is the ordinary case this
+registry exists to proxy; the rule covers the ranges that name the host itself and the metadata
+service, nothing wider.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1386,3 +1652,4 @@ verbatim and recorded as uncached, `terraform.md`'s rule).
 | 2026-09-27 | d9510af | authoring pass: grounded first draft, not a review | Not a review. Gathered the requirements of 27 citing format specs from their "what this format requires of `upstream-adapters.md`" sections, `format-handler-interface.md`'s resolved adapter-axis record and its 2026-09-25 ownership note, `proxy-cache.md`'s Design and resolved records, `data-model.md`'s `Upstream` entity, `management-api.md`'s repository administration and AC21, `conformance-harness.md`'s upstream bindings, `project-charter.md`'s step 4, and `agents/spec-loop/consequences.md` (Open items 7, 11, 13 and every line naming this file; themes 2 and 7; the `artifact-verification.md` and `signing-service.md` requirements on `proxy-cache.md`). Grounded prior art in Harbor's adapter, model and ECR/GCR/native sources, the distribution token-auth specification, Docker Hub's pull-limit page, the ECR `GetAuthorizationToken` reference, the GCE metadata-server and Artifact Registry authentication pages, GitHub's rate-limit page, Pulp's `Remote` model and zot's sync example, all fetched this run; Nexus and Artifactory pages did not render and no claim about them is made. Fixed the design: two transport adapters plus a credential-kind axis, a one-method interface pin, an `Upstream`-held off-origin allowlist with per-host credential roles enforced at connect time, typed rate-limit errors with a capped cool-down, truthful body completion as the adapter's half of the completion-only mode, a redactor covering every credential shape, compile-time preconfigured profiles held equal to `proxy-cache.md`'s set by test, and the adapter half of the nightly job with an explicit unfunded-row table. Stated the adapter-versus-proxy-cache split as a table. Seven questions written in decision shape and adopted under the standing delegation; zero open. 29 criteria, each with a Test Plan row and a named enforcer for every boundary rule. `node scripts/check-spec.js` run against this file with zero failures; the unasserted-duty advisories acted on. |
 | 2026-09-28 | 9ebf6e9 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. From `repository-lifecycle.md` (authoring item 13; its AC20, AC25): a new Design section "Lifecycle of an upstream binding" - deleting a credential an `Upstream` or `ReplicationLink` references is refused `409` `in-use`, changing a `remote`'s upstream keeps every cached reference and resets `RemoteFile.last-checked`, and the adapter's half is per-fetch resolution of the row and its credential with realm-keyed tokens and no carried cool-down; AC30 added with rows shared with that spec and `management-api.md` AC21. From `observability.md` (item 7): `traceparent` and `tracestate` on the forbidden outbound set with the transport built without the propagating round-tripper (AC4 extended, its AC20 row shared); `telemetry.MarkSecret` before every credential use and the redactor's parameter list held equal to `telemetry.RedactURL`'s (AC20 extended); the six `upstream_*` series and the `UpstreamRateLimitLow` and `UpstreamCooldown` alerts by their catalogue names (AC31 added). From `deployment.md` (item 5): a "Configuration keys" section tabling `upstream.default_concurrency`, `upstream.default_cooldown_cap` and `upstream.connect_timeout` in the three-column shape `scripts/check-config-keys.js` parses, the `User-Agent` computed from `server.public_url` and stated as not a key (AC5, AC32 added), the row-level `limits` falling back to the instance defaults. From the `management-api.md` reconciliation (item 6): `upstream-invalid` is 422 (AC23, "Configuration-time validation"). From the `data-model.md` reconciliation (item 3): "Configuration on the `Upstream` row" and the credential store cite "Upstream configuration and upstream credentials" and AC40 instead of a consequence. From the `proxy-cache.md` reconciliation (item 5): the nuget and maven rows are shipped under its resolved second extension (was Q17), the split table cites its AC20 and AC22, Phase 3 follows. The charter's step citations and `auth.md` AC10's review surface cited as applied. Already done at authoring: every Open item and format line naming this file; the format specs' "to be authored" wording (authoring item 12) is still queued on their side. 32 criteria, each with a Test Plan row; `node scripts/check-spec.js` on this file: zero failures. Stays draft pending a gate review. |
 | 2026-09-28 | 3135d95 | closing reconciliation sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show applied, verified against the current text of the spec that raised it (`cargo.md`, `conan.md`, `terraform.md`, `oci.md`). Applied: format batch 3 item 11 (a Cargo row in "The requirements, gathered": `https://` sparse root, the `dl` host on the allowlist with role `none`, the `header` kind with header `Authorization` for a private sparse upstream; the crates.io recipe under "Preconfigured profiles"); format batch 4 item 10 as **Q8, adopted under the standing delegation**: a `basic-exchange` kind (Basic `GET` at a stored exchange path, `text/plain` token presented as Bearer to the root and its `root` entries, one re-exchange on a fresh `401`), with the `bearer`-only option rejected as a deferral for effort; folded through Scope, the kinds table, the ConanCenter recipe line, AC33 and Phase 3; format batch 5 item 6 as **Q9, adopted**: `Request` carries a git location `{url, commit}` the `Router` sends to the `git` adapter on an `https` row under that row's allowlist, bound and cool-down, presenting no credential, refused on a `distribution` row, and a row naming `git` refused at configuration; folded through Scope, "Selecting an adapter", "The interface", "Credential kinds", AC23, AC34 and Phase 4; format batch 1 item 10 (the Docker Hub CDN hosts are captured at `oci.md`'s Phase 4, its proxied phase, in the profile row, AC24 and Phase 1). Found already done: management-api reconciliation 6 (`upstream-invalid` 422), proxy-cache reconciliation 5, repository-lifecycle authoring items 12 and 13. New consequences reported: `conan.md` (the Conan-shaped kind now exists, its proxied path and Phase 4 can cite was-Q8 and AC33), `terraform.md` (the gap is closed by was-Q9 and AC34), `management-api.md` (the upstream-credential kind list gains `basic-exchange`), `auth.md` (AC10's review list of upstream kinds gains the Conan-shaped exchange), `proxy-cache.md` and `format-handler-interface.md` (the fetch-and-cache location gains the git form). 34 criteria, each with a Test Plan row; `fable_recheck` extended; `node scripts/check-spec.js` zero failures on this file. Stays draft. |
+| 2026-10-01 | 7ffbd14 | Fable recheck: full review + re-examination of the Opus and cloud-session adoptions (Q1 to Q9), adversarial SSRF pass, go-spec-reviewer inline, constitution compliance | Every sibling citation verified at HEAD against the current text of `proxy-cache.md` (the adapter seam, the Obligation list with the git form and the expected validator, AC26's `RetryAt` deferral, AC31), `auth.md` (AC10's review list naming this spec's kinds and `basic-exchange`, AC36 as amended), `credential-management.md` (the exchange makes no request for an untrusted issuer through `internal/auth`'s client), `deployment.md` (`HTTPS_PROXY`/`NO_PROXY` once, `security.previous_master_key`), `artifact-verification.md` (`internal/trustsource`), `observability.md` (the six series, `MarkSecret` per job, `RedactURL`), `signing-service.md` (was-Q21's read-driven first fetch reaches this seam only through a handler's route), `data-model.md` AC40, `management-api.md`'s kind list, `conformance-harness.md`'s `upstreams` sub-entries, and the format specs behind every row of "The requirements, gathered" (`terraform.md`, `conan.md`, `cargo.md`, `rubygems.md`, `oci.md`, hex, vagrant, swift, homebrew, conda, julia, hackage, cran, composer, rpm re-read). Queued item applied: rubygems authoring 9 (a RubyGems row, the recipe, `basic` root only, `Range` on `/versions` with `Repr-Digest` and `Content-Range` verbatim, `416` as `RangeNotSatisfiable`; AC14, AC15). Verdicts: Q1 confirmed; Q2 confirmed and amended (`Validate` takes `model.Upstream`); Q3 **amended** (a host allowlist checks the host and nothing else: the scheme rule, the path-joining rule and no credential over plain HTTP added, `allow_http` refusing a credential at configuration; AC6, AC7, AC23); Q4 confirmed (go-git and `x/net/idna` named); Q5 **amended** (Docker Hub's `ratelimit-remaining: 0` carries no reset time, so it no longer starts a cool-down, only a stated `x-ratelimit-reset` or a `RateLimitError` does; per-process state and restart stated as costs; AC9, AC10); Q6 confirmed; Q7 confirmed; Q8 confirmed with its fold amended (exchange path under the path rule, token body bounded, cache keyed by `rotated_at`); Q9 confirmed with its fold amended (git URL grammar refusing userinfo, query, fragment, scheme and short refs, redirects through this package's client, no submodules, links unresolved, size bound during transfer; AC28, AC34). New Q10 adopted on Fable: loopback, link-local and unspecified destinations refused at dial time with a per-row `allow_local` for stand-ins (AC35). Other findings fixed: the egress boundary's rule was scoped to two packages and then spoke of exclusions it could not have, now module-wide with the egress inventory as its exclusion list (`internal/storage`, `internal/auth`, `internal/trustsource`, `internal/policy`, `internal/replication`, `internal/signing/kms`, `internal/telemetry`; AC3); every exchanged token cache keyed by the credential's `rotated_at` so AC30's rotation clause holds for exchanging kinds; one transport per row (TLS is per row) built by one constructor rather than "the single transport"; `CheckRedirect` strips credential headers before recomputing per hop; goroutine ownership and shutdown stated (nothing outlives `Fetch`, refresh is lazy); `foundation.tsv` cited by its real path. go-spec-reviewer: approved with the naming and ownership notes above applied. Constitution: both paths, named enforcers per boundary, no handler table, findings in docs. 35 criteria, each with a Test Plan row; zero open questions; `node scripts/check-spec.js` zero failures. `fable_recheck` cleared; draft to planned. Sibling consequences reported: data-model (`allow_http`, `allow_local` on the `Upstream` row), observability (`upstream` label under the disclosure statement), proxy-cache (`RangeNotSatisfiable`, the Docker Hub no-cool-down change is invisible to it), conformance-harness (`allow_local` on loopback stand-ins), rubygems (its ranged revalidation cites AC14/AC15), terraform and conan (citations). |
