@@ -1,12 +1,11 @@
 ---
-status: draft
-status_description: "Closing sweep 2026-09-28 at f4a9246 on Opus (not a review): the coverage table re-read against every format spec (Helm and Ansible collections uncovered, no OSV ecosystem as of 2026-09-28; Open VSX across every VSCode variant; Hackage, R numeric_version, Homebrew PkgVersion, NuGet, Packagist and RubyGems orderings added to the vendored set, version.pm owed if a CPAN source appears) and the binding table likewise (Composer, Go, NuGet, Cargo, Pub, Hex, CRAN, Julia, Homebrew, Arch, LuaRocks rows from their captures; the union warning closed per format by its recipe; Composer, dotnet and the code-only clients in the rendering paragraph). Q11 adopted (the handler reports an advisory key, origin, source package, UUID or bound URLs, stored core-parsed on Package or Version and carried on fetch-and-cache; AC24) and Q12 (hosted repositories match public coordinates with operator coordinate_exemptions on local repositories, the advisory reader keyed by repository and applying them; AC25). 25 criteria, zero open questions; fable_recheck added. Sweep 2026-09-28 at 6e6d503 (not a review): format-handler-interface AC14, data-model AC28, catalogue AC8 and conformance-harness AC26 cited where this spec had recorded consequences. Reconciled 2026-09-28 at 33679fb with the foundation authoring wave (not a review): artifact-verification's verdict shape (chain, revocation, superseded revision) consumed in AC15; scans and feed syncs as async-operations jobs and schedules; the policy. key table, the refusals route, rule administration through the repository PATCH, the lifecycle rule at tombstone, and observability's metrics, alerts and audit events all cited from their owners. Two Design sections built once for the format wave's findings: per-ecosystem OSV coverage with coordinate mapping and version ordering (Julia by UUID, Swift by URL, OS-package repositories by declared release, conda only through the cataloguer's pkg:conda PURLs) and per-format refusal binding with a closed Binds set and pending rows for uncaptured formats. Q9 adopted (one OSV schema, several sources; Homebrew's database becomes usable by configuration) and Q10 (a hijacked HTTP/1.1 status line naming the condition, canonical fallback on HTTP/2). 23 criteria, zero open questions; stays draft pending a gate review."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-09-30 at f2b770b: a full review pass plus the re-examination of the four questions adopted on Opus. Q9 confirmed (a revision of the delegation-adopted Q1, within bounds; the owner's purge decision untouched) and amended (one record per source per id, aliases never identity; an ecosystem two sources list fails closed when either is stale; AC21 rewritten); Q10 confirmed and amended in its cost (the hijacked write must emit the pre-set headers, report its status to the request metrics and log, and drain or close; the phrase's condition set is AC5's; AC18 extended); Q11 confirmed and amended in its fold (RubyGems platform gems and Arch %BASE% added as key rows, a later write replaces the stored key, the late-report cost stated; AC24 extended; julia.md never received the fold, reported); Q12 confirmed and amended (the reader still returns component-level condemnations for an exempted name, a virtual resolves under its member's exemptions and ecosystem, an exemption names the coordinate as keyed; AC19 and AC25 extended). Q5's option D confirmed intact. Q13 raised and adopted under the delegation: a source's freshness is its last completed sync or the export time an import declares, floored by the newest record, because the newest record alone reads every quiet ecosystem as stale (checked against OSV's Hackage export; revises Q7's measure; AC9 and AC16 rewritten). Queued items applied: the RubyGems binding row split from the grouped pending row and its coverage row grounded, the Swift proxied key from the upstream list's canonical and alternate links, FirstByteWithin not honoured under refuse-until-scanned (AC6, shared test with proxy-cache AC21), data-model AC46 cited. go-spec-reviewer inline: approved after the fixes. 25 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Consequences reported for julia, rubygems, observability, management-api, deployment, format-handler-interface, data-model, question-triage and lessons. Earlier: closing sweep 2026-09-28 at f4a9246 on Opus (not a review): the coverage table re-read against every format spec (Helm and Ansible collections uncovered, no OSV ecosystem as of 2026-09-28; Open VSX across every VSCode variant; Hackage, R numeric_version, Homebrew PkgVersion, NuGet, Packagist and RubyGems orderings added to the vendored set, version.pm owed if a CPAN source appears) and the binding table likewise (Composer, Go, NuGet, Cargo, Pub, Hex, CRAN, Julia, Homebrew, Arch, LuaRocks rows from their captures; the union warning closed per format by its recipe; Composer, dotnet and the code-only clients in the rendering paragraph). Q11 adopted (the handler reports an advisory key, origin, source package, UUID or bound URLs, stored core-parsed on Package or Version and carried on fetch-and-cache; AC24) and Q12 (hosted repositories match public coordinates with operator coordinate_exemptions on local repositories, the advisory reader keyed by repository and applying them; AC25). 25 criteria, zero open questions; fable_recheck added. Sweep 2026-09-28 at 6e6d503 (not a review): format-handler-interface AC14, data-model AC28, catalogue AC8 and conformance-harness AC26 cited where this spec had recorded consequences. Reconciled 2026-09-28 at 33679fb with the foundation authoring wave (not a review): artifact-verification's verdict shape (chain, revocation, superseded revision) consumed in AC15; scans and feed syncs as async-operations jobs and schedules; the policy. key table, the refusals route, rule administration through the repository PATCH, the lifecycle rule at tombstone, and observability's metrics, alerts and audit events all cited from their owners. Two Design sections built once for the format wave's findings: per-ecosystem OSV coverage with coordinate mapping and version ordering (Julia by UUID, Swift by URL, OS-package repositories by declared release, conda only through the cataloguer's pkg:conda PURLs) and per-format refusal binding with a closed Binds set and pending rows for uncaptured formats. Q9 adopted (one OSV schema, several sources; Homebrew's database becomes usable by configuration) and Q10 (a hijacked HTTP/1.1 status line naming the condition, canonical fallback on HTTP/2). 23 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for scanning artifacts and enforcing supply-chain policy at the registry boundary - blocking by vulnerability, licence or signature state, on both hosted and proxied content."
 author: michielvha
 goal: "Make the registry a policy enforcement point rather than a passive store, so a rule about what may enter a build is applied where every artifact already passes."
 priority: "medium"
 issue: 15
-fable_recheck: "closing reconciliation sweep on Opus 2026-09-28 with Q11 (handler-reported advisory key stored core-parsed) and Q12 (hosted coordinate matching with operator exemptions, reader keyed by repository) raised and adopted under the standing delegation; the new judgement was never Fable-reviewed"
 created: 2026-09-23
 covers:
   - "internal/policy/**"
@@ -97,9 +96,13 @@ when that case is written, never assumed from another format's.
   coordinate mapping and version ordering the matcher needs, and a per-repository ecosystem
   declaration for OS-package formats whose OSV ecosystems are keyed by distribution release.
 - The advisory key: where an ecosystem's advisories name a package by something other than its
-  package name and version (an origin or source package, a UUID, a Git URL), the handler reports
-  that key when it records the version and the core stores it as core-parsed data, so the
+  package name and version (an origin or source package, a UUID, a Git URL, a platform gem's bare
+  version number), the handler reports that key when it records the package or version and the
+  core stores it as core-parsed data, replaced by any later write recording the same row, so the
   matcher never parses a version document (the resolved advisory-key decision, was Q11).
+- Advisory freshness measured per source as the last completed sync or, for an import, the
+  export time the import declares, so a quiet ecosystem is never stale for publishing nothing
+  (the resolved freshness-measure decision, was Q13).
 - Coordinate matching on hosted repositories, where a private package sharing a public name
   inherits the public package's advisories unless the operator exempts the name, for rules and
   the advisory reader alike (the resolved hosted-matching decision, was Q12).
@@ -197,11 +200,15 @@ have no OSV data while two of them have OSV-schema databases published elsewhere
 13,023 records, `homebrew.md`), so the unit the decision protects is the **schema**, not the
 **host**. An operator may therefore declare additional sources in `policy.feed.sources`, each an
 OSV-schema bulk export (`ecosystems.txt` plus `{ecosystem}/all.zip` at a root URL) declaring the
-ecosystems it covers. Sources are a union, never a merge: an advisory is identified by its OSV
-`id` and `aliases`, the same advisory from two sources is one record with two sources, and
-records never contradict each other because a record is one source's statement, so a rule
-evaluates each record on its own fields. Freshness, sync and staleness (below) apply per source,
-and an ecosystem is covered when at least one configured source lists it. Data in any other
+ecosystems it covers. Sources are a union, never a merge: a record is one source's statement
+about one advisory `id`, so the same `id` from two sources is two records that never contradict
+each other because each is evaluated on its own fields (a threshold rule fires on the stricter),
+a condemnation both support carries both sources, and `aliases` are carried for display and never
+used as identity, since identity by alias is a merge rule under another name. Freshness, sync and
+staleness (below) apply per source, and an ecosystem is covered when at least one configured
+source lists it; an ecosystem two sources list fails closed when either is stale, because each was
+declared authoritative for it, which is what a source's `ecosystems` restriction exists to bound
+(a private source restricted to its own ecosystem cannot take npm down with it). Data in any other
 schema is out of scope; CPANSA (2,117 advisories, `cpan.md`) and the Arch security tracker
 (2,444 records, `arch.md`) are named in the coverage table below as the reason a conversion would
 be worth having, and nothing here consumes them until one exists.
@@ -220,7 +227,15 @@ is a `Schedule` of kind `policy.feed_sync` on the shared scheduler (`async-opera
 scheduler"), one per source, with period `policy.feed.sync_interval` and exclusivity key the kind
 so two processes never sync the same source at once; under offline mode the schedule is disabled,
 which is how "suspends the feed's network sync" is implemented rather than a flag the sync
-checks. Advisory data has a freshness time, and past an instance-level staleness threshold
+checks. A source's **freshness** is the time its data was last shown to be what the source
+publishes (the resolved freshness-measure decision, was Q13): for a synced source, the completion
+of its last successful sync, one that read the root's `ecosystems.txt` and fetched or conditionally
+confirmed every consumed export, with a sync that fails partway advancing nothing; for an imported
+source, the export time the import declares (below). It is never the newest record's `modified`
+time on its own, because a quiet ecosystem publishes nothing for months and is not stale for it,
+and the export carries no production time of its own that could stand in (OSV's `Hackage/all.zip`
+fetched 2026-09-29 held 33 records, every entry timestamp zeroed to 1980 and no manifest). Past an
+instance-level staleness threshold
 (`policy.feed.staleness_threshold`, default 24 hours) policy **fails closed**: a repository whose policy carries an
 advisory-dependent rule (a vulnerability threshold or a malware rule) refuses resolutions with a
 refusal naming stale advisory data rather than any advisory, recorded like every other refusal,
@@ -235,10 +250,16 @@ watching is the failure it must not have.
 
 Offline mode (`proxy-cache.md`, a single instance-level switch) suspends the feed's network sync
 along with every upstream request, because an air gap that still syncs advisories is not one.
-The feed therefore also accepts a **local import** of OSV's per-ecosystem bulk exports, carried
-across the air gap by the operator, and freshness is measured from the newest modification time
-among the imported records, never from the time of the import, so carrying an old export in does
-not make stale data look fresh. The staleness threshold is not suspended offline (the resolved
+The feed therefore also accepts a **local import** of OSV-schema bulk exports, carried across the
+air gap by the operator together with the export's production time, the root's `Last-Modified` at
+download, which the import names. Freshness is that declared time, never the moment of the import,
+and an import naming no time, or a time earlier than the newest `modified` among its records, is
+refused as inconsistent, so carrying an old export in does not make stale data look fresh by
+accident; an operator who declares a false time has told the registry a lie the audit line
+records, and holds the same power as one who removes the rule (the resolved freshness-measure
+decision, was Q13, which revised the measure the offline-freshness decision, was Q7, had chosen).
+The import is an administrative operation of `management-api.md` in the shape of replication's
+archive import, a consequence reported to that spec. The staleness threshold is not suspended offline (the resolved
 offline-freshness question): an air-gapped instance that enforces advisory policy imports on a
 cadence inside the threshold, or fails closed. Offline mode is the single key `proxy.offline`
 (`proxy-cache.md` AC5); this spec adds no second switch.
@@ -280,7 +301,7 @@ per row.
 | Ecosystem | OSV data | Coordinate the matcher keys on | Grounded in |
 |---|---|---|---|
 | npm, PyPI, Maven, Go, crates.io, NuGet, Packagist, Pub, Hex | covered | name and version as the ecosystem spells them (Maven as `groupId:artifactId`, Packagist as `vendor/name`), each under its own ordering in the vendored set; Go's `GO-` advisories arrive through OSV; RustSec is OSV's crates.io data | `npm.md`, `pypi.md`, `maven.md`, `go-modules.md`, `cargo.md`, `nuget.md`, `composer.md`, `pub.md`, `hex.md` |
-| RubyGems | covered by OSV; no format spec yet | name and version | to be grounded by the RubyGems spec when authored |
+| RubyGems | covered (`RubyGems`) | the name as spelled and the **version number without its platform**, under RubyGems' ordering; a platform gem's version string carries the platform (`1.1.0-x86_64-linux` is one RubyGems version entry), which RubyGems' ordering would read as a pre-release of `1.1.0`, so for such a version the handler reports the bare number as the version's advisory key (below) | `rubygems.md` (its "Policy refusals on the wire"; the key is this spec's consequence to it) |
 | OCI images, generic | no ecosystem, by construction | nothing at coordinate level; OCI is matched through the component inventory (AC10); generic has no ecosystem to match | `oci.md`, `generic.md` |
 | Helm charts | uncovered: OSV's `ecosystems.txt`, fetched 2026-09-28, lists no Helm or chart ecosystem | advisory rules refused at configuration unless a `policy.feed.sources` source declares one; coordinate and signature-verdict rules bind without it | `helm.md` |
 | Ansible collections | uncovered: OSV's `ecosystems.txt`, fetched 2026-09-28, lists no Ansible or Galaxy ecosystem | advisory rules refused at configuration unless a `policy.feed.sources` source declares one, when the matcher keys on `{namespace}.{name}` under semver | `ansible-collections.md` |
@@ -288,7 +309,7 @@ per row.
 | Hackage | covered (`Hackage`, 32 HSEC advisories, none withdrawn or `MAL-`; OSV's separate `GHC` ecosystem concerns the compiler, which no repository of this format serves) | package name, matched byte for byte, and version under Hackage's component-wise integer ordering | `hackage.md` |
 | opam | covered (29 OSEC advisories over 18 packages, no `MAL-` entries) | package name and version under **opam's** version ordering, where `~` sorts before everything | `opam.md` |
 | Julia | covered (`Julia`, 1,717 JLSEC advisories, no `MAL-` entries) | the package **UUID** as the advisory key, `pkg:julia/{name}?uuid={uuid}`, never the name alone, because a name is unique only within one registry; semver ordering | `julia.md` |
-| Swift | covered only as `SwiftURL`, keyed by Git URL | the package's **bound repository URLs** in OSV's normalised `host/path` form as the advisory key (the identifiers binding `swift.md` adopted), not its scope and name | `swift.md` |
+| Swift | covered only as `SwiftURL`, keyed by Git URL | the package's **bound repository URLs** in OSV's normalised `host/path` form as the advisory key, not its scope and name: on a hosted repository the URLs its first-claim binding holds (rewritten by a `rebind`), on a proxied one the normalised `canonical` and `alternate` links of the upstream's release list, reported when that list is adopted and carried on each version route's fetch-and-cache request; a package with no bound URL has no key and matches nothing | `swift.md` (its "Advisory coverage exists, keyed by Git URL", AC23) |
 | Open VSX | covered (`VSCode` and `VSCode:https://open-vsx.org` today, 21 advisories, all `MAL-`) | `namespace.name` matched **case-insensitively** across **every** `VSCode` ecosystem variant, the Marketplace's `VSCode` and any `VSCode:{url}`, including ones OSV adds later, semver ordering, PURL type `vscode-extension`; every entry is a security signal under the shared rule | `openvsx.md` (its resolved OSV-matching decision, was Q17) |
 | Debian, Ubuntu | covered, keyed by **source** package and release (`Debian:12`, `Ubuntu:24.04:LTS`) | the source package and source version as the advisory key, under the repository's declared release qualifier (below) | `debian.md` |
 | RPM distributions | covered for `Red Hat`, `Rocky Linux`, `AlmaLinux`, `SUSE`, `openSUSE`, each by release; **Fedora is not an OSV ecosystem** | package name and EVR under the repository's declared ecosystem (below) | `rpm.md` |
@@ -298,7 +319,7 @@ per row.
 | Conan | `ConanCenter` is defined and holds **no data** | advisory rules refused at configuration: a listed ecosystem with an empty export is uncovered | `conan.md` |
 | Vagrant, Chef, Puppet, LuaRocks | no ecosystem (Puppet also has no PURL type) | advisory rules refused at configuration | `vagrant.md`, `chef.md`, `puppet.md`, `luarocks.md` |
 | CPAN | no ecosystem; CPANSA publishes 2,117 advisories in its own schema | advisory rules refused at configuration until an OSV-schema export of CPANSA is declared as a source **and** `version.pm`'s ordering is vendored (above) | `cpan.md` |
-| Arch | no ecosystem; Arch's tracker publishes 2,444 records keyed by package base in its own schema | as CPAN | `arch.md` |
+| Arch | no ecosystem; Arch's tracker publishes 2,444 records keyed by package base in its own schema | as CPAN, except that the handler already reports a split package's `%BASE%` as the version's advisory key (below), inert while no source lists an Arch ecosystem, so an OSV-schema export of the tracker binds when declared with no code change | `arch.md` (its "Advisories, OSV and the security-signal rule", AC24) |
 | Homebrew | `Homebrew` is recognised by OSV's query API, absent from its exported `ecosystems.txt`, and `Homebrew/all.zip` answers `404`; Homebrew's own OSV-format database holds 13,023 records | uncovered by the default feed; covered the moment the operator declares Homebrew's database as a source, with no code change, which is the case the advisory-sources decision exists for: formula name (the PURL `brew` name) and version under Homebrew's `PkgVersion` ordering with its `_revision` suffix | `homebrew.md` |
 
 **OS-package repositories declare their ecosystem.** OSV keys the Debian, Ubuntu, RPM and Alpine
@@ -313,29 +334,36 @@ part of the handler's opaque `settings` document, because the core evaluates it 
 never reads it (`data-model.md` AC28 stores it, and the `policy` document, beside the retention
 rules, absent from every snapshot and from any handler `settings`).
 
-**Where an advisory names something other than the package, the handler reports the key.** Four
+**Where an advisory names something other than the package, the handler reports the key.** Five
 rows key their advisories on a value that is not the core's `Package.name` and version string:
 Alpine on the version's `origin` (from its `.PKGINFO`, the `o:` of its index entry), Debian and
 Ubuntu on the source package and source version (the stanza's `Source` field), Julia on the
-package UUID, and Swift on the package's bound repository URLs. The core never parses a version's
+package UUID, Swift on the package's bound repository URLs, and RubyGems, for a platform gem only,
+on the version number without the platform its version string carries; Arch reports a split
+package's `%BASE%` the same way ahead of any coverage. The core never parses a version's
 opaque metadata document, so it cannot find these itself, and a key supplied only with a request
 would leave the feed sync blind to them, because re-matching a new advisory against stored
 content (AC7, AC14) happens with no request in flight. Per the resolved advisory-key decision (was
 Q11), the key is **reported by the handler and stored by the core**: an **advisory key** is one or
 more names and at most one version, core-parsed and never part of any metadata document, held on
-the `Package` for a key that is the package's (Julia's UUID, Swift's bound URLs, rewritten in the
-same write when a Swift `rebind` moves them) and on the `Version` for a key that is the version's
-(Alpine's origin, Debian's source package and source version), a version-level key replacing the
+the `Package` for a key that is the package's (Julia's UUID, Swift's bound URLs) and on the
+`Version` for a key that is the version's (Alpine's origin, Debian's source package and source
+version, a RubyGems platform gem's bare number, Arch's base), a version-level key replacing the
 package-level one. The handler supplies it in the same metadata-store write that records the
-package or version, on the hosted and the proxied path alike, and on a proxied miss it also rides
-the fetch-and-cache request, taken from the upstream document the handler already read, so the
-refusal before any upstream fetch (AC8) keys on it too. Absent a key, the matcher keys on the
-package name and the version string, which is every other row. The key is matched in the
-ecosystem the row or the repository's `advisory_ecosystem` names, and a handler that reports a
-wrong key mis-matches silently, which AC17's cases (one per covered row) and each format's
-policy conformance case are there to catch. How the key travels through `Deps` is `format-handler-interface.md`'s to record,
-as an input to its scheduled re-open, since it rides calls the pin already has and changes no
-method; where it is stored is `data-model.md`'s. AC24 asserts it.
+package or version, on the hosted and the proxied path alike, and **a later write recording the
+same package or version replaces the stored key**, which is the general rule a Swift `rebind`
+rewriting the URLs in its own write is one instance of; a version first recorded before the
+document that names its key was read (a proxied package fetched ahead of its index) is matched by
+its name until the next write reports the key, which is the reporting side of the silent
+mis-match cost below. On a proxied miss the key also rides the fetch-and-cache request, taken from
+the upstream document the handler already read, so the refusal before any upstream fetch (AC8)
+keys on it too. Absent a key, the matcher keys on the package name and the version string, which
+is every other row. The key is matched in the ecosystem the row or the repository's
+`advisory_ecosystem` names, and a handler that reports a wrong key mis-matches silently, which
+AC17's cases (one per covered row) and each format's policy conformance case are there to catch.
+How the key travels through `Deps` is recorded in `format-handler-interface.md` (its AC17, a
+re-open input with no method change, since it rides calls the pin already has); where it is stored
+is `data-model.md` AC46. AC24 asserts it.
 
 **Hosted repositories match public coordinates.** Coordinate matching keys on the ecosystem's
 name space, which a hosted repository shares with the public registry of its ecosystem: a
@@ -348,12 +376,17 @@ That is deliberate: the collision is the dependency-confusion shape, a refusal n
 makes it visible, and over-refusal is the safe error. The remedy is an exemption the operator
 declares, not a silent default: the `policy` document of a `local` repository may carry
 `coordinate_exemptions`, a list of `{name, reason}` entries the operator asserts are not the
-public package of that name. An exempted name is matched at neither tier by its own coordinate (a
+public package of that name, `name` being the coordinate as the matcher keys it for the format
+(the advisory key where a row reports one). An exempted name is matched at neither tier by its own coordinate (a
 catalogued component whose PURL is the exempted package itself is skipped too), while the
 components catalogued inside it still match, so a private package's vulnerable dependency is still
 found. An exemption on a `remote` repository is refused at configuration as `validation`, because a
 remote's names are its upstream's by construction, and on a `virtual`, which holds no versions of
-its own. Adding or removing one is a rule change and emits `policy.rule.update`. The OS-package
+its own: a resolution through a virtual is evaluated on the version the resolving member holds,
+under that member's `advisory_ecosystem` and exemptions, whether the rule is the virtual's or the
+member's, and an advisory-dependent rule on a virtual of an OS-package format binds only while
+every member declares an ecosystem, refused otherwise as AC11 refuses any rule that cannot bind.
+Adding or removing one is a rule change and emits `policy.rule.update`. The OS-package
 formats already have the opt-in shape for hosted content: a hosted repository with no
 `advisory_ecosystem` matches nothing, as `debian.md` records. The advisory reader applies the same
 exemptions (below), so what a handler renders never disagrees with what the rules enforce. AC25
@@ -361,8 +394,8 @@ asserts it.
 
 ### Configuration
 
-The keys this spec owns, in the three-column shape `scripts/check-config-keys.js` checks against
-`deployment.md`'s schema:
+The keys this spec owns, in the three-column shape `deployment.md`'s `scripts/check-config-keys.js`
+(built in its Phase 1; not yet in the tree) checks against its schema:
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -405,7 +438,14 @@ collisions are stated here rather than discovered in implementation:
   coalesced waiter of a cold-start miss experiences. When the scan lands red, every waiter
   receives the policy refusal, not a network error - the mid-stream-abort ambiguity the
   integrity decision tolerates is not acceptable here, because a policy refusal is an
-  explainable event by this spec's own AC5.
+  explainable event by this spec's own AC5. A handler's `FirstByteWithin` declaration
+  (`proxy-cache.md`'s resolved first-byte-deadline decision, was Q16, as amended on its recheck)
+  is **not honoured** under refuse-until-scanned: no byte reaches any client before the scan
+  lands, so a client whose first-byte deadline is shorter than scan latency (Julia's Pkg abandons
+  a request after twenty seconds without a byte) fails its cold misses on such a repository and
+  does whatever its binding row says it does next. That is the setting's cost stated where it is
+  paid, not a third path, and `internal/policy/refuse_until_scanned_test.go` asserts it, shared
+  with `proxy-cache.md` AC21 (AC6).
 - **Serve-stale.** During a serve-stale outage no upstream security signal can arrive, which
   `proxy-cache.md` already names as the exposure window. The advisory feed is the independent
   detection channel that keeps working through an upstream outage, and stale-served responses
@@ -488,9 +528,13 @@ range, it returns the advisory records matching it and the condemnations standin
 (each with its sources), read from the same data the evaluator uses, and nothing else. It keys
 the question the way the evaluator does, which is why it takes the repository rather than an
 ecosystem string: the ecosystem is the format's row or the repository's `advisory_ecosystem`, the
-coordinate's stored advisory key replaces its name where one was reported, and a name the
+coordinate's stored advisory key replaces its name where one was reported, a name the
 repository exempts (`coordinate_exemptions`, the resolved hosted-matching decision, was Q12)
-answers empty. A handler rendering an in-band channel for a hosted repository therefore never
+answers with no coordinate-matched advisory record while a condemnation standing against the
+version through its catalogued components is still returned, because the rules still refuse on
+it and a reader that hid it would be the disagreement the reader exists to prevent, and on a
+`virtual` the answer is the resolving member's, under that member's ecosystem and exemptions. A
+handler rendering an in-band channel for a hosted repository therefore never
 shows a private package the public package's advisories after the operator has exempted it, and
 before then shows exactly what the rules enforce; whether a format renders a channel on hosted
 repositories at all stays the format's decision (`composer.md` declines for its default-blocking
@@ -503,10 +547,10 @@ the interface beside `Verifier` and the refusal type, together with the refusal 
 `WriteRefusal` as the module's only hand-written status line ("The pinned method set", its AC14);
 its `internal/format/refusal_writer_test.go` and `internal/policy/advisory_reader_test.go` are the
 same files AC18 and AC19 here name. AC19 proves the reader against a fixture handler holding only
-`Deps`. The reader's input changed from an ecosystem to a repository with the hosted-matching
-decision; `format-handler-interface.md` still describes it as taking an ecosystem, a wording
-reported to that spec (the signature is this spec's to own, per its rule that dependency
-interfaces' signatures belong to the layers' owners).
+`Deps`. The reader takes the repository served rather than an ecosystem since the hosted-matching
+decision, which `format-handler-interface.md` records in that shape ("The pinned method set", its
+AC14 and AC17); the signature is this spec's to own, per its rule that dependency interfaces'
+signatures belong to the layers' owners.
 
 ### Rendering a refusal: the status line, the phrase and the body
 
@@ -540,13 +584,20 @@ The half this spec owns is the write. Go's `net/http` writes the canonical `http
 every status and offers no API for another phrase, so a phrase naming the condition needs the
 shared refusal path to take the connection (`http.Hijacker`) and write the status line itself,
 which only works on HTTP/1.1 (the resolved refusal-status-line decision, was Q10). The refusal
-writer lives in `internal/format` beside the refusal type, as `WriteRefusal(w, r, refusal, body)`:
-the handler chooses the status code and the body in its protocol's shape and calls the writer;
+writer lives in `internal/format` beside the refusal type, as `WriteRefusal(w, r, refusal, body)`,
+`body` a `[]byte` so the writer frames it with `Content-Length` and never chunks: the handler
+chooses the status code and the body in its protocol's shape and calls the writer;
 on an HTTP/1.1 connection the writer hijacks, writes the status line `HTTP/1.1 {code} {phrase}`
 with a phrase of the form `Refused by policy: {condition}` (ASCII, at most 120 bytes, the
-condition being the advisory or signal id, the licence, `stale advisory data` or `unscanned`,
-never a URL and never CR or LF), writes the handler's headers and body, and closes or returns
-the connection according to the request's keep-alive state; on HTTP/2, or wherever the
+condition being AC5's condition set: the advisory or signal id, the licence, the producer's
+`failed` reason, `stale advisory data` or `unscanned`, never a URL and never CR or LF), writes the
+headers already set on the `ResponseWriter` (the `X-Request-Id` echo every response carries,
+`observability.md` AC14) and then the handler's headers and body, reports the status code and body
+size to the request middleware it bypassed, so the refusal is counted in
+`http_server_request_duration_seconds` and appears in the request log like any response rather
+than vanishing at the hijack, drains or discards the unread request body, and closes or returns
+the connection according to the request's keep-alive state, closing whenever the body was not
+fully read; on HTTP/2, or wherever the
 `ResponseWriter` is not a `Hijacker`, it falls back to the standard write with the canonical
 phrase, and the body carries the same condition. The writer is the only place a status line is
 hand-written in this codebase, held by an architecture test (AC18), because a hand-written status
@@ -588,7 +639,8 @@ checks it lists every catalogue ecosystem.
 |---|---|---|---|
 | generic | pending | no ecosystem client; a plain HTTP error | `generic.md` |
 | OCI | pending | `DENIED` error under `403`; fallback behaviour of `docker`, `podman`, `oras` not yet captured | `oci.md` |
-| npm, PyPI, Ansible collections, Helm, RubyGems | pending | rendering sections exist; whether the client prints the body or the phrase, and whether it falls back to another configured source (PyPI's `--extra-index-url`, Ansible's next `server_list` entry, a second Helm repository), is the format's policy case to capture: npm AC20, pypi AC16, ansible-collections AC14, helm AC17 | `npm.md`, `pypi.md`, `ansible-collections.md`, `helm.md`; RubyGems has no format spec yet |
+| npm, PyPI, Ansible collections, Helm | pending | rendering sections exist; whether the client prints the body or the phrase, and whether it falls back to another configured source (PyPI's `--extra-index-url`, Ansible's next `server_list` entry, a second Helm repository), is the format's policy case to capture: npm AC20, pypi AC16, ansible-collections AC14, helm AC17 | `npm.md`, `pypi.md`, `ansible-collections.md`, `helm.md` |
+| RubyGems | pending | both clients print the phrase and never the body: `bundle install` retries the download four times and exits `5`, `gem install` exits `1` (captured on 4.0.20, 3.5.22 and 3.4.19); a refusal on `/info` or `/versions` is a bypass, not a refusal, since Bundler falls back silently through the dependency API and the legacy index to the quick spec and the `.gem`, so refusals bind on the `.gem`, quick-spec and attestation routes and the indexes keep listing the version; whether `gem install` with two configured sources falls back after a refusal is rubygems AC22's capture, which fills this row | `rubygems.md` (its resolved refusal-placement decision, was Q12) |
 | Go modules | pending | `go` prints the status line and the `text/plain` body; the reference gives `403` the meaning "not on an approved list", on which the client is expected to stop rather than try the next proxy, and go-modules AC10's case captures that fallback before the row leaves `pending` | `go-modules.md` |
 | NuGet | pending | `dotnet` prints the status line only and retries a download six times; fallback to another configured source is nuget AC12's capture | `nuget.md` |
 | Cargo | pending | `cargo` prints `detail` verbatim on API refusals; index and download rendering and fallback to another source are cargo AC18's capture | `cargo.md` |
@@ -789,18 +841,23 @@ are fixed on this side and met on that one.
       enqueues none. A scan failure leaves the artifact observably unscanned, never silently
       unservable: past `policy.scan.unscanned_alert_after` it counts in
       `policy_unscanned_past_bound`, which is the `ArtifactUnscannedPastBound` alert's input, and
-      the job's `last_error` names the failure.
+      the job's `last_error` names the failure. Under refuse-until-scanned a fetch whose handler
+      declared `FirstByteWithin` delivers no byte to any client before the scan lands either.
 - [ ] AC7: A new advisory affecting already-stored content causes that content to be refused on
       the next resolution without re-ingest and without re-reading its bytes, on both paths,
       including content whose cached bytes have since been evicted.
 - [ ] AC8: A coordinate-refused artifact requested through a remote repository is refused
       without any upstream fetch, asserted at the network layer: condemned content is neither
       fetched nor cached.
-- [ ] AC9: When advisory data is older than `policy.feed.staleness_threshold`, a repository whose policy
-      carries an advisory-dependent rule refuses resolutions with an error naming stale
-      advisory data and the operator is alerted, while a repository with only licence rules and
-      a remote repository with no policy keep serving; the first sync that restores freshness
-      lifts those refusals with no operator action.
+- [ ] AC9: When a source's freshness is older than `policy.feed.staleness_threshold`, a
+      repository whose policy carries an advisory-dependent rule on an ecosystem that source
+      lists refuses resolutions with an error naming stale advisory data and the operator is
+      alerted (`policy_advisory_feed_degraded`, the `AdvisoryFeedDegraded` alert's input), while
+      a repository with only licence rules and a remote repository with no policy keep serving;
+      freshness is the completion of the source's last successful sync, so a source whose
+      ecosystems have published no new record for longer than the threshold stays fresh while its
+      syncs complete and a sync that fails partway advances nothing; the first completed sync
+      that restores freshness lifts those refusals with no operator action.
 - [ ] AC10: An OCI image whose repository, name and tag match no advisory, but whose layers
       contain an OS package an advisory names above the repository's threshold, is refused at
       resolution with the matched component in the refusal record, and the handler's metadata
@@ -838,9 +895,11 @@ are fixed on this side and met on that one.
       same cases with `internal/verify` in the fixture's place.
 - [ ] AC16: With the instance in offline mode (`proxy.offline`) every `policy.feed_sync` schedule
       is disabled and the advisory feed performs no network sync (asserted at the network layer),
-      a local import of an OSV bulk export updates advisory data, and freshness after the import
-      is the newest modification time among the imported records, so importing an export older
-      than the staleness threshold leaves advisory-dependent policy failing closed.
+      a local import of an OSV-schema bulk export updates advisory data, freshness after the
+      import is the export time the import declared and never the time of the import, an import
+      declaring no time or a time earlier than the newest `modified` among its records is refused
+      with nothing imported, and importing an export whose declared time is older than the
+      staleness threshold leaves advisory-dependent policy failing closed.
 - [ ] AC17: For every row of "What the feed covers, per ecosystem" that is covered, a fixture
       advisory in that ecosystem's OSV key form condemns the artifact whose core coordinate maps
       onto it and nothing else: Julia by UUID and not by name, Swift by bound repository URL,
@@ -857,7 +916,10 @@ are fixed on this side and met on that one.
       configured source lists their ecosystem.
 - [ ] AC18: A refusal served on an HTTP/1.1 connection carries the status line
       `HTTP/1.1 {code} Refused by policy: {condition}` observed on the raw socket, with the
-      handler's headers and body intact and the connection's keep-alive state honoured; the same
+      `X-Request-Id` the middleware set, the handler's headers and body intact, the connection's
+      keep-alive state honoured (closed when the request body was not fully read), and the
+      refusal counted in `http_server_request_duration_seconds` with its status code and present
+      in the request log exactly as a non-hijacked response would be; the same
       refusal over HTTP/2, or through a `ResponseWriter` that is not a `Hijacker`, carries the
       canonical phrase and the same condition in the body; an architecture test asserts that
       `internal/format`'s refusal writer is the only site in the module that writes a status line
@@ -867,8 +929,11 @@ are fixed on this side and met on that one.
       advisory records and standing condemnations (with sources) for the repository it serves and
       a coordinate or range, keyed as the evaluator keys them (the format's ecosystem or the
       repository's `advisory_ecosystem`, the stored advisory key in place of the name), receives
-      an empty answer for an uncovered ecosystem and for a name the repository exempts rather
-      than an error, obtains no content bytes through it, and imports nothing from
+      an empty answer for an uncovered ecosystem rather than an error, receives for a name the
+      repository exempts no coordinate-matched advisory record but still any condemnation
+      standing against the version through its catalogued components, receives for a `virtual`
+      the resolving member's answer under that member's ecosystem and exemptions, obtains no
+      content bytes through it, and imports nothing from
       `internal/policy`; under a stale feed the reader answers from the last sync while the
       enforcing calls fail closed.
 - [ ] AC20: "When a refusal binds, per format" lists every ecosystem of `catalogue.md` exactly
@@ -877,11 +942,15 @@ are fixed on this side and met on that one.
       by a captured value in the same change that lands that format's policy conformance case, so
       no format reaches its policy case with its row still `pending`.
 - [ ] AC21: Advisory data from a second OSV-schema source declared in `policy.feed.sources` covers
-      the ecosystems it lists and no others: an advisory present in both sources is one record
-      with two sources; an ecosystem covered only by the second source binds rules, and a stale
-      second source fails closed for that ecosystem alone while the default feed's ecosystems keep
-      evaluating; a source whose `ecosystems.txt` cannot be read is refused at configuration; a
-      source in any other schema is refused at configuration naming the schema.
+      the ecosystems it lists and no others: an advisory `id` present in both sources is stored
+      once per source, each record evaluated on its own fields with a threshold rule firing on
+      the stricter, and a condemnation both support carries both sources, while an alias shared
+      by two ids never merges them; an ecosystem covered only by the second source binds rules,
+      a stale second source fails closed for the ecosystems it lists alone, those the default feed
+      also lists included, while the default feed's other ecosystems keep evaluating, and a source
+      whose `ecosystems` restriction omits an ecosystem neither covers nor fails it; a source
+      whose `ecosystems.txt` cannot be read is refused at configuration; a source in any other
+      schema is refused at configuration naming the schema.
 - [ ] AC22: Deleting a repository leaves every condemnation and refusal record it held readable
       with its reason, through the tombstone at and after tombstone time, while its policy rules
       are dropped at tombstone time; recreating a repository under the same name starts with no
@@ -895,21 +964,28 @@ are fixed on this side and met on that one.
 - [ ] AC24: A version whose handler reported an advisory key differing from its package name
       and version (an Alpine subpackage `swhello-doc` with origin `swhello`, a Debian binary
       package whose `Source` names another source package and version, a Julia package by
-      UUID, a Swift release by its bound URLs) is condemned by an advisory naming the key and
-      not by one naming only the package name, both at resolution and at a feed sync with no
-      request in flight; the key is stored as core-parsed data on the `Package` or `Version`,
-      a version-level key replacing a package-level one, and never read from a metadata
-      document; a proxied miss whose fetch-and-cache request carries the key is refused before
-      any upstream request; a Swift `rebind` moves the matched URLs in the same write; and a
-      version reported with no key is matched on its package name and version string.
+      UUID, a Swift release by its bound URLs, a RubyGems platform gem `1.1.0-x86_64-linux`
+      keyed `1.1.0`, an Arch split package keyed by its base) is condemned by an advisory naming
+      the key and not by one naming only the package name or the version string, both at
+      resolution and at a feed sync with no request in flight; the key is stored as core-parsed
+      data on the `Package` or `Version`, a version-level key replacing a package-level one, and
+      never read from a metadata document; a proxied miss whose fetch-and-cache request carries
+      the key is refused before any upstream request; a later write recording the same package
+      or version replaces the stored key, a Swift `rebind` moving the matched URLs in its own
+      write being one case and a proxied version first recorded without a key and re-reported
+      with one another; and a version reported with no key is matched on its package name and
+      version string.
 - [ ] AC25: On a `local` repository whose policy carries an advisory-dependent rule, a version
       whose package name equals a public advisory's coordinate is refused exactly as on a
       `remote`; with that name in the policy's `coordinate_exemptions` it is served, it is no
       longer matched by its own coordinate at either tier while a vulnerable component
-      catalogued inside it still refuses it, the advisory reader answers empty for the name on
-      that repository and not on another, and the change emits `policy.rule.update`;
-      `coordinate_exemptions` on a `remote` or `virtual` repository is refused at configuration
-      as `validation` naming the repository type, and nothing is stored.
+      catalogued inside it still refuses it, the advisory reader answers no coordinate-matched
+      record for the name on that repository and not on another while still answering that
+      component condemnation, the same version resolved through a `virtual` holding the
+      repository as a member is refused and served exactly as the member alone would, and the
+      change emits `policy.rule.update`; `coordinate_exemptions` on a `remote` or `virtual`
+      repository is refused at configuration as `validation` naming the repository type, and
+      nothing is stored.
 
 ## Test Plan
 
@@ -920,32 +996,33 @@ are fixed on this side and met on that one.
 | AC3 | integration | `internal/policy/licence_test.go` (both paths, licence detected by the cataloguer) |
 | AC4 | architecture test | `internal/policy/arch_test.go` (both import directions) |
 | AC5 | integration | `internal/policy/audit_test.go` (including post-eviction, post-purge, stale-feed and verdict-failure records; `policy_refusals_total`, `policy.refusal`, `policy.condemnation` and `policy.rule.update` through `telemetry.NewTestRecorder`); `internal/manage/reads_test.go` (the refusals route under `pull`, shared with `management-api.md` AC28) |
-| AC6 | integration | `internal/policy/scan_window_test.go` (window states, no byte to the initiating client under refuse-until-scanned; one `policy.scan` job per commit and none on abort against the fixture runner; scan failure past `policy.scan.unscanned_alert_after` observed as `policy_unscanned_past_bound` through `telemetry.NewTestRecorder` with `last_error` set) |
+| AC6 | integration | `internal/policy/scan_window_test.go` (window states, no byte to the initiating client under refuse-until-scanned; one `policy.scan` job per commit and none on abort against the fixture runner; scan failure past `policy.scan.unscanned_alert_after` observed as `policy_unscanned_past_bound` through `telemetry.NewTestRecorder` with `last_error` set); `internal/policy/refuse_until_scanned_test.go` (a `FirstByteWithin` fetch under refuse-until-scanned delivering no byte before the scan; shared with `proxy-cache.md` AC21) |
 | AC7 | integration | `internal/policy/advisory_update_test.go` (both paths, including evicted content; cataloguer instrumented to prove no re-read) |
 | AC8 | integration | `internal/policy/prefetch_refusal_test.go` (network-level assertion) |
-| AC9 | integration | `internal/policy/feed_staleness_test.go` (injected clock across the threshold, three repository shapes, recovery sync) |
+| AC9 | integration | `internal/policy/feed_staleness_test.go` (injected clock across the threshold, three repository shapes, recovery sync; a source with no new record whose syncs keep completing stays fresh, a sync failing partway leaves freshness where it was; `policy_advisory_feed_degraded` through `telemetry.NewTestRecorder`) |
 | AC10 | integration | `internal/policy/inventory_test.go` (fixture OCI image with a vulnerable OS package in a layer, metadata-document digest compared before and after) |
 | AC11 | unit + integration | `internal/policy/rule_binding_test.go` (configuration rejection for each unbindable case, listed-but-empty ecosystem, missing and unknown `advisory_ecosystem`, enforcement of the accepted coordinate rules); `internal/manage/repository_test.go` (`validation` on `PATCH`, nothing stored) |
 | AC12 | integration | `internal/policy/deps_enforcement_test.go` (fixture handler holding only `Deps`) |
 | AC13 | integration | `internal/policy/security_signal_test.go` (both arrival orders, withdrawal of one then both sources, vulnerability withdrawal in place) |
 | AC14 | integration | `internal/policy/security_signal_test.go` (unrequested cached coordinate, sync-driven) |
 | AC15 | integration | `internal/policy/signature_verdict_test.go` (fixture verdict source: chain, revocation, superseded revision, failed reason in the record; `artifact-verification.md` AC1 reruns it over `internal/verify`) |
-| AC16 | integration | `internal/policy/feed_import_test.go` (schedules disabled and network-level assertion under offline mode, old and fresh exports) |
+| AC16 | integration | `internal/policy/feed_import_test.go` (schedules disabled and network-level assertion under offline mode; an export imported with a fresh declared time, with an old one, with none, and with one earlier than its newest record, the last two refused with nothing imported) |
 | AC17 | unit + integration | `internal/policy/ecosystem_mapping_test.go` (one case per covered row: key form, ordering, negative case; every `VSCode` variant including an unknown `{url}`; unimplemented ordering refused; Helm and Ansible refused as uncovered); `internal/policy/version_order_test.go` (each vendored ordering against a table generated by the ecosystem's own implementation, including Hackage, `numeric_version` and Homebrew `_revision` cases) |
-| AC18 | integration + architecture test + conformance | `internal/format/refusal_writer_test.go` (raw HTTP/1.1 socket status line, keep-alive, HTTP/2 canonical fallback, non-Hijacker fallback; shared with `format-handler-interface.md` AC14); `internal/format/arch_test.go` (single hand-written status line site, shared with the same); `conformance/maven/policy_test.go` (phrase visible in Maven's and Gradle's output) |
-| AC19 | integration | `internal/policy/advisory_reader_test.go` (fixture handler holding only `Deps`; keyed by repository, `advisory_ecosystem` and stored advisory key; uncovered ecosystem; exempted name; stale feed; import assertion; shared with `format-handler-interface.md` AC14) |
+| AC18 | integration + architecture test + conformance | `internal/format/refusal_writer_test.go` (raw HTTP/1.1 socket status line, keep-alive and the close on an unread body, the `X-Request-Id` and other pre-set headers on the wire, the refusal observed in `http_server_request_duration_seconds` and the request log through `telemetry.NewTestRecorder`, HTTP/2 canonical fallback, non-Hijacker fallback; shared with `format-handler-interface.md` AC14); `internal/format/arch_test.go` (single hand-written status line site, shared with the same); `conformance/maven/policy_test.go` (phrase visible in Maven's and Gradle's output) |
+| AC19 | integration | `internal/policy/advisory_reader_test.go` (fixture handler holding only `Deps`; keyed by repository, `advisory_ecosystem` and stored advisory key; uncovered ecosystem; exempted name with and without a component condemnation; a virtual answering as its resolving member; stale feed; import assertion; shared with `format-handler-interface.md` AC14) |
 | AC20 | ci | structure check in `make verify` over this spec's binding table against `catalogue.md`'s rows and the closed `Binds` set (the same check `catalogue.md` AC8 names from its side, on its AC6 row parser); `deployment.md`'s docs build generating the operator page; the per-format policy case's validator refusing a `pending` row for its format (`conformance-harness.md` AC26) |
-| AC21 | integration | `internal/policy/feed_sources_test.go` (two stand-in sources, shared advisory, per-source staleness, unreadable list, non-OSV schema refused) |
+| AC21 | integration | `internal/policy/feed_sources_test.go` (two stand-in sources; one `id` in both stored as two records, the stricter winning a threshold rule and the condemnation carrying both sources; two ids sharing an alias kept apart; per-source staleness including an ecosystem both list failing closed when either is stale and an `ecosystems`-restricted source leaving the rest untouched; unreadable list; non-OSV schema refused) |
 | AC22 | integration | `internal/storage/retention_test.go` (records readable at and after tombstone; rules dropped; recreated name clean; shared with `repository-lifecycle.md` AC24) |
 | AC23 | script + integration | `scripts/check-config-keys.js` under `make verify` (`deployment.md` AC5's fixtures); `internal/policy/feed_sync_test.go` (network-level: source roots only, no off-root redirect, no credential) |
-| AC24 | integration | `internal/policy/advisory_key_test.go` (the four key shapes at resolution and at a request-free sync, package-level and version-level keys, the fetch-and-cache key before any upstream request asserted at the network layer, a Swift `rebind`, the no-key default); `internal/model/advisory_key_test.go` (the key outside every metadata document) |
-| AC25 | integration | `internal/policy/hosted_match_test.go` (a colliding private name refused, then served once exempted, a vulnerable catalogued component still refusing it, the reader's empty answer on the exempting repository only, `policy.rule.update` through `telemetry.NewTestRecorder`); `internal/manage/repository_test.go` (`validation` on `PATCH` for an exemption on a remote and a virtual, nothing stored) |
+| AC24 | integration | `internal/policy/advisory_key_test.go` (the six key shapes at resolution and at a request-free sync, package-level and version-level keys, the fetch-and-cache key before any upstream request asserted at the network layer, replacement by a later write in the `rebind` and the late-report shapes, the no-key default); `internal/model/advisory_key_test.go` (the key outside every metadata document; shared with `data-model.md` AC46) |
+| AC25 | integration | `internal/policy/hosted_match_test.go` (a colliding private name refused, then served once exempted, a vulnerable catalogued component still refusing it and still answered by the reader, the reader's coordinate answer empty on the exempting repository only, the same version through a virtual member refused and served as the member alone, `policy.rule.update` through `telemetry.NewTestRecorder`); `internal/manage/repository_test.go` (`validation` on `PATCH` for an exemption on a remote and a virtual, nothing stored) |
 
 ## Implementation Phases
 
 ### Phase 1: Scanning
 OSV-schema source sync (the default feed and `policy.feed.sources`) as `policy.feed_sync`
-schedules, local bulk import, per-source freshness tracking against the staleness threshold, the
+schedules, local bulk import with its declared export time, per-source freshness tracking (last
+completed sync or declared export time) against the staleness threshold, the
 per-ecosystem mapping and ordering table with the vendored orderings it lists, the
 `advisory_ecosystem` repository setting, the advisory key stored on `Package` and `Version` and
 carried on the fetch-and-cache request, the coordinate index, the byte-level cataloguer (library selected here against the coverage table,
@@ -981,8 +1058,10 @@ foundation authoring wave raised Q9 (advisory sources, revising Q1's single-feed
 evidence of nine uncovered ecosystems) and Q10 (the refusal status line), both adopted the same
 way. The closing sweep of the same reconciliation pass raised Q11 (where the matcher learns an
 advisory key that differs from the package name) and Q12 (hosted repositories and public names),
-adopted the same way on Opus and awaiting a Fable recheck; all twelve are folded into Scope,
-Design, the acceptance criteria and the Test Plan above. Q5
+adopted the same way on Opus. The Fable recheck of 2026-09-30 re-examined Q9 to Q12 (each
+confirmed, each amended in its fold or its stated cost, recorded on its section) and raised Q13
+(how a source's freshness is measured, revising Q7's measure), adopted the same way; all thirteen
+are folded into Scope, Design, the acceptance criteria and the Test Plan above. Q5
 was adopted in a form other than its written recommendation, because that recommendation would
 have reversed a decision the owner made; the reason is recorded in its section. Every adopted
 answer is reversible by the owner.
@@ -1199,7 +1278,10 @@ call the experiment reserves for the owner.
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: offline mode suspends
 the feed's network sync, a local import of OSV bulk exports keeps the data current, freshness is
 the newest record's modification time, and the staleness threshold still applies. Folded into
-"The advisory feed and its freshness", Phase 3 and AC16.
+"The advisory feed and its freshness", Phase 3 and AC16. **Revised 2026-09-30 by the resolved
+freshness-measure decision (was Q13)**: the measure became the export time the import declares,
+floored by the newest record's `modified`, because the newest record alone reads every quiet
+ecosystem as stale; the threshold and the no-offline-exemption rule stand unchanged.
 
 Accepted cost: an air-gapped instance that enforces advisory policy owes a recurring import
 inside the threshold, or it fails closed. Option B lost because it makes the air-gapped
@@ -1263,6 +1345,16 @@ Folded into Scope, "The advisory feed and its freshness", "What the feed covers,
 Configuration, AC11, AC21 and AC23. Q1's record carries the revision note. This revises an answer
 adopted under the delegation, not an owner decision.
 
+Rechecked on Fable 2026-09-30: confirmed. The revision is within the delegation's bounds (Q1 was
+itself adopted under it on 2026-09-26, and the owner's one decision in this area, the purge on a
+security signal, is untouched) and right on the merits: the thing Q1 bought is the schema, and a
+second host in the same schema costs none of it. Amended in its fold: the record identity was
+stated two ways (one record with two sources in the feed section and AC21, two records in this
+record's cost), now settled as one record per source per `id` with `aliases` never used as
+identity, since identity by alias is the merge rule Q1 refused; and an ecosystem two sources list
+now fails closed when either is stale, a cost this record had not priced and that a source's
+`ecosystems` restriction exists to bound. AC21 rewritten accordingly.
+
 Accepted cost: a second source is a second thing that can go stale, and an ecosystem covered by
 two sources whose records disagree on severity gets two records, each evaluated on its own
 fields, so a threshold rule fires on the stricter. Option A lost because it leaves Homebrew
@@ -1315,6 +1407,17 @@ refused them, which is the diagnosability AC5's record exists to provide and the
 id and the registered codes that come closest (`451`) mean something else to several clients
 (Cargo treats `451` as a security signal, `cargo.md`).
 
+Rechecked on Fable 2026-09-30: confirmed, the options fairly framed and B the right one. Amended
+in its stated cost, which stopped at framing and keep-alive: a hijacked write also bypasses the
+response middleware, so unless the writer emits the headers the middleware already set (the
+`X-Request-Id` echo `observability.md` AC14 promises on every response), reports its status and
+size to the request metrics and log, and drains or closes on an unread body, every policy
+refusal disappears from `http_server_request_duration_seconds`, from `HighErrorRate` and from the
+request log, on the one response class an operator most needs to find. The phrase's condition set
+also omitted the verdict failure AC5 records; it is now AC5's set. AC18 and its Test Plan row
+extended; `observability.md`'s middleware wrapper must implement `http.Hijacker` and accept the
+reported status, a consequence reported to it.
+
 The format authoring wave confirmed for Maven, Gradle, apt, R, renv, Chef, the CPAN clients,
 `mix`, `rebar3` and conda's four clients that the user sees only the status line of a refusal,
 and `deployment.md` recorded that Go's `net/http` writes only the canonical phrase. The question
@@ -1354,6 +1457,19 @@ condemnation of cached content (AC14) run with no request in flight, so an advis
 the cataloguer reads bytes, so it cannot key the refusal before any upstream fetch (AC8), it has no
 reliable source for a Julia UUID or a Swift binding, and it would move the coordinate tier's
 correctness onto the inventory tier's vendored library.
+
+Rechecked on Fable 2026-09-30: confirmed; A is the only option under which the request-free sync
+sees the key, and the cost is priced honestly. Amended in its fold, which was incomplete in three
+ways: two rows were missing (a RubyGems platform gem's version string carries its platform, which
+RubyGems' own ordering reads as a pre-release of the bare number, so it needs the bare number as a
+version-level key or every platform gem mis-matches silently; Arch reports `%BASE%` ahead of any
+coverage, per `arch.md` AC24); the replacement rule was stated only for Swift's `rebind`, where
+it is general (any later write recording the same row replaces the key), and without it a proxied
+version first recorded before the document naming its key was read would keep the wrong key for
+ever; and `julia.md` never received the fold at all, still supplying the UUID "when it calls the
+shared resolution", reported. The coverage table's Swift row now carries the proxied key the
+format closing sweep queued (the upstream list's `canonical` and `alternate` links). AC24 extended
+with the two rows and the replacement rule; `data-model.md` AC46 cited as the storage half.
 
 The coverage table keys four rows on something other than `Package.name` and the version string:
 Alpine's origin, Debian's source package and source version, Julia's UUID and Swift's bound
@@ -1397,6 +1513,18 @@ republished into a hosted repository and names that collide on purpose, which is
 dependency-confusion shape the policy exists to catch; over-refusal is the safe error, as
 `openvsx.md` also chose for its variants.
 
+Rechecked on Fable 2026-09-30: confirmed; B is right and its cost is honest. Amended in its fold,
+which contradicted its own promise in one place: the reader "answering empty" for an exempted name
+would hide an inventory-tier condemnation the rules still enforce (the exemption removes the name's
+own coordinate from matching, not its catalogued components), which is exactly the
+rules-versus-rendering disagreement the reader exists to prevent, so the reader now answers no
+coordinate-matched record while still returning standing condemnations. Two gaps closed beside
+it: a resolution through a `virtual`, which holds no versions and may carry no exemption, is
+evaluated on the resolving member's version under that member's `advisory_ecosystem` and
+exemptions, rules and reader alike, with an advisory rule on an OS-package virtual bindable only
+while every member declares an ecosystem; and an exemption's `name` is the coordinate as the
+matcher keys it for the format. AC19 and AC25 extended.
+
 `composer.md`'s resolved hosted-channel decision (was Q11 there) found that coordinate matching
 treats a private `acme/lib` on a hosted repository and Packagist's `acme/lib` as one coordinate,
 so the private package inherits the public one's advisories, and it declined to render
@@ -1419,6 +1547,48 @@ narrowest way for an operator to say "this name is ours" without disabling the r
 public by default or private by default, which is a security posture rather than a technical
 choice.
 
+### Resolved: how a source's freshness is measured (was Q13, raised and adopted on the Fable recheck)
+
+**Adopted 2026-09-30 under the owner's standing delegation.** Option A: a synced source is fresh
+as of the completion of its last successful sync, one that read the root's `ecosystems.txt` and
+fetched or conditionally confirmed every consumed export; an imported source is fresh as of the
+export time the import declares, and an import declaring none, or a time earlier than the newest
+`modified` among its records, is refused with nothing imported. This revises the measure the
+offline-freshness decision (was Q7) chose, a delegation adoption, and keeps its threshold and its
+no-offline-exemption rule; it reverses no owner decision. Folded into Scope, "The advisory feed
+and its freshness", AC9, AC16 and Phase 1; Q7's record carries the revision note.
+
+Accepted cost: a declared export time is the operator's assertion, checked only against the
+records' own dates, so an old export declared new is a lie the registry cannot detect, which the
+audit line records and which is no more power than removing the rule; and the time must travel
+across the air gap beside the archive, because the archive carries none. Option B lost because it
+fails closed on every quiet ecosystem on both paths: a synced private source with no change in a
+day is stale for ever, and an air-gapped instance importing exactly what the upstream publishes is
+stale within a day of the import, so the deployment Q7 meant to keep honest is the one it makes
+unusable. Option C lost for the reason Q7 gave: an undeclared import time makes an old export
+carried in look fresh.
+
+Q7 measured freshness from the newest `modified` among a source's records so that re-importing an
+old export could not launder staleness. Checked against the feed on 2026-09-29: OSV's
+`Hackage/all.zip` holds 33 records whose entry timestamps are zeroed to 1980 with no manifest, so
+an export carries no production time of its own, and `HSEC-2023-0001` was last modified
+2025-11-14; a source is stale under Q7 whenever nothing in it changed for a threshold, whether or
+not it was just synced or imported, which for a quiet ecosystem is the normal state.
+
+**Recommendation:** A, because the evidence that advisory data is current is that the live root
+was read, or that the operator says when the export was produced; the records' own dates are
+evidence of change, not of currency.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Last completed sync for a synced source; a declared export time, floored by the newest record, for an import** | Quiet ecosystems stay fresh; an accidental re-import of an old export is refused; the sync's evidence is the live root itself | An operator can declare a false time deliberately; the time must be carried beside the archive |
+| **B. Newest record `modified`, as Q7 adopted** | Nothing to declare; laundering impossible | Every quiet ecosystem fails closed within a threshold of its last advisory, and an air gap cannot be kept fresh by importing what the upstream publishes |
+| **C. Time of the sync or the import, undeclared** | Simplest | An old export carried in reads fresh, the laundering Q7 refused |
+
+**Why this is yours:** it decides what counts as evidence that advisory data is current on an air
+gap, the operator's word against the records' dates, which is a posture call about who the
+registry trusts when it cannot check.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1430,3 +1600,4 @@ choice.
 | 2026-09-26 | 2edd42c | folding owner answers to storage-and-gc Q10 and proxy-cache Q11 | Not a review, and only a consequential update: neither decision is this spec's. The GC-and-eviction section now says five enumerated roots (pointer-targeted snapshots became the fifth on 2026-09-26) and states eviction correctly under proxy-cache's answer - it drops the cached reference and the sweep reclaims the bytes, eviction itself deleting nothing - which leaves the digest-independence argument behind AC7 intact and if anything longer-lived. Q5 is left open and unanswered; only its option C wording was corrected, since the mark root quarantine would add is now a sixth rather than a fifth. This spec's position that policy records are not a root is unchanged. |
 | 2026-09-28 | 6e6d503 | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. Applied sweep 1 item 3 and charter reconciliation 6, verified against the sources' current text: the advisory reader and refusal writer are cited to `format-handler-interface.md` ("The pinned method set", AC14) with `internal/format/refusal_writer_test.go` and `internal/policy/advisory_reader_test.go` recorded as shared in AC18's and AC19's rows; the `advisory_ecosystem` paragraph cites `data-model.md` AC28; AC20's row names `catalogue.md` AC8 as the same structure check from the catalogue's side and `conformance-harness.md` AC26 as the validator rule's home. No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
 | 2026-09-28 | f4a9246 | closing reconciliation sweep on Opus: cross-spec reconciliation of the format batches and closing sweeps. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the current text of its source spec and of this file. Found already done: sweep 1 item 3 and charter reconciliation 6 (at 6e6d503). Applied: format batch 2 item 3 (Ansible collections uncovered, keyed on `{namespace}.{name}` under semver if a source declares it; the NuGet, Maven, Go and Ansible binding rows stay `pending`, each naming the case that fills it); batch 3 item 9 (Helm uncovered, OSV `ecosystems.txt` of 2026-09-28 lists none); batch 4 item 9 (the advisory key, adopted as Q11); batch 6 item 8 (Hackage's component-wise integer ordering vendored; `version.pm` named as owed if a CPAN source is ever declared, the CPAN row needing both; Open VSX matched across every `VSCode` variant, AC17); batch 8 item 8 (R's `numeric_version` vendored); batch 7 item 9 (the Composer row from `composer.md`'s captures: omission from the package file, 2.10.3 holding on a dist `403`, 2.2.30 cloning `source` so holding only under restricted egress, the second-repository question still open, so `pending` under `conformance-harness.md` AC26; Composer placed in the rendering paragraph with the clients whose status line is printed verbatim, since it prints the raw status line and the phrase therefore reaches its user, rather than beside SwiftPM and pacman as the item worded it); batch 7 item 10 (hosted matching, adopted as Q12); batch 7 item 11 (Homebrew's `PkgVersion` with `_revision` vendored, so the database Q9 was adopted for binds). Every coverage and binding row re-read against its format spec: Go, NuGet, Cargo and Pub split out of the grouped pending row with their captured rendering; Hex, CRAN (pak's `cran.r-project.org` fallback), Conda, Swift, Vagrant, Puppet, opam, Julia (hosted packages fail with no egress), Homebrew (recipe, tap bottles, `HOMEBREW_BOTTLE_DOMAIN` under restricted egress), Arch (`SigLevel = Required DatabaseRequired`) and LuaRocks (`--only-server`) rows corrected; the union warning now names Alpine, LuaRocks and Chef, each closed by its single-source recipe. Gap found and fixed beyond the queue: NuGet, Packagist and RubyGems rows claimed covered with no vendored ordering, now in the set. The rendering paragraph re-sorted into status-line clients, code-only clients (dnf, zypper, brew, Vagrant, opam, cabal, renv) and body-showing counter-examples (SwiftPM, Conan, Policyfile, `go`, Puppet, pacman). Two questions raised and adopted on Opus under the standing delegation, in template shape: Q11 (A: the handler reports an advisory key, stored core-parsed on `Package` or `Version` and carried on the fetch-and-cache request, because a request-time key leaves the request-free feed sync blind; AC24) and Q12 (B: `local` repositories match public coordinates, `coordinate_exemptions` on `local` only, the advisory reader keyed by repository and applying them; AC25, AC19 amended). Two criteria added, two amended, each with a Test Plan row; phases updated; `fable_recheck` added. `node scripts/check-spec.js`: zero failures and no advisory on this file. Stays draft pending a gate review. |
+| 2026-09-30 | f2b770b | Fable recheck: full review (claim verification at HEAD against every cited sibling and format spec, adversarial lens, constitution compliance, go-spec-reviewer inline) + re-examination of the Opus adoptions Q9 to Q12 + the queued consequences | The tree still holds only `cmd/stackweaver-registry/main.go`, so claim verification ran against the sibling specs and the live OSV feed. Queued items applied first: rubygems item 5 (RubyGems split out of the grouped pending binding row with its captured rendering and the byte-route binding of its was-Q12; its coverage row grounded on the bare version number under RubyGems' ordering), format closing sweep batch 1 item 3 (the Swift proxied key from the upstream list's `canonical` and `alternate` links), proxy-cache recheck item 4 (`FirstByteWithin` not honoured under refuse-until-scanned, in the proxied-path section and AC6 with `internal/policy/refuse_until_scanned_test.go` shared with proxy-cache AC21), second-pass item 3 (`data-model.md` AC46 cited in Design and AC24's row); the `check-config-keys.js` wording corrected, since the script is not in the tree. Verdicts: Q9 confirmed and amended (a revision of delegation-adopted Q1, within bounds, the owner's purge decision untouched; record identity had been stated two ways and is now one record per source per id with aliases never identity; an ecosystem two sources list fails closed when either is stale; AC21 rewritten). Q10 confirmed and amended in its cost (a hijacked write bypasses the response middleware, so the writer emits the pre-set headers including the `X-Request-Id` echo, reports its status to `http_server_request_duration_seconds` and the request log, and drains or closes on an unread body; the condition set is AC5's, adding the verdict failure; `body` is a `[]byte`; AC18 extended). Q11 confirmed and amended in its fold (two key rows missing: a RubyGems platform gem's version string, which RubyGems' ordering reads as a pre-release, and Arch's `%BASE%` reported ahead of coverage; the replacement rule generalised from Swift's `rebind` to any later write, with the late-report cost stated; `julia.md` still supplies the UUID at resolution, reported; AC24 extended). Q12 confirmed and amended (the reader "answering empty" for an exempted name would hide an inventory-tier condemnation the rules enforce, so it answers no coordinate-matched record and still the standing condemnations; a resolution through a virtual applies the resolving member's exemptions and ecosystem, an OS-package virtual's advisory rule bindable only while every member declares one; an exemption's `name` is the coordinate as keyed; AC19 and AC25 extended). Q5's option D checked against every later change: intact, the security-signal rule verbatim in both specs and no root added. Adversarial finding beyond the adoptions: Q7's freshness measure (the newest record's `modified`) reads every quiet ecosystem as stale on both paths and makes the air gap it protects unusable; OSV's `Hackage/all.zip` fetched 2026-09-29 carries no production time of its own (entries zeroed to 1980, no manifest). Raised as Q13 in decision shape and adopted under the delegation: last completed sync for a synced source, a declared export time floored by the newest record for an import; Q7's record carries the revision; AC9 and AC16 rewritten, Scope and Phase 1 updated; the import's surface reported to `management-api.md`. Constitution: both paths, the shared model, no handler table, the named enforcers and the conformance gate all hold; no rule contradicted. go-spec-reviewer inline: approved after the fixes. `node scripts/check-spec.js`: zero failures. Every criterion testable and mapped, Open Questions empty, `fable_recheck` cleared: draft to planned. |

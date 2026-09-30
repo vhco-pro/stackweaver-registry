@@ -479,7 +479,7 @@ decision:
 | `formats/vagrant.md` | Q13 |
 | `foundation/async-operations.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 |
 | `foundation/format-handler-interface.md` | Q10, Q11 |
-| `foundation/supply-chain-policy.md` | Q9, Q10, Q11, Q12 |
+| `foundation/supply-chain-policy.md` | Q9, Q10, Q11, Q12 (rechecked on Fable 2026-09-30: all four confirmed and amended; Q13 adopted on Fable; spec planned) |
 | `foundation/deployment.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13 |
 | `foundation/observability.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8 |
 | `foundation/management-api.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16 |

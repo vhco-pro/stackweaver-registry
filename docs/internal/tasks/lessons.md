@@ -8,6 +8,20 @@ covers: []
 Newest first. Each entry records a mistake, its root cause, and the convention it produced.
 Anything learned that would otherwise live only in a chat session belongs here.
 
+## 2026-09-30 - Freshness measured from the data's own dates fails closed on every quiet source
+
+**What happened:** `supply-chain-policy.md` Q7, adopted on Opus, judged an advisory source stale when
+its newest record's `modified` date was older than a threshold. A Fable recheck tested it against a
+real OSV archive. `Hackage/all.zip` held 33 records, zeroed zip entry times and no manifest, so a
+perfectly current feed for a quiet ecosystem read as stale on both paths. An air-gapped install
+importing yesterday's export could never become fresh.
+
+**Root cause:** "the newest record changed long ago" was treated as "the feed is out of date". The
+two are the same only for an ecosystem busy enough to publish advisories constantly.
+
+**Convention:** measure currency from the act that proved it, such as a completed sync or a declared
+export time, never from the change dates inside the data. Adopted as supply-chain Q13.
+
 ## 2026-09-28 - A queue marked done by report, with one file never written
 
 **What happened:** the local format queue (every ecosystem that needs a real client in a container)
