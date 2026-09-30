@@ -157,7 +157,15 @@ function checkSpec(absPath) {
   // ── review log freshness ───────────────────────────────────────────────────
   const log = section(body, 'Review Log') || '';
   const logRows = [...log.matchAll(/^\|\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([0-9a-f]{7,40})\s*\|/gm)];
-  const lastSha = logRows.length ? logRows[logRows.length - 1][2] : null;
+  // The newest review is the row with the latest date (the last of those, on a tie), not the last
+  // row: a pass that inserts its row mid-table would otherwise leave freshness measured from an
+  // older review, and a planned spec would read as stale (proxy-cache, 2026-09-30).
+  let newest = null;
+  for (const r of logRows) if (!newest || r[1] >= newest[1]) newest = r;
+  const lastSha = newest ? newest[2] : null;
+  if (newest && newest !== logRows[logRows.length - 1]) {
+    warn(rel, `Review Log is out of date order: the newest row (${newest[1]}, ${newest[2]}) is not the last`);
+  }
 
   if (status === 'planned') {
     if (openQs.length) fail(rel, `status is planned but ${openQs.length} question(s) are open`);
