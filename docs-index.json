@@ -449,7 +449,7 @@
     "path": "docs/internal/plans/foundation/auth.md",
     "description": "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "13",
     "covers": [
       "internal/auth/**"
