@@ -43,13 +43,31 @@ the queues are empty.
 A task prompt is one line: "Read `agents/spec-loop/<brief>` and follow it exactly. HEAD sha: <sha>.
 Author `docs/internal/plans/<dir>/<name>.md`; your hints are its line in `<queue>.tsv`."
 
+## Heartbeat (unattended runs)
+
+An hourly in-session cron fires the prompt "spec-loop heartbeat" so the loop survives usage-limit
+resets while the owner sleeps (set 2026-10-01; session-only, expires after 7 days or when the
+session ends). Each firing:
+1. If two loop agents are still running (ListAgents, or their notifications have not arrived), do
+   nothing more.
+2. Otherwise run `git status --short` in this repository. An uncommitted spec that has today's
+   Review Log row and cleared `fable_recheck` is a finished pass that was never committed: check
+   it and commit it as usual. An uncommitted spec WITHOUT its new Review Log row is a pass killed
+   mid-edit: relaunch the same brief on the same file, telling the agent to continue from the
+   partial edits in the tree (never revert them).
+3. Fill free slots, two agents at most, with the next items in the resume point below.
+4. If the API refuses with a usage limit, stop; the next firing retries.
+
 ## Resume point
 
-**2026-09-30: Fable is back.** Recheck order, one spec per agent with `recheck-brief.md`, two at a
-time: storage-and-gc, proxy-cache (data retention first), then signing-service (Q19 and the AC36
-signed-virtual admission), supply-chain-policy, auth, management-api, then the other foundation
-specs, then the formats. The remaining format sweep batches below run on Opus in between, since
-they are execution against decided rules, and each format's recheck waits for its sweep batch.
+**2026-10-01, Fable rechecks.** Done (planned on Fable): storage-and-gc, proxy-cache,
+signing-service, supply-chain-policy, auth, management-api, data-model, credential-management,
+format-handler-interface, async-operations, observability. Next, one spec per agent with
+`recheck-brief.md`: artifact-verification and deployment (running at 3247f69), then
+repository-lifecycle, upstream-adapters, web-ui. Then the "Fable follow-up pass owed" section of
+consequences.md: one short Fable pass per planned foundation spec applying every item queued
+against it since its recheck, with a Review Log row. Then the format sweep batches below (Opus is
+fine for these), then each format's Fable recheck after its batch.
 
 Stopped by the owner at the spend limit, then the two interrupted items were finished the same
 day. Nothing is uncommitted. In order:
