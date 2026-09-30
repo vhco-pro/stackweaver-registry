@@ -8,6 +8,23 @@ covers: []
 Newest first. Each entry records a mistake, its root cause, and the convention it produced.
 Anything learned that would otherwise live only in a chat session belongs here.
 
+## 2026-10-01 - A dependency listed by enumeration survived four passes its own spec forbade
+
+**What happened:** `format-handler-interface.md` listed "the central authorizer" among the shared
+layers a handler reaches through `Deps`. Two paragraphs later the same spec forbade a handler from
+making an authorization check, and `auth.md` never mentions `Deps`. The entry survived four
+reconciliation passes. A second defect sat beside it: "`Deps` is the only door" was held by a
+forbidden-import list that never named `internal/proxy`, `internal/auth`, `internal/server` or the
+store packages, so the claim was unenforced. The Fable recheck found both.
+
+**Root cause:** the `Deps` list was written by enumerating the shared layers that exist, not by
+asking which handler need each entry serves. A forbidden list only rules out what its author
+thought of.
+
+**Convention:** every `Deps` entry names the handler need that consumes it, and an entry with no
+consumer is removed. A boundary phrased as "only X" is enforced by an allowlist, never by a
+forbidden list.
+
 ## 2026-09-30 - One invariant restated in two specs drifted apart for three passes
 
 **What happened:** `management-api.md` said every request emits an audit line. `observability.md`,

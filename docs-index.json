@@ -506,7 +506,7 @@
     "path": "docs/internal/plans/foundation/format-handler-interface.md",
     "description": "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "4",
     "covers": [
       "internal/format/**"

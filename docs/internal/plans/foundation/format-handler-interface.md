@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Leftovers pass of the closing sweep 2026-09-28 at 4278ce0 on Opus (not a review): the fetch-and-cache re-open input and AC8 name what the request gained, the git location {url, commit} (upstream-adapters was-Q9), the kept-blob digests in the adoption check's result, the classification's evictability (proxy-cache was-Q21), the retention count with zero valid and the declared counts so far (proxy-cache was-Q19) and the declaring level (was-Q22); the replay entry refuses a non-GET method and a local or virtual repository before dispatch and no wire request can carry the marker, the cases auth AC36 relies on (AC18 and its replay_entry_test.go row extended); the AC10 placement cites auth AC36 and the AC10 procedure; async-operations AC30 cited. The pin stays five; 18 criteria; no new question. Earlier, closing reconciliation sweep 2026-09-28 at b0fa0b3 on Opus (not a review): the pin stays five. Deps gains Documents (ServeDocument, ServeRendered, ServeFile, SignedBy; signing-service was-Q14), the claim declaration on the write transaction (management-api was-Q14) and the advisory key on the metadata-store write and the fetch-and-cache request (supply-chain was-Q11), with the advisory reader keyed by repository (was-Q12) (AC17); Operator.Authorize returns format.Addressed and format.Binding gains a route-level-object flag (management-api was-Q13, was-Q14); Scope admits an empty repository for a descriptor only, OCI GET /v2/ (auth AC32, oci was-Q8; AC12); the import boundary adds internal/signing (AC15); Q11 adopted (the proxy.revalidate replay, proxy-cache was-Q18, reaches handlers through one replay entry built in the composition root and injected into internal/proxy only; AC18). The re-open's inputs are rewritten as a complete list, each naming its source spec and question: several objects per Scope(r), the fetch-and-cache request with the adoption check and advisory key, the second dispatch, the Deps door as it has grown, and the exchange-echo declaration beside the route-scoped forms (auth was-Q25); Swift's alias rider superseded; AC8 requires a verdict on each. 18 criteria, zero open questions; carries fable_recheck. Earlier: reconciled 2026-09-28 at 95346bd with the foundation wave's step-3 leftovers (not a review): the pin stays five; Deps gains supply-chain's advisory reader and the WriteRefusal writer, the module's only hand-written status line (AC14); the reserved table names the replication segment as `replication` and adds `t` for auth's root path token, stripped by the authorizer before routing (AC11); the re-open takes two more named inputs, proxy-cache's fetch-and-cache request shape and auth's route-scoped credential declaration (with Chef's end-of-part hash, the base URL and Swift's alias coordinate riding it), each with an AC8 verdict. Earlier, 2026-09-27 at 713c1e3, reconciled with the foundation authoring wave (not a review): the pin stays five, held now by a reflection test (AC16); the three optional interfaces the new foundation specs introduced (management-api's Operator, signing-service's Indexer, web-ui's surface.Declarer) are recorded together as type-asserted at registration and as one named re-open input, with Q10 adopted under the standing delegation to keep them three rather than consolidate before the evidence exists; Scope's addressed object gains auth Q23's descriptor kind, riding the 2026-09-26 amendment, with the sentinel test in AC12; Capabilities gains Virtual and Rename (AC13); Deps gains the Verifier, upstream.Options on fetch-and-cache, the server.hosts lookup and a *slog.Logger with request correlation; the handler import boundary is one list with one test (AC15); the reserved-segment table is exhaustive (api, ui, healthz, readyz, metrics, the replication segment, exactly /) and AC11 fixtures each; the carve-out class splits into path-only (OCI) and host-bound (Terraform, Puppet /v3/) claims. Earlier (2026-09-26): Wave 1 folds, Q9 adopted. 16 criteria, zero open questions; stays draft pending a gate review."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-01 at 75ee7de: a full review pass plus the re-examination of the two questions adopted without Fable. Q10 confirmed and amended in its record (consumer-declares holds for Operator and surface.Declarer, not for Indexer, which signing-service declares in internal/format; the handler's internal/surface and internal/index value-type imports named in AC15's allowlist; the re-open's Indexer verdict includes its home). Q11 confirmed as the forced consequence of proxy-cache's Fable-confirmed was-Q18 and amended in its fold and cost (the entry takes a route from three sources, a cached entry's recorded route, a profile-declared literal, template or DeriveInputs derivation, or a router-authorized virtual read's recorded cell, and checks it itself against the cached-route reader and member-input interface it holds; rounds mean several entry calls per job, each checked alone; the marker's key lives in the composition root package no handler can import, so not branching on it is mechanical; the one-recipient assertion is an AST scan; AC18 rewritten). Queued items applied and verified against their sources: WriteRefusal's amended contract (body []byte, pre-set headers, status reported to the middleware, drain-or-close; AC14 and its shared row), the expected validator on the fetch-and-cache request, the advisory key's replace-on-later-write, DeriveInputs on the Indexer's generator, the rename configure reaching every Operator, the anchor class clarified as the index runtime's read and not a Deps door, AC12's sentinel test in both modes scanning headers, and a new re-open input, what Scope(r) may read (RubyGems' index resolution, Chef's and Galaxy's multipart filename), with an interim bound AC12's helper holds (metadata store only, never fetch-and-cache or the blob store; the body left readable). Adversarial findings fixed: the central authorizer was listed in Deps for four passes against this spec's own rule and auth.md's, removed; AC15's forbidden list never named internal/proxy, internal/auth, internal/server or the store packages, so the only-door claim now has an internal/ allowlist the same test holds; a host-bound claim on an unbound hostname is AC10's denial through a Scope(r) error, never a handler-rendered 404 or a repository-less descriptor (AC11). The pin stays five; 18 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. go-spec-reviewer inline: approved after the fixes. Earlier: leftovers pass of the closing sweep 2026-09-28 at 4278ce0 on Opus (not a review): the fetch-and-cache re-open input and AC8 name what the request gained, the git location {url, commit} (upstream-adapters was-Q9), the kept-blob digests in the adoption check's result, the classification's evictability (proxy-cache was-Q21), the retention count with zero valid and the declared counts so far (proxy-cache was-Q19) and the declaring level (was-Q22); the replay entry refuses a non-GET method and a local or virtual repository before dispatch and no wire request can carry the marker, the cases auth AC36 relies on (AC18 and its replay_entry_test.go row extended); the AC10 placement cites auth AC36 and the AC10 procedure; async-operations AC30 cited. The pin stays five; 18 criteria; no new question. Earlier, closing reconciliation sweep 2026-09-28 at b0fa0b3 on Opus (not a review): the pin stays five. Deps gains Documents (ServeDocument, ServeRendered, ServeFile, SignedBy; signing-service was-Q14), the claim declaration on the write transaction (management-api was-Q14) and the advisory key on the metadata-store write and the fetch-and-cache request (supply-chain was-Q11), with the advisory reader keyed by repository (was-Q12) (AC17); Operator.Authorize returns format.Addressed and format.Binding gains a route-level-object flag (management-api was-Q13, was-Q14); Scope admits an empty repository for a descriptor only, OCI GET /v2/ (auth AC32, oci was-Q8; AC12); the import boundary adds internal/signing (AC15); Q11 adopted (the proxy.revalidate replay, proxy-cache was-Q18, reaches handlers through one replay entry built in the composition root and injected into internal/proxy only; AC18). The re-open's inputs are rewritten as a complete list, each naming its source spec and question: several objects per Scope(r), the fetch-and-cache request with the adoption check and advisory key, the second dispatch, the Deps door as it has grown, and the exchange-echo declaration beside the route-scoped forms (auth was-Q25); Swift's alias rider superseded; AC8 requires a verdict on each. 18 criteria, zero open questions; carries fable_recheck. Earlier: reconciled 2026-09-28 at 95346bd with the foundation wave's step-3 leftovers (not a review): the pin stays five; Deps gains supply-chain's advisory reader and the WriteRefusal writer, the module's only hand-written status line (AC14); the reserved table names the replication segment as `replication` and adds `t` for auth's root path token, stripped by the authorizer before routing (AC11); the re-open takes two more named inputs, proxy-cache's fetch-and-cache request shape and auth's route-scoped credential declaration (with Chef's end-of-part hash, the base URL and Swift's alias coordinate riding it), each with an AC8 verdict. Earlier, 2026-09-27 at 713c1e3, reconciled with the foundation authoring wave (not a review): the pin stays five, held now by a reflection test (AC16); the three optional interfaces the new foundation specs introduced (management-api's Operator, signing-service's Indexer, web-ui's surface.Declarer) are recorded together as type-asserted at registration and as one named re-open input, with Q10 adopted under the standing delegation to keep them three rather than consolidate before the evidence exists; Scope's addressed object gains auth Q23's descriptor kind, riding the 2026-09-26 amendment, with the sentinel test in AC12; Capabilities gains Virtual and Rename (AC13); Deps gains the Verifier, upstream.Options on fetch-and-cache, the server.hosts lookup and a *slog.Logger with request correlation; the handler import boundary is one list with one test (AC15); the reserved-segment table is exhaustive (api, ui, healthz, readyz, metrics, the replication segment, exactly /) and AC11 fixtures each; the carve-out class splits into path-only (OCI) and host-bound (Terraform, Puppet /v3/) claims. Earlier (2026-09-26): Wave 1 folds, Q9 adopted. 16 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for the common format handler interface, defining the hosted and proxied paths every format must implement and the boundaries handlers may not cross."
 author: michielvha
 goal: "Make adding a format a bounded, repeatable unit of work so an agent can implement one end to end without touching shared layers."
@@ -9,7 +9,6 @@ issue: 4
 created: 2026-09-21
 covers:
   - "internal/format/**"
-fable_recheck: "closing reconciliation sweep on Opus, 2026-09-28: adopted Q11 (the proxy.revalidate replay reaches handlers through one below-authorizer replay entry built in the composition root and injected into internal/proxy only, AC18) and folded the Deps additions, Operator signature changes and repository-less descriptor settled in sibling specs; needs a Fable recheck before any gate"
 ---
 
 # Plan: Format handler interface
@@ -105,7 +104,9 @@ Concretely a handler:
   document set its retention count and declaring level, the upstream location, ordered
   candidate list or git location, the `upstream.Options`, exactly one of a declared digest set
   and a handler-supplied verifier, the optional paired-document declaration and
-  `FirstByteWithin` deadline, and a typed refusal in return), to which
+  `FirstByteWithin` deadline, for mutable metadata the optional expected validator the handler
+  derived from another document of the same remote (its AC31), and a typed refusal in
+  return), to which
   `supply-chain-policy.md` adds the advisory key where the handler reported one (its resolved
   advisory-key decision, was Q11 there). The request is the same whether a client's
   request or a `proxy.revalidate` replay drove the handler (`proxy-cache.md`'s resolved
@@ -133,7 +134,7 @@ either merely might:
 | `Name()` | `string` | The catalogue key (`generic`, `oci`): the default mount prefix, the conformance matrix row, the log field |
 | `Mounts()` | `[]Mount`, a `Mount` being a URL prefix plus a root-anchored flag | Generic returns the default format-first mount; OCI claims the root-anchored `/v2/` (Routing and registration, below) |
 | `Capabilities()` | `Capabilities`, carrying proxy support (`supported` or `unsupported`), reference-implementation availability (`available` or `none`), virtual aggregation `Virtual` (`supported` or `unsupported`) and repository rename `Rename` (`supported` or `unsupported`) | The machine-readable home of the declarations the harness and the shared layers honour: AC4's runner honours proxy `unsupported`, the conformance matrix renders `none` as a replay-match exemption and `Virtual: unsupported` as a virtual-column exemption (AC13), and `repository-lifecycle.md` refuses a virtual repository or a rename of a format that declares either `unsupported` (its AC4 and AC13), which is how `formats/hex.md`'s "no virtual aggregation, no rename" becomes a refusal rather than a repository every client rejects. Generic declares all four, closing the "neither sibling spec currently says how" gap recorded in `formats/generic.md`; the second field arrived with generic's resolved replay-exemption decision, the third and fourth with `repository-lifecycle.md` (2026-09-27). Fields on this type are declarations, not amendments to the method set |
-| `Scope(r)` | `(Scope, error)`, a `Scope` being a repository (empty only for a descriptor that names no repository, below), one of `pull`/`push`/`delete`, and the **addressed object**: exactly one of *named* (the handler's canonical name for the finest named thing the route addresses), *content-addressed* (content identified by digest, or an upload bound to one), *descriptor* (a repository-wide document whose body carries no name, version or digest of any object the repository holds: protocol configuration, a discovery probe, a signing-key document; `pull`-only under a patterned scope, per `auth.md`'s resolved name-free-document decision, was Q23), or *none* (the repository as a whole, including every name-enumerating route). **An error denies the request**, with the same response an unauthorized caller receives | The route-to-scope mapping the central authorizer evaluates (`auth.md`). Needed from the **first** format, not at the re-open: AC7's unauthenticated, unauthorized and pattern-refusal cases apply from day one, and without this the shared layer cannot know what it is authorizing. The addressed object is the second out-of-cycle amendment (below): generic reports artifact paths, OCI reports `{image}/{tag}` (the repository being the first component of the OCI name, `formats/oci.md`'s resolved name-split decision, was Q8 there), and both have content-addressed and listing routes, so both Tier 0 formats exercise named, content-addressed and none. The descriptor kind is exercised by Cargo's `config.json`, Conan's capability probe and RPM's `repomd.xml` (`auth.md`, "Pattern scopes"), and by OCI from Tier 0: `formats/oci.md` ("Addressed objects and pattern scopes") declares the distribution spec's `GET /v2/` version probe a **descriptor with no repository**, since under the name split the repository is part of a `<name>` the probe does not carry. `auth.md` authorizes such a descriptor for any verified credential whatever its scopes, and denies as unauthorized a named, content-addressed or none object reported without a repository ("A descriptor that names no repository", its AC32), so the empty repository is admitted for the descriptor kind alone |
+| `Scope(r)` | `(Scope, error)`, a `Scope` being a repository (empty only for a descriptor that names no repository, below), one of `pull`/`push`/`delete`, and the **addressed object**: exactly one of *named* (the handler's canonical name for the finest named thing the route addresses), *content-addressed* (content identified by digest, or an upload bound to one), *descriptor* (a repository-wide document whose body carries no name, version or digest of any object the repository holds: protocol configuration, a discovery probe, a signing-key document; `pull`-only under a patterned scope, per `auth.md`'s resolved name-free-document decision, was Q23), or *none* (the repository as a whole, including every name-enumerating route). **An error denies the request**, with the same response an unauthorized caller receives | The route-to-scope mapping the central authorizer evaluates (`auth.md`). Needed from the **first** format, not at the re-open: AC7's unauthenticated, unauthorized and pattern-refusal cases apply from day one, and without this the shared layer cannot know what it is authorizing. The addressed object is the second out-of-cycle amendment (below): generic reports artifact paths, OCI reports `{image}/{tag}` (the repository being the first component of the OCI name, `formats/oci.md`'s resolved name-split decision, was Q8 there), and both have content-addressed and listing routes, so both Tier 0 formats exercise named, content-addressed and none. The descriptor kind is exercised by Cargo's `config.json`, Conan's capability probe and RPM's `repomd.xml` (`auth.md`, "Pattern scopes"), and by OCI from Tier 0: `formats/oci.md` ("Addressed objects and pattern scopes") declares the distribution spec's `GET /v2/` version probe a **descriptor with no repository**, since under the name split the repository is part of a `<name>` the probe does not carry. `auth.md` authorizes such a descriptor for any verified credential whatever its scopes, and denies as unauthorized a named, content-addressed or none object reported without a repository ("A descriptor that names no repository", its AC32), so the empty repository is admitted for the descriptor kind alone. Whether `Scope(r)` may read anything beyond the request line and headers to name its object is the re-open's to judge, under the input "What `Scope(r)` may read" below and the interim bound stated there; the two Tier 0 handlers read nothing |
 | `ServeHTTP(w, r)` | embedded `http.Handler` | The resolved HTTP-direct decision: the handler receives the real request and response |
 
 Construction is by injection: each format package exposes `New(deps Deps) Handler`, and
@@ -142,7 +143,7 @@ the blob store (CAS), the metadata store (the three-level opaque documents and
 snapshot-pointer resolution `data-model.md` defines), the proxy layer's fetch-and-cache
 entry point (`proxy-cache.md`), which carries the handler's upstream location and an
 `upstream.Options` value down to the adapter layer the handler never sees
-(`proxy-cache.md`, "The adapter seam"; `upstream-adapters.md`, "The interface"), the central authorizer (`auth.md`), the
+(`proxy-cache.md`, "The adapter seam"; `upstream-adapters.md`, "The interface"), the
 verifier (`Verifier`, two methods, `Check` for integrity entries and `Verify` for signature
 and attestation schemes, declared in `internal/format` beside `Deps` and satisfied by
 `internal/verify`; `artifact-verification.md`, "How a handler reaches the verifier"), the
@@ -154,7 +155,14 @@ library's `*slog.Logger` with a handler that reads request correlation (`request
 attributes by hand (`observability.md`, "Structured logging", its AC15), and the
 **`Documents`** serving door (below). Those dependency
 interfaces' signatures belong to the specs that own the layers; this spec pins only that
-they arrive through `Deps` and that a handler holds no capability it was not handed.
+they arrive through `Deps` and that a handler holds no capability it was not handed. One
+capability is deliberately **not** handed: there is no authorizer in `Deps`. The router runs
+`auth.md`'s central authorizer over the handler's `Scope(r)` before the handler sees a request
+(Routing and registration, below; `auth.md`, "Authorization is central, never per-handler"), so
+a handler holds nothing it could evaluate a credential with, and the import allowlist below
+keeps `internal/auth` out of its reach. Earlier drafts listed "the central authorizer" among the
+`Deps` entries, which `auth.md` never backed and which contradicted this spec's own rule, two
+paragraphs below, that an auth check inside the handler is forbidden; corrected 2026-10-01.
 
 The corollary is an **import boundary**, held mechanically because `Deps` is the only door:
 no package under `internal/format/**` imports `internal/policy` (AC14), `internal/verify`
@@ -167,7 +175,17 @@ AC16) or `internal/signing` (`signing-service.md` AC2, which is why `Documents` 
 types alone, as the `Indexer` method must (`signing-service.md`, "Two halves, one write", and
 its AC2). Each owning spec holds its edge in its own test; `internal/format/arch_test.go` holds
 the whole list from this side, with a violation fixture per edge, so a new shared package
-that forgets its boundary test still fails here (AC15).
+that forgets its boundary test still fails here (AC15). That forbidden list is each owner's
+edge; the claim that `Deps` is the only door is held by its complement, an **allowlist** the
+same test enforces: under `internal/`, a handler package and its subpackages import only
+`internal/format` (`Deps`, the consumer interfaces and the value types), `internal/index` for
+the value types its generator package and its `Indexer` method name, and `internal/surface` for
+the `surface.Declaration` its `Surface()` method returns. Any other `internal/` import fails
+the test, `internal/proxy`, `internal/auth`, `internal/server` and the packages behind the blob
+store and the metadata store included, none of which the forbidden list named before
+2026-10-01 although AC3 and the "only door" statement assumed them. A forbidden list grows only
+when someone remembers the new package; the allowlist fails closed on the package nobody thought
+about, which is what "only door" has to mean (AC15).
 
 **Three of those entries are policy-enforcing**, per `supply-chain-policy.md`'s resolved
 evaluation-hook decision (was Q4 there): the metadata store's version resolution, the blob
@@ -195,15 +213,28 @@ cannot be used around the three enforcing calls; it exists because four formats 
 advisory data inside a served document (NuGet's `VulnerabilityInfo`, Hex's advisory links,
 Composer's advisories route, Open VSX's `malicious` list) and would otherwise import
 `internal/policy` or invent a source (its "A handler may read advisories, never evaluate
-them", AC19). The **refusal writer**, `WriteRefusal(w, r, refusal, body)`, is how a handler
-renders the typed refusal once it has chosen its protocol's status code and body: on an
-HTTP/1.1 connection the writer hijacks and writes the status line itself, `HTTP/1.1 {code}
-Refused by policy: {condition}`, because the reason phrase is the only text most package
-clients show their user and Go's `net/http` offers no API for a custom one; on HTTP/2 or a
-`ResponseWriter` that is not a `Hijacker` it falls back to the canonical write with the
-condition in the body (its resolved refusal-status-line decision, was Q10, AC18). That writer
-is the **only hand-written status line in the module**, and `internal/format/arch_test.go`
-asserts it, so a handler cannot grow a second one (AC14).
+them", AC19). The **refusal writer**, `WriteRefusal(w, r, refusal, body)`, `body` a `[]byte`
+so the writer frames it with `Content-Length` and never chunks, is how a handler renders the
+typed refusal once it has chosen its protocol's status code and body: on an HTTP/1.1
+connection the writer hijacks and writes the status line itself, `HTTP/1.1 {code} Refused by
+policy: {condition}`, because the reason phrase is the only text most package clients show
+their user and Go's `net/http` offers no API for a custom one; on HTTP/2 or a `ResponseWriter`
+that is not a `Hijacker` it falls back to the canonical write with the condition in the body
+(its resolved refusal-status-line decision, was Q10, AC18). Because a hijacked write bypasses
+the response middleware, the writer also emits the headers already set on the `ResponseWriter`
+(the `X-Request-Id` echo `observability.md` AC14 promises on every response) before the
+handler's own, reports the status code and body size to the request middleware it bypassed so
+the refusal is counted in `http_server_request_duration_seconds` and appears in the request
+log, drains or discards the unread request body, and closes or returns the connection by the
+request's keep-alive state, closing whenever the body was not fully read (that decision as
+amended on Fable 2026-09-30; its AC18, whose test this spec's AC14 row shares). Two obligations
+fall on siblings and are cited, not restated: `observability.md`'s middleware `ResponseWriter`
+wrapper must implement `http.Hijacker` and accept the reported status, or every refusal
+vanishes from the metrics on the one response class an operator most needs to find (a
+consequence `supply-chain-policy.md`'s recheck reported to it, unapplied there at 75ee7de), and
+`deployment.md` keeps the main listener on HTTP/1.1 by default. That writer is the **only
+hand-written status line in the module**, and `internal/format/arch_test.go` asserts it, so a
+handler cannot grow a second one (AC14).
 
 **Three more `Deps`-level additions arrived with the 2026-09-28 closing sweeps**, each settled in
 the spec that owns its layer, each riding a door the pin already has, and none changing the
@@ -241,7 +272,11 @@ method set (AC17):
   it too. The core stores it core-parsed on `Package` or `Version`, never inside a metadata
   document (the field belongs to `data-model.md`'s `Package` and `Version` rows, reported to it
   by that spec's closing sweep, and the matching is `supply-chain-policy.md` AC24's); a handler
-  reporting no key is matched on the package name and version string. This is also how the core
+  reporting no key is matched on the package name and version string. A later write recording
+  the same `Package` or `Version` row **replaces** the stored key (Swift's `rebind`; a proxied
+  version first recorded before the document naming its key was read; that decision as amended
+  on Fable 2026-09-30, its AC24, `data-model.md` AC46), so a handler reports the key on every
+  write that records the row, never only the first. This is also how the core
   learns a version's origin or source package when it differs from `Package.name`, the question
   the format batch 4 reconciliation raised against this spec and `supply-chain-policy.md`
   together, now answered by that spec's was-Q11.
@@ -322,8 +357,8 @@ than one, and hands the fold-in verdict to the re-open.
 
 | Interface | Declared in | Methods | Who calls it, and for what |
 |---|---|---|---|
-| `Operator` | `internal/manage`, with the value types `Operation`, `Addressed`, `Outcome`, `Kind` and `Binding` in `internal/format` beside the pinned `Scope` | `Operations() []format.Kind`, `Bindings() []format.Binding` (each a route pattern, the kind it binds onto and, where the route's `Scope(r)` reports an object `Authorize` does not, a flag naming it a **route-level object**), `Authorize(ctx, op) (format.Addressed, error)` (the (object, action) pairs the operation addresses plus the coordinates it **claims** at the handler's retirement granularity), `Apply(ctx, tx, op) (format.Outcome, error)` | `management-api.md`'s `Submit`, for every registry-owned management operation and every client-wire binding onto one: `Apply` runs inside the write transaction the core opened (its resolved dispatch decision, was Q2). `Authorize` returns `format.Addressed` rather than a slice of scopes, and `Submit` declares its claims on the transaction, per that spec's resolved claimed-coordinate decision (was Q14); a binding's route is never wider than its operation, its object being one of `Authorize`'s, none, or the declared route-level object (dput's `.changes`), with `Submit` evaluating every pair on both paths, per its resolved binding-scope decision (was Q13, AC8 there). `repository-lifecycle.md` delivers a rename as a `configure` operation whose `args` carry `{"rename": {"from", "to"}}`; a handler with no `Operator` receives nothing and its rename conformance case proves its documents were never name-bound. `async-operations.md`'s runner reaches a handler **only** through `Operator.Apply` via `internal/manage`, never directly: the prototype's question 4 is answered with no pinned method |
-| `Indexer` | `internal/format`, beside `Deps` | `Generator() index.Generator` | `signing-service.md`'s index runtime, before every commit on a repository whose handler declares it: the handler returns a pure generator from its sibling package `internal/format/<name>/index` (records in, bytes out; it imports `internal/index`'s value types and nothing else of the registry). The prototype's question 1 is answered the same way: no pinned method |
+| `Operator` | `internal/manage`, with the value types `Operation`, `Addressed`, `Outcome`, `Kind` and `Binding` in `internal/format` beside the pinned `Scope` | `Operations() []format.Kind`, `Bindings() []format.Binding` (each a route pattern, the kind it binds onto and, where the route's `Scope(r)` reports an object `Authorize` does not, a flag naming it a **route-level object**), `Authorize(ctx, op) (format.Addressed, error)` (the (object, action) pairs the operation addresses plus the coordinates it **claims** at the handler's retirement granularity), `Apply(ctx, tx, op) (format.Outcome, error)` | `management-api.md`'s `Submit`, for every registry-owned management operation and every client-wire binding onto one: `Apply` runs inside the write transaction the core opened (its resolved dispatch decision, was Q2). `Authorize` returns `format.Addressed` rather than a slice of scopes, and `Submit` declares its claims on the transaction, per that spec's resolved claimed-coordinate decision (was Q14); a binding's route is never wider than its operation, its object being one of `Authorize`'s, none, or the declared route-level object (dput's `.changes`), with `Submit` evaluating every pair on both paths, per its resolved binding-scope decision (was Q13, AC8 there). `repository-lifecycle.md` delivers a rename as a `configure` operation whose `args` carry `{"rename": {"from", "to"}}`, handed to **every** `Operator` inside the rename transaction whether or not its `Operations()` lists `configure`, because a rename is a lifecycle event a handler may need to see rather than an operation a caller submits (`management-api.md`'s resolved dispatch decision as amended on Fable 2026-09-30, was Q2, its AC10; `hackage.md` accepts the notice and changes nothing), while a `settings` document for a format whose handler declares no `configure` is refused before any handler runs; a handler with no `Operator` receives nothing and its rename conformance case proves its documents were never name-bound. `async-operations.md`'s runner reaches a handler **only** through `Operator.Apply` via `internal/manage`, never directly: the prototype's question 4 is answered with no pinned method |
+| `Indexer` | `internal/format`, beside `Deps` | `Generator() index.Generator` | `signing-service.md`'s index runtime, before every commit on a repository whose handler declares it: the handler returns a pure generator from its sibling package `internal/format/<name>/index` (records in, bytes out; it imports `internal/index`'s value types and nothing else of the registry). The generator's members (`Generate`, `Merge`, `DeriveInputs`, `FromUpstream`, `Render`) are `signing-service.md`'s and grow there: `DeriveInputs`, which turns an adopted member document into the member-input paths it names, arrived with its resolved member-input decision (was Q21, on Fable 2026-09-30) without touching this one-method interface. `Indexer` is declared in `internal/format` beside `Deps`, not by its consumer `internal/index`, a departure from the idiom the other two rows follow that the re-open's verdict on `Indexer` includes. The prototype's question 1 is answered the same way: no pinned method |
 | `surface.Declarer` | `internal/surface` | `Surface() surface.Declaration` | `web-ui.md`'s renderer and the conformance runner's recipe step, for the per-format client recipes and display hints embedded as `surface.yaml` in the handler package (its resolved declaration-home decision, was Q1); a handler without it renders generically and fails that spec's AC17, since every format must declare at least one recipe |
 
 Two rules hold across the three. First, **the pin is held by a test, not by memory**: a
@@ -372,8 +407,11 @@ for a path prefix. It has two sub-classes, and the `Mount` says which:
   repository}` in configuration, because a hostname is a deployment fact, DNS and a certificate
   SAN, before it is a registry fact; reloaded on `SIGHUP`; a binding to a missing repository is
   a startup warning and a `404` on that host). The claiming handler serves its root-anchored
-  path only on a hostname bound to a repository of its format and answers `404` elsewhere, in
-  its own protocol's error shape. Terraform/OpenTofu (Tier 3) discovers services through
+  path only on a hostname bound to a repository of its format; on any other hostname its
+  `Scope(r)` has no repository to report and returns an error, never a repository-less
+  descriptor, so the request is denied as AC10 says, with the response an unauthorized caller
+  receives (`auth.md` renders that as a `404`, forbidden and missing being indistinguishable),
+  and the handler is never invoked. Terraform/OpenTofu (Tier 3) discovers services through
   `/.well-known/terraform.json` at the host root - the Stackweaver monorepo's working registry
   implementation registers exactly that root route (`HandleServiceDiscovery` in
   `backend/internal/api/routes/routes.go`) - and only the discovery document needs anchoring,
@@ -428,16 +466,30 @@ runs in `internal/proxy`, which therefore has to reach the handler table the rou
 the resolved replay-entry decision below (was Q11), the registration layer exposes that reach as
 **one function value, the replay entry**, built once in the server's composition root from the
 same handler table and mount rules the router uses and injected into `internal/proxy` at
-construction, never imported. It resolves the handler from the remote's format and the route
-recorded with the cached entry (or, for a remote never adopted, a member-input path the format's
-generator profile declares: `signing-service.md` AC35), attaches the marker, sets no principal and
-does not call `Scope(r)`, because there is no caller to authorize; nothing it returns reaches
-anyone. It refuses before dispatch any method other than `GET` and any repository that is not a
-`remote` (a `local` or `virtual` target is refused, since a replay exists only to revalidate an
-upstream's content), so a caller that reached it wrongly still cannot write or read hosted
-content below the authorizer. The marker is a context value only the entry sets: no header,
-query parameter or path segment of a wire request is ever read as the marker, so a client cannot
-forge one through the router. The job that calls the entry receives no principal from the queue
+construction, never imported. It resolves the handler from the remote's format and dispatches the route the job names,
+attaches the marker, sets no principal and does not call `Scope(r)`, because there is no caller
+to authorize; nothing it returns reaches anyone. A route it dispatches has exactly **three
+sources**, and the entry checks the route against them itself rather than taking the job's word:
+the route recorded with one of the remote's cached entries at its first fetch; a member input the
+format's generator profile declares, as a literal path, a template expanded over values the
+runtime holds, or a derivation the generator's pure `DeriveInputs` computes from a document
+adopted earlier in the same job; or a template cell that a router-authorized read of a virtual
+recorded within the variable's declared grammar (`signing-service.md`'s resolved member-input
+decision, was Q21, AC35; `proxy-cache.md` AC26 as amended on Fable 2026-09-30; `auth.md` AC36).
+The composition root therefore hands the entry, beside the handler table, the remote's
+cached-route reader and the same member-input interface `internal/proxy` receives, and the
+entry refuses before dispatch any route outside the union of the three, any method other than
+`GET`, and any repository that is not a `remote` (a `local` or `virtual` target is refused,
+since a replay exists only to revalidate an upstream's content), so a caller that reached it
+wrongly still cannot write, read hosted content, or steer a dispatch below the authorizer. The
+job replays in rounds, asking the member-input interface again after each round's adoptions
+within the profile's round bound, so one job may call the entry several times; each call is
+checked alone. The marker is a context value only the entry sets, and it is unreadable by
+construction where it matters: its key and its accessor live in the composition root package,
+which every handler package cannot import without an import cycle (the root imports every
+handler), so "a handler must not branch on the marker" is a compile-time fact rather than a
+rule, and no header, query parameter or path segment of a wire request is ever read as the
+marker, so a client cannot forge one through the router. The job that calls the entry receives no principal from the queue
 either (`async-operations.md` AC30).
 `internal/proxy` holds the call to one site (`proxy-cache.md`'s `internal/proxy/arch_test.go`),
 and this spec holds the other end: only the composition root constructs the entry, only
@@ -537,7 +589,9 @@ from evidence, not a better guess now. Concretely:
   `format.Binding`), `Indexer` (`signing-service.md`'s resolved renderer-placement decision, was
   Q3 there, its answer to the prototype's question 1: an optional interface, not a sixth method,
   revised before its Phase 1 if the prototype finds the callback needs request context a
-  generator cannot be given) and `surface.Declarer` (`web-ui.md`'s resolved declaration-home
+  generator cannot be given; its generator gained `DeriveInputs` with that spec's resolved
+  member-input decision, was Q21, the interface unchanged at one method; and it is declared in
+  `internal/format` rather than by its consumer, so its verdict includes its home) and `surface.Declarer` (`web-ui.md`'s resolved declaration-home
   decision, was Q1 there), together with `async-operations.md`'s finding that the runner reaches
   a handler only through the `Apply` method of `Operator`, via `internal/manage` (its Scope,
   "Handler-visible scheduling hooks"; the prototype's question 4). The re-open states, per
@@ -570,7 +624,10 @@ from evidence, not a better guess now. Concretely:
   `upstream.Options`, exactly one of a declared digest set and a
   handler-supplied verifier (its completion-only mode, was Q15 there, AC20), an optional
   paired-document declaration (its AC22) and an optional `FirstByteWithin` deadline (was Q16
-  there, AC21), the **advisory key** where the handler reported one (`supply-chain-policy.md`'s
+  there, AC21), for mutable metadata an optional **expected validator** the handler derived
+  from another document of the same remote, which replaces the TTL as that request's freshness
+  test (`rubygems.md`'s resolved info-freshness decision, was Q6 there; `proxy-cache.md` AC31),
+  the **advisory key** where the handler reported one, replaced by any later write of the row (`supply-chain-policy.md`'s
   resolved advisory-key decision, was Q11 there, AC24), and a typed refusal in return. It is one
   entry's request, not a method, and it enters here as generic's and OCI's proxied paths used
   it, so the re-open judges whether the request has become a second interface in all but name.
@@ -579,9 +636,16 @@ from evidence, not a better guess now. Concretely:
   so `internal/proxy` reaches the router's handler table, through the replay entry this spec's
   resolved replay-entry decision below (was Q11) fixes. It changes no method, and its option B,
   a fourth optional `Revalidator` interface, was declined there partly because it would press
-  against this spec's three-interfaces verdict; the re-open says whether a second,
-  unauthorized way into handlers is still the right shape once two merging formats exist, and
-  whether the replay entry is its right home.
+  against this spec's three-interfaces verdict. Since the entry was fixed, the job it serves
+  grew rounds: the member-input interface answers for the remote's current state, templates
+  expanded over other members' values, derivations from documents adopted in an earlier round,
+  and cells recorded by router-authorized virtual reads, bounded at registration (that decision
+  as amended on Fable 2026-09-30; `signing-service.md` was Q21), so the entry is called once per
+  route per round and checks each route against the three sources itself (Routing and
+  registration, "A second dispatch"). The re-open says whether a second, unauthorized way into
+  handlers is still the right shape once two merging formats exist, whether the replay entry is
+  its right home, and whether a dispatch that already carries a source-checked route should keep
+  re-deriving the upstream location through the handler at all.
 - **The `Deps` door as it has grown.** The pin fixed that shared layers arrive through `Deps`
   and left each interface's signature to its owner; since then `Deps` has gained, each settled
   in its owning spec and none changing a method: the `Verifier` (`artifact-verification.md`,
@@ -595,11 +659,18 @@ from evidence, not a better guess now. Concretely:
   decision, was Q14 there), the **claim declaration** on the write transaction a handler's own
   wire write opens (`management-api.md`'s resolved claimed-coordinate decision, was Q14 there,
   with `storage-and-gc.md` AC30 and its resolved head-lock decision, was Q12 there), and the
-  **advisory key** on the metadata-store write that records a package or version
-  (`supply-chain-policy.md`, was Q11 there). The re-open judges whether that door is still one
-  construction contract or has become several interfaces that should be named as such, and in
-  particular whether the claim declaration and the advisory key, both values a handler reports
-  on a write, belong on one structured write coordinate.
+  **advisory key** on the metadata-store write that records a package or version, replaced by
+  any later write of the row (`supply-chain-policy.md`, was Q11 there, as amended on Fable
+  2026-09-30). One read is recorded here so the re-open does not mistake it for a door: the
+  verdict and the **anchor class** a remote member's adoption ran under, which a virtual merge
+  reads for admission (`signing-service.md`'s resolved admission decision, was Q20 there;
+  `data-model.md` AC44), are the index runtime's reads through its own dependencies, not a
+  handler's through `Deps`, because the merge runs in `internal/index` and the generator is
+  pure; no handler reads a verdict or an anchor class, and `Deps` carries neither. The re-open
+  judges whether that door is still one construction contract or has become several interfaces
+  that should be named as such, and in particular whether the claim declaration and the
+  advisory key, both values a handler reports on a write, belong on one structured write
+  coordinate.
 - **Route-scoped and URL-borne credential declarations.** `auth.md` settled that a
   presentation form accepted only on some routes of one format is declared by the handler
   beside its route-to-scope mapping, naming the routes and where the credential sits (a header
@@ -618,7 +689,8 @@ from evidence, not a better guess now. Concretely:
   segment forms of NuGet, Open VSX, LuaRocks and Terraform and Conan's echo as the evidence.
   Two smaller requests of the same shape, what a request carries that the pin does not, ride the
   same input: Chef's end-of-part content-hash check on a multipart upload whose object is taken
-  from the part's filename (`formats/chef.md`, "Authentication"; the Galaxy precedent), and the
+  from the part's filename (`formats/chef.md`, "Authentication"; the Galaxy precedent; the
+  object half of that upload, `Scope(r)` reading the part's filename, is the next input's), and the
   externally visible base URL for documents that carry absolute URLs (`formats/npm.md` and
   `formats/cargo.md` read `server.public_url` through `Deps`; for generated documents,
   `formats/chef.md`'s and `formats/vagrant.md`'s, `signing-service.md`'s resolved serve-time
@@ -627,6 +699,27 @@ from evidence, not a better guess now. Concretely:
   (`formats/swift.md`), is **superseded**: `supply-chain-policy.md`'s was-Q11 stores Swift's
   bound URLs as a package-level advisory key reported at write time and rewritten by a `rebind`
   in the same write, so no request coordinate carries them.
+- **What `Scope(r)` may read.** The pin treats `Scope(r)` as a function of the request line
+  and headers, and two format specs found routes whose object is not there. `formats/rubygems.md`
+  (its resolved filename-resolution decision, was Q5 there) reads **repository state**: a
+  download filename `{name}-{version}[-{platform}]` cannot be split without the index (169
+  ambiguous name pairs on rubygems.org), so its `Scope(r)` resolves the filename through the
+  index the route would serve, the snapshot the request's pointer names on a hosted repository
+  and the cached index on a remote, and reports none when it resolves to nothing. `formats/chef.md`
+  ("Authentication", its route table) and `formats/ansible-collections.md` ("Namespaces") read
+  the **request body**: the object of a multipart publish is the file part's declared filename,
+  read before the file's bytes. `auth.md` admits the first under its existence rule's condition
+  (its result reaches the caller only as the authorization outcome, identical for an
+  out-of-pattern object and a missing one, and it reads nothing the request's repository does
+  not hold; "Pattern scopes", its AC10 review list) and leaves whether `Scope(r)` may read at
+  all to this re-open. Until it runs, the interim bound is this spec's, and AC12's helper holds
+  it: a `Scope(r)` that reads repository state reads it through the metadata store alone, never
+  through fetch-and-cache or the blob store, so no upstream request and no content read happens
+  before authorization; a `Scope(r)` that reads the body reads at most the leading part's headers
+  and leaves the body readable in full for `ServeHTTP`. Neither Tier 0 handler reads anything,
+  and every format that does lands after the re-open, which decides whether these reads are
+  admitted as declared per route, moved to a companion of `Scope(r)`, or refused in favour of
+  a route grammar that carries the object.
 - **Out-of-cycle amendments are re-examined, not inherited:** the re-open re-affirms or revises
   each amendment made between the pin and the re-open - `Scope(r)` (2026-09-23) and its
   addressed object (2026-09-26, widened with the descriptor kind 2026-09-27 and the
@@ -673,8 +766,9 @@ AC8 makes this a criterion of this spec rather than an intention.
       violation, one per reserved string; and a request carrying the root path token
       `/t/{token}/` reaches the routed handler with the segment already stripped, on a
       format-first and on a root-anchored mount alike. A host-bound root-anchored claim is served only on a
-      hostname `server.hosts` binds to a repository of the claiming format and answers `404`
-      elsewhere. (That a carve-out is also recorded in the claiming format's spec stays a review
+      hostname `server.hosts` binds to a repository of the claiming format; on any other
+      hostname the handler's `Scope(r)` returns an error, never a repository-less descriptor,
+      and the request is denied as AC10 says (a `404`) with the handler never invoked. (That a carve-out is also recorded in the claiming format's spec stays a review
       rule; the list is its mechanical shadow.)
 - [ ] AC6: No handler performs its own network egress: inside `internal/format/**`, any call
       that moves bytes upstream - `net/http`'s package-level request helpers, `Client.Do`,
@@ -695,11 +789,18 @@ AC8 makes this a criterion of this spec rather than an intention.
       document is a descriptor, and a name-enumerating or repository-wide route that can name
       objects is none - proven per handler by a table test over its whole route set, in which a
       route absent from the table fails the test, and for every route the table reports as a
-      descriptor the sentinel test runs: the repository is seeded with an object whose name,
-      version and digest are sentinels occurring nowhere else, the route is fetched, and any
-      sentinel in the response body fails the handler's table. A route may report an empty
+      descriptor the sentinel test runs, in both modes where the route exists: the repository
+      is seeded with an object whose name, version and digest are sentinels occurring nowhere
+      else, the route is fetched, and any sentinel in the response body or in any response
+      header fails the handler's table (a proxied descriptor is upstream bytes, so a handler can
+      be right hosted and wrong proxied, and a latest version surfaced in a header would pass a
+      body-only scan; `auth.md` AC32). A route may report an empty
       repository only as a descriptor (OCI's `GET /v2/`), and the table fails any named,
-      content-addressed or none route that reports none.
+      content-addressed or none route that reports none. While `Scope(r)` runs, the helper's
+      fixture `Deps` records every call, and a fetch-and-cache or blob-store call made during
+      `Scope(r)` fails the table, so a `Scope(r)` that reads repository state reads the metadata
+      store alone; a `Scope(r)` that reads the request body leaves it readable in full for
+      `ServeHTTP`, asserted by a fixture body the helper reads back after `Scope(r)` returns.
 - [ ] AC13: `Capabilities()` carries reference-implementation availability, `Virtual` and
       `Rename` beside proxy support; the generic handler declares `none` and every other
       registered handler `available`; both Tier 0 handlers declare `Virtual: supported` and
@@ -713,7 +814,9 @@ AC8 makes this a criterion of this spec rather than an intention.
       are declared in `internal/format`; a fixture handler that imports nothing from
       `internal/policy` recognises the refusal with `errors.As` when the metadata-resolution,
       blob-read or fetch-and-cache call in its `Deps` returns it, renders it through
-      `WriteRefusal` with its own status code and body, and reads advisory records and standing
+      `WriteRefusal` with its own status code and a `[]byte` body (framed with
+      `Content-Length`, the pre-set `X-Request-Id` on the wire, the status and size reported to
+      the request middleware, the unread request body drained or the connection closed), and reads advisory records and standing
       condemnations through the reader, for the repository it serves and a coordinate, while
       obtaining no content bytes from it; an architecture
       test asserts that `WriteRefusal` is the only site in the module that writes a status line by
@@ -722,7 +825,10 @@ AC8 makes this a criterion of this spec rather than an intention.
       `internal/upstream`, `internal/repository`, `internal/telemetry`, the OpenTelemetry API,
       `client_golang`, `internal/manage`, `internal/async` or `internal/signing`, and
       `internal/repository` imports no handler package; the whole list is held by one architecture test in `internal/format`
-      with a violation fixture per edge, independently of the owning specs' own tests.
+      with a violation fixture per edge, independently of the owning specs' own tests; and the
+      same test holds the allowlist: a handler package's imports under `internal/` are within
+      `internal/format`, `internal/index` and `internal/surface`, proven by fixtures importing
+      `internal/proxy`, `internal/auth`, `internal/server` and a store package that each fail.
 - [ ] AC16: `format.Handler` has exactly five methods, asserted by reflection so a sixth cannot
       arrive unnoticed; registration type-asserts `Operator`, `Indexer` and `surface.Declarer`
       once and records the set each handler declares; a fixture handler implementing none of
@@ -741,10 +847,15 @@ AC8 makes this a criterion of this spec rather than an intention.
       fetch-and-cache request, each through a call `Deps` already carries; and the pinned method
       set is unchanged at five.
 - [ ] AC18: The replay entry is the only way into a handler that does not pass the shared
-      authorizer: given a repository and a recorded route it dispatches to the same handler the
-      router would, with the replay marker and no principal and without calling `Scope(r)`; it
-      refuses before dispatch a method other than `GET` and a `local` or `virtual` repository,
-      the fixture handler recording no invocation for either; it is constructed only in the
+      authorizer: given a `remote` and a route from one of the three sources (a cached entry's
+      recorded route, a profile-declared literal, template or `DeriveInputs` derivation, or a
+      template cell a router-authorized virtual read recorded) it dispatches to the same handler
+      the router would, with the replay marker and no principal and without calling `Scope(r)`;
+      it refuses before dispatch a method other than `GET`, a `local` or `virtual` repository,
+      and a route from none of the three sources, checked by the entry against the cached-route
+      reader and the member-input interface it holds, the fixture handler recording no
+      invocation for any of the three; the marker's key and accessor are declared in the
+      composition root package, which a handler package cannot import; it is constructed only in the
       server's composition root and handed only to `internal/proxy`, which an architecture test
       asserts; a wire request carrying a header, query parameter or path segment named like the
       marker reaches the handler through the router without the marker set; and every request
@@ -763,9 +874,10 @@ AC8 makes this a criterion of this spec rather than an intention.
       "The scheduled re-open" cited as its evidence, and with an explicit verdict on each
       out-of-cycle amendment (the descriptor kind and the repository-less descriptor included),
       on whether the addressed object and the policy coordinate converge, on the server-side
-      ingest hook, on whether `Scope(r)` should report several objects, on each of the three
+      ingest hook, on whether `Scope(r)` should report several objects, on what `Scope(r)` may
+      read (repository state, the request body), on each of the three
       optional interfaces (`Operator`, `Indexer`, `surface.Declarer`: fold in, keep optional, or
-      consolidate), on the host binding's home, on whether the fetch-and-cache request shape
+      consolidate, and `Indexer`'s home), on the host binding's home, on whether the fetch-and-cache request shape
       (adoption check with its kept digests, the classification's evictability, the retention
       count and declaring level, the git location and the advisory key included) has become a
       second interface, on the
@@ -790,12 +902,12 @@ AC8 makes this a criterion of this spec rather than an intention.
 | AC10 | unit + conformance | `internal/format/scope_test.go` (denial semantics plus the server-log assertion, which is not protocol-observable and so cannot live in a conformance case per `conformance-harness.md`'s observation rule); a deliberately unmapped route in `conformance/core/` asserting the response is indistinguishable from an unauthorized one |
 | AC11 | unit + integration | `internal/format/register_test.go` (fixture handlers: wrong non-root prefix, unlisted root anchor, a `Name()` and a root anchor for each reserved string `api`, `ui`, `healthz`, `readyz`, `metrics`, `replication` and `t`, a claim at exactly `/`; the `replication` pair shared with `replication.md` AC18); the host-bound serving rule in `internal/server/hosts_test.go`, shared with `deployment.md` AC12; the stripped root path token in `internal/auth/path_token_test.go`, shared with `auth.md` AC31 |
 | AC13 | unit | `internal/format/capabilities_test.go` (every registered handler's four declarations: `none` for generic only; `Virtual` and `Rename` `supported` for both Tier 0 handlers); the matrix rendering itself is asserted in `conformance/core/matrix_test.go`, shared with `conformance-harness.md` AC20 and `repository-lifecycle.md` AC4 |
-| AC14 | unit + architecture test | `internal/format/policy_refusal_test.go` (fixture handler, fixture `Deps` returning the refusal from each of the three calls; import assertion that the fixture package does not import `internal/policy`); `internal/format/refusal_writer_test.go` (raw HTTP/1.1 status line, HTTP/2 and non-`Hijacker` fallback; shared with `supply-chain-policy.md` AC18); `internal/format/arch_test.go` (single hand-written status line site); `internal/policy/advisory_reader_test.go` (the reader against the fixture handler, keyed by the repository it serves; shared with `supply-chain-policy.md` AC19) |
-| AC15 | architecture test | `internal/format/arch_test.go` (import walk over every handler package against the forbidden list, one violation fixture per edge, plus the reverse edge from `internal/repository`); the owning specs' own tests (`internal/format/verify_boundary_test.go` for `artifact-verification.md` AC4, `internal/upstream/import_boundary_test.go`, `internal/telemetry/boundary_test.go`, `internal/manage/arch_test.go`, `internal/async/arch_test.go`, `internal/format/signing_boundary_test.go` for `signing-service.md` AC2) stay where they are |
+| AC14 | unit + architecture test | `internal/format/policy_refusal_test.go` (fixture handler, fixture `Deps` returning the refusal from each of the three calls; import assertion that the fixture package does not import `internal/policy`); `internal/format/refusal_writer_test.go` (raw HTTP/1.1 socket status line, keep-alive and the close on an unread body, the `X-Request-Id` and other pre-set headers on the wire, the refusal observed in `http_server_request_duration_seconds` and the request log through `telemetry.NewTestRecorder`, HTTP/2 and non-`Hijacker` fallback; shared with `supply-chain-policy.md` AC18 as extended on Fable 2026-09-30); `internal/format/arch_test.go` (single hand-written status line site); `internal/policy/advisory_reader_test.go` (the reader against the fixture handler, keyed by the repository it serves; shared with `supply-chain-policy.md` AC19) |
+| AC15 | architecture test | `internal/format/arch_test.go` (import walk over every handler package against the forbidden list, one violation fixture per edge, plus the reverse edge from `internal/repository`; the same walk against the `internal/` allowlist, with fixtures importing `internal/proxy`, `internal/auth`, `internal/server` and a store package that each fail, and a fixture generator package importing only `internal/index` value types that passes); the owning specs' own tests (`internal/format/verify_boundary_test.go` for `artifact-verification.md` AC4, `internal/upstream/import_boundary_test.go`, `internal/telemetry/boundary_test.go`, `internal/manage/arch_test.go`, `internal/async/arch_test.go`, `internal/format/signing_boundary_test.go` for `signing-service.md` AC2) stay where they are |
 | AC16 | unit | `internal/format/pin_test.go` (reflection over `format.Handler`: exactly five methods); `internal/format/register_test.go` (optional-set recording for a fixture declaring none and one declaring all three; the all-three fixture's `format.Addressed` and its `format.Binding` route-level flag recorded; the binding semantics are `management-api.md` AC8's `internal/manage/binding_test.go`) |
-| AC12 | unit | `internal/format/<name>/scope_object_test.go` per handler, the name the format specs and `auth.md` AC32 cite (route table covering every mount's routes and all four object kinds), with a shared helper in `internal/format/scope_test.go` that fails when a registered route is missing from the table, fails a non-descriptor route reporting no repository, and runs the sentinel check (seed sentinels, fetch, scan the body) for every route the table reports as a descriptor; OCI's repository-less `GET /v2/` in `internal/format/oci/scope_object_test.go` |
+| AC12 | unit | `internal/format/<name>/scope_object_test.go` per handler, the name the format specs and `auth.md` AC32 cite (route table covering every mount's routes and all four object kinds), with a shared helper in `internal/format/scope_test.go` that fails when a registered route is missing from the table, fails a non-descriptor route reporting no repository, runs the sentinel check (seed sentinels, fetch, scan the body and every response header, hosted and proxied fixtures; shared with `auth.md` AC32) for every route the table reports as a descriptor, and records every fixture-`Deps` call made while `Scope(r)` runs, failing on a fetch-and-cache or blob-store call and on a request body `Scope(r)` left short; OCI's repository-less `GET /v2/` in `internal/format/oci/scope_object_test.go` |
 | AC17 | unit + architecture test | `internal/format/documents_test.go` (fixture handler holding only `Deps`: the three serving forms and a `304` with no validator header set by the fixture; the claim declaration's `retired` refusal and the advisory key on both calls through fixture `Deps`; import assertion); `internal/format/pin_test.go` (five methods); shared with `signing-service.md` AC11 and AC32 (`internal/format/freshness_boundary_test.go`, `internal/index/serve_rendered_test.go`, `internal/index/serve_file_test.go`), `management-api.md` AC12 (`internal/manage/retirement_test.go`), `storage-and-gc.md` AC30 (`internal/storage/write_claim_test.go`) and `supply-chain-policy.md` AC24 (`internal/policy/advisory_key_test.go`) for the behaviour behind each door |
-| AC18 | unit + architecture test | `internal/server/replay_entry_test.go` (dispatch by repository and recorded route to the router's handler, marker set, no principal, `Scope(r)` never called; a non-`GET` method and a `local` and a `virtual` repository refused before dispatch with no handler invocation; a wire request carrying a header, query parameter and path segment named like the marker reaching the handler through the router without it; a fixture route denied through the router and served through the entry; shared with `auth.md` AC36); `internal/server/arch_test.go` (the entry constructed only in the composition root and passed only to `internal/proxy`, shared with `auth.md` AC36); shared with `proxy-cache.md` AC26 (`internal/proxy/arch_test.go`, the single call site); the queue's half of "no principal" is `async-operations.md` AC30's `internal/async/kinds_test.go` |
+| AC18 | unit + architecture test | `internal/server/replay_entry_test.go` (dispatch by `remote` and a route from each of the three sources to the router's handler, marker set, no principal, `Scope(r)` never called; a non-`GET` method, a `local` and a `virtual` repository, and a route from none of the three sources refused before dispatch with no handler invocation, the entry checking against a fixture cached-route reader and member-input interface; a second round's derived route dispatched after the first round's adoption; a wire request carrying a header, query parameter and path segment named like the marker reaching the handler through the router without it; a fixture route denied through the router and served through the entry; shared with `auth.md` AC36); `internal/server/arch_test.go` (the entry constructed only in the composition root and passed only to `internal/proxy`, shared with `auth.md` AC36); shared with `proxy-cache.md` AC26 (`internal/proxy/arch_test.go`, the single call site); the queue's half of "no principal" is `async-operations.md` AC30's `internal/async/kinds_test.go` |
 
 AC5's manual procedure: for each landing format, inspect the PR diff and record in the
 experiment log that it touches only `internal/format/<name>/`, its conformance cases, and the
@@ -813,7 +925,8 @@ route registration point; any other file is a finding against this spec.
   claims, the `server.hosts` lookup in `Deps`) and the reserved-segment list (`api`, `ui`,
   `healthz`, `readyz`, `metrics`, `replication`, `t`, exactly `/`), the replay entry handed to
   `internal/proxy` (AC18), type assertion and recording of the three optional interfaces (AC16), the pin reflection test (AC16), and
-  the architecture tests including the import boundary (AC15)
+  the architecture tests including the import boundary's forbidden list and `internal/`
+  allowlist (AC15)
 
 ### Phase 2: Proven by two
 - Generic and OCI handlers, confirming the interface survives a trivial and a hard format
@@ -821,9 +934,10 @@ route registration point; any other file is a finding against this spec.
 ### Phase 3: The scheduled re-open
 - The write-triggered services prototype, both halves, then the re-open review pass (AC8) over
   its finding, the two Tier 0 handlers, the request-to-coordinate evidence, the server-side
-  ingest hook, several objects per `Scope(r)`, the three optional interfaces, the host binding,
-  the fetch-and-cache request shape, the revalidation replay, the `Deps` door as it has grown
-  and the credential declarations, before any Tier 1 handler work
+  ingest hook, several objects per `Scope(r)`, what `Scope(r)` may read, the three optional
+  interfaces, the host binding, the fetch-and-cache request shape, the revalidation replay,
+  the `Deps` door as it has grown and the credential declarations, before any Tier 1 handler
+  work
 
 ## Tasks
 
@@ -834,8 +948,9 @@ Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 None remain open. Q9 was raised by the 2026-09-25 gate review and adopted on 2026-09-26 under
 the owner's standing delegation; Q10 was raised and adopted on 2026-09-27 during cross-spec
 reconciliation; Q11 was raised and adopted on 2026-09-28 in the closing reconciliation sweep, on
-Opus, and awaits a Fable recheck. Each record opens by saying so, and the owner may reverse any
-of them. The resolved
+Opus. Q10 and Q11 were rechecked on Fable on 2026-10-01 and both confirmed, each with its
+record amended (the notes on each say what changed). Each record opens by saying so, and the
+owner may reverse any of them. The resolved
 records that follow are kept rather than deleted, so the reasoning survives the next time
 someone asks why it was done this way.
 
@@ -886,6 +1001,28 @@ replay dispatches for a never-adopted remote is a member-input path the generato
 (`signing-service.md` AC35), and the queue gives the calling job no principal
 (`async-operations.md` AC30). None of this changes the option adopted.
 
+Rechecked on Fable 2026-10-01: **confirmed**, the options fairly framed and A the right one. It
+is the forced consequence of `proxy-cache.md`'s replay decision (was Q18 there), which Fable
+confirmed and amended on 2026-09-30: once the job replays the handler's own route, B cycles and
+C invents a credential, and the alternative of replaying the stored fetch-and-cache request
+without the handler fails because that request carries handler closures (the adoption check,
+the verifier) and, for a never-adopted remote, only the handler can derive an upstream
+location from a route. **Amended in its fold and its stated cost**, in four places. First, the
+record fixed a route "recorded with the cached entry" and the job has since grown rounds,
+templates, derivations and request-recorded cells, so the entry now takes a route from three
+sources and checks it against them itself, holding the cached-route reader and the member-input
+interface beside the handler table; a job may therefore call the entry several times, each call
+checked alone (Design, "A second dispatch"; AC18). Second, the cost "a marker a careless
+handler could read" was over-stated: the marker's key and accessor live in the composition root
+package, which no handler package can import without a cycle, so the rule is mechanical, and
+the record's mitigation is stated as such. Third, the "one recipient" assertion is an AST scan
+over the constructor's call sites and the value's flow into `internal/proxy`'s constructor, not
+a type property, and is recorded honestly as that. Fourth, the accepted cost gains what the
+rounds imply: the entry's input is no longer one fixed route per remote but a source-checked
+set that grows with the profile's round bound, which is why the re-open now also asks whether
+a dispatch carrying a source-checked route should re-derive the upstream location through the
+handler at all.
+
 ### Resolved: three optional interfaces beside the pin (was Q10)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: the three optional
@@ -924,6 +1061,20 @@ and UI halves are built on, and it decides how much the pin's "exactly five" cla
 Accepted cost: two Tier 0 handlers and the prototype will be written against three separate
 optional forms, and the re-open may rename or merge them; AC16 makes the pin count and each
 handler's declared set data the re-open can read rather than reconstruct.
+
+Rechecked on Fable 2026-10-01: **confirmed**; A is right and B and C lost for the reasons given.
+**Amended in its record**, which over-claimed its own justification: "the consumer declares the
+interface at its point of use produces exactly three" holds for `Operator` (`internal/manage`)
+and `surface.Declarer` (`internal/surface`) but not for `Indexer`, which `signing-service.md`
+declares in `internal/format` beside `Deps`, not in its consumer `internal/index` (its Design,
+"Package shape", confirmed on Fable 2026-09-30 as its was-Q3). The adoption stands regardless,
+since the count and the deferral do not depend on where the third is declared, but the
+departure is now named in the table and the re-open's verdict on `Indexer` includes its home.
+Two costs the record under-stated: a handler implementing `surface.Declarer` imports
+`internal/surface` for its return type, as its generator package imports `internal/index` for
+value types, so both are named in AC15's allowlist rather than left as an unstated exception;
+and the three interfaces are asserted by a registration layer that imports all three consumers,
+a fan-in that belongs only in the composition root and that the allowlist keeps out of handlers.
 
 ### Resolved: the re-open's evidence set and the request-to-coordinate gap (was Q9)
 
@@ -1151,3 +1302,4 @@ fetch-and-cache entry in `Deps` passes down. Handlers never see an adapter and n
 | 2026-09-27 | 713c1e3 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every queued item targeting this file verified against the current text of its source spec before applying. The pin stays five and AC16 now holds the count by reflection. The three optional interfaces the authoring wave introduced - `Operator` (`management-api.md`, resolved dispatch decision, was Q2, four methods, declared in `internal/manage`, with value types in `internal/format`), `Indexer` (`signing-service.md`, `Generator() index.Generator`, the prototype's question 1), `surface.Declarer` (`web-ui.md`, resolved declaration-home decision, was Q1) - are recorded in a new Design subsection as type-asserted at registration and as one named re-open input with a per-interface verdict required by AC8; Q10 raised in the template's decision shape and adopted under the standing delegation: keep three, do not consolidate or fold before the re-open's evidence exists; none rides an out-of-cycle amendment because none touches the method set. `async-operations.md`'s finding that the runner reaches a handler only through `Operator.Apply` (the prototype's question 4) and its generalised no-goroutine rule recorded. `repository-lifecycle.md`: `Capabilities()` gains `Virtual` and `Rename`, AC13 extended, the rename `configure` operation named under `Operator`. `auth.md` Q23: the `descriptor` kind, stated explicitly as riding the 2026-09-26 amendment as auth.md treats it; AC12 covers four kinds and runs the sentinel test on every descriptor route, the shared helper gaining the check. `Deps`: the `Verifier` (`artifact-verification.md`), `upstream.Options` on fetch-and-cache (`upstream-adapters.md`, which now owns the adapter axis; the 2026-09-25 ownership note closed), the `server.hosts` lookup (`deployment.md`, was Q8), the `*slog.Logger` with context correlation (`observability.md`). The handler import boundary consolidated into AC15 with one test and a fixture per edge (policy, verify, upstream, repository both ways, telemetry and OTel and client_golang, manage, async). Reserved segments made an exhaustive owner-cited table (`api`, `ui`, `healthz`, `readyz`, `metrics`, the replication segment, exactly `/`) with AC11 naming a fixture per string; the carve-out class split into path-only and host-bound claims with Puppet's `/v3/` (Open item 25) recorded beside Terraform, the was-Q3 record extended. Old-fold items (replication 4, supply-chain 2, harness 2, format-management 4, charter 4) found already applied at fe54272. 16 criteria. Stays draft. |
 | 2026-09-28 | b0fa0b3 | closing-sweep reconciliation pass on Opus (step 3): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through "From the supply-chain-policy.md closing sweep", each matched to the settled text of its owning spec rather than the queue text, plus format batch 1 item 2, which the progress log did not show applied. Signing-service closing sweep item 3: `Deps` carries `Documents` (`ServeDocument`, `ServeRendered`, `ServeFile`, `SignedBy`) declared in `internal/format` (its was-Q14). Management-api closing sweep item 3 (with batch 3 item 4, batch 4 item 4 and batch 6 item 10, settled there): `Operator.Authorize` returns `format.Addressed`, `format.Binding` gains the route-level-object flag, the value types gain `Addressed`, and two re-open inputs (several objects per `Scope(r)`, its was-Q13; the `Deps`-level claim declaration, its was-Q14, with `storage-and-gc.md` AC30 and was-Q12). Proxy-cache closing sweep item 3: the fetch-and-cache request gains the adoption check (its AC25), and the `proxy.revalidate` replay (its was-Q18) is a second dispatch into handlers below the authorizer; Q11 raised in the template's decision shape and adopted under the standing delegation, on Opus: one replay entry, built in the composition root from the router's handler table and injected into `internal/proxy` only, no pinned method or handler-facing type changed (Routing and registration, AC18). Supply-chain closing sweep item 2 and batch 4 item 9: the advisory key rides the metadata-store write and the fetch-and-cache request (its was-Q11), which also answers how the core learns an origin or source package; the advisory reader is keyed by the repository served (its was-Q12); Swift's alias rider marked superseded. Auth closing sweep item 2: the exchange-echo declaration (its was-Q25, AC35) joins the route-scoped credential input; the `Scope(r)` row states OCI's repository-less `GET /v2/` descriptor (its AC32, `formats/oci.md` was-Q8), "OCI reports tags" becomes `{image}/{tag}`, the path-only claim and the was-Q3 record name the first-component split, and AC12 fails a non-descriptor route reporting no repository. The re-open's inputs rewritten as one complete list, each naming its source spec and question (the ingest hook as `replication.md` was-Q10, `Indexer` as `signing-service.md` was-Q3, `surface.Declarer` as `web-ui.md` was-Q1, the ansible finding as its was-Q1 and was-Q6), with a new "`Deps` door as it has grown" input; AC8 requires a verdict on every new input. Also corrected on verification: the import boundary lacked `internal/signing` (`signing-service.md` AC2), now in AC15 and its row; the per-handler object table file is `scope_object_test.go`, the name every format spec and `auth.md` AC32 cite; the adapter-seam citation pointed at a heading `upstream-adapters.md` does not have (it is `proxy-cache.md`'s, and "The interface" there). New AC17 (`Documents`, claim declaration and advisory key through `Deps`, pin five) and AC18 (the replay entry), each with a Test Plan row; Scope and Phases 1 and 3 updated. No method change: the pin stays five (AC16). Earlier items found already done: every item before format batch 3 other than batch 1 item 2 (sweep 1 and the foundation reconciliation). `fable_recheck` added for Q11. 18 criteria. Stays draft. |
 | 2026-09-28 | 4278ce0 | leftovers pass of the closing sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the items queued against this file after its closing sweep, each verified against the owning spec's settled text. Six-spec closing sweep item 3: the fetch-and-cache location gains the git form `{url, commit}` (`upstream-adapters.md`'s resolved git-location decision, was Q9, AC34), in the handler-contract bullet, the re-open input and AC8. Data-loss fix item 4 and its second-wave item 2: the adoption check's result carries the kept-blob digests, and a revisioned document set carries its retention count, with the declared counts so far read from the format specs (one per module for `puppet.md`, one per box for `vagrant.md`, zero for `homebrew.md`'s API documents and manifests). Eviction settlement item 6: the classification carries evictability (artifact versus metadata, `proxy-cache.md` was-Q21, AC29), the count is zero-valid (was-Q19) and the declaring level is repository or package (was-Q22). Auth and data-model second passes item 1: "A second dispatch, below the authorizer" and AC18 gain the three cases `auth.md` AC36 relies on (non-`GET` refused before dispatch, `local` and `virtual` refused before dispatch, no wire request carrying the marker), the `internal/server/replay_entry_test.go` row names them and shares with `auth.md` AC36, the "reported to that spec" sentence now cites `auth.md` AC36 and its AC10 procedure, and the replayed route for a never-adopted remote is the profile-declared member-input path (`signing-service.md` AC35). Async-operations closing sweep item 3 (optional, applied): `async-operations.md` AC30 cited in Design and in AC18's row. A dated note on the was-Q11 record says what landed; the option adopted is unchanged. Found already done: proxy-cache closing sweep item 3 (the adoption check and the second dispatch, since the closing sweep). No question raised or adopted; the fable_recheck marker is unchanged. The pin stays five; 18 criteria, each with a Test Plan row. Stays draft. |
+| 2026-10-01 | 75ee7de | Fable recheck: full review (claim verification of every sibling citation at HEAD: `auth.md` "Authorization is central", "The one entry that skips the authorizer", AC32 and AC36 as amended on Fable; `proxy-cache.md` "Revalidation outside the request", the Obligation list, AC26 and AC31; `signing-service.md` "Package shape", the member-input and `DeriveInputs` contract, "The produce/verify boundary", AC35; `supply-chain-policy.md`'s refusal writer, AC18 and its was-Q10 and was-Q11 as amended; `management-api.md`'s dispatch section and AC10; `data-model.md` AC44 to AC46; `async-operations.md` AC30; `repository-lifecycle.md` AC4 and AC13; `deployment.md` AC12; `formats/rubygems.md` was-Q5, `formats/chef.md`'s route table, `formats/ansible-collections.md` "Namespaces", `formats/oci.md`'s and `formats/generic.md`'s tables; the tree still holds only `cmd/stackweaver-registry/main.go`, so no code claim was checkable) + adversarial lens at full strength on the Opus-folded sections + constitution + go-spec-reviewer inline + re-examination of the Opus adoptions Q10 and Q11 | Brought current first: every open consequence against this file applied and verified against its source's current text (supply-chain recheck item 6, proxy-cache recheck item 6, signing-service recheck item 12, auth recheck item 3, management-api recheck item 8, rubygems authoring item 3; the earlier sweeps' items found applied). Verdicts: Q10 confirmed, its record amended (the consumer-declares claim holds for two of three; `Indexer`'s home named and put to the re-open; the `internal/surface` and `internal/index` value-type imports named in the allowlist). Q11 confirmed as forced by `proxy-cache.md`'s Fable-confirmed replay decision, amended in fold and cost (three route sources checked by the entry itself against the cached-route reader and member-input interface it holds; rounds; the marker's key in the composition root package, so unreadable by any handler; the one-recipient assertion an AST scan; AC18 and its row rewritten). Refuted and fixed beyond the adoptions: `Deps` listed "the central authorizer", which `auth.md` never mentions and which contradicted this spec's own forbidden-auth-check rule, removed with a paragraph saying why; AC15's forbidden list assumed but never named `internal/proxy`, `internal/auth`, `internal/server` and the store packages, so the "only door" claim is now held by an `internal/` allowlist in the same test with failing fixtures; a host-bound claim's "answers 404 elsewhere" was a handler-rendered response that AC10 forbids, restated as a `Scope(r)` error and AC10's denial (Design, AC11; `terraform.md` and `puppet.md` already say `404`); Chef's and Galaxy's body-derived object and RubyGems' index-resolved object gathered into one new re-open input, "What `Scope(r)` may read", with the interim bound AC12's helper holds. Also folded: `WriteRefusal`'s amended contract (AC14 and its shared row), the expected validator, the advisory key's replace rule, `DeriveInputs`, the rename `configure` to every `Operator`, the anchor class as the runtime's read and not a `Deps` door, AC12's sentinel test in both modes scanning headers. Constitution: both paths, the shared model, no handler table, a named enforcer per boundary and the conformance gate all hold; nothing weakens `auth.md` AC10 (the replay entry and the data-reading `Scope(r)` stay on its review list). go-spec-reviewer inline: interfaces small and consumer-placed but for `Indexer` (named), errors and context explicit, no goroutine in a handler, the pin's YAGNI departure recorded; approved after the fixes. `node scripts/check-spec.js`: zero failures on this file; no em-dashes on touched lines. Sibling consequences reported to the orchestrator, not applied. The pin stays five; 18 criteria, each mapped; Open Questions empty; `fable_recheck` cleared; draft to planned. |
