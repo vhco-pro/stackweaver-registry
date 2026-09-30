@@ -197,7 +197,7 @@ function checkSpec(absPath) {
       // the sha the row cites - otherwise every review marks its own spec stale.
       try {
         const recording = execSync(
-          `git -C ${ROOT} log -1 --format=%H -S"${lastSha}" -- "${rel}"`,
+          `git -C ${ROOT} log -1 --format=%H -G"${lastSha}" -- "${rel}"`,
           { encoding: 'utf-8' },
         ).trim();
         if (!recording) {
