@@ -276,6 +276,9 @@
   "internal/telemetry/**": [
     "docs/internal/plans/foundation/observability.md"
   ],
+  "internal/trustsource/**": [
+    "docs/internal/plans/foundation/artifact-verification.md"
+  ],
   "internal/ui/**": [
     "docs/internal/plans/foundation/web-ui.md"
   ],

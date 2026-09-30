@@ -429,10 +429,11 @@
     "path": "docs/internal/plans/foundation/artifact-verification.md",
     "description": "Spec for artifact signature and attestation verification: one shared verifier behind the handlers and the proxy layer, per-repository trust sets, Sigstore, OpenPGP, CMS, apk, RPM, JWS, Ed25519 and TUF entries for the ecosystems the format specs raise, and a stored per-digest verdict that supply-chain-policy.md consumes.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "46",
     "covers": [
-      "internal/verify/**"
+      "internal/verify/**",
+      "internal/trustsource/**"
     ]
   },
   {
