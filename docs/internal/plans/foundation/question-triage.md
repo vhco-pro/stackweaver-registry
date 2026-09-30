@@ -440,15 +440,16 @@ decision:
 2. **Revisions of earlier decisions.**
    - `supply-chain-policy.md` Q9 revised a delegation-adopted Q1.
    - `proxy-cache.md` Q17 extends the preconfigured upstreams a second time.
-3. **What a signed virtual may merge** (found by the format closing sweep, 2026-09-28).
-   - `signing-service.md` AC36 admits only verdict-carrying upstream documents into a signed
-     virtual repository.
-   - `arch.md` Q13 and `rpm.md` Q11 applied it honestly. As a result, the official Arch and
-     Manjaro mirrors, Fedora through metalink, and any TLS-only remote contribute nothing to a
-     signed virtual repository.
-   - This is a product limitation no owner chose. Batch 2 of the format sweep in
-     `agents/spec-loop/consequences.md` records the alternatives: record-level admission by
-     package signature, and a metalink match as admission.
+3. **What a signed virtual may merge.** RESOLVED on Fable 2026-09-30 by `signing-service.md` Q20.
+   A signed virtual repository now admits a remote's documents by the anchor class its adoption
+   ran under:
+   - a signature anchor needs a `verified` verdict;
+   - a metalink integrity anchor and TLS alone both admit;
+   - a failed adoption is never admitted.
+
+   The admission outcome is recorded per document. This supersedes arch Q13 and the composed half
+   of signing-service Q17, so the official Arch mirrors and Fedora contribute again. It is
+   reversible by the owner.
 4. **The authorizer surface.**
    - `auth.md` Q23 to Q25: the descriptor object kind and the Conan exchange echo.
    - `management-api.md` Q13: a binding is never wider than its operation. It feeds auth AC10's
@@ -486,7 +487,7 @@ decision:
 | `foundation/web-ui.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9 |
 | `foundation/repository-lifecycle.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10 |
 | `foundation/upstream-adapters.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9 |
-| `foundation/signing-service.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19 |
+| `foundation/signing-service.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19 (rechecked on Fable 2026-09-30: fifteen confirmed, Q8, Q16, Q19 amended, Q17's composed half superseded by Q20; Q20 and Q21 adopted on Fable; spec planned) |
 | `foundation/storage-and-gc.md` | Q11, Q12 (rechecked on Fable 2026-09-30: both confirmed and amended; spec planned) |
 
 ## Closed without an owner decision
