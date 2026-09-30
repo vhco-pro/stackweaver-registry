@@ -479,7 +479,7 @@
     "path": "docs/internal/plans/foundation/data-model.md",
     "description": "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "12",
     "covers": [
       "internal/model/**",
