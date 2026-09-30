@@ -576,7 +576,7 @@
     "path": "docs/internal/plans/foundation/repository-lifecycle.md",
     "description": "Spec for the repository lifecycle: creation of local, remote and virtual repositories with their type-specific settings, configuration changes and which of them are completed writes, renaming and what it does to identities, tokens, grants, replication links and client URLs, the read-only state, deletion as a reference-ending write whose space returns only through pruning and the sweep, deletion's effect on pointers, snapshots, cached content, upload sessions, jobs, keys, trust sets, links and virtual membership, and the reuse of a name after deletion.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "50",
     "covers": [
       "internal/repository/**"
