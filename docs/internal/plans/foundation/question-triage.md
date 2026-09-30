@@ -474,7 +474,7 @@ decision:
 | `formats/hex.md` | Q9, Q10 |
 | `formats/pub.md` | Q6 |
 | `foundation/artifact-verification.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 |
-| `foundation/proxy-cache.md` | Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22 |
+| `foundation/proxy-cache.md` | Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22 (rechecked on Fable 2026-09-30: six confirmed, Q16 and Q18 amended; spec planned) |
 | `formats/vagrant.md` | Q13 |
 | `foundation/async-operations.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 |
 | `foundation/format-handler-interface.md` | Q10, Q11 |
