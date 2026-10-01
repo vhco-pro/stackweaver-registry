@@ -61,18 +61,13 @@ session ends). Each firing:
 
 ## Resume point
 
-**2026-10-01, Fable rechecks.** Every foundation spec except web-ui is rechecked and planned
-(web-ui running at 13192da). Next, in order, two agents at a time:
-1. Follow-ups with `followup-brief.md`, one planned spec per agent, most-queued first: data-model,
-   storage-and-gc, signing-service, proxy-cache, auth, management-api, async-operations,
-   deployment, observability, format-handler-interface, credential-management,
-   supply-chain-policy, artifact-verification, repository-lifecycle, upstream-adapters. A
-   follow-up queues more items against other planned specs. Repeat rounds until a round queues
-   nothing against a planned foundation spec.
-2. Gate reviews (`agents/spec.md` review mode, on Fable) of the foundation drafts not carrying
-   `fable_recheck`: conformance-harness (a build-step gate), replication, project-charter.
-3. The format sweep batches below (Opus is fine), then each format's Fable recheck with
-   `recheck-brief.md` after its batch.
+**2026-10-01, foundation done on Fable.** Every foundation spec except the three drafts below is
+rechecked and planned, and the follow-up rounds converged (only optional wording remains, listed in
+consequences.md). Next, two agents at a time:
+1. Gate reviews (`agents/spec.md` review mode, on Fable): conformance-harness (running at 369f502),
+   replication, then project-charter.
+2. The format sweep batches below (Opus is fine), carrying every format item queued in
+   consequences.md since 2026-09-28, then each format's Fable recheck with `recheck-brief.md`.
 
 Stopped by the owner at the spend limit, then the two interrupted items were finished the same
 day. Nothing is uncommitted. In order:
