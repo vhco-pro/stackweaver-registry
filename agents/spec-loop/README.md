@@ -58,6 +58,11 @@ session ends). Each firing:
    partial edits in the tree (never revert them).
 3. Fill free slots, two agents at most, with the next items in the resume point below.
 4. If the API refuses with a usage limit, stop; the next firing retries.
+5. **Owner, 2026-10-01: stop the loop when Fable is out of usage.** A 5-hour session limit
+   ("your session limit resets <time>") is not that: recover after the reset as above. A refusal
+   that is not a session reset (a weekly or monthly Fable allowance spent, or Fable unavailable)
+   ends the loop: commit what finished, record the resume point here, cancel the heartbeat cron,
+   and never fall back to Opus for spec judgment.
 
 ## Resume point
 
