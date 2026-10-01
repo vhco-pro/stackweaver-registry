@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Format closing sweep 2026-09-28 at f8ad8b2 on Opus (not a review): the merging profile declares its member-input paths (per subdir repodata.json, the shard index and run_exports.json; channeldata.json and notices.json at the root), replayed for noarch and every subdir another member holds when a never-adopted remote joins a virtual; remote adoption re-merges and a virtual-only remote is revalidated by the virtual's reads (signing-service was-Q16, AC35; proxy-cache AC26; AC17 extended); the unsigned merged index admits remote documents with no verdict, AC36 governing only signed bodies; the digest index declared on the remote's blob-digest list with a retained count of zero, closing a keep-alive-by-mention hole, and the remote's index documents outside the quota in cache_metadata_bytes (proxy-cache was-Q19, Q21; new AC26); Cache-Control per format, max-age=60, no repository override (signing-service was-Q18, AC30), packages and sidecars through ServeFile (was-Q14, AC6 extended); bindings never wider than publish, claims checked at declaration and at commit, the declared unchanged publish and the wire rendering of retired (management-api was-Q13 to Q16, AC4 extended); the hosted read half recorded against a pinned conda-index tree and no write corpus, two exception-list rows for conformance-harness (AC19). No question adopted; 26 criteria. Earlier: Reconciled 2026-09-28 at 15ced69 with the foundation wave on Opus (not a review): revoke and unrevoke are management-api's withdraw and restore kinds under delete (its was-Q1 reversed this spec's push), patches and notices annotate, remove delete-file, the two upload routes declared bindings onto publish (AC5); retirement is data-model's core-held Retirement record, refused centrally as retired, the served removed list kept as snapshot state (AC4); generation through signing-service's Indexer and generator package as an unsigned consumer, dispatched by the pre-commit hook and served through ServeDocument, the virtual merge on the index.merge job (AC6, AC17); the /t/ path token held by auth.md's presentation-form table and format-handler-interface's reserved t, the upstream path-token kind in upstream-adapters (AC8, AC14); refusals through WriteRefusal with the status-line phrase, the capture filling conda's pending binding row (AC10); the CEP-27 verdict through artifact-verification's entry, recorded not enforced (AC22); OSV coverage and the pkg:conda cataloguer requirement cited from supply-chain-policy; cache-scoped Last-Modified on remotes (AC12); removal rows named by proxy-cache class; Capabilities with rename and virtual cases (AC25). Earlier: authored 2026-09-26 from captures of conda 26.7.1 and 24.1.2, mamba 2.9.0, micromamba 2.3.3 and pixi 0.81.0; ten questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-01 at 71e0ccb: a full review pass plus the re-examination of the ten authoring adoptions and the three judgements the closing sweep folded without a question. Q1, Q3, Q5, Q7, Q8 and Q10 confirmed; Q2 confirmed as revised by management-api's effect rule, with the bulk import refusing revoke and remove lists under annotate; Q4 confirmed and amended in cost (every publish rewrites the monolithic forms whole, gated at conda-forge scale by AC18; created_at from the write's input; channeldata derived at generation); Q6 confirmed and amended in fold (the merged current index derived from merged records, the removed subtraction, notices by id, the merged shards on the merged shard index's declared list with one predecessor generation, the static member-input list replaced by a {subdir} template plus noarch with a read-driven remote-only subdir under signing-service was-Q21 and was-Q22); Q9 confirmed and amended in fold (run_exports from info/run_exports.json, about data at ingest, the overlay excluding run_exports). Q11 raised and adopted under the standing delegation, owner-facing: the merge reads repodata.json.zst from a remote member, one seventh of the transfer, a .zst-less member contributing nothing. Adversarial findings folded: the shard index's declared list holds the previous generation's shards so a client inside its max-age never meets a 404 on a shard (AC2, AC6); attach declared for CEP-50 attestations on existing files and an existing-bytes publish with one is a changed publish (AC5, AC22); the overlay excludes identity, integrity and run_exports fields; the proxied TTL is the layer's, not the upstream's max-age (AC12); no configuration-time probe (AC20); HEAD and no content encoding on both paths; CEP-6 notices validation (AC23); the spool limit's 413 (AC3); the digest index built in the adoption transaction (AC26). 26 criteria, each with a Test Plan row; eleven resolved, zero open; fable_recheck cleared. Earlier: Format closing sweep 2026-09-28 at f8ad8b2 on Opus (not a review): the merging profile declares its member-input paths (per subdir repodata.json, the shard index and run_exports.json; channeldata.json and notices.json at the root), replayed for noarch and every subdir another member holds when a never-adopted remote joins a virtual; remote adoption re-merges and a virtual-only remote is revalidated by the virtual's reads (signing-service was-Q16, AC35; proxy-cache AC26; AC17 extended); the unsigned merged index admits remote documents with no verdict, AC36 governing only signed bodies; the digest index declared on the remote's blob-digest list with a retained count of zero, closing a keep-alive-by-mention hole, and the remote's index documents outside the quota in cache_metadata_bytes (proxy-cache was-Q19, Q21; new AC26); Cache-Control per format, max-age=60, no repository override (signing-service was-Q18, AC30), packages and sidecars through ServeFile (was-Q14, AC6 extended); bindings never wider than publish, claims checked at declaration and at commit, the declared unchanged publish and the wire rendering of retired (management-api was-Q13 to Q16, AC4 extended); the hosted read half recorded against a pinned conda-index tree and no write corpus, two exception-list rows for conformance-harness (AC19). No question adopted; 26 criteria. Earlier: Reconciled 2026-09-28 at 15ced69 with the foundation wave on Opus (not a review): revoke and unrevoke are management-api's withdraw and restore kinds under delete (its was-Q1 reversed this spec's push), patches and notices annotate, remove delete-file, the two upload routes declared bindings onto publish (AC5); retirement is data-model's core-held Retirement record, refused centrally as retired, the served removed list kept as snapshot state (AC4); generation through signing-service's Indexer and generator package as an unsigned consumer, dispatched by the pre-commit hook and served through ServeDocument, the virtual merge on the index.merge job (AC6, AC17); the /t/ path token held by auth.md's presentation-form table and format-handler-interface's reserved t, the upstream path-token kind in upstream-adapters (AC8, AC14); refusals through WriteRefusal with the status-line phrase, the capture filling conda's pending binding row (AC10); the CEP-27 verdict through artifact-verification's entry, recorded not enforced (AC22); OSV coverage and the pkg:conda cataloguer requirement cited from supply-chain-policy; cache-scoped Last-Modified on remotes (AC12); removal rows named by proxy-cache class; Capabilities with rename and virtual cases (AC25). Earlier: authored 2026-09-26 from captures of conda 26.7.1 and 24.1.2, mamba 2.9.0, micromamba 2.3.3 and pixi 0.81.0; ten questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for the conda channel format: the static subdir layout, the subdir-wide generated index in its monolithic, compressed, current and sharded representations, repodata patching as the ecosystem's management vocabulary, the four proprietary upload APIs and the two served as bindings, hosted and proxied, with conda, mamba, micromamba and pixi as the conformance oracles."
 author: michielvha
 goal: "Serve conda, mamba and pixi users a private channel whose index is regenerated by the shared index service on every publish and never disagrees with itself across its representations, and a conda-forge cache that survives that channel's scale, with repodata patching, revocation and removal as registry-owned operations the real clients observe."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/conda/**"
   - "conformance/conda/**"
-fable_recheck: "the format closing sweep on Opus 2026-09-28 folded a design judgement without a question, which needs a Fable recheck: the member-input paths a never-adopted remote member is first fetched through, and their expansion over noarch and the subdirs other members of the virtual hold"
 ---
 
 # Plan: Conda channel format
@@ -140,10 +139,11 @@ gate (its AC5) and the charter's breadth verdict (its AC9, build step 8) both pr
 re-open is recorded here anyway, from this side, because a gate enforced on one side only is
 enforced nowhere.
 
-**The shared signing and index service must be `planned` before Phase 1.** Every index document
+**The shared signing and index service is `planned`, which Phase 1 required.** Every index document
 a hosted channel serves is a write-triggered generated document produced by the index half of
-`docs/internal/plans/foundation/signing-service.md`, which the charter builds at step 7 as the
-production form of what the step 4a prototype learned (`write-triggered-services-prototype.md`).
+`docs/internal/plans/foundation/signing-service.md` (planned on Fable 2026-09-30), which the
+charter builds at step 7 as the production form of what the step 4a prototype learned
+(`write-triggered-services-prototype.md`).
 Conda is one of that spec's unsigned consumers: the handler declares the optional `Indexer`
 interface, its generator lives in the sibling package `internal/format/conda/index`, and the
 service creates no key and no signature record for a conda repository (signing-service.md, "The
@@ -152,17 +152,18 @@ service is stated in Design ("What the signing and index service must provide"),
 mapped onto that spec's contract; nothing is asked of its signing half, because nothing on this
 wire is signed (Scope). Every package file and sidecar also goes out through that spec's
 `ServeFile` form behind `Documents` in `Deps` (its resolved handler-rendered decision, was Q14,
-AC32). A conda handler without it can serve no subdir at all, so Phase 1 waits on that spec
-reaching `planned`.
+AC32). A conda handler without it can serve no subdir at all, which is why Phase 1 waited on
+that spec.
 
-**The management API must be `planned` before Phase 2.** Publishing a file, deleting one, patching
-a record, revoking and unrevoking, and setting channel notices are operations of
-`docs/internal/plans/foundation/management-api.md`, placed on its closed kind vocabulary by its
-cross-format reconciliation table (`publish`, `annotate`, `withdraw` and `restore`,
+**The management API is `planned`, which Phase 2 required.** Publishing a file, deleting one,
+patching a record, revoking and unrevoking, attaching an attestation to an existing file, and
+setting channel notices are operations of `docs/internal/plans/foundation/management-api.md`
+(planned on Fable 2026-09-30), placed on its closed kind vocabulary by its cross-format
+reconciliation table (`publish`, `annotate`, `withdraw` and `restore`, `attach`,
 `delete-file`), with the two upload shapes `rattler-build` drives declared as bindings onto
 `publish` through the handler's `Operator` interface (Design, "The publish path" and "Patch,
-revoke, remove and notices are management operations"). AC3, AC4, AC5 and AC23 are untestable
-until that surface exists.
+revoke, remove and notices are management operations"). AC3, AC4, AC5, AC22 and AC23 are
+untestable until that surface exists.
 
 **The shared-layer pieces the path-carried token needs now exist in their owners.** The
 `/t/{token}/` segment is the root path token of `auth.md`'s presentation-form table (universal,
@@ -170,8 +171,8 @@ extracted, marked secret, verified and stripped by the shared authorizer before 
 AC31), the registration layer holds `t` in `format-handler-interface.md`'s reserved-segment table
 with an AC11 fixture, and the same token inserted into an upstream URL is the `path-token`
 credential kind of `docs/internal/plans/foundation/upstream-adapters.md` (template `/t/{token}/`
-after the host, root host only; its AC19 and AC20). All three are drafts; Phase 1 relies on the
-first two and Phase 3 on the third, and none is re-specified here.
+after the host, root host only; its AC19 and AC20). All three are `planned`; Phase 1 relies on
+the first two and Phase 3 on the third, and none is re-specified here.
 
 ## Scope
 
@@ -195,8 +196,8 @@ first two and Phase 3 on the third, and none is re-specified here.
   `info/index.json`, server-computed digests, immutability and the core-held retirement set, and
   the write-boundary declaration `data-model.md` requires.
 - The management operations this format needs from the management API: publish, delete a file,
-  patch a record, revoke and unrevoke, set notices, each bound onto the kind and action
-  `management-api.md`'s vocabulary assigns it.
+  patch a record, revoke and unrevoke, attach a CEP-50 attestation to an existing file, set
+  notices, each bound onto the kind and action `management-api.md`'s vocabulary assigns it.
 - Name, version, build, subdir and filename rules exactly as CEP-26 states them, the mandatory
   `noarch` subdir, and the filename grammar the registry parses.
 - Non-interactive authentication in every form the pinned clients send: HTTP Basic from URL
@@ -304,10 +305,10 @@ stored state (Design, "Every hosted index document is a write-triggered document
 | `repodata.json` | `info` (`subdir`; `base_url` and `repodata_version: 2` only when packages live elsewhere), `packages` (one record per `.tar.bz2` filename), `packages.conda` (one per `.conda` filename), `removed` (filenames removed by patch instructions), `repodata_version` (1). A record carries every `info/index.json` field of the package (`build`, `build_number`, `depends`, `constrains`, `license`, `license_family`, `name`, `noarch`, `subdir`, `timestamp`, `version`, and any `run_exports`, `python_site_packages_path` or `track_features` present) plus the server-computed `md5`, `sha256` and `size` of the artifact, with the patch overlay applied and `revoked: true` on a revoked record | The last fallback of every client; `mamba search` reads it directly |
 | `repodata.json.zst`, `repodata.json.bz2` | The same bytes compressed; CEP-36 marks `.bz2` deprecated and `.zst` recommended | `.zst`: conda 24, micromamba, and every sharded client on fallback; `.bz2`: pixi only when `.zst` is absent |
 | `current_repodata.json` (+ `.zst`, `.bz2`) | The newest version of each package name, the versions a pin file names, and whatever older records are needed to satisfy their dependencies (`build_current_repodata` in conda-index); revoked and removed records are simply absent from it. conda-index's rule kept the revoked `demo-1.1` as "newest" in this pass, so the registry generates it from the patched records (below) rather than from the raw ones | `conda --solver classic` only |
-| `repodata_shards.msgpack.zst` | A zstd-compressed msgpack map: `version: 1`, `info` with `subdir`, `created_at`, and `base_url` and `shards_base_url` (both present, empty strings when packages and shards live beside the index; conda 26's own source notes that rattler and pixi require the keys), and `shards`, a map from package name to the 32-byte SHA-256 of that name's shard file | conda 26, mamba 2.9, pixi |
+| `repodata_shards.msgpack.zst` | A zstd-compressed msgpack map: `version: 1`, `info` with `subdir`, `created_at` (conda-index writes its own run time; this registry writes the triggering write's commit time, which the runtime hands the generator, so the bytes are deterministic under `signing-service.md` AC25), and `base_url` and `shards_base_url` (both present, empty strings when packages and shards live beside the index; conda 26's own source notes that rattler and pixi require the keys), and `shards`, a map from package name to the 32-byte SHA-256 of that name's shard file | conda 26, mamba 2.9, pixi |
 | `{sha256 hex}.msgpack.zst` | One shard per package name: `packages` and `packages.conda` maps of the records for that name, with `run_exports` inlined (CEP-21); the filename is the SHA-256 of the compressed bytes, verified by this pass on a generated shard and a live conda-forge shard. conda-index 0.13.0 encodes each record's `md5` and `sha256` as raw bytes; live conda-forge shards carry hex strings; both decode in the three sharded clients | The same three |
-| `run_exports.json` (+ `.zst`, `.bz2`) | `info` with `subdir` and `version: 1`, and per-filename `run_exports` maps (`weak`, `strong`, `weak_constrains`, `strong_constrains`, `noarch`), which CEP-12 requires to reflect the archives and never be patched | conda-build and rattler-build when pinning; no pinned client |
-| `channeldata.json` (channel root) | `channeldata_version: 1`, `subdirs`, and per-package channel-wide metadata (`version`, `subdirs`, `summary`, `home`, `license`, `timestamp`, `run_exports`, the activation and prefix flags) | No pinned client; a UI |
+| `run_exports.json` (+ `.zst`, `.bz2`) | `info` with `subdir` and `version: 1`, and per-filename `run_exports` maps (`weak`, `strong`, `weak_constrains`, `strong_constrains`, `noarch`) read from each package's `info/run_exports.json` at ingest (the file conda-index's cache extracts for it; `index.json` carries none), which CEP-12 requires to reflect the archives and never be patched; CEP-12 specifies no compressed form, so the `.zst` and `.bz2` are conda-index's convention followed here | conda-build and rattler-build when pinning; no pinned client |
+| `channeldata.json` (channel root) | `channeldata_version: 1`, `subdirs`, and per-package channel-wide metadata, the fields conda-index's `CHANNELDATA_FIELDS` names (`version`, `subdirs`, `summary`, `description`, `home`, `license`, `dev_url`, `doc_url`, `icon_url`, `timestamp`, `run_exports` per version, `tags`, and the `activate.d`, `deactivate.d`, `pre_link`, `post_link`, `pre_unlink`, `binary_prefix` and `text_prefix` flags), derived at generation from the newest version of each name over the records' ingest-extracted `about` data, never stored as a document of its own | No pinned client; a UI |
 | `notices.json` (channel root) | CEP-6: `notices`, each with `id`, `message`, `level`, `created_at`, `expires_at` | conda 26.7.1 and pixi on every command |
 
 Two consequences of the representation set are load-bearing. **They must be regenerated
@@ -324,8 +325,11 @@ The levels are exactly those `data-model.md` provides; no table is added.
 
 - `Package.name` holds the package name under CEP-26's grammar, lowercase by construction
   (`^(([a-z0-9])|([a-z0-9_](?!_)))[._-]?([a-z0-9]+(\.|-|_|$))*$`, at most 64 characters), so
-  there is no folding and no display spelling. The package-level document holds the package's
-  channel-wide `channeldata` entry. The **retirement set** (every `{subdir}/{filename}` this
+  there is no folding and no display spelling. The package-level document holds nothing this
+  format reads: the package's `channeldata.json` entry is derived at generation from its newest
+  version's record (below), because a stored entry would have to be recomputed by every publish
+  of an older version and every removal of the newest, the half-applied-write shape this project
+  names as its most recurrent defect. The **retirement set** (every `{subdir}/{filename}` this
   repository ever removed) is not in it: it is the core-held `Retirement` record
   `management-api.md` moved it to ("Retirement is core-held", its resolved retirement-placement
   decision, was Q3) and `data-model.md` owns (its entity table, AC35). The handler returns each
@@ -340,11 +344,15 @@ The levels are exactly those `data-model.md` provides; no table is added.
   lowercase letters, underscores, `+` and `!`, at most 64 characters); a conda version has many
   builds (`py39_0`, `py310_0`, `h0_0`), so the version-level document holds a **filename-keyed
   map** of records, one per artifact file, as `pypi.md` and `maven.md` keep per-file attributes:
-  the fields from the artifact's `info/index.json`, the server-computed `md5`, `sha256` and
-  `size`, the `subdir`, the **patch overlay** for that file (the field replacements a hotfix
-  applies, exactly the shape of one `patch_instructions.json` entry), the `revoked` flag, and
-  the `attestations_sha256` when a CEP-50 sidecar exists. The join against the version's `File`
-  rows is by filename.
+  the fields from the artifact's `info/index.json`, the `run_exports` map from its
+  `info/run_exports.json`, the `about` data conda-index's cache extracts for `channeldata.json`
+  (`info/about.json`'s fields and the activation and prefix flags conda-index derives from the
+  package's file list), the server-computed `md5`, `sha256` and `size`, the `subdir`, the
+  **patch overlay** for that file (the field replacements a hotfix applies, exactly the shape of
+  one `patch_instructions.json` entry), the `revoked` flag, and the `attestations_sha256` when a
+  CEP-50 sidecar exists. Everything a generated document needs is extracted once at ingest, so
+  no generator ever reopens an archive. The join against the version's `File` rows is by
+  filename.
 - Every artifact file is a `File` of the version at the relative path `{subdir}/{filename}`, its
   `Blob` keyed by the CAS digest of the bytes as received; that digest is exactly the `sha256`
   the record advertises and every client verifies, so the CAS key and the format's integrity
@@ -356,9 +364,9 @@ The levels are exactly those `data-model.md` provides; no table is added.
   `{subdir}/{filename}.sigs.{sha256}`, whose digest the record's `attestations_sha256` names.
 - The repository-level document holds the subdir list, each subdir's `removed` list, the
   generated documents per subdir (each representation's reference, inline below the threshold
-  and a CAS blob above it), the per-name shard references, `channeldata.json`, the notices, and
-  the identity of the generation that produced them; a `remote` repository's document caches the
-  upstream's documents and the
+  and a CAS blob above it), the per-name shard references on the shard index's declared
+  blob-digest list (below), `channeldata.json`, the notices, and the identity of the generation
+  that produced them; a `remote` repository's document caches the upstream's documents and the
   **digest index** the proxied path needs (below) instead.
 
 ### Every hosted index document is a write-triggered document
@@ -387,8 +395,10 @@ as the service's design:
   `repodata.json` with its `.zst` and `.bz2`, `current_repodata.json` with its compressed forms,
   `run_exports.json` with its compressed forms, the shard of the file's package name and the
   shard index, and the channel's `channeldata.json`; a patch, revocation or removal regenerates
-  the same set minus `run_exports.json`, which CEP-12 forbids patching; a notices change
-  regenerates only `notices.json`. Each lands in the same completed logical write and the same
+  the same set minus `run_exports.json`, which CEP-12 forbids patching; an attestation attached
+  to an existing file regenerates the record's shard, the shard index and the monolithic forms,
+  since the record's `attestations_sha256` changes; a notices change regenerates only
+  `notices.json`. Each lands in the same completed logical write and the same
   snapshot as the change that triggered it, so no snapshot serves a shard index that names a
   shard the snapshot does not hold, or a `.zst` that disagrees with its `.json`
   (`data-model.md`'s one-write-one-snapshot rule; the prototype's question 3).
@@ -403,15 +413,30 @@ as the service's design:
   record, `revoke` setting `revoked: true` and appending `package_has_been_revoked` to `depends`,
   `remove` dropping the record and listing the filename under `removed`, with one deliberate
   difference from conda-index: a removal here names one file and never its `.tar.bz2` or
-  `.conda` twin, because each is its own `File` and its own management object. The raw records
-  never change; a patch is state beside them, so unpatching is a metadata write like patching.
+  `.conda` twin, because each is its own `File` and its own management object. The overlay may
+  replace any index field except the identity fields (`name`, `version`, `build`, `subdir`),
+  the integrity fields (`md5`, `sha256`, `size`) and `run_exports`, the last because a shard
+  inlines the record's `run_exports` (CEP-21) and `run_exports.json` must reflect the archive
+  (CEP-12), so a patched value would make the two disagree; an overlay naming one of those is
+  refused `validation`. The raw records never change; a patch is state beside them, so
+  unpatching is a metadata write like patching.
 - **Shards are content-addressed and encoded as conda-index encodes them**: msgpack, zstd,
   digests as raw bytes, `run_exports` inlined, the index carrying `base_url` and
-  `shards_base_url` as empty strings and `created_at` as the generation time; the shard's
-  filename is the SHA-256 of its compressed bytes, which is what conda 26 (`shard_url` in the
-  pinned source) and rattler build the URL from. A package name whose records did not change
-  keeps its shard and its name across regenerations, so a publish of one package costs one new
-  shard and one new index, never a rewrite of the subdir.
+  `shards_base_url` as empty strings and `created_at` as the triggering write's commit time
+  (never the clock, so the generator stays deterministic; the value reaches it in the write's
+  input, `signing-service.md`'s `Generate` contract); the shard's filename is the SHA-256 of its
+  compressed bytes, which is what conda 26 (`shard_url` in the pinned source) and rattler build
+  the URL from. A package name whose records did not change keeps its shard and its name across
+  regenerations, so a publish of one package costs one new shard and one new index, never a
+  rewrite of the subdir. **The shard index's declared blob-digest list holds every shard it
+  names and every shard the previous generation of that index named**, and the shard route
+  resolves a digest against that list: a client that fetched the index inside its `max-age`
+  and solves after a publish has replaced one shard still fetches the shard its index names,
+  instead of a `404` on a content-addressed route whose consequence no capture recorded. The
+  previous generation leaves the list at the next regeneration, so each list holds at most two
+  generations of one subdir's shards and the sweep keeps exactly those (`storage-and-gc.md`
+  AC16, `data-model.md` AC37). The monolithic forms have no such window: they are one document
+  each, replaced whole.
 - **The `ETag` of a stored document is derived from its bytes**, so identical documents across
   snapshots share a tag, a repoint that changes the document changes it, and a `304` costs no
   generation. Every generated document is served through the runtime's `index.ServeDocument`,
@@ -431,7 +456,13 @@ as the service's design:
   stored files, served through the runtime's `ServeFile` with the CAS digest as a strong `ETag`
   and byte ranges, under a package-level serve policy carrying the same `immutable` header for
   packages and the content-addressed sidecar and `no-cache` for the mutable `.sigs` URL, never by
-  headers the handler sets (its resolved handler-rendered decision, was Q14, AC11, AC32).
+  headers the handler sets (its resolved handler-rendered decision, was Q14, AC11, AC32). The
+  profile offers **no content encoding on any key**: the compressed representations are this
+  format's compression, a client that wants fewer bytes asks for the `.zst`, and `Accept-Encoding:
+  gzip` on the monolithic JSON (pixi, conda) is answered with the identity bytes, which every
+  client accepts (captured). A `HEAD` on any index route, which mamba sends for the shard index
+  and the `.zst` and pixi for the `.zst` and `.bz2` before choosing, answers the `GET`'s status
+  and headers with no body, the ordinary `net/http` behaviour of the serving door.
 - **A repoint restores the documents.** Because the documents live in the snapshot delta, a
   rollback serves exactly the index of the snapshot it targets, its `removed` lists included; the
   retirement set is core-held and untouched by a repoint (`data-model.md` AC33 and AC35), so a
@@ -439,12 +470,21 @@ as the service's design:
   unpublishable.
 - **Virtual repositories merge** (the resolved virtual-repository decision below): a `virtual`
   repository's per-subdir index is the union of its members' records in member order, the first
-  member holding a filename winning a collision, its `removed` list the union, its shard index
-  the union of names with a merged shard per name that appears in several members
-  (content-addressed by its own merged bytes), `channeldata.json` the union by package with the
-  first member's entry winning, and `notices.json` the union; `base_url` and `shards_base_url`
-  stay empty so every package and shard resolves through the virtual URL and then through the
-  members in order. The merge is the generator's `Merge`, run as the deferred `index.merge` job on
+  member holding a filename winning a collision, its `removed` list the union less every
+  filename some member's records still list (a file removed from one member and present in
+  another is served, so it is not removed), its `current_repodata.json` and compressed forms
+  derived from the merged records rather than merged from the members' (so the merge reads no
+  member's `current_repodata.json`), its shard index the union of names with a merged shard per
+  name that appears in several members (content-addressed by its own merged bytes),
+  `run_exports.json` the union by filename with the first member's entry winning,
+  `channeldata.json` the union by package with the first member's entry winning, and
+  `notices.json` the union by notice `id` with the first member's notice winning; `base_url` and
+  `shards_base_url` stay empty so every package and shard resolves through the virtual URL and
+  then through the members in order. The merged shard index's declared list holds every merged
+  shard and the profile declares one predecessor generation retained, for the same `max-age`
+  window as on the hosted path, so a merged shard is held by the virtual's own merged set and
+  not by any member (`signing-service.md` AC19's declared list on the swap), and a member-held
+  shard resolves through that member. The merge is the generator's `Merge`, run as the deferred `index.merge` job on
   the shared runner, enqueued by a member's write with the virtual as coalesce key, at the
   virtual's creation and on every member-list change, and never on a request's path; it creates
   no snapshot, and the previous merged set serves until the new one commits
@@ -452,32 +492,48 @@ as the service's design:
   the virtual's pointer record forward, so the merged documents' `Last-Modified` never goes back
   (its resolved virtual-freshness decision, was Q15, AC34).
 - **Remote members are read through their cached documents, and kept fresh by the virtual's
-  reads.** Nothing on this wire is signed, so every remote document's verdict is `absent`, and it
-  still contributes: `signing-service.md`'s rule that a composed document needs a `verified`
-  verdict governs a body the virtual signs (its resolved pass-through decision, was Q17, AC36),
-  and a conda virtual signs nothing, so its merged index vouches for nothing a client could
-  mistake for the registry's verification; each client checks every package against the record's
-  `sha256` as it would at the remote's own URL. A remote member adopting a new upstream revision of a document the merge reads
-  enqueues `index.merge` for every virtual listing it inside the adoption transaction, through
-  the runtime's adoption hook (`signing-service.md`'s resolved remote-member decision, was Q16,
+  reads.** Nothing on this wire is signed, so every remote document is adopted under anchor
+  class `none` with verdict `absent`, and it contributes: `signing-service.md`'s admission rule
+  binds signed bodies only and states that an unsigned virtual applies no admission rule (its
+  resolved admission decision, was Q20, AC36), and a conda virtual signs nothing, so its merged
+  index vouches for nothing a client could mistake for the registry's verification; each client
+  checks every package against the record's `sha256` as it would at the remote's own URL. A
+  remote member adopting a new upstream revision of a document the merge reads enqueues
+  `index.merge` for every virtual listing it inside the adoption transaction, through the
+  runtime's adoption hook (`signing-service.md`'s resolved remote-member decision, was Q16,
   AC35; `proxy-cache.md` AC25). A remote reached only through the virtual receives no request of
   its own, so serving a merged document whose input from the remote is past the remote's TTL
   enqueues one coalesced `proxy.revalidate` job that replays the remote's own routes below the
   authorizer, never on the request's path (`proxy-cache.md`, "Revalidation outside the request",
-  AC26). The profile declares the **member-input paths** of every document the `Merge` reads from
-  a member, each under the member's mount, as `signing-service.md`'s `Profile` requires and
-  registration refuses a merging profile without (its AC35): per subdir, `{subdir}/repodata.json`
-  (the complete record set, and the one representation CEP-36 requires every channel to serve),
-  `{subdir}/repodata_shards.msgpack.zst` (the name-to-shard map, so a name held by one member
-  keeps that member's shard digest; a member answering `404` for it contributes its names through
-  shards the merge encodes from its records) and `{subdir}/run_exports.json`; at the channel root,
-  `channeldata.json` and `notices.json`. A virtual's creation, or a member-list change adding a
-  remote never adopted, replays these paths on that remote for `noarch`, which every channel
-  holds, and for every subdir another member of the virtual already holds, so the virtual lists
-  the remote's records there with no request ever made to the remote's own URL. A subdir held by
-  that remote alone is not known to the virtual until the remote has adopted it, which a direct
-  client of the remote causes; a read-driven first fetch for such a subdir is `signing-service.md`'s
-  to add, reported by this pass rather than invented here.
+  AC26). The profile declares a **member input** for every document the `Merge` reads from a
+  member, in the shapes `signing-service.md`'s resolved member-input decision admits (was Q21,
+  AC35; registration refuses a merging profile with a member-read key and no input): per subdir,
+  **templates over one variable, `{subdir}`**, sourced from the subdirs the virtual's other
+  members hold plus the format constant `noarch`, with the grammar CEP-26 gives a subdir
+  (`noarch` or `{os}-{arch}`, one segment, lowercase letters, digits and one hyphen), expanding
+  to `{subdir}/repodata.json.zst` (the record set, in the compressed form the resolved
+  member-input-representation decision below chose, was Q11), `{subdir}/repodata_shards.msgpack.zst`
+  (the name-to-shard map, so a name held by one member keeps that member's shard digest; a
+  member answering `404` for it contributes its names through shards the merge encodes from its
+  records) and `{subdir}/run_exports.json` (CEP-12 specifies no compressed form); at the channel
+  root, the literals `channeldata.json` and `notices.json`. The merge reads no
+  `current_repodata.json` and no `repodata.json` from any member. A virtual's creation, or a
+  member-list change adding a remote never adopted, replays these inputs on that remote for
+  `noarch` and for every subdir another member of the virtual holds, whether or not a direct
+  client of the remote ever asked for them, so the virtual lists the remote's records there with
+  no request ever made to the remote's own URL. **A subdir only the remote holds is fetched
+  read-driven**: a request to the virtual for `{subdir}/...` at a subdir no member input covered,
+  whose value fits the grammar, is answered from the merged set as it stands (`404` for that
+  subdir, which every client treats as "nothing for this platform" and resolves from `noarch`),
+  records the cell on the virtual's input record and enqueues each remote member's revalidation;
+  the replay then requests that subdir's inputs, a subdir the upstream answers `404` becomes the
+  remote's negative entry and is not asked again until it lapses, and a subdir it holds is in
+  the merged set within the staleness bound, so the client's next resolve sees it. The cell set
+  is bounded at `index.requested_cells_max` (256 by default) per virtual and pruned once the
+  route is cached or the negative entry lapsed unrequested (its resolved requested-cell decision,
+  was Q22; `proxy-cache.md` AC26; `data-model.md` AC45); the pinned clients request only their
+  own platform subdir and `noarch`, so a virtual sees a handful of cells, and the grammar keeps a
+  request from recording anything that is not a subdir name.
 
 ### What the signing and index service must provide
 
@@ -505,10 +561,13 @@ conda's five items as an unsigned generated index):
    served by a stream copy through `ServeDocument` (AC5 and AC11 there), so a conda-forge-sized
    mirror (AC18) is a set of blobs the fourth mark root protects.
 5. **The virtual merge** with the rules above, the generator's `Merge` on the `index.merge` job
-   (AC19 there), re-run when a remote member adopts a new revision and fed a never-adopted
-   remote's first fetch through the member-input paths the profile declares (AC35 there, the gap
-   this spec reported now met), with the virtual's freshness moving forward at every merge commit
-   (AC34 there).
+   (AC19 there), its merged shard index declaring the merged shards with one predecessor
+   generation, re-run when a remote member adopts a new revision and fed a never-adopted
+   remote's first fetch through the `{subdir}` templates and root literals the profile declares,
+   with a remote-only subdir fetched read-driven from the virtual's own miss (AC35 there, the gap
+   this spec reported now met by its resolved member-input decision, was Q21), with the
+   virtual's freshness moving forward at every merge commit (AC34 there). The generator declares
+   no `DeriveInputs` derivation, so the profile's round bound is one.
 
 Nothing is required of the service's signing half or of a verification entry on its side:
 conda channels sign nothing a client verifies by default, and the CEP-27 attestation verdict is
@@ -545,7 +604,11 @@ equality rule `hex.md` applies to its organization prefix. Both carry one file p
 this registry enforces on ingest, on either binding:
 
 - The body is spooled to a bounded temporary buffer outside the CAS and parsed as the format its
-  filename names: a `.conda` is a stored ZIP holding `metadata.json` with
+  filename names, the bound being `management.publish_spool_limit` (1 GiB by default): a body
+  over it is refused `413` `too-large` on either binding and nothing is committed, and a package
+  that large (a CUDA or PyTorch build can exceed it) is published through the API's upload
+  session and `publish` operation instead (`management-api.md` AC14), which `rattler-build`
+  cannot drive, a cost the resolved upload-binding record states. A `.conda` is a stored ZIP holding `metadata.json` with
   `conda_pkg_format_version: 2`, `info-{name}-{version}-{build}.tar.zst` and
   `pkg-{name}-{version}-{build}.tar.zst`; a `.tar.bz2` is a bzip2 tarball holding `info/` beside
   the payload (CEP-35). `info/index.json` is read from the info archive; a body that is not its
@@ -580,9 +643,12 @@ this registry enforces on ingest, on either binding:
   idempotency above never reaches a retired file. The retirement is per file: a `.conda` and its
   `.tar.bz2` twin are two coordinates, and removing one retires only it.
 - A CEP-50 attestation may accompany a publish (the prefix binding's `--attestation` part when
-  the client sends one, or the management operation directly); it is stored as the file's
+  the client sends one, or the `publish` operation directly); it is stored as the file's
   `.sigs.{sha256}` sidecar and its digest recorded on the record, never verified by the handler
-  (Design, "Integrity, signing and provenance").
+  (Design, "Integrity, signing and provenance"). A publish carrying an attestation beside bytes
+  that already exist is **not** an unchanged publish: the sidecar appends and the record's
+  `attestations_sha256` moves, one snapshot. An attestation for an existing file without its
+  bytes is the `attach` operation (below).
 - The response is `201` with a JSON body naming the stored path, the record's `sha256` and the
   snapshot; a publish to a proxied or virtual repository answers `405` with the
   `repository-type` problem before authorization is consulted (`management-api.md` AC7).
@@ -621,6 +687,7 @@ carries (its "The operation vocabulary"; a format declares kinds, never actions)
 | Patch a record (replace named fields of one file's record: `depends`, `constrains`, `license`, `timestamp`, `track_features`, any index field except the identity fields and the digests) | The next resolve sees the overlay: `demo-app-2.1`'s `depends` of `demo >=9` served as `demo >=1.1` made it installable on every client | `annotate` | `push` |
 | Revoke a file (`revoked: true`, `package_has_been_revoked` appended to `depends`) | A fresh solve selects another version (`demo` resolved to 1.0 on all five clients); an exact pin fails with `nothing provides package_has_been_revoked needed by demo-1.1-0` (conda 26 and 24), `package_has_been_revoked =* *, which does not exist` (mamba, micromamba) or `package_has_been_revoked *, for which no candidates were found` (pixi); the file still downloads by URL, so `pixi install --locked` on a lockfile pinning it still installed it. A yank in the sense `pypi.md` and `cargo.md` use | `withdraw` | `delete` (the resolved revocation-action decision below, revised by `management-api.md`'s resolved withdraw-action decision, was Q1 there) |
 | Unrevoke a file | The record returns to selectable | `restore` | `delete` |
+| Attach a CEP-50 attestation to an existing file (a JSON array of Sigstore bundles, appended to the file's sidecar; CEP-50 is append-only, so no `detach` is declared and a bundle already present is refused `conflict`) | The `.sigs` and `.sigs.{sha256}` routes serve the new sidecar and the record's `attestations_sha256` names it, in every representation; no client reads it (`curl` and the `Verifier` verdict are the oracle) | `attach` | `push` |
 | Remove a file | The record leaves every representation, the filename joins `removed`, the file answers `404`, the coordinate is retired forever; a solve prints each client's missing-package message | `delete-file` | `delete` |
 | Set or clear channel notices | conda 26 and pixi print the notice on their next command; a cleared set answers `404` | `annotate` (object none) | `push` |
 
@@ -640,9 +707,16 @@ AC26). The object is `{name}/{version}/{build}` for every file operation (notice
 the target coordinate `{subdir}/{filename}`; a patch is the field map one
 `patch_instructions.json` entry carries, and an import of a whole `patch_instructions.json`
 archive is one `annotate` operation, one write however many records it changes
-(`management-api.md`, "Every operation is one completed logical write"); retirement is
-core-held (above), so no operation carries a set forward; and the publish bindings and the
-management endpoint yield the same documents and authorization outcomes (AC5).
+(`management-api.md`, "Every operation is one completed logical write"), reporting one `push`
+pair per file it patches; because a kind carries one action, the import applies the archive's
+`packages` and `packages.conda` overlays only and is refused `validation` naming the list when
+the archive's `revoke` or `remove` lists are non-empty, since those are `delete` effects a
+`push` key must not reach through an import; a bulk revocation or removal is one `withdraw` or
+`delete-file` operation naming many objects, the several-pairs shape `management-api.md` AC4
+tests, and an overlay entry naming a filename the subdir does not hold is refused `validation`
+rather than ignored as conda-index ignores it; retirement is core-held (above), so no operation
+carries a set forward; and the publish bindings and the management endpoint yield the same
+documents and authorization outcomes (AC5).
 
 ### Names, versions, subdirs: nothing folds, and `noarch` always exists
 
@@ -732,7 +806,7 @@ grammar has none.
 | `{subdir}/{name}-{version}-{build}.{ext}`, and its `.sigs` and `.sigs.{sha256}` sidecars | named | `{name}/{version}/{build}` |
 | `PUT {subdir}/{filename}` | named | `{name}/{version}/{build}` from the URL, confirmed against `info/index.json` after the body arrives; a disagreement is refused (the resolved publish-object decision below) |
 | `POST api/v1/upload/{channel}` | named | `{name}/{version}/{build}` from the multipart part's declared filename, which precedes the bytes, confirmed the same way |
-| Patch, revoke, unrevoke, remove | named | `{name}/{version}/{build}` from the operation's object |
+| Patch, revoke, unrevoke, attach, remove | named | `{name}/{version}/{build}` from the operation's object |
 | Set notices | none | - (repository-wide) |
 
 What that gives and costs, applying `auth.md`'s rules rather than re-deciding them. **A patterned
@@ -836,25 +910,39 @@ The handler owns the request and classifies for the proxy layer's fetch-and-cach
 settled decisions in `proxy-cache.md`; the upstream is a channel base URL on any of the captured
 hosts, with an optional upstream credential in one of three forms (a path token inserted as
 `/t/{token}/` after the host, which is how a private anaconda.org channel is read; a Bearer token,
-which is how prefix.dev is read; HTTP Basic), validated at configuration by fetching
-`noarch/repodata.json` or `noarch/repodata_shards.msgpack.zst` and requiring one of them to
-parse (AC20). The transport half is `docs/internal/plans/foundation/upstream-adapters.md`'s, the
-`https` adapter under the upstream's allowlist and credential role: the three forms are its
-`path-token` (template `/t/{token}/` after the host, inserted on requests to the root host only
-and never into an off-origin URL), `bearer` and `basic` credential kinds (its AC19), the
-credential redacted from every log, error and URL-bearing record in every position (its AC20),
-and `upstream.Validate` runs on the management API's create and `PATCH` of the remote before the
-handler's repodata probe (its AC23; the probe itself is the handler's `configure`). The protocol
-half, which document to fetch and how to classify it, stays this handler's derivation below.
+which is how prefix.dev is read; HTTP Basic). The transport half is
+`docs/internal/plans/foundation/upstream-adapters.md`'s, the `https` adapter under the
+upstream's allowlist and credential role: the three forms are its `path-token` (template
+`/t/{token}/` after the host, inserted on requests to the root host only and never into an
+off-origin URL), `bearer` and `basic` credential kinds (its AC19), the credential redacted from
+every log, error and URL-bearing record in every position (its AC20), never presented over
+plain HTTP (its resolved host-rule decision, was Q3, so an `http://` upstream with a path token
+is refused at configuration), and `upstream.Validate` on the management API's create and
+`PATCH` of the remote is the only configuration-time check, which accepts an unreachable but
+well-formed upstream (its AC23). **The handler probes nothing at configuration**: this spec
+first required a parseable `noarch` index at configuration, which that rule forbids, so the
+first request through the remote fetches what the client asked for, and an upstream serving no
+parseable index answers the client what the upstream answers (a `404` negatively cached, or a
+body that is not repodata, which fails cache materialisation as an integrity failure at fetch,
+recorded for the operator, AC16) (AC20). The protocol half, which document to fetch and how to
+classify it, stays this handler's derivation below.
 
 - **Every index document is mutable metadata with a TTL**: `repodata.json` and its compressed
   forms, `current_repodata.json`, `repodata_shards.msgpack.zst`, `run_exports.json`,
-  `channeldata.json` and `notices.json`. conda-forge serves `ETag`, `Last-Modified` and
-  `max-age=1200` and answers `304` to either conditional header (captured), so revalidation uses
-  the entity tag and an unchanged 28 MB `.zst` costs a `304` upstream (the adapter sends
-  `If-None-Match` whenever an `ETag` is held, `upstream-adapters.md` AC15); the defaults
-  channel's `max-age=30` is honoured the same way. Clients' own conditional requests are answered
-  `304` from the cache under this registry's `ETag` inside the TTL, and the `Last-Modified` a
+  `channeldata.json` and `notices.json`. The TTL is the layer's metadata TTL, a default in the
+  low minutes with a per-repository override (`proxy-cache.md`'s resolved default-TTL decision,
+  was Q2), never the upstream's `max-age`: conda-forge's `max-age=1200` and the defaults
+  channel's `max-age=30` are what those channels tell their own clients, and this registry tells
+  its clients `max-age=60` under the per-format serve policy. conda-forge serves `ETag`,
+  `Last-Modified` and answers `304` to either conditional header (captured), so revalidation
+  uses the entity tag and an unchanged 28 MB `.zst` costs a `304` upstream (the adapter sends
+  `If-None-Match` whenever an `ETag` is held, `upstream-adapters.md` AC15). Clients' own
+  conditional requests are answered `304` from the cache under this registry's `ETag` inside the
+  TTL; a `HEAD` probe (mamba, pixi) is answered from the cached document's headers, and on a
+  cold remote fills the cache exactly as the `GET` would, since the layer defines no `HEAD`
+  forwarding, which costs one representation a probing client may not then fetch (mamba 2.9.0
+  `HEAD`s the `.zst` and fetches the shards) and leaves it cached for the next client that
+  wants it; and the `Last-Modified` a
   remote serves is its cache-scoped `adopted_at`, never the upstream's header, forward-moving on
   every newly adopted revision, with a `304` only on an exact `If-Modified-Since` match or a
   matching `ETag` (`proxy-cache.md`, "Freshness of what a remote serves", AC22). Each representation is fetched and
@@ -869,17 +957,21 @@ half, which document to fetch and how to classify it, stays this handler's deriv
   against the `sha256` of the record for that filename, never committed on a mismatch or a
   truncated body. The record comes from the **digest index**: for a sharded upstream, the
   package's shard, fetched through the cache like any shard; for a monolithic-only upstream, a
-  filename-to-`sha256` map the handler builds once per adopted `repodata.json` revision (parsing
-  the 188 MB document once per TTL rather than once per package miss), stored as CAS-backed
-  metadata on the remote's repository-level document and **declared on its blob-digest list**,
-  the only way a document keeps another blob alive (`storage-and-gc.md` AC16; `data-model.md`,
-  "Declared blob digests on a document, inline or CAS-backed", AC37), a map named only inside the
+  filename-to-`sha256` map the handler builds **in the adoption transaction of each monolithic
+  representation** (`repodata.json`, its `.zst` or its `.bz2`, whichever a client caused to be
+  fetched, decompressed on the way), from the same streamed pass that writes the body to the
+  CAS, so no package request ever meets a revision without its map and no map is ever built
+  lazily or late (the shape `cran.md`'s recheck chose for its digest index; parsing the 188 MB
+  document once per adoption rather than once per package miss), stored as CAS-backed metadata
+  on the remote's repository-level document and **declared on its blob-digest list**, the only
+  way a document keeps another blob alive (`storage-and-gc.md` AC16; `data-model.md`, "Declared
+  blob digests on a document, inline or CAS-backed", AC37), a map named only inside the
   document's body being collected by the first sweep past grace. The handler declares a retained
   count of **zero** (`proxy-cache.md`'s resolved retained-revision decision, was Q19, where zero
   is valid), because no conda route reads a superseded revision: a package request resolves
-  against the current index's record, so the adoption of a new `repodata.json` drops the previous
-  map from the list in the same transaction, and a map finished after that adoption is discarded
-  rather than declared (its AC27). A request for a filename the digest index does not
+  against the current map's record, so the adoption that rewrites the map drops the previous one
+  from the list in the same transaction (its AC27); the late-map case that criterion names never
+  arises here. A request for a filename the digest index does not
   know is answered `404` and negatively cached (below). Every shard and every listed file
   therefore reaches fetch-and-cache with a **declared digest**, never in the completion-only mode
   `proxy-cache.md` offers for digest-less wires (its resolved completion-only decision, was Q15,
@@ -1006,7 +1098,9 @@ removal and a notice produce as each client reads them, is recorded against a tr
 `conda-index` 0.13.0 generates with its patch generator (the way this spec's captures were
 made) behind a pinned static server, because no public channel accepts a test publish; that
 local reference is a row of `conformance-harness.md`'s authoritative-reference exception list
-(its AC28), and it is also why `Capabilities()` declares reference-implementation availability
+(its AC28), the row naming the reference by kind and version and the corpus manifest under
+`conformance/conda/` pinning the static-server image and the generator by digest at recording
+time (its resolved digest-placement decision, was Q7), and it is also why `Capabilities()` declares reference-implementation availability
 `available`, a conda-index tree behind a file server being exactly what conda-forge is. For the
 hosted write surface there is **no reference at all**: the Artifactory shape is proprietary and
 prefix.dev is a service, so no write corpus is recorded, and the two bindings are proven by
@@ -1047,7 +1141,16 @@ the `base_url` rewrite.
       `patch_instructions.json` answer `404`, every representation exists from the repository's
       first snapshot so that no client cache ever records a `has_zst` or `has_shards` of `false`
       with a `last_checked` against a hosted channel, and a channel holding no noarch package
-      still serves an empty `noarch` subdir that every client accepts.
+      still serves an empty `noarch` subdir that every client accepts; `run_exports.json` and
+      every shard carry each file's `run_exports` as read from its `info/run_exports.json`, and
+      `channeldata.json`'s entry for a name is derived from its newest version and changes when
+      a newer version is published or the newest removed, with no stored entry; a `HEAD` on
+      every index route answers the `GET`'s status and headers with no body and no route sends
+      `Content-Encoding`; the shard index's `created_at` equals the triggering write's commit
+      time, so two generations from the same records are byte-identical; and a shard the
+      previous generation of a subdir's shard index named is still served after a publish has
+      replaced it, until the generation after that, proven by a client whose shard index is
+      inside its `max-age` resolving across the publish.
 - [ ] AC3: `rattler-build upload artifactory` against `PUT /conda/{repository}/{subdir}/{filename}`
       with Basic and `rattler-build upload prefix` against
       `POST /conda/{repository}/api/v1/upload/{repository}` with Bearer each publish a `.conda`
@@ -1057,7 +1160,9 @@ the `base_url` rewrite.
       clients installs exactly the published bytes and verifies their `sha256`; and a body that
       is not its named format, lacks `info/index.json`, whose `info/index.json` disagrees with the
       filename or the URL's subdir, or whose name, version, build or subdir violates CEP-26's
-      grammar is refused with `422` and nothing committed; and `rattler-build upload anaconda`
+      grammar is refused with `422` and nothing committed, a body over
+      `management.publish_spool_limit` with `413` `too-large` and nothing committed on either
+      binding; and `rattler-build upload anaconda`
       and `rattler-build upload quetz` pointed at the repository fail at their first request
       with `404` (no `post_url` staging flow and no `X-API-Key` route exist), the client
       printing the status.
@@ -1081,11 +1186,16 @@ the `base_url` rewrite.
       fails with each client's captured message while `pixi install --locked` on a lockfile
       pinning it still installs it, a removed file leaves every representation, a bulk
       `patch_instructions.json` import applies as one write, and a notice is printed by conda 26
-      and pixi; the handler declares exactly the kinds `publish`, `annotate`, `withdraw`,
-      `restore` and `delete-file` with the two publish routes as bindings onto `publish`, and
+      and pixi; an overlay naming `name`, `version`, `build`, `subdir`, `md5`, `sha256`,
+      `size` or `run_exports`, an overlay entry naming a filename the subdir does not hold, and
+      an imported archive whose `revoke` or `remove` list is non-empty are each refused
+      `validation` naming the field, filename or list, with nothing committed, while a
+      `withdraw` and a `delete-file` naming many files each apply as one write; the handler
+      declares exactly the kinds `publish`, `annotate`, `withdraw`, `restore`, `attach` and
+      `delete-file` with the two publish routes as bindings onto `publish`, and
       each kind is driven by a `script` case; a principal holding `pull` alone is refused every
       operation, one holding `push` without `delete` is refused revocation, unrevocation and
-      removal while its patches and notices succeed, the publish bindings and the management
+      removal while its patches, attachments and notices succeed, the publish bindings and the management
       endpoint yield the same documents and authorization outcomes, no snapshot is created by a
       refusal, and every operation against a proxied or virtual repository answers `405` with
       the `repository-type` problem.
@@ -1103,9 +1213,12 @@ the `base_url` rewrite.
       publishes into one subdir both land and every representation enumerates both, the
       regenerated documents committing in the same snapshot as the file that triggered them,
       proven by repointing to that snapshot's predecessor and reading the previous documents; a
-      package whose records did not change keeps its shard name across a regeneration; and a
+      package whose records did not change keeps its shard name across a regeneration; a
       subdir index above the inline size threshold is stored as a CAS blob, protected across a
-      GC sweep by the CAS-backed-metadata mark root, and served to a real client afterwards.
+      GC sweep by the CAS-backed-metadata mark root, and served to a real client afterwards; and
+      a subdir's shard index declares the shards it names and those its previous generation
+      named, so that after two publishes and a sweep past grace the shards of the generation
+      before last are collected and the previous generation's are not.
 - [ ] AC7: A request for a filename under any other case, for `noarch/../x`, or for a subdir the
       repository does not hold answers `404`, and every client resolves from `noarch` alone when
       its platform subdir is absent; the filename grammar parses `{name}-{version}-{build}` from
@@ -1153,11 +1266,13 @@ the `base_url` rewrite.
       served with both rewritten to empty strings in every representation while packages and
       shards are fetched from the absolute base by this registry, a relative value left
       untouched.
-- [ ] AC12: A proxied index document is revalidated after its TTL and not before, with
-      `If-None-Match` so an unchanged document costs a `304` upstream; a package published
-      upstream becomes visible to every client after the TTL and, absent an explicit refresh, not
-      before; a client's own conditional request inside the TTL is answered `304` without an
-      upstream request; every cached index document is served with the remote's cache-scoped
+- [ ] AC12: A proxied index document is revalidated after the layer's metadata TTL and not
+      before, whatever `max-age` the stand-in sends, with `If-None-Match` so an unchanged
+      document costs a `304` upstream; a package published upstream becomes visible to every
+      client after the TTL and, absent an explicit refresh, not before; a client's own
+      conditional request inside the TTL is answered `304` without an upstream request; a
+      `HEAD` probe on a cached document makes no upstream request and on a cold remote causes
+      exactly the fetch the `GET` would, the document then cached; every cached index document is served with the remote's cache-scoped
       `Last-Modified`, never the upstream's, later than the previous value on each newly adopted
       revision; and a shard named by the cached index that answers `404` upstream triggers an
       index revalidation rather than a negative-cache entry.
@@ -1190,36 +1305,60 @@ the `base_url` rewrite.
       in the second member; a package present in both members installs the first member's
       bytes, asserted by digest; and the merge runs as the deferred `index.merge` job, a write to
       the local member becoming visible in the virtual within the staleness bound with no merge on
-      a request's path and the previous merged set serving until the new one commits. A virtual
+      a request's path and the previous merged set serving until the new one commits; the
+      merged `current_repodata.json` holds what conda-index's rule keeps over the merged
+      records, a filename in one member's `removed` list and another member's records is
+      served and absent from the merged `removed`, and two members' notices sharing an `id`
+      yield the first member's. A virtual
       created over a local member holding `noarch` and `linux-64` and a remote never adopted
-      fetches the remote's declared member-input paths for both subdirs at creation, every client
+      fetches, at creation, exactly the remote's `{subdir}` templates expanded over both subdirs
+      (`repodata.json.zst`, `repodata_shards.msgpack.zst`, `run_exports.json`) and the two root
+      literals, never `repodata.json` or `current_repodata.json`, every client
       of the virtual then resolving a package only the remote's upstream holds with no request
-      ever made to the remote's own URL; the remote's adoption of a changed upstream index
+      ever made to the remote's own URL; a client of the virtual requesting `osx-arm64`, a
+      subdir only the remote's upstream holds, is answered `404` and resolves from `noarch`, the
+      cell is recorded and one revalidation per remote enqueued, the replay requests that
+      subdir's inputs, and the client's next resolve after the staleness bound installs the
+      remote's `osx-arm64` package, while a request for `foo-bar` fitting the grammar and held
+      by no upstream is asked of the stand-in once until its negative entry lapses and a
+      request for `a..b` or `noarch/../x` records nothing; a remote whose stand-in answers `404`
+      for `repodata.json.zst` contributes no record, the exclusion recorded on the merged set's
+      input record; the remote's adoption of a changed upstream index
       enqueues the merge in the adoption transaction and the change reaches the virtual within
       the staleness bound; with the remote reached only through the virtual, a read of the merged
       index past the remote's TTL enqueues one `proxy.revalidate` job and is served the current
       merged set with no upstream request on its path (`proxy-cache.md` AC26,
       `signing-service.md` AC35); every merged index's `Last-Modified` is later than any the
       virtual served before; the remote's records are listed although its documents carry no
-      verdict, the merged index being unsigned; and registration refuses a conda profile whose
-      `Merge` reads a member document with no member-input path declared.
+      verdict, the merged index being unsigned; a merged shard is held by the merged shard
+      index's declared list with one predecessor generation, so a sweep past grace between two
+      merges collects nothing a client holding either generation's index names; and
+      registration refuses a conda profile whose `Merge` reads a member document with no member
+      input declared.
 - [ ] AC18: Against a stand-in serving the recorded conda-forge noarch and linux-64 documents (a
       188 MB `repodata.json`, its 28 MB `.zst`, a 973 KB shard index and its shards), every
       client resolves a real package through the proxied path, the digest index is built once per
-      revalidation with the server's peak memory and build time under the thresholds a CI
+      adoption with the server's peak memory and build time under the thresholds a CI
       benchmark gate fails on, every document is served as a CAS-backed blob by a stream copy
-      with `Range` honoured, and a warm resolve on each client costs no upstream request.
+      with `Range` honoured, and a warm resolve on each client costs no upstream request; and
+      on the hosted path a subdir seeded with the recorded conda-forge noarch record set
+      regenerates its full document set for one publish, the `.bz2` included, within a time and
+      peak-memory threshold the same gate fails on, the shard of an untouched name keeping its
+      bytes (`signing-service.md` AC4's largest-consumer benchmark, which this format is).
 - [ ] AC19: Replay-match passes against a corpus recorded from conda-forge and the defaults
       channel, with the hosted read half recorded from a pinned static server over a
       `conda-index` 0.13.0 tree, covering the recorded surface named in Design; the corpus
       manifest names that local reference for the hosted half and no write reference, each
       matching a conda row of `conformance-harness.md`'s authoritative-reference exception list
       (its AC28), and no transcript recorded against this registry is part of the corpus.
-- [ ] AC20: Configuring a remote repository whose upstream answers neither a parseable
-      `noarch/repodata.json` nor a `noarch/repodata_shards.msgpack.zst` is refused at
-      configuration with a problem naming the requirement, after `upstream.Validate` has passed;
-      a `virtual` repository of format `conda` is accepted; and a publish or management operation
-      against a remote repository answers `405` with the `repository-type` problem.
+- [ ] AC20: Configuring a remote repository makes no request to its upstream: an unreachable but
+      well-formed upstream is accepted once `upstream.Validate` passes, an `http://` upstream
+      with a path-token credential is refused by `upstream.Validate`, and the handler declares no
+      `configure` probe; against an upstream serving no parseable index the first client request
+      receives the upstream's `404`, negatively cached, or an integrity failure recorded for the
+      operator where the body is not repodata, with nothing committed; a `virtual` repository
+      of format `conda` is accepted; and a publish or management operation against a remote
+      repository answers `405` with the `repository-type` problem.
 - [ ] AC21: The generation differences are asserted, not assumed: conda 24.1.2 and micromamba
       2.3.3 never request a sharded index and resolve a shards-only channel as absent with their
       captured messages while conda 26.7.1, mamba 2.9.0 and pixi resolve it; conda 24.1.2 fails on
@@ -1230,7 +1369,10 @@ the `base_url` rewrite.
       worked around.
 - [ ] AC22: A CEP-50 sidecar stored with a publish is served byte-identical at
       `{filename}.sigs` and `{filename}.sigs.{sha256}`, the record carries `attestations_sha256`
-      equal to the sidecar's digest, a second attestation appends without reordering the first,
+      equal to the sidecar's digest, a second attestation through the `attach` operation appends
+      without reordering the first in one snapshot that regenerates the record's shard and the
+      monolithic forms, a bundle already present is refused `conflict`, a publish of existing
+      bytes with a new attestation creates that snapshot rather than completing unchanged,
       the content-addressed sidecar is published in the same write as the record naming it, a
       file with none answers `404` on both routes, and a proxied stand-in's sidecars are served
       byte-identical with the immutable one verified against its name; and on both paths the
@@ -1240,9 +1382,13 @@ the `base_url` rewrite.
       naming another channel `failed` with `channel-mismatch`, each file still committing and
       installing on a real client while no rule requiring a verified attestation binds.
 - [ ] AC23: A hosted channel's `notices.json` reflects the notices set through the management
-      API, conda 26.7.1 and pixi print a notice on their next command, a cleared set answers
-      `404` silently on both, and conda 24.1.2, mamba and micromamba never request it, all
-      asserted from the transcript.
+      API as one replaced document, each notice carrying CEP-6's `id`, `message`, `level`
+      (`info`, `warning` or `critical`), `created_at` and `expires_at`, a document missing one,
+      carrying an unknown level, a malformed timestamp or two notices with one `id` refused
+      `validation` with nothing committed; conda 26.7.1 and pixi print a notice on their next
+      command and do not print an expired one, a cleared set answers `404` silently on both,
+      and conda 24.1.2, mamba and micromamba never request it, all asserted from the
+      transcript.
 - [ ] AC24: A build published in both formats is listed under `packages` and `packages.conda`
       with its own digests each, conda 24, conda 26, micromamba and pixi install the `.conda`,
       and each client's downloaded bytes verify against the record it chose; a removed `.conda`
@@ -1259,41 +1405,43 @@ the `base_url` rewrite.
       index are unchanged, a request for each inside its TTL is served from the cache with no
       upstream request and the same `Last-Modified`, and `cache_metadata_bytes{repository}`
       counts them while `cache_referenced_bytes{repository}` does not; a sweep run with the
-      grace lapsed leaves the current revision's digest index in the store, and after an
-      adoption of a new `repodata.json` the next sweep past grace collects the previous
-      revision's map, a map finished after that adoption is discarded rather than declared, and
-      a package the new index still lists installs on a real client afterwards.
+      grace lapsed leaves the current revision's digest index in the store, after an
+      adoption of a new `repodata.json` or `repodata.json.zst` the next sweep past grace
+      collects the previous revision's map, the new map having been written and declared in the
+      adoption's own transaction so that a package request between the adoption and the sweep
+      resolves against it with no build on the request's path, and a package the new index
+      still lists installs on a real client afterwards.
 
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
 | AC1 | conformance | `conformance/conda/hosted_test.go` (all five pinned images; fresh package and index caches in setup; per-client probe order asserted from the transcript; warm-inside-TTL, `304` and `--offline` runs asserted at the network layer) |
-| AC2 | conformance + integration | `conformance/conda/documents_test.go` (`curl` and decoders over every representation; shard digests; classic-solver runs on both conda images; the empty-`noarch` channel on all five); `internal/format/conda/documents_test.go` (record agreement across representations, server-computed digests) |
-| AC3 | conformance + integration | `conformance/conda/publish_test.go` (`rattler-build upload artifactory` and `upload prefix` in the rattler-build image; fresh-cache resolve on all five clients; byte and digest comparison; refusal fixtures through `curl`); `internal/format/conda/publish_test.go` (snapshot count and content set, head-snapshot visibility before the response, `info/index.json` and grammar refusals) |
+| AC2 | conformance + integration | `conformance/conda/documents_test.go` (`curl` and decoders over every representation; shard digests; `HEAD` on every index route; no `Content-Encoding`; classic-solver runs on both conda images; the empty-`noarch` channel on all five; a conda 26 client resolving across a publish from a shard index inside its `max-age`); `internal/format/conda/documents_test.go` (record agreement across representations, server-computed digests, `run_exports` and `about` data from the info archive, the derived `channeldata.json` entry across a newer publish and a newest removal, `created_at` equality across two generations, the shard index's declared list across two publishes with the sweep) |
+| AC3 | conformance + integration | `conformance/conda/publish_test.go` (`rattler-build upload artifactory` and `upload prefix` in the rattler-build image; fresh-cache resolve on all five clients; byte and digest comparison; refusal fixtures through `curl`, the over-limit body among them); `internal/format/conda/publish_test.go` (snapshot count and content set, head-snapshot visibility before the response, `info/index.json` and grammar refusals, the `413` under an injected spool limit) |
 | AC4 | conformance + integration | `conformance/conda/publish_test.go` (identical and changed-bytes re-upload through `rattler-build`; a retired filename refused `retired` on both bindings; a `state`-seeded `Retirement` record, `conformance-harness.md` AC18); `internal/format/conda/immutability_test.go` (the unchanged publish's `Operation` with no snapshot reference and `unchanged: true`; retirement with same and different bytes, after pruning under an injected clock, across a backwards repoint and back, and with a removal committed between declaration and commit, the twin unaffected, `removed` rendering; the central refusal and its commit-time check are `management-api.md` AC12's `internal/manage/retirement_test.go` and `storage-and-gc.md` AC30's) |
-| AC5 | conformance + integration | `conformance/conda/manage_test.go` (the `script` drives every declared kind through the management endpoint, `management-api.md` AC24 and `conformance-harness.md` AC26, then real resolves on all five clients with each captured message; `pixi install --locked` on a pre-revocation lockfile; notices on conda 26 and pixi); `internal/format/conda/manage_test.go` (one snapshot per operation, the declared kinds, action refusals with revocation refused under `push` alone per `management-api.md` AC9, binding-versus-endpoint equivalence shared with `management-api.md` AC8's table test, `405` `repository-type` on remote and virtual) |
-| AC6 | architecture test + integration | `internal/format/conda/arch_test.go` (no renderer in the handler package, the renderer only in `internal/format/conda/index`; the generator package's purity is `signing-service.md` AC2's `internal/index/generator_purity_test.go`); `internal/format/conda/index/golden_test.go` (the generator's fixtures, registered with `signing-service.md` AC25's determinism harness); `internal/format/conda/concurrent_publish_test.go` (two writers, every representation, predecessor repoint, shard-name stability, forward-moving `Last-Modified` across the repoint); `internal/format/conda/seed_test.go` (seeded versus published bytes, `signing-service.md` AC21); `internal/format/conda/serve_policy_test.go` (index `Cache-Control` equal on two repositories with different configuration, shard and package headers, package and sidecar `ETag` from the CAS digest through `ServeFile`; the module-wide boundary is `signing-service.md` AC11's `internal/format/freshness_boundary_test.go` and the policy its AC30's `internal/index/serve_policy_test.go`); `internal/storage/metadata_root_test.go` (threshold crossing, sweep, serve) |
+| AC5 | conformance + integration | `conformance/conda/manage_test.go` (the `script` drives every declared kind through the management endpoint, `management-api.md` AC24 and `conformance-harness.md` AC26, then real resolves on all five clients with each captured message; `pixi install --locked` on a pre-revocation lockfile; notices on conda 26 and pixi); `internal/format/conda/manage_test.go` (one snapshot per operation, the declared kinds including `attach`, action refusals with revocation refused under `push` alone per `management-api.md` AC9, the overlay field, absent-filename and non-empty `revoke` or `remove` list refusals, a many-object `withdraw` and `delete-file` as one write each, binding-versus-endpoint equivalence shared with `management-api.md` AC8's table test, `405` `repository-type` on remote and virtual) |
+| AC6 | architecture test + integration | `internal/format/conda/arch_test.go` (no renderer in the handler package, the renderer only in `internal/format/conda/index`; the generator package's purity is `signing-service.md` AC2's `internal/index/generator_purity_test.go`); `internal/format/conda/index/golden_test.go` (the generator's fixtures, registered with `signing-service.md` AC25's determinism harness, the shard index's `created_at` taken from the input and not the clock); `internal/format/conda/concurrent_publish_test.go` (two writers, every representation, predecessor repoint, shard-name stability, forward-moving `Last-Modified` across the repoint); `internal/format/conda/shard_retention_test.go` (two publishes replacing one name's shard, the declared list holding two generations, a sweep past grace collecting the third, shared with `storage-and-gc.md` AC16's declared-list fixtures); `internal/format/conda/seed_test.go` (seeded versus published bytes, `signing-service.md` AC21); `internal/format/conda/serve_policy_test.go` (index `Cache-Control` equal on two repositories with different configuration, shard and package headers, package and sidecar `ETag` from the CAS digest through `ServeFile`; the module-wide boundary is `signing-service.md` AC11's `internal/format/freshness_boundary_test.go` and the policy its AC30's `internal/index/serve_policy_test.go`); `internal/storage/metadata_root_test.go` (threshold crossing, sweep, serve) |
 | AC7 | conformance + unit | `conformance/conda/names_test.go` (`curl` for the case, traversal and absent-subdir paths; the platform-absent resolve on all five clients); `internal/format/conda/filename_test.go` (right-anchored parse table; CEP-26 refusals including the mixed-case fixture) |
 | AC8 | conformance + integration | `conformance/conda/auth_test.go` (private repository on all five clients in every captured credential form; challenge equality across existing and missing repositories; `pull`-less and rejected tokens; the path-token absence asserted over the transcript and the server log capture); `internal/format/conda/auth_test.go` (plaintext refusal under `auth.md` AC27 for every form, the path token included) |
 | AC9 | conformance + unit | `conformance/conda/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens through the `credentials` key; the index refusal under real resolves; in-pattern and out-of-pattern publishes through both bindings; the mislabelled fixture); `internal/format/conda/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
 | AC10 | conformance | `conformance/conda/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`; the raw status line read from the socket; all five clients' transcripts and output; a second configured channel to capture fallback for the `supply-chain-policy.md` AC20 row) |
 | AC11 | conformance + integration | `conformance/conda/proxied_test.go` (stand-in serving recorded conda-forge documents and packages; all five clients; network-level assertion from fresh caches; byte comparison; absolute and relative `base_url` stand-ins); `internal/format/conda/proxied_verify_test.go` (shard-name and record-digest verification before commit; digest index from a monolithic-only stand-in) |
-| AC12 | conformance + integration | `conformance/conda/proxied_ttl_test.go` (mutating stand-in serving `ETag`; upstream `304` and client `304` at the network layer; the vanished-shard revalidation); `internal/format/conda/proxied_freshness_test.go` (the served `Last-Modified` is the cache record's under a stand-in whose own dates move backwards, the shared half being `proxy-cache.md` AC22's `internal/proxy/freshness_test.go`) |
+| AC12 | conformance + integration | `conformance/conda/proxied_ttl_test.go` (mutating stand-in serving `ETag` and a `max-age` longer and shorter than the layer's TTL; upstream `304` and client `304` at the network layer; mamba's and pixi's `HEAD` probes cold and warm, counted at the stand-in; the vanished-shard revalidation); `internal/format/conda/proxied_freshness_test.go` (the served `Last-Modified` is the cache record's under a stand-in whose own dates move backwards, the shared half being `proxy-cache.md` AC22's `internal/proxy/freshness_test.go`) |
 | AC13 | conformance | `conformance/conda/proxied_test.go` (missing filename, subdir and notices; throttling stand-in responses; network-level counts) |
 | AC14 | conformance | `conformance/conda/proxied_auth_test.go` (three stand-ins, one per upstream credential kind, provisioned through the `upstreams` key's `credential` entry; a redirecting stand-in for the root-host-only insertion; upstream transcript asserted for the adapter's credential and the absence of the client's; log capture asserted free of the token) |
 | AC15 | integration | `internal/format/conda/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
 | AC16 | integration + conformance | `internal/format/conda/proxied_integrity_test.go` (corrupt package, misnamed shard, truncated body; CAS and reference assertions; operator record); `conformance/conda/integrity_test.go` (the hosted corrupt-package control on all five clients with each captured message) |
-| AC17 | integration + conformance | `internal/format/conda/index/merge_test.go` (the generator's `Merge`: rules per representation, collision order, merged shard digest); `internal/format/conda/virtual_merge_test.go` (on the production runner, the deferred job and staleness bound shared with `signing-service.md` AC19's `internal/index/virtual_merge_test.go`); `conformance/conda/virtual_test.go` (a virtual repository over a local and a remote member; resolves on all five clients; digest assertion on the shadowed package; the virtual created over a never-adopted remote with the stand-in's transcript showing only the member-input paths and the network layer no request to the remote's URL; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go`); `internal/format/conda/index/profile_test.go` (the declared member-input paths per `Merge` input, and a profile lacking one refused at registration, `signing-service.md` AC35's `internal/index/virtual_remote_member_test.go` holding the runtime half) |
-| AC18 | benchmark + conformance | `internal/format/conda/scale_bench_test.go` (digest-index build over the recorded conda-forge noarch index, peak RSS and time against the gate thresholds); `conformance/conda/scale_test.go` (the recorded conda-forge documents behind a stand-in; every client resolves; `Range`; warm zero-request run) |
+| AC17 | integration + conformance | `internal/format/conda/index/merge_test.go` (the generator's `Merge`: rules per representation, collision order, the derived current index, the `removed` subtraction, notices by `id`, merged shard digest, the merged shard index's declared list with one predecessor generation); `internal/format/conda/virtual_merge_test.go` (on the production runner, the deferred job and staleness bound shared with `signing-service.md` AC19's `internal/index/virtual_merge_test.go`; a sweep past grace between two merges, shared with `storage-and-gc.md` AC16); `conformance/conda/virtual_test.go` (a virtual repository over a local and a remote member; resolves on all five clients; digest assertion on the shadowed package; the virtual created over a never-adopted remote with the stand-in's transcript showing exactly the expanded templates and root literals and the network layer no request to the remote's URL; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go`); `conformance/conda/virtual_remote_test.go` (the remote-only `osx-arm64` subdir read-driven on a real client across the staleness bound, the `foo-bar` and dot-segment requests at the network layer, the `.zst`-less stand-in excluded with its input record read through the API, shared with `signing-service.md` AC35's `internal/index/virtual_remote_member_test.go` for the cell, cap and grammar half); `internal/format/conda/index/profile_test.go` (the `{subdir}` template with its sources and grammar and the two root literals per `Merge` input, no derivation, round bound one, and a profile lacking an input refused at registration) |
+| AC18 | benchmark + conformance | `internal/format/conda/scale_bench_test.go` (digest-index build over the recorded conda-forge noarch index inside a fixture adoption, and one hosted publish into a subdir seeded with that record set regenerating every representation, peak RSS and time against the gate thresholds, `// gate:` annotated, the untouched shard's bytes compared; shared with `signing-service.md` AC4's `internal/index/bench_incremental_test.go`); `conformance/conda/scale_test.go` (the recorded conda-forge documents behind a stand-in; every client resolves; `Range`; warm zero-request run) |
 | AC19 | conformance + unit | `conformance/conda/replay_test.go`; the corpus manifest under `conformance/conda/` checked against the exception table by `conformance-harness.md` AC28's `conformance/record/reference_exceptions_test.go` |
-| AC20 | integration | `internal/format/conda/upstream_config_test.go` (unparseable probe after `upstream.Validate`, virtual acceptance, `405` `repository-type` on remote writes) |
+| AC20 | integration | `internal/format/conda/upstream_config_test.go` (no upstream request at create or `PATCH`, counted at a stand-in; the `http://` path-token refusal through `upstream.Validate`, shared with `upstream-adapters.md` AC23; the first request against a `404`-everywhere stand-in and against one serving HTML at `noarch/repodata.json`, the negative entry and the operator record; virtual acceptance; `405` `repository-type` on remote writes) |
 | AC21 | conformance | `conformance/conda/generations_test.go` (shards-only and `base_url` channels on all five clients; `use_only_tar_bz2` on conda 24; the mamba 2.9.0 entries asserted against the exception list) |
-| AC22 | conformance + integration | `conformance/conda/attestation_test.go`, shared with `artifact-verification.md` AC19 and counted for its AC24 verification column (`curl` over both sidecar routes on hosted and proxied repositories; a second attestation appended; valid, subject-mismatched and channel-mismatched bundles from the fixture Sigstore with the identity policy through the `trust` key; each file installed by a real client); `internal/format/conda/sidecar_test.go` (record digest, same-write publication order, immutable sidecar verification, the verdict read through `Verifier` and no `internal/verify` import) |
-| AC23 | conformance | `conformance/conda/notices_test.go` (notices set and cleared through the management endpoint in the `script`; conda 26 and pixi output asserted; the other three transcripts asserted free of the request) |
+| AC22 | conformance + integration | `conformance/conda/attestation_test.go`, shared with `artifact-verification.md` AC19 and counted for its AC24 verification column (`curl` over both sidecar routes on hosted and proxied repositories; a second attestation appended through `attach` in the `script`; valid, subject-mismatched and channel-mismatched bundles from the fixture Sigstore with the identity policy through the `trust` key; each file installed by a real client); `internal/format/conda/sidecar_test.go` (record digest, same-write publication order, the `attach` snapshot regenerating the shard and monolithic forms, the duplicate bundle's `conflict`, the existing-bytes-plus-attestation publish creating a snapshot, immutable sidecar verification, the verdict read through `Verifier` and no `internal/verify` import) |
+| AC23 | conformance + unit | `conformance/conda/notices_test.go` (notices set and cleared through the management endpoint in the `script`, one expired; conda 26 and pixi output asserted; the other three transcripts asserted free of the request); `internal/format/conda/notices_test.go` (the CEP-6 field, level, timestamp and duplicate-`id` refusals) |
 | AC24 | conformance | `conformance/conda/dual_format_test.go` (a dual-format build; each client's chosen file and verified digest from the transcript; removal of one twin) |
 | AC25 | unit + conformance | `internal/format/conda/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/conda/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; byte-identical documents and resolves on all five clients under the new name in both modes; the old name's `not-found`) |
-| AC26 | integration | `internal/format/conda/proxied_metadata_test.go` (an eviction pass over a remote far over quota, documents and digest index untouched and served inside TTL, both gauges read through `telemetry.NewTestRecorder`; a sweep with the grace lapsed before and after an adoption, a late map build discarded; the layer halves are `proxy-cache.md` AC27's and AC29's); `conformance/conda/proxied_evict_test.go` (a real resolve after the eviction pass and the sweep) |
+| AC26 | integration | `internal/format/conda/proxied_metadata_test.go` (an eviction pass over a remote far over quota, documents and digest index untouched and served inside TTL, both gauges read through `telemetry.NewTestRecorder`; a sweep with the grace lapsed before and after an adoption, the map's declaration asserted in the adoption's transaction and a package request between adoption and sweep resolved with no build on its path; the layer halves are `proxy-cache.md` AC27's and AC29's); `conformance/conda/proxied_evict_test.go` (a real resolve after the eviction pass and the sweep) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their visibility and type,
@@ -1328,25 +1476,28 @@ specs and are not restated per criterion here.
   `format-handler-interface.md` hold it, and `Capabilities()` with the rename case (AC25)
 
 ### Phase 2: Publish and management
-- The `Operator` declaration: both bindings onto `publish` with the bounded spool, format and
-  `info/index.json` validation, server-computed digests, immutability with the idempotent and
-  `409` cases, the core-held retirement refusal, the write-boundary declaration exercised end to
-  end under concurrency
-- Patch, revoke, unrevoke, remove, notices and sidecar publication as the `annotate`,
-  `withdraw`, `restore` and `delete-file` kinds with the bulk patch-instructions import, and the
-  CEP-27 verdict through `Verifier`: waits on
-  `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
-  preconditions; AC3, AC4, AC5, AC22, AC23)
+- The `Operator` declaration: both bindings onto `publish` with the bounded spool and its `413`,
+  format, `info/index.json`, `info/run_exports.json` and `about` extraction and validation,
+  server-computed digests, immutability with the idempotent and `409` cases, the core-held
+  retirement refusal, the write-boundary declaration exercised end to end under concurrency
+- Patch, revoke, unrevoke, remove, notices, attestation attachment and sidecar publication as
+  the `annotate`, `withdraw`, `restore`, `attach` and `delete-file` kinds with the bulk
+  patch-instructions import and its refusals, the CEP-6 notices validation, and the CEP-27
+  verdict through `Verifier` (`docs/internal/plans/foundation/management-api.md` is `planned`,
+  Blocking preconditions; AC3, AC4, AC5, AC22, AC23)
 
 ### Phase 3: Proxied path and virtual repositories
-- Upstream validation with the `path-token`, `bearer` and `basic` kinds through the adapter,
-  classification per resource, shard-name and record-digest stream-and-verify with declared
-  digests, the digest index declared on the remote's blob-digest list with a retained count of
-  zero, the `base_url` rewrite, `ETag` revalidation and the cache-scoped `Last-Modified`, index
+- The `path-token`, `bearer` and `basic` kinds through the adapter with no handler probe at
+  configuration, classification per resource, shard-name and record-digest stream-and-verify
+  with declared digests, the digest index built in the adoption transaction and declared on the
+  remote's blob-digest list with a retained count of zero, the `base_url` rewrite, `ETag`
+  revalidation under the layer's TTL and the cache-scoped `Last-Modified`, `HEAD` probes, index
   documents outside the quota in `cache_metadata_bytes`, negative caching with the vanished-shard
   exception, the removal classes, `405` on remote writes, the virtual merge as the `index.merge`
-  job with the profile's member-input paths, re-merge on remote adoption and the virtual-only
-  remote's revalidation (AC17, AC26), and the conda-forge scale benchmark gate
+  job with the profile's `{subdir}` templates and root literals over the `.zst`, the merged
+  shard index's declared list with one predecessor generation, the read-driven remote-only
+  subdir, re-merge on remote adoption and the virtual-only remote's revalidation (AC17, AC26),
+  and the conda-forge scale benchmark gate on both paths (AC18)
 
 ### Phase 4: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate, which covers
@@ -1363,9 +1514,11 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 None open. The ten questions this draft raised were each written in the template's decision
 shape and then adopted at their own recommendation under the owner's standing delegation of
-2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided,
-folded through Scope, Design, the criteria and the Test Plan in the same pass, and reversible
-by the owner at any time. `grep -rn "standing delegation"` is the owner's review queue.
+2026-09-26, so the loop can continue, and the Fable recheck of 2026-10-01 raised and adopted an
+eleventh; each is recorded below as adopted rather than decided, folded through Scope, Design,
+the criteria and the Test Plan in the same pass, and reversible by the owner at any time.
+`grep -rn "standing delegation"` is the owner's review queue. Every record carries the
+recheck's verdict.
 
 ### Resolved: which upload protocols are served as publish bindings (was Q1)
 
@@ -1396,6 +1549,13 @@ know and a `force` switch whose true position is the immutability rule's negatio
 compatibility promise users will hold it to.
 
 Accepted cost: the two exception-list entries, and a documentation line per declined target.
+
+Rechecked on Fable 2026-10-01: confirmed. The options were framed fairly and A is right: the two
+bindings reuse credential forms the verifier already holds, and B's `force=true` position is
+not implementable under immutability at any effort. One cost the record under-stated: a body
+over `management.publish_spool_limit` (1 GiB by default) is refused `413` on both bindings,
+and `rattler-build` cannot drive the API's upload session, so a package that large is published
+through the API alone (Design, "The publish path"; AC3).
 
 ### Resolved: which action revocation and patching require (was Q2)
 
@@ -1432,6 +1592,13 @@ input to the reconciliation `management-api.md` owes.
 
 Accepted cost: one more row for that reconciliation, recorded in the sibling consequences.
 
+Rechecked on Fable 2026-10-01: confirmed as revised. The revision by `management-api.md`'s
+effect rule (its was-Q1, itself confirmed on Fable 2026-09-30) stands, and the record states
+its cost honestly: a conda publish-only key cannot revoke its own upload. The recheck added the
+bulk import's consequence of the same rule: an imported `patch_instructions.json` applies its
+overlays under `annotate` and is refused when its `revoke` or `remove` lists are non-empty,
+since those are `delete` effects (Design, "Patch, revoke, remove and notices"; AC5).
+
 ### Resolved: the `/t/{token}/` path-carried credential (was Q3)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: accept the form, as a
@@ -1462,6 +1629,13 @@ Accepted cost: the two sibling amendments, and the Phase 1 dependency on the aut
 now made: the root path token row of `auth.md`'s presentation-form table with its AC31, and the
 reserved `t` segment of `format-handler-interface.md` with its AC11 fixture; the upstream half is
 `upstream-adapters.md`'s `path-token` kind.
+
+Rechecked on Fable 2026-10-01: confirmed. All three sibling pieces exist at HEAD (`auth.md`'s
+root path token row and AC31 naming `conformance/conda/auth_test.go`, the reserved `t` row of
+`format-handler-interface.md`, the `path-token` kind of `upstream-adapters.md` AC19) and each
+is `planned`. One clause added from `upstream-adapters.md`'s was-Q3 as rechecked: a path token
+is never presented over plain HTTP, so an `http://` upstream with one is refused at
+configuration (AC20).
 
 ### Resolved: where the index documents are produced (was Q4)
 
@@ -1495,6 +1669,18 @@ Q3 there) and the trigger in the shared write path (its resolved trigger decisio
 so "the handler holds no renderer" means the handler's HTTP package, with the bytes produced in
 `internal/format/conda/index`.
 
+Rechecked on Fable 2026-10-01: confirmed, amended in its cost. "A publish pays the regeneration
+of its subdir" under-states it: the monolithic JSON, its `.zst` and `.bz2` and the current index
+are each one document replaced whole, so every publish is O(records in the subdir) however
+incremental the shards are, and at conda-forge scale that is a 188 MB JSON and a bzip2 pass per
+publish, serialised per subdir under the document lock. AC18 now gates the hosted regeneration
+at that scale beside the proxied map build. Two more things the fold had left to the clock or
+to a stored value: the shard index's `created_at` is the write's commit time from the
+generator's input, never the clock, or the determinism harness (`signing-service.md` AC25)
+fails on it; and `channeldata.json`'s per-package entry is derived at generation from the newest
+version's ingest-extracted `about` data rather than kept on the package-level document (Design,
+"Mapping onto the shared model"; AC2, AC6).
+
 ### Resolved: policy-refused records stay in the served index (was Q5)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: the index is generated
@@ -1520,6 +1706,11 @@ outcome: a silently absent version is a mystery, a refused one is a message.
 **Why this is yours:** it trades a friendlier failure for a boundary you settled.
 
 Accepted cost: the mid-transaction `403`, and its rendering table in Design.
+
+Rechecked on Fable 2026-10-01: confirmed. The boundary `supply-chain-policy.md` holds is
+intact at HEAD (its AC4 and AC15), the status-line phrase is the one channel to a conda user,
+and AC10's capture fills the binding row. B's regeneration-per-advisory-sync cost is real at
+this format's scale (a 188 MB rewrite per subdir per sync) and was priced fairly.
 
 ### Resolved: virtual repositories and the merge rules (was Q6)
 
@@ -1553,8 +1744,23 @@ bound (its "Virtual merges", AC19), so a member's change reaches the virtual wit
 rather than inside the member's write, and the handler's `Capabilities()` now declares the choice
 as `Virtual: supported` (`format-handler-interface.md` AC13). The re-run on member revalidation
 this record asked for is that spec's adoption hook (its resolved remote-member decision, was Q16,
-AC35), and the profile declares the member-input paths a never-adopted remote is first fetched
+AC35), and the profile declares the member inputs a never-adopted remote is first fetched
 through (Design, "Every hosted index document is a write-triggered document"; AC17).
+
+Rechecked on Fable 2026-10-01: confirmed, amended in its fold, which was incomplete in five
+places the adversarial pass found. The merged `current_repodata.json` must be derived from the
+merged records, not merged from members' current indexes, or a classic-solver client of the
+virtual sees a "newest" that the merged `repodata.json` contradicts; the merged `removed` list
+drops any filename a member's records still list, since a file removed from one member and
+present in another is served; two members' notices sharing an `id` resolve first-member-wins;
+the merged shards had no keep-alive (a merged shard is content-addressed and held by no
+member), so the merged shard index's declared list holds them with one predecessor generation
+under `signing-service.md` AC19; and the member inputs the format closing sweep folded without
+a question were a static path list over `repodata.json`, which the resolved member-input
+decision (`signing-service.md` was Q21) replaces with a `{subdir}` template sourced from the
+other members plus the constant `noarch`, a read-driven first fetch for a subdir only the
+remote holds (its was-Q22 bounding the cells), and the representation question the next
+record decides. The `channel_priority` cost stands.
 
 ### Resolved: conda-forge as a preconfigured upstream (was Q7)
 
@@ -1579,6 +1785,10 @@ call.
 Accepted cost: the proxied cases run against a stand-in only; the real conda-forge is exercised
 by the recording session and the scale benchmark's recorded documents, and nothing scheduled,
 until the revisit.
+
+Rechecked on Fable 2026-10-01: confirmed. `proxy-cache.md`'s second extension of the set (its
+was-Q17, confirmed on Fable 2026-09-30 and flagged owner-facing there) did not add conda-forge,
+so the sequencing argument still holds and the revisit trigger is unchanged.
 
 ### Resolved: rewriting `base_url` on the proxied path (was Q8)
 
@@ -1607,6 +1817,12 @@ revalidation.
 decides what a proxied conda repository promises about where bytes come from.
 
 Accepted cost: the recompression, and an exception-list entry for the altered field.
+
+Rechecked on Fable 2026-10-01: confirmed. The rewrite is the one place a proxied conda document
+differs from the upstream's bytes, AC11 names it, and the cost is bounded to one recompression
+per adoption because the digest index is now built in the same adoption transaction from the
+same streamed pass (Design, "The proxied path"), so a rewritten subdir costs one parse and one
+recompression, never two passes.
 
 ### Resolved: which generated documents a hosted channel carries (was Q9)
 
@@ -1638,6 +1854,15 @@ test.
 Accepted cost: the regeneration set in Design, and the exception-list entries for the omitted
 files.
 
+Rechecked on Fable 2026-10-01: confirmed, amended in its fold. The set is right, but two of
+the documents had no stated source: `run_exports.json` and the shards' inlined `run_exports`
+come from each package's `info/run_exports.json` (the file conda-index's cache extracts;
+`index.json` carries none, which the mapping had implied), and `channeldata.json`'s fields come
+from `info/about.json` and the flags conda-index derives from the file list, both extracted at
+ingest so no generator reopens an archive. The patch overlay now excludes `run_exports`, or the
+shards and `run_exports.json` would disagree (Design, "Mapping onto the shared model", "Every
+hosted index document is a write-triggered document"; AC2, AC5).
+
 ### Resolved: the addressed object of a publish (was Q10)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: the publish reports
@@ -1666,6 +1891,51 @@ adopts a sibling's precedent for a security boundary.
 Accepted cost: the bounded spool of a refused mislabelled upload, sized by the same constant that
 bounds every publish.
 
+Rechecked on Fable 2026-10-01: confirmed. `management-api.md`'s resolved binding-scope decision
+(was Q13 there, confirmed on Fable) is exactly this shape: the route's object precedes the
+bytes and `Submit` evaluates every `Authorize` pair on both ways in, so the binding can only add
+a refusal. The constant is now named (`management.publish_spool_limit`).
+
+### Resolved: which representation a merge reads from a remote member (was Q11, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation**, in the Fable recheck. Option B:
+the `{subdir}` template's record input is `{subdir}/repodata.json.zst`, never `repodata.json`;
+a remote member whose upstream answers `404` for the `.zst` of a subdir contributes nothing to
+the virtual for that subdir, recorded per document on the merged set's input record, and the
+operator documentation states that a virtual member must serve the compressed form (Design,
+"Every hosted index document is a write-triggered document"; AC17 and its row).
+
+The question: the format closing sweep declared `{subdir}/repodata.json` as the merge's record
+input because CEP-36 makes it the one representation every channel must serve. A remote reached
+only through a virtual is revalidated after the layer's metadata TTL (low minutes) whenever the
+virtual is read, with one conditional request per input, and conda-forge's noarch index changes
+every few minutes, so most revalidations transfer the whole document: 188 MB for the `.json`
+against 28 MB for its `.zst`, per subdir, per TTL. Over a day of continuous reads that is the
+difference between gigabytes and hundreds of megabytes for one subdir, and nothing in the
+record had priced it.
+
+**Recommendation:** B, because every live channel sampled (conda-forge, defaults, prefix.dev)
+serves the `.zst`, conda 24 and micromamba already depend on it as their first choice, the
+harness's own reference tree enables it, and a channel that lacks it is a channel the oldest
+pinned clients would fall back on, not a channel a virtual is configured over; the input
+interface cannot express a fallback (a second declared input is a second fetch every round), so
+a fallback would cost the `.json` on every round, which is the problem.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. `repodata.json`, the mandatory representation** | Any CEP-36 channel can be a member | 188 MB per changed revalidation at conda-forge scale, per subdir, which the TTL multiplies into gigabytes a day |
+| **B. `repodata.json.zst`, the recommended representation** | One seventh of the transfer; the same bytes once decompressed | A channel serving no `.zst` contributes nothing to a virtual, visible on the input record and in the operator documentation |
+| **C. Both declared, the merge reading whichever the remote holds** | A fallback for `.zst`-less channels | Both are fetched every round, so the fallback costs the `.json` on every channel, including the ones that need no fallback |
+
+**Why this is yours:** it decides which conda channels can be virtual members, a compatibility
+promise users will read as a rule, and it trades that against upstream bandwidth an operator
+pays for.
+
+Accepted cost: the `.zst`-less member's exclusion and its documentation line; the merge
+decompresses 28 MB per subdir per round instead of parsing 188 MB, which is cheaper, not dearer.
+A lost to the bandwidth; C to paying A's cost everywhere. Reversible by the owner by switching
+the template to `repodata.json`, after which AC17's `.zst`-less clause inverts.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1673,3 +1943,4 @@ bounds every publish.
 | 2026-09-26 | e690dfa | authoring pass: grounded first draft, not a review | Grounded the wire contract three ways: captured traffic from conda 26.7.1 and 24.1.2, mamba 2.9.0, micromamba 2.3.3 and pixi 0.81.0, pinned by image digest, run in containers against a logging stub serving channels indexed by the real conda-index 0.13.0 with a patch generator (a dependency hotfix, a removal, a revocation), across three rounds (cold, warm-inside-TTL and post-TTL resolves with each client's probe order and conditional requests, offline, classic solver, a shards-only channel, a monolithic-only channel, a CEP-15 `base_url` channel, a `/t/` token URL, Basic from URL userinfo and from each client's stored login, Bearer, the stored conda-token form of mamba and pixi, a credential-less private channel, a channel with no `noarch`, a channel with only `noarch`, a missing channel, a policy-shaped `403` on a package, a corrupted package, a dual-format build with and without `use_only_tar_bz2`, a removed version, a revoked version on a fresh solve, on an exact pin and under `pixi install --locked`, a mixed-case package name, `search` on each client, and the clients' cache state files), plus `rattler-build 0.76.1` driven once per upload target to capture the anaconda.org, prefix.dev, quetz and Artifactory upload protocols; the CEPs (6, 12, 15, 16, 21, 26, 27, 34, 35, 36, 38, 42, 48, 50), the conda-index reference and source, the conda source in both pinned images (the probing order, the seven-day negative memory, `repodata_use_shards`, the absent JLAP interface), the pixi and rattler-build references, the anaconda-client source, and the Artifactory and Nexus documentation; and the live conda-forge, defaults and prefix.dev channels (sizes, headers, `304`s on both conditional headers, `206`, `404`s, the bad-token `200`, the JLAP refusal, a shard verified against its name, and the bytes-versus-hex digest encoding divergence). Design built from that: the layout and the five-representation index with its per-client discovery order; the shared model mapping with filename-keyed records, a patch overlay and a retirement set rendered as `removed`; every representation as a write-triggered document of the shared index service with a five-item requirement list, incremental shards, the merge, and unsigned generation; the publish path with the four captured upload protocols and the two served as bindings, ingest validation against `info/index.json`, immutability and retirement, and the write-boundary declaration; patch, revoke, unrevoke, remove and notices as management operations with captured effects, revoke as a yank; CEP-26 rules and the mandatory `noarch`; four credential forms including the path token and no client reacting to a challenge; the addressed-object table with the consequence that a patterned `pull` cannot resolve; the `403` rendering on all five clients; integrity, CEP-50 sidecars and the OSV finding; the proxied classification with shard-name and record-digest verification, the digest index, the `base_url` rewrite, negative caching, conda-forge scale and conda's rows of the removal table; and virtual repositories with their merge rules, against Hex's refusal. Ten questions written in decision shape and adopted under the standing delegation: the two upload bindings (AC3, AC9), revoke and patch under `push` (AC5), the path-carried token (AC8, AC14), generation by the index service (AC6), no index elision for policy (AC10), virtual repositories with first-member-wins (AC17, AC20), conda-forge not preconfigured, the `base_url` rewrite (AC11), the generated-document set (AC2), and the filename-first publish object (AC3, AC9). Twenty-four criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here: `auth.md`'s fifth presentation form (the `/t/{token}/` path segment, its log redaction and AC31), client-table rows for conda, mamba, micromamba, pixi and rattler-build, and the revoke row for its action reconciliation; `format-handler-interface.md`'s reserved root-anchored `/t/` carve-out; the `management-api.md` operations including the bulk patch import; the `signing-service.md` requirement list including the merge; the `upstream-adapters.md` path-token insertion and the prefix.dev `303`; the `artifact-verification.md` CEP-27 verifier; the `conformance-harness.md` seed path invoking the index service and the path-token redaction rule; conda's rows in `proxy-cache.md`'s removal table; the reason-phrase finding and the missing OSV ecosystem for `supply-chain-policy.md`; and a Conda row in the management-surfaces analysis. Stays draft; awaits an independent review. |
 | 2026-09-28 | 15ced69 | cross-spec reconciliation of the foundation wave, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From `management-api.md` (reconciliation table, resolved withdraw-action decision was Q1, resolved retirement-placement decision was Q3, `Operator`): revoke and unrevoke are `withdraw` and `restore` under `delete`, reversing this spec's adopted `push` (a revision note under the resolved revocation-action record), patches and notices `annotate`, removal `delete-file`, publish `publish` with the two upload routes declared bindings; retirement moved to the core-held `Retirement` record keyed `{subdir}/{filename}` and refused centrally with `retired` (409), the served `removed` list kept as format state in the repository-level document so a repoint restores it; AC4 and AC5 rewritten, `405` as `repository-type`. From `signing-service.md` (items 11 and consequences 13, 15): the `Indexer` and generator package `internal/format/conda/index`, unsigned consumer (AC24 there), pre-commit dispatch, per-document lock, `ServeDocument` with pointer-scoped `Last-Modified`, the `index.merge` job; the five-item requirement list mapped onto the contract; AC6 extended. From `auth.md` (AC31, was Q23, Open item 14, auth reconciliation 4) and `format-handler-interface.md` (AC11, sweep 1 item 6): the root path token and reserved `t` now exist, the 'fifth form, until the amendment lands' wording removed; no conda route is a descriptor, stated. From `upstream-adapters.md` (item 12): `path-token`, `bearer`, `basic` kinds, `Validate` before the handler's probe, redirects inside the adapter (AC14, AC20). From `supply-chain-policy.md` (was Q10, AC18, AC20; reconciliation 10): `WriteRefusal`, the status-line phrase, AC10 fills conda's `pending` binding row; the OSV gap now cited from its coverage table and Phase 1 cataloguer selection. From `artifact-verification.md` (AC19, AC21, AC24, AC25): the CEP-27 verdict through `Verifier`, recorded not enforced, AC22 extended, the test file aligned to its `conformance/conda/attestation_test.go`. From `proxy-cache.md` (AC22, was Q15, AC13 classes): cache-scoped `Last-Modified` on remotes (AC12), declared-digest fetches, removal rows named by class. From `conformance-harness.md` (reconciliation 4, AC13, AC24, AC26): the seed-path obligation met by construction, redaction of the path segment inherited, per-kind and `rename_test.go` rules. From `repository-lifecycle.md` AC12 and `format-handler-interface.md` AC13: a Capabilities and lifecycle section and new AC25. Twenty-five criteria, each with a Test Plan row; no question adopted, so no `fable_recheck` marker. Consequences for other files are in this pass's report (a conda row in `proxy-cache.md`'s event-class table, the remote-revalidation merge trigger in `signing-service.md`, the finer-than-object retirement coordinate in `management-api.md`). `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
 | 2026-09-28 | f8ad8b2 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Applied: foundation-leftovers item 2 and `signing-service.md` AC35 (the merging profile's member-input paths per `Merge` input, replayed for `noarch` and every subdir another member holds, registration refusing a profile without them; the subdir only a remote holds reported as a gap), signing-service closing-sweep item 6 and proxy-cache closing-sweep item 6 (remote adoption re-merges through the adoption hook, was-Q16, AC35; the virtual-only remote's revalidation, `proxy-cache.md` AC26; the virtual's forward-moving freshness, was-Q15, AC34; AC17 and its row extended, the Q6 record's accepted cost updated); eviction-settlement item 7 (the remote's index documents and digest index outside the quota in `cache_metadata_bytes`, `proxy-cache.md` was-Q21, AC29), which exposed a keep-alive-by-mention hole the data-loss waves had not listed for conda: the digest index was a CAS-backed map named only inside the remote's document, now declared on its blob-digest list with a retained count of zero under `proxy-cache.md` was-Q19 and consistent with was-Q22 (a repository-wide index declares at repository level), new AC26; `signing-service.md` was-Q14 (packages and sidecars through `ServeFile`, Blocking preconditions, Phase 1) and was-Q18 (this spec's per-repository index `max-age` replaced by the per-format `max-age=60`, AC30; AC6 extended); management-api closing-sweep items 4 and 5 (was-Q13 binding scope, was-Q14 claims checked at declaration and again at commit, was-Q15 declared unchanged publish, was-Q16 wire rendering of `retired`; AC4 and its row extended). Found while verifying: `signing-service.md` AC36 admits remote documents into a signed merge only under `verified`, and nothing conda serves is signed, so the spec now states that the rule governs signed bodies and the unsigned conda merge admits them (AC17). Corpus: the publish flows were to be recorded against this registry itself, which `conformance-harness.md` AC28 cannot accept and which would replay-match by construction; the hosted read half is now recorded against a pinned `conda-index` 0.13.0 tree and the write half has no corpus, both reported as exception-list rows (AC19 and its row). Found already done: Open item 14 and the management-api 7 and 13 items (applied at 15ced69), sweep-1 item 6 (FHI AC11 cited), auth rows for conda and rattler-build present. Skipped: nothing. No question adopted; a `fable_recheck` marker added for the member-input expansion judgement. 26 criteria, each with a Test Plan row. Stays draft. |
+| 2026-10-01 | 71e0ccb | Fable recheck: full review (claim verification of every sibling citation at HEAD: `signing-service.md`'s `Profile` and `Generate` contract, was-Q20, was-Q21, was-Q22, AC4, AC19, AC25, AC30, AC35, AC36; `proxy-cache.md`'s was-Q2, was-Q19 to was-Q23, AC26, AC27, AC29 and its paired-set rule; `management-api.md`'s conda rows, the `attach` kind, `management.publish_spool_limit`, AC4, AC8, AC12, AC14, was-Q13 to was-Q16; `upstream-adapters.md` AC19, AC20, AC23 and its `path-token` row; `auth.md`'s root path token row and AC31; `format-handler-interface.md`'s reserved `t`; `conformance-harness.md`'s two conda rows and was-Q7; `artifact-verification.md`'s CEP-27 entry and AC19; `supply-chain-policy.md`'s conda coverage and binding rows and AC11; `cran.md`'s was-Q10 citing this spec's `{subdir}/{filename}` claim, which is that shape; the conda CEP index and the conda-index sources for `run_exports`, `CHANNELDATA_FIELDS`, `created_at`, `_apply_instructions` and the default output set, fetched this run; the tree holds no conda code, so no code claim was checkable) + the adversarial lens at full strength on the whole design as unreviewed (the five clients, shards, revoke versus remove, patch instructions, notices, `run_exports`, `channeldata`) + constitution + re-examination of the ten authoring adoptions and the three judgements the closing sweep folded without a question | Brought current first: every open item in `agents/spec-loop/consequences.md` targeting this file applied and verified against its source's current text (the signing-service recheck's item 6: the member inputs as a `{subdir}` template sourced from the other members plus the constant `noarch` and the read-driven remote-only subdir, cited to was-Q21, was-Q22, `proxy-cache.md` AC26 and `data-model.md` AC45, and AC36's unsigned-virtual clause cited as explicit, replacing the was-Q17 citation and the "reported rather than invented" gap; the conformance-harness gate's was-Q7, the manifest pinning the reference's digest; every earlier item re-found applied). Verdicts on the ten adoptions: Q1 confirmed (cost added: bodies over the spool limit refused `413`, published through the API alone); Q2 confirmed as revised (the bulk import's `revoke` and `remove` lists refused under `annotate`, since a kind carries one action); Q3 confirmed (no path token over plain HTTP, `upstream-adapters.md` was-Q3); Q4 confirmed and amended in cost (every publish rewrites the monolithic forms whole, bzip2 included, so AC18 gates hosted regeneration at conda-forge scale; `created_at` from the write's input for determinism; `channeldata` derived at generation, not stored on the package-level document); Q5 confirmed; Q6 confirmed and amended in fold (the merged current index derived from merged records, the `removed` subtraction, notices by `id`, the merged shards held by the merged shard index's declared list with one predecessor generation, and the static member-input list replaced); Q7 confirmed; Q8 confirmed; Q9 confirmed and amended in fold (`run_exports` from `info/run_exports.json`, which `index.json` does not carry; `about` data extracted at ingest; the overlay excludes `run_exports`); Q10 confirmed. The three folded judgements: the member-input expansion amended as above and its representation decided as Q11, raised and adopted under the standing delegation (the template reads `repodata.json.zst`, one seventh of the `.json`'s transfer per changed revalidation; a `.zst`-less member contributes nothing, recorded; owner-facing as a membership rule); the digest-index data-loss fix confirmed and amended (the map built in the adoption transaction from the same streamed pass, as `cran.md`'s recheck chose, so no package request meets a revision without its map and `proxy-cache.md` AC27's late-map case never arises); the `max-age=60`, `ServeFile`, management-api and corpus folds confirmed. Adversarial findings folded without a question: the shard route resolved a digest against the head alone, so a client whose shard index was inside its `max-age` met a `404` on a content-addressed route after a publish replaced one shard, an outcome no capture recorded; the shard index's declared list now holds the previous generation's shards too (AC2, AC6); the declared kinds had no way to add a CEP-50 attestation to an existing file, and an identical-bytes publish carrying one would have completed unchanged with no snapshot, so `attach` is declared and such a publish is a changed one (AC5, AC22); the overlay could patch identity, integrity and `run_exports` fields; the proxied TTL was described as the upstream's `max-age`, which `proxy-cache.md`'s was-Q2 does not provide (AC12); the handler's configuration-time repodata probe contradicted `upstream-adapters.md` AC23's acceptance of an unreachable upstream and the probe placement every other format moved, removed (AC20); `HEAD` probes and the absence of content encoding stated on both paths (AC2, AC12); notices validated to CEP-6's shape (AC23); the spool limit named (AC3). Constitution: both paths, the shared model with no handler-owned table, the named enforcers, the conformance gate and the no-render rule all hold; no mark root added, `auth.md` AC10 untouched, no token widened. Sibling consequences reported to the orchestrator, not applied: `signing-service.md` (`Generate`'s input must expose the write's commit time for a snapshot-scoped key; conda's `{subdir}` template, no derivation, one predecessor generation; `proxy-cache.md` (no `HEAD` forwarding is defined, conda assumes a cold `HEAD` fills the cache); `management-api.md` (the conda reconciliation table gains an `attach` row); `conformance-harness.md` (optional: `conformance/conda/virtual_remote_test.go` beside `signing-service.md` AC35's). `node scripts/check-spec.js`: zero failures on this file; no em-dashes on touched lines. 26 criteria, each with a Test Plan row; eleven questions resolved, zero open; `fable_recheck` cleared. draft to planned. |

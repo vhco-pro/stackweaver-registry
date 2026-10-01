@@ -144,7 +144,7 @@
     "path": "docs/internal/plans/formats/conda.md",
     "description": "Spec for the conda channel format: the static subdir layout, the subdir-wide generated index in its monolithic, compressed, current and sharded representations, repodata patching as the ecosystem's management vocabulary, the four proprietary upload APIs and the two served as bindings, hosted and proxied, with conda, mamba, micromamba and pixi as the conformance oracles.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "25",
     "covers": [
       "internal/format/conda/**",
