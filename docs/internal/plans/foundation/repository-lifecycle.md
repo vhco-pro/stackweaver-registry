@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned by the Fable recheck of 2026-10-01 at 261b20c: a full review pass over the cloud-authored whole and the Opus sweeps, plus the re-examination of the ten questions adopted without Fable. Q1, Q2, Q5, Q7 and Q9 confirmed; Q3, Q4 and Q8 confirmed with their folds amended (the freshness floor under the share lock on detach and deletion, the member-validation and credential-reference races closed by a share lock, the deletion write exempt from the pre-commit hook and the pointer-document render so the fourth root really stops seeing a deleted local at commit, a virtual's merged documents and declared lists ended at its deletion, async's per-kind grace hold and cancel_requested); Q6 and Q10 confirmed with under-stated costs recorded. Q11 raised and adopted under the standing delegation: read_only does not stop document-only pointer transitions, so a frozen signed repository keeps renewing its envelope through a second predicate, Renewable, at the door's document-only form. New AC29 (virtual deletion and rename). 29 criteria, each with a Test Plan row; zero open questions; eleven sibling consequences reported for the orchestrator; fable_recheck cleared. Implementation waits on the door's document-only form and the hook exemption landing in storage-and-gc.md and signing-service.md at their Fable follow-up."
+status_description: "Fable follow-up 2026-10-01 at 75e21cb, still planned: the four optional citation items the sibling follow-ups queued applied (storage-and-gc AC24, AC25 and AC30 on AC9, AC10, AC14 and AC21; async AC11 and AC28 on deletion step 8; proxy-cache AC23 on AC14 and step 5), data-model recheck item 4 found already applied at 261b20c, every reported sentence replaced by a citation now that the door's document-only form, the hook exemption and the read_only schedule rule have landed in storage-and-gc, signing-service, data-model, async-operations and management-api, and one defect found by the adversarial read of the lock-order text those siblings landed: the deletion read its own freshness values under a share lock that the same transaction later upgrades, PostgreSQL's canonical deadlock, so the deletion now locks its own rows FOR UPDATE first and a Lock order paragraph places every lock it takes in the door's order, with AC18 and AC21 gaining the no-deadlock interleavings; one sibling consequence reported (data-model AC36 wording). Planned by the Fable recheck of 2026-10-01 at 261b20c: a full review pass over the cloud-authored whole and the Opus sweeps, plus the re-examination of the ten questions adopted without Fable. Q1, Q2, Q5, Q7 and Q9 confirmed; Q3, Q4 and Q8 confirmed with their folds amended (the freshness floor under the share lock on detach and deletion, the member-validation and credential-reference races closed by a share lock, the deletion write exempt from the pre-commit hook and the pointer-document render so the fourth root really stops seeing a deleted local at commit, a virtual's merged documents and declared lists ended at its deletion, async's per-kind grace hold and cancel_requested); Q6 and Q10 confirmed with under-stated costs recorded. Q11 raised and adopted under the standing delegation: read_only does not stop document-only pointer transitions, so a frozen signed repository keeps renewing its envelope through a second predicate, Renewable, at the door's document-only form. New AC29 (virtual deletion and rename). 29 criteria, each with a Test Plan row; zero open questions; eleven sibling consequences reported for the orchestrator; fable_recheck cleared. The door's document-only form and the hook exemption have since landed in storage-and-gc.md (AC24, AC25) and signing-service.md (AC22, AC29), so nothing in this spec waits on a sibling."
 description: "Spec for the repository lifecycle: creation of local, remote and virtual repositories with their type-specific settings, configuration changes and which of them are completed writes, renaming and what it does to identities, tokens, grants, replication links and client URLs, the read-only state, deletion as a reference-ending write whose space returns only through pruning and the sweep, deletion's effect on pointers, snapshots, cached content, upload sessions, jobs, keys, trust sets, links and virtual membership, and the reuse of a name after deletion."
 author: michielvha
 goal: "Give every repository one lifecycle with one enforcement point, so that creating, renaming, freezing and deleting a repository of any format and type does exactly what the shared model says on both paths, deletes no object outside the sweep, never reattaches a stale grant or token, never leaves a virtual repository silently serving less, and is provable on an injected clock before the first handler that depends on it ships."
@@ -60,10 +60,14 @@ Who depends on this, and what each already requires:
   object), AC18 (deleting a pointer releases the root and serialises with pruning), the
   repository-scoped touch-refreshed grace, its AC15 scan naming `internal/repository` among the
   packages it holds to "management operations and repository deletion are reference-ending
-  paths, never deleters", its AC24 (the lifecycle operations in the GC property suite), its AC25
-  (the sole write-transaction constructor calling `repository.Writable`, with repository deletion
-  as the one named exemption) and its AC23, under which an unfinished `Job` naming a repository
-  holds its grace open.
+  paths, never deleters", its AC24 (the lifecycle operations in the GC property suite, and the
+  cadence re-sign proceeding on a `read_only` repository through the door's document-only
+  form), its AC25 (the sole write-transaction constructor calling `repository.Writable`, its
+  document-only form calling `repository.Renewable` with no waiving entry point, and repository
+  deletion as the one named exemption, which skips the predicate, the pre-commit hook and the
+  pointer-document render together), its AC30 (the lock order every write, member-list change,
+  job `Finish` and deletion share) and its AC23, under which an unfinished `Job` naming a
+  repository and carrying `holds_grace` holds its grace open.
 - `auth.md`: "A scope binds to the repository's identity, never its name: a deleted and
   recreated repository of the same name is a new repository, and tokens scoped to the old one
   grant nothing on it"; a grant "binds the repository's identity, so it grants nothing on a
@@ -79,10 +83,13 @@ Who depends on this, and what each already requires:
 - `signing-service.md`: keys are per repository (its resolved key-scope decision, was Q6),
   `SigningKey` carries a repository ref, and `PointerDocument` records hang off pointers, so a
   deletion and a rename each need a stated effect on them. Its cadence re-sign (AC22) renews a
-  signed envelope by a pointer transition that creates no snapshot and moves no target, its
-  generator runs in the door's pre-commit hook before every commit on an `Indexer` format, and
-  a virtual's merge swap writes declared blob-digest lists that "the virtual's deletion ends"
-  (AC19): three facts the read-only and deletion designs below have to answer.
+  signed envelope by a pointer transition that creates no snapshot and moves no target, on a
+  `read_only` repository as on an `active` one; its generator runs in the door's pre-commit
+  hook before every commit on an `Indexer` format except the deletion write, which its AC29
+  holds to zero generator and signer calls; and a virtual's merge swap writes declared
+  blob-digest lists that "the virtual's deletion ends" while "a rename of the virtual enqueues
+  exactly one coalesced merge" (AC19): three facts the read-only and deletion designs below
+  answer.
 - `artifact-verification.md`: the trust set is per repository and "lives beside the
   repository's retention rules as core-parsed configuration, in no snapshot"; verdicts are
   keyed by digest and must outlive the blob they explain.
@@ -315,7 +322,11 @@ read-only state that stopped the cadence re-sign would not be "serving what it s
 serving nothing within a window (the resolved document-only-transitions decision, was Q11). A
 follower renews nothing either way (`signing-service.md` AC23), which is why `ErrReplica` is
 refused by both predicates and the document-only form has no waiving entry point. `Writable` and
-`Renewable` read the same row and differ in exactly one state, and AC9 asserts both.
+`Renewable` read the same row and differ in exactly one state, and AC9 asserts both. The door
+side is `storage-and-gc.md`'s ("The write transaction has one door", AC25); the two transitions
+that take the form on the job runner are `async-operations.md` AC11 (the merge swap) and
+`signing-service.md` AC22 (the re-sign), and `management-api.md` AC31 asserts the renewal
+continuing under `freeze` on the wire.
 
 ### Identity and naming
 
@@ -508,7 +519,8 @@ record and for clients, stated so no sibling has to derive it:
   conformance suite's rename case proves its served documents were never name-bound. A
   `virtual`'s served documents are rendered by the merge, never by `Apply`, so for a `virtual`
   of a format with an `Indexer` the rename enqueues one `index.merge` (coalesced like any
-  trigger) in the rename transaction instead of, not beside, the handler hook: a merged
+  trigger) in the rename transaction instead of, not beside, the handler hook
+  (`signing-service.md` AC19's rename clause): a merged
   document that embeds the name is re-rendered under the new one within the staleness bound,
   and a format whose merged documents embed nothing does one idle merge. The
   conformance case is the same for every format: rename, then a real client installs from the
@@ -611,7 +623,9 @@ order and refuses at the first failure with nothing committed:
    deletion script written against a repository that has since been deleted and recreated under
    the same name then deletes nothing, which is the same protection identity binding gives
    grants, applied to the most destructive request the API has (the resolved confirmation
-   decision, was Q5).
+   decision, was Q5). The read that checks the identity takes the `Repository` row `FOR
+   UPDATE`: it is the first lock the transaction takes and the one every later step's
+   serialisation claim rests on ("Lock order", below).
 2. **The `in-use` check.** If any `virtual` repository lists this repository as a member, the
    deletion is refused `409` with problem type `in-use`, its `detail` and extension member
    naming every such virtual repository, unless the request sets `detach: true`, in which case
@@ -619,12 +633,16 @@ order and refuses at the first failure with nothing committed:
    virtual repository (the resolved member-deletion decision, was Q3). Each such removal is the
    floored member-list transition of the Configuration table: the floor is computed from this
    repository's freshness values (its default pointer's `moved_at` for a `local`, its latest
-   `adopted_at` for a `remote`), read under the share lock **before step 5 drops the documents
-   and step 6 the pointers those values live on**, and written onto each affected virtual's
-   default pointer in this transaction (`data-model.md` AC36's "a member removed by its own
-   deletion or detachment sets the same floor from the values that transaction held"). The
+   `adopted_at` for a `remote`), read **before step 5 drops the documents and step 6 the
+   pointers those values live on** and under this transaction's own update lock on those rows
+   (`FOR UPDATE`, since step 6 updates them: the share lock a virtual's member-list change
+   takes on a member it does not own would here be a share lock the same transaction later
+   upgrades under a concurrent merge's share, PostgreSQL's canonical deadlock), and written onto
+   each affected virtual's default pointer in this transaction (`data-model.md` AC36's "a
+   member removed by its own deletion or detachment sets the same floor from the values that
+   transaction held"; the lock kind is this spec's, "Lock order" below). The
    `in-use` check itself reads `VirtualMember` under the same serialisation creation step 3
-   gives a membership insert: the deletion updates this repository's row, so an insert that
+   gives a membership insert: step 1 locked this repository's row, so an insert that
    read the row `FOR SHARE` either committed before this check and is seen, or waits on this
    transaction and then sees `deleted`. A `remote` whose
    `Upstream` references an `UpstreamCredential` is not a blocker: the credential outlives the
@@ -645,7 +663,9 @@ order and refuses at the first failure with nothing committed:
    survive any version removal (`data-model.md` AC33) and are dropped at tombstone time. The
    write opens at the sole write-transaction door under the named exemption `storage-and-gc.md`
    AC25 gives deletion, and **the exemption covers the door's pre-commit hook and the
-   pointer-document render as well as the writability check**: no generator runs over the empty
+   pointer-document render as well as the writability check** (`storage-and-gc.md` AC25 as
+   amended, `signing-service.md` AC29's zero generator and signer calls, `data-model.md` AC36's
+   one exception): no generator runs over the empty
    content set and no pointer document is rendered for the pointer moves of step 6. Were the
    hook to run, a signed format's `Indexer` would regenerate an empty index into fresh current
    documents (a `Release` for no packages, signed under a key step 10 retires in this same
@@ -670,7 +690,7 @@ order and refuses at the first failure with nothing committed:
    keep alive at this commit. No object is touched in either half, and the blobs fall to the
    sweep after grace like any unreferenced content. The
    `Upstream` row, its `RemoteFile` rows and its negative-cache entries (`proxy-cache.md`,
-   "Negative caching") are deleted with it; `FileProvenance` records in
+   "Negative caching", all three named in its AC23) are deleted with it; `FileProvenance` records in
    other repositories that name this remote as a source are unaffected (they hold a URL, not a
    reference). For a `virtual`, there are no content rows, but there are **current documents**:
    its merged document set (`signing-service.md`, "Virtual merges"), CAS-backed above the
@@ -685,8 +705,9 @@ order and refuses at the first failure with nothing committed:
    list" and `data-model.md` AC45's "dropped at the virtual's deletion" are the two sibling
    statements of it. Its `VirtualMember` rows (where it is the virtual) and its named pointers'
    `PointerDocument` records are removed; an `index.merge` pending for it is cancelled in step 8,
-   and a merge running at the commit finds its swap refused `ErrDeleted` at the door and commits
-   nothing (`async-operations.md`, "Repository deletion cancels the repository's jobs").
+   and a merge running at the commit finds its swap refused `ErrDeleted` at the door and ends
+   `cancelled` with nothing committed (`async-operations.md`, "Repository deletion cancels the
+   repository's jobs", its AC11).
 6. **Release the pointers.** Every named pointer is deleted and the default pointer is moved
    onto the final empty snapshot (for a `local`) or deleted (for a `remote` or `virtual`, whose
    only snapshot is the initial one and is dropped with the row). Each is the pointer-release
@@ -719,7 +740,10 @@ order and refuses at the first failure with nothing committed:
    repository, repository-scoped schedules disabled, the grace hold released only at the
    running job's terminal state) is `async-operations.md` AC28. A `remote`'s pending
    `proxy.revalidate` and a `virtual`'s pending `index.merge` each name that repository as
-   the job's repository reference, so this step reaches them.
+   the job's repository reference, so this step reaches them (its AC11 fixes the merge job's
+   reference as the virtual it merges; its AC28 names both among the cancelled). The job rows
+   are the last rows the deletion touches, which is what keeps this step and a running job's
+   `Finish` out of a lock cycle ("Lock order", below).
 9. **Grants** on the repository are deleted in this transaction, each with an audit line
    (`management-api.md`: a grant "dies with the repository"). **Credentials** are not touched:
    a token or key whose scope names the identity stays listed with that scope, grants nothing
@@ -762,6 +786,28 @@ order and refuses at the first failure with nothing committed:
     `Operation` with sub-kind `delete`, the identity, the name, `reclaim`, `detach`, and the
     counts of pointers released, memberships detached, sessions expired and jobs cancelled.
 
+**Lock order.** The numbered steps are the order of effects. Locks are taken in the door's
+order (`storage-and-gc.md`, "The head lock is the last lock a write takes", AC30;
+`async-operations.md`, "Finish"), so that the deletion, a member's own write, a virtual's merge
+or member-list change and a running job's `Finish` can never wait on one another in a cycle. The
+deletion's first lock is its own `Repository` row, `FOR UPDATE` at step 1. Next come the other
+non-head rows it updates, each taken `FOR UPDATE` and never `FOR SHARE`: its own pointer and
+freshness rows as step 2 reads the floor, the membership and link rows of steps 2 and 3, and,
+before the head write of step 5 opens, the session, grant, key and `Upstream` rows that steps 7,
+9 and 10 and the `remote` half of step 5 update later, so that no update after the head takes a
+lock it did not already hold. Then each affected virtual's head, for the floor write of step 2.
+Then this repository's own head and pointers, through the door, at steps 5 and 6. The job rows
+last, at step 8. That is the order a merge or member-list change takes (member rows under a
+share lock, then the virtual's head), the order a member's own write takes (its documents, then
+its head) and the order a job's `Finish` takes (documents, member rows, head, job row), so no
+transaction holds a head while waiting on a row the deletion holds and none holds a job row
+while waiting on a head. A transaction sharing a row the deletion will update (a merge reading
+this repository's freshness values, a creation validating it as a member) either committed
+before the deletion's lock and is seen, or waits and then sees `deleted`, and the deletion never
+waits on such a transaction while holding a lock it wants. `storage-and-gc.md` AC30's property
+case interleaves a deletion cancelling a job with that job's `Finish` and asserts no deadlock;
+AC18 and AC21 here add the merge, adoption and transition interleavings on the deleted member.
+
 **Tombstone.** When the pruner drops the deleted repository's last content snapshot (and, for a
 `local`, its final empty snapshot with it, since nothing else targets it once the default
 pointer is deleted at that moment), it also drops the `Package` rows, the trust set revisions,
@@ -770,7 +816,7 @@ records, and leaves the `Repository` row as a tombstone: identity, last name, fo
 `deleted_at`, deleting principal, and the `Operation` reference. The tombstone is never removed.
 It is what lets a credential listing, an audit trail, a retirement record and an operation
 record name a repository that no longer exists (`credential-management.md` AC20 renders the
-deleted repository's last name from it; `data-model.md` AC39), and it costs one row per deleted
+deleted repository's last name from it; `data-model.md` AC38), and it costs one row per deleted
 repository, which is a price worth paying for never having a dangling identity in the audit
 trail. The operation reference is the deleting `Operation`'s wire identifier, kept as an
 identifier: `Operation` rows are pruned after `management.operation_retention` (90 days by
@@ -798,8 +844,8 @@ so a virtual's resolution set never changes without a line naming it) and `repos
 (emitted by the pruner at tombstone time, the one lifecycle record not tied to an operator's
 request). `observability.md`'s vocabulary table lists all eight, `repository.configure` with
 `changed_fields`, `.detach` on the member-list change and `.reclaim` on the pruner, with
-`previous_name`, `reclaim` and `detach` as extension attributes; `unbound_hosts` on
-`repository.rename` is the one extension this spec's was-Q10 adds to it (reported). A line
+`previous_name`, `unbound_hosts`, `reclaim` and `detach` as extension attributes, and its AC12
+diffs that table against this list in both directions. A line
 for a refused operation carries `outcome: refused` and the `problem_type`.
 
 The gauge `repositories{format,repository_kind,state}` (`stackweaver_registry_` namespace;
@@ -843,7 +889,7 @@ is easy to assume harmless and this project's data loss lives in exactly such as
 | delete (`local`) | the final empty snapshot's checkpoint; no pointer document (the door's exemption skips the hook and the render) | every head reference | deletes named pointers, moves the default pointer | no | the pointer moves serialise with pruning's targeted check (AC18); the reference ends are ordinary row deletes the next mark observes |
 | delete (`remote`) | no | every cached reference, and every current metadata document with its declared blob-digest list (documents are not cached references) | deletes the default pointer | no | cached references in eviction's shape (`proxy-cache.md` AC7, asserted for deletion by its AC23); documents as current documents the fourth root stops seeing at commit, never through eviction (`proxy-cache.md` AC29, `storage-and-gc.md` AC16) |
 | delete (`virtual`) | no | every merged document and the declared list each carries (its parts and the retained predecessor generations); the input record with it | deletes the default pointer | no | the merged documents are current documents the fourth root stops seeing at commit, their lists ended through the reference-ending path the merge swap's producer mirrors (`storage-and-gc.md` AC16, `signing-service.md` AC19); a merge running at the commit is refused at the door |
-| detach member | no | no | a floored document-only transition of each affected virtual's default pointer (no target change; the member's values read under the share lock before its documents and pointers go) | no | a merge is enqueued; the merge's own writes go through the write path |
+| detach member | no | no | a floored document-only transition of each affected virtual's default pointer (no target change; the member's values read under the deletion's own update lock before its documents and pointers go) | no | a merge is enqueued; the merge's own writes go through the write path |
 | `reclaim: now` | no | no | no | no | a pruning input; the pruner's own check-then-act serialisation applies |
 | tombstone | no | no | deletes the default pointer of a deleted `local` | no | performed inside the pruner's cycle, under its lock |
 
@@ -941,7 +987,8 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       a deleted member and a duplicate are each refused `validation` and the request creates
       nothing; a member given by name is bound by identity, so renaming the member afterwards
       leaves the membership intact and resolution unchanged; and a member-list write adding a
-      member, interleaved with that member's deletion at every point, either refuses the member
+      member, which reads the member's `Repository` row `FOR SHARE`, interleaved with that
+      member's deletion at every point, either refuses the member
       as deleted or makes the deletion refuse `in-use`, and no run commits a membership on a
       `deleted` repository.
 - [ ] AC6: A `remote` is created only with an upstream `upstream.Validate` accepts and a
@@ -959,7 +1006,7 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       management operation through `Submit`, retention pass, replication freeze, pointer create,
       target-moving repoint and pointer delete) calls `Writable` before opening its transaction,
       enforced by an architecture test
-      on the sole write-transaction constructor; a `read_only` repository and a repository with
+      on the sole write-transaction constructor (`storage-and-gc.md` AC25); a `read_only` repository and a repository with
       an active replication link and a deleted repository are each refused through the same
       predicate with distinct typed errors (`ErrReadOnly`, `ErrReplica`, `ErrDeleted`), rendered
       `405` `read-only`, `405` `replica` naming the leader and `not-found`; the constructor's one
@@ -978,7 +1025,8 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       with `read-only` when it runs, reads keep serving every content file and unsigned document
       bit-identically, the cadence re-sign of a signed envelope runs on schedule on the injected
       clock so a Debian-shaped fixture's `Valid-Until` and a TUF-shaped fixture's `expires` never
-      lapse while frozen and a real client accepts the renewed envelope, older untargeted
+      lapse while frozen and a real client accepts the renewed envelope (`signing-service.md`
+      AC22; `storage-and-gc.md` AC24's read-only clause), older untargeted
       snapshots still
       age out and are pruned on the injected clock while the pointer-targeted snapshot survives,
       and `thaw` restores every refused operation.
@@ -1007,7 +1055,7 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       `remote` ends
       every cached reference, removes every current metadata document with its freshness
       record and declared blob-digest list, and deletes its `Upstream`, `RemoteFile` and
-      negative-cache rows,
+      negative-cache rows (`proxy-cache.md` AC23's deletion clause),
       deleting a
       `virtual` removes its member rows and its merged documents as AC29 asserts, and in every
       case no blob-store deletion call is
@@ -1036,11 +1084,13 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       refused `409` `in-use` naming each of them and changes nothing; with `detach: true` the
       memberships are removed in the deletion transaction, a merge is enqueued per affected
       virtual repository, each affected virtual's default pointer carries a `moved_at` at least
-      one second after the deleted member's latest freshness value as read under the share lock
-      in that transaction (on an injected clock stepped backwards, and with an adoption of the
-      deleted `remote` or a transition of the deleted `local`'s pointer interleaved at every
+      one second after the deleted member's latest freshness value as read under the deletion's
+      own update lock in that transaction (on an injected clock stepped backwards, and with an
+      adoption of the deleted `remote`, a transition of the deleted `local`'s pointer and a
+      merge of the affected virtual each interleaved at every
       point of the deletion), so no request served through a per-request virtual ever carries
-      a `Last-Modified` the virtual later serves lower, and a real client resolving through the
+      a `Last-Modified` the virtual later serves lower, no interleaving ends in a deadlock
+      abort on either side, and a real client resolving through the
       virtual afterwards sees the
       remaining members' content in the remaining order and nothing of the deleted member.
 - [ ] AC19: Deletion requires the repository's identity as confirmation: a request whose
@@ -1063,7 +1113,10 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       none, repository-scoped `Schedule`s are disabled,
       a `remote`'s pending `proxy.revalidate` and a `virtual`'s pending `index.merge` are among
       the cancelled,
-      and a job that observes the deleted state at its next step ends itself without a write.
+      a job that observes the deleted state at its next step ends itself without a write, and
+      the deletion and a running job's `Finish` interleaved at every point never deadlock, the
+      job rows being the last rows the deletion locks (`storage-and-gc.md` AC30's property
+      case).
 - [ ] AC22: Deleting a replica ends its `ReplicationLink` with reason `deleted`; deleting the
       leader's repository makes each follower's next sync mark its link `failed` naming
       `not-found` with the follower still serving its last replicated snapshot, and the
@@ -1135,18 +1188,18 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
 | AC7 | fault injection | `internal/repository/atomicity_test.go` (fault after each step of each operation) |
 | AC8 | architecture test | `internal/format/arch_test.go` |
 | AC9 | architecture test + integration | `internal/storage/arch_test.go` (sole write-transaction constructor calls `Writable`, its document-only form calls `Renewable` and has no waiving entry point; the `ErrReplica`-waiving entry point imported only by `internal/replication`; shared with `storage-and-gc.md` AC25 and `replication.md` AC12); `internal/repository/writable_test.go` (read-only, replica, deleted, their renderings, the waiving entry point still refusing `read_only` and `deleted`, `Renewable` passing `read_only` and refusing replica and deleted, and cache materialisation consulting neither) |
-| AC10 | conformance + integration | `conformance/generic/readonly_test.go` (real client publish refused 405, reads unchanged, thaw); `conformance/debian/readonly_test.go` (a frozen suite's `Valid-Until` renewed on the cadence and accepted by a real `apt`; shared with `signing-service.md` AC22's cadence case); `internal/storage/retention_test.go` (pruning under read-only on the injected clock); `internal/repository/readonly_test.go` (signing-key operation refused; a deferred operation pending at the freeze ends `failed` `read-only`; a running retention pass commits nothing; the `signing.resign` schedule stays enabled while `retention.pass` is disabled) |
+| AC10 | conformance + integration | `conformance/generic/readonly_test.go` (real client publish refused 405, reads unchanged, thaw); `conformance/debian/readonly_test.go` (a frozen suite's `Valid-Until` renewed on the cadence and accepted by a real `apt`; shared with `signing-service.md` AC22's cadence case); `internal/storage/retention_test.go` (pruning under read-only on the injected clock and the cadence re-sign proceeding through the document-only form; shared with `storage-and-gc.md` AC24); `internal/repository/readonly_test.go` (signing-key operation refused; a deferred operation pending at the freeze ends `failed` `read-only`; a running retention pass commits nothing; the `signing.resign` schedule stays enabled while `retention.pass` is disabled) |
 | AC11 | conformance + integration | `conformance/oci/readonly_remote_test.go` (network-layer assertion of zero upstream requests; not-found on miss; thaw); `internal/repository/readonly_remote_test.go` (eviction skipped over quota, freshness record unchanged, thaw restores fetching; shared with `proxy-cache.md` AC23); `internal/repository/readonly_test.go` (virtual refused) |
 | AC12 | conformance + integration | `conformance/<format>/rename_test.go` in every format's set, its presence enforced by the harness's per-kind case validator (`conformance-harness.md` AC26); `internal/repository/rename_test.go` (record survival table; `configure` receipt) |
 | AC13 | integration | `internal/repository/capability_test.go` (`Rename: unsupported`); `internal/replication/link_rename_test.go` (follower failure and link update) |
-| AC14 | architecture test + integration | `internal/storage/arch_test.go` (AC15 scan includes `internal/repository`); `internal/repository/delete_test.go` (final checkpoint snapshot; a fixture `Indexer` handler's generator never called and no new `PointerDocument` on the deletion write; cached reference ends; a remote's current documents, freshness records, declared lists and negative entries removed; member rows; no deletion call observed via the storage fake) |
+| AC14 | architecture test + integration | `internal/storage/arch_test.go` (AC15 scan includes `internal/repository`); `internal/repository/delete_test.go` (final checkpoint snapshot; a fixture `Indexer` handler's generator never called and no new `PointerDocument` on the deletion write, shared with `storage-and-gc.md` AC25 and `signing-service.md` AC29; cached reference ends; a remote's current documents, freshness records, declared lists and negative entries removed, shared with `proxy-cache.md` AC23's `internal/proxy/eviction_test.go`; member rows; no deletion call observed via the storage fake) |
 | AC15 | integration + conformance | `internal/repository/delete_test.go` (pointer release, name reuse, inheritance of nothing); `internal/storage/retention_test.go` (age-out and `reclaim: now` on the injected clock; shared blob survives); `conformance/generic/lifecycle_test.go` (not-found after delete) |
 | AC16 | integration + property | `internal/repository/delete_remote_test.go` (a remote holding cached files, documents at all three levels inline and CAS-backed, and a retained revision declared on a package-level document; an eviction pass over quota first, ending no document; then deletion, grace and sweep on the injected clock, every file blob, document body and declared blob collected; shared blob; provenance readable); `internal/storage/gc_property_test.go` (remote deletion as a property operation ending documents as well as cached references, shared with `storage-and-gc.md` AC16 and `proxy-cache.md` AC29) |
 | AC17 | property | `internal/storage/gc_property_test.go` (lifecycle operations in the op set) |
-| AC18 | integration + conformance | `internal/repository/inuse_test.go` (refusal body; detach; the floor on each affected virtual's default pointer on a backwards-stepped clock with the deleted member's adoption or transition interleaved at every point, shared with `data-model.md` AC36's `internal/model/pointer_freshness_test.go`); `conformance/generic/virtual_detach_test.go` (real client through the virtual after detach) |
+| AC18 | integration + conformance | `internal/repository/inuse_test.go` (refusal body; detach; the floor on each affected virtual's default pointer on a backwards-stepped clock with the deleted member's adoption or transition and a merge of the affected virtual each interleaved at every point, the deletion's `FOR UPDATE` read of its own rows observed, no deadlock abort on either side; shared with `data-model.md` AC36's `internal/model/pointer_freshness_test.go`); `conformance/generic/virtual_detach_test.go` (real client through the virtual after detach) |
 | AC19 | integration | `internal/repository/confirm_test.go` (mismatch; delete-and-recreate race) |
 | AC20 | integration + fault injection | `internal/repository/credential_inuse_test.go` (remote and link references; rotation then delete; a remote's create or upstream change and the credential's deletion interleaved at every point, never an `Upstream` row naming a deleted credential) |
-| AC21 | integration | `internal/repository/delete_jobs_test.go` (pending and retrying cancelled in-tx; `cancel_requested` set in-tx and the running job cancelled at checkpoint; grace hold until terminal on the injected clock for a `HoldsGrace` kind and no hold for a running `proxy.revalidate`; schedules disabled; a remote's `proxy.revalidate` and a virtual's `index.merge` cancelled; self-ending job); `internal/async/cancel_test.go` (`CancelByRepository` inside the deletion transaction, shared with `async-operations.md` AC28) |
+| AC21 | integration | `internal/repository/delete_jobs_test.go` (pending and retrying cancelled in-tx; `cancel_requested` set in-tx and the running job cancelled at checkpoint; grace hold until terminal on the injected clock for a `HoldsGrace` kind and no hold for a running `proxy.revalidate`; schedules disabled; a remote's `proxy.revalidate` and a virtual's `index.merge` cancelled; self-ending job); `internal/async/cancel_test.go` (`CancelByRepository` inside the deletion transaction, shared with `async-operations.md` AC28); `internal/storage/gc_property_test.go` (a deletion cancelling a job interleaved with that job's `Finish`, never a deadlock; shared with `storage-and-gc.md` AC30) |
 | AC22 | integration | `internal/replication/lifecycle_test.go` (replica deletion ends link; leader deletion observed by follower; takeover afterwards) |
 | AC23 | integration | `internal/repository/delete_records_test.go` (grants gone; credentials listed and inert; keys retired with public forms; untouched records readable) |
 | AC24 | integration | `internal/storage/retention_test.go` (tombstone at last-snapshot prune on the injected clock; dropped rows including the `policy` document and `advisory_ecosystem`; condemnation and refusal records still readable; `repository.reclaim` record; survives further cycles; shared with `supply-chain-policy.md` AC22); `internal/manage/repository_delete_test.go` (`?state=deleted` admin-only, tombstones by identity, never in the live listing; `management-api.md` AC20's test, shared); `internal/credential/listing_test.go` (name rendered from tombstone; shared with `credential-management.md` AC20) |
@@ -1286,6 +1339,18 @@ could land on a repository deleted a moment later; the member validation now rea
 row `FOR SHARE` (Creation step 3, AC5). The accepted cost gains one lock on a row the
 transaction already reads.
 
+Fable follow-up 2026-10-01: the lock kind on the deletion side corrected. The recheck's fold
+had the deletion read its own freshness values "under the share lock", the lock a virtual's
+member-list change rightly takes on a member it does not own; in the deletion the same
+transaction updates those rows at step 6, and a share lock later upgraded while a concurrent
+merge shares the row is PostgreSQL's canonical deadlock. The deletion now takes its own
+`Repository` row `FOR UPDATE` at step 1 and its own pointer and freshness rows `FOR UPDATE` at
+step 2, and a "Lock order" paragraph places every lock the deletion takes in the door's order
+(`storage-and-gc.md` AC30, `async-operations.md` "Finish"): own rows, affected virtuals' heads,
+own head and pointers, job rows last. The floor semantics are unchanged; AC18 and AC21 gain the
+no-deadlock interleavings. Reported to `data-model.md` as wording of its AC36 and member-removal
+paragraph.
+
 ### Resolved: how a deletion ends a `local` repository's head (was Q4)
 
 **Adopted 2026-09-27 under the owner's standing delegation.** Option A: one completed logical
@@ -1321,8 +1386,11 @@ that outlives the commit is the default pointer's existing envelope record, drop
 tombstone. The same pass found the `virtual` row of the barrier table saying "no content": a
 virtual's merged documents are fourth-root current documents with declared lists and an input
 record, and its deletion ends them (Deletion step 5, AC29). Neither changes the option; both
-change what the fold must say for it to hold. Reported to `storage-and-gc.md`,
-`signing-service.md` and `data-model.md` as wording of their planned text.
+change what the fold must say for it to hold. Landed at the siblings' Fable follow-ups of
+2026-10-01: `storage-and-gc.md` AC25 and "The write transaction has one door" (the exemption
+skips predicate, hook and render together), `signing-service.md` AC29 (zero generator and
+signer calls across the deletion write) and `data-model.md` AC36 (the deletion's
+default-pointer move as the one render exception).
 
 ### Resolved: what a deletion request must carry to be believed (was Q5)
 
@@ -1534,8 +1602,16 @@ form to `storage-and-gc.md`'s single door, a planned spec.
 
 Accepted cost: the second predicate, one more form at the door for `storage-and-gc.md` AC25 and
 `replication.md` AC12's architecture test to assert, and the thaw an `external` key's document
-needs to be renewed. Reported to `storage-and-gc.md`, `signing-service.md`, `data-model.md` and
-`async-operations.md`, each planned, for their Fable follow-up.
+needs to be renewed. Landed at the siblings' Fable follow-ups of 2026-10-01: `storage-and-gc.md`
+AC24 and AC25 with its door section (the document-only form calling `Renewable`, no waiving
+entry point, the re-sign proceeding under `read_only`), `signing-service.md` AC22 and "The
+cadence runs on a `read_only` repository too" (key operations still refused `read-only`),
+`data-model.md` "Jobs and schedules" and AC41 (`read_only` disables only `retention.pass`;
+`signing.resign` and `replication.sync` keep enqueuing), `async-operations.md` AC11 and its
+kind table (the merge swap and `signing.resign` through the form's document-only shape under
+`Renewable`; `signing.resign` not suspended by `read_only`) and `management-api.md` AC31 (the
+renewal continuing under `freeze` on the wire). `replication.md`, still draft, has not yet
+added the form's `ErrReplica` refusal to its AC12 (this spec's recheck consequence 5 stands).
 
 ## Review Log
 
@@ -1547,3 +1623,4 @@ needs to be renewed. Reported to `storage-and-gc.md`, `signing-service.md`, `dat
 | 2026-09-28 | 3135d95 | closing reconciliation sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show applied, verified against the current text of `terraform.md` (its rename paragraph and AC26), `puppet.md` (its rename paragraph and AC27), `deployment.md` ("Host binding", its resolved host-binding decision) and `oci.md`. Applied: format batch 5 item 7 as **Q10, adopted under the standing delegation**: bind by name (option A) over bind by identity (a latent break at the next unrelated reload) and refusing the rename (no outage-free order exists), with the break announced in the `repository.rename` audit record and the `lifecycle` `Operation` as `unbound_hosts`; folded into "Renaming", "Audit and metrics", AC27 and new AC28 with a Test Plan row shared with `deployment.md` AC12 and the Terraform and Puppet rename cases; `deployment.md`'s Host binding and AC12 updated in the same sweep. Format batch 1 item 4 (the name grammar cites `oci.md`'s name-split decision, was Q8). The audit paragraph's 'what this pass reports back' wording replaced: `observability.md`'s vocabulary already lists all eight events with `changed_fields`. Found already done: management-api reconciliation 1, conformance-harness reconciliation 8, proxy-cache reconciliation 7, supply-chain reconciliation 4, replication reconciliation 3 and 5, charter reconciliation 3, upstream and async reconciliation 2. New consequences reported: `observability.md` (`unbound_hosts` joins `repository.rename`'s extension set), `data-model.md` or `management-api.md` (the `lifecycle` rename `Operation` records `unbound_hosts`), `terraform.md` and `puppet.md` (their rename paragraphs can cite was-Q10 instead of the queued alternative). `fable_recheck` extended; `node scripts/check-spec.js` zero failures on this file. Stays draft. |
 | 2026-09-28 | 4278ce0 | leftovers pass of the closing sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the one item queued against this file after its closing sweep (eviction settlement item 5), verified against `proxy-cache.md`'s resolved metadata-eviction and declaring-document decisions (was Q21, was Q22 there), its "Interaction with GC" paragraph on a remote's documents, and `storage-and-gc.md`'s fourth root. Deletion step 5 no longer calls a remote's cached documents cached references ended "in the eviction shape": its cached references (`File` rows bound to `RemoteFile` sources) end through the reference-ending call eviction uses, and its current metadata documents at all three levels, which no eviction reaches, are removed in the same transaction with their cache-scoped freshness records and the declared blob-digest lists they carry, the way a `local`'s head documents end, so the fourth root stops seeing them and the retained revisions they keep at that commit. The deletion table's `remote` row, AC14 and AC16 (now also asserting that an eviction pass before the deletion ends no document, and that document bodies and declared blobs are collected after grace) and both rows follow; AC16's row shares the property operation with `storage-and-gc.md` AC16 and `proxy-cache.md` AC29. The same stale wording in `proxy-cache.md` is fixed there in this pass. Found already done: every earlier item for this file. No question raised or adopted; roots stay five; the fable_recheck marker is unchanged. 28 criteria, each with a Test Plan row. Stays draft. |
 | 2026-10-01 | 261b20c | Fable recheck: full review (claim verification at HEAD against every cited sibling, `deployment.md` read from its working tree since another agent was rechecking it; adversarial lens at full strength on the cloud-authored whole and the Opus step-5 rewrite, both treated as unreviewed, deletion attacked against the five mark roots and the deletion-intent barrier; constitution compliance; go-spec-reviewer inline, its codebase step vacuous since `internal/` is empty) + re-examination of the ten adoptions made without Fable (Q1 to Q9 in the cloud session, Q10 on Opus) | Brought current first: the three open queue items targeting this file applied and verified against their sources (signing-service recheck 14: the promotion and rollback trigger and the virtual's deletion ending its declared lists; data-model recheck 4: the floor under the share lock on detach and deletion; the was-Q10 fold confirmed against `deployment.md`'s working tree, `management-api.md` AC31, `data-model.md`'s `Operations` result document and `observability.md`'s row). Verdicts: Q1, Q2, Q5, Q7, Q9 confirmed; Q3 confirmed with the fold amended (the floor on detach; the member validation reads the member's row `FOR SHARE`, closing an unserialised check-then-act between a membership insert and the member's deletion); Q4 confirmed with the fold amended (the deletion write runs no pre-commit hook and renders no pointer document, without which a signed format's regenerated empty index would keep the fourth root on the repository until tombstone and the record's root claim was false; the barrier table's `virtual` row said "no content" where the merged documents, their declared lists and the input record end at deletion); Q6 confirmed with the operation reference's 90-day pruning stated; Q8 confirmed with the fold amended for `async-operations.md`'s Fable amendment of its was-Q4 (`holds_grace` per kind, `proxy.revalidate` holds none, `cancel_requested`); Q10 confirmed with two costs stated (`unbound_hosts` is per process; the `404` is the shared denial through a `Scope(r)` error). One new question found by the adversarial lens and adopted at its recommendation: Q11, `read_only` and document-only pointer transitions, since a frozen signed repository would otherwise let its `Valid-Until` or TUF expiry lapse and stop serving; a second predicate `Renewable` and the door's document-only form (state machine, Read-only, AC9, AC10). Other findings folded: the credential-reference race (AC20), a virtual's rename enqueuing one merge (Renaming, AC29), negative-cache entries at a remote's deletion, the Go error-type split for refusals carrying data. New AC29 with its row. Eleven sibling consequences reported. `fable_recheck` cleared; `node scripts/check-spec.js` zero mechanical failures on this file, two pre-existing advisories. 29 criteria, each with a Test Plan row; zero open questions. Planned. |
+| 2026-10-01 | 75e21cb | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: every item in `agents/spec-loop/consequences.md` targeting this file after the 261b20c row collected and verified against the current text of its source spec and of this one, then read adversarially against the rest of this spec. Applied, four: storage-and-gc follow-up item 2 (AC9 cites storage AC25, AC10 cites AC24's read-only clause with `internal/storage/retention_test.go` shared, the state-machine paragraph cites the door section, the Context bullet names AC24, AC25 and AC30 as amended); async follow-up item 3 (deletion step 8 and step 5 cite async AC11 for the merge job's repository reference and its `cancelled` end, AC28 for the cancelled set); proxy-cache follow-up item 3 (AC14, step 5 and the Test Plan row cite proxy-cache AC23's deletion clause, which now names the negative-cache entries this spec's recheck consequence 7 asked for); data-model follow-up item 2 (every "reported" or "for their Fable follow-up" sentence replaced by a citation of the landed text: the was-Q4 and was-Q11 records, the audit paragraph's `unbound_hosts` now in observability's vocabulary and AC12, the signing-service Context bullet with AC22, AC29 and AC19's rename clause, the virtual-rename trigger citing AC19, the tombstone's `data-model.md` AC38, previously mis-cited as AC39, and the status_description's wait sentence). Found already applied at 261b20c: data-model recheck item 4 (the floor under the lock on detach and deletion, Deletion step 2, the Configuration table, AC18). Declined, none. Adversarial read of the lock-order text the siblings landed (`storage-and-gc.md` AC30 and its head-lock paragraph, `async-operations.md` "Finish") against this spec's deletion: the fold had the deletion read its own freshness values under a share lock while step 6 updates those rows, which under a concurrent merge's share on the same row is PostgreSQL's canonical upgrade deadlock, and the step-2 serialisation claim rested on a row lock no step stated taking. Fixed: step 1 takes the `Repository` row `FOR UPDATE`, step 2 reads its own rows `FOR UPDATE`, a "Lock order" paragraph places every lock the deletion takes in the door's order (own rows, affected virtuals' heads, own head and pointers, job rows last) and names the three transactions it must not cycle with; AC18 gains the merge interleaving and a no-deadlock clause, AC21 the `Finish` interleaving shared with storage AC30, AC5 names the `FOR SHARE` read the creation side takes; the was-Q3 record carries the amendment. Not a question: the floor semantics and every option are unchanged. One sibling consequence reported (`data-model.md` AC36 and its member-removal paragraph: when the removal is the member's own deletion the read is under the deleting transaction's update lock, not a share lock). `replication.md`, still draft, has not applied recheck consequence 5; noted in the was-Q11 record, nothing here waits on it. No em-dashes; `node scripts/check-spec.js` zero mechanical failures on this file, two pre-existing advisories. 29 criteria, each with a Test Plan row; zero open questions. Stays planned. |
