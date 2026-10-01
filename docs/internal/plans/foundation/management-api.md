@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned by the Fable recheck of 2026-09-30 at 5edf701: a full review pass plus the re-examination of all sixteen questions adopted without Fable (Q1 to Q12 by the cloud session, Q13 to Q16 on Opus). Verdicts: Q1, Q3, Q4, Q6 to Q11, Q13, Q15 and Q16 confirmed; Q2 amended (registration cannot check that Apply implements a declared kind, so AC10 checks the vocabulary and AC11 and AC24 the behaviour; the rename configure reaches every Operator and the signing-key configure reaches none, which hackage.md relied on); Q5 amended (audit lines for every write past the authorizer under a registered event, reads on the request log only, no second line for an authorizer refusal, per observability.md's channel rule; AC23 rewritten); Q12 amended in its fold (a virtual-only remote's refresh takes effect through the virtual's next read, proxy-cache was-Q18 as amended); Q14 amended in its cost and fold (the claim-granularity invariant is held by each format's retired-republish case, the deferred path re-declares its claims in the runner's transaction, storage-and-gc was-Q12 as amended cited: READ COMMITTED and the head lock last). None superseded. Queued items applied: the Puppet binding rows split, Terraform's deprecate limited to providers, the client-driven route list extended (Galaxy publish, npm deprecate, Puppet's POST /v3/releases, gem push and yank, cabal upload, rebar3 docs), RubyGems among the unchanged-publish declarers with its yank as delete-version, the Hackage key row moved onto the signing-key routes with a note covering every key-rotation row, AC23 under a registered event, replication.link.sync and .reseed named, and the admin advisory import (AC34, supply-chain was-Q13). Adversarial findings fixed: the dead management.deferred_threshold key removed, pagination given a criterion (AC18), the repository-type refusal ordered after the existence check, a member-list change's enqueues placed in the PATCH transaction (AC19), the poll route's admin case stated. Reconciliation table re-read against all 33 format specs. 34 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Earlier: leftovers pass of the closing sweep 2026-09-28 at 4278ce0 on Opus (not a review): basic-exchange among the upstream-credential kinds (upstream-adapters was-Q8); the repository PATCH refuses coordinate_exemptions on a remote or virtual as validation (supply-chain AC25; AC19 extended); a rename's lifecycle Operation records unbound_hosts (repository-lifecycle was-Q10, AC28; AC31 extended); AC6's row names internal/storage/arch_test.go; retirement and the unchanged publish cite storage-and-gc AC30, AC31 and was-Q12 and data-model AC32 and AC35. No new question; 33 criteria. Earlier, closing sweep 2026-09-28 at 97e5a5d on Opus (not a review): format batches 3 to 8 applied. Four questions adopted under the standing delegation and marked for a Fable recheck: Q13 a binding is never wider than its operation (route object among Authorize's, none, or a declared route-level object; Submit evaluates every pair; dput and cpan-upload, AC8); Q14 the retirement check compares a write's claimed coordinates, finer than its object for conda, Conan, PyPI and Open VSX, declared by Authorize or on the write transaction by a non-binding wire write, checked at declaration and at commit, a retiring kind's Outcome a subset or none (AC12); Q15 a declared unchanged publish completes with no snapshot beside Idempotency-Key (cran, puppet, hackage, cpan; AC5); Q16 the decision is central and the rendering the wire's (Open VSX 400, Swift 409 problem, Forge 409; AC7 scoped off pub's own 400). Reconciliation table re-read against every format spec: Galaxy publish binding, CRAN per-tree delete-file (unplace drops CRAN), Hex docs attach, Conan prune and delete-version, RPM out of the architecture set, Open VSX route, opam delete-package, Vagrant provider file as publish (attach drops it), generic retiring nothing, OCI declaring no kinds. 33 criteria. Earlier, sweep 2026-09-28 at 6e6d503 (not a review): replication link, sync, re-seed, takeover, export and import routes and the `replica` problem type (now 20 types) from replication.md, with AC33 and a Phase 5 at charter step 10; the `policy` and `advisory_ecosystem` PATCH fields refused `validation` per supply-chain-policy AC11 (AC19 extended); refresh also expires negative-cache entries (AC29, proxy-cache AC24); harness AC26, auth AC22 and data-model AC32 cited. 33 criteria. Reconciled 2026-09-28 at 9f53d20 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. The spec is now the single wire contract for every sibling that mounts under /api/v1: an exhaustive endpoint table with per-route authorization (repository lifecycle, trust and verdicts, signing keys, upstream credentials with kinds, job administration, the credential routes, the session, formats, search, recipes, refusals and refresh reads the UI needs), a closed problem-type table with statuses (19 types then, 20 with `replica`), the cancelled state and cancel route, X-Request-Id validation and the audit channel via telemetry.Auditor.Emit, and the session cookie with CSRF on unsafe methods. Twelve questions in decision shape adopted under the owner's standing delegation (Q11 deleted listing as a filter, Q12 refresh under push); zero open. 32 criteria, each with a Test Plan row. Awaits a /spec review pass."
+status_description: "Fable follow-up of 2026-10-01 at 1aacafb, still planned: every item queued against this spec since its recheck applied and verified against the source spec's text at HEAD, none declined. The local admin credential's Basic form with the username admin is the third credential on /api/v1 (auth was-Q26: verified against the account's hash, never looked up as a token, never challenged with WWW-Authenticate: Basic, never asked for a CSRF token) and the CSRF comparison is against the session row's stored value (AC30); the credential routes' human-principal requirement (a bearer token resolved then refused unauthorized) and their Idempotency-Key on the created row (AC17); Submit's per-pair evaluation reaches internal/auth's authorizer on the binding as on the API (AC8); the keyserver import runs inside the request and is refused validation under proxy.offline, and every repository read declares its addressed object, the verdict listing none and a verdict by digest content-addressed (AC28); freeze and thaw of a virtual refused repository-type, a signing-key configure refused read-only under freeze while the cadence re-sign continues (AC31); GET /api/v1/principals for the grants picker (AC28); unbound_hosts placed in the result document; AC16's row cites data-model AC32 and async AC5. One question raised and adopted under the standing delegation, flagged owner-facing: Q17, the per-repository operation listing withholds the principal attribute and filter from readers who could not originate an operation, so an anonymous reader of a public repository sees what happened and when but not who (AC23). 34 criteria, each with a Test Plan row; 17 resolved, zero open. Earlier: planned by the Fable recheck of 2026-09-30 at 5edf701: a full review pass plus the re-examination of all sixteen questions adopted without Fable (Q1 to Q12 by the cloud session, Q13 to Q16 on Opus). Verdicts: Q1, Q3, Q4, Q6 to Q11, Q13, Q15 and Q16 confirmed; Q2 amended (registration cannot check that Apply implements a declared kind, so AC10 checks the vocabulary and AC11 and AC24 the behaviour; the rename configure reaches every Operator and the signing-key configure reaches none, which hackage.md relied on); Q5 amended (audit lines for every write past the authorizer under a registered event, reads on the request log only, no second line for an authorizer refusal, per observability.md's channel rule; AC23 rewritten); Q12 amended in its fold (a virtual-only remote's refresh takes effect through the virtual's next read, proxy-cache was-Q18 as amended); Q14 amended in its cost and fold (the claim-granularity invariant is held by each format's retired-republish case, the deferred path re-declares its claims in the runner's transaction, storage-and-gc was-Q12 as amended cited: READ COMMITTED and the head lock last). None superseded. Queued items applied: the Puppet binding rows split, Terraform's deprecate limited to providers, the client-driven route list extended (Galaxy publish, npm deprecate, Puppet's POST /v3/releases, gem push and yank, cabal upload, rebar3 docs), RubyGems among the unchanged-publish declarers with its yank as delete-version, the Hackage key row moved onto the signing-key routes with a note covering every key-rotation row, AC23 under a registered event, replication.link.sync and .reseed named, and the admin advisory import (AC34, supply-chain was-Q13). Adversarial findings fixed: the dead management.deferred_threshold key removed, pagination given a criterion (AC18), the repository-type refusal ordered after the existence check, a member-list change's enqueues placed in the PATCH transaction (AC19), the poll route's admin case stated. Reconciliation table re-read against all 33 format specs. 34 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Earlier: leftovers pass of the closing sweep 2026-09-28 at 4278ce0 on Opus (not a review): basic-exchange among the upstream-credential kinds (upstream-adapters was-Q8); the repository PATCH refuses coordinate_exemptions on a remote or virtual as validation (supply-chain AC25; AC19 extended); a rename's lifecycle Operation records unbound_hosts (repository-lifecycle was-Q10, AC28; AC31 extended); AC6's row names internal/storage/arch_test.go; retirement and the unchanged publish cite storage-and-gc AC30, AC31 and was-Q12 and data-model AC32 and AC35. No new question; 33 criteria. Earlier, closing sweep 2026-09-28 at 97e5a5d on Opus (not a review): format batches 3 to 8 applied. Four questions adopted under the standing delegation and marked for a Fable recheck: Q13 a binding is never wider than its operation (route object among Authorize's, none, or a declared route-level object; Submit evaluates every pair; dput and cpan-upload, AC8); Q14 the retirement check compares a write's claimed coordinates, finer than its object for conda, Conan, PyPI and Open VSX, declared by Authorize or on the write transaction by a non-binding wire write, checked at declaration and at commit, a retiring kind's Outcome a subset or none (AC12); Q15 a declared unchanged publish completes with no snapshot beside Idempotency-Key (cran, puppet, hackage, cpan; AC5); Q16 the decision is central and the rendering the wire's (Open VSX 400, Swift 409 problem, Forge 409; AC7 scoped off pub's own 400). Reconciliation table re-read against every format spec: Galaxy publish binding, CRAN per-tree delete-file (unplace drops CRAN), Hex docs attach, Conan prune and delete-version, RPM out of the architecture set, Open VSX route, opam delete-package, Vagrant provider file as publish (attach drops it), generic retiring nothing, OCI declaring no kinds. 33 criteria. Earlier, sweep 2026-09-28 at 6e6d503 (not a review): replication link, sync, re-seed, takeover, export and import routes and the `replica` problem type (now 20 types) from replication.md, with AC33 and a Phase 5 at charter step 10; the `policy` and `advisory_ecosystem` PATCH fields refused `validation` per supply-chain-policy AC11 (AC19 extended); refresh also expires negative-cache entries (AC29, proxy-cache AC24); harness AC26, auth AC22 and data-model AC32 cited. 33 criteria. Reconciled 2026-09-28 at 9f53d20 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. The spec is now the single wire contract for every sibling that mounts under /api/v1: an exhaustive endpoint table with per-route authorization (repository lifecycle, trust and verdicts, signing keys, upstream credentials with kinds, job administration, the credential routes, the session, formats, search, recipes, refusals and refresh reads the UI needs), a closed problem-type table with statuses (19 types then, 20 with `replica`), the cancelled state and cancel route, X-Request-Id validation and the audit channel via telemetry.Auditor.Emit, and the session cookie with CSRF on unsafe methods. Twelve questions in decision shape adopted under the owner's standing delegation (Q11 deleted listing as a filter, Q12 refresh under push); zero open. 32 criteria, each with a Test Plan row. Awaits a /spec review pass."
 description: "Spec for the registry-owned management API: the one surface through which hosted content is administered across every format (publish where no client publishes, withdraw and restore, annotate, delete, retire), repositories and pointers are administered, and every operation is one completed logical write with one audit record; client-native routes such as npm unpublish and cargo yank are bindings onto the same operations."
 author: michielvha
 goal: "Give the 33 format handlers one management surface with one authorization rule per operation, one write-accounting rule, one audit record and one dispatch mechanism, so that a format's management half costs a table of bindings rather than a bespoke API, and so that no management write can ever bypass the snapshot model or the single blob deleter."
@@ -209,9 +209,18 @@ the trust set and verdicts, policy refusal records, client recipes, grants and u
 credentials (metadata only, never the secret), plus three registry-wide reads a browser or an
 automation client needs before it names anything: the caller's own session, the registered
 formats with their capabilities, and a package-name search. Reads are authorized `pull` on the
-repository, except grants, upstream credentials, the replication link, the deleted-repository
+repository, except grants, upstream credentials, the principal listing the grant routes name,
+the replication link, the deleted-repository
 listing, the job queue and the registry-wide operation listing, which are admin-only; the registry-wide reads are
 answered for every caller and scoped to what that caller may read (the endpoint table below).
+Each repository read declares its addressed object in `auth.md`'s four kinds, so a
+pattern-scoped `pull` behaves on this surface as it does on a format route (its AC24): a
+listing reports none, so a patterned grant cannot list packages, versions, files, pointers,
+retirements, refusals, operations or verdicts; a read of a package, version or file reports that
+coordinate; a verdict read by digest is content-addressed; and the trust set and the rendered
+recipes, repository-wide documents that name no package, report a descriptor (its resolved
+name-free-document decision, was Q23). A patterned publisher refused `retired` still learns
+why, because the refusal's problem body carries the refused coordinates.
 
 The three families share every convention below, and the content family is where the cost of
 breadth lives, so it gets the most words.
@@ -275,14 +284,32 @@ breadth lives, so it gets the most words.
   the value lands in a log line) is replaced by a generated id. The validation and the echo are
   the shared middleware's on every listener, owned by `observability.md` (its AC14) and applied
   here; the same id is the audit line's and the `Operation` record's correlation field.
-- **Authentication on `/api/v1`** is either the bearer token `auth.md` defines or the browser
-  session cookie `auth.md` issues after OIDC (its AC22), decided by the same authorizer into the
-  same principal shape. Because a cookie is an ambient credential, a cookie-authenticated
+- **Authentication on `/api/v1`** is the bearer token `auth.md` defines, the browser session
+  cookie `auth.md` issues after OIDC or the local admin sign-in (its AC22), or, on `/api/v1`
+  alone, **the local admin credential as HTTP Basic with the username `admin`** (`auth.md`,
+  "The local admin credential on the API", its resolved local-admin-on-the-API decision, was
+  Q26; AC2), each decided by the same authorizer into the same principal shape. The Basic form
+  exists for the first mint (`deployment.md`, "First run and first mint", AC26), a `curl`
+  against `POST /api/v1/tokens` before any session exists: a Basic credential whose username is
+  `admin` is verified against the local admin account's hash alone and resolves to the local
+  admin **human principal**, never looked up as a token, while a Basic credential under any
+  other username is a registry token exactly as on a format route; the form is accepted
+  wherever a session would be, only while the account is enabled and under the TLS rule, and
+  `/api/v1` never answers a refusal with a `WWW-Authenticate: Basic` challenge, so no browser is
+  prompted for it or caches it. Because a cookie is an ambient credential, a cookie-authenticated
   request with an unsafe method (`POST`, `PUT`, `PATCH`, `DELETE`) must carry `X-CSRF-Token`
-  equal to the `stackweaver_csrf` double-submit cookie, and is refused `unauthenticated` when
-  the header is absent or differs; a bearer-authenticated request is never asked for one. The
-  mechanism is `auth.md`'s; this spec requires it on every route under `/api/v1`, contributed
-  routes included, and holds it with a test (AC30).
+  equal to the value bound to its session, which the `stackweaver_csrf` cookie carried to the
+  client at issue; the server compares the header with **the value stored on the session row**,
+  never with whatever `stackweaver_csrf` cookie arrived, because a sibling subdomain can plant
+  one (cookie tossing; `auth.md` AC22 as amended), and refuses `unauthenticated` when the header
+  is absent or differs. A bearer-authenticated request and a local-admin Basic request are
+  never asked for one, since neither is ambient. The mechanism is `auth.md`'s; this spec
+  requires it on every route under `/api/v1`, contributed routes included, and holds it with a
+  test (AC30). The routes `credential-management.md` contributes declare a third requirement
+  beside a scope and the admin role, a **human principal**, a session or the local admin and
+  never a token: a bearer token reaches the same authorizer, is resolved to its principal and
+  is then refused `unauthorized` (its AC14; `auth.md`, "Route requirements", AC30), so "the
+  bearer token through the same authorizer" holds there as resolved-then-refused.
 - **Refusals** are RFC 9457 `application/problem+json`. The `type` URI is one of a closed list
   under `https://stackweaver.dev/problems/registry/` (resolvable later; the list is the
   contract now), `title` is fixed per type, `detail` names what was refused in the format's
@@ -299,7 +326,7 @@ breadth lives, so it gets the most words.
   | `validation` | 422 | A malformed request, a declaration the handler's peek contradicts, a name outside the grammar, a deletion whose `confirm` is not the repository's identity |
   | `conflict` | 409 | A duplicate name or a state the write cannot apply to |
   | `retired` | 409 | The addressed coordinate is in the repository's retirement set |
-  | `repository-type` | 405 | A content operation, publish or refresh against a repository type that does not accept it |
+  | `repository-type` | 405 | A content operation, publish or refresh against a repository type that does not accept it, or a freeze or thaw of a `virtual`, whose state is its members' (`repository-lifecycle.md` AC11) |
   | `read-only` | 405 | A completed write against a `read_only` repository (`repository-lifecycle.md`) |
   | `replica` | 405 | A completed write, through the API or a binding, against a repository whose replication link is not `ended`; `detail` names the repository as a replica and names its leader (`replication.md` AC11; `repository.Writable`'s `ErrReplica`) |
   | `in-use` | 409 | Deleting a virtual member without `detach`, or an upstream credential still referenced by an `Upstream` or a `ReplicationLink` (`repository-lifecycle.md`) |
@@ -327,7 +354,11 @@ breadth lives, so it gets the most words.
   within the operation retention window returns the original response with the original
   `Operation`; the same key with a different payload is refused `idempotency-key-reuse` (422);
   a repeat while the first is still running is refused `operation-outstanding` (409). The key is
-  stored on the `Operation` record, so nothing new is invented to hold it. The key is the API's
+  stored on the `Operation` record, so nothing new is invented to hold it; the credential routes
+  are the one exception, since they leave no `Operation` ("Audit" below): there the key, a
+  digest of the payload and the requesting principal are stored on the row the write created
+  and a repeat is matched per principal (`credential-management.md`, its resolved replay
+  decision as amended on its recheck, was its Q4; AC16). The key is the API's
   retry mechanism for every kind; it is distinct from a format's **unchanged publish** ("Every
   operation is one completed logical write"), which serves the clients that retry a publish with
   no key at all (cpan-upload, puppet-blacksmith, `cabal upload`) by recognising identical bytes.
@@ -349,10 +380,15 @@ breadth lives, so it gets the most words.
   here; the one write-shaped action a `remote` accepts is the cache refresh below, which is
   itself refused `repository-type` on a `local` or `virtual`.
 - **Refused on a `read_only` repository.** Every completed write, content operation, pointer
-  write or retention pass included, answers 405 with `read-only`, through the API and every
+  write, signing-key `configure` or retention pass included, answers 405 with `read-only`,
+  through the API and every
   binding alike, because the sole write-transaction constructor consults
   `repository.Writable` (`repository-lifecycle.md` AC9, AC10); configuration changes, and the
-  thaw that restores writes, are still accepted.
+  thaw that restores writes, are still accepted. A document-only pointer transition is not a
+  completed write and continues under the freeze: the cadence re-sign that keeps a frozen
+  signed envelope's validity window open passes the door's second predicate, `Renewable`
+  (`repository-lifecycle.md`'s resolved read-only-renewal decision, was its Q11; AC10), so an
+  archived Debian suite or Hackage repository stays installable.
 - **Refused on a replica.** Every completed write against a repository whose replication link is
   not `ended` answers 405 with `replica`, through the API and every binding alike, from the same
   `repository.Writable` predicate (`ErrReplica`; `replication.md` AC11, `repository-lifecycle.md`
@@ -384,11 +420,11 @@ canonical coordinates percent-encoded as one segment each; `{id}` is an unguessa
 | `GET /api/v1/repositories/{name}` | `pull` | The repository with its identity, state, type-specific configuration and, for a `remote`, its upstream (credential by name only) |
 | `PATCH /api/v1/repositories/{name}` | admin | Configuration (`repository-lifecycle.md`, "Configuration"): visibility, retention, members (a member-list change is a document-only transition of the virtual's default pointer, `data-model.md` AC36, and enqueues `index.merge` and a never-adopted `remote` member's first fetch inside the `PATCH` transaction, `signing-service.md` AC35, `proxy-cache.md` AC26), upstream (validated), `settings` as `configure` (refused `validation` for a format whose handler declares no `configure`), the `policy` document and `advisory_ecosystem` (each validated by `internal/policy`; an unbindable rule or an ecosystem no source lists is refused `validation` naming the failed condition, `supply-chain-policy.md` AC11; a `policy` carrying `coordinate_exemptions` on a `remote` or `virtual` is refused `validation` naming the repository type, `supply-chain-policy.md` AC25); format and type refused `validation` |
 | `DELETE /api/v1/repositories/{name}` | admin | Body `confirm` (the identity, required), `detach` (default false), `reclaim` (`now` or absent); refused `validation`, `in-use` (`repository-lifecycle.md` AC19, AC18); one `lifecycle` operation |
-| `POST /api/v1/repositories/{name}/freeze`, `.../thaw`, `.../rename` | admin | Lifecycle transitions; `rename` takes `to` and is refused `capability-unsupported` where the format declares `Rename: unsupported`; each one `lifecycle` operation (`repository-lifecycle.md`) |
+| `POST /api/v1/repositories/{name}/freeze`, `.../thaw`, `.../rename` | admin | Lifecycle transitions; `freeze` and `thaw` are refused `repository-type` on a `virtual`, whose state is its members' (`repository-lifecycle.md` AC11); `rename` takes `to` and is refused `capability-unsupported` where the format declares `Rename: unsupported`; each one `lifecycle` operation (`repository-lifecycle.md`) |
 | `POST /api/v1/repositories/{name}/refresh` | `push`, object none; `remote` only | Cache refresh: marks every cached metadata document and every negative-cache entry of the remote due for revalidation on its next request; one `refresh` operation (`proxy-cache.md`'s resolved metadata-TTL decision and its AC24; the resolved refresh-action decision, was Q12) |
 | `GET /api/v1/repositories/{name}/packages`, `.../packages/{package}`, `.../packages/{package}/versions`, `.../versions/{version}`, `.../versions/{version}/files` | `pull` | Content reads as the core models them, with withdrawn state, retirement, references and per-file digests; a version read carries its verdicts and refusal records inline |
 | `POST /api/v1/repositories/{name}/operations` | the kind's action on every object `Authorize` reports | The content operation: `kind`, `target`, `args` (the resolved wire-shape decision, was Q4); 201 with a completed `Operation`, or 202 with a `pending` one and `Location` |
-| `GET /api/v1/repositories/{name}/operations` | `pull` | This repository's operations, filterable by kind, principal, state and time |
+| `GET /api/v1/repositories/{name}/operations` | `pull`, object none | This repository's operations, filterable by kind, state and time; the `principal` attribute and the `principal` filter are admitted to the admin and to a caller holding `push` or `delete` on the repository, the callers who could originate one, and the attribute is absent and the filter refused `unauthorized` for every other reader, an anonymous reader of a public repository included (the resolved operator-disclosure decision, was Q17) |
 | `GET /api/v1/operations` | admin | Registry-wide operations with the same filters |
 | `GET /api/v1/operations/{id}` | originating | The poll route; `not-found` to any other caller (the admin role holds every action, `auth.md` "Human grants", so it reads every operation, as the registry-wide listing already lets it) |
 | `POST /api/v1/operations/{id}/cancel` | originating, or admin | Cooperative cancellation (`async-operations.md` AC9); a synchronous or terminal operation answers `conflict` |
@@ -399,8 +435,8 @@ canonical coordinates percent-encoded as one segment each; `{id}` is an unguessa
 | `PUT /api/v1/repositories/{name}/pointers/{pointer}` | `push`, object none | Create or repoint; one `repoint` operation |
 | `DELETE /api/v1/repositories/{name}/pointers/{pointer}` | `delete`, object none | Delete a named pointer; the default pointer is refused `conflict` |
 | `GET /api/v1/repositories/{name}/trust` | `pull` | The trust set and its revision (`artifact-verification.md`) |
-| `PUT`, `DELETE /api/v1/repositories/{name}/trust`; `POST .../trust/import` | admin | One revision per `PUT`; keyserver or upstream import (`artifact-verification.md`) |
-| `GET /api/v1/repositories/{name}/verdicts`, `.../verdicts/{digest}` | `pull` | Verdicts with state, scheme, identity, reason and revision; the listing filters by `state` and `scheme` (`artifact-verification.md`) |
+| `PUT`, `DELETE /api/v1/repositories/{name}/trust`; `POST .../trust/import` | admin | One revision per `PUT`; keyserver or upstream import, the keyserver fetch run by `internal/trustsource` synchronously inside the request under the request's bound and refused `validation` naming the switch under `proxy.offline` (`artifact-verification.md` AC22) |
+| `GET /api/v1/repositories/{name}/verdicts`, `.../verdicts/{digest}` | `pull`; the listing reports the object none, the read by digest is content-addressed | Verdicts with state, scheme, identity, reason and revision; the listing filters by `state` and `scheme`; a patterned `pull` therefore reads a verdict by digest and cannot list (`auth.md` AC24; `artifact-verification.md`) |
 | `GET /api/v1/repositories/{name}/refusals` | `pull` | Policy refusal records (`supply-chain-policy.md` AC5) |
 | `GET /api/v1/repositories/{name}/recipes` | `pull` | The format's client recipes rendered for this repository with `Token` left as a placeholder, plus the raw templates (`web-ui.md`, `internal/surface`) |
 | `GET`, `POST /api/v1/repositories/{name}/signing-keys`; `POST .../signing-keys/{id}/activate`, `.../retire`; `POST .../signing-keys/import`; `POST .../signing-keys/{id}/document` | admin | Key listing and the five key operations, each submitted through `Submit` as a `configure` operation whose `Apply` is `internal/signing`'s, with the handler's generator run in the same transaction (`signing-service.md` AC15) |
@@ -410,12 +446,13 @@ canonical coordinates percent-encoded as one segment each; `{id}` is an unguessa
 | `GET /api/v1/repositories/{name}/export` | admin | Streams the replication archive of a `local` (a replica included) and returns its manifest digest as the `X-Manifest-Digest` trailer, for the operator to carry out of band; refused `repository-type` on a `remote` or `virtual`; audit `replication.export` |
 | `POST /api/v1/repositories/{name}/import?digest=` | admin | Applies a replication archive streamed in the body; refused `validation` without `digest`, refused with nothing committed when the digest does not match the archive's manifest or the archive's range does not connect to the repository's position (`replication.md` AC19, "Air-gapped export is the same mechanism, written to a file"); writes through the applier's entry point, so the target must be a linked replica or an air-gapped follower's repository; audit `replication.import` |
 | `GET`, `POST /api/v1/grants`; `DELETE /api/v1/grants/{id}` | admin | Human grants `(principal, repository, action, pattern)`; the listing filters by `repository` and `principal` (`auth.md` AC28) |
+| `GET /api/v1/principals` | admin | The principals a grant names, human and robot (`data-model.md`'s `Principal`): `id`, `kind`, display name, enabled; filters `kind` and `q`, a case-insensitive prefix on the display name or robot name; the picker the grants page needs so the admin never types an `(issuer, subject)` by hand (`web-ui.md`, its grants page); a read on the request log, no audit record |
 | `GET`, `POST /api/v1/upstream-credentials`; `GET`, `PATCH`, `DELETE /api/v1/upstream-credentials/{name}` | admin | Records of the kinds `upstream-adapters.md` tables (`basic`, `bearer`, `header`, `path-token`, `basic-exchange`, `token-exchange`, `aws-ecr`, `gcp`; `basic-exchange` is its resolved Conan-exchange decision, was Q8), each with its per-kind fields; the value is write-only; `PATCH` rotates one row; `DELETE` is refused `in-use` while an `Upstream` or `ReplicationLink` references it (`repository-lifecycle.md` AC20) |
 | `GET /api/v1/system/jobs` | admin | The job queue, filterable by kind, state and repository (`async-operations.md` AC21) |
 | `POST /api/v1/system/jobs/{id}/cancel` | admin | Cancel a job with or without an `Operation` |
 | `POST`, `DELETE /api/v1/system/jobs/kinds/{kind}/pause` | admin | Pause and resume a kind; how the harness holds the Galaxy import (`async-operations.md` AC10) |
 | `POST /api/v1/system/advisories/import?exported_at=&source=` | admin | Applies an OSV-schema bulk export streamed in the body to the advisory feed, in the shape of the replication import: `exported_at` is the export's production time (the root's `Last-Modified` at download, carried across the air gap beside the archive) and is required, `source` names a `policy.feed.sources` entry and defaults to the instance's default feed; refused `validation` with nothing imported when `exported_at` is absent or earlier than the newest `modified` among the archive's records, or when `source` names no configured source; the source's freshness becomes the declared time (`supply-chain-policy.md`'s resolved freshness-measure decision, was Q13, and its AC16); contributed by `internal/policy`; audit `policy.feed.import` (registered by `supply-chain-policy.md` and `observability.md`), no `Operation` |
-| `/api/v1/tokens`, `/api/v1/tokens/{id}`, `.../rotate`, `/api/v1/tokens/exchange`; `/api/v1/robots`, `/api/v1/robots/{name}`, `.../trust`; `/api/v1/keys`, `/api/v1/keys/{name}` | as `credential-management.md`'s route tables state, per route | Contributed by `internal/credential`; every wire convention here applies; listed so AC25 has one table to generate from |
+| `/api/v1/tokens`, `/api/v1/tokens/{id}`, `.../rotate`, `/api/v1/tokens/exchange`; `/api/v1/robots`, `/api/v1/robots/{name}`, `.../trust`; `/api/v1/keys`, `/api/v1/keys/{name}` | as `credential-management.md`'s route tables state, per route, each requiring a human principal (a session or the local admin, never a token: a token is resolved and refused `unauthorized`, its AC14) | Contributed by `internal/credential`; every wire convention here applies, the `Idempotency-Key` held on the created row rather than an `Operation` (its AC16); listed so AC25 has one table to generate from |
 
 Every administration write above that is not a content operation still leaves an `Operation`
 record (kind `lifecycle`, `repoint`, `refresh`, or `configure`) and an audit line, except the
@@ -606,7 +643,12 @@ rule for when a route may be one, drawn from the format specs' own decisions:
   the operation's `Authorize` reports, or none, or a route-level object the format spec records
   with its reason; whichever it is, `Submit` then evaluates **every** (object, action) pair
   `Authorize` reports, on the binding exactly as on the API, so the route's check is an extra
-  gate and never a substitute. A principal the API refuses is therefore refused through the
+  gate and never a substitute. Both evaluations are `internal/auth`'s: `Submit` hands every
+  pair to the central authorizer and `internal/manage` holds no evaluation logic of its own, so
+  the property is held by construction rather than by discipline (`auth.md` carries the
+  invariant as its own rule in "Scope vocabulary", on its AC10 review surface; asserted by
+  `internal/manage/arch_test.go` and AC8's principal table). A principal the API refuses is
+  therefore refused through the
   binding too, and a binding may only be stricter: CPAN's cpan-upload route reports none, because
   its part order varies from run to run, so it serves unpatterned `push` alone while the API
   accepts a patterned one (`cpan.md`, its resolved binding-object decision); dput's `.changes`
@@ -926,13 +968,18 @@ that spec for what each does:
   format or type is refused `validation`: the content is the format's, and a `remote` becoming `local` is
   `replication.md`'s freeze, not a flag flip.
 - **Freeze, thaw, rename.** `POST .../freeze` moves `active` to `read_only`, under which every
-  completed write is refused `read-only` while reads, configuration and thaw stay available;
+  completed write, a signing-key `configure` included, is refused `read-only` while reads,
+  configuration, the cadence re-sign of a signed envelope (a document-only pointer transition
+  under `Renewable`, `repository-lifecycle.md`'s resolved read-only-renewal decision, was its
+  Q11; AC10) and thaw stay available; both are refused `repository-type` on a `virtual`, whose
+  state is its members' (its AC11);
   `POST .../thaw` reverses it; `POST .../rename` with `to` changes the label only, is refused
   `capability-unsupported` where the format declares `Rename: unsupported` (Hex), and hands
   every handler that implements `Operator`, whether or not its `Operations()` declares
   `configure`, a `configure` with `{"rename": {"from", "to"}}` inside the rename transaction
   (`repository-lifecycle.md`, "Rename" and "Read-only"; Design, "Dispatch"). A rename's
-  `lifecycle` `Operation` also records `unbound_hosts`, every hostname the process's loaded
+  `lifecycle` `Operation` also records `unbound_hosts` in its result document
+  (`data-model.md`, "Operations"), every hostname the process's loaded
   `server.hosts` bound to the old name (empty when none), the same list its `repository.rename`
   audit record carries: a hostname binding names a repository by name, so the rename leaves it
   pointing at a missing repository until the operator edits and reloads it, and the admin who
@@ -959,7 +1006,14 @@ that spec for what each does:
   administer the repository's trust set as one revision per `PUT`; `GET .../verdicts` and
   `.../verdicts/{digest}` read verdicts. The semantics, the trust-set shape and the re-evaluation
   a revision triggers are `artifact-verification.md`'s; the trust writes are admin, the reads
-  `pull`, and no problem type beyond `validation`, `not-found` and `conflict` is needed.
+  `pull`, and no problem type beyond `validation`, `not-found` and `conflict` is needed. The
+  keyserver import is the one route here that reaches a network: `internal/trustsource` runs
+  the fetch synchronously inside the request under the request's bound, so the operator's
+  `curl` learns the outcome from the response, and under `proxy.offline` the import is refused
+  `validation` naming the switch with the trust set unchanged (`artifact-verification.md`
+  AC22). The verdict listing reports the object none and a verdict by digest is
+  content-addressed, so a patterned `pull` reads the verdict of a blob it may pull and cannot
+  enumerate the repository's verdicts (`auth.md` AC24).
 - **Signing keys.** The `.../signing-keys` routes create, activate, retire and import keys and
   submit an externally signed document, each a `configure` operation submitted through `Submit`
   whose `Apply` is `internal/signing`'s, with the handler's generator run in the same
@@ -1004,7 +1058,11 @@ that spec for what each does:
 - **Human grants** in `auth.md`'s vocabulary, `(principal, repository, action)` with an optional
   pattern: create, list, revoke. The admin alone does this (auth AC28), the grant binds the
   repository's identity so it dies with the repository, and every change is an audit line. No
-  role vocabulary exists to administer.
+  role vocabulary exists to administer. `GET /api/v1/principals` (admin) lists the principals a
+  grant may name, human and robot, with kind and display name, filtered by `kind` and a name
+  prefix `q`, so a grant is created against a principal who has signed in or a robot that
+  exists rather than a hand-typed `(issuer, subject)`; it reads `data-model.md`'s `Principal`
+  rows through the shared model and is a request-log read.
 - **Jobs.** `GET /api/v1/system/jobs`, `POST .../jobs/{id}/cancel` and the per-kind pause and
   resume routes expose `async-operations.md`'s queue to the admin; their semantics are that
   spec's (AC9, AC10, AC21) and their wire is this one's.
@@ -1042,7 +1100,10 @@ different questions and have different lifetimes (the resolved audit-record deci
   snapshot, idempotency key and request id. Synchronous operations create it `pending` and
   complete it in the same request; `data-model.md` now frames the entity as the record of
   **every** management operation, not asynchronous work only ("Operations", its widened AC32
-  with the three terminal states). It is listable per repository (`pull`) and registry-wide
+  with the three terminal states). It is listable per repository (`pull`, with the initiating
+  `principal` shown to the admin and to a holder of `push` or `delete` on the repository and
+  withheld from every other reader, the resolved operator-disclosure decision, was Q17) and
+  registry-wide
   (admin), filterable by kind, principal, state and time, and it is pruned after the configured
   window, 90 days by default. A refused request creates none: an unauthenticated caller must not
   be able to fill the table.
@@ -1146,7 +1207,7 @@ that a boundary enforced only by review is not enforced:
 
 | Boundary | Enforcer |
 |---|---|
-| Every management route is mounted under the reserved `api` segment and mapped through the central authorizer; no code in `internal/manage` evaluates authorization itself | `internal/manage/arch_test.go`, the shape `replication.md` AC18 uses |
+| Every management route is mounted under the reserved `api` segment and mapped through the central authorizer; no code in `internal/manage` evaluates authorization itself, `Submit`'s per-pair evaluation on the API and on every binding included | `internal/manage/arch_test.go`, the shape `replication.md` AC18 uses |
 | No handler package imports `internal/manage`; handlers reach `Submit` only through `Deps`; nothing in `internal/manage` imports the write-transaction entry point that waives `ErrReplica` | `internal/manage/arch_test.go` (import graph); `internal/storage/arch_test.go` (`storage-and-gc.md` AC25, the waiver's single importer) |
 | For every binding a handler declares, the route's action is the kind's, its object is one `Authorize` reports or none or the route-level object the `Binding` declares, every principal the API refuses is refused through the binding, and submitting through the binding and through the API yields the same snapshot delta | `internal/manage/binding_test.go`, table-driven over every registered handler's `Bindings()` and a principal table (unpatterned, in-pattern, partly out-of-pattern, wrong action) |
 | One operation, one snapshot; an unchanged publish, none; a refused operation, none | `internal/manage/accounting_test.go`, property test with fault injection |
@@ -1155,7 +1216,7 @@ that a boundary enforced only by review is not enforced:
 | Every declared kind has a `script`-driven conformance case | `conformance/core/case_validate_test.go` (`conformance-harness.md` AC26's validator rule, asserted there from the harness side) |
 | The OpenAPI document matches the route table, including the routes `internal/credential`, `internal/signing`, `internal/repository`, `internal/async`, `internal/replication` and `internal/policy` contribute under `/api/v1`, and loses nothing between tags | `internal/manage/openapi/openapi_test.go` |
 | Every unsafe-method request that reaches the API or a binding past the authorizer emits exactly one audit line through `telemetry.Auditor.Emit` under a registered event, a read emits none, and every completed, failed or cancelled operation leaves exactly one `Operation` | `internal/manage/audit_test.go` on `telemetry.NewTestRecorder` |
-| Every route under `/api/v1`, contributed routes included, refuses a cookie-authenticated unsafe request without a matching CSRF token, and never asks a bearer request for one | `internal/manage/csrf_test.go`, table-driven over the route table |
+| Every route under `/api/v1`, contributed routes included, refuses a cookie-authenticated unsafe request whose CSRF token does not match the session row's stored value, never asks a bearer or local-admin Basic request for one, and never answers a refusal with a `WWW-Authenticate: Basic` challenge | `internal/manage/csrf_test.go`, table-driven over the route table |
 | Every problem type any route returns is in the closed list, with the status the list fixes | `internal/manage/problem_test.go` (the type table is the Go source of truth; a route returning an unlisted type fails the test) |
 
 ## Acceptance Criteria
@@ -1205,7 +1266,10 @@ that a boundary enforced only by review is not enforced:
       the kind's action is accepted through both; and the same operation submitted through the
       binding and through the API produces byte-identical served documents and snapshot deltas,
       proven by a table test that enumerates `Bindings()` of every handler, with fixture
-      bindings of all three object shapes (the dput and cpan-upload shapes among them).
+      bindings of all three object shapes (the dput and cpan-upload shapes among them); and
+      `Submit`'s evaluation of every pair, on the binding as on the API, reaches
+      `internal/auth`'s authorizer and never a check written in `internal/manage`, so a
+      route-level object can only add a refusal.
 - [ ] AC9: The `withdraw` and `restore` kinds require `delete` and the `annotate` kind requires
       `push` for every format that declares them, so a NuGet unlist, a conda revocation, a PyPI
       yank and a Cargo yank are each refused to a principal holding `push` alone and accepted
@@ -1272,7 +1336,9 @@ that a boundary enforced only by review is not enforced:
 - [ ] AC17: A write repeated with the same `Idempotency-Key` and payload within the retention
       window returns the original response and `Operation` without a second snapshot; the same
       key with a different payload is refused `idempotency-key-reuse` (422); and a repeat while
-      the first is still running is refused `operation-outstanding` (409).
+      the first is still running is refused `operation-outstanding` (409); on the credential
+      routes, which leave no `Operation`, the same replay semantics hold on the created row
+      (`credential-management.md` AC16, asserted there).
 - [ ] AC18: Every refusal is `application/problem+json` with a `type` from the closed list, a
       fixed `title`, a `detail` naming the refused coordinate or reason, and the extension
       members the type defines (the refused coordinates on `retired`, the reach on
@@ -1339,7 +1405,12 @@ that a boundary enforced only by review is not enforced:
       exactly one `Operation` record sharing that `request_id`; a refused request leaves none; a
       grant or upstream-credential change leaves an audit record and no `Operation`; and `Operation`
       records are listable per repository under `pull` and registry-wide under the admin role,
-      filterable by kind, principal, state and time, and pruned after the configured retention.
+      filterable by kind, principal, state and time, and pruned after the configured retention,
+      where the per-repository listing carries the `principal` attribute and honours the
+      `principal` filter for the admin and for a caller holding `push` or `delete` on the
+      repository, and for every other reader, an anonymous reader of a public repository
+      included, omits the attribute and refuses the filter `unauthorized`, while the registry-wide
+      listing and the poll route carry it as before.
 - [ ] AC24: Every operation kind a handler declares through `Operations()` has at least one
       conformance case in that format's case set whose `script` calls the operation and then
       runs the real client, and the case-set validator fails the suite before any container
@@ -1368,9 +1439,15 @@ that a boundary enforced only by review is not enforced:
       an empty page rather than a refusal when there are none, and a name in an unreadable
       repository never appears; `GET .../recipes` returns byte for byte what `internal/surface`
       renders for that repository with `Token` left as the placeholder; `GET .../refusals`
-      returns the repository's policy refusal records under `pull`; and `GET .../trust` and
+      returns the repository's policy refusal records under `pull`; `GET .../trust` and
       `GET .../verdicts` answer under `pull` while `PUT`, `DELETE` and `import` on the trust set
-      are refused to every non-admin principal.
+      are refused to every non-admin principal, `POST .../trust/import` completing its keyserver
+      fetch inside the request and refused `validation` naming the switch under `proxy.offline`
+      with the trust set unchanged; a pattern-scoped `pull` reads a verdict by digest, the trust
+      set and the recipes and is refused the verdict listing and the package listing; and
+      `GET /api/v1/principals` lists every human and robot principal with kind and display name,
+      filtered by `kind` and by prefix, for the admin alone and is refused to every other
+      principal.
 - [ ] AC29: `POST .../refresh` on a `remote` under an unpatterned `push` marks every cached
       metadata document and every negative-cache entry due for revalidation so the next
       real-client request revalidates upstream before the metadata TTL would have expired and a
@@ -1380,20 +1457,33 @@ that a boundary enforced only by review is not enforced:
       to `pull`, and is refused `repository-type` on a `local` or `virtual` and `read-only` on a
       frozen remote.
 - [ ] AC30: Every route under `/api/v1`, contributed routes included, accepts the session cookie
-      and the bearer token through the same authorizer into the same principal; a
+      and the bearer token through the same authorizer into the same principal, a
+      credential-management route resolving the bearer token to its principal and then refusing
+      it `unauthorized` (`credential-management.md` AC14), and accepts HTTP Basic with the
+      username `admin` and the local admin's emitted credential as the local admin human
+      principal while the account is enabled (`auth.md` AC2), a Basic credential under any
+      other username being read as a registry token; a
       cookie-authenticated `POST`, `PUT`, `PATCH` or `DELETE` whose `X-CSRF-Token` is absent or
-      differs from the `stackweaver_csrf` cookie is refused `unauthenticated` and changes
-      nothing; a bearer-authenticated request is never asked for one; and a cookie-authenticated
-      `GET` needs none.
+      differs from the value stored on the session row is refused `unauthenticated` and changes
+      nothing, a request whose `stackweaver_csrf` cookie was replaced by a planted value and
+      whose header equals that planted value included; a bearer-authenticated request and a
+      local-admin Basic request are never asked for one; a cookie-authenticated
+      `GET` needs none; and no refusal on `/api/v1` carries a `WWW-Authenticate: Basic`
+      challenge.
 - [ ] AC31: `POST .../freeze` makes every completed write against the repository, through the
-      API and every binding, answer 405 `read-only` while reads, `PATCH` and `thaw` succeed;
+      API and every binding, a signing-key `configure` included, answer 405 `read-only` while
+      reads, `PATCH` and `thaw` succeed and the cadence re-sign of a signed envelope keeps
+      running under the freeze (`repository-lifecycle.md` AC10, which asserts the renewal with
+      a real client); `POST .../freeze` and `.../thaw` on a `virtual` answer `repository-type`
+      and change nothing (its AC11);
       `POST .../rename` changes the name and nothing else so a real client installs from the new
       name and the old name answers `not-found`, is refused `capability-unsupported` for a format
       declaring `Rename: unsupported`, and hands every `Operator` handler, one whose
       `Operations()` omits `configure` included, a `configure` carrying
       `{"rename": {"from", "to"}}` inside the rename transaction; each of the three leaves one
       `lifecycle` `Operation` with its sub-kind and the identity and is refused to every
-      non-admin principal; and a rename's `Operation` lists under `unbound_hosts` each hostname
+      non-admin principal; and a rename's `Operation` lists under `unbound_hosts`, in its result
+      document (`data-model.md`, "Operations"), each hostname
       the loaded `server.hosts` bound to the old name, empty when none
       (`repository-lifecycle.md` AC28).
 - [ ] AC32: The signing-key routes create, activate, retire and import a key and accept an
@@ -1439,7 +1529,7 @@ that a boundary enforced only by review is not enforced:
 | AC5 | property + fault injection | `internal/manage/accounting_test.go` (every kind; faults between authorization and `Apply`, and between `Apply` and commit; the unchanged publish on a declaring fixture handler with identical, one-byte-different and retired claims; the commit-time refusal's `failed` record; the unchanged publish shared with `data-model.md` AC32, whose storage half is `storage-and-gc.md` AC31's `internal/storage/write_claim_test.go`) |
 | AC6 | architecture + integration | `internal/storage/arch_test.go` (the module-wide deleter scan, `storage-and-gc.md` AC15); `internal/manage/reclaim_test.go` (delete, prune, sweep on an injected clock) |
 | AC7 | integration + conformance | `internal/manage/repository_type_test.go` (API and fixture binding against `remote` and `virtual`, the binding's status equal and its body in the fixture wire's shape); each format's own binding case asserts the same 405, and a format's own non-binding wire publish its own status (`conformance/pub/publish_test.go`, `pub.md` AC14) |
-| AC8 | table (architecture) | `internal/manage/binding_test.go` (enumerates every registered handler's `Bindings()`; action equality and object membership among `Authorize`'s objects, none, or the declared route-level object; a principal table in which every API refusal is a binding refusal, including a principal holding only the route's object; delta and document equality; fixture bindings in the dput and cpan-upload shapes) |
+| AC8 | table (architecture) | `internal/manage/binding_test.go` (enumerates every registered handler's `Bindings()`; action equality and object membership among `Authorize`'s objects, none, or the declared route-level object; a principal table in which every API refusal is a binding refusal, including a principal holding only the route's object; delta and document equality; fixture bindings in the dput and cpan-upload shapes; a recording authorizer injected through `internal/auth`'s consumer interface observes every pair on both paths); `internal/manage/arch_test.go` (no authorization evaluation in `internal/manage`, shared with AC2) |
 | AC9 | integration | `internal/manage/action_table_test.go` (the kind table against `auth.md`'s vocabulary; per-format declared kinds checked against the reconciliation table) |
 | AC10 | unit + integration | `internal/manage/register_test.go` (kind-less handler; a kind outside the vocabulary refused at registration); `internal/manage/kinds_test.go` (a declared kind `Apply` answers as unsupported fails the fixture run; `settings` refused `validation` for a fixture with no `configure`; the rename `configure` delivered to a fixture whose `Operations()` omits it) |
 | AC11 | integration | `internal/manage/kinds_test.go` (every kind on the fixture handler: `withdraw`, `restore`, `attach`, `detach`, `place`, `unplace`, `annotate`, `configure`; `args` byte equality at `Apply`; first real handler declaring each kind) |
@@ -1447,22 +1537,22 @@ that a boundary enforced only by review is not enforced:
 | AC13 | integration | `internal/manage/publish_test.go` (declaration mismatch; undeclared coordinate under patterned and unpatterned `push`; orphan collection on an injected clock) |
 | AC14 | integration | `internal/manage/upload_session_test.go` (multi-gigabyte fixture streamed from a generator; dropped connection and resume; memory and disk ceilings asserted; publish latency independent of size) |
 | AC15 | integration | `internal/manage/publish_test.go` (multipart form versus sessions plus operation; delta and result-document equality) |
-| AC16 | integration + fault injection | `internal/manage/deferred_test.go` (202 and `Location`; state monotonicity across the three terminal states; snapshot reference atomic with completion; failed and cancelled deferred operations; poll and cancel authorization; cancel of a synchronous or terminal operation); `internal/async/cancel_test.go` (`async-operations.md` AC9: pending, running-then-finish, running-then-return) |
+| AC16 | integration + fault injection | `internal/manage/deferred_test.go` (202 and `Location`; state monotonicity across the three terminal states; snapshot reference atomic with completion; failed and cancelled deferred operations; the claim retired between enqueue and run, shared with `data-model.md` AC32's deferred clause; poll and cancel authorization; cancel of a synchronous or terminal operation); `internal/async/cancel_test.go` (`async-operations.md` AC9: pending, running-then-finish, running-then-return); the runner's side of the same contract, `Apply` inside `Finish` with the claims declared again, is `async-operations.md` AC5's row |
 | AC17 | integration | `internal/manage/idempotency_test.go` (replay; payload change; concurrent repeat while the job is not terminal) |
 | AC18 | unit + integration | `internal/manage/problem_test.go` (every type's shape, status and extension members; a route returning an unlisted type fails); `internal/telemetry/request_id_test.go` (`observability.md` AC14: validation, generation, echo) and `internal/manage/request_id_test.go` (the id on every management response and in the audit record); `internal/manage/pagination_test.go` (table over every listing route in the route table: `limit`, cursor walk to exhaustion with each item once, `Link` present exactly while a page remains) |
 | AC19 | integration + conformance | `internal/manage/repository_test.go` (create each type; identity in every response; admin-only; format and type change refused; settings versus configuration snapshot count); `internal/manage/upstream_validate_test.go` (`upstream-adapters.md` AC23: create and `PATCH`, each refusal `upstream-invalid`, unreachable accepted); `internal/repository/create_test.go` (`repository-lifecycle.md` AC4: `capability-unsupported` on a `virtual`); `internal/manage/repository_test.go` also carries the `policy` and `advisory_ecosystem` `PATCH` refusals with nothing stored, shared with `supply-chain-policy.md` AC11, and the `coordinate_exemptions` refusal on a `remote` and a `virtual` with nothing stored, shared with `supply-chain-policy.md` AC25; `internal/manage/virtual_members_test.go` (a member-list change and a `virtual`'s creation: no snapshot, the pointer freshness record advanced, `index.merge` and the never-adopted member's first fetch enqueued in the transaction and absent after an injected rollback; shared with `signing-service.md` AC35 and `proxy-cache.md` AC26); `conformance/generic/admin_test.go` (a repository created through the API serves a real client) |
 | AC20 | integration | `internal/manage/repository_delete_test.go` (`confirm` mismatch; `in-use` with and without `detach`; pointer release; name reuse without grants; age-out; `reclaim: now`; shared blob survives; deleted listing admin-only; injected clock); `internal/repository/delete_test.go` (`repository-lifecycle.md` AC14 to AC19, shared) |
 | AC21 | integration | `internal/manage/upstream_credential_test.go` (every kind of `upstream-adapters.md`'s table with its per-kind fields, `basic-exchange` included; write-only value; single-row rotation; next fetch uses the new credential at the network layer; `in-use` while referenced by an `Upstream` and by a `ReplicationLink`, then accepted); `internal/manage/grant_test.go` (create, list, revoke; admin-only; enforced on the next request) |
 | AC22 | integration | `internal/manage/pointer_test.go` (listing fields; promotion equality; out-of-reach refusal with reach; default pointer undeletable; actions and pattern refusal; `repoint` operation record) |
-| AC23 | integration | `internal/manage/audit_test.go` on `telemetry.NewTestRecorder` (one record per unsafe-method request past the authorizer, refusals by this surface included; none from this surface for an authorizer refusal, so a refused write yields one record in total; none for any read; every event registered; one `Operation` per completed, failed or cancelled operation; none for grants and upstream credentials; credential-free attributes; listing scopes and filters; pruning on an injected clock) |
+| AC23 | integration | `internal/manage/audit_test.go` on `telemetry.NewTestRecorder` (one record per unsafe-method request past the authorizer, refusals by this surface included; none from this surface for an authorizer refusal, so a refused write yields one record in total; none for any read; every event registered; one `Operation` per completed, failed or cancelled operation; none for grants and upstream credentials; credential-free attributes; listing scopes and filters, the `principal` attribute present for the admin and for `push` and `delete` holders and absent for a `pull`-only reader and for an anonymous reader of a public repository, the `principal` filter refused to those two; pruning on an injected clock) |
 | AC24 | unit | `conformance/core/case_validate_test.go` (a case set missing a `script` case for a declared kind fails validation naming the kind; shared with `conformance-harness.md` AC26, which asserts the same rule from the harness side) |
 | AC25 | unit | `internal/manage/openapi/openapi_test.go` (regeneration equality over every route under `/api/v1`, contributed routes included, the advisory import among them; equality with the endpoint table parsed from this spec; previous-tag comparison) |
 | AC26 | unit | `cmd/stackweaver-registry/serve_test.go` (in-process command with flag, env and file sources); `internal/manage/arch_test.go` (no Viper or Cobra import) |
 | AC27 | review + integration | `format-handler-interface.md`'s "Optional interfaces discovered at registration" (recorded) and its Review Log entry at the re-open; `internal/manage/operator_test.go` (generic's `delete-file`; the prototype's `publish` and `configure` on the interface) |
-| AC28 | integration + e2e | `internal/manage/reads_test.go` (session for anonymous, human, robot and admin, the anonymous case shared with `auth.md` AC22's `internal/auth/session_test.go`; formats listing against the registry; search scoped to readable repositories with an unreadable sentinel name; recipes byte-equal to `internal/surface`; refusals under `pull`, shared with `supply-chain-policy.md` AC5; trust and verdict reads under `pull`, trust writes admin-only); `web/e2e/setup.spec.ts` (`web-ui.md` AC7: the rendered snippet equals the recipes route) |
+| AC28 | integration + e2e | `internal/manage/reads_test.go` (session for anonymous, human, robot and admin, the anonymous case shared with `auth.md` AC22's `internal/auth/session_test.go`; formats listing against the registry; search scoped to readable repositories with an unreadable sentinel name; recipes byte-equal to `internal/surface`; refusals under `pull`, shared with `supply-chain-policy.md` AC5; trust and verdict reads under `pull`, trust writes admin-only; the import against a fixture keyserver completing in-request and refused under `proxy.offline`, shared with `artifact-verification.md` AC22's `internal/trustsource/sources_test.go`; a patterned `pull` on a verdict by digest, the trust set, the recipes, the verdict listing and the package listing; the principal listing for the admin, with `kind` and `q`, refused to a human, a robot and a repository-scoped token); `web/e2e/setup.spec.ts` (`web-ui.md` AC7: the rendered snippet equals the recipes route) |
 | AC29 | integration + conformance | `internal/manage/refresh_test.go` (metadata and negative entries marked due; no snapshot; no fetch at the network layer; `refresh` record; pattern and `pull` refused; `repository-type` and `read-only` refusals; shared with `proxy-cache.md` AC24); `conformance/oci/refresh_test.go` (a real client's next pull revalidates upstream inside the TTL and a negatively cached tag is looked up again, observed at the upstream stand-in; shared with `proxy-cache.md` AC24) |
-| AC30 | integration + e2e | `internal/manage/csrf_test.go` (table over the route table: cookie unsafe without header, with wrong header, with matching header; bearer unsafe without header; cookie `GET`); `internal/auth/session_test.go` (`auth.md` AC22); `web/e2e/csrf.spec.ts` (`web-ui.md` AC13, a cross-site form post refused) |
-| AC31 | integration + conformance | `internal/manage/lifecycle_routes_test.go` (freeze, thaw, rename; admin-only; `capability-unsupported`; the `configure` rename args at `Apply`; `lifecycle` records with sub-kind and identity; a rename's `unbound_hosts`, listed for a bound old name and empty otherwise, shared with `repository-lifecycle.md` AC28's `internal/repository/rename_hosts_test.go`); `conformance/generic/readonly_test.go` and `conformance/<format>/rename_test.go` (`repository-lifecycle.md` AC10, AC12) |
+| AC30 | integration + e2e | `internal/manage/csrf_test.go` (table over the route table: cookie unsafe without header, with wrong header, with a planted cookie and a header equal to it, with the session row's value; bearer unsafe without header; local-admin Basic unsafe without header, accepted on `POST /api/v1/tokens` and on an admin route; a registry token under the username `admin` and the local credential under another username each refused as an authentication failure; a bearer token on a credential route resolved then `unauthorized`; cookie `GET`; no `WWW-Authenticate: Basic` on any refusal); `internal/auth/session_test.go` (`auth.md` AC22) and `internal/auth/local_test.go` (`auth.md` AC2, shared); `web/e2e/csrf.spec.ts` (`web-ui.md` AC13, a cross-site form post refused) |
+| AC31 | integration + conformance | `internal/manage/lifecycle_routes_test.go` (freeze, thaw, rename; admin-only; freeze and thaw of a `virtual` refused `repository-type`; a signing-key `configure` refused `read-only` under the freeze, the renewal under the freeze being `repository-lifecycle.md` AC10's rows; `capability-unsupported`; the `configure` rename args at `Apply`; `lifecycle` records with sub-kind and identity; a rename's `unbound_hosts`, listed for a bound old name and empty otherwise, shared with `repository-lifecycle.md` AC28's `internal/repository/rename_hosts_test.go`); `conformance/generic/readonly_test.go` and `conformance/<format>/rename_test.go` (`repository-lifecycle.md` AC10, AC12) |
 | AC32 | integration | `internal/manage/signing_keys_routes_test.go` (the five operations as `configure`; `Apply` in `internal/signing`; generator in the same transaction; non-admin and repository-scoped token refused); `internal/manage/jobs_routes_test.go` (`async-operations.md` AC21: admin and non-admin, audit record, OpenAPI presence); `internal/async/pause_test.go` (paused kind not claimed) |
 | AC33 | integration + architecture | `internal/manage/replication_routes_test.go` (admin-only over every replication route; `validation` and `conflict` on `PUT`; the `replica` 405 through the API and the fixture binding while linked, accepted after takeover; `acknowledge_fencing` gate; `digest` gate and mismatch; export trailer; one `replication.*` audit record per write route, `replication.link.sync` and `.reseed` included, none for the link `GET`, no `Operation`); `internal/replication/readonly_test.go` and `takeover_test.go` (`replication.md` AC11, AC16, shared); `internal/replication/export_import_test.go` (`replication.md` AC19, shared); `internal/storage/arch_test.go` (`storage-and-gc.md` AC25: `internal/manage` never imports the `ErrReplica` waiver) |
 | AC34 | integration | `internal/manage/advisory_import_test.go` (admin-only under the existence oracle; a fixture OSV export condemning a version, refused afterwards by a rule reading advisory data; freshness equal to `exported_at` on an injected clock; refusals for a missing time, a time earlier than the newest `modified`, an unconfigured `source`, each with no record imported; one `policy.feed.import` record, no `Operation`; shared with `supply-chain-policy.md` AC16's `internal/policy/feed_offline_test.go`) |
@@ -1476,10 +1566,11 @@ that a boundary enforced only by review is not enforced:
 - `Submit`, the write transaction, the `Operation` record, the audit line (AC2, AC5, AC23)
 - Repository administration: create, update, delete with `confirm`, `detach` and `reclaim`,
   freeze, thaw, rename, the deleted listing, upstream credentials with their kinds and the
-  `in-use` refusal, human grants (AC19, AC20, AC21, AC31); the lifecycle semantics land as
+  `in-use` refusal, human grants and the principal listing (AC19, AC20, AC21, AC28, AC31); the
+  lifecycle semantics land as
   `repository-lifecycle.md` Phases 1 and 2 in the same step
 - Pointer management and the `remote` refresh (AC22, AC29)
-- The session cookie on `/api/v1` and the CSRF rule (AC30)
+- The session cookie and the local admin Basic form on `/api/v1` and the CSRF rule (AC30)
 - `GET /api/v1/session` and `GET /api/v1/formats` (AC28, the two reads the first repository
   needs)
 - The retirement set and its central refusal (AC12)
@@ -1528,11 +1619,12 @@ Left empty by `/spec`. Populated by `/tasks` once the spec reaches `planned`.
 ## Open Questions
 
 None open. Every question this authoring pass raised, the two the 2026-09-28 reconciliation
-raised and the four the 2026-09-28 closing sweep raised (Q13 to Q16, adopted on Opus), is
+raised, the four the 2026-09-28 closing sweep raised (Q13 to Q16, adopted on Opus) and the one
+the Fable follow-up of 2026-10-01 raised (Q17), is
 recorded below in decision shape and adopted at its own recommendation under the owner's
 standing delegation (`CLAUDE.md`, 2026-09-26); `grep -n "standing delegation"` is the review
-queue. All sixteen were re-examined on the Fable recheck of 2026-09-30, each record carrying
-its verdict; none was superseded.
+queue. The first sixteen were re-examined on the Fable recheck of 2026-09-30, each record
+carrying its verdict; none was superseded.
 
 ### Resolved: which action the `withdraw` kind requires (was Q1)
 
@@ -2042,6 +2134,45 @@ captured renderings (`ovsx --skip-duplicate`'s wording match, Swift's `Content-V
 pub`'s printed code) are each something option B would have thrown away. The property that
 matters, one decision and nothing committed, is AC12's and AC7's regardless of rendering.
 
+### Resolved: who sees the operator behind an operation (was Q17, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation**, on Fable. Option B: the
+per-repository operation listing stays a `pull` read, but its `principal` attribute and its
+`principal` filter are admitted only to the admin and to a caller holding `push` or `delete` on
+the repository, the principals who could originate an operation there; every other reader, an
+anonymous reader of a public repository included, receives the record without the attribute
+and is refused the filter `unauthorized`. The registry-wide listing (admin) and the poll route
+(originating) are unchanged. Folded through the endpoint table, "Audit", AC23 and its Test Plan
+row, and reported to `web-ui.md` (its Operations page renders the attribute when present and
+offers the filter to callers who may use it) and to the OpenAPI document (an optional field).
+
+The judgment call it settles, raised by `web-ui.md`'s recheck (its resolved anonymous-access
+decision, was its Q4, names the cost): everything `pull` reads on a public repository is
+world-readable, and the operation listing carried the display name of every principal who ran
+one, so a public repository's operator roster and activity were enumerable by anyone, through
+the UI exactly as through `curl`. The listing exists so a reader can learn what happened to a
+coordinate and when (why a version vanished, when a repoint occurred), which the retirement and
+pointer listings already expose under `pull`; the identity of the operator is the one thing in
+it a reader needs no grant to see and a human's display name makes personal.
+
+**Recommendation (adopted):** B, because it keeps "what happened and when" readable by every
+consumer the repository already serves while limiting "who" to the set of principals who can
+themselves appear in the listing, and because the rule is one authorization-dependent rendering
+rather than a new route or a new action.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. State it: the listing is a `pull` read and operator activity on a public repository is public** | No change; the UI renders what it is given | Every human who publishes to a public repository has their display name and activity pattern enumerable anonymously, which no package index exposes by default and which a privacy regime may count as personal data |
+| **B. Elide the principal for readers who could not have originated an operation; the filter follows the field** | Consumers keep the history; operators see each other; the admin sees everything; no new route or action | A response whose shape depends on the caller, which the OpenAPI document must mark optional and AC23 must test per principal class |
+| **C. Require `push` for the whole listing** | One rule, no optional field | A `pull`-only consumer loses the history that explains a vanished version; the UI's Operations tab goes blank on a public repository for the visitors it was meant to orient |
+
+**Why this is yours:** it decides what a public repository discloses about the people who
+administer it, which is a product stance as much as an authorization rule.
+
+Accepted cost: the caller-dependent field, and a filter a `pull` reader cannot use. A lost
+because it makes a privacy choice by omission; C lost because it withholds the history from the
+readers the listing was added for.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -2052,3 +2183,4 @@ matters, one decision and nothing committed, is AC12's and AC7's regardless of r
 | 2026-09-28 | 97e5a5d | closing-sweep reconciliation pass on Opus (step 3): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied every item in `agents/spec-loop/consequences.md` targeting this file from format batch 1 through format batch 8 and the auth.md closing sweep (none there), each verified against the current text of the format spec it concerns, plus format batch 1 item 6, which the progress log did not show applied. Binding rule and AC8 (batch 3 item 4, batch 6 item 10): `debian.md`'s dput `.changes` route reports one object while its publish reports several, and `cpan.md`'s cpan-upload route reports none while `Authorize` reports a named object; Q13 raised and adopted: a binding is never wider than its operation (route object among `Authorize`'s, none, or a declared route-level object; `Submit` evaluates every pair on both paths), with a multi-object `Scope(r)` left to the interface re-open. Retirement (batch 4 item 4, batch 6 item 10, batch 8 item 6): Q14 raised and adopted: the check compares claimed coordinates, finer than the object for conda, Conan, PyPI and Open VSX, reported by `Authorize` (now returning `format.Addressed`) or declared on the write transaction by a non-binding wire write such as Conan's `PUT`, checked at declaration and at commit; a retiring kind's `Outcome` may be a subset or empty (Conan, Composer, generic, LuaRocks); Q16 raised and adopted: the decision central, the rendering the wire's (Open VSX `400`, Swift `409` problem with `Content-Version: 1`, Puppet's Forge `409`), with a revision note under was-Q10. AC5 (batch 8 item 4): Q15 raised and adopted: a declared unchanged publish completes with no snapshot (`cran.md` AC4, `puppet.md` AC6, `hackage.md` AC12, `cpan.md` AC12), distinct from `Idempotency-Key`, which `vagrant.md` relies on instead. AC7 (batch 8 item 5): scoped to operations and bindings; `pub.md`'s own wire publish keeps its `400`. Reconciliation table re-read row by row against all 32 format specs' management tables: RPM out of the architecture set (batch 3 item 5); Conan's `prune` rows and `delete-version` for a reference, no `delete-package` (batch 4 item 5); Hex publish docs as `attach` replacing an existing file (batch 5 item 3); CRAN per-tree deletion as `delete-file` retiring the version, dropped from `unplace` (batch 8 item 3); Vagrant provider file as `publish`, dropped from `attach` (batch 7 item 7); opam `delete-package` (batch 7 item 7); generic retiring nothing and OCI declaring no kinds (batch 1 item 6); found unlisted and added: Galaxy's publish binding (`ansible-collections.md` was-Q9), Hex's docs route paths, Open VSX's binding route. The pointer-freshness paragraph now cites `data-model.md` AC36 instead of treating the mechanism as owed. AC5, AC7, AC8 and AC12 amended with their Test Plan rows. `fable_recheck` extended, not removed. `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
 | 2026-09-28 | 4278ce0 | leftovers pass of the closing sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the items queued against this file after its closing sweep, each verified against the owning spec's settled text. Six-spec closing sweep item 1: the upstream-credential route lists `basic-exchange` among `upstream-adapters.md`'s kinds (its resolved Conan-exchange decision, was Q8), and AC21's row exercises every kind of that table. Supply-chain closing sweep item 4: the repository `PATCH` refuses a `policy` carrying `coordinate_exemptions` on a `remote` or `virtual` as `validation` naming the repository type, with nothing stored (`supply-chain-policy.md` AC25), in the endpoint table, AC19 and its row (`internal/manage/repository_test.go`, shared). Six-spec closing sweep item 5: the rename's `lifecycle` `Operation` records `unbound_hosts`, the hostnames the loaded `server.hosts` bound to the old name (`repository-lifecycle.md`'s resolved hostname-binding decision, was Q10, AC28), in "Freeze, thaw, rename", AC31 and its row (shared with `internal/repository/rename_hosts_test.go`). Storage-and-gc closing sweep item 2: AC6's row now names `internal/storage/arch_test.go`, the file `storage-and-gc.md` AC15 names (it read `internal/storage/gc/arch_test.go`); "Retirement is core-held" cites the default `Pointer` row as the repository head (`storage-and-gc.md`'s resolved head-lock decision, was Q12, and AC30) and the unchanged publish cites its AC31. Data-model closing sweep item 2: the unchanged publish cites `data-model.md` AC32 and the claim checks its AC35, and AC5's and AC12's rows name both as sharing. Format-handler-interface closing sweep item 6 (optional, applied): "What this feeds the re-open" cites the inputs that spec records, its AC8 and AC15. No question raised or adopted; the fable_recheck marker is unchanged. 33 criteria, each with a Test Plan row. Stays draft. |
 | 2026-09-30 | 5edf701 | Fable recheck: full review (claim verification at HEAD against every cited sibling and all 33 format specs, adversarial lens at full strength on the cloud-authored whole, constitution compliance) + re-examination of the sixteen adoptions made without Fable + the queued consequences | The tree still holds only `cmd/stackweaver-registry/main.go`, so claim verification ran against the sibling specs: every cited criterion and resolved decision (signing-service AC15, AC23, AC35, AC36; replication AC11, AC12, AC16, AC19; proxy-cache AC24, AC26; storage-and-gc AC15, AC25, AC30, AC31 and was-Q12; data-model AC32, AC33, AC35, AC36; auth AC7, AC17, AC22, AC28; format-handler-interface AC8, AC11, AC15, AC16; conformance-harness AC18, AC26; supply-chain AC5, AC11, AC16, AC25 and was-Q13; repository-lifecycle AC9, AC10, AC18 to AC20, AC28; async AC9, AC10, AC21; observability AC14 and its audit vocabulary; web-ui AC7, AC13; upstream-adapters AC23 and its kind table; artifact-verification AC9) read as cited, and the reconciliation table was re-read row by row against every format's management table (Puppet's bindings and Terraform's deprecate were the two disagreements, both fixed; `cargo.md`'s owners record is its Q2, corrected). Queued items applied first: format closing sweep batch 1 item 1 (Puppet rows split, `POST /v3/releases` among the client-driven routes; supersedes management-surfaces item 2), management-surfaces items 8 and 13, rubygems item 8, batch 3 item 4 (the rename `configure` reaches every `Operator`; `settings` for a format without `configure` refused `validation`; every key-rotation row is the signing-key routes'), observability closing sweep items 1 and 2 (`replication.link.sync` and `.reseed` named; AC23 under a registered event), supply-chain recheck item 4 (AC34, `POST /api/v1/system/advisories/import?exported_at=&source=`). Verdicts: Q1, Q3, Q4, Q6 to Q11, Q13, Q15, Q16 confirmed; Q2, Q5, Q12, Q14 confirmed and amended (each record says what changed); none superseded. Adversarial findings beyond the adoptions, all fixed: the audit rule contradicted `observability.md` (reads are never audit events, and an authorizer-refused write would have been audited twice); `management.deferred_threshold` was a key nothing could read; pagination had no criterion; the `repository-type` refusal was ordered "before authorization" in a way that broke the oracle it claimed to keep; a `virtual`'s member-list change and creation did not say where their merge and first-fetch enqueues run; the deferred path did not re-declare its claims; AC10 asked registration for a check it cannot make. Consistency with the 2026-09-30 Fable decisions checked: signing-service was-Q20 and Q21 (the virtual creation and `PATCH` rows now place the first fetch and merge inside their transactions), proxy-cache's amended was-Q18 (the virtual-only remote's refresh), storage-and-gc's amended was-Q12 (`READ COMMITTED`, head lock last, cited). Constitution: both paths, the shared model, no handler table, the named enforcers and the conformance gate hold; no rule contradicted. `node scripts/check-spec.js`: zero failures. 34 criteria each mapped, Open Questions empty, `fable_recheck` cleared: draft to planned. Sibling consequences reported for observability, replication, supply-chain-policy, deployment, auth (AC10 review surface), data-model, format-handler-interface, hackage, question-triage and lessons. |
+| 2026-10-01 | 1aacafb | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: every item queued against this file in `agents/spec-loop/consequences.md` after the 2026-09-30 row, and the coordinator's note from the auth follow-up at ec38840, verified against the current text of its source spec and of this one, with an adversarial pass over each change. Applied, nine of nine: (1) auth recheck 4: `Submit`'s per-pair evaluation reaches `internal/auth`'s authorizer and never a manage-local check, on the binding as on the API, in "Bindings", the enforcer row, AC8 and its row (a recording authorizer injected through the consumer interface), citing `auth.md`'s "Scope vocabulary" where that spec carries the invariant; (2) credential-management recheck 3, deployment recheck 5 and the auth follow-up item 3 together: the authentication paragraph admits the local admin credential as HTTP Basic with the username `admin` on `/api/v1` alone, verified against the hash and never as a token, with any other username a registry token, never challenged with `WWW-Authenticate: Basic`, never asked for a CSRF token, accepted wherever a session would be as `auth.md`'s text at HEAD states it (its "The local admin credential on the API", AC2, was-Q26; `deployment.md`'s "First run and first mint", AC26), the credential routes' human-principal requirement as resolved-then-refused (`credential-management.md` AC14, `auth.md` "Route requirements" and AC30), and the `Idempotency-Key` exception on the credential routes (the key on the created row, its AC16; the idempotency convention and AC17); AC30 rewritten with its row naming the admin-Basic cases, the planted-cookie case and the no-challenge case, the enforcer row extended; (3) web-ui recheck 2, first part: the CSRF comparison is against the value stored on the session row, never the arriving cookie (`auth.md` AC22 as amended), in the paragraph, AC30 and its row; (4) artifact-verification recheck 5: `POST .../trust/import` runs the keyserver fetch synchronously inside the request under its bound and is refused `validation` naming the switch under `proxy.offline` (its AC22), in the endpoint table, "Trust set and verdicts", AC28 and its row; the verdict listing declares the object none and a verdict by digest content-addressed, and, since no read on this surface declared an object, every repository read now does (listings none, coordinate reads their coordinate, the trust set and recipes a descriptor), so a patterned `pull` behaves per `auth.md` AC24, asserted by AC28; (5) repository-lifecycle recheck 6: freeze and thaw of a `virtual` refused `repository-type` in the problem table, the route row, "Freeze, thaw, rename" and AC31 (its AC11); the cadence re-sign continuing under freeze through `Renewable` while a signing-key `configure` stays refused `read-only` (its was-Q11, AC10), in "Refused on a `read_only` repository", the same bullet and AC31 with its row; (6) web-ui recheck 2, second part: `GET /api/v1/principals` (admin; `id`, `kind`, display name, enabled; filters `kind` and `q`) in the endpoint table, "Human grants", AC28, its row and Phase 1, a request-log read over `data-model.md`'s `Principal`; (7) web-ui recheck 2, third part, owner-facing: the per-repository operation listing's disclosure of principal display names to anonymous readers of a public repository, raised as Q17 in decision shape and adopted under the standing delegation at its recommendation (option B: the `principal` attribute and filter admitted to the admin and to `push` or `delete` holders, withheld from every other reader), folded through the endpoint table, "Audit", AC23 and its row; (8) data-model recheck 5: `unbound_hosts` sits in the lifecycle `Operation`'s result document, in "Freeze, thaw, rename" and AC31; (9) data-model follow-up 2 and async recheck 6: AC16's row cites `data-model.md` AC32's deferred clause and `async-operations.md` AC5. Declined: none. One divergence from the coordinator's wording recorded rather than applied: "on human-principal routes only" was narrowed to what `auth.md` states at HEAD, accepted wherever a session would be on `/api/v1`, since the credential is `auth.md`'s and the two specs must agree. Adversarial findings on the changes: the AC30 row named a test file `auth.md` does not have, corrected to its `internal/auth/local_test.go`; the registry-wide listing and the poll route are stated unchanged so Q17 narrows exactly one read. Constitution: no handler table (the principal listing reads the shared `Principal`), every new boundary has an enforcer (the CSRF table, the arch test, AC23's per-class rendering), nothing weakens `auth.md` AC10. `node scripts/check-spec.js`: zero failures once this row lands. 34 criteria, each with a Test Plan row; 17 resolved, zero open; stays planned. Sibling consequences reported, not applied: `web-ui.md` (the Operations page under was-Q17; the principals picker route now tabled), `auth.md` (AC10's surface may name the Q17 rendering), `credential-management.md` (citation of this spec's authentication paragraph as applied), `deployment.md` (citation), `observability.md` (no new event: the principal listing is a read), `question-triage.md` (Q17 adopted on Fable). |
