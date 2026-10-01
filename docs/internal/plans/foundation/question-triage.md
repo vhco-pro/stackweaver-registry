@@ -487,7 +487,7 @@ decision:
 | `foundation/web-ui.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9 (rechecked on Fable 2026-10-01: six confirmed, Q7, Q8, Q9 confirmed with folds amended; spec planned) |
 | `foundation/repository-lifecycle.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10 (rechecked on Fable 2026-10-01: Q1, Q2, Q5, Q7, Q9 confirmed, Q6, Q10 confirmed with costs stated, Q3, Q4, Q8 amended; Q11 adopted on Fable; spec planned) |
 | `foundation/upstream-adapters.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9 (rechecked on Fable 2026-10-01: Q1, Q4, Q6, Q7 confirmed, Q2, Q3, Q5, Q8, Q9 amended; Q10 adopted on Fable; spec planned) |
-| `foundation/signing-service.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19 (rechecked on Fable 2026-09-30: fifteen confirmed, Q8, Q16, Q19 amended, Q17's composed half superseded by Q20; Q20 and Q21 adopted on Fable; spec planned) |
+| `foundation/signing-service.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13, Q14, Q15, Q16, Q17, Q18, Q19 (rechecked on Fable 2026-09-30: fifteen confirmed, Q8, Q16, Q19 amended, Q17's composed half superseded by Q20; Q20 and Q21 adopted on Fable; spec planned; Q22 adopted on Fable 2026-10-01 in the follow-up) |
 | `foundation/data-model.md` | no numbered question; three Opus design judgements (member-list freshness floor, the was-Q21 and was-Q22 folds) rechecked on Fable 2026-09-30: floor confirmed and amended, both folds confirmed; spec planned |
 | `foundation/storage-and-gc.md` | Q11, Q12 (rechecked on Fable 2026-09-30: both confirmed and amended; spec planned) |
 
