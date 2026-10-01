@@ -166,7 +166,7 @@
     "path": "docs/internal/plans/formats/cran.md",
     "description": "Spec for the CRAN (R) repository format: the per-tree PACKAGES index in its plain, gzip and rds representations, the source tree with its Archive/ directory of superseded versions, binary trees keyed by operating system, build and R minor version, publishing and deletion through the registry-owned management API because the ecosystem has no publish protocol, hosted and proxied, with base R, pak and renv as the conformance oracles.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "26",
     "covers": [
       "internal/format/cran/**",
