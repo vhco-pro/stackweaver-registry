@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned by the Fable recheck of 2026-10-01 at b74dd00: a full review pass over the cloud-authored whole (claim verification of every sibling citation at HEAD, adversarial lens at full strength, constitution compliance) plus the re-examination of the seven questions adopted without Fable. Verdicts: Q1 (robot as a principal owning ordinary tokens), Q2 (admin-only administration), Q6 (stored-and-owned here, presented and verified in auth.md) and Q7 (API only, curl first mint) confirmed; Q3 amended (the lifetime policy as it stands at rotation applies, with an explicit lifetime on rotate; AC11); Q4 amended (the Idempotency-Key lives on the row the write created, matched on the requesting principal, within management.operation_retention; the exchange accepts none; AC16); Q5 amended (one audit line per request past the authorizer, none for an authorizer refusal, per management-api.md's amended rule; the read exception given its reason; the robot, key and trust events re-verified as registered in observability.md; a credential.prune job, exchange-minted tokens pruned at expiry; AC6, AC18). None superseded. Adversarial findings fixed: AC1 asked docker login, npm and pip to run against a generic repository in both modes, where generic has one client (curl) and no proxied path; the human-principal route requirement that AC22 forbids this package to evaluate is now declared to the central authorizer, with row ownership as data scoping under the existence oracle; the owner-bound check at mint is a call into internal/auth's evaluator; the exchange verifies only issuers a trust policy names and makes no outbound request otherwise (the SSRF bound), refuses a scope outside the robot's grants instead of silently narrowing, mints nothing for a disabled or deleted robot, and names an issuer profile (github, gitlab, generic) so the harness's fixture issuer is expressible; the lookup prefix is unique per row since it is the route id; robot deletion is one transaction with one audit line; the robot name grammar is repository-lifecycle.md's; AC24's gc test file corrected to data-model AC34's. Consistent with auth.md as planned on 2026-09-30 (Q22's partial reversal of Q17 and the per-host clients recorded in Context; Q24's recognition scope is the verifier's) and with management-api.md as planned the same day. 25 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Five sibling consequences reported (data-model fields, auth's requirement shape and the first-mint Basic form, management-api's authentication paragraph, async-operations' credential.prune kind, artifact-verification's generic-profile refusal). Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): the OIDC exchange tables its format-side bindings, PyPI's (its AC19, the first) and Open VSX's api/-/trusted-publishing/token (openvsx was-Q19, AC33), whose wire shape is still to be captured from ovsx 1.2.0 before the binding is written; a binding is a pure translation onto the exchange, minting nothing itself, held by the existing handler import boundary (new AC25, Phase 3). 25 criteria, zero open questions; stays draft pending a gate review. Earlier: Reconciled 2026-09-28 at 0b79dc8 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. Every sibling consequence this spec reported is now a citation: the four entities live in data-model.md (AC39, meeting AC24's gate), the two problem types are 422 in management-api.md's closed list, the audit line goes through observability.md's Auditor in its registered credential.* vocabulary with the credentials{state,owner_kind} gauge, deployment.md tables the eight keys and the first mint, the harness seeds the expiring token and the registered key (AC25 there), repository-lifecycle.md keeps the tombstone AC20 renders from and deletes grants but never credentials, auth.md cites the robot account and AC34 holds Chef's signed requests, and the robot trust policy doubles as artifact-verification.md's identity source with exchange and attestation bound to one robot (its AC28). Seven questions adopted under the owner's standing delegation, none open; 24 criteria, each with a Test Plan row. Awaits a gate review."
+status_description: "Fable follow-up 2026-10-01 at c0d03c0, still planned: the five items the sibling rechecks and follow-ups queued after this spec was planned applied, none declined (credential.prune registered in Phase 1 and run under generic.md's fixture runner until the queue core lands at step 4b, with Phase 3 placed after that core because an exchange-minted token is pruned at its expiry, AC6; the generic-profile refusal cited to artifact-verification AC28 as validation naming the profile; the four data-model fields cited as carried, AC24 met in full; admin reserved in the principal namespace so POST /api/v1/robots refuses it validation, AC9, with auth's Route requirements and AC30 cited; the local admin Basic form and the resolved-then-unauthorized clause cited to management-api AC30 and the idempotency exception to its AC17). Earlier: planned by the Fable recheck of 2026-10-01 at b74dd00: a full review pass over the cloud-authored whole (claim verification of every sibling citation at HEAD, adversarial lens at full strength, constitution compliance) plus the re-examination of the seven questions adopted without Fable. Verdicts: Q1 (robot as a principal owning ordinary tokens), Q2 (admin-only administration), Q6 (stored-and-owned here, presented and verified in auth.md) and Q7 (API only, curl first mint) confirmed; Q3 amended (the lifetime policy as it stands at rotation applies, with an explicit lifetime on rotate; AC11); Q4 amended (the Idempotency-Key lives on the row the write created, matched on the requesting principal, within management.operation_retention; the exchange accepts none; AC16); Q5 amended (one audit line per request past the authorizer, none for an authorizer refusal, per management-api.md's amended rule; the read exception given its reason; the robot, key and trust events re-verified as registered in observability.md; a credential.prune job, exchange-minted tokens pruned at expiry; AC6, AC18). None superseded. Adversarial findings fixed: AC1 asked docker login, npm and pip to run against a generic repository in both modes, where generic has one client (curl) and no proxied path; the human-principal route requirement that AC22 forbids this package to evaluate is now declared to the central authorizer, with row ownership as data scoping under the existence oracle; the owner-bound check at mint is a call into internal/auth's evaluator; the exchange verifies only issuers a trust policy names and makes no outbound request otherwise (the SSRF bound), refuses a scope outside the robot's grants instead of silently narrowing, mints nothing for a disabled or deleted robot, and names an issuer profile (github, gitlab, generic) so the harness's fixture issuer is expressible; the lookup prefix is unique per row since it is the route id; robot deletion is one transaction with one audit line; the robot name grammar is repository-lifecycle.md's; AC24's gc test file corrected to data-model AC34's. Consistent with auth.md as planned on 2026-09-30 (Q22's partial reversal of Q17 and the per-host clients recorded in Context; Q24's recognition scope is the verifier's) and with management-api.md as planned the same day. 25 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Five sibling consequences reported (data-model fields, auth's requirement shape and the first-mint Basic form, management-api's authentication paragraph, async-operations' credential.prune kind, artifact-verification's generic-profile refusal). Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): the OIDC exchange tables its format-side bindings, PyPI's (its AC19, the first) and Open VSX's api/-/trusted-publishing/token (openvsx was-Q19, AC33), whose wire shape is still to be captured from ovsx 1.2.0 before the binding is written; a binding is a pure translation onto the exchange, minting nothing itself, held by the existing handler import boundary (new AC25, Phase 3). 25 criteria, zero open questions; stays draft pending a gate review. Earlier: Reconciled 2026-09-28 at 0b79dc8 with the foundation authoring wave (not a review), after the 2026-09-27 grounded first draft. Every sibling consequence this spec reported is now a citation: the four entities live in data-model.md (AC39, meeting AC24's gate), the two problem types are 422 in management-api.md's closed list, the audit line goes through observability.md's Auditor in its registered credential.* vocabulary with the credentials{state,owner_kind} gauge, deployment.md tables the eight keys and the first mint, the harness seeds the expiring token and the registered key (AC25 there), repository-lifecycle.md keeps the tombstone AC20 renders from and deletes grants but never credentials, auth.md cites the robot account and AC34 holds Chef's signed requests, and the robot trust policy doubles as artifact-verification.md's identity source with exchange and attestation bound to one robot (its AC28). Seven questions adopted under the owner's standing delegation, none open; 24 criteria, each with a Test Plan row. Awaits a gate review."
 description: "Spec for the credential-management surface: issuing, listing, rotating and revoking registry tokens under /api/v1/tokens, the robot-account principal that lets automation outlive the people who set it up, the expiry states that make a dying token visible before it fails, registered public keys for clients that sign requests, and an OIDC exchange that mints short-lived tokens for CI without a stored secret."
 author: michielvha
 goal: "Give every user, human or robot, one way to obtain, see, rotate and kill the credential their package client presents, so that no format ships before its users can get a token and no token dies without warning."
@@ -66,9 +66,15 @@ specs that cite it:
   Q5 there; AC23): one line for every unsafe-method request past the shared authorizer under a
   registered event, none from the surface for a request the authorizer refused, reads on the
   request log only, with the read events this spec registers named as the one exception. Its
-  authentication paragraph admits the bearer token and the session cookie on `/api/v1` (AC30
-  there), while `deployment.md`'s first-mint recipe presents the local admin credential as the
-  Basic password; that third form is a seam this recheck reports to both (Review Log).
+  authentication paragraph admits three credentials on `/api/v1` (AC30 there, as applied on its
+  Fable follow-up of 2026-10-01): the bearer token, the session cookie, and the local admin
+  credential as HTTP Basic with the username `admin`, the form `deployment.md`'s first-mint
+  recipe presents against `POST /api/v1/tokens` before any session exists; `auth.md` owns that
+  form and its discriminator (its resolved local-admin-on-the-API decision, was Q26; "The local
+  admin credential on the API"; AC2), and its AC30 asserts from the authorizer's side that a
+  credential route resolves a bearer token to its principal and then refuses it `unauthorized`
+  (AC14 here). Its AC17 records the one exception to its `Idempotency-Key`-on-`Operation` rule,
+  the key on the row these routes create (AC16 here).
 - **`formats/chef.md`** adopted registered RSA public keys as a second credential kind (its
   resolved publish-authentication decision, was Q1): "A principal registers an RSA public key as
   a credential, through the credential surface `auth.md` assigns to
@@ -214,13 +220,16 @@ identity key or robot name, display fields, enabled flag), `Credential` (kind `t
 `public-key`, owner ref, name, lookup prefix and hash or public key and fingerprint, scopes as
 `(repository identity, actions, pattern)` rows with the multi-repository mark, created, expires
 or non-expiring, revoked at and by, rotated-from ref, last used), `Grant` (as `auth.md` states
-it) and `TrustPolicy` (robot ref, issuer, audience, claim constraints). The Fable recheck of
-2026-10-01 found four fields the surface needs that the section does not yet carry, reported to
-`data-model.md` rather than edited there: `created_by` and the idempotency triple (key, payload
-digest, requesting principal) on `Credential`, the same triple and `deleted_at` on `Principal`,
-a unique index on the token lookup prefix, and the issuer profile on `TrustPolicy`. None
-references a blob or a snapshot, so none is a GC mark root and each sits in "Records that are
-not mark roots". A
+it) and `TrustPolicy` (robot ref, issuer, issuer profile, audience, claim constraints). The four
+fields the Fable recheck of 2026-10-01 found the surface needs are carried there since that
+spec's Fable follow-up of the same day (its entity table rows for `Principal`, `Credential` and
+`TrustPolicy`, its "Principals, credentials and grants", and AC39, whose row shares this spec's
+`create_test.go`, `idempotency_test.go` and `robot_test.go`): `created_by` and the idempotency
+triple (key, payload digest, requesting principal) on `Credential`, the same triple and
+`deleted_at` on `Principal` (its unique index on a robot's name deliberately not partial, so the
+name stays reserved), a unique index on the token lookup prefix, and the issuer profile on
+`TrustPolicy`. None references a blob or a snapshot, so none is a GC mark root and each sits in
+"Records that are not mark roots". A
 credential scope references a repository by identity and tolerates that repository's deletion:
 the row stays readable, the listing renders the repository's last name from the tombstone
 `repository-lifecycle.md` keeps forever (its AC24; `data-model.md` AC39), and the scope grants
@@ -251,21 +260,28 @@ its closed type list, `Idempotency-Key` on writes, `limit` plus opaque `cursor` 
 authority and cannot mint, list or revoke tokens, because `auth.md`'s scope vocabulary has no
 action for it (AC30, "no token ... can perform an administrative action"). The one route a
 token-bearing request reaches is none of these. A robot therefore never manages its own
-credentials; the admin does (the resolved robot-ownership decision below, was Q2).
+credentials; the admin does (the resolved robot-ownership decision below, was Q2). Before any
+session exists, the local admin account reaches these routes as HTTP Basic with the username
+`admin` on `/api/v1` alone, the form `deployment.md`'s first mint uses and `auth.md` owns and
+asserts (its resolved local-admin-on-the-API decision, was Q26; AC2), resolving to the local
+admin human principal and never read as a token; `management-api.md` AC30 asserts it on the
+`/api/v1` surface, so nothing here re-tests it.
 
 **How "who" reaches the authorizer**, stated on the Fable recheck because AC22 forbids this
-package to decide it. `auth.md`'s vocabulary has two route requirements today, a `(repository,
-action, object)` scope and the admin role; these routes need a third, **a human principal**: a
+package to decide it. `auth.md`'s vocabulary has three route requirements ("Route
+requirements" there, carried since its Fable follow-up of 2026-10-01): a `(repository, action,
+object)` scope, the admin role, and the one these routes declare, **a human principal**: a
 session, or the local admin account, and never a token, whatever the token's owner holds. Each
 route here declares that requirement beside its mapping exactly as `management-api.md`'s admin
 routes declare theirs, and the central authorizer evaluates it, resolving a presented token into
 its principal first (so `management-api.md` AC30's "accepts the bearer token through the same
-authorizer" holds) and then refusing it `unauthorized` (AC14). A robot has no session, so it
-never satisfies the requirement. What remains after the authorizer is **data scoping**, not
-authorization: a session's listing is filtered to the rows it owns, and a read, rotate or
-revoke of a row the caller does not own answers `not-found` under the existence oracle. The
-requirement shape is `auth.md`'s to carry (reported as a sibling consequence; it belongs on its
-AC10 review surface), and `internal/credential/arch_test.go` holds that no code here reads a
+authorizer" holds) and then refusing it `unauthorized` (AC14; `auth.md` AC30 asserts the same
+from the authorizer's side, a token owned by the admin and a robot's token included). A robot
+has no session, so it never satisfies the requirement. What remains after the authorizer is
+**data scoping**, not authorization: a session's listing is filtered to the rows it owns, and a
+read, rotate or revoke of a row the caller does not own answers `not-found` under the existence
+oracle. The requirement shape is `auth.md`'s, on its AC10 review surface, and
+`internal/credential/arch_test.go` holds that no code here reads a
 `Grant` row or a principal's kind to decide anything (AC22). The same rule covers the
 owner-bound check at mint: "every requested scope is held by the owner's current grants" is a
 question this package asks `internal/auth`'s evaluator through its consumer interface, never
@@ -274,8 +290,8 @@ answers itself.
 **`id`** is the lookup prefix, so the identifier a user sees in the listing is the same string
 they see at the start of the token in their CI secret, and nothing else is needed to match the
 two. That makes the prefix a route key, so it is **unique per row**: a unique index holds it
-(`data-model.md`, reported), and the issuer regenerates on the rare collision rather than
-returning a duplicate.
+(`data-model.md`'s `Credential` row and AC39), and the issuer regenerates on the rare collision
+rather than returning a duplicate.
 
 **The token value** is `auth.md`'s: at least 256 bits from `crypto/rand`, no structure beyond
 a non-secret prefix. This spec fixes the prefix's shape, because the surface displays it: the
@@ -297,7 +313,9 @@ record and this surface writes none (the resolved audit-shape decision below, wa
 the Fable recheck closed rather than leaving to the implementer: a write here that carries the
 key stores the key, a digest of the request payload and the requesting principal **on the row it
 created**, the `Credential` for a create, a rotate or a key registration and the `Principal` for
-a robot create (`data-model.md`, reported). A repeat is matched on `(requesting principal, key)`,
+a robot create (the idempotency triple on both records, `data-model.md` AC39; the exception to
+the key-on-`Operation` rule recorded in `management-api.md` AC17). A repeat is matched on
+`(requesting principal, key)`,
 never on the key alone, so one principal's key can never replay another's row; within
 `management.operation_retention`, the same window the management API uses, a match with the
 same payload digest returns the original row without `secret` (AC16), and a different digest is
@@ -337,7 +355,8 @@ outside it (`auth.md` AC25, exercised through this route). Then:
 `scope-exceeds-owner` and `lifetime-policy` are the two problem types this surface contributes
 to `management-api.md`'s closed list, where both are recorded with status `422` (the list is that
 spec's contract, and it carries them since the reconciliation). Each other refusal uses an
-existing type: `validation` (`422`) for a bad pattern or an un-opted multi-repository request,
+existing type: `validation` (`422`) for a bad pattern, an un-opted multi-repository request or
+a robot name outside the grammar or reserved (`admin` included),
 `not-found` under the existence oracle, `unauthenticated` and `unauthorized` as the central
 authorizer answers, `conflict` (`409`) for a duplicate robot or key name,
 `idempotency-key-reuse` and `operation-outstanding` as `management-api.md` defines them.
@@ -377,8 +396,17 @@ default, the same window as `management.operation_retention`, so the person whos
 broke can see that their token was revoked, when, and by whom, rather than seeing it vanish.
 After the window the row is pruned by a `credential.prune` job on `async-operations.md`'s
 runner, one daily `Schedule` with the kind as its exclusivity key and no configuration key of
-its own (the window is the key above; the kind is reported to that spec's table); the audit
-line survives the prune, as `management-api.md`'s does. **One class is exempt from the listing
+its own (the window is the key above; the kind's row is in that spec's kind table, its AC14 and
+its Phase 5); the audit line survives the prune, as `management-api.md`'s does. The kind is
+registered in Phase 1 at charter step 2, which precedes the queue core at step 4b, so it follows
+the convention `async-operations.md`'s Phase 5 and resolved build-placement decision (was Q9
+there) state for the three schedule consumers that land early: until the queue core exists the
+job runs only under the fixture runner `generic.md`'s Phase 2 already uses for `retention.pass`,
+never a ticker of this package's own, and a binary built before step 4b runs no schedule at all,
+which is acceptable here because nothing is due before a 90-day window has passed (the one
+earlier case, an exchange-minted token pruned at its expiry, arrives with Phase 3, which for
+that reason lands after the queue core). AC6's test
+drives the job on an injected clock and is the same test on either runner. **One class is exempt from the listing
 window**: a token minted by the OIDC exchange is pruned at its expiry, since a fifteen-minute
 token retained for ninety days is not history anyone reads but noise that would bury a busy
 robot's listing under thousands of `expired` rows, and its `credential.exchange` audit line is
@@ -426,10 +454,10 @@ has" procedure, one `DELETE` per row.
 
 | Route | Who | Effect |
 |---|---|---|
-| `POST /api/v1/robots` | admin | Creates a robot principal with a unique `name` under `repository-lifecycle.md`'s name grammar (the same character set and reserved words, so nothing new is invented and no robot is named `api`; `conflict` on a duplicate, including a name a deleted robot held: robot names are never reused, so a grant or audit line naming one is never ambiguous) and a `description`; holds no grants and owns no credentials |
+| `POST /api/v1/robots` | admin | Creates a robot principal with a unique `name` under `repository-lifecycle.md`'s name grammar (the same character set and reserved words, so nothing new is invented and no robot is named `api`) plus one reservation of the principal namespace's own: `admin`, the local admin account's name, which `auth.md` reserves so that its Basic form on `/api/v1` has an unambiguous discriminator (its resolved local-admin-on-the-API decision, was Q26); a reserved name is refused `validation` naming the rule, as the grammar's other reserved words are, and `conflict` is for a duplicate, including a name a deleted robot held: robot names are never reused, so a grant or audit line naming one is never ambiguous. Takes a `description`; holds no grants and owns no credentials |
 | `GET /api/v1/robots`, `GET /api/v1/robots/{name}` | admin | Rows with enabled flag, created by and when, credential count, and grant summary as `management-api.md`'s grant listing renders it |
 | `PATCH /api/v1/robots/{name}` | admin | `description`; `enabled: false` disables the robot, and every credential it owns is refused on the next request while its rows stay intact, and the exchange mints nothing for it; `enabled: true` restores them |
-| `DELETE /api/v1/robots/{name}` | admin | In one transaction: revokes every credential the robot owns, deletes its `Grant` rows and its trust policy, and sets `deleted_at` on the principal (`data-model.md`, reported); the name stays reserved. The grants go the way `repository-lifecycle.md`'s deletion removes a repository's (in the deletion transaction, through the shared model, never through `internal/manage`), so the request emits its one `credential.robot.delete` line carrying the count of grants removed and no `manage.grant.delete` lines |
+| `DELETE /api/v1/robots/{name}` | admin | In one transaction: revokes every credential the robot owns, deletes its `Grant` rows and its trust policy, and sets `deleted_at` on the principal (`data-model.md`'s `Principal` row and AC39, whose name index is not partial); the name stays reserved. The grants go the way `repository-lifecycle.md`'s deletion removes a repository's (in the deletion transaction, through the shared model, never through `internal/manage`), so the request emits its one `credential.robot.delete` line carrying the count of grants removed and no `manage.grant.delete` lines |
 | `PUT /api/v1/robots/{name}/trust`, `GET`, `DELETE` | admin | The robot's trust policy for OIDC exchange (below): one policy per robot, so a robot exchanged from two issuers is two robots, which keeps a policy's identity the robot's |
 
 A robot's authority is its grants and nothing else (`auth.md` AC14 and AC30 apply unchanged:
@@ -441,7 +469,8 @@ the robot is removed, because the intersection is with the robot's grants, not t
 alone administers robots and their tokens.
 
 Harbor's `robot$` prefix is not adopted. A robot's name is any name the principal namespace
-accepts, and the listing marks the kind; the prefix in Harbor exists because a robot logs in
+accepts (every name under the grammar except its reserved words and `admin`), and the listing
+marks the kind; the prefix in Harbor exists because a robot logs in
 by name as a `docker` username, and here the username is not an authentication input
 (`auth.md`, the Basic-form semantics).
 
@@ -531,9 +560,13 @@ profile's row of this package's trusted-issuer table (the same row that says
 `repository_owner_id` is mandatory under `github`), not in a fixed table of either spec; adding
 a profile adds one row carrying its required claims and its mapping, and a policy under
 `generic` derives no certificate identity, so an `identity-policy` entry referencing such a
-robot is refused at the trust-set write (AC13; `artifact-verification.md`, reported).
+robot is refused `validation` at the trust-set write, naming the profile, with no revision
+created (AC13 here; `artifact-verification.md` AC28, which asserts it, and its resolved
+identity-policy decision, was Q10, as amended on Fable 2026-10-01).
 
-The exchange is Phase 3, after OCI: no Tier 1 client needs it to run, and its first consumers
+The exchange is Phase 3, after OCI and after the queue core lands at charter step 4b (an
+exchange-minted token is pruned at its expiry, minutes not months, so this phase waits for the
+production runner rather than the fixture one): no Tier 1 client needs it to run, and its first consumers
 are format-side bindings, each a format-shaped route the ecosystem's client calls, translated by
 the handler into this exchange and nothing else, so there is one exchange however many ways in:
 
@@ -707,7 +740,10 @@ Per the constitution, every boundary this spec introduces names the test that ho
       the next request and the exchange mints nothing for it, both restored when the robot is
       re-enabled, their rows untouched; deleting a robot revokes every token it owns, deletes its
       grants and trust policy in the deletion transaction with one `credential.robot.delete`
-      audit line and no `manage.grant.delete` line, and its name cannot be reused.
+      audit line and no `manage.grant.delete` line, and its name cannot be reused; and
+      `POST /api/v1/robots` with the name `admin`, or any reserved word of
+      `repository-lifecycle.md`'s grammar, is refused `validation` naming the rule and creates
+      no principal.
 - [ ] AC10: A token created without `expires_at` expires after `default_token_lifetime` (`2160h` by default); a
       lifetime beyond `max_token_lifetime` is refused `lifetime-policy`; `non_expiring: true`
       is honoured with `allow_non_expiring` unset and refused `lifetime-policy` with it set to
@@ -795,9 +831,11 @@ Per the constitution, every boundary this spec introduces names the test that ho
 - [ ] AC24: The `Principal`, `Credential`, `Grant` and `TrustPolicy` entities are specified in
       `data-model.md`'s entity table and its "Records that are not mark roots" (its "Principals,
       credentials and grants" and AC39, in place since 2026-09-27) with the four fields the
-      Fable recheck of 2026-10-01 reported to it (`created_by`, the idempotency triple, the
-      lookup-prefix unique index, `deleted_at`, the issuer profile), which is the gate this
-      criterion places before any code under `internal/credential` reaches `main`, and a blob
+      Fable recheck of 2026-10-01 reported to it and its Fable follow-up of the same day
+      carries (`created_by`, the idempotency triple, the lookup-prefix unique index,
+      `deleted_at`, the issuer profile), which is the gate this
+      criterion places before any code under `internal/credential` reaches `main`, met in full
+      since that follow-up, and a blob
       referenced only through a credential's scoped repository is collected while the credential
       row stays readable.
 
@@ -819,10 +857,10 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | AC3 | integration | `internal/credential/forms_test.go`, driving `auth.md` AC31's `credential_form_test.go` helper with a token minted here |
 | AC4 | integration | `internal/credential/display_once_test.go` (every response of create, rotate, list, read, replay, refusal, plus everything `telemetry.NewTestRecorder` captured for each: metrics, spans, log records, audit records; `observability.md`) |
 | AC5 | integration + conformance | `internal/credential/expiry_state_test.go` (injected clock through each state); `internal/credential/metrics_test.go` (`credentials{state,owner_kind}` on `telemetry.NewTestRecorder`; shared with `observability.md` AC6); `conformance/generic/expiring_token_test.go` (an `expiring` token, seeded through the harness's `credentials` sub-entry per `conformance-harness.md` AC25, runs a real client) |
-| AC6 | integration | `internal/credential/revoke_test.go` (next-request refusal, OCI JWT window via `auth.md` AC5's fixture, retention and the `credential.prune` job on an injected clock with an exchanged token pruned at expiry and a revoked one retained, idempotent delete, rotate refused; the job registered in `internal/async/kinds_test.go`'s table, `async-operations.md`) |
+| AC6 | integration | `internal/credential/revoke_test.go` (next-request refusal, OCI JWT window via `auth.md` AC5's fixture, retention and the `credential.prune` job on an injected clock with an exchanged token pruned at expiry and a revoked one retained, idempotent delete, rotate refused; the job registered in `internal/async/kinds_test.go`'s table, `async-operations.md` AC8 and AC14, and driven by the fixture runner `generic.md`'s Phase 2 names until the queue core lands at charter step 4b, the test unchanged on the production runner) |
 | AC7 | integration + conformance | `internal/credential/multi_repository_test.go`; `formats/oci.md` AC1's suite run in `conformance/oci/`, its `OCI_PASSWORD` a token minted through this route |
 | AC8 | integration | `internal/credential/owner_bound_test.go` (human and robot owners; grant-then-mint ordering through `internal/manage`'s grant surface) |
-| AC9 | integration | `internal/credential/robot_test.go` (creator's grants revoked; disable and re-enable, the exchange refused while disabled; delete in one transaction with grants and trust policy gone, one audit line on `telemetry.NewTestRecorder`, name reservation) |
+| AC9 | integration | `internal/credential/robot_test.go` (creator's grants revoked; disable and re-enable, the exchange refused while disabled; delete in one transaction with grants and trust policy gone, one audit line on `telemetry.NewTestRecorder`, name reservation after deletion; `admin` and each reserved word of `repository-lifecycle.md`'s grammar refused `validation` at create with no principal row written) |
 | AC10 | integration | `internal/credential/lifetime_policy_test.go` (default, maximum, opt-in with the flag unset and set, policy lowered after creation) |
 | AC11 | integration | `internal/credential/rotate_test.go` (identical scopes, expiry arithmetic, explicit lifetime on rotate, grace overlap on an injected clock, grace beyond maximum refused, rotate refused under a policy tightened after creation and accepted with a lifetime inside it, chain visible in the listing) |
 | AC12 | integration + conformance | `internal/credential/public_key_test.go` (PEM forms, size, duplicates, ownership); `conformance/chef/signed_publish_test.go` (`knife supermarket share` with a registered key seeded through the harness's `credentials` sub-entry, its private half delivered to the client container as a file per `conformance-harness.md` AC25: in scope, out of scope, expired, revoked; `formats/chef.md` AC11) |
@@ -837,7 +875,7 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | AC21 | unit | `internal/credential/config_test.go` (in-process command test in the cobra-viper skill's shape) |
 | AC22 | architecture test | `internal/credential/arch_test.go` |
 | AC23 | e2e | `web/e2e/credentials.spec.ts` (Playwright: list states, display-once, revoke, robot page); lands with the UI at charter step 9 |
-| AC24 | review + integration | `data-model.md` "Principals, credentials and grants" and AC39 (present since 2026-09-27; re-checked at this spec's gate review); `internal/model/credential_records_test.go` (`data-model.md` AC39); `internal/storage/gc_property_test.go`, the file `data-model.md` AC34's row names, with the four entities among the non-root records whose blobs are collected |
+| AC24 | review + integration | `data-model.md` "Principals, credentials and grants" and AC39 (present since 2026-09-27, the four reported fields since its Fable follow-up of 2026-10-01; re-checked at this spec's gate review and its follow-up); `internal/model/credential_records_test.go` (`data-model.md` AC39); `internal/storage/gc_property_test.go`, the file `data-model.md` AC34's row names, with the four entities among the non-root records whose blobs are collected |
 | AC25 | integration + conformance + architecture | `internal/credential/exchange_binding_test.go` (a fixture binding translating into the exchange: one row per matching identity token, none for no match, the row's owner, lifetime and scopes as AC13's); `internal/credential/arch_test.go` (the existing import-graph rule that no handler package imports `internal/credential`, with a fixture binding package that does failing); `conformance/pypi/trusted_publishing_test.go` and `conformance/openvsx/trusted_publishing_test.go` (shared with `formats/pypi.md` AC19 and `formats/openvsx.md` AC33; the fixture issuer through `conformance-harness.md` AC25's `trust_policy` sub-entry) |
 
 ## Implementation Phases
@@ -849,7 +887,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
   under `/api/v1/tokens` (AC1, AC2, AC4, AC6, AC11), the four `auth.md` rules through the
   surface (AC7, AC8, AC10), expiry states (AC5), problem types and idempotency (AC15, AC16)
 - Robots under `/api/v1/robots` (AC9), token-bearing requests refused (AC14)
-- Audit lines (AC18), `last_used_at` worker (AC19), the `credential.prune` job (AC6), plaintext
+- Audit lines (AC18), `last_used_at` worker (AC19), the `credential.prune` job (AC6; registered
+  here at step 2 and run under the fixture runner `generic.md`'s Phase 2 names until the queue
+  core lands at step 4b, per `async-operations.md`'s Phase 5), plaintext
   refusal on the routes (AC17), deleted-repository tolerance (AC20), the architecture test
   (AC22), form-agnostic proof (AC3)
 - This phase is what `formats/oci.md` Phase 1 waits on
@@ -858,7 +898,7 @@ Per the constitution, every boundary this spec introduces names the test that ho
 - `/api/v1/keys` and the `public-key` credential kind (AC12); `auth.md`'s verifier grows the
   signed-request form in the same pass (its AC34, in place since the reconciliation)
 
-### Phase 3: OIDC exchange (after OCI; before the first trusted-publishing binding)
+### Phase 3: OIDC exchange (after OCI and the queue core at step 4b; before the first trusted-publishing binding at step 6)
 - `TrustPolicy`, `PUT /api/v1/robots/{name}/trust`, `POST /api/v1/tokens/exchange` (AC13)
 - The binding rule and its architecture test (AC25); the PyPI and Open VSX bindings themselves
   land with their formats, the Open VSX one after its ovsx 1.2.0 capture
@@ -943,7 +983,8 @@ not: a robot whose CI runs under an OIDC issuer needs no rotation at all, since 
 mints a fresh fifteen-minute token per job, so the administrator's toil is confined to robots
 on CI without an identity token. The fold under-stated how "admin only" reaches the authorizer;
 Design ("How who reaches the authorizer") now states the human-principal requirement every
-route declares, reported to `auth.md` as a requirement shape its vocabulary must carry.
+route declares, which `auth.md` carries as its vocabulary since its Fable follow-up of
+2026-10-01 ("Route requirements", AC30).
 
 ### Resolved: rotation semantics (was Q3)
 
@@ -1010,7 +1051,8 @@ decision (was Q5) writes none here, so the key had nowhere to live; Design ("Whe
 requesting principal and the key so no principal can replay another's row, within
 `management.operation_retention`. And the exchange route, which the fold silently included,
 accepts no key: a replay without the secret serves nothing a CI job could use. AC16 asserts
-both; `data-model.md` is reported the fields.
+both; `data-model.md` carries the triple on both records since its Fable follow-up of
+2026-10-01 (AC39), and `management-api.md` AC17 records the exception to its own rule.
 
 ### Resolved: whether credential events leave an `Operation` record (was Q5)
 
@@ -1113,10 +1155,15 @@ Rechecked on Fable 2026-10-01: confirmed. `management-api.md`'s was-Q9 was confi
 the day before for the same reason (surface discipline, not effort, which the constitution
 forbids as a reason). The cost is stated honestly, with one precision the recheck adds: the
 first mint's credential is the local admin credential presented as the Basic password, which
-`deployment.md`'s "First run and first mint" and its AC26 run, while `management-api.md`'s
-authentication paragraph admits only the bearer token and the session cookie on `/api/v1` and
-`auth.md`'s Basic row reads its password as a registry token. That seam is theirs to close and
-is reported to both; nothing here changes if they close it by naming the form.
+`deployment.md`'s "First run and first mint" and its AC26 run. At the recheck,
+`management-api.md`'s authentication paragraph admitted only the bearer token and the session
+cookie on `/api/v1` and `auth.md`'s Basic row read every Basic password as a registry token, a
+seam reported to both. Both closed it on their Fable follow-ups of 2026-10-01: `auth.md` raised
+and adopted the local-admin-on-the-API decision (was Q26; the username `admin` selects the
+local admin reading on `/api/v1` alone, so the name is reserved in the principal namespace and
+this spec's robot route refuses it, AC9) and asserts the form in its AC2; `management-api.md`
+admits it as the third credential on `/api/v1` (AC30). Nothing here changed in behaviour; the
+form is cited in Design ("The token surface").
 
 ## Review Log
 
@@ -1126,3 +1173,4 @@ is reported to both; nothing here changes if they close it by naming the form.
 | 2026-09-28 | 0b79dc8 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the data-model reconciliation: the "entity table has none of these three" claim replaced by a citation of "Principals, credentials and grants" and AC39, AC24's gate recorded as met, its Test Plan row naming `internal/model/credential_records_test.go`. From the management-api reconciliation: `scope-exceeds-owner` and `lifetime-policy` recorded as `422` (Design, AC15) and the Context bullet updated to the applied mount, endpoint-table and OpenAPI coverage. From the observability authoring: the audit line goes through `telemetry.Auditor.Emit` in the `credential.<object>.<action>` vocabulary with the registered extension attributes (`credential`, `owner`, `owner_kind`, `multi_repository`, `issuer`), AC4 and AC18 scan through `telemetry.NewTestRecorder`, and the gauge `credentials{state,owner_kind}` (leader-exported, `CredentialsExpiring`) is asserted by AC5 with `internal/credential/metrics_test.go`; the robot `.update`, `.read`, `.list`, key `.read`, `.list` and `credential.trust.*` events are reported back to `observability.md` as vocabulary additions. From the conformance-harness reconciliation: AC5's `expiring` token and AC12's registered key are seeded through `credentials` sub-entries (harness AC25). From the repository-lifecycle authoring: AC20 now states the tombstone-rendered name and that deletion removes grants and touches no credential, with `internal/credential/listing_test.go` shared with lifecycle AC24. From the artifact-verification authoring: the trust policy as an identity source, exchange and attestation bound to one robot (its AC28), the issuer-specific mapping beside the trusted-issuer table; AC13 extended and `internal/verify/identity_test.go` shared. From the deployment authoring: the configuration table and the was-Q7 cost cite the `credentials.` inventory row and "First run and first mint". Stale quotations of `auth.md` ("owed and not yet written", "defines no robot-account principal") rewritten as history with the current citations; Phase 2 cites `auth.md` AC34. No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
 | 2026-09-28 | 3135d95 | closing reconciliation sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show applied, verified against the current text of `openvsx.md` ("Trusted publishing is a binding onto the OIDC exchange", its resolved trusted-publishing decision was Q19, AC33) and `pypi.md` (its binding section and AC19). Applied: format batch 6 item 11 (a binding table under "OIDC exchange" naming Open VSX's `api/-/trusted-publishing/token` with its wire shape recorded as not yet captured, a local capture of ovsx 1.2.0 owed before the binding is written, and nothing assumed about it); format batch 1 item 8 (PyPI's binding cited as the first, its AC19); the Context line on both formats updated from 'declined' to 'binds'; new AC25 (every binding a pure translation onto the exchange, no handler importing `internal/credential`) with a Test Plan row shared with the two formats' trusted-publishing cases and `conformance-harness.md` AC25's new `trust_policy` sub-entry; Phase 3. Found already done: management-api reconciliation 7, conformance-harness reconciliation 7, artifact-verification authoring item 12. No question raised; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
 | 2026-10-01 | b74dd00 | Fable recheck: full review (claim verification at HEAD of every sibling citation: `auth.md` Scope, "Presentation forms", "Where a route-scoped form is recognised", the machine-surface paragraph, "Token expiry", "Tokens are never stored recoverable", AC5 to AC7, AC12, AC16, AC17, AC25, AC27, AC29 to AC31, AC34 and its resolved Q14 to Q17, Q20 to Q22, Q24; `management-api.md`'s mount conventions, closed problem table, endpoint table row, "Audit", "Configuration and the CLI stance", AC17, AC18, AC23, AC25, AC30 and its resolved Q5 and Q9; `observability.md`'s audit channel, vocabulary table, `credentials` gauge, AC6, AC7, AC12, AC19; `data-model.md` "Principals, credentials and grants", AC34, AC39; `conformance-harness.md` `credentials` row and AC25; `repository-lifecycle.md` deletion and tombstone; `artifact-verification.md` was-Q10 and AC28; `deployment.md`'s `credentials.` row and "First run and first mint"; `project-charter.md` steps 2, 6, 9, 11; `web-ui.md` AC12; `formats/oci.md`, `chef.md`, `pypi.md`, `openvsx.md`, `pub.md`, `julia.md`, `rubygems.md`, `generic.md`; the tree still holds only the stub `main.go`) + adversarial lens at full strength on the cloud-authored whole + constitution + re-examination of the seven adoptions made without Fable | Brought current first: every queued consequence naming this file was already applied (the 2026-09-28 sweeps), and the three Fable rechecks of 2026-09-30 that this spec depends on were read for what they changed: `auth.md`'s Q22 recheck (the per-host clients as the second need behind the multi-repository opt-in, now in Context), its Q24 as amended (recognition scope stays the verifier's; nothing here changes), and `management-api.md`'s Q5 as amended (every write past the authorizer under a registered event, reads on the request log, this spec's read events the named exception), which this spec's Audit section and AC18 had contradicted with "every request, refused or not". Verdicts: Q1 confirmed (under-stated: the robot as a principal is what keeps the trusted-publishing bindings free of authorization logic; the name grammar is `repository-lifecycle.md`'s); Q2 confirmed (the OIDC exchange removes rotation toil for robots on an identity-token issuer; the human-principal route requirement stated and reported to `auth.md`); Q3 amended (policy as it stands at rotation; explicit lifetime on rotate; AC11); Q4 amended (the key stored on the created row, matched on the requesting principal, within `management.operation_retention`; none on the exchange; AC16); Q5 amended (no second line for an authorizer refusal; the read exception given its reason; the robot, key and trust events re-verified as registered in `observability.md` AC12 and the stale "reports to it" wording replaced; pruning by a `credential.prune` job with exchange-minted tokens pruned at expiry; AC6, AC18); Q6 confirmed against `auth.md` as planned; Q7 confirmed (the first mint's form named and its seam reported). None superseded; AC10 of `auth.md` untouched and cited as covering the exchange, trust and key routes. Adversarial findings fixed: AC1 ran `docker login`, `npm whoami` and `pip download` against a generic repository "hosted and proxied alike", which no client does and generic cannot (proxy `unsupported`); rewritten onto `curl` hosted-only with the format clients' auth cases sharing the row shape. The "who" column had no path to the authorizer that AC22 permits; Design now declares the human-principal requirement per route, keeps ownership as data scoping under the existence oracle (`not-found` on a non-owner's read, rotate and revoke, AC2), and makes the owner-bound check a call into `internal/auth`'s evaluator, held by the arch test's new `Grant`-read assertion. The exchange fetched any issuer's keys the `iss` claim named, an unauthenticated fetch-any-URL primitive; it now proceeds only for an issuer a trust policy names, with zero outbound requests otherwise, on a recording transport (AC13, enforcer row). The exchange silently narrowed requested scopes where a create refuses; now `scope-exceeds-owner`. A disabled or deleted robot could still be exchanged into; refused. The trusted-issuer table was a code table keyed by issuer, which made the harness's fixture issuer inexpressible; split into an issuer URL (data) and a profile (`github`, `gitlab`, `generic`; code), a `generic` robot deriving no certificate identity. The lookup prefix is the route `id` yet nothing made it unique; a unique index and regeneration on collision (AC2). Robot deletion "through the grant path" would have emitted `manage.grant.delete` lines inside one request; now one transaction, one line (AC9). One policy per robot stated. AC24's row cited a non-existent `internal/model/gc_roots_test.go`; corrected to `data-model.md` AC34's `internal/storage/gc_property_test.go`, and AC24's gate now names the four reported fields. `created_by` recorded on every created row. Both-paths check: the token has no hosted or proxied distinction (one verifier), and the one conformance case here is generic's hosted `curl`; the proxied half of every token's life is each format's auth case, cited. Constitution: findings in the doc, no handler owns a table, the shared data model cited, every boundary named with its enforcer, scope never cut for effort. 25 criteria, each mapped; zero open questions; `node scripts/check-spec.js` zero failures for this file, its only advisories the two an uncommitted review produces; `fable_recheck` cleared; draft to planned. Reported, not applied (five sibling consequences, numbered in the recheck report): `data-model.md` (fields and index), `auth.md` (the human-principal requirement shape on AC10's surface; the local admin credential as the Basic password on `/api/v1`), `management-api.md` (its authentication paragraph and AC30 versus the credential routes' `unauthorized` and the first-mint Basic form), `async-operations.md` (the `credential.prune` kind), `artifact-verification.md` (an `identity-policy` entry referencing a `generic`-profile robot refused at the trust-set write). |
+| 2026-10-01 | c0d03c0 | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: every item in `agents/spec-loop/consequences.md` targeting this file after the b74dd00 row collected (the credential-management recheck's own five reported items traced to their landings, the async-operations recheck item 4 and follow-up item 2, the artifact-verification recheck item 6, the data-model follow-up item 2, the auth follow-up item 2, the management-api follow-up item 3), each verified against the current text of its source spec and of this one, then read adversarially against the rest of this spec. Applied, five of five. (1) async-operations recheck item 4, repeated by its follow-up item 2 (its kind table row, AC14, Phase 5 and its was-Q9 recheck note): the fixture-runner convention is stated rather than the registration moved, because that spec already states it for the three schedule consumers that land before step 4b and `retention.pass` at the same step 2 uses it (`generic.md` Phase 2); Design ("Expiry states"), Phase 1 and AC6's row say `credential.prune` is registered in Phase 1 and runs under that fixture runner until the queue core lands, a binary built before step 4b running no schedule, acceptable because nothing is due inside 90 days; the one earlier case, an exchange-minted token pruned at its expiry, is why Phase 3 now lands after the queue core at step 4b and before the first binding at step 6, a narrowing inside the "between OCI and step 6" the charter already states (Design, "OIDC exchange"; Phase 3; flagged owner-facing below). (2) artifact-verification recheck item 6 (its AC28 and was-Q10 as amended): the `generic`-profile refusal at the trust-set write cites AC28 and is typed as that spec asserts it, `validation` naming the profile with no revision created. (3) data-model follow-up item 2 (its `Principal`, `Credential` and `TrustPolicy` rows, "Principals, credentials and grants", AC39 and its row): the "does not yet carry" paragraph, the lookup-prefix index, the `Idempotency-Key` paragraph, the robot `DELETE` row, the was-Q4 note, AC24 and its row now cite the fields as carried since its follow-up of 2026-10-01; AC24's gate recorded as met in full. (4) auth follow-up item 2 (its "The local admin credential on the API", "Route requirements", AC2, AC30, was-Q26): `admin` is reserved in the principal namespace, so `POST /api/v1/robots` refuses it `validation` naming the rule as the grammar's other reserved words are, with no principal written (the robot route table, the Harbor paragraph, the problem-type list, AC9 and its `robot_test.go` row); "How who reaches the authorizer" cites "Route requirements" as the home of the three-requirement vocabulary and AC30 as its authorizer-side assertion, and the was-Q2 note no longer says "reported". (5) management-api follow-up item 3 (its authentication paragraph, AC17, AC30 and its row): the Context bullet, the "Who" paragraph and the was-Q7 note cite the local admin Basic form with the username `admin` as the third credential on `/api/v1` and AC30's resolved-then-`unauthorized` clause, and AC17 as the recorded exception for the key on the created row; nothing here re-tests the form, which `auth.md` AC2 and `management-api.md` AC30 assert. Declined: none; nothing queued was superseded. Adversarial check of what changed: AC9's row first claimed its `admin` half was shared with `auth.md` AC2's `internal/auth/local_test.go`, whose row covers the Basic form and not robot naming, corrected to this package's own test; the fixture-runner sentence as first written left exchange-minted tokens unpruned for the fifteen-minute case if Phase 3 landed before 4b, closed by the Phase 3 placement; the reserved name is `validation` and not `conflict`, consistent with `repository-lifecycle.md` AC2 and with this spec's `conflict`-for-duplicate rule; the "Who" paragraph's new sentence adds no criterion because its assertion is the siblings' and AC14's refusal of every token is unchanged. Owner-facing: the Phase 3 narrowing to after step 4b is a placement precision derived from the prune-at-expiry rule, reversible by the owner, raised as no question because every alternative it excludes would leave exchange-minted rows unpruned until 4b. No question raised or adopted; `auth.md` AC10 untouched; no mark root added. No em-dashes or en-dashes. 25 criteria, each with a Test Plan row; Open Questions empty; `node scripts/check-spec.js` on this file: zero failures once this row lands. Stays planned. Sibling consequences reported, not applied: `project-charter.md` (optional: its step 6 row and Phase 5 may say Phase 3 lands after the queue core at step 4b). |
