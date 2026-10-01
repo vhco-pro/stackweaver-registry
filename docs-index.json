@@ -460,7 +460,7 @@
     "path": "docs/internal/plans/foundation/conformance-harness.md",
     "description": "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "2",
     "covers": [
       "conformance/**"
@@ -566,7 +566,7 @@
     "path": "docs/internal/plans/foundation/replication.md",
     "description": "Spec for replicating content between registry instances - geo-distribution, disaster recovery and air-gapped mirroring - built on the content-addressed store and immutable snapshots.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "14",
     "covers": [
       "internal/replication/**"

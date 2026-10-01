@@ -459,6 +459,7 @@ One target file per agent. A file listed here has had every item targeting it ap
 - management-api.md, FABLE FOLLOW-UP ROUND 2: DONE 2026-10-01 at 9b17887 on Fable. AC34's row file corrected and source=osv equal to absent. New Q18 on Fable: one refusal rule for /api/v1: unauthenticated without a credential, not-found only for an unreadable repository or row, unauthorized otherwise, registry-wide admin routes and refused filters included (new AC35). Stays planned.
 - async-operations.md, FABLE FOLLOW-UP ROUND 3: DONE 2026-10-01 at ac597f6 on Fable. The jobs routes answer unauthorized to non-admins and unauthenticated without a credential (AC21, management-api was-Q18, AC35); the two cancel routes distinguished. Queues nothing. Stays planned.
 - supply-chain-policy.md, FABLE FOLLOW-UP ROUND 2: DONE 2026-10-01 at 369f502 on Fable. Four items applied: the feed sync exclusivity key is per source (AC23); the import's source reads osv when absent; the import route answers unauthorized and unauthenticated (management-api AC35); HijackReporter precision. Per-source concurrency let two sources condemn one coordinate at once, so AC13 now guarantees one condemnation, one purge and one alert. FOLLOW-UP ROUNDS CONVERGED: nothing non-optional remains queued against a planned foundation spec. Stays planned.
+- conformance-harness.md, FABLE GATE REVIEW: DONE 2026-10-01 at d4540af on Fable (its report was delivered before the usage limit killed the agent). AC28 was unsatisfiable by its own table (eleven of twelve rows carried no digest): new Q7 adopted, the corpus manifest pins the digest and the row names the reference. rubygems row corrected; conan row added; single-recipe runner entry (new AC29); allow_local on loopback stand-ins (AC19); named advisory sources with osv reserved; manage.apply as the paused kind. draft -> planned.
 ## From data-model.md reconciliation (2026-09-27)
 Wording-only unless stated: each target now cites data-model.md instead of saying the record is owed.
 1. signing-service.md (~l.439, ~l.460): "`data-model.md`'s to add" -> "added in data-model.md (Design 'Freshness scoped to the pointer', AC36, AC37)"; ~l.437: "no retained snapshot holds" -> "no retained snapshot or pointer document holds" (data-model AC37).
@@ -1116,3 +1117,9 @@ Planned specs with items raised after their own round-1 follow-up: data-model (p
 
 ## From the round-2 supply-chain-policy.md follow-up (2026-10-01, on Fable)
 1. async-operations.md (optional wording): its AC14 row may name internal/policy/feed_sync_test.go as the file supply-chain AC23 shares with its scheduler_test.go.
+
+## From the conformance-harness.md Fable gate review (2026-10-01, on Fable)
+1. Stale "reported, not yet landed" wording now that the exception rows exist: formats/swift.md ~l.1009-1010; formats/vagrant.md ~l.925; formats/cran.md ~l.1006; formats/hackage.md ~l.1090; formats/rubygems.md ~l.708 (also: the row pins the built geminabox image's digest, not the ruby:3.3 client digest); formats/helm.md was-Q7 accepted cost.
+2. formats/conan.md "Conformance, the clients and the corpus": state that its hosted and write halves against conan_server are a row of conformance-harness's exception list (AC28) and why no public write reference exists; its AC23 depends on that row.
+3. web-ui.md (Fable follow-up, wording ~l.681-682): cite conformance-harness AC29 and "Case definition" for the single-recipe runner entry.
+4. upstream-adapters.md (optional): AC35 or was-Q10 may cite conformance-harness's upstreams row and AC19 as the harness-side consumer of allow_local.

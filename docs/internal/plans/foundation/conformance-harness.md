@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): the authoritative-reference exception list the settled decision (was Q3) provided for now exists, naming Helm's write half (pinned ChartMuseum), Debian's hosted half (reprepro), RPM's hosted half (a createrepo_c tree) and RPM's absent write reference, held by a manifest check (AC28); the credentials key gains a trust_policy sub-entry naming the harness's fixture OIDC issuer for pypi AC19 and openvsx AC33 (AC25 extended); cran's pak stand-ins and swift's presigned-store stand-in named as upstreams hosts sub-entries; OCI's two-repository suite namespaces and the first format batch's named cases recorded. 28 criteria, zero open questions; stays draft pending a gate review. Earlier: Sweep 2026-09-28 at 6e6d503 (not a review): AC26 also refuses a policies case for a format whose supply-chain binding row is still pending (supply-chain AC20); advisories entries may name a second source (AC21); the replication entry carries a per-link sync_interval; proxy-cache AC20 and AC22 case placements recorded; the stale package-level retirement wording replaced by the core-held Retirement record. Reconciled 2026-09-28 at b5424a2 with the foundation authoring wave (not a review): the closed setup vocabulary gains the trust key (artifact-verification.md) and owner-assigned sub-entries on repositories (read_only state, recreated names, hostname binding through server.hosts, signing key material), credentials (robot-owned tokens, registered public keys, expiring tokens) and upstreams (adapter, credential, off-origin hosts), each validated and rejected as not yet landed exactly as a key is (AC17); seeded state on an Indexer handler comes out generated and signed through the write-path hook (AC24); the client block gains recipe and the case-set rules gain declared operation kinds, rename cases and recipes (AC26); Q6 adopted under the standing delegation: every client container is confined to the case network and resolves only declared names (AC23); holds on the inspecting proxy (AC27); redaction covers every credential position (AC13). Earlier (2026-09-26): AC21 and AC22 from the Wave 1 folds; Q4 and Q5 adopted. 27 criteria, zero open questions; stays draft pending a gate review."
+status: planned
+status_description: "Planned by the Fable gate review of 2026-10-01 at d4540af: every sibling citation verified at HEAD against all sixteen planned foundation specs and the twelve exception-row formats' corpus sections; the exception list's digest rule corrected (AC28 was unsatisfiable by its own table: the digest now lives in the corpus manifest, Q7 adopted under the standing delegation), the rubygems row's misattributed client-image digest removed, the owed conan row added; the four queued items folded (web-ui's single-recipe runner entry as AC29, allow_local on loopback stand-in rows in AC19, named advisory sources with osv reserved, the paused kind named as manage.apply). 29 criteria, zero open questions, check-spec zero failures. Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): the authoritative-reference exception list the settled decision (was Q3) provided for now exists, naming Helm's write half (pinned ChartMuseum), Debian's hosted half (reprepro), RPM's hosted half (a createrepo_c tree) and RPM's absent write reference, held by a manifest check (AC28); the credentials key gains a trust_policy sub-entry naming the harness's fixture OIDC issuer for pypi AC19 and openvsx AC33 (AC25 extended); cran's pak stand-ins and swift's presigned-store stand-in named as upstreams hosts sub-entries; OCI's two-repository suite namespaces and the first format batch's named cases recorded. 28 criteria, zero open questions; stays draft pending a gate review. Earlier: Sweep 2026-09-28 at 6e6d503 (not a review): AC26 also refuses a policies case for a format whose supply-chain binding row is still pending (supply-chain AC20); advisories entries may name a second source (AC21); the replication entry carries a per-link sync_interval; proxy-cache AC20 and AC22 case placements recorded; the stale package-level retirement wording replaced by the core-held Retirement record. Reconciled 2026-09-28 at b5424a2 with the foundation authoring wave (not a review): the closed setup vocabulary gains the trust key (artifact-verification.md) and owner-assigned sub-entries on repositories (read_only state, recreated names, hostname binding through server.hosts, signing key material), credentials (robot-owned tokens, registered public keys, expiring tokens) and upstreams (adapter, credential, off-origin hosts), each validated and rejected as not yet landed exactly as a key is (AC17); seeded state on an Indexer handler comes out generated and signed through the write-path hook (AC24); the client block gains recipe and the case-set rules gain declared operation kinds, rename cases and recipes (AC26); Q6 adopted under the standing delegation: every client container is confined to the case network and resolves only declared names (AC23); holds on the inspecting proxy (AC27); redaction covers every credential position (AC13). Earlier (2026-09-26): AC21 and AC22 from the Wave 1 folds; Q4 and Q5 adopted. 27 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -63,7 +63,9 @@ never in a recollection of how a client behaves.
 - Load and performance testing. Benchmarks are a separate CI gate (see the charter, AC6).
 - Fault injection for storage and GC. Those defects have no client-level oracle at all and are
   specced with the storage layer, not here.
-- Testing the web UI. That is Playwright's job, later.
+- Testing the web UI. That is Playwright's job (`web-ui.md`); the one thing the harness lends it
+  is the single-recipe runner entry in "Case definition", so the snippet a user copies from the
+  setup page is executed by the same code path a conformance case uses.
 
 ## Design
 
@@ -147,7 +149,16 @@ code. Roughly:
   container before `script`, so the snippet a user copies from the setup page is proven by a
   real client. Two validator rules close that loop and AC26 asserts them: a case naming an
   undeclared recipe id is rejected before any container starts, and every recipe a format
-  declares is named by at least one passing case of that format
+  declares is named by at least one passing case of that format. The step that runs rendered
+  steps in the client container is also exposed as a **single-recipe runner entry** of
+  `conformance/core`, invoked as a subprocess with a format, already-rendered steps and the
+  name of an existing case network: it runs the steps in that format's pinned client image
+  joined to that network and confined to it exactly as a case's client container is, and
+  reports exit code, stdout, stderr and the transcript. It creates no instance and provisions
+  nothing, so the instance the steps address must already be reachable by name on that network.
+  `web-ui.md`'s Playwright flow for its AC8 is the consumer: the snippet copied from the setup
+  page is handed to this entry, so the Playwright process never talks to a container runtime
+  and the snippet is executed by exactly the code path a conformance case uses (AC29)
 - `mode`: `hosted` or `proxied` - **every format must have cases in both**, unless the
   format's spec declares a mode unsupported; `generic` is the single current exemption
   (`format-handler-interface.md`, the proxy-path resolution), and the runner requires the
@@ -207,9 +218,9 @@ input language grow wherever a consumer happens to need it.
 |---|---|---|---|
 | `repositories` | Repositories on an instance | The `Repository` entity of `data-model.md`: format, type (`local` / `remote` / `virtual`), visibility, virtual member order, the named upstream binding of a `remote`, and the repository metadata document verbatim. Sub-entries: `state` (`active`, the default, or `read_only`), and an entry may recreate a name a previous entry of the same case created and deleted, so a case starts on a recreated repository (`repository-lifecycle.md`); `hostname`, binding the repository to a hostname the client resolves to the instance (`deployment.md`'s `server.hosts`; `terraform.md`, `puppet.md`); `signing`, the repository's key material for a format with an `Indexer`: a fixture private key file or `generate` (`signing-service.md`'s `file` backend) | Phase 2 (with generic) for the base entry; `state` with `repository-lifecycle.md`; `hostname` with `deployment.md`'s loader; `signing` with `signing-service.md` |
 | `credentials` | The identities the script presents: none, a token scoped to a repository and actions, each scope optionally narrowed by a pattern, a token spanning several named repositories under `auth.md`'s explicit multi-repository opt-in, or a deliberately wrong scope. Sub-entries from `credential-management.md`: a token owned by a named robot; a registered RSA public key under a key name, whose private half the harness hands to the client container as a file (`chef.md`); a token in expiry state `expiring` (its AC5); `trust_policy`, a robot's OIDC trust policy naming the harness's fixture OIDC issuer, a harness fixture server with per-case signing keys and a name on the case network from which the script obtains an identity token for the client to exchange (its AC13; `pypi.md` AC19, `openvsx.md` AC33) | The token scope of `auth.md`, patterns and the multi-repository opt-in included; the owner, `public-key` kind, expiry state and `TrustPolicy` (issuer, audience, claim constraints) of `credential-management.md` | Phase 2 (with generic) for tokens; the robot, public-key and expiry-state sub-entries with `credential-management.md`; `trust_policy` with its Phase 3 (the OIDC exchange) |
-| `upstreams` | Named upstreams a `remote` repository binds to | A stand-in (an image by digest, or a harness fixture server, serving recorded or fixture content) **and** the identity of the real service it stands in for; see "Upstream bindings". Sub-entries from `upstream-adapters.md`: `adapter` (default `https`), `credential` (a kind from its table plus fixture material), and `hosts`, the allowlisted off-origin hosts each given a stand-in and a name on the case network (a codeload stand-in, a presigned-redirect target such as `swift.md`'s presigned store, `homebrew.md`'s four public hosts, `cpan.md`'s five, `cran.md`'s pak metadata hosts) | The upstream configuration of `upstream-adapters.md` | Phase 2 (with generic) for the base entry; `adapter`, `credential` and `hosts` with `upstream-adapters.md` |
+| `upstreams` | Named upstreams a `remote` repository binds to | A stand-in (an image by digest, or a harness fixture server, serving recorded or fixture content) **and** the identity of the real service it stands in for; see "Upstream bindings". Sub-entries from `upstream-adapters.md`: `adapter` (default `https`), `credential` (a kind from its table plus fixture material), and `hosts`, the allowlisted off-origin hosts each given a stand-in and a name on the case network (a codeload stand-in, a presigned-redirect target such as `swift.md`'s presigned store, `homebrew.md`'s four public hosts, `cpan.md`'s five, `cran.md`'s pak metadata hosts). A stand-in the instance reaches on a loopback address (a harness fixture server in the runner's own process, as AC19's two fixture upstreams are) has `allow_local` set on the `Upstream` row the seed path writes for the binding, since `upstream-adapters.md` refuses loopback, link-local and unspecified destinations at dial time unless the row admits them (its AC35, its resolved local-address decision, was Q10); a stand-in reached by its case-network name needs nothing, and the case network is unchanged | The upstream configuration of `upstream-adapters.md`, `allow_local` included (`data-model.md` AC40) | Phase 2 (with generic) for the base entry; `adapter`, `credential` and `hosts` with `upstream-adapters.md` |
 | `state` | Content and state already on the server when the client starts: packages, versions and files with fixture bytes, the metadata documents at the levels the data model defines, and the core-held records a management operation would have left (`Retirement`, `management-api.md`) | Shared-model entities, with fixture bytes named by path inside the case directory and metadata documents carried verbatim. On a repository whose handler declares an `Indexer`, the seeded write comes out generated and signed through the write-path hook, with no seed-side code (`signing-service.md` AC21) | Phase 2 (with generic); generated and signed output with `signing-service.md` |
-| `advisories` | Case-controlled advisory sources, never the live feed: one entry per source, so a case may declare a second OSV-schema source beside the first (`supply-chain-policy.md` AC21, its resolved advisory-sources decision, was Q9) | The advisory-source format of `supply-chain-policy.md` (OSV schema, an `ecosystems.txt` list per source) | `supply-chain-policy.md` |
+| `advisories` | Case-controlled advisory sources, never the live feed: one entry per source, so a case may declare a second OSV-schema source beside the first (`supply-chain-policy.md` AC21, its resolved advisory-sources decision, was Q9). The entry standing in for the default feed is named `osv`, the name that spec reserves for it, and is applied as the instance's `policy.feed.url`; every further entry carries its own name, applied as a `policy.feed.sources` entry, and that name is the `source` label its gauges, its `policy.feed_sync` schedule and the import route carry, so a second entry named `osv`, or two entries sharing a name, is rejected at validation exactly as the server's configuration refuses it | The advisory-source format of `supply-chain-policy.md` (OSV schema, an `ecosystems.txt` list per source, a name per source) | `supply-chain-policy.md` |
 | `policies` | Supply-chain policy rules on named repositories | The policy-rule configuration of `supply-chain-policy.md` | `supply-chain-policy.md` |
 | `trust` | A repository's trust set, verbatim: keys, roots, identity policies, a `sigstore-root` file for the offline virtual Sigstore | The trust-set format of `artifact-verification.md` | `artifact-verification.md`, which builds this key's provisioner (its AC25) |
 | `replication` | Replication links between the case's named `instances`, and a replica's starting state: an active link, optionally with its own per-link `sync_interval` (`replication.md`'s link record), or a repository already taken over (its fencing acknowledgement given) so a post-takeover case starts there | The replication-link and takeover configuration of `replication.md`; the no-network pair its air-gap cases need is expressed by declaring those instances network-isolated, not by this key | `replication.md`, which builds this key's provisioner |
@@ -278,7 +289,10 @@ Every `upstreams` entry carries a stand-in, and the run, not the case, selects t
 the main suite binds every upstream to its stand-in and so needs no network, and the nightly
 real-upstream job (`proxy-cache.md` AC15) rebinds the same entries to the real services with
 the case body unchanged. An entry without a stand-in fails validation, since the main suite
-could not run it offline.
+could not run it offline. The binding decides the row's `allow_local` too: bound to a stand-in
+on a loopback address it is set, named in the instance's startup log like any other explicit
+transport field; bound to a container on the case network or to the real service it is not,
+so the nightly run never carries the exemption into a real upstream row.
 
 **Corpus starting state uses the same vocabulary.** The starting-state declaration AC15
 requires of a corpus is written in `state` and `repositories` terms and applied through the
@@ -338,9 +352,12 @@ implementation discovers it has no counterparty:
   a case set missing such a case fails before the run, naming the kind. Effect-only cases seed
   the operation's outcome through `state`, including the core-held `Retirement` record.
 - **The deferred Galaxy import is held through the admin pause routes.**
-  `async-operations.md` AC10 pauses a job kind; the Galaxy deferred case's `script` calls
-  `POST` and `DELETE /api/v1/system/jobs/kinds/{kind}/pause` around its publish and poll, so the
-  server carries no test-only hold. No new key.
+  `async-operations.md` AC10 pauses a job kind; the Galaxy deferred case's `script`
+  (`conformance/ansible/deferred_publish_test.go`, `ansible-collections.md` AC9,
+  `write-triggered-services-prototype.md` AC8) calls `POST` and
+  `DELETE /api/v1/system/jobs/kinds/manage.apply/pause` around its publish and poll, the paused
+  kind being `manage.apply`, the one kind that backs a deferred `Operation`, so the server
+  carries no test-only hold. No new key.
 - **Repository lifecycle cases are a per-kind rule and a set of named cases.**
   `repository-lifecycle.md` AC12 requires `conformance/<format>/rename_test.go` in every
   format's set, validated by this harness's case-set rule (AC26); its AC1, AC10, AC11, AC15
@@ -349,9 +366,13 @@ implementation discovers it has no counterparty:
   `conformance/oci/`, provisioned through the `repositories` entry's `state` and recreated-name
   sub-entries (AC24). Its AC4 has the matrix render a format whose `Capabilities()` declares
   `Virtual: unsupported` as exempt in the virtual column, which AC20 asserts.
-- **Recipes are proven by cases.** `web-ui.md` AC17 requires every declared recipe to be named
-  by a passing case and an undeclared recipe id to be rejected before any container starts;
-  the `client` block's `recipe` field and AC26 are this side of it.
+- **Recipes are proven by cases, and the UI's copied snippet runs through the same code.**
+  `web-ui.md` AC17 requires every declared recipe to be named by a passing case and an
+  undeclared recipe id to be rejected before any container starts; the `client` block's
+  `recipe` field and AC26 are this side of it. Its AC8 flow's last step hands the snippet copied
+  from the setup page to the single-recipe runner entry of `conformance/core` ("Case
+  definition"; AC29), with the format, the rendered steps and the e2e stack's network, and reads
+  the exit code back; `web-ui.md`'s "Testing strategy" names the entry.
 - **Credential shapes beyond a plain token.** `credential-management.md` AC5's
   `conformance/generic/expiring_token_test.go` needs a token seeded in state `expiring`; its
   AC12's `conformance/chef/signed_publish_test.go` needs a registered RSA public key whose
@@ -480,7 +501,7 @@ recorded half with no public reference to record against is on that list, here, 
 else: a local reference is authoritative only for the half its row names, and a disagreement on
 any other half is still settled by the public registry.
 
-| Format | Half | Reference, pinned by digest | Why no public reference | Source |
+| Format | Half | Reference (its digest lives in the corpus manifest, the resolved digest-location decision below) | Why no public reference | Source |
 |---|---|---|---|---|
 | helm | Write: the ChartMuseum upload a `cm-push` publish drives | a ChartMuseum container | no public chart repository exposes the write API; the read half is recorded against two public repositories of different hosting classes | `formats/helm.md`, resolved corpus-reference decision (was Q7) |
 | debian | Hosted: a publish's visibility, a `dput` upload, a Basic-authenticated update, a `by-hash` fetch of a previous generation, a rollback | `reprepro` serving a tree it generated | the public archives accept no test upload; the read half is recorded against `deb.debian.org` and `archive.ubuntu.com` | `formats/debian.md`, "Conformance, the clients and the corpus" |
@@ -498,14 +519,21 @@ any other half is still settled by the public registry.
 | cran | Hosted: the trees a publish produces as each client reads them (a supersession with its `Archive/` move and `Meta/` documents, a version older than the listed one, Windows, macOS and Linux binary trees, an empty tree) | a tree the pinned R 4.5.1 image's `tools::write_PACKAGES` generates from the corpus's packages, behind a pinned static server | CRAN accepts no test upload; the read half is recorded against cloud.r-project.org | `formats/cran.md`, "Conformance, the three clients and the corpus" |
 | cran | Write | none: no CRAN client publishes, so no write corpus exists; publish, `delete-file`, `delete-version` and `delete-package` are `script`-driven cases (AC26) proven by the effect a real client observes | there is nothing to record | `formats/cran.md`, its recorded surface |
 | hackage | Write: `cabal upload --publish` with a token and with a password, an identical and a changed-bytes republish | a hackage-server container | hackage.haskell.org accepts no test upload (a maintainer account is required and its upload routes offer Digest alone, captured); the read half is recorded against hackage.haskell.org | `formats/hackage.md`, "Conformance, the clients and the corpus" |
-| rubygems | Hosted and write: push new, identical and changed; yank with and without `--platform`; the appended `/versions` and rewritten `/info` a publish and a yank produce; a lockfile install of a yanked version | a geminabox 4.0.1 container with compact_index 0.15.0 built on `ruby:3.3` (sha256:7930e42c707772b6079924702c806a14792bb2916ad3802083cc80fd27cad688) | rubygems.org accepts pushes only into its one public namespace from a real account, where a test gem is a permanent publication and a yank older than 30 days is refused (`Deletion::MAXIMUM_VERSION_AGE`); the read half is recorded against rubygems.org | `formats/rubygems.md`, "Conformance, the three clients and the corpus" |
+| rubygems | Hosted and write: push new, identical and changed; yank with and without `--platform`; the appended `/versions` and rewritten `/info` a publish and a yank produce; a lockfile install of a yanked version | a geminabox 4.0.1 container with `compact_index` 0.15.0, built by the harness and pinned by its built digest (AC4's rule; `formats/rubygems.md` pins no base for it, the `ruby:3.3` digest it records being a client image's) | rubygems.org accepts pushes only into its one public namespace from a real account, where a test gem is a permanent publication and a yank older than 30 days is refused (`Deletion::MAXIMUM_VERSION_AGE`); the read half is recorded against rubygems.org | `formats/rubygems.md`, "Conformance, the three clients and the corpus" |
+| conan | Hosted and write: a cold and a `--update` install, a version-range install, an upload of a recipe with two binaries, a second revision, a forced re-upload of an older revision, `conan list` and `conan search`, each remove shape, a `--metadata` upload and download, a private read with the `401` and the exchange, Conan 1.66.0's revisions-mode upload | a `conan_server` 2.32.0 container | the protocol has no published specification and its reference implementation is `conan_server` itself, ConanCenter being Artifactory's second implementation of the API the client and reference server define; the proxied read half is recorded against ConanCenter (a cold install of a recipe and its binary, a missing reference, a missing binary) | `formats/conan.md`, "Conformance, the clients and the corpus" |
 
 The rule is mechanical (AC28): each format's corpus manifest under `conformance/<format>/` names
-the reference each recorded half was captured against, and a test reads this table and every
-manifest and fails on a half recorded against anything but its format's public registry that no
-row names, on a row whose reference is not pinned by digest, and on a row no manifest uses, so
-the list only grows by an entry here and only shrinks by evidence. A format spec that records a
-hosted half against a local reference server adds its row here in the same pass.
+the reference each recorded half was captured against and, for a local reference, the digest it
+ran at (an image digest, or the built image's digest for a reference the harness builds, under
+AC4's rule), and a test reads this table and every manifest and fails on a half recorded against
+anything but its format's public registry that no row names, on a manifest whose local reference
+carries no digest, and on a row no manifest uses, so the list only grows by an entry here and only
+shrinks by evidence. The digest lives in the manifest and not in a row, because a digest exists
+only once the reference is built and recorded, and a hand-kept copy here would be the second list
+the external-suite rule above already refuses (the resolved digest-location decision, was Q7). A
+format spec that records a hosted half against a local reference server adds its row here in the
+same pass. A write row reading "none" records that no write corpus exists for that format, and
+its manifest declares none.
 
 ### Upstream client drift
 
@@ -604,8 +632,10 @@ an acceptance criterion rather than a design note.
       or object-storage drivers directly.
 - [ ] AC19: An upstream's binding is chosen by the run, never by the case: one proxied case file,
       byte-identical across both runs, passes against two different upstream servers selected
-      only by the run's binding argument, and a case whose `upstreams` entry has no stand-in
-      fails validation.
+      only by the run's binding argument, the row written for a loopback stand-in carrying
+      `allow_local` and the row written for a case-network or real binding not, observed in the
+      instance's startup log; and a case whose `upstreams` entry has no stand-in fails
+      validation.
 - [ ] AC20: The generated matrix renders every format's replay-match status from run results,
       and renders a format whose `Capabilities()` declares reference-implementation
       availability `none` as exempt, citing the format's spec, never as passing and never as missing; a format with no
@@ -667,14 +697,23 @@ an acceptance criterion rather than a design note.
       proven by a case whose script publishes between two requests and asserts the transcript
       order; the server binary carries no pause path for it, held by an architecture test that
       fails if a hold reaches the binary.
+- [ ] AC29: The single-recipe runner entry of `conformance/core`, invoked as a subprocess with a
+      format, rendered steps and the name of an existing network, runs the steps in that
+      format's pinned client image joined to that network and resolving nothing outside it,
+      reports exit code, stdout, stderr and the transcript, and shares its implementation with
+      the recipe step of a case (one code path, held by an architecture test that fails if a
+      second one appears); proven by invoking it against a fixture instance on a prepared
+      network with steps that install from the instance, and once more with steps naming a
+      host outside the network, which fails at name resolution.
 
 - [ ] AC28: A corpus half recorded against a reference other than its format's public canonical
       registry is accepted only when the authoritative-reference exception list in this spec
-      names that format, that half and a reference pinned by digest: a test reading the table
-      and every `conformance/<format>/` corpus manifest fails on an unlisted local reference, on
-      a row whose reference carries no digest, and on a row no manifest uses, proven by fixture
-      manifests one per rule plus the Helm write, Debian hosted and RPM hosted rows passing; the
-      RPM write row records that no write corpus exists and its manifest declares none.
+      names that format, that half and the reference, and the half's corpus manifest pins that
+      reference by digest: a test reading the table and every `conformance/<format>/` corpus
+      manifest fails on an unlisted local reference, on a manifest whose local reference carries
+      no digest, and on a row no manifest uses, proven by fixture manifests one per rule plus a
+      fixture manifest per current row passing, a write row reading "none" passing only with a
+      manifest that declares no write corpus.
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
@@ -706,7 +745,8 @@ an acceptance criterion rather than a design note.
 | AC25 | integration | `conformance/core/seed_test.go` (robot-owned token, registered public key with the private half delivered as a file, `expiring` token, `trust_policy` against the fixture issuer with a matching and a foreign identity token; each authorized per `auth.md` and `credential-management.md`, the listing route's `state` in the transcript); `conformance/core/oidc_issuer_test.go` (the fixture issuer's discovery document and keys reachable by the instance and the client by its case-network name) |
 | AC26 | unit + integration | `conformance/core/case_validate_test.go` (fixture handler declaring two kinds and two recipes; case sets missing a kind's `script` case, missing `rename_test.go`, naming an undeclared recipe, leaving a recipe unnamed, a `policies` case against a fixture binding table with a `pending` row; a complete set); `conformance/core/runner_test.go` (a recipe named only by failing cases fails the run); shared with `management-api.md` AC24, `web-ui.md` AC17 and `supply-chain-policy.md` AC20, which assert the same rules from their side |
 | AC27 | integration + architecture test | `conformance/core/hold_test.go` (held request, script publish, release, transcript order); `conformance/core/arch_test.go` (no hold symbol reachable from `cmd/` or `internal/`) |
-| AC28 | unit | `conformance/record/reference_exceptions_test.go` (parses this spec's exception table and every corpus manifest; fixture manifests for an unlisted local reference, an undigested row and an unused row; the Helm, Debian and RPM rows passing) |
+| AC28 | unit | `conformance/record/reference_exceptions_test.go` (parses this spec's exception table and every corpus manifest; fixture manifests for an unlisted local reference, a manifest whose local reference carries no digest, and an unused row; a fixture manifest per current row passing, the "none" write rows with a manifest declaring no write corpus) |
+| AC29 | integration + architecture test | `conformance/core/recipe_entry_test.go` (the entry invoked as a subprocess against a fixture instance on a prepared network: steps that install succeed and the transcript is reported; steps naming an undeclared host fail at name resolution); `conformance/core/arch_test.go` (the entry and a case's recipe step call one implementation; shared with `web-ui.md` AC8's Playwright flow, which is its consumer) |
 
 ## Implementation Phases
 
@@ -720,8 +760,9 @@ an acceptance criterion rather than a design note.
   not-yet-landed key or sub-entry), and run-selected upstream bindings
 - Server lifecycle with per-case isolation; the case network with client confinement and
   declared-name resolution (AC23); the inspecting proxy with holds (AC27)
-- Client container execution and capture, and the core cases every format's traffic runs under
-  (`request_id_test.go`, `route_label_test.go`)
+- Client container execution and capture, the single-recipe runner entry over the same code
+  path (AC29), and the core cases every format's traffic runs under (`request_id_test.go`,
+  `route_label_test.go`)
 
 ### Phase 2: First subject
 - The generic format's hosted cases as the runner's proving ground, plus validation that its
@@ -766,10 +807,40 @@ Populated by `/tasks` once this spec reaches `planned`.
 ## Open Questions
 
 None open. Q4 (raised by the 2026-09-23 gate review) and Q5 (exposed while folding Q4's answer)
-were adopted on 2026-09-26, and Q6 (raised by the format specs' fallback findings) on
-2026-09-28, under the owner's standing delegation, so the owner may reverse any of them.
-Resolved decisions are kept rather than deleted, so the reasoning survives the next time
-someone asks why it was done this way.
+were adopted on 2026-09-26, Q6 (raised by the format specs' fallback findings) on 2026-09-28,
+and Q7 (raised by the 2026-10-01 gate review) on 2026-10-01, under the owner's standing
+delegation, so the owner may reverse any of them. Resolved decisions are kept rather than
+deleted, so the reasoning survives the next time someone asks why it was done this way.
+
+### Resolved: where the exception list's digest lives (was Q7, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation.** Option A: the table names each
+local reference by kind and version, the half's corpus manifest pins it by digest at recording
+time, and AC28's test fails a manifest whose local reference carries no digest. Raised by the
+gate review: AC28 read "a row whose reference carries no digest" while eleven of the twelve rows
+carried none and could not, since a reference the harness builds (a `createrepo_c` tree, a
+`write_PACKAGES` tree, a geminabox container) has no digest until it is built, and the one row
+that did carry a digest had taken it from a client image. Folded into the table heading, the
+rule paragraph beneath it and AC28.
+
+**Recommendation:** A. It is the only option under which the criterion can pass before every
+reference is built, and it keeps one machine-readable list, which the external-suite rule in
+"Case definition" already requires of exception lists.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. The manifest carries the digest; the row names the reference** (adopted) | AC28 is satisfiable now; the digest is written by the recording run that observed it, so it cannot drift from the corpus it pins; one machine-readable list | A reviewer reading this table sees no digest and must open the manifest to find the exact image a half was recorded against |
+| **B. Each row carries the digest** | The digest is reviewable in the PR that lands the row | Eleven rows cannot be written until their references are built, so AC28 fails until the last format records; a rebuilt reference needs a spec edit and a corpus edit that can disagree, the second hand-kept list the spec refuses elsewhere |
+| **C. Both carry it, held equal by the test** | Reviewable and machine-readable | The same two-copy problem as B with a test to catch the disagreement, which is work to keep two copies of one fact |
+
+**Why this is yours:** it trades a reviewer's convenience against the criterion being
+satisfiable at all before the last format records, and decides that the corpus, not the spec,
+is where a recorded fact is pinned.
+
+Accepted cost: the table is a human-readable index and nothing more; the exact reference a half
+was recorded against is read from `conformance/<format>/`. B lost because it made AC28
+unsatisfiable until the twelfth format recorded and duplicated a fact the test then has to
+reconcile; C lost on the same duplication.
 
 ### Resolved: every client container is confined to the case network (was Q6)
 
@@ -925,10 +996,11 @@ a real body, it carries a small fixture rather than a recorded multi-megabyte bl
 exception list. Local reference servers (Verdaccio, a local Gitea, Harbor) are for offline
 iteration only and never settle a disagreement, except for a half the exception list in Design
 ("The recording proxy", the authoritative-reference exception list) names: a half no public
-registry can be recorded against, which is today Helm's write half (ChartMuseum), Debian's
+registry can be recorded against, which began as Helm's write half (ChartMuseum), Debian's
 hosted half (`reprepro`), RPM's hosted half (a `createrepo_c` tree) and RPM's write half (no
-reference at all). The list is the recorded exception the settled decision already provided for,
-so adding a row applies the decision rather than revising it; AC28 holds it.
+reference at all) and now holds a row for every format whose spec records a hosted or write
+half against a local reference. The list is the recorded exception the settled decision already
+provided for, so adding a row applies the decision rather than revising it; AC28 holds it.
 
 The reasoning is that a real user points a real client at us, and that client's expectations were
 formed against the public registry. Conforming faithfully to Verdaccio's quirks would be
@@ -955,3 +1027,4 @@ question in `formats/npm.md`.**
 | 2026-09-28 | f8ad8b2 | format closing sweep bookkeeping on Opus. Not a review | Not a review. Added the conda, alpine and arch exception-list rows (a hosted half against a pinned locally generated tree, and a write row with nothing to record, for each) that the format sweep reported, so AC28 names every local reference those corpora use. No question, no criterion changed. |
 | 2026-09-28 | a3a9d78 | format closing sweep bookkeeping on Opus. Not a review | Not a review. Added the cran (hosted against a pinned `write_PACKAGES` tree, and a write row with nothing to record) and hackage (write against a hackage-server container) exception-list rows the format sweep reported. No question, no criterion changed. |
 | 2026-09-28 | a3a9d78 | RubyGems authoring bookkeeping on Opus. Not a review | Not a review. Added the rubygems exception-list row (hosted and write halves against a geminabox container pinned by its base image digest, since the image is built locally). No question, no criterion changed. |
+| 2026-10-01 | d4540af | Fable gate review: claim verification at HEAD, adversarial, constitution (go-spec-reviewer inline on the runner entry's contract; claim verification against the tree still vacuous, there is no `conformance/` directory, so every claim checked is a cross-spec one) | A review. Every cited criterion, resolved decision and section of the sixteen planned foundation specs and the twelve exception-row formats verified at HEAD, and the whole of `agents/spec-loop/consequences.md` read for items naming this file. Corrections: AC28 was unsatisfiable by the table it reads, since it failed "a row whose reference carries no digest" while eleven of twelve rows carried none and could not before their references are built, and the twelfth (rubygems) carried a digest `formats/rubygems.md` records for a client image, not for geminabox; Q7 raised in the decision shape and adopted under the standing delegation (the digest lives in the corpus manifest, the row names the reference), folded into the table heading, the rule paragraph, AC28 and its Test Plan row; the conan row owed since the six-spec sweep added from `formats/conan.md`'s corpus section (hosted and write against a `conan_server` 2.32.0 container, proxied read against ConanCenter); the was-Q3 record no longer says the list is "today" four rows. Folded from the ledger: `web-ui.md`'s single-recipe runner entry (Scope, "Case definition", the sibling bullet, new AC29 with `conformance/core/recipe_entry_test.go` and an architecture test holding one code path, Phase 1), with the precondition that the entry creates no instance and the steps' target must already be reachable on the network it is handed; `upstream-adapters.md`'s loopback refusal (the seed path sets `allow_local` on a row bound to a loopback stand-in and never on a case-network or real binding, in the `upstreams` row, "Upstream bindings" and AC19); `supply-chain-policy.md`'s source names (`osv` reserved for the entry standing in for the default feed, every further entry named, duplicates rejected at validation); the paused kind named as `manage.apply` with its case file and the two sibling criteria. Eleven exception rows match their format's current corpus section; every other citation held. Constitution lenses clear (the gate itself, both modes under AC11, the seed path on the shared layers, the main-gated CI trigger matching the constitution's accepted hazard). Open Questions empty, 29 criteria each with a Test Plan row, `node scripts/check-spec.js` zero failures: draft to planned. |
