@@ -66,8 +66,12 @@ rechecked and planned, and the follow-up rounds converged (only optional wording
 consequences.md). Next, two agents at a time:
 1. Gate reviews (`agents/spec.md` review mode, on Fable): conformance-harness (running at 369f502),
    replication, then project-charter.
-2. The format sweep batches below (Opus is fine), carrying every format item queued in
-   consequences.md since 2026-09-28, then each format's Fable recheck with `recheck-brief.md`.
+2. Each format spec gets ONE Fable pass with `recheck-brief.md`, whose step 1 brings the file
+   current with every item queued against it, so the separate Opus sweep batches below are
+   retired (decided 2026-10-01: a sweep then a recheck pays twice for the same reading). Order:
+   the formats Fable's foundation decisions changed most first: arch, rpm, alpine, cpan (signing
+   Q20 supersessions), then debian, cran, conda, hackage, rubygems, conan, swift, puppet, vagrant,
+   homebrew, then the rest. Formats without `fable_recheck` get the same pass in review mode.
 
 Stopped by the owner at the spend limit, then the two interrupted items were finished the same
 day. Nothing is uncommitted. In order:
