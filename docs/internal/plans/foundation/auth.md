@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned by the Fable recheck of 2026-09-30 at df2d9c5: a full review pass plus the re-examination of the three questions adopted without Fable. Q23 confirmed (the sentinel test now runs in both modes and scans headers, AC32); Q24 confirmed and amended (a route-scoped form's recognition scope: vendor headers everywhere, a query parameter or in-mount segment inside the declaring mount only, the root path token before a reserved segment off-route; AC31); Q25 confirmed and amended (the echo body is only the extracted machine credential, a credential-less or session-only request answers the challenge on an anonymously readable repository too; AC35). AC36 amended for signing-service's read-driven first fetch (was Q21): a replayed route's three sources are stated and the request-derived cell is bounded to a router-authorized virtual read within its variable's declared grammar; AC36 and Design now say request dispatch, naming the job-side generator and Operator.Apply calls as non-request entries. AC10 extended, never weakened: Submit's second scope evaluation and the deferred manage.apply path (management-api was-Q13), the recognition scope, the data-reading Scope(r), the token-parameter redaction. Queued RubyGems row applied from that spec's capture; the per-host clients recorded as the second need behind the multi-repository opt-in (Q22 stands). 36 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. AC10 still requires external review of the implementation regardless of spec status. Earlier: leftovers pass of the closing sweep 2026-09-28 at 4278ce0, on Opus (not a review): AC10's review list of upstream-adapters' credential kinds names the Conan-shaped basic-exchange (upstream-adapters was-Q8, AC33); the replay's no-principal property and AC36's row cite async-operations AC30. AC10 unchanged in force. 36 criteria, zero open questions, no new question. Earlier, second closing-sweep pass 2026-09-28 at 1d6b1c8, on Opus (not a review): the revalidation replay entry (proxy-cache was-Q18, AC26; format-handler-interface was-Q11, AC18) is named in Authorization is central as the one handler entry that skips the authorizer, with the three properties that make it safe (no principal or credential, nothing returned to any caller, one asserted call site on a fixed GET-on-a-remote input), the conditions that would make it unsafe, and its enforcers adopted beside internal/auth/arch_test.go (AC36); it is ADDED to AC10's external review list, whose scope now names every authorizer-bypassing entry and reviews a surface landing after the first review before it reaches main. AC10 unchanged in force. 36 criteria, zero open questions, no new question. Earlier, reconciled 2026-09-28 at 173da1b in the closing sweep of step 3, on Opus (not a review): the client table gained seventeen rows from the format batches, each checked against its format spec's own capture (go, apt, dput, conan, apk, pacman, mix/rebar3, cpanm, cpm/carton, CPAN.pm, cpan-upload, julia Pkg, SwiftPM, dart pub, vagrant, opam, brew), and the helm row was corrected from its captures (Basic only, preemptive, scheme-and-host confined; Bearer only from cm-push); the Bearer, Basic and scheme-less rows name every client that needs them; the uniform challenge names Swift, pub and Vagrant as declaring Bearer; Pattern scopes gained OCI's {image}/{tag} object and repository-less GET /v2/ descriptor authorized by authentication alone (AC32 extended), Galaxy discovery as a descriptor, and the descriptor and enumerating-none examples from the format specs. Q25 raised and adopted under the standing delegation: Conan's token-exchange echo is written by the shared layer on a declared route, never by the handler (AC35). No new presentation form; AC10 untouched, its review list extended. 35 criteria, zero open questions; stays draft pending a gate review and a Fable recheck of Q25. Earlier, 2026-09-28 at 95346bd: GET /api/v1/session answers an anonymous caller 200 (AC22). Earlier, 2026-09-27 at a72f8ef: fourteen client rows, the presentation-form table, Q24, AC33 and AC34. AC10 still requires external review of the implementation regardless of spec status."
+status_description: "Fable follow-up of 2026-10-01 at 82928d4, still planned: the five items queued since the recheck applied and verified against their source specs. The browser flow now matches web-ui.md as its recheck fixed it (no route renders HTML; a pre-authentication cookie binds state, nonce and the PKCE verifier to the browser; the local admin form is the SPA's page posting a single-use flow token; POST-only logout; return_to only as a /ui/ path; CSRF compared against the session row's stored value, so a tossed cookie fails; AC20, AC22). The local admin credential's Basic form on /api/v1 is named as deployment.md states it, username admin, and Q26, raised and adopted here, makes that username the discriminator from a registry token (AC2). The third route requirement credential-management.md declared, a human principal that no token satisfies, is carried as this spec's vocabulary (Route requirements; AC30). Authorizer refusals are audited by auth.* events alone and three session events are named for observability.md to register (new AC37, Audit events). AC36's row cites FHI AC18 as carrying its cases; the body-reading Scope(r) (Chef, Galaxy) joins the data-reading one under the existence rule. AC10 extended, never weakened: the was-Q13 invariant stated as unconditional, the human-principal requirement, the admin Basic form and its discriminator, the flow cookie and token, the session-row CSRF comparison, the body-reading Scope(r), the audit emission. 37 criteria, each with a Test Plan row; zero open questions. AC10 still requires external review of the implementation regardless of spec status. Earlier: planned by the Fable recheck of 2026-09-30 at df2d9c5: a full review pass plus the re-examination of the three questions adopted without Fable. Q23 confirmed (the sentinel test now runs in both modes and scans headers, AC32); Q24 confirmed and amended (a route-scoped form's recognition scope: vendor headers everywhere, a query parameter or in-mount segment inside the declaring mount only, the root path token before a reserved segment off-route; AC31); Q25 confirmed and amended (the echo body is only the extracted machine credential, a credential-less or session-only request answers the challenge on an anonymously readable repository too; AC35). AC36 amended for signing-service's read-driven first fetch (was Q21): a replayed route's three sources are stated and the request-derived cell is bounded to a router-authorized virtual read within its variable's declared grammar; AC36 and Design now say request dispatch, naming the job-side generator and Operator.Apply calls as non-request entries. AC10 extended, never weakened: Submit's second scope evaluation and the deferred manage.apply path (management-api was-Q13), the recognition scope, the data-reading Scope(r), the token-parameter redaction. Queued RubyGems row applied from that spec's capture; the per-host clients recorded as the second need behind the multi-repository opt-in (Q22 stands). 36 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. AC10 still requires external review of the implementation regardless of spec status. Earlier: leftovers pass of the closing sweep 2026-09-28 at 4278ce0, on Opus (not a review): AC10's review list of upstream-adapters' credential kinds names the Conan-shaped basic-exchange (upstream-adapters was-Q8, AC33); the replay's no-principal property and AC36's row cite async-operations AC30. AC10 unchanged in force. 36 criteria, zero open questions, no new question. Earlier, second closing-sweep pass 2026-09-28 at 1d6b1c8, on Opus (not a review): the revalidation replay entry (proxy-cache was-Q18, AC26; format-handler-interface was-Q11, AC18) is named in Authorization is central as the one handler entry that skips the authorizer, with the three properties that make it safe (no principal or credential, nothing returned to any caller, one asserted call site on a fixed GET-on-a-remote input), the conditions that would make it unsafe, and its enforcers adopted beside internal/auth/arch_test.go (AC36); it is ADDED to AC10's external review list, whose scope now names every authorizer-bypassing entry and reviews a surface landing after the first review before it reaches main. AC10 unchanged in force. 36 criteria, zero open questions, no new question. Earlier, reconciled 2026-09-28 at 173da1b in the closing sweep of step 3, on Opus (not a review): the client table gained seventeen rows from the format batches, each checked against its format spec's own capture (go, apt, dput, conan, apk, pacman, mix/rebar3, cpanm, cpm/carton, CPAN.pm, cpan-upload, julia Pkg, SwiftPM, dart pub, vagrant, opam, brew), and the helm row was corrected from its captures (Basic only, preemptive, scheme-and-host confined; Bearer only from cm-push); the Bearer, Basic and scheme-less rows name every client that needs them; the uniform challenge names Swift, pub and Vagrant as declaring Bearer; Pattern scopes gained OCI's {image}/{tag} object and repository-less GET /v2/ descriptor authorized by authentication alone (AC32 extended), Galaxy discovery as a descriptor, and the descriptor and enumerating-none examples from the format specs. Q25 raised and adopted under the standing delegation: Conan's token-exchange echo is written by the shared layer on a declared route, never by the handler (AC35). No new presentation form; AC10 untouched, its review list extended. 35 criteria, zero open questions; stays draft pending a gate review and a Fable recheck of Q25. Earlier, 2026-09-28 at 95346bd: GET /api/v1/session answers an anonymous caller 200 (AC22). Earlier, 2026-09-27 at a72f8ef: fourteen client rows, the presentation-form table, Q24, AC33 and AC34. AC10 still requires external review of the implementation regardless of spec status."
 description: "Spec for the two auth surfaces a registry needs: human identity via a standard OIDC client with a local-admin fallback, and machine identity via scoped registry tokens that package clients can actually present."
 author: michielvha
 goal: "Give every format one auth model that real package clients can use, while keeping user passwords, MFA, account recovery and federation outside our code."
@@ -104,7 +104,9 @@ Design).
 - **Human identity**: a standard OIDC client (Authorization Code with PKCE) usable with any
   compliant provider - Zitadel, Keycloak, Authentik, Entra, Okta, Google. Provider-agnostic by
   construction.
-- **Local admin fallback**: a single bootstrap account so the server is usable without an IdP.
+- **Local admin fallback**: a single bootstrap account, named `admin`, so the server is usable
+  without an IdP: through the SPA's sign-in form, and as HTTP Basic on `/api/v1` alone for the
+  first mint (Design, "The local admin credential on the API"; AC2).
 - **Machine identity**: scoped, revocable registry tokens that the clients above can present,
   **in every presentation form the client table needs**: the `Authorization` schemes, the
   vendor headers, the URL-borne segments and query parameter, each with its redaction and its
@@ -138,7 +140,12 @@ Design).
   skips the authorizer"; AC36).
 - **Human grants**: the vocabulary between "nothing" and "administer the registry", which is
   per-repository grants in the machine vocabulary plus the single global admin role (Design,
-  "Human grants").
+  "Human grants"); and the three **route requirements** the authorizer evaluates, a scope, the
+  admin role, and a human principal that no token satisfies (Design, "Route requirements";
+  AC30).
+- **The authorizer's audit events**, the `auth.*` records every refusal, session issue and
+  sign-out leaves, named here and registered by `observability.md` (Design, "Audit events";
+  AC37).
 - **Token shape**: a token's scopes bind to one repository unless it was created with the
   explicit multi-repository opt-in, and its authority never exceeds its owning principal's
   current grants (Design, the machine surface).
@@ -223,17 +230,56 @@ verify the ID token's signature against the provider's published keys, its issue
 (this client's ID) and its expiry, and must bind the authorization flow with `state`, `nonce`
 and the PKCE verifier. `coreos/go-oidc` covers the token checks when configured to; the flow
 bindings are relying-party code and belong to this spec's surface. The browser routes are
-`/ui/auth/login` (starts the OIDC flow, or renders the local admin form when no provider is
-configured), `/ui/auth/callback` (the redirect target) and `/ui/auth/logout`, mounted by
-`internal/auth` under the reserved `ui` segment `web-ui.md` owns (`format-handler-interface.md`,
-the reserved-segment table); `web-ui.md` consumes them and adds nothing to the flow. The session
-the registry then issues is a server-side row referenced by a cookie set HttpOnly, Secure,
-`SameSite=Lax` and `Path=/`, with the lifetime `auth.session.lifetime` ("Configuration" below).
-CSRF defense on state-changing UI routes is the **double-submit** pattern: at session issue the
-server also sets a non-HttpOnly cookie `stackweaver_csrf` holding a random value bound to the
-session; the client sends it back as `X-CSRF-Token` on every `POST`, `PUT`, `PATCH` and
-`DELETE`, and a mismatch or absence is refused `unauthenticated`. `SameSite=Lax` is defense in
-depth, not the defense, because it does not cover a top-level `GET`-initiated navigation.
+`/ui/auth/login`, `/ui/auth/callback` and `/ui/auth/logout`, mounted by `internal/auth` under
+the reserved `ui` segment `web-ui.md` owns (`format-handler-interface.md`, the reserved-segment
+table); `web-ui.md` consumes them and adds nothing to the flow. **None of the three renders
+HTML**: each answers a redirect or a refusal, and the one form in the flow is a page of the SPA,
+so it sits under the SPA's CSP and accessibility checks rather than outside them (`web-ui.md`,
+"Authentication in the browser", as its Fable recheck of 2026-10-01 fixed it; this spec's
+wording followed on its follow-up of the same day). Their shape:
+
+- `GET /ui/auth/login` starts a flow. The server keeps the flow under a random flow id and binds
+  it to the browser that started it through a short-lived **pre-authentication cookie**
+  (HttpOnly, Secure, `SameSite=Lax`, `Path=/ui/auth/`) holding that id; the flow expires with the
+  cookie, ten minutes after issue, a constant rather than a key. With a provider configured the
+  response redirects to it with `state`, `nonce` and the PKCE verifier stored under the flow id,
+  so a callback presented by a browser that did not start that flow is refused and issues no
+  session, which is what closes login CSRF (an attacker completing their own flow in the victim's
+  browser). The cookie is `Lax` rather than `Strict` on purpose: the callback arrives as a
+  top-level navigation from the provider's origin, which `Strict` would strip the cookie from.
+  With no provider configured the same cookie is set for a flow of the server's own and the
+  response is `302` to `/ui/signin?flow=<token>`, the token being a second random value stored
+  under the flow id; it travels in the URL because the page cannot read an HttpOnly cookie, and
+  it forges nothing alone, because the matching cookie exists only in the browser that made the
+  `GET`.
+- `POST /ui/auth/login` accepts the SPA's **native form post** of the local admin form (the
+  account name `admin`, its credential, the flow token as a hidden field), never a `fetch`, so
+  the credential never passes through script. The post is accepted only when the hidden token
+  equals the value stored under the flow id the cookie names and the flow is unconsumed; an
+  accepted post consumes the flow, so a post without the token, with another flow's token,
+  without the cookie, or replayed after the flow was consumed is refused and issues no session,
+  and a refused post leaves the flow open only until its expiry.
+- `/ui/auth/callback` completes the provider flow under the bindings above and answers `302`
+  to `/ui/`, or to the `return_to` the login started with, **accepted only as a path beginning
+  with `/ui/`**: no scheme, no host, no protocol-relative `//`, so the callback is never an open
+  redirect, and a `return_to` outside that grammar lands on `/ui/`.
+- `/ui/auth/logout` is **`POST` only**, carrying the CSRF token; it invalidates the session
+  server-side and clears both cookies. A `GET` to it answers a method refusal and changes
+  nothing, because a state change on `GET` is exactly what `SameSite=Lax` does not cover.
+
+The session the registry then issues, by either flow, is a server-side row referenced by a cookie
+set HttpOnly, Secure, `SameSite=Lax` and `Path=/`, with the lifetime `auth.session.lifetime`
+("Configuration" below). CSRF defense on state-changing UI routes is the **double-submit**
+pattern: at session issue the server also sets a non-HttpOnly cookie `stackweaver_csrf` holding a
+random value bound to the session; the client sends it back as `X-CSRF-Token` on every `POST`,
+`PUT`, `PATCH` and `DELETE`, and a mismatch or absence is refused `unauthenticated`. **"Bound to
+the session" is load-bearing**: the server compares the header with the value stored on the
+session row, never with whatever `stackweaver_csrf` cookie arrived, because a sibling subdomain
+an attacker controls can set a cookie of that name for the parent domain (cookie tossing) and a
+cookie-versus-header comparison would accept the planted pair. `SameSite=Lax` is defense in
+depth, not the defense, because it does not cover a top-level `GET`-initiated navigation. A
+session issue, a sign-out and a refused sign-in each leave an audit record ("Audit events"
+below).
 `GET /api/v1/session` answers the signed-in principal, its kind and its grant summary, or, for a
 caller with no session, `200` with `principal_kind: anonymous` and no grants, never a `401`
 (`management-api.md` AC28), so the UI learns who it is without a second identity path and its
@@ -255,6 +301,30 @@ the registry: a Stackweaver administrator is not implicitly a registry administr
 identity arriving from the provider gets whatever the registry's own default-role policy says,
 which is a separate decision from authentication. Conflating the two is how an SSO integration
 quietly becomes a privilege-escalation path.
+
+**The local admin credential on the API** (the resolved local-admin-on-the-API decision
+below, was Q26). Beside the bearer token and the session cookie, `/api/v1` accepts one more
+credential, and only there: HTTP Basic with the local admin account's name **`admin`** as the
+username and its emitted credential (AC15) as the password, which resolves through the shared
+authorizer to the local admin **human principal**. It exists for one procedure, the first mint
+of `deployment.md`'s "First run and first mint" (its AC26): a `curl` against `POST /api/v1/tokens`
+before any session exists, which `credential-management.md`'s routes accept only from a human
+principal ("Route requirements" below). On `/api/v1` the username is therefore an
+authentication input, the one place it is: a Basic credential whose username is `admin` is read
+as the local admin form and verified against that account's hash alone, never looked up as a
+token; with any other username the password is read as a registry token exactly as on a format
+route. So a registry token presented with the username `admin` fails authentication, and the
+local admin credential presented under another username is read as a token and fails too, each
+refused with an authentication error and never anonymous (AC12). The form is accepted only while
+the account is enabled (AC2, AC13), only where a session would be (every route under `/api/v1`,
+never a format route, where a Basic password is a registry token and this credential fails as an
+invalid one), and only over a connection that satisfies the TLS rule (AC27). It is not an
+ambient credential, so a request carrying it is never asked for a CSRF token, exactly as a bearer
+request is not (`management-api.md` AC30); and `/api/v1` never answers a refusal with a
+`WWW-Authenticate: Basic` challenge, so no browser is ever prompted for it or caches it as one.
+The name `admin` is reserved in the principal
+namespace for this account, so no robot takes it (reported to `credential-management.md`). AC2
+asserts the form.
 
 **Machine**: a token presented in whichever form the client sends, from the table below.
 Verification resolves the token to the same principal and scopes whatever the form, and an
@@ -293,6 +363,11 @@ Q24, states how and what an off-route presentation means).
 | read token segment | `-/t/{token}/` inside the Open VSX mount, honoured **only for a token holding no action but `pull`**; a token holding `push` or `delete` presented there is refused | route-scoped: Open VSX's read routes | VS Code-family editors, which drop URL credentials and read a challenge as "not found" |
 | download capability | `/{format}/{repository}/-/c/{capability}/` on byte routes; not a registry token but the token service's second product, below | route-scoped: Terraform's byte routes | terraform, tofu |
 | signed request | Chef's `X-Ops-*` headers, a signature over a canonical string against a registered RSA public key; not a token at all, below | route-scoped: Chef's write routes | knife |
+
+The table is the machine surface's: every form in it carries a registry token (or, in its last
+two rows, a capability or a signature), and it governs format routes. The local admin
+credential's Basic form on `/api/v1` ("The local admin credential on the API" above) is not a
+row, because it is not a registry token and is accepted on no format route.
 
 Three rules hold across the table, and they are the reason it is one table rather than a note
 per format:
@@ -601,6 +676,40 @@ The accepted cost is that a handler declaring its mapping wrongly under-protects
 exactly what AC7's unauthenticated and unauthorized cases catch, which is why they are
 runner-enforced rather than advisory.
 
+**Route requirements.** A route that requires authorization declares exactly one of three
+requirements beside its mapping, and the authorizer evaluates it; no package decides
+authorization for itself. (The routes that require none are the ones this spec already names
+as answering any caller: `GET /api/v1/session`, the OCI token endpoint and
+`credential-management.md`'s exchange route, whose credential is in the body, and the
+`/ui/auth/` routes, which issue a session rather than consume one.)
+
+- a **scope**, `(repository, action, object)`, the requirement every format route and every
+  replication route declares, evaluated against the principal's grants or the token's effective
+  authority under "Pattern scopes";
+- the **admin role**, which `management-api.md`'s administrative routes declare;
+- a **human principal**: a session, or the local admin account, and never a token, whatever the
+  token's owner holds. `credential-management.md`'s routes under `/api/v1/tokens`,
+  `/api/v1/robots` and `/api/v1/keys` declare it ("How who reaches the authorizer" there, stated
+  on its Fable recheck of 2026-10-01 and carried here because the requirement shape is this
+  spec's). The authorizer resolves a presented token into its principal first, so the token
+  reaches the same authorizer as every credential (`management-api.md` AC30), and then refuses
+  it `unauthorized` (its AC14); a robot has no session and never satisfies it. What a route
+  does after the authorizer, filtering a listing to the rows the caller owns or answering
+  `not-found` for a row it does not, is data scoping under the existence rule, not
+  authorization, and `internal/credential/arch_test.go` holds that boundary from its side.
+
+AC30 asserts the third requirement from this side, and the three sit on AC10's review surface
+as the vocabulary of everything the authorizer can be asked.
+
+**A refusal is audited here, never by the refused surface.** When the authorizer refuses a
+request, this spec's `auth.*` events record it ("Audit events" below): `auth.credential.refused`
+for a plaintext or malformed presentation, `auth.credential.invalid` for a credential that fails
+verification, `auth.access.denied` for a verified principal refused a scope, the admin role or
+the human-principal requirement. The surface behind the authorizer never runs for that request
+and emits nothing for it, so a refused write yields one record in total, under an `auth.*` event
+and never a `manage.*` or `credential.*` one (`management-api.md` AC23 as amended on its Fable
+recheck of 2026-09-30, `credential-management.md`'s audit enforcer). AC37 asserts it.
+
 **The one entry that skips the authorizer: the revalidation replay.** Every request reaches a
 handler through the router, and the router runs this spec's authorizer over the handler's
 `Scope(r)` before the handler sees it; AC18 and the per-format cases above hold that path. There
@@ -727,8 +836,14 @@ own, on the binding exactly as on the API. The route's check is an extra gate an
 substitute, so a principal the API refuses is refused through the binding, and a binding may only
 be stricter: dput's `.changes` route reports the changes file while its publish reports every
 binary and the source, all of which must pass; cpan-upload's route reports none, so it serves an
-unpatterned `push` alone while the API accepts a patterned one. That second evaluation is scope
-enforcement outside the router and is named in AC10's procedure for that reason.
+unpatterned `push` alone while the API accepts a patterned one. **The invariant is that
+`Submit`'s evaluation of every pair is unconditional**, on a binding exactly as on the API,
+whatever the route's own check reported and whichever of the three object shapes the `Binding`
+declared: the route-level `Scope(r)` object can therefore only ever add a refusal, and a
+route-level object that widened anything would be a binding authorizing what the API refuses,
+the defect that spec's AC8 exists to catch (its was-Q13 record as amended on its Fable recheck
+of 2026-09-30). That second evaluation is scope enforcement outside the router and is named in
+AC10's procedure, with the invariant, for that reason.
 
 ### Pattern scopes
 
@@ -802,6 +917,18 @@ consumers show the shape a declaration takes:
   authorization outcome, identical for an out-of-pattern object and a missing one, and it reads
   nothing the request's repository does not hold. Whether `Scope(r)` may read at all is the
   interface re-open's to judge (`format-handler-interface.md`); the condition is this spec's.
+- **A `Scope(r)` may read the request body to name its object**, and that read is the harder
+  case, because the body is unauthenticated input: Chef's and Galaxy's multipart publish report
+  the file part's declared filename, which precedes the artifact bytes (`formats/chef.md`,
+  "Authentication"; the Galaxy bullet above), so the authorization input is a value the caller
+  chose. It is safe only because nothing turns on it but the authorization outcome: the object is
+  evaluated against the credential's scopes exactly as a path-borne one, the artifact whose
+  metadata disagrees with the declared name is refused by the handler after authorization (so a
+  mislabelled part evades nothing), and the existence rule's condition above applies unchanged.
+  `format-handler-interface.md`'s interim bound ("What `Scope(r)` may read") limits such a read
+  to the leading part's headers and leaves the body readable in full for the handler, held by
+  its AC12 helper; the re-open decides whether these reads stay. Both kinds of reading
+  `Scope(r)` sit on AC10's review list by name.
 
 **How a patterned scope evaluates** (the resolved requests-naming-no-object decision below). A
 scope with no pattern authorizes its action on every request to its repository, whatever the
@@ -937,6 +1064,30 @@ listing match by eye. A token is displayed once at creation and is unrecoverable
 This is deliberately inconvenient. A registered public key is the one credential this rule does
 not need: it is stored whole because it is not secret.
 
+### Audit events
+
+This spec names its audit events here so `observability.md` registers them in its vocabulary
+(`internal/telemetry/audit_events.go`), per that spec's rule that a sibling's Design names an
+event before the table carries it. Three exist there already and three are new on this follow-up:
+
+| Event | When | Extension attributes |
+|---|---|---|
+| `auth.credential.refused` | a credential presented over plaintext (AC27) or in a malformed or off-route form (AC31) | `form`, `reason` |
+| `auth.credential.invalid` | a credential that fails verification: unknown, expired, revoked, a failed signature, a foreign or expired capability (AC12) | `form`, `reason` |
+| `auth.access.denied` | a verified principal refused a scope, the admin role or the human-principal requirement ("Route requirements") | `form`, `reason` |
+| `auth.session.issue` | a session issued by either flow | `method` (`oidc` or `local`) |
+| `auth.session.end` | a session invalidated by `POST /ui/auth/logout` | none |
+| `auth.session.refused` | a sign-in refused: a callback failing a binding (AC20), a form post failing the flow token, a wrong local admin credential, the local account disabled | `method`, `reason` |
+
+Every attribute passes the redaction chain, so no credential, flow token or password reaches a
+record (AC7), and `reason` is a closed enumeration rather than free text. The three refusal
+events and `auth.session.refused` are rate-limited to one record per client address per minute
+with a `suppressed` count, the shape `observability.md` already states for `auth.credential.*`
+(its AC12), so a brute-force attempt is visible but cannot flood the sink. A successful machine
+request emits no audit record: it is the request log's, and a `docker pull` is hundreds of them.
+Session expiry at `auth.session.lifetime` emits nothing either, since no request causes it.
+AC37 asserts the set.
+
 ### Configuration
 
 The keys this spec owns, in the one configuration surface `deployment.md` defines (file,
@@ -966,7 +1117,15 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
 - [ ] AC1: A user authenticates through any compliant OIDC provider, demonstrated against at
       least two different providers, with no provider-specific code on the path.
 - [ ] AC2: With no OIDC configured, the local admin account authenticates and the server is
-      fully usable; the account cannot be used once OIDC is configured unless explicitly kept.
+      fully usable, through the SPA's form post to `POST /ui/auth/login` and as HTTP Basic on
+      `/api/v1` with the username `admin` and its emitted credential as the password, which
+      resolves to the local admin human principal and is accepted by a route requiring one
+      (`POST /api/v1/tokens`, the first mint of `deployment.md` AC26) without a CSRF token; a
+      registry token presented in that slot with the username `admin`, and the local admin
+      credential presented under any other username, are each refused with an authentication
+      error and never anonymous; the same Basic credential on any format route fails as an
+      invalid registry token; and the account cannot be used, in either form, once OIDC is
+      configured unless explicitly kept.
 - [ ] AC3: `docker login --password-stdin` succeeds against the OCI token flow with a registry
       token as the Basic password and any username, the token endpoint's responses carry no
       refresh token, and a token scoped to one repository **cannot** read another, asserted by
@@ -1040,21 +1199,34 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
       with anonymous read enabled.
 - [ ] AC20: An OIDC callback whose `state` does not match an initiated flow, whose `nonce` does
       not match, whose PKCE verifier fails, or whose ID token fails signature, issuer, audience
-      or expiry validation is rejected with no session issued - asserted by integration tests
-      that tamper with each binding individually.
+      or expiry validation is rejected with no session issued, as is a callback presented by a
+      browser holding no pre-authentication cookie for that flow, or one presented after the
+      flow's ten-minute expiry - asserted by integration tests that tamper with each binding
+      individually.
 - [ ] AC21: The local principal is keyed on `(issuer, subject)` alone: a changed email claim on
       an unchanged `(issuer, subject)` resolves to the same principal with its grants intact,
       and an identical email claim arriving from a different `(issuer, subject)` resolves to a
       distinct principal holding no grants.
-- [ ] AC22: A completed `/ui/auth/callback` issues the session cookie with HttpOnly, Secure,
-      `SameSite=Lax` and `Path=/` and the `stackweaver_csrf` cookie bound to the session; a
-      `POST`, `PUT`, `PATCH` or `DELETE` UI request whose `X-CSRF-Token` is absent or does not
-      match that cookie is refused `unauthenticated` and changes nothing; `GET /api/v1/session`
-      answers the signed-in principal with a valid cookie and, without one, `200` with
-      `principal_kind: anonymous` and no grants (`management-api.md` AC28), while an invalid or
-      expired cookie on it is refused `unauthenticated`, never answered as anonymous; the session
-      expires at `auth.session.lifetime` from issue; and `/ui/auth/logout` invalidates the
-      session server-side, after which the old cookie no longer authenticates.
+- [ ] AC22: A completed `/ui/auth/callback`, and an accepted local admin form post, issue the
+      session cookie with HttpOnly, Secure, `SameSite=Lax` and `Path=/` and the `stackweaver_csrf`
+      cookie bound to the session, and answer `302` to `/ui/` or to a `return_to` that is a
+      path beginning with `/ui/`, landing on `/ui/` for a `return_to` naming another origin, a
+      scheme or a protocol-relative path; none of the three `/ui/auth/` routes ever answers an
+      HTML body; a `POST`, `PUT`, `PATCH` or `DELETE` UI request whose `X-CSRF-Token` is absent
+      or does not match the value stored on the session row is refused `unauthenticated` and
+      changes nothing, including a request whose `stackweaver_csrf` cookie was replaced by a
+      value the session never issued and whose header equals that planted value; with no
+      provider configured, `GET /ui/auth/login` sets the pre-authentication cookie and answers
+      `302` to `/ui/signin?flow=<token>`, the form post with that token and the matching cookie
+      issues the session, and the same post without the token, with a token from another flow,
+      without the cookie, or replayed after the flow was consumed is refused and issues no
+      session; `GET /api/v1/session` answers the signed-in principal with a valid cookie and,
+      without one, `200` with `principal_kind: anonymous` and no grants (`management-api.md`
+      AC28), while an invalid or expired cookie on it is refused `unauthenticated`, never
+      answered as anonymous; the session expires at `auth.session.lifetime` from issue; and
+      `POST /ui/auth/logout` with the CSRF token invalidates the session server-side, after which
+      the old cookie no longer authenticates, while a `GET` to that route answers a method
+      refusal and changes nothing.
 - [ ] AC23: The OCI token service rejects a token whose header names any algorithm other than
       the configured one, including `none`, regardless of its signature; and a signing-key
       rotation leaves already-issued tokens verifiable via `kid` until their expiry while new
@@ -1097,8 +1269,12 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
 - [ ] AC30: A token's authority never exceeds its owner's: creating a token with a scope its
       owning principal does not hold is refused; after the owner's grant is revoked, the
       token's matching scope is refused on the next request on every path except an
-      already-issued OCI JWT, which fails once expired and no later; and no token, including
-      one owned by the admin, can perform an administrative action.
+      already-issued OCI JWT, which fails once expired and no later; no token, including
+      one owned by the admin, can perform an administrative action; and a route declaring the
+      human-principal requirement accepts a session and the local admin account, resolves a
+      presented token to its principal and then refuses it `unauthorized`, a token owned by the
+      admin and a robot's token included, so no token reaches `/api/v1/tokens`,
+      `/api/v1/robots` or `/api/v1/keys` (`credential-management.md` AC14 from that side).
 - [ ] AC31: One registry token authenticates as the same principal with the same scopes in
       every form the Design table lists: as `Authorization: Bearer <token>`, as the Basic
       password with any username, as `Authorization: Token <token>`, as a scheme-less
@@ -1180,13 +1356,25 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
       query or path; no package under `internal/auth/**` references the marker, so no
       authorization decision depends on it; and every request through the router, including one
       for a route the replay also serves, is authorized exactly as AC18 and AC17 require.
+- [ ] AC37: Every request the authorizer refuses emits exactly one audit record through
+      `telemetry.Auditor.Emit`, under `auth.credential.refused` for a plaintext or off-route
+      presentation, `auth.credential.invalid` for a credential that fails verification, and
+      `auth.access.denied` for a verified principal refused a scope, the admin role or the
+      human-principal requirement, carrying `form` and `reason` and no credential value, and the
+      refused route's own surface emits none for that request, so a refused management or
+      credential write leaves one record in total; a session issued by the OIDC flow and by the
+      local admin form each emit one `auth.session.issue` with its `method`, `POST /ui/auth/logout`
+      emits one `auth.session.end`, and a refused callback, a refused form post and a wrong
+      local admin credential each emit one `auth.session.refused` with its `reason`; a
+      successful machine request emits no audit record; and the four refusal events are
+      rate-limited to one record per client address per minute with a `suppressed` count.
 
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
 | AC1 | integration | `internal/auth/oidc_test.go` (two providers in containers) |
-| AC2 | integration | `internal/auth/local_test.go` |
+| AC2 | integration | `internal/auth/local_test.go` (the form post; the `admin` Basic form on `/api/v1` accepted by a human-principal route without a CSRF token; a registry token under the username `admin` and the local credential under another username each refused, never anonymous; the same Basic on a format route failing as an invalid token; both forms refused once OIDC is configured without the keep flag); the first mint end to end is `deployment.md` AC26's `deploy/compose/test/up_test.sh` |
 | AC3 | conformance | `conformance/oci/auth_test.go` (`docker login --password-stdin` with a registry token, token-endpoint response inspected for a refresh token, cross-repository denial) |
 | AC4 | conformance | `conformance/<format>/auth_test.go` |
 | AC5 | integration | `internal/auth/revocation_test.go` |
@@ -1204,9 +1392,9 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
 | AC17 | conformance | `conformance/core/existence_oracle_test.go` (private versus missing, credentialed and credential-less, the `WWW-Authenticate` value compared byte for byte per format) |
 | AC18 | unit + conformance | `internal/auth/scope_map_test.go`; per-format cases via `format-handler-interface.md` AC7 |
 | AC19 | unit + conformance | `internal/auth/pattern_test.go` (the matcher, with a `FuzzPatternMatch` target asserting a wildcard-free pattern matches only itself and `*` never matches across `/`); per-format pattern-refusal cases in both modes via `format-handler-interface.md` AC7 |
-| AC20 | integration | `internal/auth/oidc_test.go` (per-binding tamper cases) |
+| AC20 | integration | `internal/auth/oidc_test.go` (per-binding tamper cases; a callback without the pre-authentication cookie for its flow; a callback after the flow's expiry on an injected clock) |
 | AC21 | integration | `internal/auth/principal_test.go` |
-| AC22 | integration | `internal/auth/session_test.go` (cookie attributes, `stackweaver_csrf` issue, mismatched and absent `X-CSRF-Token`, `GET /api/v1/session` with a valid cookie, with none (`200`, `principal_kind: anonymous`, shared with `management-api.md` AC28's `internal/manage/reads_test.go`) and with an expired one (`unauthenticated`), expiry under an injected clock, logout) |
+| AC22 | integration | `internal/auth/session_test.go` (cookie attributes, `stackweaver_csrf` issue, mismatched and absent `X-CSRF-Token`, a planted `stackweaver_csrf` cookie with a header equal to it refused against the session row's value, `return_to` accepted as a `/ui/` path and rejected for an origin, a scheme and `//`, no HTML body on any of the three routes, the local admin flow (`302` to `/ui/signin?flow=`, the accepted post, the post without the token, with another flow's, without the cookie, and replayed), `GET /api/v1/session` with a valid cookie, with none (`200`, `principal_kind: anonymous`, shared with `management-api.md` AC28's `internal/manage/reads_test.go`) and with an expired one (`unauthenticated`), expiry under an injected clock, `POST` logout, `GET` logout inert; shared with `web-ui.md` AC4 and AC13, whose `web/e2e/signin.spec.ts` and `web/e2e/csrf.spec.ts` drive the same cases from a real browser) |
 | AC23 | integration | `internal/auth/token_service_test.go` (algorithm confusion; mid-flight key rotation) |
 | AC24 | unit + conformance | `internal/auth/pattern_test.go` (evaluation per object kind and action); `conformance/oci/auth_test.go` (tag-scoped pull of a multi-architecture index; refused digest delete and tag list); `conformance/generic/auth_test.go` (refused listing) |
 | AC25 | unit | `internal/auth/pattern_test.go` (validation table over each refused form) |
@@ -1214,13 +1402,14 @@ the scope vocabulary are not configurable. Token lifetimes and the expiry warnin
 | AC27 | integration | `internal/auth/plaintext_test.go` (flag unset and set, valid and invalid credential in each presentation form of the Design table, spoofed forwarding header, no-credential request) |
 | AC28 | integration | `internal/auth/grant_test.go` |
 | AC29 | integration | `internal/auth/token_scope_test.go` (single-repository default, refused and accepted multi-repository creation, unnamed repository refused); the cross-repository mount under an opt-in token is also exercised by `formats/oci.md` AC1's suite run |
-| AC30 | integration | `internal/auth/token_owner_test.go` |
+| AC30 | integration | `internal/auth/token_owner_test.go` (the owner intersection; the administrative refusal; a fixture route declaring the human-principal requirement accepting a session and the local admin account and refusing a human-owned, an admin-owned and a robot-owned token `unauthorized` after resolving each to its principal; shared with `credential-management.md` AC14's route table) |
 | AC31 | unit + integration + conformance | `internal/auth/credential_form_test.go` (every form of the Design table resolving identically; unknown schemes, malformed values, off-route presentations inside each form's recognition scope, the root path token before a reserved segment, and a write-capable token in the Open VSX read segment rejected, never anonymous; `?token=` outside the Open VSX mount answered credential-less; two forms on one request); the real clients per form in `conformance/nuget/auth_test.go` (`formats/nuget.md` AC10, both headers on a challenged push), `conformance/chef/auth_test.go` (`X-Jfrog-Art-Api`), `conformance/openvsx/auth_test.go` (`formats/openvsx.md` AC9), `conformance/conda/auth_test.go` (`formats/conda.md` AC8, the root path token), `conformance/luarocks/auth_test.go` (`formats/luarocks.md` AC5 and AC8) and `conformance/hackage/auth_test.go` (`formats/hackage.md` AC20) |
 | AC32 | unit + conformance | `internal/auth/pattern_test.go` (descriptor evaluation per action); `conformance/cargo/auth_test.go` (patterned-only `pull` running `cargo fetch` in both modes, refused another crate's index file; `formats/cargo.md` AC17); `conformance/helm/auth_test.go` and `conformance/rpm/pattern_test.go` (patterned-only `pull` refused `index.yaml` and `primary`; `formats/helm.md` AC16, `formats/rpm.md` AC14); the sentinel test in each handler's `internal/format/<name>/scope_object_test.go` through the shared helper `format-handler-interface.md` AC12 names (body and headers, hosted and proxied fixtures); `internal/auth/pattern_test.go` (a repository-less descriptor under a verified, a patterned, a failing and an absent credential; a repository-less object of each other kind denied); `conformance/oci/auth_test.go` (a patterned-only `pull` passing the `GET /v2/` probe with the real `docker`; `formats/oci.md` AC11) |
 | AC33 | integration + conformance | `internal/auth/capability_test.go` (claims, foreign object and repository, expiry and revocation under an injected clock, tampered value, anonymous-readable omission; the file `formats/terraform.md` AC4 names); `internal/auth/leak_test.go` (URL redaction); `conformance/terraform/capability_test.go` (the four real clients; `formats/terraform.md` AC4) |
 | AC34 | integration + conformance | `internal/auth/signed_request_test.go` (captured knife requests replayed under each protocol; each altered header, clock skew, expired and revoked key, unknown sign description, mismatched content hash aborting before commit); `internal/auth/arch_test.go` (AC9's allowed set covers the verifier); `conformance/chef/auth_test.go` (real `knife supermarket share` and `unshare`; `formats/chef.md` AC6) |
 | AC35 | integration + conformance | `internal/auth/exchange_echo_test.go` (valid, patterned, invalid, expired, revoked and `pull`-less tokens on both routes; a credential-less request and a session-cookie request on an anonymously readable repository answered `401` with the challenge; response headers and body; a handler registered for the route that fails if invoked); `internal/auth/leak_test.go` (the echoed value scanned for, as AC7 does per form); `conformance/conan/auth_test.go` (the real Conan 2.32.0, 2.0.17 and 1.66.0 exchange followed by Bearer requests; `formats/conan.md` AC14) |
-| AC36 | architecture test + unit + integration | `internal/auth/arch_test.go` (no package under `internal/auth/**` references the replay marker, beside AC9's allowed-library assertion); `internal/server/replay_entry_test.go`, shared with `format-handler-interface.md` AC18 (no principal and no credential on the replayed request; a non-`GET` method, a `local` and a `virtual` repository, and a route from none of the three sources refused before dispatch, cases reported to that spec; a wire request carrying a header, query parameter or path segment named like the marker reaches the handler without it; a fixture route denied through the router and served through the entry); `internal/server/arch_test.go`, shared with the same AC18 (one constructor, one recipient); `internal/proxy/arch_test.go` and `internal/proxy/revalidate_job_test.go`, shared with `proxy-cache.md` AC26 (the single call site; the discarding writer, so no replayed byte reaches a caller, also shared with `async-operations.md` AC30; a read-driven cell recorded only by a router-authorized virtual read and only when it fits its variable's grammar, a cell with a dot-segment or outside the grammar never recorded, shared with `signing-service.md` AC35); the queue's half of "no principal", that no job's context carries one, is `async-operations.md` AC30's `internal/async/kinds_test.go` |
+| AC36 | architecture test + unit + integration | `internal/auth/arch_test.go` (no package under `internal/auth/**` references the replay marker, beside AC9's allowed-library assertion); `internal/server/replay_entry_test.go`, shared with `format-handler-interface.md` AC18, which carries every case this criterion relies on as amended on its Fable recheck of 2026-10-01 (no principal and no credential on the replayed request; a non-`GET` method, a `local` and a `virtual` repository, and a route from none of the three sources refused before dispatch, the entry checking against its cached-route reader and member-input interface; a wire request carrying a header, query parameter or path segment named like the marker reaches the handler without it; a fixture route denied through the router and served through the entry); `internal/server/arch_test.go`, shared with the same AC18 (one constructor, one recipient); `internal/proxy/arch_test.go` and `internal/proxy/revalidate_job_test.go`, shared with `proxy-cache.md` AC26 (the single call site; the discarding writer, so no replayed byte reaches a caller, also shared with `async-operations.md` AC30; a read-driven cell recorded only by a router-authorized virtual read and only when it fits its variable's grammar, a cell with a dot-segment or outside the grammar never recorded, shared with `signing-service.md` AC35); the queue's half of "no principal", that no job's context carries one, is `async-operations.md` AC30's `internal/async/kinds_test.go` |
+| AC37 | integration | `internal/auth/audit_test.go` on `telemetry.NewTestRecorder` (one record per refusal under the matching event, with `form` and `reason`; a refused management write and a refused credential write yielding one record in total, shared with `management-api.md` AC23's `internal/manage/audit_test.go` and `credential-management.md`'s `internal/credential/audit_test.go`; `auth.session.issue` for each flow, `auth.session.end` on logout, `auth.session.refused` per refusal cause; no record for a successful machine request; the per-address rate limit and its `suppressed` count on an injected clock; every attribute through the redaction chain, shared with AC7's `internal/auth/leak_test.go`) |
 
 **AC10 procedure**: before the first auth code merges, a security review is performed by a party
 other than the implementing agent, covering token lifecycle, scope enforcement, the OIDC
@@ -1236,22 +1425,39 @@ with `proxy-cache.md`'s `proxy.revalidate` job) is reviewed the same way before 
 - this spec's: the token store and constant-time lookup, every presentation form in the Design
   table with its extraction, redaction and plaintext refusal, the route-scoping declarations,
   the OCI token service's claim set, pattern-claim encoding, key provenance and storage, the
-  download capability, the OIDC relying-party flow and session, the pattern matcher and the
-  repository-less descriptor rule, the recognition scope of each route-scoped form, Conan's
-  exchange-echo route (the one response that carries a presented credential back), the redaction
-  of Vagrant's non-form `access_token` parameter and of a `token` parameter outside its mount,
-  every `Scope(r)` that reads repository state to name its object (RubyGems, its was-Q5) for the
-  existence rule, and Chef's canonical-string construction and signature check;
+  download capability, the OIDC relying-party flow and session (the pre-authentication cookie
+  and flow id, the single-use flow token of the local admin form, the `return_to` grammar, the
+  CSRF comparison against the session row's stored value), the local admin credential's Basic
+  form on `/api/v1` and the username `admin` as its discriminator from a registry token, the
+  three route requirements the authorizer evaluates ("Route requirements": a scope, the admin
+  role, a human principal), the pattern matcher and the repository-less descriptor rule, the
+  recognition scope of each route-scoped form, Conan's exchange-echo route (the one response
+  that carries a presented credential back), the redaction of Vagrant's non-form `access_token`
+  parameter and of a `token` parameter outside its mount, every `Scope(r)` that reads repository
+  state to name its object (RubyGems, its was-Q5) for the existence rule and every `Scope(r)`
+  that reads the request body for it (Chef's and Galaxy's multipart publish: an authorization
+  input taken from an unauthenticated body, bounded to the leading part's headers), the
+  authorizer's audit emission (that every refusal is recorded under an `auth.*` event with no
+  credential in any attribute, AC37), and Chef's canonical-string construction and signature
+  check;
 - `management-api.md`'s: the second scope evaluation at `Submit`, where every `(object, action)`
   pair an operation's `Authorize` reports is evaluated through this spec's authorizer on the
-  binding as on the API (its resolved binding-scope decision, was Q13, AC8), and the deferred
-  `manage.apply` path, where the runner applies an `Operation` on the authorization its
-  originating request received and holds no principal (`async-operations.md` AC30), the reviewer
-  checking that nothing enqueues an `Operation` the router did not authorize;
+  binding as on the API (its resolved binding-scope decision, was Q13, AC8), with the invariant
+  that record's Fable recheck stated: that evaluation is **unconditional**, so a route-level
+  `Scope(r)` object can only ever add a refusal, and the reviewer checks that no binding path
+  skips or short-circuits it on the strength of the route's own check; that an authorizer
+  refusal is audited by this spec's `auth.*` events and never by a `manage.*` one, the refused
+  surface emitting nothing (its AC23); and the deferred `manage.apply` path, where the runner
+  applies an `Operation` on the authorization its originating request received and holds no
+  principal (`async-operations.md` AC30), the reviewer checking that nothing enqueues an
+  `Operation` the router did not authorize;
 - `credential-management.md`'s: the token surface's display-once path, robot accounts, the
-  registered public-key store, and the OIDC token exchange (`/api/v1/tokens/exchange`), which
-  grows the auth surface with a second OIDC verification path and is off OCI's critical path but
-  not off this review's;
+  registered public-key store, the human-principal requirement its routes declare beside their
+  mapping (that every route under `/api/v1/tokens`, `/api/v1/robots` and `/api/v1/keys`
+  declares it, that the authorizer and not that package evaluates it, and that what follows the
+  authorizer is data scoping only), and the OIDC token exchange (`/api/v1/tokens/exchange`),
+  which grows the auth surface with a second OIDC verification path and is off OCI's critical
+  path but not off this review's;
 - `signing-service.md`'s: the key custody backends (`file`, `kms`, `pkcs11`, `external`) and the
   key routes under `/api/v1/repositories/{name}/signing-keys`, auth-adjacent because they hold
   and operate private material under admin authority;
@@ -1290,9 +1496,12 @@ which lands with `formats/conan.md`. Ported from Stackweaver's
 form lands with the format that needs it, since its conformance case is that format's.
 
 ### Phase 2: Human identity
-OIDC client, the `/ui/auth/*` routes, local admin fallback, session issuance with the
-double-submit CSRF cookie and `GET /api/v1/session`, human grants and the admin role, the
-`auth.*` configuration table.
+OIDC client, the `/ui/auth/*` routes with the pre-authentication cookie, the flow token of the
+local admin form and the `return_to` grammar (AC20, AC22), local admin fallback in both forms,
+the SPA's form post and the `admin` Basic form on `/api/v1` (AC2), session issuance with the
+double-submit CSRF cookie compared against the session row and `GET /api/v1/session`, human
+grants and the admin role, the three route requirements (AC30), the `auth.*` audit events (AC37),
+the `auth.*` configuration table.
 
 ### Phase 3: The token service
 Challenge, token endpoint, scoped JWTs carrying any pattern, subset grants for multi-repository
@@ -1323,7 +1532,10 @@ the same day, when eleven format specs' presentation forms were consolidated int
 the off-route rule had to be one rule; Q25 was raised by the closing reconciliation sweep of
 2026-09-28, when the `conan` client row showed a response that returns the presented credential,
 and was adopted on Opus. Q23, Q24 and Q25 were rechecked on Fable on 2026-09-30 and each
-confirmed, with the amendments their records name; each adopted record opens by saying so, and
+confirmed, with the amendments their records name. Q26 was raised and adopted on Fable on
+2026-10-01 by the follow-up pass, when `deployment.md`'s first-mint recipe and
+`credential-management.md`'s recheck both reported that the local admin credential reaches
+`/api/v1` in a Basic form this spec did not describe. Each adopted record opens by saying so, and
 the owner may reverse any of them. Q1 through Q12 are all resolved (Q1-Q3 on
 2026-09-23 from the original draft, Q4-Q12 answered 2026-09-23 after the security review that
 raised them). The resolved records that follow are kept rather than deleted, so the reasoning
@@ -1567,6 +1779,41 @@ answers the format's challenge on an anonymously readable repository too, since 
 principal has nothing to echo. Verified against `formats/conan.md` at HEAD: both routes are
 `pull` descriptors under the remote's mount, the reference server answers `text/plain`, and a
 `pull`-less token's `404` makes the client skip the remote, as the row says.
+
+### Resolved: how the local admin credential reaches `/api/v1` (was Q26, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation**, on Fable. Option A: on `/api/v1`
+alone, HTTP Basic with the username `admin` is the local admin form, verified against that
+account's hash and never looked up as a token; any other username makes the password a registry
+token as on a format route; the form is accepted only while the account is enabled, only where
+a session would be, and under the TLS rule, and the name `admin` is reserved in the principal
+namespace. Folded through Scope, Design ("The local admin credential on the API", the note under
+the presentation-form table, "Route requirements"), AC2 and its Test Plan row, Phase 2 and
+AC10's procedure.
+
+The judgment call it settles: `credential-management.md`'s routes require a human principal and
+no session exists before the first sign-in, so `deployment.md`'s first mint (its AC26) presents
+the local admin credential as the Basic password with `admin` as the username. Three specs
+named the form and none owned its discriminator: this spec's Basic row reads every Basic
+password as a registry token with the username ignored, `management-api.md`'s authentication
+paragraph admits only the bearer token and the session cookie, and a server receiving a Basic
+credential on `/api/v1` had no stated rule for which reading applies.
+
+**Recommendation (adopted):** A, because it makes the two readings disjoint by a value the
+caller states, costs no new route or header, and keeps the format-route rule untouched.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. The username `admin` selects the local admin reading on `/api/v1`; any other username is the registry-token reading** | One Basic form on `/api/v1` with an unambiguous discriminator; the first mint stays a `curl` with no new header or route; a token under `admin` and the local credential under another name both fail closed | The username is an authentication input on `/api/v1` where the format routes ignore it; `admin` is reserved as a principal name, which `credential-management.md`'s robot grammar must refuse |
+| **B. Try both readings: verify as the local admin, else look the password up as a token** | No reserved name; any username works for the first mint | Two verifications per Basic request on `/api/v1`, and a failed local-admin check falling through to a token lookup turns the local admin hash into a second oracle on every token presentation |
+| **C. A dedicated route or header for the local admin (`/ui/auth/login` as Basic, or `X-Local-Admin`)** | The Basic row stays single-reading everywhere | A fourth credential form on the API for one procedure, in the review scope for the life of the product, and `deployment.md` AC26's `curl` as already stated changes shape |
+
+Accepted cost: a reserved name and one place where the Basic username means something. B lost
+because fall-through verification is the oracle shape this spec refuses everywhere else; C lost
+because it adds a form to AC10's surface to avoid naming a username.
+
+**Why this is yours:** it fixes the shape of the first-run procedure every operator performs
+and reserves a name in the principal namespace.
 
 ### Resolved: a token's authority relative to its owner (was Q20, raised and adopted 2026-09-26)
 
@@ -1913,3 +2160,4 @@ world-readable until it matters.
 | 2026-09-28 | 1d6b1c8 | cross-spec reconciliation second pass on Opus, after the proxy-cache, storage-and-gc, supply-chain-policy and format-handler-interface closing sweeps. Not a review | Not a review. Applied the one item queued against this file after its closing sweep (proxy-cache closing sweep item 4, repeated as format-handler-interface closing sweep item 1), verified against the settled text of `proxy-cache.md` (resolved revalidation-replay decision, was Q18, AC26, "Revalidation outside the request") and `format-handler-interface.md` (resolved replay-entry decision, was Q11, AC18, "A second dispatch, below the authorizer"). Design, "Authorization is central, never per-handler", gains "The one entry that skips the authorizer": the replay entry named, its three enforcers in `internal/server` and `internal/proxy` adopted as this spec's, `internal/auth/arch_test.go` extended to assert no `internal/auth` package reads the replay marker, why it is safe (no principal or credential, response discarded, one constructor, recipient and call site on a fixed input) and six conditions that would make it unsafe. New AC36 with its Test Plan row; Scope and Phase 4 cite it. AC10's review list gains the replay entry as its fifth bullet, and the procedure's scope sentence now names every authorizer-bypassing entry and requires a listed surface landing after the first review to be reviewed before it reaches `main`: AC10's requirement is unchanged in force, only extended. The GET-only and remote-only refusal at the entry and the marker cases in `internal/server/replay_entry_test.go` are reported to `format-handler-interface.md`. No question raised or adopted; the fable_recheck marker is unchanged. |
 | 2026-09-28 | 4278ce0 | leftovers pass of the closing sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the items queued against this file after its second pass, each verified against the owning spec's settled text. Six-spec closing sweep item 2: the `upstream-adapters.md` bullet of AC10's review list names the Conan-shaped `basic-exchange` kind (a stored Basic pair traded for a `text/plain` token presented as Bearer), citing that spec's resolved Conan-exchange decision (was Q8) and its AC33; the list only grows, and AC10's requirement is unchanged in force. Async-operations closing sweep item 3 (optional, applied): "The one entry that skips the authorizer" cites `async-operations.md` AC30 for the queue giving the `proxy.revalidate` job no principal, and AC36's Test Plan row names that criterion's `internal/async/kinds_test.go` as the queue's half and shares the discarding-writer case with it. Found already done: every earlier item for this file. No question raised or adopted; roots untouched; the fable_recheck marker is unchanged. 36 criteria, each with a Test Plan row. Stays draft. |
 | 2026-09-30 | df2d9c5 | Fable recheck: full review (claim verification of every sibling citation at HEAD: `formats/conan.md`'s exchange routes, `signing-service.md` was-Q21 and AC35, `proxy-cache.md` "Revalidation outside the request" and AC26, `format-handler-interface.md` AC12 and AC18, `management-api.md` was-Q13 and AC8, `async-operations.md` AC30, `upstream-adapters.md`'s `basic-exchange` and AC33, `observability.md`'s `RedactURL` list; seven of the seventeen Opus client rows refuted against their format specs' captures and found faithful: conan, vagrant, swift, julia Pkg, brew, dart pub, go) + adversarial lens on every path that reaches content without the authorizer + constitution + re-examination of the Opus adoptions Q23, Q24 and Q25 | Brought current first: the one open queue item (rubygems authoring item 4) applied from `formats/rubygems.md`'s own capture (a `gem`/`bundle` row, the Basic and scheme-less "Needed by" lists, RubyGems' probe a descriptor and its indexes none, `bundle` and `gem` among the clients a patterned-only `pull` cannot run), plus its was-Q5 data-reading `Scope(r)` admitted under the existence rule's condition. Verdicts: Q23 confirmed (fold under-stated the sentinel test: both modes, headers; AC32); Q24 confirmed and amended (recognition scope of route-scoped forms; AC31); Q25 confirmed and amended (echo body source; credential-less and session-only requests challenged; AC35). AC36 held against `signing-service.md`'s read-driven first fetch and amended: the replayed route's sources are recorded, declared-or-derived, or a template cell recorded by a router-authorized virtual read within its variable's grammar, and "never a value taken from a request" is replaced by that bound, with "only way into a handler" sharpened to request dispatch and the job-side `Operator.Apply` and generator calls named as non-request entries. `management-api.md` was-Q13 confirmed from the auth side and folded into Scope vocabulary as a rule this spec owns (`Submit` evaluates every pair through this spec's authorizer). AC10 extended by five items and weakened by none. Q22's partial reversal of Q17 stands, with the per-host clients as a second need. 36 criteria, each mapped; zero open questions; `fable_recheck` cleared; draft to planned. AC10's external implementation review remains unsatisfied by any spec pass. |
+| 2026-10-01 | 82928d4 | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: every item queued against this file in `agents/spec-loop/consequences.md` after the 2026-09-30 row verified against the current text of its source spec and of this one, with an adversarial pass over each change. Applied, five of five: (1) management-api recheck 6: the was-Q13 invariant stated in Scope vocabulary and in AC10's procedure (`Submit`'s evaluation of every `Authorize` pair is unconditional, so a route-level `Scope(r)` object can only add a refusal), and a new Design rule that an authorizer refusal is audited by `auth.*` events and never by the refused surface's (its AC23 as amended); (2) credential-management recheck 2: the third route requirement, a human principal that no token satisfies, carried as this spec's vocabulary in a new "Route requirements" paragraph, asserted by AC30 from the authorizer's side and placed on AC10's surface; (3) deployment recheck 4, extending (2): the first-mint form named as that spec states it, HTTP Basic on `/api/v1` with the username `admin` and the emitted credential, resolving to the local admin human principal, only while enabled and under the TLS rule, confirmed against `deployment.md`'s "First run and first mint" and AC26 (no sibling names the account otherwise); its discriminator from a registry token was owned by no spec, so Q26 was raised in the decision shape and adopted under the standing delegation (the username `admin` selects the local admin reading on `/api/v1` alone; `admin` reserved as a principal name), folded through Scope, Design, AC2 and its row, Phase 2 and AC10; (4) FHI recheck 3: AC36's row cites FHI AC18 as amended as carrying its cases, and the body-reading `Scope(r)` (Chef, Galaxy) joins the data-reading one in "Pattern scopes" and on AC10's list; (5) web-ui recheck 1: "The two surfaces" rewritten to the flow its recheck fixed (no HTML from the three routes, the pre-authentication cookie, the single-use flow token, `POST`-only logout, `return_to` as a `/ui/` path), AC20 gains the missing-cookie and expired-flow cases, AC22 the session-row CSRF comparison with the planted-cookie case, the flow-token cases, the `return_to` grammar and the inert `GET` logout; three session events named (`auth.session.issue`, `.end`, `.refused`) in a new "Audit events" subsection, with the three refusal events `observability.md` already carries, asserted by new AC37. Declined: none. Constants rather than keys: the flow expires ten minutes after issue. AC10 extended by seven items and weakened by none. 37 criteria, each with a Test Plan row; zero open questions; stays planned. AC10's external implementation review remains unsatisfied by any spec pass. |
