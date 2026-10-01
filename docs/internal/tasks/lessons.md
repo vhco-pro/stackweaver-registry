@@ -8,6 +8,21 @@ covers: []
 Newest first. Each entry records a mistake, its root cause, and the convention it produced.
 Anything learned that would otherwise live only in a chat session belongs here.
 
+## 2026-10-01 - "Inside the same transaction, through the door" named a form the door does not have
+
+**What happened:** `replication.md`'s takeover was folded to re-sign every pointer document "inside the
+takeover transaction through the door's document-only form". `storage-and-gc.md`'s write door has
+three forms. The standard and document-only forms evaluate their predicate before `BeginTx`, and
+the on-a-transaction form is reserved for `async-operations.md`'s `Finish`. No form does what the
+fold said. It survived until a resumed Fable gate review refuted it against storage AC25.
+
+**Root cause:** the fold cited "the door" as a single thing after the door had grown three forms
+with different transaction rules.
+
+**Convention:** a fold that writes through the door names which form it takes, and anything done
+"in the same transaction" through the door is only possible from a job's `Finish`. A request-path
+caller that needs two writes does them as two steps and states what happens when the second fails.
+
 ## 2026-10-01 - A key rotation designed from the command's point of view could not run
 
 **What happened:** `deployment.md` Q5 described master-key rotation as a command that rewraps every

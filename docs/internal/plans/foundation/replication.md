@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Sweep 2026-09-28 at 6e6d503 (not a review): management-api's replication routes and `replica` type cited; data-model AC31 shared in AC16 and AC22. Reconciled 2026-09-28 at 9f93794 with the foundation authoring wave (not a review): signing records travel with the pointer set and a linked follower signs nothing, takeover needs resolvable keys (AC21); sync runs as replication.sync jobs with per-snapshot checkpoints on the shared async runner (AC3, AC23); the link has a six-state vocabulary with terminal ended, an updatable leader name and composes with repository-lifecycle's Writable predicate, read_only and deletion (AC11, AC12, AC16, AC22); observability's replication metrics, alerts, audit events and peer trace propagation folded into AC10; a replication. key table (AC24); the reserved segment is named replication (AC18); freeze's dated HCP Vagrant consumer recorded with Q11 adopted. Earlier: Wave 1 reconciliation (charter step 10, harness provisioner, sibling amendments landed) and Q1-Q10 adopted under the owner's standing delegation. 24 criteria, zero open questions; the server-side ingest hook stays pending at the interface re-open; stays draft pending a gate review."
+status: planned
+status_description: "Fable gate review 2026-10-01 at 4dac925 cleared it to planned (a pass interrupted mid-apply and resumed on Fable the same day): every sibling citation verified at HEAD against the planned foundation specs, the queued consequences applied (`.sync` and `.reseed` audit events with the re-seed's discarded snapshots in `objects`, the link `GET` on the request log only, the replication read surface a mount on the main listener, AC12 covering the door's document-only form, the management routes' refusal order under management-api's was-Q18 and AC35), and the adversarial findings folded: every apply, the takeover, the re-seed and the deletion serialise on the link row, the link row is the position of record and the link's `Schedule` is disabled in the transaction that ends it (AC23, AC26); the `Retirement` set and `FileProvenance` travel on the read surface and in the archive (AC25); the want-list covers pointer-document bodies, declared blob-digest lists and verification-failed blobs; a leader whose head is below the follower's position is `diverged` (AC17); a `read_only` replica's sync is refused `read-only` under the two planned architecture tests (AC22); the position is pinned by the mirrored default pointer and the chain stays linear across a leader rollback (AC20); AC18 names the refusal each token class receives under auth's existence rule; an import into an unlinked repository is refused `validation` (AC9). One new question raised and adopted on Fable (Q12: the takeover request re-signs and registers the cadence schedules, in two steps because the door's on-a-transaction form is the runner's alone). 26 criteria, zero open questions; the server-side ingest hook stays pending at the interface re-open. Earlier: sweep 2026-09-28 at 6e6d503 (not a review): management-api's replication routes and `replica` type cited; data-model AC31 shared in AC16 and AC22. Reconciled 2026-09-28 at 9f93794 with the foundation authoring wave (not a review): signing records travel with the pointer set and a linked follower signs nothing, takeover needs resolvable keys (AC21); sync runs as replication.sync jobs with per-snapshot checkpoints on the shared async runner (AC3, AC23); the link has a six-state vocabulary with terminal ended, an updatable leader name and composes with repository-lifecycle's Writable predicate, read_only and deletion (AC11, AC12, AC16, AC22); observability's replication metrics, alerts, audit events and peer trace propagation folded into AC10; a replication. key table (AC24); the reserved segment is named replication (AC18); freeze's dated HCP Vagrant consumer recorded with Q11 adopted. Earlier: Wave 1 reconciliation (charter step 10, harness provisioner, sibling amendments landed) and Q1-Q10 adopted under the owner's standing delegation. 24 criteria, zero open questions; the server-side ingest hook stays pending at the interface re-open; stays draft pending a gate review."
 description: "Spec for replicating content between registry instances - geo-distribution, disaster recovery and air-gapped mirroring - built on the content-addressed store and immutable snapshots."
 author: michielvha
 goal: "Let one logical registry span sites, so a build pulls locally and an air-gapped environment can be fed a verifiable snapshot."
@@ -75,15 +75,19 @@ state.
   replication and makes a replica writable, with fencing of the old leader an acknowledged
   operator duty.
 - Replication of metadata at all three levels, not only blobs, so a follower serves correct
-  indexes and dist-tags rather than correct bytes under wrong names.
+  indexes and dist-tags rather than correct bytes under wrong names; and of the repository's
+  core-held `Retirement` set and `FileProvenance` records, which are not snapshot content, so a
+  taken-over repository refuses the coordinates its old leader retired.
 - Interaction with GC and retention: what a follower may collect, and why a leader's pruning
   consults no follower.
 - Replication authentication: a follower reads a leader with an ordinary machine token, whose
   `pull` scope on a repository authorizes that repository's replication read surface.
 - **Signed documents on a follower**: the leader's `Signature` and `PointerDocument` records
   travel with the pointer set, a follower serves them verbatim and signs nothing while linked,
-  and takeover requires the repository's active signing keys to resolve on the follower
-  (`signing-service.md`'s resolved follower decision, was Q9 there).
+  takeover requires the repository's active signing keys to resolve on the follower
+  (`signing-service.md`'s resolved follower decision, was Q9 there), and the takeover request
+  re-signs under them and registers the `signing.resign` schedules, so a taken-over repository
+  nobody writes to does not expire (the resolved takeover-signing decision below, was Q12).
 - **Sync as shared deferred work**: a link's sync and transfer run as `replication.sync` jobs
   on the shared async runner (`async-operations.md`), with a checkpoint per completed snapshot,
   so resume after a crash is the queue's rescue path rather than a replication-local mechanism.
@@ -145,13 +149,21 @@ snapshot depends on them. Three consequences bind the transfer unit:
   sweep unsound.
 
 **Blobs move by want-list.** Metadata (deltas and checkpoints) arrives first; the follower
-computes which referenced digests its store lacks and requests only those. Because the store is
-content-addressed, a blob the follower already holds - from an earlier snapshot, from another
-repository, or from its own cache - is never transferred again, which is what keeps a re-seed
-cheap in bytes even though it re-transfers a checkpoint. A digest the follower "has" but whose
-blob its own sweep is deleting is handled by the shared reference-creation call and the
-intent's commit gate like any other commit (the GC section below), never by a replication-local
-rule.
+computes which referenced digests its store lacks and requests only those. The want-list is
+every digest the transferred records reach, not only what the deltas reference: the blobs of the
+content set, CAS-backed metadata documents, the CAS-backed bodies of the pointer set's
+`PointerDocument` records and the bodies `Signature` records sign, and every digest on a
+replicated document's declared blob-digest list (`data-model.md` AC37; Hackage's index segments,
+Debian's by-hash generations), because the follower's fourth mark root marks through those
+records exactly as the leader's does and a record whose body is absent is a reference to nothing.
+Because the store is content-addressed, a blob the follower already holds - from an earlier
+snapshot, from another repository, or from its own cache - is never transferred again, which is
+what keeps a re-seed cheap in bytes even though it re-transfers a checkpoint. "Already holds"
+is the dedup check's answer, so a `Blob` row carrying the verification-failed mark counts as
+absent and is fetched again (`data-model.md` AC43; `storage-and-gc.md`'s resolved read-path
+decision, was Q11 there). A digest the follower "has" but whose blob its own sweep is deleting
+is handled by the shared reference-creation call and the intent's commit gate like any other
+commit (the GC section below), never by a replication-local rule.
 
 Interrupted transfer resumes from the last completed snapshot rather than restarting, because
 each snapshot is an independently valid stopping point. How that resume happens is not
@@ -172,6 +184,30 @@ either applied whole or not at all (AC2). Replication therefore builds no resume
 retry loop and no worker pool of its own; a follower runs its own queue and a leader never
 enqueues anything for a follower (`async-operations.md` excludes cross-instance jobs because
 followers pull).
+
+Two details keep that rescue path honest. **The position of record is the link row, not the
+job's checkpoint**: each snapshot's apply transaction writes the snapshot, moves the mirrored
+pointers whose target it completes and advances the `ReplicationLink`'s position together, and
+`job.Checkpoint` is written after that commit, so a worker that dies between the two leaves a
+checkpoint one snapshot behind the row, and the re-run finds the snapshot already present by
+identity and skips it rather than applying it twice. **Every apply transaction locks the link
+row and re-reads its state** before committing, and so do the takeover, the operator re-seed and
+the replica's deletion (`repository-lifecycle.md` AC22), which lock the same row: a sync still
+transferring when a takeover commits finishes its blob puts (content-addressed, unreferenced,
+grace-protected until the sweep) and then finds the link `ended` at its next apply, ends itself
+with nothing more applied, and the new leader's first write is the only writer of N+1 (AC26).
+The exclusivity key keeps two syncs apart; the row lock is what keeps a sync apart from the
+operator. The transaction that ends a link also **disables the link's `Schedule`**, the takeover
+as the deletion already does (`async-operations.md`'s per-link `Schedule` row and its deletion
+rule, `repository-lifecycle.md` AC21), so nothing enqueues a sync for an `ended` link; a job
+enqueued before that commit finds the link `ended` at its next apply and ends itself as above,
+and an on-demand sync, a re-seed or a takeover requested against an `ended` link is refused as a
+state conflict, whose problem type `management-api.md`'s table fixes (AC23, AC26).
+
+A follower is an ordinary instance of the one binary, roles by configuration (`deployment.md`,
+"Process model"): the sync runs on whichever of its processes has workers, so a follower whose
+every process sets `async.workers: 0` enqueues `replication.sync` and never applies it, and the
+link reports lag until a worker exists. Nothing in the binary names an instance a follower.
 
 Two consequences of riding the runner are stated so nobody rediscovers them: the per-link
 `Schedule`'s period is the instance default `replication.sync_interval` unless the link sets its
@@ -198,9 +234,18 @@ follower holds one mirrored pointer per leader pointer, same name, same target s
   on the leader by definition, so the follower seeds that target from its checkpoint like any
   other. What a follower transfers is bounded by the content sets of the distinct snapshots the
   pointer set targets, plus one checkpoint interval each, never by history length.
-- **The follower's replication pointer is its mirrored default pointer.** That is the pointer
-  `storage-and-gc.md` names as an instance of the fifth root; every mirrored environment pointer
-  is one too, for the same reason (the GC section below).
+- **The follower's replication pointer is its mirrored default pointer, and its target is the
+  link's position.** That is the pointer `storage-and-gc.md` names as an instance of the fifth
+  root; every mirrored environment pointer is one too, for the same reason (the GC section
+  below). The leader's default pointer tracks the newest snapshot (`data-model.md`'s `Pointer`
+  row: "one tracks the newest snapshot, others are environments repointed by promotion and
+  rollback"), so the snapshot the link's position names is always the mirrored default
+  pointer's target, pinned on the follower however old it grows, and the next contiguous delta
+  always has a reconstructible base to apply to. A leader-side rollback repoints an environment
+  pointer and creates no snapshot (`data-model.md` AC23), so the chain the follower walks stays
+  linear by number across it: the follower's position and its identity check are unchanged, the
+  mirrored environment pointer moves to the older target it already holds or seeds, and the
+  leader's next write arrives as the one delta from the position (AC20).
 - **The pointer's signed and dated documents travel with it.** `signing-service.md` places
   signatures and pointer-held documents (a Debian `InRelease`, a TUF `timestamp.json`, a
   per-pointer freshness record) in `Signature` and `PointerDocument` records outside snapshot
@@ -212,6 +257,16 @@ follower holds one mirrored pointer per leader pointer, same name, same target s
   not sign" (`project-charter.md`, step 10) means in practice. A mirrored pointer's records move
   with the pointer, under the same rule that the pointer moves only once its target is whole.
   Signing on a follower begins only at takeover (the takeover section below).
+- **The retirement set and provenance travel too.** `management-api.md` holds coordinate
+  retirement in core-held `Retirement` records outside snapshot content, never pruned, so a
+  follower that received only snapshots would hold no record that `acme@1.0.0` can never be
+  reused, and its first write after a takeover could re-publish a coordinate every client of the
+  old leader saw retired. The leader's `Retirement` records and the `FileProvenance` records of
+  frozen files are therefore part of the replication read surface, transferred as opaque records
+  and applied idempotently (a retirement names a coordinate; applying it twice is a no-op), so a
+  taken-over repository refuses the retired coordinates at claim declaration and at commit
+  exactly as the leader did (`data-model.md` AC35; AC25). While linked they change nothing, since
+  nothing writes there; they exist for the day the link ends.
 
 ### Snapshot identity makes a divergent history detectable
 
@@ -231,13 +286,36 @@ properties make it load-bearing:
   position's identity with the leader's identity at that number. A match means the leader's
   history extends the follower's, and transfer proceeds. A mismatch means the histories forked:
   the follower applies nothing, keeps serving what it has, and reports `diverged` with the
-  highest snapshot number both sides agree on. Only an explicit operator re-seed moves it off
-  that state, and that command reports the local snapshots it will discard before discarding
-  them, because on a repository that was written after a takeover those snapshots are the
-  split-brain writes.
+  highest snapshot number both sides agree on. **A leader whose head is below the follower's
+  position is diverged too**, with the agreed number the highest at which both identities are
+  equal: there is no identity at the follower's number to compare, and a leader behind its own
+  follower is a leader restored from a backup that lost those writes, whose next write would
+  fork under a number the follower already holds. The follower does not wait for that to happen.
+  Only an explicit operator re-seed moves a link off `diverged`, and that command reports the
+  local snapshots it will discard before discarding them, because on a repository that was
+  written after a takeover those snapshots are the split-brain writes, and on a restored leader's
+  follower they are the writes the restore lost.
+- **Linking a repository that already has a history is the same check.** A `local` repository
+  with its own writes, linked to a leader, diverges at its first sync and reports it; the
+  operator re-seed is the conversion path, and it lists what it discards. A freshly created
+  `local` links cleanly, because its initial empty snapshot's identity is a function of its
+  number and the empty delta alone (`data-model.md` AC29 is deterministic), so every fresh
+  repository is a prefix of every leader.
 
 A divergent history is never silently merged, applied around, or overwritten by an automatic
 re-seed. The same identity check guards archive import (below).
+
+**What the operator re-seed does** is one write through the applier's entry point, serialised on
+the link row like every apply: it repoints every mirrored pointer to the agreed snapshot (or
+deletes the mirrored pointers whose target the follower no longer holds, so they seed from a
+checkpoint), removes the discarded snapshots' rows and their `SnapshotIdentity` records, and
+leaves their deltas, checkpoints and blobs unreferenced for the pruner and the sweep, deleting
+no object itself (`storage-and-gc.md` AC15). This is the one case in which an identity record is
+rewritten: the leader's snapshots then apply under the discarded numbers with the leader's
+identities. The accepted cost, confirmed by the operator with `confirm` set to the repository
+identity (`management-api.md`'s endpoint table), is that a mirrored pointer whose agreed target
+is not held serves nothing until the seed completes; the `replication.link.reseed` audit event
+lists the discarded snapshots in `objects` (AC17, AC26).
 
 ### A replica is read-only, and replication is per repository
 
@@ -277,7 +355,7 @@ state set is the one `observability.md`'s one-hot gauge reports:
 |---|---|---|
 | `syncing` | a `replication.sync` job holds the link's exclusivity key and is transferring | |
 | `idle` | the last sync completed and the follower is at the leader's position for every mirrored pointer | |
-| `failed` | the last sync could not complete and nothing was applied | `not-found` (the leader repository is gone or renamed), `unauthorized`, `unreachable`, `source-type` |
+| `failed` | the last sync could not complete and nothing was applied | `not-found` (the leader repository is gone or renamed), `unauthorized`, `unreachable`, `source-type`, `read-only` (the replica is frozen; thaw resumes it) |
 | `reseeding` | a retention gap was detected and a checkpoint-based re-seed is in progress | `retention-gap` |
 | `diverged` | the identity check failed; nothing applies until an operator re-seed | the highest agreed snapshot number |
 | `ended` | terminal: the link no longer governs the repository | `takeover`, `deleted` |
@@ -300,9 +378,18 @@ asserted by AC22:
   rename the operator updates the name and the next sync resumes on the identity check alone,
   with no re-seed, because the history is unchanged. After a leader-side deletion the operator
   takes the follower over or deletes it.
-- **A `read_only` replica stays read-only after takeover.** `read_only` is the repository's
-  state, the link is the link's; takeover changes only the latter. Thaw is the lifecycle
-  operation that makes such a repository writable again, and it is a separate, audited act.
+- **A `read_only` replica stays read-only after takeover, and does not sync while frozen.**
+  `read_only` is the repository's state, the link is the link's; takeover changes only the
+  latter. Thaw is the lifecycle operation that makes such a repository writable again, and it
+  is a separate, audited act. While the replica is frozen its link's schedule keeps enqueuing
+  (`async-operations.md` suspends only `retention.pass` under `read_only`), but the applier's
+  entry point waives `ErrReplica` alone and still refuses `ErrReadOnly` (`storage-and-gc.md`
+  AC25, `repository-lifecycle.md` AC9, both planned and both asserting it in
+  `internal/storage/arch_test.go`), so each sync ends having applied nothing and the link
+  reports `failed` with reason `read-only` until the thaw, after which the next sync resumes
+  on the identity check alone. Freezing a replica is therefore not a no-op before takeover: it
+  stops the replica following, which is what an operator freezing it means, and the
+  `ReplicationLinkFailed` alert says so (AC22).
 - **A deleted repository cannot be linked**, and neither can a `remote` or a `virtual` (the
   source section above; refused `failed` at configuration time with reason `source-type` on the
   leader side, or a type refusal on the follower side).
@@ -314,16 +401,26 @@ The link's own management - create, update (leader URL, leader repository name, 
 reference, sync interval), delete, an on-demand sync, the operator re-seed and takeover - is
 administration of a repository and therefore belongs on the registry-owned management API under
 the reserved `api` segment (`management-api.md`), admin-only like every other repository
-administration kind, implemented by `internal/replication` behind that API's conventions and
-audited as `replication.link.create`, `.update`, `.delete`, `.takeover` (the observability
-section below). `management-api.md`'s endpoint table now carries them: `GET`, `PUT`, `PATCH`
+administration kind and refused in that API's one order (its resolved refusal-type decision,
+was Q18, and its AC33 and AC35): `unauthenticated` to a credential-less request, `not-found` to
+a principal that cannot read the repository, byte-identical to an absent one, and
+`unauthorized` to every other non-admin principal, a repository-scoped token holding every
+action included. The routes are implemented by `internal/replication` behind that API's
+conventions and audited as `replication.link.create`, `.update`, `.delete`, `.sync`, `.reseed` and `.takeover`
+(the observability section below; `.sync` and `.reseed` were named by `management-api.md`'s
+Fable recheck of 2026-09-30 and registered by `observability.md` on 2026-10-01, since every
+write past the authorizer on that API audits under a registered event, its AC23). The link's
+`GET` is a read and leaves a request-log line and no audit record, like every other read on that
+surface. `management-api.md`'s endpoint table now carries them: `GET`, `PUT`, `PATCH`
 and `DELETE /api/v1/repositories/{name}/replication` for the link, `POST .../replication/sync`,
-`.../replication/reseed` and `.../replication/takeover` (the latter refused `validation` without
-`acknowledge_fencing: true`), and its closed problem list carries `replica` (its AC33); this
-spec states the operations and their semantics, and that table fixes the wire. Export and
-import are operator actions on the same surface, `GET .../export` and `POST .../import?digest=`:
-export streams the archive and returns its manifest digest, import takes the archive and
-refuses to start without the digest (AC19).
+`.../replication/reseed` (refused `validation` without `confirm` equal to the repository
+identity, and its audit record lists the discarded snapshots in `objects`) and
+`.../replication/takeover` (refused `validation` without `acknowledge_fencing: true`, and
+`conflict` naming each active signing key that does not resolve on the follower), and its closed
+problem list carries `replica` (its AC33); this spec states the operations and their semantics,
+and that table fixes the wire. Export and import are operator actions on the same surface,
+`GET .../export` and `POST .../import?digest=`: export streams the archive and returns its
+manifest digest, import takes the archive and refuses to start without the digest (AC19).
 
 ### Only a local repository is a replication source
 
@@ -491,15 +588,42 @@ environment pointer.
   still read-only if an operator had frozen it `read_only` (the link section above). The next
   write creates snapshot N+1 on the replicated numbering, chained to N's identity, so the
   history is continuous for anyone who followed the old leader up to N.
-- **Takeover needs the keys it is about to sign with.** A linked follower has signed nothing
-  (the pointer-set section above); the first write after takeover regenerates and re-signs the
-  repository's pointer documents. Takeover is therefore refused, with a problem naming each
-  missing key, unless every active signing key of the repository resolves on the follower - a
-  `kms` or `pkcs11` key reachable from both instances, or a `file` key created on the follower
-  and announced under the repository's rotation profile before the takeover
-  (`signing-service.md`'s resolved follower decision, was Q9 there, and its AC23; the
-  replicated-repository key recipe in `deployment.md` shows the working configuration). A
-  format that declares no signing has no keys to resolve and this check passes vacuously.
+- **Takeover needs the keys it is about to sign with, and signs with them at once.** A linked
+  follower has signed nothing (the pointer-set section above), and it also holds no
+  `signing.resign` schedule: `signing-service.md` derives a schedule's next run from the stored
+  documents' expiry and writes it in the re-sign job's `Finish`, so a repository that has never
+  re-signed locally has no cadence at all. A takeover that waited for the first write would
+  leave a disaster-recovery repository nobody publishes to serving the old leader's documents
+  until their `Valid-Until` or TUF expiry lapsed, with no schedule to renew them and no alert
+  before `apt` refused the suite. The takeover request therefore re-signs, in two steps that
+  the door's shape dictates (the resolved takeover-signing decision below, was Q12). Takeover
+  is first refused `conflict`, naming each missing key, unless every active signing key of the
+  repository resolves on the follower - a `kms` or `pkcs11` key reachable from both instances,
+  or a `file` key created on the follower and announced under the repository's rotation
+  profile before the takeover (`signing-service.md`'s resolved follower decision, was Q9
+  there, and its AC23; the replicated-repository key recipe in `deployment.md` shows the
+  working configuration). The **takeover transaction** then, under the link row lock, ends the
+  link, disables its schedule and registers the repository's per-pointer and repository-scoped
+  `signing.resign` schedules through the signing service with their next run now, so the
+  cadence exists from the first second whatever follows. The **same request** then runs the
+  repository's re-sign as one repository batch over every pointer through the door's standard
+  document-only form (`Renewable` passes, the link being `ended`), re-rendering every pointer
+  document under the follower's resolved keys and writing the schedules' next runs from the
+  renewed documents' expiry, exactly the cadence's effect on the request path. It cannot be one
+  transaction: the door's standard form evaluates `Renewable` before it opens a transaction and
+  its on-a-transaction form is the job runner's alone (`storage-and-gc.md` AC25), and
+  `Renewable` refuses while the link is active. The keys are thereby proven by use, not only
+  resolved, at the one moment an operator is watching. If that render fails - a resolved key
+  that will not sign - the takeover is not undone, since the operator has already fenced the
+  old leader: the link stays `ended`, the request answers the failure naming the key, the
+  documents stay the old leader's, and the schedules just registered retry on the cadence with
+  `SigningFailed` firing (`signing-service.md` AC17) until the key signs. A format that
+  declares no signing has no keys to resolve, no documents to render and no schedule to
+  register, and both steps are empty.
+- **Takeover honours what the old leader retired.** The leader's `Retirement` records arrived
+  with the pointer set (the pointer-set section above), so a publish after takeover that claims
+  a retired coordinate is refused at claim declaration and at commit as it would have been on
+  the leader (AC25). A DR takeover does not reopen coordinates every client saw closed.
 - **Fencing the old leader is the operator's duty, and the command makes it an explicit
   acknowledgement.** Takeover refuses to run without an acknowledgement flag whose refusal
   message names the duty: the old leader must accept no further writes to that repository
@@ -526,14 +650,21 @@ instance identity: the leader's authorizer sees a token like any other.
 - **`pull` on a repository authorizes that repository's replication read surface**: the pointer
   set, its `Signature` and `PointerDocument` records, the retained ranges, snapshot identities,
   deltas, checkpoints, and blobs by digest. The action vocabulary stays `pull`/`push`/`delete`. A token lacking `pull` on the repository -
-  including a push-only token, and a token scoped to a different repository - is refused on
-  every replication route with the response an unauthorized caller receives.
+  including a push-only token, and a token scoped to a different repository - cannot read the
+  repository at all, so it is refused on every replication route with the response an absent
+  repository receives, byte-identical in status, body and headers (`auth.md`'s existence rule,
+  was Q11 there, and its AC17); a credential-less request is answered `unauthenticated` with
+  the challenge, identically for an existing and an absent repository.
 - **A `pull` grant narrowed below the whole repository does not authorize replication reads.**
   This is derived rather than chosen: a delta exposes every path in the repository, so a
   credential `auth.md`'s path and tag patterns narrow to part of a repository would read
   through replication what its pattern exists to withhold. Such a token is refused on the
   replication surface, on the same reasoning by which `auth.md`'s pattern scopes refuse a
-  listing outright: the response reveals objects outside the pattern.
+  listing outright: the response reveals objects outside the pattern. It is refused
+  `unauthorized`, not `not-found`, because a holder of a patterned `pull` can already read
+  part of the repository, so its existence is nothing the oracle protects from that caller;
+  this is the order `management-api.md`'s resolved refusal-type decision (was Q18 there) fixes
+  for `/api/v1`, applied on the `replication` mount by the replication package's own mapping.
 - **The replication routes are not format-handler routes**, so no handler's `Scope(r)` maps
   them. The replication package declares its own route-to-scope mapping, evaluated by the
   central authorizer, and an architecture test asserts that every replication route is mapped
@@ -561,13 +692,19 @@ cannot read retained history have no such scope in v1.
 
 An export is the transfer format serialised: a snapshot range - deltas plus any checkpoint the
 range depends on - the blobs it references (including CAS-backed metadata documents), the
-snapshot identities, the pointer set at export time, the provenance records of any frozen files,
-a manifest listing every digest, and enough repository identity (name, format, snapshot numbers)
-for the importer to know what it is looking at. Import verifies every digest against the
-manifest and the manifest against the deltas before committing anything. An archive has no
+snapshot identities, the pointer set at export time with its `Signature` and `PointerDocument`
+records and their CAS-backed bodies, the `Retirement` set, the provenance records of any frozen
+files, a manifest listing every digest, and enough repository identity (name, format, snapshot
+numbers) for the importer to know what it is looking at. Import verifies every digest against
+the manifest and the manifest against the deltas before committing anything. An archive has no
 want-list negotiation, since there is no channel to negotiate over, so it carries every blob its
-range newly references. Nothing about it is a special path, which is the point - a second
-mechanism would be a second set of bugs.
+range newly references, every declared-list digest included. Nothing about it is a special
+path, which is the point - a second mechanism would be a second set of bugs. Import is applier
+work: it writes through the applier's entry point and is accepted only into a repository with
+an active link (`management-api.md`'s import row), which on an air-gapped instance is a link
+whose leader is named and never reached, so that the imported repository is a replica, read-only
+and refusing every other writer, exactly as a networked follower is. An import into a
+repository with no link, or whose link is `ended`, is refused `validation`.
 
 Import carries the obligations the network path gets for free:
 
@@ -608,15 +745,21 @@ are that spec's catalogue and this spec's tests assert them through `telemetry.N
 - **Alerts** in the packaged `alerts.yaml`: `ReplicationLinkFailed`, `ReplicationReseeding` and
   `ReplicationDiverged` on the corresponding one-hot state, and `ReplicationLagHigh` when the
   last successful sync is older than 15 minutes.
-- **Audit events**: `replication.link.create`, `.update`, `.delete`, `.takeover`,
-  `replication.export` and `replication.import`, each carrying `link` and `leader`, emitted
-  through `telemetry.Auditor.Emit`.
+- **Audit events**: `replication.link.create`, `.update`, `.delete`, `.sync`, `.reseed`,
+  `.takeover`, `replication.export` and `replication.import`, each carrying `link` and `leader`,
+  emitted through `telemetry.Auditor.Emit` by the management route that performs the write
+  (`observability.md`'s vocabulary table and AC12); a `replication.link.reseed` record lists the
+  discarded snapshots in the fixed `objects` attribute. The link's `GET`, like every read, is
+  the request log's and emits no audit record.
 - **Trace propagation**: a follower's requests to its leader carry `traceparent` and
   `tracestate`, so a follower's sync span is a child of the leader's trace and one trace spans
   both instances (`observability.md`'s resolved propagation decision, was Q4 there, and its
   AC20). Requests to a replication peer are the one outbound path that propagates; upstream
-  fetches never do. The replication listener's responses carry `X-Request-Id` like every other
-  (its AC14).
+  fetches never do. The replication read surface is not a listener of its own: it is the
+  `replication` mount on the main listener, labelled `format="replication"` on the HTTP series,
+  and its responses carry `X-Request-Id` like every other (its AC14). The credential the
+  follower presents is marked through `telemetry.MarkSecret` under the job's per-job secret set
+  (`async-operations.md` AC27), so no record a sync emits carries it.
 
 The instance configuration this spec owns, registered under the `replication.` prefix
 `deployment.md` reserves for it, in that spec's three-column shape:
@@ -678,7 +821,8 @@ boundary between records and configuration.
       archive lacks), gapped relative to the follower's position, or divergent from it (a
       different identity at the follower's position number) is refused with an explicit error
       naming the problem and nothing committed; re-importing an already-applied archive is a
-      no-op.
+      no-op; and an import into a repository with no link, or whose only link is `ended`, is
+      refused `validation` with nothing committed.
 - [ ] AC10: A follower exposes, per replicated repository, its current position, each mirrored
       pointer's target, and the time of its last successful sync; a failed sync, a re-seed in
       progress and a detected divergence are each surfaced as an explicit status a monitor can
@@ -688,22 +832,29 @@ boundary between records and configuration.
       `replication_last_sync_timestamp_seconds{link}`, `replication_snapshots_behind{link}` and
       `replication_bytes_transferred_total{link,direction}`; the packaged alerts
       `ReplicationLinkFailed`, `ReplicationReseeding`, `ReplicationDiverged` and
-      `ReplicationLagHigh` fire on those series; every link create, update, delete and takeover
-      and every export and import emits its audit event (`replication.link.create`, `.update`,
-      `.delete`, `.takeover`, `replication.export`, `replication.import`) carrying `link` and
-      `leader`; and a follower's requests to its leader carry `traceparent` and `tracestate` so
-      the follower's sync span is a child of the leader's trace.
+      `ReplicationLagHigh` fire on those series; every link create, update, delete, on-demand
+      sync, re-seed and takeover and every export and import emits exactly one audit record
+      under its event (`replication.link.create`, `.update`, `.delete`, `.sync`, `.reseed`,
+      `.takeover`, `replication.export`, `replication.import`) carrying `link` and `leader`, the
+      re-seed's listing the discarded snapshots in `objects`, while the link's `GET` emits none
+      and leaves a request-log line; the replication read surface answers on the main listener
+      under the `replication` mount with `X-Request-Id` on every response; and a follower's
+      requests to its leader carry `traceparent` and `tracestate` so the follower's sync span
+      is a child of the leader's trace.
 - [ ] AC11: A replicated repository refuses a client publish, a hosted delete, a metadata-only
       mutation, and every pointer create, repoint and delete, each refused through
       `repository.Writable`'s `ErrReplica` and rendered `405` with problem type `replica` whose
       detail names the repository as a replica and names its leader, and its content is unchanged
       afterwards; on the same instance a local repository accepts writes, and one instance
       simultaneously follows a leader for one repository and serves as leader for another.
-- [ ] AC12: No package other than the replication applier can commit a snapshot or move a
-      pointer in a repository with an active replication link: the sole write-transaction
-      constructor calls `repository.Writable`, the entry point that waives `ErrReplica` (and
-      only that error) is imported by `internal/replication` alone, and an architecture test on
-      the constructor asserts both.
+- [ ] AC12: No package other than the replication applier can commit a snapshot, move a
+      pointer or re-render a pointer document in a repository with an active replication link:
+      the sole write-transaction constructor calls `repository.Writable`, its document-only
+      form calls `repository.Renewable`, which refuses `ErrReplica` on a linked replica (a
+      cadence re-sign is refused there; a follower renews nothing, `signing-service.md` AC23)
+      and has no waiving entry point, the entry point that waives
+      `ErrReplica` (and only that error) is imported by `internal/replication` alone, and an
+      architecture test on the constructor asserts all of it.
 - [ ] AC13: Configuring replication from a `remote` or `virtual` source repository is refused
       with an error naming the repository type, and a virtual repository defined on the follower
       over its replicas and its own remote repositories resolves in member order.
@@ -727,17 +878,24 @@ boundary between records and configuration.
       repository accepts writes, its next write creates the snapshot numbered one past the last
       replicated snapshot and chained to its identity, and the link records the leader, snapshot
       number and time it took over at; a repository that was `read_only` before takeover is
-      `read_only` after it, refusing writes with `ErrReadOnly` until thawed.
+      `read_only` after it, refusing writes with `ErrReadOnly` until thawed, while its cadence
+      re-sign proceeds.
 - [ ] AC17: A follower whose position's identity differs from the leader's identity at the same
-      number - produced by an old leader that kept writing after a takeover, and by a leader
-      restored from an older backup - applies nothing, keeps serving, and reports `diverged`
-      with the highest snapshot number both agree on; it leaves that state only through an
-      explicit operator re-seed, which lists the local snapshots it will discard before
+      number - produced by an old leader that kept writing after a takeover, by a leader
+      restored from an older backup that then wrote again, and by a local repository with its
+      own history being linked - applies nothing, keeps serving, and reports `diverged` with
+      the highest snapshot number both agree on; a leader whose head is below the follower's
+      position (restored from a backup and not yet written to) is reported `diverged` at that
+      head without waiting for its next write; and the follower leaves that state only through
+      an explicit operator re-seed, which lists the local snapshots it will discard before
       discarding them.
 - [ ] AC18: A machine token with `pull` on a repository replicates it; a token without `pull` on
-      it (push-only, or scoped to another repository) and a `pull` grant narrowed below the
-      whole repository are refused on every replication route with the response an
-      unauthorized caller receives; and an architecture test asserts every replication route
+      it (push-only, or scoped to another repository) is refused on every replication route
+      with the response an absent repository receives, byte-identical in status, body and
+      headers; a `pull` grant narrowed below the whole repository is refused `unauthorized` on
+      every replication route; a credential-less request is answered `unauthenticated` with the
+      challenge, identically for an existing and an absent repository; and an architecture
+      test asserts every replication route
       is mapped to a scope evaluated by the central authorizer, that no replication route
       evaluates authorization itself, and that every replication route sits under the reserved
       `replication` first segment, which handler registration refuses to a handler named
@@ -750,34 +908,64 @@ boundary between records and configuration.
 - [ ] AC20: Leader pointer moves - creation, promotion, rollback to an earlier retained snapshot,
       and deletion - are reflected on the follower after its next sync, and a pointer deleted on
       the leader is deleted on the follower, releasing its pin so its snapshot ages out under
-      the follower's window.
+      the follower's window; across a leader rollback the link's position, its identity check
+      and the mirrored default pointer's target are unchanged, the position's snapshot survives
+      the follower's pruning however old it grows while the link is active, and the leader's
+      next write after the rollback applies as one contiguous delta with no re-seed.
 - [ ] AC21: A linked follower of a repository whose format declares signing serves the leader's
       `Signature` and `PointerDocument` records verbatim, its `Last-Modified` and signed index
       bytes equal to the leader's, and creates no `Signature` record and calls no signing
-      backend while the link is active; takeover of that repository is refused with a problem
-      naming each active key that does not resolve on the follower, and succeeds when every
-      active key resolves (a shared `kms` fixture key, and a `file` key created and announced on
-      the follower beforehand), after which the follower's first write re-signs under those keys.
+      backend while the link is active; takeover of that repository is refused `conflict` with
+      a problem naming each active key that does not resolve on the follower, and succeeds when
+      every active key resolves (a shared `kms` fixture key, and a `file` key created and
+      announced on the follower beforehand), registering the repository's `signing.resign`
+      schedules in the transaction that ends the link and re-rendering every pointer document
+      under those keys in the same request through the door's document-only form, so that with
+      no write after takeover a real client still installs after the old leader's documents
+      would have expired, and a linked follower has no such schedule at all; a resolved key
+      that fails to sign leaves the link `ended`, the documents unchanged and the schedules
+      registered, the request failing naming the key and `SigningFailed` firing until the
+      cadence's retry signs.
 - [ ] AC22: Deleting a replica ends its link with reason `deleted` in the deletion transaction;
       a leader-side rename or deletion of the leader repository makes the follower's next sync
       mark the link `failed` with reason `not-found` while the follower keeps serving its last
       replicated position; updating the link's leader repository name after a rename resumes
       syncing with no re-seed; configuring a link on a deleted repository is refused, and a link
-      whose leader repository is a `remote` or `virtual` fails naming `source-type`; and
-      deleting the `UpstreamCredential` a link references is refused `409` `in-use` naming the
-      link until the link is deleted or rotated to another credential.
+      whose leader repository is a `remote` or `virtual` fails naming `source-type`; freezing a
+      replica `read_only` makes its next sync apply nothing and mark the link `failed` with
+      reason `read-only`, with `ReplicationLinkFailed` firing, and the thaw's next sync resumes
+      with no re-seed; and deleting the `UpstreamCredential` a link references is refused `409`
+      `in-use` naming the link until the link is deleted or rotated to another credential.
 - [ ] AC23: Each active link is a `Schedule` on `internal/async` that enqueues a
       `replication.sync` job with exclusivity key `link:{id}`, so a second sync of the same link
       never runs while one holds the key, an on-demand sync enqueues the same kind, the job
-      checkpoints after every completed snapshot, and an instance with `proxy.offline: true`
-      enqueues no `replication.sync` while its links keep their position and still accept an
-      archive import.
+      checkpoints after every completed snapshot, the `Schedule` is disabled in the transaction
+      that ends the link (takeover or deletion) so no sync is enqueued for an `ended` link and
+      an on-demand sync, re-seed or takeover against one is refused, and an instance with
+      `proxy.offline: true` enqueues no `replication.sync` while its links keep their position
+      and still accept an archive import.
 - [ ] AC24: The configuration schema registers exactly `replication.sync_interval` (default
       `60s`) and `replication.blob_concurrency` (default `8`) under the `replication.` prefix
       and refuses any other key under it naming this spec; a link with no interval of its own
       syncs at `replication.sync_interval`, a per-link interval below it is refused
       `validation`, and a sync job runs at most `replication.blob_concurrency` want-list fetches
       at once.
+- [ ] AC25: The leader's `Retirement` records and the `FileProvenance` records of its frozen
+      files arrive on the follower with the pointer set and in an exported archive, applying
+      twice is a no-op, and after takeover a publish claiming a coordinate the old leader
+      retired is refused at claim declaration and at commit exactly as on the leader, with
+      nothing committed; the frozen files' provenance is readable from the follower's API
+      while linked.
+- [ ] AC26: A takeover, an operator re-seed and a replica's deletion each serialise with a
+      running `replication.sync` on the link row: a sync killed or paused mid-transfer when the
+      takeover commits applies no further snapshot, ends itself, and the new leader's first
+      write is the only snapshot numbered N+1; the link row's position advances in the same
+      transaction as each applied snapshot and a worker killed between that commit and its
+      `job.Checkpoint` re-runs without applying the snapshot twice; and after an operator
+      re-seed the discarded snapshots' rows and identity records are gone, the leader's
+      snapshots apply under those numbers with the leader's identities, the discarded deltas,
+      checkpoints and blobs are reclaimed by the pruner and the sweep with no object deleted by
+      `internal/replication`, and the follower serves content identical to the leader's.
 
 ## Test Plan
 
@@ -791,23 +979,25 @@ boundary between records and configuration.
 | AC6 | integration | `internal/replication/retention_test.go` (leader prunes past an offline follower; follower detects, re-seeds and keeps serving) |
 | AC7 | property | `internal/storage/gc_property_test.go` (transfer-apply, mirrored pointer moves and freeze in the operation set) |
 | AC8 | integration | `internal/replication/seed_test.go` (leader with pruned early history; re-seed byte accounting against blobs already held) |
-| AC9 | fault injection | `internal/replication/airgap_test.go` (truncated, mutated, gapped and divergent archives) |
-| AC10 | integration | `internal/replication/status_test.go` (state per link); `internal/replication/metrics_test.go` through `telemetry.NewTestRecorder` (the four series, the four alerts' rules, the six `replication.*` audit events; shared with `observability.md` AC6); `internal/replication/trace_test.go` (two instances, one trace; shared with `observability.md` AC20) |
+| AC9 | fault injection | `internal/replication/airgap_test.go` (truncated, mutated, gapped and divergent archives; an import into an unlinked repository and into one whose link is `ended`, each refused `validation`) |
+| AC10 | integration | `internal/replication/status_test.go` (state per link); `internal/replication/metrics_test.go` through `telemetry.NewTestRecorder` (the four series, the four alerts' rules, the eight `replication.*` audit events with the re-seed's `objects` and no record for the link `GET`, the `format="replication"` label and `X-Request-Id` on the read surface; shared with `observability.md` AC6, AC12 and AC14, and with `management-api.md` AC33's `internal/manage/replication_routes_test.go` for the route-emitted events); `internal/replication/trace_test.go` (two instances, one trace; shared with `observability.md` AC20) |
 | AC11 | integration | `internal/replication/readonly_test.go` (every write kind against a replica, `ErrReplica` and the `replica` problem naming the leader; mixed-role instance) |
-| AC12 | architecture | `internal/storage/arch_test.go` (sole write-transaction constructor calls `Writable`; the `ErrReplica`-waiving entry point imported only by `internal/replication`; shared with `repository-lifecycle.md` AC9 and `storage-and-gc.md` AC25) |
+| AC12 | architecture + integration | `internal/storage/arch_test.go` (sole write-transaction constructor calls `Writable`; its document-only form calls `Renewable` and has no waiving entry point; the `ErrReplica`-waiving entry point imported only by `internal/replication`; shared with `repository-lifecycle.md` AC9 and `storage-and-gc.md` AC25); `internal/replication/renewable_test.go` (a cadence re-sign refused `ErrReplica` on a linked replica, proceeding once the link is `ended`) |
 | AC13 | integration | `internal/replication/source_test.go` (remote and virtual sources refused; follower-defined virtual resolution) |
 | AC14 | integration | `internal/replication/freeze_test.go` (table-driven over every handler declaring proxy support; network-level no-egress assertion; sweep-before-commit fault) |
 | AC15 | conformance | `conformance/replication/freeze_airgap_test.go` (two network-isolated instances, offline mode, real client, links through the `replication` key); `conformance/core/seed_test.go` (the `replication` provisioner reached through the seed path) |
-| AC16 | integration | `internal/replication/takeover_test.go` (acknowledgement gate; link `ended` with reason `takeover`; numbering and identity continuation; a `read_only` replica stays read-only); `internal/model/replication_link_test.go` (the `ended` transition and the takeover record on the link, shared with `data-model.md` AC31) |
-| AC17 | integration | `internal/replication/divergence_test.go` (post-takeover split brain; leader restored from backup) |
-| AC18 | integration | `internal/replication/auth_test.go` (pull, push-only, other-repository and pattern-narrowed tokens on every replication route) |
+| AC16 | integration | `internal/replication/takeover_test.go` (acknowledgement gate; link `ended` with reason `takeover`; numbering and identity continuation; a `read_only` replica stays read-only and keeps re-signing); `internal/model/replication_link_test.go` (the `ended` transition and the takeover record on the link, shared with `data-model.md` AC31) |
+| AC17 | integration | `internal/replication/divergence_test.go` (post-takeover split brain; leader restored from backup, before and after its next write; a written local repository linked) |
+| AC18 | integration | `internal/replication/auth_test.go` (pull, push-only, other-repository and pattern-narrowed tokens and a credential-less request on every replication route; byte equality of the push-only and other-repository responses with an absent repository's, and of the two credential-less responses; shared with `auth.md` AC17 and AC24) |
 | AC18 | architecture | `internal/replication/arch_test.go` (every replication route mapped through the central authorizer and mounted under `/replication/`); `internal/format/register_test.go` (the `replication` fixture pair refused at registration; shared with `format-handler-interface.md` AC11) |
 | AC19 | fault injection | `internal/replication/airgap_trust_test.go` (missing digest, wrong digest, rewritten self-consistent manifest) |
-| AC20 | integration | `internal/replication/pointers_test.go` (create, promote, rollback, delete; pin release on the follower) |
-| AC21 | integration | `internal/replication/signing_records_test.go` (records on the read surface; follower's bytes equal the leader's; no `Signature` created and no backend call while linked); `internal/replication/takeover_keys_test.go` (refused naming unresolvable keys; succeeds with a shared `kms` fixture key and with a pre-announced follower `file` key; first write re-signs); both shared with `signing-service.md` AC23 |
-| AC22 | integration | `internal/replication/lifecycle_test.go` (replica deletion ends the link; leader deletion observed as `failed` `not-found`, follower still serving; shared with `repository-lifecycle.md` AC22, and with `data-model.md` AC31 for the `ended`/`deleted` transition); `internal/replication/link_rename_test.go` (leader rename, name update, resume without re-seed; shared with `repository-lifecycle.md` AC13); `internal/replication/link_config_test.go` (deleted repository refused; credential `in-use`, shared with `repository-lifecycle.md` AC20) |
-| AC23 | integration | `internal/replication/sync_job_test.go` (schedule per link, kind and exclusivity key, on-demand enqueue, checkpoint per snapshot, offline instance enqueues nothing and still imports) |
-| AC24 | unit + integration | `internal/replication/config_test.go` (defaults, per-link floor, concurrency bound observed at a counting leader); `scripts/check-config-keys.js` over this spec's key table (shared with `deployment.md`) |
+| AC20 | integration | `internal/replication/pointers_test.go` (create, promote, rollback, delete; pin release on the follower; a leader rollback followed by the follower's retention pass with the position outside its window, then a leader write applied as one delta) |
+| AC21 | integration + conformance | `internal/replication/signing_records_test.go` (records on the read surface; follower's bytes equal the leader's; no `Signature` created, no backend call and no `signing.resign` schedule while linked); `internal/replication/takeover_keys_test.go` (refused `conflict` naming unresolvable keys; succeeds with a shared `kms` fixture key and with a pre-announced follower `file` key; the schedules registered in the ending transaction and every pointer document re-rendered in the request; a fixture `kms` key that resolves and refuses to sign: link `ended`, documents unchanged, schedules present, the request failing naming the key, `SigningFailed` through `telemetry.NewTestRecorder`, the cadence's retry succeeding once the fixture signs); `conformance/replication/takeover_expiry_test.go` (a Debian or Hackage replica taken over with no further write, the clock advanced past the old leader's document expiry, a real client installing); the first two shared with `signing-service.md` AC23 |
+| AC22 | integration | `internal/replication/lifecycle_test.go` (replica deletion ends the link; leader deletion observed as `failed` `not-found`, follower still serving; shared with `repository-lifecycle.md` AC22, and with `data-model.md` AC31 for the `ended`/`deleted` transition); `internal/replication/link_rename_test.go` (leader rename, name update, resume without re-seed; shared with `repository-lifecycle.md` AC13); `internal/replication/link_config_test.go` (deleted repository refused; credential `in-use`, shared with `repository-lifecycle.md` AC20); `internal/replication/readonly_replica_test.go` (freeze, `failed` `read-only`, alert, thaw and resume) |
+| AC23 | integration | `internal/replication/sync_job_test.go` (schedule per link, kind and exclusivity key, on-demand enqueue, checkpoint per snapshot, the schedule disabled by takeover and by deletion with no later enqueue and the on-demand routes refused on an `ended` link, offline instance enqueues nothing and still imports; the disabled-schedule half shared with `async-operations.md` AC14) |
+| AC24 | unit + integration | `internal/replication/config_test.go` (defaults, per-link floor, concurrency bound observed at a counting leader); `scripts/check-config-keys.js` over this spec's key table (`deployment.md`'s Phase 1 tool, shared with it) |
+| AC25 | integration | `internal/replication/retirement_test.go` (records on the read surface and in the archive; idempotent apply; post-takeover claim refused at declaration and at commit, shared with `data-model.md` AC35's `internal/model/retirement_test.go`); provenance readable while linked in `internal/replication/airgap_test.go` |
+| AC26 | fault injection | `internal/replication/takeover_race_test.go` (sync paused mid-transfer at every apply boundary while takeover, re-seed and deletion commit; the single N+1 writer); `internal/replication/resume_test.go` (kill between the apply commit and `job.Checkpoint`); `internal/replication/reseed_test.go` (rows and identities removed, leader's numbers reapplied, reclamation by pruner and sweep under `storage-and-gc.md` AC15's deleter scan over `internal/replication`) |
 
 ## Implementation Phases
 
@@ -834,22 +1024,28 @@ The harness's `replication` `setup` provisioner on the seed path, including a ta
 state, so every later phase's conformance cases can be expressed. Snapshot-range transfer with
 want-list blob fetch as `replication.sync` jobs with per-snapshot checkpoints, the `replication.`
 configuration keys, checkpoint-based seed and re-seed, snapshot identity and divergence refusal,
-pointer-set mirroring including `Signature` and `PointerDocument` records, digest verification,
-atomic pointer moves, resume through the queue's rescue path, read-only enforcement on replicas
-through the shared `Writable` entry point and its architecture test, replication authentication
-with its route mapping and architecture test, source-type refusal, the link's management
-operations and lifecycle composition, and the follower status surface with its metrics, alerts,
-audit events and peer trace propagation (AC1-AC4, AC6-AC8, AC10-AC13, AC17 in part, AC18, AC20,
-AC21 in part, AC22-AC24).
+pointer-set mirroring including `Signature`, `PointerDocument`, `Retirement` and
+`FileProvenance` records, digest verification, atomic pointer moves, the link row as the
+position of record with every apply serialised on it, resume through the queue's rescue path,
+read-only enforcement on replicas through the shared `Writable` entry point and its
+architecture test, replication authentication with its route mapping and architecture test,
+source-type refusal, the link's management operations and lifecycle composition, and the
+follower status surface with its metrics, alerts, audit events and peer trace propagation
+(AC1-AC4, AC6-AC8, AC10-AC13, AC17 in part, AC18, AC20, AC21 in part, AC22-AC24, AC25 in
+part, AC26 in part).
 
 ### Phase 2: Air-gapped export and import
 The same transfer format serialised to an archive, with the out-of-band manifest digest, digest,
 contiguity, identity and atomicity checks on import, and export from replicas (AC5, AC9, AC19).
 
 ### Phase 3: Disaster-recovery takeover
-The takeover command with its fencing acknowledgement, its signing-key precondition, numbering
-and identity continuation, the operator re-seed that lists discarded snapshots, and the operator
-guide's fencing runbook and replicated-repository key recipe (AC16, AC17, AC21 in full).
+The takeover command with its fencing acknowledgement, its signing-key precondition, the
+schedule registration in its ending transaction and the request-path re-sign that follows it,
+numbering and identity continuation, the
+retired coordinates honoured, the serialisation of takeover and re-seed with a running sync,
+the operator re-seed that lists and removes the discarded snapshots, and the operator guide's
+fencing runbook and replicated-repository key recipe (AC16, AC17, AC21, AC25 and AC26 in
+full).
 
 ### Phase 4: Freeze of cached content
 Freeze into a local repository through the handler ingest hook, provenance recording and export,
@@ -857,14 +1053,15 @@ and the end-to-end air-gap proof with a real client (AC14, AC15).
 
 ## Tasks
 
-Populated by `/tasks` once this spec reaches `planned`.
+Populated by `/tasks` now that this spec is `planned`.
 
 ## Open Questions
 
 No questions are open. The seven raised by the first review were adopted on 2026-09-26 under
 the owner's standing delegation, and folding them exposed three further judgment calls (Q8-Q10),
 which were raised and adopted in the same pass. The 2026-09-28 reconciliation raised and adopted
-one more (Q11). Every adopted answer is reversible by the owner.
+one more (Q11), and the Fable gate review of 2026-10-01 one more (Q12). Every adopted answer is
+reversible by the owner; `grep -n "standing delegation"` lists them.
 
 ### Resolved: retention-gap recovery (was Q1)
 
@@ -1145,6 +1342,58 @@ Folded into: Design (the freeze section's dated-consumer paragraph). Consequence
 **Why this is yours:** it weighs a dated external commitment against the build order the charter
 owns.
 
+### Resolved: who re-signs at takeover, and when (was Q12, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation**, on Fable, in the gate review that
+raised it. Option A: the takeover request re-signs. Its transaction ends the link and registers
+the per-pointer and repository-scoped `signing.resign` schedules with their next run now, and
+the same request then runs the repository's re-sign as one repository batch through the door's
+standard document-only form, which `Renewable` passes once the link is `ended`, re-rendering
+every pointer document under the follower's resolved keys and writing the schedules' next runs
+from the renewed documents' expiry. Two steps rather than one transaction, because the door's
+standard form evaluates `Renewable` before it opens a transaction and its on-a-transaction form
+is the job runner's alone (`storage-and-gc.md` AC25); the alternative, a second waiving entry
+point on the document-only form, would amend two planned architecture tests for one caller.
+Accepted cost: the served bytes change at the moment of takeover (the documents' dates move
+forward and the signatures are the follower's), so a client comparing the new leader against
+the old sees a different envelope over identical content; a takeover of a repository with many
+pointers does that much signing inside one operator request; and a resolved key that then
+refuses to sign leaves a taken-over repository serving the old leader's documents, loudly (the
+request fails naming the key, `SigningFailed` fires) and with the cadence already registered to
+retry, since the fencing the operator performed cannot be undone by rolling the takeover back.
+B lost because registering the schedules without re-signing leaves the old leader's documents
+in place until their renewal fraction, which keeps the bytes comparable a little longer but
+proves nothing about the keys until the cadence first fires, possibly days later and
+unattended; C lost because it is the hole: with no write, no schedule, and the documents expire.
+
+Raised by the Fable gate review. The takeover section said "the first write after takeover
+regenerates and re-signs the repository's pointer documents", and `signing-service.md`'s cadence
+derives each `signing.resign` schedule's next run from the stored documents' expiry, written in
+the re-sign job's `Finish`. A linked follower has never re-signed, so it holds no schedule; a
+taken-over repository that receives no write therefore serves the old leader's signed documents
+with nothing to renew them, and a Debian `Valid-Until` or a Hackage `timestamp.json` lapses
+with no alert before it. Disaster recovery is exactly the case in which nobody publishes for a
+while.
+
+**Recommendation:** A. It proves the keys by using them at the one moment an operator is
+watching, and it leaves the repository in the state every other signed repository is in: a
+schedule derived from documents it signed itself.
+
+Folded into: Scope (the signed-documents bullet), Design (the takeover section), AC16 (the
+cadence proceeding on a `read_only` taken-over repository), AC21 and its Test Plan rows (the
+schedules registered in the ending transaction, the re-render in the request, the
+failing-key case, a conformance case with the clock past the old documents' expiry), Phase 3.
+Consequence for `signing-service.md` AC23 and `management-api.md`'s takeover row.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. The takeover transaction re-signs and registers the schedules** | Keys proven by use at takeover; the cadence exists from the first second; no silent expiry | The envelope changes at takeover; a many-pointer takeover signs inside one request |
+| **B. Register the schedules at takeover from the old documents' expiry; the cadence re-signs when due** | Bytes stay the old leader's until renewal; takeover is cheap | Keys proven only when the first cadence fires, unattended; a `kms` key reachable at takeover and not later fails days afterwards |
+| **C. Leave it to the first write** | Nothing added to takeover | A repository nobody writes to expires with no schedule and no alert |
+
+**Why this is yours:** it decides what a disaster-recovery takeover promises for a signed
+repository that is read but not written, and it moves signing work into the takeover request.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1155,3 +1404,4 @@ owns.
 | 2026-09-26 | fe54272 | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. From the charter fold: Context's claim that replication has no build-order step was stale; it now cites step 10, after Tier 1, not gated by the breadth verdict, with the charter's reason. From the harness and generic fold: this spec owns building the harness's `replication` provisioner, now Phase 1's first item and asserted through AC15, whose case declares its two instances network-isolated and offline. From the auth and interface fold: Phase 0 records the sibling amendments as landed (auth's replication-read widening; data-model's link, identity, freeze write kind and provenance, applied in the same reconciliation; the interface's reserved mount, now cited in the authentication section and asserted by AC18's architecture test), with the server-side ingest hook the one remaining prerequisite, pending at the interface re-open. From the replication fold's signing note: a frozen signed-index repository is re-signed by the shared signing and index service, and any future archive signing belongs there too. Freeze's metadata sentence updated now that `data-model.md` defines the write kind. |
 | 2026-09-28 | 9f93794 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. Already done from the old folds: charter step 10 placement, the `replication` provisioner (Phase 1, AC15), auth's `pull` widening. Applied: signing-service 5 (`Signature` and `PointerDocument` records travel with the pointer set, a linked follower serves verbatim and signs nothing, takeover refused unless every active key resolves; the two "future signing-service" sentences are now citations; AC1 extended, AC21 added); async-operations 8 (a new Design section: each link a `Schedule` enqueuing `replication.sync` with exclusivity key `link:{id}` and a checkpoint per completed snapshot, resume as the queue's rescue path, offline mode runs no sync; AC3 rewritten, AC23 added); repository-lifecycle 7 (a new Design section with the link's six-state table including terminal `ended` with reasons `takeover` and `deleted`, the updatable leader name, `failed` naming `not-found` on leader rename or deletion, `read_only` surviving takeover, `repository.Writable` with `ErrReplica` as the shared predicate and the applier's waiving entry point; AC11, AC12, AC16 rewritten, AC22 added); observability 13 (the four `replication_*` series, four alerts, six audit events and peer trace propagation, folded into AC10 with two new Test Plan rows); deployment 8 (a `replication.` key table: `sync_interval` 60s, `blob_concurrency` 8, no checkpoint-interval key; AC24); format-handler-interface reconciliation 1 (the reserved segment is the string `replication`, fixture pair `replication` in `register_test.go`; AC18 names it); Open item 23 (freeze's dated first consumer, the HCP Vagrant recipe, with Q11 raised and adopted: a `read_only` remote carries the content until Phase 4 lands). Phase 0 restated against the specs that now exist. 24 criteria, zero open questions, one new resolved question; stays draft pending a gate review. Consequences for other files reported to the queue. |
 | 2026-09-28 | 6e6d503 | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. Applied sweep 1 item 5 (AC16's and AC22's Test Plan rows share `internal/model/replication_link_test.go` with `data-model.md` AC31, verified against its current text) and, now that `management-api.md` carries them, cited the link, sync, re-seed, takeover, export and import routes and the `replica` problem type to that spec's endpoint table and AC33 in place of "a consequence for management-api.md's endpoint table". No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
+| 2026-10-01 | 4dac925 | Fable gate review: claim verification at HEAD, adversarial, constitution (one pass, interrupted mid-apply by a usage limit and resumed on Fable the same day with every partial edit re-judged; the Opus sweeps since the last Fable pass treated as unreviewed; go-spec-reviewer lens inline; claim verification against code vacuous, `internal/` is an empty directory) | A review. Every sibling citation verified at HEAD against the planned texts of `storage-and-gc.md` (five roots, the deletion-intent barrier, the door's three forms, AC25's `Renewable` with no waiving entry point and its on-a-transaction form used only inside `Finish`, AC10, AC15, AC18, AC23), `signing-service.md` (was-Q9, AC17, AC23, the `archive` purpose, the cadence schedule written in `Finish`, the repository batch), `management-api.md` (the six replication rows, `replica`, AC23's every-write-past-the-authorizer rule, AC33, was-Q18 and AC35), `observability.md` (the eight `replication.*` events with the re-seed's `objects`, AC12, AC14, AC20, was-Q4, the `replication` mount on the main listener), `deployment.md` (one binary with roles, `async.workers: 0`, the `replication.` row, the key recipe), `repository-lifecycle.md` (AC9, AC13, AC20, AC21, AC22, was-Q11, deletion step 3 and 12), `async-operations.md` (the `replication.sync` row, one `Schedule` per active link, not suspended by `read_only`, disabled offline and by deletion, AC27's secret set, cross-instance jobs excluded), `data-model.md` (the `Pointer` row's default pointer tracking the newest snapshot, AC23, AC29 to AC31, AC35, AC37, AC43, "Replication's records"), `auth.md` (was-Q11, AC17, AC24, "What `pull` also authorizes"), `format-handler-interface.md` AC11, `conformance-harness.md` (the `replication` key), `formats/vagrant.md` and `docs/internal/HANDOFF.md` (Q11's dated item is recorded there; nothing owed). Corrected: "the replication listener" is the `replication` mount on the main listener. Applied the queued consequences: `.sync` and `.reseed` audit events beside the four, in Design, "What a monitor sees" and AC10, the re-seed listing discarded snapshots in `objects`, the link `GET` request-log only; AC12 covers the document-only form refusing `ErrReplica`; the management routes refuse in `management-api.md`'s was-Q18 order (AC33, AC35), cited. Adversarial findings, each folded: (1) a running sync and a takeover could both write N+1, so every apply, the takeover, the re-seed and the deletion serialise on the link row, the link row is the position of record, `job.Checkpoint` is advisory, and the link's `Schedule` is disabled in the transaction that ends it so an `ended` link enqueues nothing (AC23, AC26); (2) the core-held `Retirement` set and `FileProvenance` did not travel, so a taken-over repository could reuse a retired coordinate; both are on the read surface and in the archive (AC25); (3) the want-list named only delta-referenced blobs, missing `PointerDocument` bodies and declared blob-digest lists, which the follower's fourth root marks through, and treated verification-failed blobs as held; (4) a leader whose head is below the follower's position had no identity to compare and the spec was silent: `diverged` at the leader's head (AC17), and linking a written local repository is the same check; (5) `repository-lifecycle.md` says freezing a replica "changes nothing" while its AC9, `storage-and-gc.md` AC25 and `async-operations.md`'s kinds test have the applier refused `ErrReadOnly`: the link reports `failed` `read-only` until thaw (AC22), reported as a sibling consequence; (6) import onto a repository with no active link was unstated: refused `validation`, the target must be a replica (AC9); (7) the link's position across a leader rollback: the position is the mirrored default pointer's target, which the leader's default pointer tracking the newest snapshot keeps pinned, and a rollback repoints an environment pointer without a snapshot, so the chain stays linear and the next write is one delta (AC20); (8) AC18's "the response an unauthorized caller receives" was ambiguous under the existence rule: a token that cannot read the repository gets the absent repository's response byte for byte, a pattern-narrowed `pull` holder `unauthorized`, a credential-less request the challenge; (9) AC12 asserted a virtual merge swap refused on a linked replica, a case that cannot arise since a replica is `local`; dropped. Raised and adopted Q12 (the takeover request re-signs and registers the cadence schedules; a linked follower holds none, so a taken-over repository nobody writes to would expire). Its first fold, written before the interruption, ran the re-sign inside the takeover transaction through the door's document-only form, which `storage-and-gc.md` AC25 rules out (the standard form evaluates `Renewable` before `BeginTx`, the on-a-transaction form is `Finish`'s alone): refolded as two steps in one request, the ending transaction registering the schedules and the request then re-signing through the standard document-only form, with the failing-key path stated and asserted (AC21). Constitution: both paths (freeze covers the proxied path, AC14 and AC15), the shared data model with no handler table, named enforcers for the three boundaries (AC12, AC18, `storage-and-gc.md` AC15's scan), CI economy untouched. 26 criteria each with a Test Plan row, zero open questions, `node scripts/check-spec.js` zero mechanical failures; draft -> planned. Sibling consequences reported to the queue. |
