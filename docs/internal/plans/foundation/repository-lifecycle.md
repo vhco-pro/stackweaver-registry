@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Fable follow-up 2026-10-01 at 75e21cb, still planned: the four optional citation items the sibling follow-ups queued applied (storage-and-gc AC24, AC25 and AC30 on AC9, AC10, AC14 and AC21; async AC11 and AC28 on deletion step 8; proxy-cache AC23 on AC14 and step 5), data-model recheck item 4 found already applied at 261b20c, every reported sentence replaced by a citation now that the door's document-only form, the hook exemption and the read_only schedule rule have landed in storage-and-gc, signing-service, data-model, async-operations and management-api, and one defect found by the adversarial read of the lock-order text those siblings landed: the deletion read its own freshness values under a share lock that the same transaction later upgrades, PostgreSQL's canonical deadlock, so the deletion now locks its own rows FOR UPDATE first and a Lock order paragraph places every lock it takes in the door's order, with AC18 and AC21 gaining the no-deadlock interleavings; one sibling consequence reported (data-model AC36 wording). Planned by the Fable recheck of 2026-10-01 at 261b20c: a full review pass over the cloud-authored whole and the Opus sweeps, plus the re-examination of the ten questions adopted without Fable. Q1, Q2, Q5, Q7 and Q9 confirmed; Q3, Q4 and Q8 confirmed with their folds amended (the freshness floor under the share lock on detach and deletion, the member-validation and credential-reference races closed by a share lock, the deletion write exempt from the pre-commit hook and the pointer-document render so the fourth root really stops seeing a deleted local at commit, a virtual's merged documents and declared lists ended at its deletion, async's per-kind grace hold and cancel_requested); Q6 and Q10 confirmed with under-stated costs recorded. Q11 raised and adopted under the standing delegation: read_only does not stop document-only pointer transitions, so a frozen signed repository keeps renewing its envelope through a second predicate, Renewable, at the door's document-only form. New AC29 (virtual deletion and rename). 29 criteria, each with a Test Plan row; zero open questions; eleven sibling consequences reported for the orchestrator; fable_recheck cleared. The door's document-only form and the hook exemption have since landed in storage-and-gc.md (AC24, AC25) and signing-service.md (AC22, AC29), so nothing in this spec waits on a sibling."
+status_description: "Fable follow-up round 3, 2026-10-01 at 9b3946f, still planned: the one queued item applied (the Read-only section's replica bullet no longer says freezing a replica changes nothing: the applier's waiving entry point is refused ErrReadOnly, so a frozen replica stops following, its link failed read-only and each sync job completed until the thaw, replication AC22 and its was-Q13, folded into Read-only, the type summary, AC10 and its row with internal/replication/readonly_replica_test.go), the optional citations placed where they bear on freeze, deletion and the transitions (replication was-Q12 and AC16 for the frozen taken-over repository renewing through Renewable, AC23 and AC26 for the link row lock, the disabled schedule and the paused sync ending cancelled in deletion step 3; signing-service's RegisterSchedules for the signing.resign rows step 8 disables; management-api was-Q18 and AC35 for the refusal order on the admin-only transitions, was-Q19 for the 500 a failed lifecycle request answers), the was-Q11 record's stale "replication.md, still draft" sentence replaced now that replication is planned and its AC12 carries the form's ErrReplica refusal, and two findings of the adversarial read folded: the predicates evaluate deleted, then read_only, then the link, without which a frozen replica had no single answer for the waiving entry point to still refuse (state machine, AC9 and its row), and the replication apply is placed in the deletion's lock order, link row before head under the door's head-last rule, with AC22 gaining the paused-apply interleaving and its row sharing replication AC26's takeover_race_test.go and AC23's sync_job_test.go. One citation declined (readonly_replica_test.go on AC13, the rename criterion, where it asserts nothing). Two sibling consequences reported, both wording for replication.md. 29 criteria, each with a Test Plan row; zero open questions. Earlier: Fable follow-up 2026-10-01 at 75e21cb, still planned: the four optional citation items the sibling follow-ups queued applied (storage-and-gc AC24, AC25 and AC30 on AC9, AC10, AC14 and AC21; async AC11 and AC28 on deletion step 8; proxy-cache AC23 on AC14 and step 5), data-model recheck item 4 found already applied at 261b20c, every reported sentence replaced by a citation now that the door's document-only form, the hook exemption and the read_only schedule rule have landed in storage-and-gc, signing-service, data-model, async-operations and management-api, and one defect found by the adversarial read of the lock-order text those siblings landed: the deletion read its own freshness values under a share lock that the same transaction later upgrades, PostgreSQL's canonical deadlock, so the deletion now locks its own rows FOR UPDATE first and a Lock order paragraph places every lock it takes in the door's order, with AC18 and AC21 gaining the no-deadlock interleavings; one sibling consequence reported (data-model AC36 wording). Planned by the Fable recheck of 2026-10-01 at 261b20c: a full review pass over the cloud-authored whole and the Opus sweeps, plus the re-examination of the ten questions adopted without Fable. Q1, Q2, Q5, Q7 and Q9 confirmed; Q3, Q4 and Q8 confirmed with their folds amended (the freshness floor under the share lock on detach and deletion, the member-validation and credential-reference races closed by a share lock, the deletion write exempt from the pre-commit hook and the pointer-document render so the fourth root really stops seeing a deleted local at commit, a virtual's merged documents and declared lists ended at its deletion, async's per-kind grace hold and cancel_requested); Q6 and Q10 confirmed with under-stated costs recorded. Q11 raised and adopted under the standing delegation: read_only does not stop document-only pointer transitions, so a frozen signed repository keeps renewing its envelope through a second predicate, Renewable, at the door's document-only form. New AC29 (virtual deletion and rename). 29 criteria, each with a Test Plan row; zero open questions; eleven sibling consequences reported for the orchestrator; fable_recheck cleared. The door's document-only form and the hook exemption have since landed in storage-and-gc.md (AC24, AC25) and signing-service.md (AC22, AC29), so nothing in this spec waits on a sibling."
 description: "Spec for the repository lifecycle: creation of local, remote and virtual repositories with their type-specific settings, configuration changes and which of them are completed writes, renaming and what it does to identities, tokens, grants, replication links and client URLs, the read-only state, deletion as a reference-ending write whose space returns only through pruning and the sweep, deletion's effect on pointers, snapshots, cached content, upload sessions, jobs, keys, trust sets, links and virtual membership, and the reuse of a name after deletion."
 author: michielvha
 goal: "Give every repository one lifecycle with one enforcement point, so that creating, renaming, freezing and deleting a repository of any format and type does exactly what the shared model says on both paths, deletes no object outside the sweep, never reattaches a stale grant or token, never leaves a virtual repository silently serving less, and is provable on an injected clock before the first handler that depends on it ships."
@@ -103,9 +103,15 @@ Who depends on this, and what each already requires:
   cooperative with a `cancel_requested` column that survives a lost notification, `exclusive_key`
   serialises jobs on one repository, and its kind table disables the `retention.pass` schedule
   while a repository is `read_only` and no other.
-- `replication.md`: a replica is "a `local` repository with an active replication link", the
-  write path "refuses for a repository with an active replication link" under an architecture
-  test, and takeover "ends the replication link". The leader does not track followers (its
+- `replication.md` (planned at its Fable gate review of 2026-10-01): a replica is "a `local`
+  repository with an active replication link", the applier is the one caller past `ErrReplica`
+  and is itself refused `ErrReadOnly` and `ErrDeleted` (its AC12, AC22), takeover ends the link
+  and, in the same request, registers the repository's `signing.resign` schedules and re-signs
+  through the door's document-only form (its AC16, AC21, resolved takeover-signing decision,
+  was Q12 there), a sync's outcome is written to the link row and the job ends `completed`,
+  `cancelled` only when the replica's deletion cancelled it (its resolved sync-outcome decision,
+  was Q13 there; AC22, AC23), and every apply, the takeover, the re-seed and the replica's
+  deletion serialise on the link row (its AC26). The leader does not track followers (its
   resolved retention-gap decision), so a leader-side deletion or rename is discovered by the
   follower, never announced.
 - `proxy-cache.md`: eviction "ends the reference and deletes nothing" under a per-repository
@@ -175,7 +181,11 @@ not a constraint (the charter's standing decision), so nothing here is deferred 
   owns the wire and carries what this spec needs of it: the problem types `in-use` (`409`),
   `read-only` (`405`) and `capability-unsupported` (`422`), the `confirm`, `detach` and `reclaim`
   fields of the delete route, the `freeze`, `thaw` and `rename` routes, the `lifecycle` operation
-  kind and the admin-only `?state=deleted` listing; this spec defines their semantics.
+  kind, the admin-only `?state=deleted` listing, and the `500` with `type` `about:blank` that a
+  lifecycle request authorized and then failed answers (a rename's `configure` hook returning
+  an error that is no typed refusal, a lock timing out, the store failing; its resolved
+  failure-answer decision, was Q19 there), after which AC7 holds: nothing committed; this spec
+  defines their semantics.
 - **Space reclamation mechanics.** The pruner, the sweep, the deletion-intent table and the
   grace period are `storage-and-gc.md`'s; this spec adds operations to its property suite and
   one input to pruning (`reclaim: now`), already decided by `management-api.md`.
@@ -272,7 +282,10 @@ the admin. Whether a format admits a `virtual` repository or a rename is read by
 the UI from `GET /api/v1/formats`, which renders each handler's `Capabilities()`
 (`management-api.md`'s endpoint table).
 
-Transitions, each admin-only, each an audit line and an `Operation` record of kind
+Transitions, each admin-only (refused to every other caller in `management-api.md`'s one
+order, its resolved refusal-type decision, was Q18 there, and AC35: `unauthenticated` without
+a credential, `not-found` to a principal that cannot read the repository, `unauthorized` to
+every other non-admin), each an audit line and an `Operation` record of kind
 `lifecycle` (`management-api.md`'s administration family, each carrying its sub-kind):
 
 - `create` produces `active`.
@@ -301,7 +314,13 @@ constructor has exactly one further entry point, which waives `ErrReplica` and n
 replica that is also `read_only` or `deleted` is refused through it too): the replication applier
 is its only importer, so `internal/replication` can commit the leader's snapshots on a follower
 while no other package can, and `internal/storage/arch_test.go` asserts the import
-(`replication.md` AC12, shared with AC9 here and `storage-and-gc.md` AC25). `ErrReplica` renders
+(`replication.md` AC12, shared with AC9 here and `storage-and-gc.md` AC25). Both predicates
+evaluate the states in one order, `deleted`, then `read_only`, then the link, and return the
+first refusal each makes (`Renewable` makes none at `read_only`, so for it a frozen replica is
+`ErrReplica`): under `Writable` a frozen replica answers `ErrReadOnly` to every writer, the
+applier included, which is what lets the waiving entry point waive `ErrReplica` alone and still refuse
+it there (`replication.md` AC22), and a client publishing to a frozen replica is told
+`read-only`, the state the operator chose, rather than `replica`. `ErrReplica` renders
 as `405` with problem type `replica` whose detail names the leader (`replication.md`); `ErrReadOnly`
 as `405` `read-only`; `ErrDeleted` as `not-found` under the existence oracle. Cache
 materialisation is not a completed write and does not consult the predicate; it consults
@@ -602,10 +621,22 @@ record and for clients, stated so no sibling has to derive it:
 - **Configuration stays open**, so the state can be reversed and so visibility, retention rules
   (for later), trust sets and grants can still be administered; `settings` changes that would
   produce a snapshot are refused like any other write.
-- **A replica** (`local` with an active link) is already unwritable through the same predicate;
-  setting it `read_only` as well is allowed and changes nothing until the link ends, at which
-  point the repository stays read-only rather than becoming writable, which is the safe default
-  after a takeover.
+- **A replica** (`local` with an active link) is already unwritable for every client through
+  the same predicate; setting it `read_only` as well is allowed, and a client sees nothing
+  different, but it is not a no-op: the applier's entry point waives `ErrReplica` alone and is
+  refused `ErrReadOnly` like any other writer (the state machine; AC9), so **a frozen replica
+  stops following**. Its link's `replication.sync` schedule keeps enqueuing
+  (`async-operations.md`'s kind table suspends only `retention.pass`), each run applies nothing,
+  writes the link `failed` with reason `read-only` and ends `completed`, the refusal being the
+  link's outcome and not the worker's fault (`replication.md` AC22 and its resolved sync-outcome
+  decision, was Q13 there), so `ReplicationLinkFailed` is the whole of the alerting and
+  `JobFailed` stays silent for as long as the operator keeps the replica frozen; the thaw's next
+  sync resumes on the identity check alone, with no re-seed. When the link ends by takeover the
+  repository stays `read_only` rather than becoming writable, which is the safe default after a
+  takeover (`replication.md` AC16), and the takeover's own re-sign runs through the door's
+  document-only form, which `Renewable` passes on a `read_only` repository once the link is
+  `ended` (its resolved takeover-signing decision, was Q12 there), so a frozen taken-over
+  repository keeps renewing its envelope exactly as any other frozen repository does.
 
 Read-only is distinct from `formats/generic.md`'s immutability switch: immutability forbids
 replacing a path in place and still permits new uploads and deletes; read-only forbids every
@@ -652,7 +683,11 @@ order and refuses at the first failure with nothing committed:
    every state, and it is "the single named exemption the architecture test knows"
    (`storage-and-gc.md` AC25). A replica's `ReplicationLink` is ended in this transaction (state
    `ended`, the terminal value in `replication.md`'s status vocabulary, with the reason
-   `deleted`; its AC22).
+   `deleted`; its AC22), under the link row's update lock, the lock every apply, the takeover
+   and the operator re-seed take (its AC26), so a sync mid-transfer at this commit applies
+   nothing more: step 8 cancels it and disables the link's schedule, and its next apply is
+   refused `ErrDeleted` at the door, so it ends `cancelled` (its AC23, under
+   `async-operations.md`'s deletion rule).
 4. **Mark deleted and free the name.** `state` becomes `deleted`, `deleted_at` and the deleting
    principal are recorded, and the partial unique index releases the name at commit.
 5. **End the head.** For a `local`, the repository's current content rows (`Version`, `File`,
@@ -732,8 +767,9 @@ order and refuses at the first failure with nothing committed:
    adoption commits its row and reference together and holds nothing awaiting a reference. The
    deletion does not
    wait for running jobs; a job that observes a `deleted` repository at its next step ends
-   itself. A `Schedule` scoped to the repository (a retention pass, a cadence re-sign, the
-   `replication.sync` of each of its links) is
+   itself. A `Schedule` scoped to the repository (a retention pass, the per-pointer and
+   repository-scoped `signing.resign` rows `signing.Service.RegisterSchedules` created, the
+   `replication.sync` of each of its links, `replication.md` AC23) is
    disabled. The deletion transaction does all of this through one call, the runner's
    `CancelByRepository(ctx, tx, repo)`, the only write path into the job table outside
    `internal/async` (its architecture test); the job-side half (self-ending on a deleted
@@ -799,14 +835,18 @@ lock it did not already hold. Then each affected virtual's head, for the floor w
 Then this repository's own head and pointers, through the door, at steps 5 and 6. The job rows
 last, at step 8. That is the order a merge or member-list change takes (member rows under a
 share lock, then the virtual's head), the order a member's own write takes (its documents, then
-its head) and the order a job's `Finish` takes (documents, member rows, head, job row), so no
+its head), the order a job's `Finish` takes (documents, member rows, head, job row) and the
+order a replication apply takes on a replica (the link row it serialises on, then its snapshot
+rows, then the head in the door's commit step, since the head is the last lock any transaction
+the constructor returns takes, the waiving entry point's included; `replication.md` AC26), so no
 transaction holds a head while waiting on a row the deletion holds and none holds a job row
 while waiting on a head. A transaction sharing a row the deletion will update (a merge reading
 this repository's freshness values, a creation validating it as a member) either committed
 before the deletion's lock and is seen, or waits and then sees `deleted`, and the deletion never
 waits on such a transaction while holding a lock it wants. `storage-and-gc.md` AC30's property
 case interleaves a deletion cancelling a job with that job's `Finish` and asserts no deadlock;
-AC18 and AC21 here add the merge, adoption and transition interleavings on the deleted member.
+AC18 and AC21 here add the merge, adoption and transition interleavings on the deleted member,
+and AC22 the apply on a deleted replica.
 
 **Tombstone.** When the pruner drops the deleted repository's last content snapshot (and, for a
 `local`, its final empty snapshot with it, since nothing else targets it once the default
@@ -908,11 +948,11 @@ interleavings this table describes are actually exercised.
 |---|---|---|---|
 | Creation requires | common fields, optional `settings` | the upstream, validated | one or more same-format members, `Virtual: supported` |
 | Default pointer | on an empty initial snapshot | same (for freshness and pointer documents) | same (for merged documents) |
-| `read_only` means | no completed writes; retention pass suspended; the cadence re-sign continues | no upstream contact; cache-only serving | refused |
+| `read_only` means | no completed writes; retention pass suspended; the cadence re-sign continues; a replica stops following (its link `failed` `read-only` until thaw) | no upstream contact; cache-only serving | refused |
 | Rename hook | `configure` with `rename` args when `Operator` present | same | one coalesced `index.merge` when the format declares an `Indexer`; members unaffected |
 | Deletion ends | head references via a final empty snapshot; named pointers | every cached reference; every current document with its freshness record and declared list; the `Upstream` row | member rows; the merged documents with their declared lists and input record; pointer documents |
 | Reclamation | pruner then sweep, under the window or `reclaim: now` | sweep after grace (no snapshots) | nothing to reclaim |
-| Replication | link ended if a replica | not linkable | not linkable |
+| Replication | link ended with reason `deleted` and its sync schedule disabled if a replica | not linkable | not linkable |
 | `in-use` blockers | virtual memberships | virtual memberships | none |
 
 ### Package shape and the Go rules
@@ -1012,7 +1052,11 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       `405` `read-only`, `405` `replica` naming the leader and `not-found`; the constructor's one
       further entry point waives `ErrReplica` alone, still refuses `ErrReadOnly` and
       `ErrDeleted`, and is imported by `internal/replication` and no other package, asserted by
-      the same architecture test; every document-only pointer transition (a cadence re-sign, a
+      the same architecture test; both predicates evaluate `deleted`, then `read_only`, then
+      the link and return the first refusal each makes, so under `Writable` a frozen replica
+      answers `ErrReadOnly` through the standard and the waiving entry point alike, under
+      `Renewable` it answers `ErrReplica`, and a deleted replica answers `ErrDeleted` under
+      both; every document-only pointer transition (a cadence re-sign, a
       virtual's merge commit and member-list change) opens through the constructor's
       document-only form, which calls `Renewable` and has no waiving entry point, and
       `Renewable` answers `nil` on a `read_only` repository and refuses `ErrReplica` and
@@ -1029,7 +1073,11 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       AC22; `storage-and-gc.md` AC24's read-only clause), older untargeted
       snapshots still
       age out and are pruned on the injected clock while the pointer-targeted snapshot survives,
-      and `thaw` restores every refused operation.
+      and `thaw` restores every refused operation; on a `read_only` replica each
+      `replication.sync` run applies nothing, writes the link `failed` with reason `read-only`
+      and ends `completed`, `ReplicationLinkFailed` firing while `JobFailed` stays silent across
+      every tick the replica is frozen, and the thaw's next sync resumes with no re-seed
+      (`replication.md` AC22).
 - [ ] AC11: On a `read_only` `remote`, a cached artifact is served without any upstream request,
       a non-cached artifact answers `not-found` with no upstream request, revalidation and
       eviction do not run, asserted at the network layer; `thaw` restores fetching; setting a
@@ -1117,7 +1165,10 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
       the deletion and a running job's `Finish` interleaved at every point never deadlock, the
       job rows being the last rows the deletion locks (`storage-and-gc.md` AC30's property
       case).
-- [ ] AC22: Deleting a replica ends its `ReplicationLink` with reason `deleted`; deleting the
+- [ ] AC22: Deleting a replica ends its `ReplicationLink` with reason `deleted` in the deletion
+      transaction under the link row's lock and disables its `replication.sync` schedule, a
+      sync paused at every apply boundary across that commit applies nothing more and ends
+      `cancelled` with no deadlock abort on either side; deleting the
       leader's repository makes each follower's next sync mark its link `failed` naming
       `not-found` with the follower still serving its last replicated snapshot, and the
       follower's takeover then proceeds as `replication.md` defines.
@@ -1187,8 +1238,8 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
 | AC6 | integration | `internal/repository/remote_test.go` (`upstream.Validate` refusals, credential resolution); `internal/repository/settings_test.go` (`configure` inside the transaction; no-`Operator` refusal) |
 | AC7 | fault injection | `internal/repository/atomicity_test.go` (fault after each step of each operation) |
 | AC8 | architecture test | `internal/format/arch_test.go` |
-| AC9 | architecture test + integration | `internal/storage/arch_test.go` (sole write-transaction constructor calls `Writable`, its document-only form calls `Renewable` and has no waiving entry point; the `ErrReplica`-waiving entry point imported only by `internal/replication`; shared with `storage-and-gc.md` AC25 and `replication.md` AC12); `internal/repository/writable_test.go` (read-only, replica, deleted, their renderings, the waiving entry point still refusing `read_only` and `deleted`, `Renewable` passing `read_only` and refusing replica and deleted, and cache materialisation consulting neither) |
-| AC10 | conformance + integration | `conformance/generic/readonly_test.go` (real client publish refused 405, reads unchanged, thaw); `conformance/debian/readonly_test.go` (a frozen suite's `Valid-Until` renewed on the cadence and accepted by a real `apt`; shared with `signing-service.md` AC22's cadence case); `internal/storage/retention_test.go` (pruning under read-only on the injected clock and the cadence re-sign proceeding through the document-only form; shared with `storage-and-gc.md` AC24); `internal/repository/readonly_test.go` (signing-key operation refused; a deferred operation pending at the freeze ends `failed` `read-only`; a running retention pass commits nothing; the `signing.resign` schedule stays enabled while `retention.pass` is disabled) |
+| AC9 | architecture test + integration | `internal/storage/arch_test.go` (sole write-transaction constructor calls `Writable`, its document-only form calls `Renewable` and has no waiving entry point; the `ErrReplica`-waiving entry point imported only by `internal/replication`; shared with `storage-and-gc.md` AC25 and `replication.md` AC12); `internal/repository/writable_test.go` (read-only, replica, deleted, their renderings, the evaluation order on a frozen replica and on a deleted one through both entry points, the waiving entry point still refusing `read_only` and `deleted`, `Renewable` passing `read_only` and refusing replica and deleted, and cache materialisation consulting neither) |
+| AC10 | conformance + integration | `conformance/generic/readonly_test.go` (real client publish refused 405, reads unchanged, thaw); `conformance/debian/readonly_test.go` (a frozen suite's `Valid-Until` renewed on the cadence and accepted by a real `apt`; shared with `signing-service.md` AC22's cadence case); `internal/storage/retention_test.go` (pruning under read-only on the injected clock and the cadence re-sign proceeding through the document-only form; shared with `storage-and-gc.md` AC24); `internal/repository/readonly_test.go` (signing-key operation refused; a deferred operation pending at the freeze ends `failed` `read-only`; a running retention pass commits nothing; the `signing.resign` schedule stays enabled while `retention.pass` is disabled); `internal/replication/readonly_replica_test.go` (a replica frozen: the link `failed` `read-only`, the job `completed` and `JobFailed` silent through `telemetry.NewTestRecorder` across three ticks, `ReplicationLinkFailed` firing, thaw and resume; shared with `replication.md` AC22 and `async-operations.md` AC14) |
 | AC11 | conformance + integration | `conformance/oci/readonly_remote_test.go` (network-layer assertion of zero upstream requests; not-found on miss; thaw); `internal/repository/readonly_remote_test.go` (eviction skipped over quota, freshness record unchanged, thaw restores fetching; shared with `proxy-cache.md` AC23); `internal/repository/readonly_test.go` (virtual refused) |
 | AC12 | conformance + integration | `conformance/<format>/rename_test.go` in every format's set, its presence enforced by the harness's per-kind case validator (`conformance-harness.md` AC26); `internal/repository/rename_test.go` (record survival table; `configure` receipt) |
 | AC13 | integration | `internal/repository/capability_test.go` (`Rename: unsupported`); `internal/replication/link_rename_test.go` (follower failure and link update) |
@@ -1200,7 +1251,7 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
 | AC19 | integration | `internal/repository/confirm_test.go` (mismatch; delete-and-recreate race) |
 | AC20 | integration + fault injection | `internal/repository/credential_inuse_test.go` (remote and link references; rotation then delete; a remote's create or upstream change and the credential's deletion interleaved at every point, never an `Upstream` row naming a deleted credential) |
 | AC21 | integration | `internal/repository/delete_jobs_test.go` (pending and retrying cancelled in-tx; `cancel_requested` set in-tx and the running job cancelled at checkpoint; grace hold until terminal on the injected clock for a `HoldsGrace` kind and no hold for a running `proxy.revalidate`; schedules disabled; a remote's `proxy.revalidate` and a virtual's `index.merge` cancelled; self-ending job); `internal/async/cancel_test.go` (`CancelByRepository` inside the deletion transaction, shared with `async-operations.md` AC28); `internal/storage/gc_property_test.go` (a deletion cancelling a job interleaved with that job's `Finish`, never a deadlock; shared with `storage-and-gc.md` AC30) |
-| AC22 | integration | `internal/replication/lifecycle_test.go` (replica deletion ends link; leader deletion observed by follower; takeover afterwards) |
+| AC22 | integration + fault injection | `internal/replication/lifecycle_test.go` (replica deletion ends link; leader deletion observed by follower; takeover afterwards; shared with `replication.md` AC22); `internal/replication/takeover_race_test.go` (a sync paused at every apply boundary while the replica's deletion commits, ending `cancelled` with nothing more applied and no deadlock; shared with `replication.md` AC26); `internal/replication/sync_job_test.go` (the schedule disabled by the deletion with no later enqueue; shared with `replication.md` AC23) |
 | AC23 | integration | `internal/repository/delete_records_test.go` (grants gone; credentials listed and inert; keys retired with public forms; untouched records readable) |
 | AC24 | integration | `internal/storage/retention_test.go` (tombstone at last-snapshot prune on the injected clock; dropped rows including the `policy` document and `advisory_ecosystem`; condemnation and refusal records still readable; `repository.reclaim` record; survives further cycles; shared with `supply-chain-policy.md` AC22); `internal/manage/repository_delete_test.go` (`?state=deleted` admin-only, tombstones by identity, never in the live listing; `management-api.md` AC20's test, shared); `internal/credential/listing_test.go` (name rendered from tombstone; shared with `credential-management.md` AC20) |
 | AC25 | integration | `internal/repository/configure_remote_test.go` (cache kept, `last-checked` reset, `upstream-invalid`, format and type refused) |
@@ -1242,8 +1293,9 @@ Every criterion is asserted on both paths where both exist (a `local` and a `rem
   and material destruction at tombstone (AC23, AC24), the cadence re-sign through the door's
   document-only form on a frozen repository and the deletion write's hook exemption on a real
   `Indexer` (AC9's `Renewable` half, AC10's cadence clause, AC14's no-hook clause, with
-  `signing-service.md` Phases 1 and 2), replication link ending and the follower's
-  failure path (AC13, AC22).
+  `signing-service.md` Phases 1 and 2), replication link ending with the paused apply, the
+  frozen replica's refused sync and the follower's failure path (AC10's replica clause, AC13,
+  AC22).
 
 ## Tasks
 
@@ -1610,8 +1662,18 @@ cadence runs on a `read_only` repository too" (key operations still refused `rea
 `signing.resign` and `replication.sync` keep enqueuing), `async-operations.md` AC11 and its
 kind table (the merge swap and `signing.resign` through the form's document-only shape under
 `Renewable`; `signing.resign` not suspended by `read_only`) and `management-api.md` AC31 (the
-renewal continuing under `freeze` on the wire). `replication.md`, still draft, has not yet
-added the form's `ErrReplica` refusal to its AC12 (this spec's recheck consequence 5 stands).
+renewal continuing under `freeze` on the wire) and, since its Fable gate review of 2026-10-01
+made it planned, `replication.md` AC12 (the form refusing `ErrReplica` on a linked replica,
+`internal/replication/renewable_test.go`), which closes this spec's recheck consequence 5.
+
+Fable follow-up round 3, 2026-10-01: the record's cost gains what the predicates already
+implied and the "Read-only" section under-stated as "changes nothing". `Writable` refuses the
+applier's waiving entry point `ErrReadOnly`, so freezing a replica stops it following: its link
+reports `failed` `read-only` until the thaw and each sync job ends `completed` (`replication.md`
+AC22, its resolved sync-outcome decision, was Q13 there). `Renewable`'s first consumer outside
+the cadence is the takeover's re-sign (`replication.md`'s resolved takeover-signing decision,
+was Q12 there, its AC16 and AC21): once the link is `ended` the form passes on a `read_only`
+repository, so a frozen replica taken over keeps renewing its envelope. The option is unchanged.
 
 ## Review Log
 
@@ -1624,3 +1686,4 @@ added the form's `ErrReplica` refusal to its AC12 (this spec's recheck consequen
 | 2026-09-28 | 4278ce0 | leftovers pass of the closing sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the one item queued against this file after its closing sweep (eviction settlement item 5), verified against `proxy-cache.md`'s resolved metadata-eviction and declaring-document decisions (was Q21, was Q22 there), its "Interaction with GC" paragraph on a remote's documents, and `storage-and-gc.md`'s fourth root. Deletion step 5 no longer calls a remote's cached documents cached references ended "in the eviction shape": its cached references (`File` rows bound to `RemoteFile` sources) end through the reference-ending call eviction uses, and its current metadata documents at all three levels, which no eviction reaches, are removed in the same transaction with their cache-scoped freshness records and the declared blob-digest lists they carry, the way a `local`'s head documents end, so the fourth root stops seeing them and the retained revisions they keep at that commit. The deletion table's `remote` row, AC14 and AC16 (now also asserting that an eviction pass before the deletion ends no document, and that document bodies and declared blobs are collected after grace) and both rows follow; AC16's row shares the property operation with `storage-and-gc.md` AC16 and `proxy-cache.md` AC29. The same stale wording in `proxy-cache.md` is fixed there in this pass. Found already done: every earlier item for this file. No question raised or adopted; roots stay five; the fable_recheck marker is unchanged. 28 criteria, each with a Test Plan row. Stays draft. |
 | 2026-10-01 | 261b20c | Fable recheck: full review (claim verification at HEAD against every cited sibling, `deployment.md` read from its working tree since another agent was rechecking it; adversarial lens at full strength on the cloud-authored whole and the Opus step-5 rewrite, both treated as unreviewed, deletion attacked against the five mark roots and the deletion-intent barrier; constitution compliance; go-spec-reviewer inline, its codebase step vacuous since `internal/` is empty) + re-examination of the ten adoptions made without Fable (Q1 to Q9 in the cloud session, Q10 on Opus) | Brought current first: the three open queue items targeting this file applied and verified against their sources (signing-service recheck 14: the promotion and rollback trigger and the virtual's deletion ending its declared lists; data-model recheck 4: the floor under the share lock on detach and deletion; the was-Q10 fold confirmed against `deployment.md`'s working tree, `management-api.md` AC31, `data-model.md`'s `Operations` result document and `observability.md`'s row). Verdicts: Q1, Q2, Q5, Q7, Q9 confirmed; Q3 confirmed with the fold amended (the floor on detach; the member validation reads the member's row `FOR SHARE`, closing an unserialised check-then-act between a membership insert and the member's deletion); Q4 confirmed with the fold amended (the deletion write runs no pre-commit hook and renders no pointer document, without which a signed format's regenerated empty index would keep the fourth root on the repository until tombstone and the record's root claim was false; the barrier table's `virtual` row said "no content" where the merged documents, their declared lists and the input record end at deletion); Q6 confirmed with the operation reference's 90-day pruning stated; Q8 confirmed with the fold amended for `async-operations.md`'s Fable amendment of its was-Q4 (`holds_grace` per kind, `proxy.revalidate` holds none, `cancel_requested`); Q10 confirmed with two costs stated (`unbound_hosts` is per process; the `404` is the shared denial through a `Scope(r)` error). One new question found by the adversarial lens and adopted at its recommendation: Q11, `read_only` and document-only pointer transitions, since a frozen signed repository would otherwise let its `Valid-Until` or TUF expiry lapse and stop serving; a second predicate `Renewable` and the door's document-only form (state machine, Read-only, AC9, AC10). Other findings folded: the credential-reference race (AC20), a virtual's rename enqueuing one merge (Renaming, AC29), negative-cache entries at a remote's deletion, the Go error-type split for refusals carrying data. New AC29 with its row. Eleven sibling consequences reported. `fable_recheck` cleared; `node scripts/check-spec.js` zero mechanical failures on this file, two pre-existing advisories. 29 criteria, each with a Test Plan row; zero open questions. Planned. |
 | 2026-10-01 | 75e21cb | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: every item in `agents/spec-loop/consequences.md` targeting this file after the 261b20c row collected and verified against the current text of its source spec and of this one, then read adversarially against the rest of this spec. Applied, four: storage-and-gc follow-up item 2 (AC9 cites storage AC25, AC10 cites AC24's read-only clause with `internal/storage/retention_test.go` shared, the state-machine paragraph cites the door section, the Context bullet names AC24, AC25 and AC30 as amended); async follow-up item 3 (deletion step 8 and step 5 cite async AC11 for the merge job's repository reference and its `cancelled` end, AC28 for the cancelled set); proxy-cache follow-up item 3 (AC14, step 5 and the Test Plan row cite proxy-cache AC23's deletion clause, which now names the negative-cache entries this spec's recheck consequence 7 asked for); data-model follow-up item 2 (every "reported" or "for their Fable follow-up" sentence replaced by a citation of the landed text: the was-Q4 and was-Q11 records, the audit paragraph's `unbound_hosts` now in observability's vocabulary and AC12, the signing-service Context bullet with AC22, AC29 and AC19's rename clause, the virtual-rename trigger citing AC19, the tombstone's `data-model.md` AC38, previously mis-cited as AC39, and the status_description's wait sentence). Found already applied at 261b20c: data-model recheck item 4 (the floor under the lock on detach and deletion, Deletion step 2, the Configuration table, AC18). Declined, none. Adversarial read of the lock-order text the siblings landed (`storage-and-gc.md` AC30 and its head-lock paragraph, `async-operations.md` "Finish") against this spec's deletion: the fold had the deletion read its own freshness values under a share lock while step 6 updates those rows, which under a concurrent merge's share on the same row is PostgreSQL's canonical upgrade deadlock, and the step-2 serialisation claim rested on a row lock no step stated taking. Fixed: step 1 takes the `Repository` row `FOR UPDATE`, step 2 reads its own rows `FOR UPDATE`, a "Lock order" paragraph places every lock the deletion takes in the door's order (own rows, affected virtuals' heads, own head and pointers, job rows last) and names the three transactions it must not cycle with; AC18 gains the merge interleaving and a no-deadlock clause, AC21 the `Finish` interleaving shared with storage AC30, AC5 names the `FOR SHARE` read the creation side takes; the was-Q3 record carries the amendment. Not a question: the floor semantics and every option are unchanged. One sibling consequence reported (`data-model.md` AC36 and its member-removal paragraph: when the removal is the member's own deletion the read is under the deleting transaction's update lock, not a share lock). `replication.md`, still draft, has not applied recheck consequence 5; noted in the was-Q11 record, nothing here waits on it. No em-dashes; `node scripts/check-spec.js` zero mechanical failures on this file, two pre-existing advisories. 29 criteria, each with a Test Plan row; zero open questions. Stays planned. |
+| 2026-10-01 | 9b3946f | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: the whole of `agents/spec-loop/consequences.md` read, every item targeting this file after the 75e21cb row collected (the replication gate review's item 3, repeated as the round-4 `async-operations.md` follow-up's item 2) and every earlier item re-found applied (the storage-and-gc, proxy-cache and async follow-ups' optional citations and the data-model follow-up's was-Q11 citation, all landed at 75e21cb). Verified against `replication.md` at HEAD, now planned (its sync section and was-Q13, the link table's `read-only` reason, the `read_only` bullet, the takeover section and was-Q12, AC12, AC16, AC21, AC22, AC23, AC26 and their rows), `async-operations.md` ("Jobs and schedules", its `replication.sync` kind row), `signing-service.md` ("The cadence runs on a `read_only` repository too", "Rotation profiles" and `RegisterSchedules`), `storage-and-gc.md` (AC25, AC30 and the head-last paragraph) and `management-api.md` (was-Q18 and AC35, "A failure is not a refusal" and was-Q19, the lifecycle rows). Applied, one of one: the Read-only section's replica bullet said freezing a replica "changes nothing until the link ends", which was true for clients and false for the applier, refused `ErrReadOnly` at the waiving entry point under this spec's own AC9; it now says a frozen replica stops following, with the link `failed` `read-only`, each sync job `completed`, `ReplicationLinkFailed` the whole of the alerting and the thaw resuming without a re-seed, folded into the type summary, AC10 and its row (`internal/replication/readonly_replica_test.go`, shared with `replication.md` AC22 and `async-operations.md` AC14). Optional citations placed: replication was-Q12 and AC16 (a frozen taken-over repository renews through `Renewable` once the link is `ended`) in the replica bullet and the was-Q11 record; AC23 and AC26 (the link row lock, the disabled schedule, the paused sync ending `cancelled`) in deletion step 3; `signing.Service.RegisterSchedules` for the `signing.resign` rows step 8 disables; management-api was-Q18 and AC35 on the admin-only transitions; was-Q19 in the out-of-scope wire bullet; the Context bullet for `replication.md` restated against its planned text. The was-Q11 record's "replication.md, still draft" sentence replaced: AC12 there carries the form's `ErrReplica` refusal, closing this spec's recheck consequence 5. Declined, one: `readonly_replica_test.go` on AC13's row, the rename criterion, where the file asserts nothing. Adversarial read of the fold: (1) "the waiving entry point still refuses `ErrReadOnly`" needs `Writable` to answer `ErrReadOnly` on a repository that is both frozen and linked, which no text fixed; the predicates now evaluate `deleted`, then `read_only`, then the link, and return the first refusal, so a frozen replica tells every writer, a client included, `read-only` (state machine, AC9, `writable_test.go`); (2) the deletion holds the link row from step 3 until commit while a mid-transfer apply "locks the link row ... before committing", a cycle if the apply held its head first; the door's head-last rule (`storage-and-gc.md` AC30) binds the waiving entry point too, so the apply's link-row lock precedes its head lock and the "Lock order" paragraph now places the apply in the order, with AC22 gaining the paused-apply interleaving and no-deadlock clause and its row sharing `replication.md` AC26's `takeover_race_test.go` and AC23's `sync_job_test.go`. Neither is a question: no option exists for the first and the second is the door's rule applied. Constitution: both paths unchanged, no new boundary without its enforcer, nothing widens a token. Two sibling consequences reported (`replication.md`, wording: the sync section may say the apply takes the link row before the door's commit step takes the head; AC11 may note a frozen replica refuses a client `read-only`, the operator's chosen state, not `replica`). No em-dashes; `node scripts/check-spec.js` zero mechanical failures on this file, two pre-existing advisories. 29 criteria, each with a Test Plan row; zero open questions. Stays planned. |
