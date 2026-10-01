@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned by the Fable recheck of 2026-10-01 at e8f554d: a full review pass over the cloud-authored whole plus the re-examination of the eleven questions adopted without Fable. Q1, Q2, Q3, Q6, Q8, Q9 and Q11 confirmed; Q4 amended (the grace hold is declared per kind, HoldsGrace copied to the row at enqueue, proxy.revalidate false, so storage-and-gc AC23's clause on it inverts; owner-facing), Q5 amended (a cancel_requested column makes a running-job cancel survive a lost notification and a lease expiry), Q7 amended (a rescue at max_attempts ends the job failed; the termination bound counts claimable time), Q10 amended (async.Skip for a manage.apply job whose operation kind this process's handler lacks). None superseded. Adversarial findings fixed: the held exclusive key is a claim-query predicate rather than an UPDATE-time violation (AC12), NOTIFY is issued inside the enqueuing transaction (AC1), Finish opens the repository write through the sole constructor's on-a-transaction form (AC5), the startup check that refused the default retentions is gone (AC22), the paused set is a shared-schema record. Queued items applied: EnqueueRevalidation(ctx, tx, remote), the deferred_threshold citation removed, credential.prune registered, index.merge enqueued by a local member's promotion or rollback through Transition, the read-driven cell's enqueue-only transaction also writing the requested cell, AC30's row citing auth AC10, rubygems added as a merge consumer. 30 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Consequences reported for data-model (cancel_requested, holds_grace, the paused-kind record), storage-and-gc (AC23, the constructor's on-a-transaction form), deployment (the retention check, connection sizing), credential-management (pre-4b placement of credential.prune) and signing-service (a cross-process adoption note). Earlier: closing reconciliation sweep 2026-09-28 at b7640dd on Opus (not a review): the kind table matches signing-service and proxy-cache as settled. index.merge is enqueued by a member write, a virtual's creation, each member-list change and a remote member's adoption through the adoption-commit hook (signing-service was-Q15, was-Q16; AC11 extended). signing.resign gains the one repository-scoped schedule under repository:{repository} beside the per-pointer ones (signing-service AC33, hackage was-Q16; AC14 extended). New kind proxy.revalidate (proxy-cache was-Q18, AC26): enqueued by EnqueueRevalidation from ServeDocument on a virtual read (its own enqueue-only transaction) and inside the virtual-creation and member-change transactions, key revalidate:{repository} for coalesce and exclusivity, run_at now, no Schedule, nothing enqueued under proxy.offline, read_only or deleted, its effect an adoption whose hook enqueues index.merge (AC29). The queue gives no job a principal and never holds the replay entry, since the replay runs below the authorizer (auth AC36, FHI AC18; AC30). Q11 adopted: RetryAt(err, at), run_at the later of at and the backoff, counted as an attempt, so a rate limit moves run_at past RetryAfter (AC7, AC24). Context's format list rewritten from each format spec's own virtual section (rpm, conda, arch, alpine, opam, cran, plus chef, luarocks, maven, helm, are index.merge consumers; julia, pub, vagrant, composer, homebrew, openvsx, puppet, swift, terraform, conan resolve per request and ask nothing), and Ansible's import is deferred on manage.apply (ansible was-Q9). 30 criteria, each with a Test Plan row; eleven questions resolved, zero open; carries fable_recheck; stays draft pending a gate review. Earlier: reconciled 2026-09-28 at 9ebf6e9 with the foundation authoring wave (not a review): repository deletion cancels pending jobs in its transaction, cancels running ones cooperatively, disables repository-scoped schedules and a job meeting the deleted state ends itself, through CancelByRepository (AC28); a job of a kind this process has no worker for is skipped for a newer or older binary, never failed and never a refused start (Q10 adopted, AC26 rewritten); the scheduler lock is internal/db/lock.LockScheduler and the leader runs the state-gauge collector (AC14); the kind table is fixed by each owning spec (policy.feed_sync one schedule per source under feed_sync:{source}, replication.sync per link at replication.sync_interval, verify kinds distinct from their period keys on purpose, storage kinds at the gc.*_interval keys); the async_* series and four alerts under observability's names (AC20), trace_context and request_id at enqueue with a linked job span (AC27); Job and Schedule cited as data-model's (AC41) and cancelled as admitted (AC32); the eleven keys under scripts/check-config-keys.js (AC22); Context restated against the charter's 4b/6a placement and every sibling as it now stands. 28 criteria, each with a Test Plan row; ten questions resolved, zero open; stays draft pending a gate review. Earlier: authored 2026-09-27 at 998b03a as a grounded first draft, not yet reviewed. Gathers the deferred-execution requirements management-api.md (deferred kinds, 202 plus Operation, poll route, idempotency), data-model.md (the Operation entity and its atomic terminal transition), signing-service.md (virtual merge contract and the cadence re-sign), artifact-verification.md (the re-evaluation worker), supply-chain-policy.md (scans, retries, feed sync), replication.md (resumable transfers), generic.md (the retention pass), the write-triggered services prototype (its questions 4 to 6 and AC8 to AC12) and the format specs placed on the step 6a subsystem, and fixes one PostgreSQL-backed job queue with leased, fenced, transactional completion that every deferred and scheduled activity in the registry runs on. Nine questions written in decision shape and adopted under the owner's standing delegation; zero open. 26 criteria, each with a Test Plan row. Awaits a /spec review pass."
+status_description: "Fable follow-up 2026-10-01 at ec38840: the seven items the sibling rechecks and follow-ups queued after this spec was planned applied, none declined (the job context from one telemetry.WithJob call per claim with the per-job secret set, AC27; the refresh schedules registered by internal/trustsource; Finish's on-a-transaction form in two shapes, the document-only one under repository.Renewable for the index.merge swap and the signing.resign run, so a frozen repository is merged and renewed, with the lock order stated, AC11, AC14; a merge job naming its virtual and a re-sign job its repository so deletion cancels them, AC28; signing.resign and replication.sync not suspended by read_only; the requested_cells_max cap recording and enqueuing nothing, AC29; the proxy-cache adoption-twice citation; stale reported wording now cited to data-model AC41 and PausedKind, storage-and-gc AC23 and deployment); AC5 gains the frozen-repository refusal found by the adversarial pass; stays planned. Planned by the Fable recheck of 2026-10-01 at e8f554d: a full review pass over the cloud-authored whole plus the re-examination of the eleven questions adopted without Fable. Q1, Q2, Q3, Q6, Q8, Q9 and Q11 confirmed; Q4 amended (the grace hold is declared per kind, HoldsGrace copied to the row at enqueue, proxy.revalidate false, so storage-and-gc AC23's clause on it inverts; owner-facing), Q5 amended (a cancel_requested column makes a running-job cancel survive a lost notification and a lease expiry), Q7 amended (a rescue at max_attempts ends the job failed; the termination bound counts claimable time), Q10 amended (async.Skip for a manage.apply job whose operation kind this process's handler lacks). None superseded. Adversarial findings fixed: the held exclusive key is a claim-query predicate rather than an UPDATE-time violation (AC12), NOTIFY is issued inside the enqueuing transaction (AC1), Finish opens the repository write through the sole constructor's on-a-transaction form (AC5), the startup check that refused the default retentions is gone (AC22), the paused set is a shared-schema record. Queued items applied: EnqueueRevalidation(ctx, tx, remote), the deferred_threshold citation removed, credential.prune registered, index.merge enqueued by a local member's promotion or rollback through Transition, the read-driven cell's enqueue-only transaction also writing the requested cell, AC30's row citing auth AC10, rubygems added as a merge consumer. 30 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Consequences reported for data-model (cancel_requested, holds_grace, the paused-kind record), storage-and-gc (AC23, the constructor's on-a-transaction form), deployment (the retention check, connection sizing), credential-management (pre-4b placement of credential.prune) and signing-service (a cross-process adoption note). Earlier: closing reconciliation sweep 2026-09-28 at b7640dd on Opus (not a review): the kind table matches signing-service and proxy-cache as settled. index.merge is enqueued by a member write, a virtual's creation, each member-list change and a remote member's adoption through the adoption-commit hook (signing-service was-Q15, was-Q16; AC11 extended). signing.resign gains the one repository-scoped schedule under repository:{repository} beside the per-pointer ones (signing-service AC33, hackage was-Q16; AC14 extended). New kind proxy.revalidate (proxy-cache was-Q18, AC26): enqueued by EnqueueRevalidation from ServeDocument on a virtual read (its own enqueue-only transaction) and inside the virtual-creation and member-change transactions, key revalidate:{repository} for coalesce and exclusivity, run_at now, no Schedule, nothing enqueued under proxy.offline, read_only or deleted, its effect an adoption whose hook enqueues index.merge (AC29). The queue gives no job a principal and never holds the replay entry, since the replay runs below the authorizer (auth AC36, FHI AC18; AC30). Q11 adopted: RetryAt(err, at), run_at the later of at and the backoff, counted as an attempt, so a rate limit moves run_at past RetryAfter (AC7, AC24). Context's format list rewritten from each format spec's own virtual section (rpm, conda, arch, alpine, opam, cran, plus chef, luarocks, maven, helm, are index.merge consumers; julia, pub, vagrant, composer, homebrew, openvsx, puppet, swift, terraform, conan resolve per request and ask nothing), and Ansible's import is deferred on manage.apply (ansible was-Q9). 30 criteria, each with a Test Plan row; eleven questions resolved, zero open; carries fable_recheck; stays draft pending a gate review. Earlier: reconciled 2026-09-28 at 9ebf6e9 with the foundation authoring wave (not a review): repository deletion cancels pending jobs in its transaction, cancels running ones cooperatively, disables repository-scoped schedules and a job meeting the deleted state ends itself, through CancelByRepository (AC28); a job of a kind this process has no worker for is skipped for a newer or older binary, never failed and never a refused start (Q10 adopted, AC26 rewritten); the scheduler lock is internal/db/lock.LockScheduler and the leader runs the state-gauge collector (AC14); the kind table is fixed by each owning spec (policy.feed_sync one schedule per source under feed_sync:{source}, replication.sync per link at replication.sync_interval, verify kinds distinct from their period keys on purpose, storage kinds at the gc.*_interval keys); the async_* series and four alerts under observability's names (AC20), trace_context and request_id at enqueue with a linked job span (AC27); Job and Schedule cited as data-model's (AC41) and cancelled as admitted (AC32); the eleven keys under scripts/check-config-keys.js (AC22); Context restated against the charter's 4b/6a placement and every sibling as it now stands. 28 criteria, each with a Test Plan row; ten questions resolved, zero open; stays draft pending a gate review. Earlier: authored 2026-09-27 at 998b03a as a grounded first draft, not yet reviewed. Gathers the deferred-execution requirements management-api.md (deferred kinds, 202 plus Operation, poll route, idempotency), data-model.md (the Operation entity and its atomic terminal transition), signing-service.md (virtual merge contract and the cadence re-sign), artifact-verification.md (the re-evaluation worker), supply-chain-policy.md (scans, retries, feed sync), replication.md (resumable transfers), generic.md (the retention pass), the write-triggered services prototype (its questions 4 to 6 and AC8 to AC12) and the format specs placed on the step 6a subsystem, and fixes one PostgreSQL-backed job queue with leased, fenced, transactional completion that every deferred and scheduled activity in the registry runs on. Nine questions written in decision shape and adopted under the owner's standing delegation; zero open. 26 criteria, each with a Test Plan row. Awaits a /spec review pass."
 description: "Spec for the shared asynchronous-operation subsystem: one PostgreSQL-backed job queue (SKIP LOCKED claims, leases with fencing tokens, transactional enqueue and completion, bounded retries, coalescing and exclusivity keys, cooperative cancellation, pause and resume, a leader-elected scheduler) that executes every deferred management operation behind data-model.md's Operation record and every scheduled or background activity the sibling specs name: virtual merges, cadence re-signing, the revalidation of remotes reached only through a virtual, verdict re-evaluation, scans and feed sync, replication transfers, retention passes and the GC sweep."
 author: michielvha
 goal: "Give every deferred or scheduled activity in the registry one runner with one durability story, so that a deferred write commits exactly once and atomically with its Operation and snapshot across crashes and multiple server processes, no handler or shared layer ever grows a goroutine, timer or queue of its own, and a pending import can never lose its bytes to the sweep."
@@ -46,11 +46,14 @@ The requirements already exist, scattered across the specs that cite this file:
   unfinished or a completed operation with no snapshot"; not snapshot content, not a mark root,
   pruned after a window. Its "Jobs and schedules" section transcribes the `Job` and `Schedule`
   records specified below, field for field, including the partial unique indexes, the
-  `trace_context` and `request_id` columns `observability.md` AC16 asked for, and the rule that
-  "an unfinished job naming a repository holds that repository's grace open, exactly as an
-  unexpired upload session does", which replaced its earlier wording that a pending operation's
-  bytes are protected only by the repository-scoped grace and left the answer to the prototype's
-  question 5.
+  `trace_context` and `request_id` columns `observability.md` AC16 asked for, the
+  `cancel_requested` and `holds_grace` columns and the `PausedKind` record this spec's Fable
+  recheck reported (carried since its Fable follow-up of 2026-10-01; AC41), the rule that
+  `read_only` suspends only the `retention.pass` schedule among a repository's own, and the
+  rule that "an unfinished job naming a repository and carrying `holds_grace` holds that
+  repository's grace open, exactly as an unexpired upload session does", which replaced its
+  earlier wording that a pending operation's bytes are protected only by the repository-scoped
+  grace and left the answer to the prototype's question 5.
 - **`management-api.md`** owns the wire. Its Scope excludes "Execution of deferred operations":
   this spec "owns workers, retries, leases", pausing and the cancellation mechanics; that spec
   owns the operation's wire shape, its `Operation` record and its poll and cancel routes, so
@@ -134,7 +137,11 @@ The requirements already exist, scattered across the specs that cite this file:
   `deployment.md`'s resolved worker-limit decision, was Q11 there); plus the
   `verify.tuf_refresh` and `verify.revocation_refresh` schedules with periods
   `verify.sigstore.refresh` (24 h) and `verify.revocation.refresh` (12 h), disabled under
-  `proxy.offline` (its AC22).
+  `proxy.offline` (its AC22). `internal/verify` registers only the `verify.reevaluate` worker;
+  the two refresh schedules are registered by `internal/trustsource`, the sibling package that
+  holds every network-reaching trust source, because `internal/verify/**` performs no network
+  I/O (its resolved trust-source decision, was Q3 there, as amended on its Fable recheck; its
+  AC22).
 - **`supply-chain-policy.md`, "Scanning is asynchronous; enforcement is synchronous"**: "An
   artifact is scanned after ingest" as a `policy.scan` job with coalesce key `scan:{digest}`
   and a kind-declared retry bound, an artifact unscanned past
@@ -157,12 +164,17 @@ The requirements already exist, scattered across the specs that cite this file:
   `internal/db/lock.LockSweep` for its whole run as a second guard (its AC26); a cache fill,
   an adoption and a map build each commit the `Blob` row and its first reference in one
   transaction and count as write activity for the remote's grace (its AC8); and an unfinished
-  job naming a repository holds that repository's grace open (its AC23), which its own Fable
-  recheck restated at full size for `proxy.revalidate` ("a leak for the duration, never a
-  loss", the per-job hold being re-enqueued by continuous virtual reads under an upstream rate
-  limit that never lifts) while noting that "a kind-level exemption from the hold stays
-  available". This pass takes the exemption (the resolved grace-hold decision below, was Q4, as
-  amended), so that clause of its AC23 inverts, reported as a consequence.
+  job carrying `holds_grace` and naming a repository holds that repository's grace open (its
+  AC23), which its own Fable recheck had restated at full size for `proxy.revalidate` ("a leak
+  for the duration, never a loss", the per-job hold being re-enqueued by continuous virtual
+  reads under an upstream rate limit that never lifts) while noting that "a kind-level
+  exemption from the hold stays available". This spec's Fable recheck took the exemption (the
+  resolved grace-hold decision below, was Q4, as amended), and that spec's Fable follow-up of
+  2026-10-01 inverted the clause: its AC23 now reads the hold from the row's flag, `true` for
+  every kind but `proxy.revalidate`, which holds nothing. Its single door has an
+  on-a-transaction form for this spec's `Finish`, with a document-only shape under
+  `repository.Renewable` for the merge swap and the cadence re-sign, and fixes the lock order
+  documents, member rows, head, job row (its AC25, AC30).
 - **`credential-management.md`, "A revoked or expired token stays listed", AC6**: a revoked or
   expired token's row is kept for `credentials.revoked_retention` (90 days) and then "pruned by
   a `credential.prune` job on `async-operations.md`'s runner, one daily `Schedule` with the kind
@@ -176,13 +188,22 @@ The requirements already exist, scattered across the specs that cite this file:
 - **`observability.md`**, metric and alert catalogue, AC7 and AC16: the `async_*` series and
   the `JobFailed`, `ScheduleOverdue`, `SchedulerLeaderless` and `VirtualMergeStalenessBreach`
   alerts by name; state-derived gauges collected on the scheduler leader only; a job's span
-  linked to the enqueuing request's span and its audit line carrying that request's id.
+  linked to the enqueuing request's span and its audit line carrying that request's id; and,
+  from its Fable recheck, the runner calling `telemetry.WithJob(ctx, id, kind, requestID)`
+  once per job before `Work`, which puts `job_id`, `kind` and the enqueuing `request_id` on
+  every record the job emits and installs the per-job secret set that `telemetry.MarkSecret`
+  appends to (the upstream adapter marks credentials under `proxy.revalidate` and
+  `replication.sync`), so a replay is recognised in the log by its kind and its absent
+  principal, never by the replay marker (its "Structured logging", "Redaction", AC31).
 - **`deployment.md`**, "Upgrade and rollback policy", "Multi-replica constraints", key
   inventory: during a rolling upgrade "a kind the old binary does not know is left unclaimed
   until the rollout finishes"; the scheduler's leader lock is taken through
   `internal/db/lock.LockScheduler`, the one constant block that may issue advisory-lock SQL;
   the eleven `async.*` keys and the `async.workers: 0` web-replica recipe are in its inventory
-  and its "Roles" table.
+  and its "Roles" table; its connection budget counts, outside `database.max_conns`, the
+  dedicated `LISTEN` connection a process with workers holds and the scheduler-lock connection
+  a candidate holds, and it relates `async.job_retention` to `management.operation_retention`
+  by no check (both since its Fable recheck of 2026-10-01).
 - **`write-triggered-services-prototype.md`**, whose asynchronous half asks questions 4 to 6
   (deferral through `Deps` or a callback, one snapshot on success and none on failure "across a
   process restart", whether "a pending import's blob need[s] GC protection the settled machinery
@@ -258,7 +279,11 @@ against code.
   catalogue); what each must say is fixed here.
 - What repository deletion does to the queue: pending jobs cancelled in the deletion
   transaction, running ones cancelled cooperatively, repository-scoped schedules disabled, a job
-  that meets a deleted repository ending itself (`repository-lifecycle.md` AC21).
+  that meets a deleted repository ending itself (`repository-lifecycle.md` AC21); and what
+  `read_only` does: only the repository's `retention.pass` schedule is suspended, while its
+  `signing.resign` schedules keep running through the door's document-only form and its
+  `replication.sync` follows its link (`repository-lifecycle.md`'s resolved
+  document-only-transitions decision, was Q11 there; `data-model.md` "Jobs and schedules").
 - Rolling upgrades and rollbacks with mixed binaries: a job of a kind this process has no worker
   for is never claimed by it and never failed.
 - Fault injection, property and benchmark tests, because concurrency and durability have no
@@ -367,14 +392,14 @@ four. The consumers and their jobs:
 | Consumer | Kind (as the owning spec now names it) | Trigger | Keys | Finish writes |
 |---|---|---|---|---|
 | `management-api.md` deferred `Apply` | `manage.apply` | `Submit` of a kind the handler declared deferred; enqueued in the transaction that inserts the `pending` `Operation` | none by default; a handler may declare an exclusivity key of the repository | the snapshot, the `Operation` terminal transition, retirements, the audit line |
-| `signing-service.md` virtual merge (its AC19, AC34, AC35) | `index.merge` | the metadata store's pre-commit hook on a member write, in the member's write transaction; the runtime's `Transition` on a target-moving transition of a `local` member's default pointer (a promotion into it, a rollback), inside the repoint (its resolved remote-member decision, was Q16 there, as amended; its AC19); once at a virtual's creation and once per change of its member list, in the transaction making it (`repository-lifecycle.md`; its resolved virtual-freshness decision, was Q15 there); and a remote member's adoption of a new upstream revision, through the hook registered on `proxy-cache.md`'s adoption commit, in the adoption transaction, for every virtual listing the remote (was Q16 there); `run_at` now plus `index.virtual_merge_window` | coalesce key `virtual:{repository}`; exclusivity key the same | the virtual's current-document swap, its merged documents' declared blob-digest lists, the input record, and the document-only transition of its default pointer (no snapshot) |
-| `signing-service.md` cadence re-sign (its AC22, AC33) | `signing.resign` | a `Schedule` per signed pointer; and, for a repository whose profile declares a repository-scoped pointer document (`hackage.md`'s resolved root-placement decision, was Q16 there), one repository-scoped `Schedule`, the only one that renews that document, as one repository batch across every pointer. Each next run is derived from the stored document's expiry and `signing.resign_at_fraction` and written in `Finish` | per pointer: exclusivity key `pointer:{repository}/{pointer}`; repository-scoped: exclusivity key `repository:{repository}` | `PointerDocument` and `Signature` records (no snapshot); the repository-scoped run re-renders the document on every pointer in one transaction |
-| `proxy-cache.md` revalidation of a remote reached only through a virtual (its AC26; `signing-service.md` AC35) | `proxy.revalidate` | `EnqueueRevalidation(ctx, tx, remote)`, called from the virtual's read path (`signing-service.md`'s `ServeDocument` serving a merged document whose input from the remote is past the remote's TTL, or a request for a cell no member input covers) in an enqueue-only transaction the read opens, which holds the job row and, for a requested cell, the entry the read writes on the virtual's input record (`data-model.md` AC45) and nothing else; and inside the transaction of a virtual's creation or of a member-list change adding a never-adopted remote; `run_at` now; **no `Schedule` of this kind exists**; nothing is enqueued while `proxy.offline` is set or the remote is `read_only` or deleted | coalesce key `revalidate:{repository}`; exclusivity key the same | nothing of its own: the effect is the adoption its replay commits through `proxy-cache.md`'s adoption transaction, whose hook enqueues `index.merge` there; `Finish` writes only the job's terminal state. A `*upstream.RateLimitError` returns the job to `pending` with `run_at` past its `RetryAfter` (`RetryAt`, below). The one kind declaring `HoldsGrace: false` (the GC grace, below) |
+| `signing-service.md` virtual merge (its AC19, AC34, AC35) | `index.merge` | the metadata store's pre-commit hook on a member write, in the member's write transaction; the runtime's `Transition` on a target-moving transition of a `local` member's default pointer (a promotion into it, a rollback), inside the repoint (its resolved remote-member decision, was Q16 there, as amended; its AC19); once at a virtual's creation and once per change of its member list, in the transaction making it (`repository-lifecycle.md`; its resolved virtual-freshness decision, was Q15 there); and a remote member's adoption of a new upstream revision, through the hook registered on `proxy-cache.md`'s adoption commit, in the adoption transaction, for every virtual listing the remote (was Q16 there); `run_at` now plus `index.virtual_merge_window` | coalesce key `virtual:{repository}`; exclusivity key the same; repository reference the virtual, so the virtual's deletion cancels the job (`repository-lifecycle.md`, "Deletion" step 8) and the job's grace (held, as for every kind but one) covers any merged body put to the CAS before the swap commits | the virtual's current-document swap, its merged documents' declared blob-digest lists, the input record, and the document-only transition of its default pointer (no snapshot), through the door's document-only form under `repository.Renewable` (Finish, below) |
+| `signing-service.md` cadence re-sign (its AC22, AC33) | `signing.resign` | a `Schedule` per signed pointer; and, for a repository whose profile declares a repository-scoped pointer document (`hackage.md`'s resolved root-placement decision, was Q16 there), one repository-scoped `Schedule`, the only one that renews that document, as one repository batch across every pointer. Each next run is derived from the stored document's expiry and `signing.resign_at_fraction` and written in `Finish` | per pointer: exclusivity key `pointer:{repository}/{pointer}`; repository-scoped: exclusivity key `repository:{repository}`; repository reference the repository. Not suspended by `read_only`: a frozen signed repository keeps renewing its envelope (`repository-lifecycle.md`'s resolved document-only-transitions decision, was Q11 there; `data-model.md` "Jobs and schedules"); disabled only by deletion | `PointerDocument` and `Signature` records (no snapshot), through the door's document-only form under `repository.Renewable` (Finish, below); the repository-scoped run re-renders the document on every pointer in one transaction |
+| `proxy-cache.md` revalidation of a remote reached only through a virtual (its AC26; `signing-service.md` AC35) | `proxy.revalidate` | `EnqueueRevalidation(ctx, tx, remote)`, called from the virtual's read path (`signing-service.md`'s `ServeDocument` serving a merged document whose input from the remote is past the remote's TTL, or a request for a cell no member input covers, unless the virtual already holds `index.requested_cells_max` cells, when the read records nothing and enqueues nothing and is still answered from the merged set, `signing-service.md`'s resolved requested-cell decision, was Q22 there) in an enqueue-only transaction the read opens, which holds the job row and, for a requested cell, the entry the read writes on the virtual's input record (`data-model.md` AC45) and nothing else; and inside the transaction of a virtual's creation or of a member-list change adding a never-adopted remote; `run_at` now; **no `Schedule` of this kind exists**; nothing is enqueued while `proxy.offline` is set or the remote is `read_only` or deleted | coalesce key `revalidate:{repository}`; exclusivity key the same | nothing of its own: the effect is the adoption its replay commits through `proxy-cache.md`'s adoption transaction, whose hook enqueues `index.merge` there; `Finish` writes only the job's terminal state. A `*upstream.RateLimitError` returns the job to `pending` with `run_at` past its `RetryAfter` (`RetryAt`, below). The one kind declaring `HoldsGrace: false` (the GC grace, below) |
 | `artifact-verification.md` re-evaluation (its AC3) | `verify.reevaluate` | the trust-set revision's transaction, one job per repository revision; the worker pages through superseded marks oldest first with a checkpoint per page; bounded by `async.kind_limits` (`verify.reevaluate: 4`) | exclusivity key `verify:{repository}` | verdict rows and cleared superseded marks |
-| `artifact-verification.md` refreshes (its AC22) | `verify.tuf_refresh`, `verify.revocation_refresh` | `Schedule`s with periods `verify.sigstore.refresh` and `verify.revocation.refresh`; disabled under `proxy.offline`. The kind names and the key names differ on purpose: a kind is a worker's registered name, a key is a period an operator sets, and `deployment.md`'s two-way check reads only the keys | exclusivity key the kind | the refreshed trust material |
+| `artifact-verification.md` refreshes (its AC22), registered by `internal/trustsource`, not `internal/verify`, which registers only `verify.reevaluate` | `verify.tuf_refresh`, `verify.revocation_refresh` | `Schedule`s with periods `verify.sigstore.refresh` and `verify.revocation.refresh`; disabled under `proxy.offline`. The kind names and the key names differ on purpose: a kind is a worker's registered name, a key is a period an operator sets, and `deployment.md`'s two-way check reads only the keys | exclusivity key the kind | the refreshed trust material |
 | `supply-chain-policy.md` scan (its AC6) | `policy.scan` | the ingest and cache-commit hooks, in the committing transaction; the kind declares its own retry bound, and an artifact unscanned past `policy.scan.unscanned_alert_after` counts in `policy_unscanned_past_bound` | coalesce key `scan:{digest}` | scan result, component inventory |
 | `supply-chain-policy.md` feed sync (its AC16, AC21) | `policy.feed_sync` | one `Schedule` per OSV-schema source (the default feed and each `policy.feed.sources` entry), period `policy.feed.sync_interval`; disabled under `proxy.offline` | exclusivity key `feed_sync:{source}` | that source's advisory rows and re-matched condemnations |
-| `replication.md` sync and transfer (its AC23) | `replication.sync` | one `Schedule` per active `ReplicationLink`, period `replication.sync_interval` unless the link sets its own (never below the instance value), and on demand; disabled under `proxy.offline` | exclusivity key `link:{id}`; checkpoint per completed snapshot | applied snapshot range, mirrored pointer moves |
+| `replication.md` sync and transfer (its AC23) | `replication.sync` | one `Schedule` per active `ReplicationLink`, period `replication.sync_interval` unless the link sets its own (never below the instance value), and on demand; disabled under `proxy.offline`; not suspended by `read_only`, since the link governs it (`data-model.md` "Jobs and schedules") | exclusivity key `link:{id}`; checkpoint per completed snapshot | applied snapshot range, mirrored pointer moves |
 | `generic.md` retention (its resolved retention placement, was Q11 there) | `retention.pass` | one `Schedule` per repository with rules; disabled while the repository is `read_only` or deleted | exclusivity key `repo:{repository}` | one snapshot per pass |
 | `credential-management.md` revoked-row pruning (its AC6) | `credential.prune` | one daily `Schedule`, instance-wide, no key of its own: a revoked or expired `Credential` row is pruned after `credentials.revoked_retention`, an exchange-minted token's at its expiry | exclusivity key the kind | the pruned `Credential` rows; the audit lines survive |
 | `storage-and-gc.md` sweep, orphan scan, pruning (its AC26) | `storage.sweep`, `storage.orphan_scan`, `storage.prune` | `Schedule`s at `gc.sweep_interval`, `gc.orphan_scan_interval`, `gc.prune_interval` | exclusivity key the kind | deletion intents, row deletes, pruned snapshots; the sweep additionally holds `internal/db/lock.LockSweep` for its whole run as a second guard |
@@ -417,7 +442,7 @@ and schedules", its entity table, AC41; specified here and transcribed there):
   claim query does not care why a job is waiting. Beside the state, a `cancel_requested` flag,
   set by a cancel of a `running` job and read by every claim, so that a cancel outlives a lost
   notification and a lease-expiry reclaim (Cancellation, below); a column of the record,
-  reported to `data-model.md`, which transcribes the `Job` without it today.
+  which `data-model.md` transcribes (its Fable follow-up of 2026-10-01; AC41).
 - **Scheduling fields**: `run_at`, `attempts`, `max_attempts`, `created_at`, `finished_at`,
   `last_error` (a bounded string, never a credential; `auth.md` AC7's leak scan covers it).
 - **Lease fields**: `lease_owner` (the worker's instance id), `lease_expires_at`, and
@@ -430,7 +455,8 @@ and schedules", its entity table, AC41; specified here and transcribed there):
   optional `repository` reference (the repository whose deletion cancels the job and, when the
   job's kind holds the grace, the repository whose grace it holds open), a `holds_grace` flag
   copied from the kind's registration at enqueue so the sweep reads it with the row and knows
-  no kind (the GC grace, below; reported to `data-model.md` with `cancel_requested`), and a
+  no kind (the GC grace, below; transcribed by `data-model.md` with `cancel_requested`, AC41),
+  and a
   `checkpoint` document the worker may write between attempts.
 - **Correlation**, set at enqueue and never changed: `trace_context`, the W3C `traceparent` of
   the enqueuing span as a string, nullable when there is none, and `request_id`, the enqueuing
@@ -545,8 +571,16 @@ follow:
 
 Workers are `errgroup` goroutines bounded by `async.workers` under the server's context (the go
 skill's bounded-concurrency rule, no hand-rolled pool). A worker loop is: wait for `NOTIFY` or
-the poll tick, claim, run, repeat; it starts no goroutine of its own beyond the heartbeat, which
-the job's context owns.
+the poll tick, claim, derive the job's context, run, repeat; it starts no goroutine of its own
+beyond the heartbeat, which the job's context owns. The job's context is derived exactly once
+per claim, before `Work`, by `telemetry.WithJob(ctx, id, kind, request_id)`
+(`observability.md`, "Structured logging", "Redaction"): it carries the job's id, kind and the
+enqueuing `request_id` for every record the job emits, and it installs the per-job secret set
+that `telemetry.MarkSecret` appends to, so a credential the upstream adapter marks under a
+`proxy.revalidate` replay or a `replication.sync` transfer is scrubbed from every record,
+`last_error` included, exactly as the request middleware does for a request. It carries no
+principal (below), and a replay is told from client traffic by its `kind` and absent principal,
+never by the replay marker (its AC31; AC27, AC30).
 
 ### Finish: fenced, transactional, exactly once in effect
 
@@ -557,14 +591,29 @@ shared metadata store at `READ COMMITTED`, runs the caller's function in it (the
 through the metadata store, the `Operation` terminal transition, retirements, verdict rows, the
 merged-document swap), and in the same transaction, as its last statement, executes `UPDATE job
 SET state='completed', finished_at=now() WHERE id=$id AND lease_token=$token AND
-state='running'`. A worker whose effect is a repository write (`manage.apply`,
-`retention.pass`, the merge swap) opens the repository's write scope inside that transaction
-through `storage-and-gc.md`'s sole write-transaction constructor in its on-a-transaction form
-(`repository.Writable`, the claims declared again, the pre-commit hook, the head lock taken
-last among the write path's locks; its AC25, AC30), so the constructor stays the only door to a
-repository write while the runner keeps commit; the fenced job update follows the head lock,
-the order `internal/repository`'s deletion also takes (repository, then job rows), so the two
-never deadlock. **If that update affects no row, `Finish` rolls the whole transaction back
+state='running'`. A worker whose effect is a repository write opens the repository's write
+scope inside that transaction through `storage-and-gc.md`'s sole write-transaction constructor
+in its on-a-transaction form, callback-shaped, which runs every check the standard door runs on
+the transaction `Finish` opened and refuses a joined transaction at any level but `READ
+COMMITTED` (its AC25, AC30). The form has two shapes, and a kind takes the one its transition
+has. `manage.apply` and `retention.pass` are completed writes: the standard shape consults
+`repository.Writable`, carries the claims declared again, runs the pre-commit hook and seals
+the snapshot in the commit step. The merge swap of `index.merge` and the cadence re-sign of
+`signing.resign` are document-only pointer transitions (`data-model.md` AC36): they take the
+form's **document-only shape**, which consults `repository.Renewable` instead, so a `read_only`
+repository is renewed and merged while a replica and a deleted repository are refused, declares
+no claim and seals no snapshot, writes the re-rendered documents' references through the shared
+reference-creation call and advances the default pointer's freshness record under the head
+lock (`repository-lifecycle.md`'s resolved document-only-transitions decision, was Q11 there;
+`signing-service.md` AC22; `storage-and-gc.md` AC24, AC25). In both shapes the constructor
+stays the only door to a repository write while the runner keeps commit, and a predicate
+refusal returns before any repository row is touched, so the runner ends the job without a
+write (`failed` with `read-only` for a completed write on a frozen repository, `cancelled` on a
+deleted one; Cancellation, below). The lock order is `storage-and-gc.md`'s: the write's
+document locks, then any member-row share lock, then the head, then the fenced job update, which
+is also the order `internal/repository`'s deletion takes (repository rows, then the job rows
+`CancelByRepository` touches), so a job's `Finish` and a deletion cancelling it never deadlock.
+**If that update affects no row, `Finish` rolls the whole transaction back
 and returns `ErrLeaseLost`.** This is the fence: a worker whose lease expired and was reclaimed
 by another worker holds a stale token, so its snapshot, its `Operation` transition and everything
 else in its function never commit. Combined with the claim rule, a job's effect commits at most
@@ -590,10 +639,11 @@ commits before `Finish`, in `proxy-cache.md`'s adoption transaction, and so outs
 worker that lost its lease may still adopt. That is safe because the adoption is the one a
 direct client's fetch of the same document would commit, under that layer's single-flight
 within a process and, across processes, its adoption commit's rule never to adopt an older or
-equal revision (two concurrent replays of one document commit one adoption, the second finding
-the revision current), and a re-run replays conditionally on the validators the first run
-adopted, so it answers `304` and adopts nothing twice. The registry test over kinds asserts it (AC8) rather than
-trusting the argument.
+equal revision (`proxy-cache.md`, "Nor is the current revision adopted twice", AC26: two
+concurrent replays of one document commit one adoption, the second finding the revision
+current under the document's revision token and running no hook), and a re-run replays
+conditionally on the validators the first run adopted, so it answers `304` and adopts nothing
+twice. The registry test over kinds asserts it (AC8) rather than trusting the argument.
 
 ### Retry, backoff and permanent failure
 
@@ -683,13 +733,18 @@ failed one: the client that wants to retry sends a new key. The queue never re-r
   `cancel_requested`; the `NOTIFY async_cancel` for each is delivered when the deletion
   commits, exactly as an operator's cancel is. The deletion does not wait for running jobs. A
   running job that reaches `Checkpoint` or `Finish` after the deletion committed finds the
-  write transaction refused by `repository.Writable`'s deleted state (the sole write-transaction
-  constructor, `storage-and-gc.md` AC25) and ends itself `cancelled` without a write; a job
-  whose external work notices the deleted state earlier may return `ctx.Err()` at once. Until
-  the job is terminal its grace hold stands (`storage-and-gc.md` AC23), so a half-imported
-  artifact's bytes are collected after the job ends, never under it. A `remote`'s pending
-  `proxy.revalidate` job names the remote as its repository, so the remote's deletion cancels it
-  here, and `EnqueueRevalidation` enqueues nothing for a deleted remote afterwards. Every
+  write transaction refused on the deleted state by `repository.Writable` or, for the merge
+  swap and the cadence re-sign, by `repository.Renewable` (the sole write-transaction
+  constructor's on-a-transaction form, `storage-and-gc.md` AC25) and ends itself `cancelled`
+  without a write; a job whose external work notices the deleted state earlier may return
+  `ctx.Err()` at once. Until the job is terminal its grace hold stands where its kind holds one
+  (`storage-and-gc.md` AC23), so a half-imported artifact's bytes are collected after the job
+  ends, never under it. A `remote`'s pending `proxy.revalidate` job names the remote as its
+  repository, so the remote's deletion cancels it here, and `EnqueueRevalidation` enqueues
+  nothing for a deleted remote afterwards; a `virtual`'s pending `index.merge` names the
+  virtual, so the virtual's deletion cancels it the same way, and a merge running at the commit
+  finds its swap refused at the door and commits nothing (`repository-lifecycle.md`, "Deletion"
+  steps 5 and 8, its AC21, AC29). Every
   `Schedule` scoped to the repository (its `retention.pass`, its per-pointer and
   repository-scoped `signing.resign` entries, its `replication.sync` links) is disabled in the
   same transaction; a tick that runs before the disable commits enqueues a job the deletion's
@@ -699,9 +754,10 @@ failed one: the client that wants to retry sends a new key. The queue never re-r
   `internal/repository` calls inside its transaction (AC28).
 - **Pause and resume a kind** (admin routes in `management-api.md`'s endpoint table): a paused
   kind's jobs are enqueued normally and never claimed (the kind is removed from `$claimable`,
-  read from a kind-state record of the shared schema, one row per paused kind naming who paused
-  it and when, never from memory, so every process agrees; `data-model.md` lists no such record
-  yet, reported as a consequence, since a table of this package's own would break its AC19).
+  read from `data-model.md`'s `PausedKind` record, one row per paused kind naming who paused
+  it and when, never from memory, so every process agrees; a record of the shared schema, since
+  a table of this package's own would break its handler-table rule and this spec's AC19; its
+  "Jobs and schedules", AC41).
   Running jobs of a paused kind finish. This is Harbor's queue pause and it is also how the conformance harness
   holds the Galaxy import for the prototype's AC8: the case `script` pauses `manage.apply`,
   publishes, polls once and sees unfinished, resumes, and polls to completion. No test-only
@@ -775,8 +831,10 @@ last, a leak the quota cannot see because `cache_referenced_bytes` falls while t
 not. That spec accepted it as "never a loss" and noted the kind-level exemption as available;
 this pass takes it, since a hold that protects nothing and defeats the quota is not a cost worth
 carrying for uniformity. The sweep gains no knowledge of kinds: it reads a flag beside the
-repository reference. `storage-and-gc.md` AC23's clause on the `proxy.revalidate` hold inverts
-as a consequence; every other kind holds, as the record was written.
+repository reference. `storage-and-gc.md` AC23's clause on the `proxy.revalidate` hold is
+inverted (its Fable follow-up of 2026-10-01: the hold read from the row's flag, `true` for
+every kind but `proxy.revalidate`, which holds nothing); every other kind holds, as the record
+was written.
 
 ### The scheduler
 
@@ -784,7 +842,13 @@ Periodic work is a `Schedule` record (`data-model.md`, "Jobs and schedules", AC4
 `kind`, `args`, `interval` or `next_run_at` derived by the kind, `last_run_at`, `last_result`,
 `enabled`, and an optional repository reference for the schedules that belong to one repository
 (a `retention.pass`, a per-pointer or repository-scoped `signing.resign`, a `replication.sync`),
-which is what repository deletion disables. One process at a time runs the scheduler tick, elected by a session-level
+which is what repository deletion disables. `read_only` disables only the `retention.pass`
+among them, a completed write an archived repository must not run on itself, while
+`signing.resign` keeps enqueuing, since its run is a document-only transition the frozen
+repository needs to stay installable and commits through the door's document-only form, and
+`replication.sync` follows its link (`repository-lifecycle.md`'s resolved
+document-only-transitions decision, was Q11 there, its AC10; `data-model.md` "Jobs and
+schedules", AC41). One process at a time runs the scheduler tick, elected by a session-level
 advisory lock on a dedicated connection, held for the process's life and re-acquired by another
 process within one tick of the holder's connection closing (River's leader election without the
 table). The lock is `internal/db/lock.LockScheduler`, from the one constant block
@@ -891,7 +955,7 @@ keys, read by that spec's enqueuing code; `management.operation_retention` stays
 `management-api.md`'s, and the two keys are independent: a job with an `Operation` is kept by
 the per-job rule (never pruned before its `Operation`), not by a relation between the keys, so
 the defaults (7 days against 90) are consistent and no startup check relates them
-(`deployment.md`'s validation paragraph still lists one, reported as a consequence).
+(`deployment.md`'s validation paragraph says so since its Fable recheck of 2026-10-01).
 `deployment.md`'s key inventory carries the eleven keys, its "Roles" table the `workers: 0`
 web-replica recipe, and its chart a second Deployment of the same image for the worker role.
 
@@ -910,7 +974,10 @@ none of them (the resolved unknown-kind decision, was Q10). The scheduler lock i
 `internal/db/lock.LockScheduler`; this package issues no advisory-lock SQL of its own.
 `internal/manage` implements the `manage.apply` worker and `internal/proxy` the
 `proxy.revalidate` worker; each other consumer package implements its own worker against
-`async.Worker`. The queries live with the shared metadata store's
+`async.Worker` (`internal/verify` the `verify.reevaluate` worker, `internal/trustsource` the
+two `verify.*_refresh` schedules, since the network-reaching trust sources live there and not
+under `internal/verify/**`). The runner derives each job's context from one
+`telemetry.WithJob` call per claim, before `Work`. The queries live with the shared metadata store's
 schema, since the records are `data-model.md`'s. No third-party queue library (the resolved
 queue-implementation question below); `golang.org/x/sync/errgroup` and `pgx` are the
 dependencies.
@@ -935,6 +1002,8 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | No package outside `internal/async` writes a job's state except through `CancelByRepository` inside the deletion transaction | `internal/async/arch_test.go` (no SQL against the job table outside the package; the one exported write path named) |
 | The runner gives no job a principal and never holds the revalidation replay entry | `internal/async/kinds_test.go` (for every registered kind, the context `Work` receives carries no principal although the job was enqueued under an authenticated request); `internal/async/arch_test.go` (the package imports neither `internal/server` nor `internal/auth`); the entry's single recipient is `format-handler-interface.md`'s `internal/server/arch_test.go` (its AC18) |
 | `proxy.revalidate` has no `Schedule` and is enqueued only through `EnqueueRevalidation` | `internal/proxy/revalidate_job_test.go` (`proxy-cache.md` AC26: no `Schedule` of the kind exists after virtual creation, reads and member changes; offline, `read_only` and deleted remotes enqueue nothing) |
+| Every job's context comes from exactly one `telemetry.WithJob` call per claim, before `Work`, carrying the job's attributes and the per-job secret set | `internal/async/trace_link_test.go` (one call per claim; `job_id`, `kind` and `request_id` on every record; a value marked during `Work` absent from every record and from `last_error`; shared with `observability.md` AC31's `internal/proxy/revalidate_job_test.go`) |
+| A kind whose effect is a document-only pointer transition (`index.merge`, `signing.resign`) takes the on-a-transaction form's document-only shape under `repository.Renewable`, never `Writable`; a completed write takes the standard shape | `internal/storage/arch_test.go` (`storage-and-gc.md` AC25: the document-only form calls `Renewable` and has no waiving entry point); `internal/async/kinds_test.go` (the registry names each kind's shape, and a fixture `Finish` on a `read_only` repository commits for the document-only kinds and ends `failed` `read-only` for the completed-write kinds) |
 
 ### Fault injection, property and benchmark tests
 
@@ -994,7 +1063,11 @@ during implementation with evidence.
       repository's write scope opened through the sole write-transaction constructor with the
       claims declared again, and its snapshot, retirements and audit line commit with both
       terminal states; a coordinate retired between enqueue and run ends both `failed` with
-      the `retired` problem and nothing committed (`management-api.md` AC16); a permanent error
+      the `retired` problem and nothing committed (`management-api.md` AC16); a deferred
+      `Apply` whose repository was frozen between enqueue and run is refused at the door by
+      `repository.Writable` before any repository row is touched and ends both `failed` with
+      the `read-only` problem and nothing committed (`repository-lifecycle.md` AC10); a
+      permanent error
       ends both `failed` with the handler's result document and no snapshot; the poll and
       cancel routes are refused `not-found` to a principal lacking the originating write's
       authorization.
@@ -1044,7 +1117,14 @@ during implementation with evidence.
       remote member's adoption of a new upstream revision enqueues one for every virtual
       listing the remote inside the adoption transaction, so a merge job exists exactly when the
       adoption commits (none when it rolls back), and the adopted change is visible in each
-      virtual within the staleness bound (`signing-service.md` AC34, AC35).
+      virtual within the staleness bound (`signing-service.md` AC34, AC35). The swap commits
+      through the sole write-transaction constructor's on-a-transaction form in its
+      document-only shape under `repository.Renewable`, never `Writable`: it declares no claim
+      and seals no snapshot, proceeds where `Renewable` passes (`active` and `read_only`) and is
+      refused where it does not, so a merge whose virtual was deleted before its `Finish` ends
+      `cancelled` with nothing committed, and the merge job carries the virtual as its
+      repository reference, so the virtual's deletion cancels a pending merge in the deletion
+      transaction (`storage-and-gc.md` AC25; `repository-lifecycle.md` AC21, AC29).
 - [ ] AC12: At most one job per `exclusive_key` is `running` at any instant across all
       processes, waiting jobs with that key run oldest first, none waits forever while the key
       is free, a pending job whose key a live running job holds is skipped by the claim without
@@ -1075,7 +1155,12 @@ during implementation with evidence.
       repository-scoped `signing.resign` schedule, whose runs hold exclusivity key
       `repository:{repository}` so no two overlap, beside its per-pointer schedules under
       `pointer:{repository}/{pointer}` (`signing-service.md` AC33), and repository deletion
-      disables both, `policy.feed_sync` runs one schedule per source under `feed_sync:{source}`,
+      disables both while `read_only` disables neither (only the repository's `retention.pass`),
+      the cadence run committing through the door's document-only form under
+      `repository.Renewable` so a frozen repository's envelope is renewed and a replica's or a
+      deleted repository's run is refused at the door and ends without a write
+      (`repository-lifecycle.md` AC10; `signing-service.md` AC22), `policy.feed_sync` runs one
+      schedule per source under `feed_sync:{source}`,
       `replication.sync` one per link at `replication.sync_interval` or the link's own period,
       `credential.prune` one daily instance-wide schedule under the kind as its exclusivity key
       (`credential-management.md` AC6),
@@ -1148,13 +1233,20 @@ during implementation with evidence.
 - [ ] AC27: `Enqueue` under a request records that request's `traceparent` as `trace_context`
       and its id as `request_id` on the `Job`, the scheduler's enqueues leave both null, the
       job's span carries a link to the enqueuing span and is not its child, and an audit line
-      emitted from the job carries the originating `request_id` (`observability.md` AC16).
+      emitted from the job carries the originating `request_id` (`observability.md` AC16); the
+      runner derives the context `Work` receives through exactly one
+      `telemetry.WithJob(ctx, id, kind, request_id)` call per claim, so every log record the job
+      emits carries `job_id`, `kind` and that `request_id`, and a value marked through
+      `telemetry.MarkSecret` during `Work` appears in no record the job emits and not in
+      `last_error` (`observability.md` "Redaction", AC31).
 - [ ] AC28: Deleting a repository, with a pending, a retrying and a running job naming it and a
       `retention.pass` schedule scoped to it, moves the pending and retrying jobs to
       `cancelled` in the deletion transaction (never run afterwards), delivers the cooperative
       cancel to the running one, which ends `cancelled` with nothing committed at its next
       `Checkpoint` or `Finish` because the write transaction is refused on the deleted state,
-      disables the schedule so no later tick enqueues for it, keeps the grace hold until the
+      disables the schedule so no later tick enqueues for it, cancels a `virtual`'s pending
+      `index.merge` and a `remote`'s pending `proxy.revalidate` through the same repository
+      reference, keeps the grace hold, where the kind holds one, until the
       running job is terminal and releases it then (`storage-and-gc.md` AC23), and the
       deletion request returns without waiting for the running job (`repository-lifecycle.md`
       AC21).
@@ -1166,7 +1258,10 @@ during implementation with evidence.
       enqueue; a request to the virtual for a cell no member input covers enqueues the remote's
       revalidation in an enqueue-only transaction that also records the cell on the virtual's
       input record, the row and the cell committing together or not at all (`data-model.md`
-      AC45); a virtual's creation or a member-list change adding a never-adopted remote
+      AC45), and a request for a further cell on a virtual already holding
+      `index.requested_cells_max` cells records nothing and enqueues nothing while still being
+      answered from the merged set (`signing-service.md`'s resolved requested-cell decision,
+      was Q22 there); a virtual's creation or a member-list change adding a never-adopted remote
       enqueues the job through `EnqueueRevalidation(ctx, tx, remote)` exactly when its
       transaction commits; no `Schedule` of the kind exists
       and no scheduler tick enqueues one; while `proxy.offline` is set, or with the remote
@@ -1194,16 +1289,16 @@ Every acceptance criterion maps to at least one test.
 | AC2 | property | `internal/async/property_test.go` (lease invariant over N processes; reclaim bound) |
 | AC3 | integration + fault injection | `internal/async/fence_test.go` (stale token at `Finish`, `Checkpoint`, heartbeat) |
 | AC4 | integration + fault injection | `internal/manage/deferred_test.go` (fault before commit at each site; pairing of `Operation` and `Job`) |
-| AC5 | integration + conformance | `internal/manage/deferred_test.go`; `conformance/ansible/deferred_publish_test.go` (real client, 202 then poll; unauthorized poll) |
+| AC5 | integration + conformance | `internal/manage/deferred_test.go`; `internal/repository/readonly_test.go` (a deferred operation pending at the freeze ends `failed` `read-only` with nothing committed, shared with `repository-lifecycle.md` AC10); `conformance/ansible/deferred_publish_test.go` (real client, 202 then poll; unauthorized poll) |
 | AC6 | integration + fault injection | `internal/async/crash_test.go` (process kill at each fault point, restart, invariants); `internal/format/ansible/deferred_crash_test.go` (the prototype's instance) |
 | AC7 | unit + integration | `internal/async/retry_test.go` (backoff schedule on an injected clock, permanent class, `RetryAt` later-of rule and attempt counting, a reclaim at `max_attempts` ending the job `failed` naming the leases, per-kind override through the registration options, credential leak scan of `last_error`) |
 | AC8 | integration | `internal/async/kinds_test.go` (table over the registry: interrupt-and-rerun, cancelled context) |
-| AC9 | integration + property | `internal/async/cancel_test.go` (pending, running-then-finish, running-then-return; the notification dropped and the flag met at the heartbeat; the lease expired with the flag set and the claim ending the row `cancelled` without a run); `internal/async/property_test.go` (never both; a cancel honoured across a lost notification and a lease expiry) |
-| AC10 | integration + conformance | `internal/async/pause_test.go` (multi-process pause visibility); `conformance/ansible/deferred_publish_test.go` (`script` pauses, polls, resumes) |
-| AC11 | integration + fault injection | `internal/index/virtual_merge_test.go` on the production runner (coalescing count, running-then-write, staleness bound and breach alert, no merge on a request goroutine; creation and member-list change enqueue under the same key; a member's default-pointer promotion and rollback enqueuing through `Transition` inside the repoint and an environment-pointer repoint enqueuing nothing, shared with `signing-service.md` AC19); `internal/index/virtual_remote_member_test.go` (shared with `signing-service.md` AC35: adoption enqueues in its transaction, an adoption rolled back by an injected fault leaves no job) |
+| AC9 | integration + property | `internal/async/cancel_test.go` (pending, running-then-finish, running-then-return; the notification dropped and the flag met at the heartbeat; the lease expired with the flag set and the claim ending the row `cancelled` without a run; shared with `data-model.md` AC41's `cancel_requested` case); `internal/async/property_test.go` (never both; a cancel honoured across a lost notification and a lease expiry) |
+| AC10 | integration + conformance | `internal/async/pause_test.go` (multi-process pause visibility: the `PausedKind` row read by a process started after the pause and absent after resume, shared with `data-model.md` AC41); `conformance/ansible/deferred_publish_test.go` (`script` pauses, polls, resumes) |
+| AC11 | integration + fault injection | `internal/index/virtual_merge_test.go` on the production runner (coalescing count, running-then-write, staleness bound and breach alert, no merge on a request goroutine; creation and member-list change enqueue under the same key; a member's default-pointer promotion and rollback enqueuing through `Transition` inside the repoint and an environment-pointer repoint enqueuing nothing, shared with `signing-service.md` AC19); `internal/index/virtual_remote_member_test.go` (shared with `signing-service.md` AC35: adoption enqueues in its transaction, an adoption rolled back by an injected fault leaves no job); `internal/storage/write_hook_test.go` (a fixture merge's `Finish` through the on-a-transaction form's document-only shape, no claim and no snapshot, shared with `storage-and-gc.md` AC25); `internal/repository/delete_virtual_test.go` (the merge job's repository reference is the virtual: a pending merge cancelled in the deletion transaction, a running merge's swap refused at the door with nothing committed; shared with `repository-lifecycle.md` AC29) |
 | AC12 | property | `internal/async/property_test.go` (exclusive-key invariant, fairness, liveness, no rolled-back claim for a held key outside the two-worker race, a held key delaying no other key, an expired holder releasing the key) |
 | AC13 | integration + property | `internal/storage/pending_operation_gc_test.go` (forced sweep past grace with a pending and a retrying import; a pending `proxy.revalidate` under a never-lifting stand-in rate limit holding nothing, the remote's evicted bytes collected; shared with `storage-and-gc.md` AC23); `internal/storage/gc_property_test.go` (queued job in the operation set, with and without the flag); `internal/async/kinds_test.go` (a kind declaring `false` leaves no unreferenced `Blob` row at any fault point, shared with `storage-and-gc.md` AC8) |
-| AC14 | integration | `internal/async/scheduler_test.go` under `testing/synctest` (leader death and election through `LockScheduler`, `scheduler: false` never elected, leader-only gauge export through `telemetry.NewTestRecorder`, missed periods, per-source and per-link schedules, restart mid-schedule, `proxy.offline` flag); `internal/db/lock/singleton_test.go` (shared with `deployment.md` AC19: holder kill and hand-over bound); `internal/signing/cadence_test.go` (expiry-derived next run; the one repository-scoped schedule beside the per-pointer ones, shared with `signing-service.md` AC33's `repository:{repository}` exclusivity); `internal/policy/feed_sync_test.go`, `internal/replication/sync_job_test.go` and `internal/credential/revoke_test.go` (the owning specs' schedule shapes; the last shared with `credential-management.md` AC6) |
+| AC14 | integration | `internal/async/scheduler_test.go` under `testing/synctest` (leader death and election through `LockScheduler`, `scheduler: false` never elected, leader-only gauge export through `telemetry.NewTestRecorder`, missed periods, per-source and per-link schedules, restart mid-schedule, `proxy.offline` flag); `internal/db/lock/singleton_test.go` (shared with `deployment.md` AC19: holder kill and hand-over bound); `internal/signing/cadence_test.go` (expiry-derived next run; the one repository-scoped schedule beside the per-pointer ones, shared with `signing-service.md` AC33's `repository:{repository}` exclusivity; a `read_only` repository renewed through the door's document-only form and a replica and a deleted repository refused, shared with `signing-service.md` AC22); `internal/repository/readonly_test.go` (the `signing.resign` schedule enabled and `retention.pass` disabled under `read_only`, shared with `repository-lifecycle.md` AC10 and `data-model.md` AC41's `internal/model/schedule_test.go`); `internal/policy/feed_sync_test.go`, `internal/replication/sync_job_test.go`, `internal/trustsource/sources_test.go` and `internal/credential/revoke_test.go` (the owning specs' schedule shapes; the refreshes registered by `internal/trustsource`, shared with `artifact-verification.md` AC22; the last shared with `credential-management.md` AC6) |
 | AC15 | integration + fault injection | `internal/verify/trust_revision_test.go` on the production runner (kill mid-page, rescue, no double recompute, kind limit) |
 | AC16 | architecture test | `internal/async/arch_test.go` (import graph); `internal/async/goroutine_test.go` (AST scan with allowlist and violation fixture) |
 | AC17 | architecture test + integration | `internal/async/arch_test.go`; `internal/async/crash_test.go` (same cases over `policy.scan` of a cached digest, `verify.reevaluate` of a proxied verdict, `index.merge` over remote members) |
@@ -1216,10 +1311,10 @@ Every acceptance criterion maps to at least one test.
 | AC24 | property | `internal/async/property_test.go`, run by `make verify` |
 | AC25 | benchmark | `internal/async/bench_test.go` (latency, throughput, dead tuples), gated in CI |
 | AC26 | integration | `internal/async/unknown_kind_test.go` (two processes with different registries: claim set, `pending` retained, gauges, warning log through `telemetry.NewTestRecorder`, `Start` succeeds); `internal/manage/deferred_test.go` (a `manage.apply` job for an operation kind one process's fixture handler lacks: `Skip`, the row unchanged, the other process running it) |
-| AC27 | integration | `internal/async/trace_link_test.go` (enqueue under a request and from the scheduler, span link, audit `request_id`; the `observability.md` AC16 row) |
-| AC28 | integration + fault injection | `internal/repository/delete_test.go` (shared with `repository-lifecycle.md` AC21: pending, retrying and running jobs, the scoped schedule, no wait); `internal/async/cancel_test.go` (`CancelByRepository` inside a transaction; running job refused at `Checkpoint` and `Finish` on the deleted state; grace hold released at terminal, shared with `storage-and-gc.md` AC23); `internal/retention/schedule_test.go` (shared with `generic.md` AC17: the repository's `retention.pass` schedule disabled on deletion, exclusivity under two runners, lost-lease commit refused) |
+| AC27 | integration | `internal/async/trace_link_test.go` (enqueue under a request and from the scheduler, span link, audit `request_id`; one `telemetry.WithJob` call per claim with `job_id`, `kind` and `request_id` on every record the job emits, and a value marked through `MarkSecret` during `Work` absent from every record and from `last_error`, through `telemetry.NewTestRecorder`; the `observability.md` AC16 row, shared with its AC31's `internal/proxy/revalidate_job_test.go` for the replay's records) |
+| AC28 | integration + fault injection | `internal/repository/delete_jobs_test.go` (shared with `repository-lifecycle.md` AC21: pending, retrying and running jobs, the scoped schedule, no wait; a `virtual`'s pending `index.merge` and a `remote`'s pending `proxy.revalidate` among the cancelled); `internal/async/cancel_test.go` (`CancelByRepository` inside a transaction; running job refused at `Checkpoint` and `Finish` on the deleted state, by `Writable` for a completed write and by `Renewable` for a merge swap; grace hold released at terminal for a kind that holds one, shared with `storage-and-gc.md` AC23); `internal/retention/schedule_test.go` (shared with `generic.md` AC17: the repository's `retention.pass` schedule disabled on deletion, exclusivity under two runners, lost-lease commit refused) |
 | AC29 | integration + fault injection | `internal/proxy/revalidate_job_test.go` on the production runner (shared with `proxy-cache.md` AC26: read bursts while pending and while running, creation and member-change enqueue with and without commit through `EnqueueRevalidation(ctx, tx, remote)`, a request for a remote-only cell recording the cell and enqueuing in one transaction that commits or fails as a whole, no `Schedule` and no tick enqueue, offline, `read_only` and deleted remotes, `RetryAt` past `RetryAfter` with a network-layer zero-request assertion until then, the `index.merge` row committed with the adoption; shared with `signing-service.md` AC35 and `data-model.md` AC45); `internal/async/cancel_test.go` (the remote's deletion cancels its pending job through `CancelByRepository`) |
-| AC30 | integration + architecture test | `internal/async/kinds_test.go` (for every registered kind, `Work`'s context carries no principal and no credential after an enqueue under an authenticated request); `internal/async/arch_test.go` (no import of `internal/server`); `internal/proxy/revalidate_job_test.go` (a failing replay whose response body carries a marker string: the marker absent from `last_error` and from every log record through `telemetry.NewTestRecorder`; shared with `auth.md` AC36's discarding-writer case); the deferred `manage.apply` path, applying an `Operation` on its originating request's authorization with no principal, is on `auth.md` AC10's external review list, so this row's evidence is read there too |
+| AC30 | integration + architecture test | `internal/async/kinds_test.go` (for every registered kind, `Work`'s context carries no principal and no credential after an enqueue under an authenticated request); `internal/async/arch_test.go` (no import of `internal/server`); `internal/proxy/revalidate_job_test.go` (a failing replay whose response body carries a marker string: the marker absent from `last_error` and from every log record through `telemetry.NewTestRecorder`; shared with `auth.md` AC36's discarding-writer case and with `observability.md` AC31's replay-signal assertions: no request log line, no `requests_total` increment, `kind="proxy.revalidate"` and no `principal` on every record); the deferred `manage.apply` path, applying an `Operation` on its originating request's authorization with no principal, is on `auth.md` AC10's external review list, so this row's evidence is read there too |
 
 ## Implementation Phases
 
@@ -1229,10 +1324,12 @@ the deferred-operation consumer (Phase 4) at step 6a before Ansible collections;
 consumers with their own specs' steps (the resolved build-placement question below).
 
 ### Phase 1: The queue core
-- `Job` record in the shared schema (`data-model.md` AC41, landed; `cancel_requested` and
-  `holds_grace` reported there), transactional `Enqueue` with `trace_context` and
-  `request_id`, refusing unregistered kinds, SKIP LOCKED claim over the registered kinds with
-  the exclusivity predicate, lease and token, heartbeat, fenced `Finish` and `Checkpoint`,
+- `Job` record in the shared schema (`data-model.md` AC41, landed with `cancel_requested`,
+  `holds_grace` and `PausedKind` at its Fable follow-up), transactional `Enqueue` with
+  `trace_context` and `request_id`, refusing unregistered kinds, SKIP LOCKED claim over the
+  registered kinds with the exclusivity predicate, lease and token, the job context from one
+  `telemetry.WithJob` call per claim, heartbeat, fenced `Finish` and `Checkpoint` through the
+  on-a-transaction form's two shapes,
   retry classes (`Permanent`, `RetryAt`, `Skip`) and backoff, lease-expiry rescue with the
   attempt-exhausted and cancel-requested endings, the registration options (`WithMaxAttempts`,
   `WithBackoff`, `WithHoldsGrace`), pruning, unknown kinds skipped, no principal in any job's
@@ -1265,9 +1362,10 @@ consumers with their own specs' steps (the resolved build-placement question bel
 
 ### Phase 5: Sibling consumers as their steps arrive
 - `policy.scan`, `policy.feed_sync` per source (step 4b, with `supply-chain-policy.md`);
-  `verify.reevaluate`, `verify.tuf_refresh`, `verify.revocation_refresh` (step 4b, AC15);
-  `index.merge` with every trigger, including the adoption hook, and `signing.resign` per pointer
-  and per repository (step 7, AC11, AC14's cadence clauses); `proxy.revalidate`, registered with
+  `verify.reevaluate` in `internal/verify` and `verify.tuf_refresh`, `verify.revocation_refresh`
+  in `internal/trustsource` (step 4b, AC15); `index.merge` with every trigger, including the
+  adoption hook, and `signing.resign` per pointer and per repository, both committing through
+  the door's document-only form (step 7, AC11, AC14's cadence clauses); `proxy.revalidate`, registered with
   `proxy-cache.md`'s Phase 2 once the queue core exists, its first caller arriving with the first
   format whose virtual phase has a `Merge` (AC29); `replication.sync` per link (step 10);
   `credential.prune` (`credential-management.md` Phase 1 at step 2, which precedes the queue
@@ -1374,7 +1472,7 @@ Rechecked on Fable 2026-10-01: confirmed. Two columns the runner needs on its ow
 (`cancel_requested`, `holds_grace`) and one record it needs beside it (the paused-kind set)
 are exactly the things option A would have put on the client-visible `Operation`; that they
 arrived without touching `Operation` is the split working as intended. `data-model.md`'s
-transcription lacks all three today, reported as a consequence.
+transcription carries all three since its Fable follow-up of 2026-10-01 (AC41).
 
 ### Resolved: an unfinished job holds its repository's grace open (was Q4)
 
@@ -1410,7 +1508,7 @@ per kind at registration (`HoldsGrace`, default true, copied to the row at enque
 sweep reads a flag and knows no kind), and `proxy.revalidate` declares it false. Cost stated
 now: one declaration per kind that a wrong `false` would turn into a data-loss hazard, held by
 `kinds_test.go`'s no-unreferenced-blob check at every fault point; `storage-and-gc.md` AC23's
-`proxy.revalidate` clause inverts (reported for its Fable follow-up). Flagged owner-facing:
+`proxy.revalidate` clause is inverted (its Fable follow-up of 2026-10-01). Flagged owner-facing:
 this changes a criterion of a spec planned on Fable, taking an exemption that spec named as
 available rather than adopted.
 
@@ -1439,7 +1537,7 @@ state are right; the fold left the running-job cancel living only in a `NOTIFY`,
 notification or a lease expiry before the worker noticed would have re-run the job as if never
 cancelled. The request is now a `cancel_requested` column read at every heartbeat and every
 claim, so a cancel is durable across a dead process and a lost notification (Design, AC9, the
-property suite); reported to `data-model.md`.
+property suite); transcribed by `data-model.md` (AC41, its Fable follow-up of 2026-10-01).
 
 ### Resolved: pause and resume per kind is the harness's hold (was Q6)
 
@@ -1461,8 +1559,9 @@ its own (a runaway kind during an incident), and it removes any test-only hold f
 Folded into "Cancellation, pause and resume", AC10, AC21.
 
 Rechecked on Fable 2026-10-01: confirmed. The under-stated cost is a record: a database-held
-paused set is a row per paused kind in the shared schema, which `data-model.md` does not list
-(reported), since a table of this package's own would break AC19; AC10 now says a process
+paused set is a row per paused kind in the shared schema, which `data-model.md` lists as
+`PausedKind` since its Fable follow-up of 2026-10-01 (AC41), a table of this package's own
+having been ruled out by AC19; AC10 now says a process
 started after the pause honours it.
 
 ### Resolved: bounded retries with a short horizon (was Q7)
@@ -1640,3 +1739,4 @@ as long as the reads continue; that is the visible, bounded shape the decision w
 | 2026-09-28 | 9ebf6e9 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. From `repository-lifecycle.md` (authoring item 12; its "Deletion" step 8 and AC21): a new bullet under "Cancellation, pause and resume" - the deletion transaction cancels every pending job naming the repository, requests cancel on running ones, disables the repository-scoped `Schedule`s, a job reaching `Checkpoint` or `Finish` on a deleted repository is refused by the write-transaction constructor and ends itself `cancelled`, the grace hold stands until terminal; `CancelByRepository(ctx, tx, repo)` added to the package shape as the one exported write path outside the package, with an enforcer row; AC28 added, its rows shared with that spec's AC21 and `storage-and-gc.md` AC23; `Schedule` gains an optional repository reference. From `deployment.md` (item 9): (a) unknown kinds skipped, not failed, which contradicted the draft's AC26 and is recorded as Q10, adopted under the standing delegation, with the claim query restricted to registered unpaused kinds, AC26 rewritten and Phase 1 following; (b) the leader lock is `internal/db/lock.LockScheduler` on a dedicated connection, with `deployment.md` AC19's enforcer cited (AC14, "The scheduler", "Package shape"); (c) no rename: the kind table now says why `verify.tuf_refresh`/`verify.revocation_refresh` (kinds) and `verify.sigstore.refresh`/`verify.revocation.refresh` (period keys) differ. From `observability.md` (item 8): the ten `async_*` series and the merge worker's breach counter by catalogue name, `JobFailed`, `ScheduleOverdue`, `VirtualMergeStalenessBreach` and `SchedulerLeaderless` through `telemetry.Alert` (AC20 rewritten), the leader-only state-gauge collector (AC14, its AC7), `trace_context` and `request_id` set at enqueue with a linked job span (the `Job` record, "Enqueue is transactional", AC27 added, its AC16 row). From the `data-model.md` reconciliation (item 2): `Job` and `Schedule` cited to "Jobs and schedules" and AC41, `cancelled` as admitted by AC32 and `management-api.md` AC16. From the `storage-and-gc.md` reconciliation (item 3): AC23 cited for the grace hold in Design, the enforcer table, AC13's row and Phase 4; the storage kinds run at the `gc.*_interval` keys with `LockSweep` as the second guard (its AC26). From the `supply-chain-policy.md` reconciliation (item 8): `policy.feed_sync` one schedule per source with exclusivity key `feed_sync:{source}`, the scan alert bound `policy.scan.unscanned_alert_after` (kind table, "The scheduler", AC14). From the `replication.md` reconciliation (item 7): `replication.sync` per link at `replication.sync_interval` or the link's own period, its AC23 cited. From the charter reconciliation (item 4): Context restated on the charter's step 4b queue core and step 6a deferred operation, "owed" dropped for `management-api.md`, `observability.md` and `deployment.md`. Context's sibling summaries rewritten to what each spec now says (`signing-service.md` AC19 and AC22 on the production runtime, `artifact-verification.md` on `async.kind_limits` with the `verify.workers` key retired under `deployment.md`'s was-Q11, `supply-chain-policy.md`'s `policy.scan` shape, `replication.md` AC23, `storage-and-gc.md` AC23 and AC26, plus new entries for `repository-lifecycle.md`, `observability.md` and `deployment.md`). The configuration table is in the three-column shape `scripts/check-config-keys.js` parses (AC22 extended). Already done at authoring: management-api items 2 and 14, signing-service item 15, debian item 20's deferred regeneration, format-management item 3's consistency note. 28 criteria, each with a Test Plan row; ten resolved questions, zero open. `node scripts/check-spec.js` on this file: zero failures. Stays draft pending a gate review. |
 | 2026-09-28 | b7640dd | closing reconciliation sweep on Opus: every `consequences.md` item targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show as applied. Not a review | Not a review. Each item verified against the current text of its source spec before applying. Format batch 3 item 7, batch 4 item 8, batch 6 item 12, batch 7 item 12, batch 8 item 10: Context's format list rewritten from each format spec's own virtual and dependency sections, which also moved `chef.md`, `luarocks.md`, `maven.md` and `helm.md` (index.merge consumers that ask nothing of this spec directly) and named `composer.md`, `homebrew.md`, `openvsx.md`, `puppet.md`, `swift.md`, `terraform.md`, `conan.md` as per-request virtuals, with `hex.md` `Virtual: unsupported`; `conda.md` left the "regenerates inside the write" sentence for the merge consumers. Signing-service closing sweep item 4: `index.merge` triggers gain member-list change and remote adoption through the adoption-commit hook (its was-Q15, was-Q16, AC34, AC35; AC11 extended, its row sharing `internal/index/virtual_remote_member_test.go`); `signing.resign` gains the repository-scoped schedule under `repository:{repository}` (its AC33, `hackage.md` was-Q16; AC14 extended, deletion disables it); the revalidation kind added. Proxy-cache closing sweep item 1: the `proxy.revalidate` row matches its "Revalidation outside the request" and AC26 exactly (callers, `revalidate:{repository}` for coalesce and exclusivity, no `Schedule`, nothing under `proxy.offline`, `read_only` or deleted, effect an adoption whose hook enqueues `index.merge`, rate limit past `RetryAfter`); the read-path enqueue runs in its own enqueue-only transaction so `Enqueue(ctx, tx, Job)` stays the only signature; the adoption outside the fence argued idempotent; remote deletion cancels the pending job through `CancelByRepository`; AC29 added. Auth AC36 and FHI AC18 (the prompt's note, and proxy-cache closing sweep item 4 seen from here): the runner gives no job a principal, treats `trace_context` and `request_id` as correlation only, never receives the replay entry, and keeps replayed response bytes out of `last_error` and its logs; "the runner's only route to a handler is `internal/manage`" corrected to name both worker doors; enforcer rows and AC30 added. Q11 raised and adopted under the standing delegation: `RetryAt(err, at)`, needed because the transient class could not express proxy-cache's "`run_at` moved past `RetryAfter`" (AC7, the property suite's termination invariant, AC24; fable_recheck extended). Earlier items not shown as applied: format batch 2 item 2 (Ansible's import deferred as the `publish` kind on `manage.apply`, its was-Q9, in Context); format batch 1 item 9 (AC28's row shares `internal/retention/schedule_test.go` with `generic.md` AC17). Already done: charter reconciliation item 4, repository-lifecycle authoring item 12 (credential and lifecycle item 3's half for this file; items 9, 10 and 13 target other files). 30 criteria, each with a Test Plan row; eleven questions resolved, zero open. `node scripts/check-spec.js` on this file: zero failures. Stays draft pending a gate review. |
 | 2026-10-01 | e8f554d | Fable recheck: full review (claim verification at HEAD against every cited sibling, all 33 format specs' virtual sections, the charter and the prototype; adversarial lens at full strength on the cloud-authored whole, its design judgement treated as unreviewed; constitution compliance; go-spec-reviewer inline, its codebase step vacuous since the module's only Go file is `cmd/stackweaver-registry/main.go`) + re-examination of the eleven adoptions made without Fable (Q1 to Q9 in the cloud session, Q10 and Q11 on Opus) | Brought current first: every open consequence against this file applied and verified against its source's current text (foundation leftovers item 1, `EnqueueRevalidation(ctx, tx, remote)` at both sites; management-api recheck item 5, the `deferred_threshold` citation gone; credential-management recheck item 4, the `credential.prune` kind in the table, AC14 and Phase 5; signing-service recheck item 13, `index.merge` enqueued by a `local` member's target-moving pointer transition through `Transition` and the read-driven cell enqueuing `proxy.revalidate` from the virtual's request path; data-model recheck item 6, the enqueue-only transaction also writing the requested cell, "Enqueue is transactional" reworded; storage-and-gc recheck item 3, judged below; auth recheck item 7, AC30's row cites AC10's deferred-Apply item; batch 7 item 12 and the other Context-list items found applied at b7640dd, `rubygems.md` added as the merge consumer it is and the first-member formats named). Verdicts: Q1, Q2, Q3, Q6, Q8, Q9, Q11 confirmed, each with an under-stated cost added to its record; Q4 confirmed and amended (the hold is declared per kind, `HoldsGrace` copied to the row at enqueue, `proxy.revalidate` false: its adoption commits row and reference together and its per-job hold chained under a persistent rate limit into a hold for the duration, the leak storage-and-gc accepted while naming the exemption; that spec's AC23 clause inverts, owner-facing); Q5 amended (the running-job cancel is a `cancel_requested` column read at every heartbeat and claim, so it survives a lost notification and a lease expiry); Q7 amended (a rescue at `max_attempts` ends the job `failed`, since a dead worker returns nothing to classify; the bound is over claimable time); Q10 amended (`async.Skip` for a `manage.apply` job whose operation kind this process's handler lacks, the row restored unchanged). None superseded. Adversarial findings fixed directly: the claim query found a held `exclusive_key` only at the `UPDATE`, which spins every process on the head-of-queue row and holds every kind behind it, now a predicate in the subselect with the index as the race guard (AC12); `NOTIFY` was described as issued after commit, now inside the transaction and delivered at commit (AC1); `Finish` opened a bare transaction where the sole write-transaction constructor must own a repository write, now the constructor's on-a-transaction form inside `Finish` with the lock order stated (AC5; storage-and-gc consequence); AC22 refused at startup the very defaults the table gives (`job_retention` 7 days under `operation_retention` 90), the per-job rule making the check wrong, removed (deployment consequence); the paused set was a `paused_kinds` table nowhere in the shared model, now a record reported to data-model; `Enqueue` refuses an unregistered kind, since only a registration carries the row's declarations; the outside-the-fence argument for `proxy.revalidate` stated across processes. Constitution: both paths (AC17), the shared model and no package-owned table (AC19, with the two columns and the record reported rather than added), the named enforcers, findings in the doc, CI economy all hold. No em-dashes on touched lines. 30 criteria, each with a Test Plan row; zero open questions; `node scripts/check-spec.js` zero failures on this file; `fable_recheck` cleared; draft -> planned. Sibling consequences reported, not applied. |
+| 2026-10-01 | ec38840 | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: every item in `agents/spec-loop/consequences.md` targeting this file after the e8f554d row collected, verified against the current text of its source spec and of this one, then read adversarially against the rest of this spec. Applied, seven. Observability recheck item 5 (its "Structured logging", "Redaction", AC31): the runner derives each job's context through exactly one `telemetry.WithJob(ctx, id, kind, request_id)` call per claim before `Work`, installing the job attributes and the per-job secret set `MarkSecret` appends to under `proxy.revalidate` and `replication.sync` (Context, Claim, "Package shape", a new enforcer row; AC27 extended, its row sharing `internal/proxy/revalidate_job_test.go` with observability AC31; AC30's row names the shared replay-signal assertions). Artifact-verification recheck item 4 (its was-Q3 as amended, AC22): `verify.tuf_refresh` and `verify.revocation_refresh` are registered by `internal/trustsource`, `internal/verify` registering only `verify.reevaluate` (Context, the kind table, "Package shape", Phase 5; AC14's row gains `internal/trustsource/sources_test.go`). Repository-lifecycle recheck item 4 (its "Deletion" steps 5 and 8, AC10, AC21, AC29, was-Q11) with storage-and-gc follow-up item 1 (its "The write transaction has one door", AC24, AC25, AC30): the `Finish` paragraph no longer sends the merge swap through `repository.Writable`; the on-a-transaction form has two shapes, the standard one for `manage.apply` and `retention.pass` and the document-only one under `repository.Renewable` for the `index.merge` swap and the `signing.resign` run, with no claim, no snapshot and the lock order documents, member rows, head, job row (Finish, the kind table, a new enforcer row; AC11 and AC14 extended, AC11's row sharing `internal/storage/write_hook_test.go` and `internal/repository/delete_virtual_test.go`); an `index.merge` job's repository reference is the virtual it merges and a `signing.resign` job's its repository, so `CancelByRepository` reaches both (the kind table, the deletion bullet, AC11, AC28 and its row); `signing.resign` and `replication.sync` are not suspended by `read_only`, only `retention.pass` is (Scope, the kind table, "The scheduler", AC14 and its row sharing `internal/repository/readonly_test.go`). Signing-service follow-up item 3 (its was-Q22, AC35; `proxy-cache.md` AC26 as amended): a request for an uncovered cell on a virtual already at `index.requested_cells_max` records nothing and enqueues nothing (the `proxy.revalidate` row, AC29). Data-model follow-up item 2 (its AC41 and `PausedKind`): the seven "reported" and "lists no such record" sentences in the `Job` record, the pause bullet, Phase 1 and the was-Q3, was-Q5 and was-Q6 recheck notes are citations now, and AC9's and AC10's rows share `internal/async/cancel_test.go` and `internal/async/pause_test.go` with data-model AC41. Proxy-cache follow-up item 3 (optional): the cross-process adoption argument in Finish cites its "Nor is the current revision adopted twice" and AC26. Found already applied and verified in the text: storage-and-gc follow-up item 1's second half (AC13's row already names `internal/storage/pending_operation_gc_test.go` as shared with storage AC23). Found met by siblings since the recheck and reworded from "reported" to citations on lines touched: storage-and-gc AC23's inverted `proxy.revalidate` clause (Context, "the GC grace", the was-Q4 note), deployment's dropped retention check and its per-role connection budget (Context, "Configuration"). Credential-management recheck item 4 (the pre-4b registration of `credential.prune`) targets that spec, whose follow-up has not run; this spec's Phase 5 and was-Q9 note already state the fixture-runner convention and say so, left as they are. Declined: nothing. Adversarial check of what changed: the new enforcer row asserted that a frozen repository ends a deferred `Apply` `failed` `read-only` while no criterion here said so, now AC5's clause with `internal/repository/readonly_test.go` shared with lifecycle AC10; AC28's row cited `internal/repository/delete_test.go` for lifecycle AC21, whose row names `delete_jobs_test.go`, corrected (data-model AC41's row carries the same stale name, reported); the merge row's grace sentence claimed the merged bodies are put before the swap, softened to what is certain; a merge of a `read_only` virtual is stated only as far as `Renewable` passes it, which lifecycle's was-Q11 lists by name. No question raised or adopted; no mark root added; `auth.md` AC10 untouched; no pinned method changed. No em-dashes or en-dashes. 30 criteria, each with a Test Plan row; Open Questions empty; `node scripts/check-spec.js` on this file: zero failures. Stays planned. |
