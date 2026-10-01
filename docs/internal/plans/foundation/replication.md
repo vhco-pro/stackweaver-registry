@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Fable gate review 2026-10-01 at 4dac925 cleared it to planned (a pass interrupted mid-apply and resumed on Fable the same day): every sibling citation verified at HEAD against the planned foundation specs, the queued consequences applied (`.sync` and `.reseed` audit events with the re-seed's discarded snapshots in `objects`, the link `GET` on the request log only, the replication read surface a mount on the main listener, AC12 covering the door's document-only form, the management routes' refusal order under management-api's was-Q18 and AC35), and the adversarial findings folded: every apply, the takeover, the re-seed and the deletion serialise on the link row, the link row is the position of record and the link's `Schedule` is disabled in the transaction that ends it (AC23, AC26); the `Retirement` set and `FileProvenance` travel on the read surface and in the archive (AC25); the want-list covers pointer-document bodies, declared blob-digest lists and verification-failed blobs; a leader whose head is below the follower's position is `diverged` (AC17); a `read_only` replica's sync is refused `read-only` under the two planned architecture tests (AC22); the position is pinned by the mirrored default pointer and the chain stays linear across a leader rollback (AC20); AC18 names the refusal each token class receives under auth's existence rule; an import into an unlinked repository is refused `validation` (AC9). One new question raised and adopted on Fable (Q12: the takeover request re-signs and registers the cadence schedules, in two steps because the door's on-a-transaction form is the runner's alone). 26 criteria, zero open questions; the server-side ingest hook stays pending at the interface re-open. Earlier: sweep 2026-09-28 at 6e6d503 (not a review): management-api's replication routes and `replica` type cited; data-model AC31 shared in AC16 and AC22. Reconciled 2026-09-28 at 9f93794 with the foundation authoring wave (not a review): signing records travel with the pointer set and a linked follower signs nothing, takeover needs resolvable keys (AC21); sync runs as replication.sync jobs with per-snapshot checkpoints on the shared async runner (AC3, AC23); the link has a six-state vocabulary with terminal ended, an updatable leader name and composes with repository-lifecycle's Writable predicate, read_only and deletion (AC11, AC12, AC16, AC22); observability's replication metrics, alerts, audit events and peer trace propagation folded into AC10; a replication. key table (AC24); the reserved segment is named replication (AC18); freeze's dated HCP Vagrant consumer recorded with Q11 adopted. Earlier: Wave 1 reconciliation (charter step 10, harness provisioner, sibling amendments landed) and Q1-Q10 adopted under the owner's standing delegation. 24 criteria, zero open questions; the server-side ingest hook stays pending at the interface re-open; stays draft pending a gate review."
+status_description: "Fable follow-up 2026-10-01 at 4e92a60, still planned: the four items queued since the gate review applied and verified against management-api, async-operations and signing-service at HEAD, none declined (an ended link's sync, re-seed, takeover, PATCH and DELETE are refused conflict with the row kept as the takeover or deletion record, a PUT creating a new link beside it and the GET answering the active or newest ended one, AC23; the takeover names signing.Service.RegisterSchedules with now and a resolved key that will not sign answers 500 with about:blank naming the key while the takeover's audit record reports the link ended, AC10, AC21, with AC21's row sharing internal/signing/schedules_test.go); one question raised and adopted under the standing delegation, flagged owner-facing: Q13, a replication.sync job ends completed whenever it wrote the link's outcome (read-only, unreachable, unauthorized, not-found, diverged, or an ended link after a takeover), cancelled when the replica's deletion cancelled it, and transient only on a fault of the worker itself after writing the new reason error, so JobFailed never fires once per sync_interval on a deliberately frozen replica and ReplicationLinkFailed is that state's whole alerting (AC22, AC23, AC26). 26 criteria, zero open questions. Earlier: Fable gate review 2026-10-01 at 4dac925 cleared it to planned (a pass interrupted mid-apply and resumed on Fable the same day): every sibling citation verified at HEAD against the planned foundation specs, the queued consequences applied (`.sync` and `.reseed` audit events with the re-seed's discarded snapshots in `objects`, the link `GET` on the request log only, the replication read surface a mount on the main listener, AC12 covering the door's document-only form, the management routes' refusal order under management-api's was-Q18 and AC35), and the adversarial findings folded: every apply, the takeover, the re-seed and the deletion serialise on the link row, the link row is the position of record and the link's `Schedule` is disabled in the transaction that ends it (AC23, AC26); the `Retirement` set and `FileProvenance` travel on the read surface and in the archive (AC25); the want-list covers pointer-document bodies, declared blob-digest lists and verification-failed blobs; a leader whose head is below the follower's position is `diverged` (AC17); a `read_only` replica's sync is refused `read-only` under the two planned architecture tests (AC22); the position is pinned by the mirrored default pointer and the chain stays linear across a leader rollback (AC20); AC18 names the refusal each token class receives under auth's existence rule; an import into an unlinked repository is refused `validation` (AC9). One new question raised and adopted on Fable (Q12: the takeover request re-signs and registers the cadence schedules, in two steps because the door's on-a-transaction form is the runner's alone). 26 criteria, zero open questions; the server-side ingest hook stays pending at the interface re-open. Earlier: sweep 2026-09-28 at 6e6d503 (not a review): management-api's replication routes and `replica` type cited; data-model AC31 shared in AC16 and AC22. Reconciled 2026-09-28 at 9f93794 with the foundation authoring wave (not a review): signing records travel with the pointer set and a linked follower signs nothing, takeover needs resolvable keys (AC21); sync runs as replication.sync jobs with per-snapshot checkpoints on the shared async runner (AC3, AC23); the link has a six-state vocabulary with terminal ended, an updatable leader name and composes with repository-lifecycle's Writable predicate, read_only and deletion (AC11, AC12, AC16, AC22); observability's replication metrics, alerts, audit events and peer trace propagation folded into AC10; a replication. key table (AC24); the reserved segment is named replication (AC18); freeze's dated HCP Vagrant consumer recorded with Q11 adopted. Earlier: Wave 1 reconciliation (charter step 10, harness provisioner, sibling amendments landed) and Q1-Q10 adopted under the owner's standing delegation. 24 criteria, zero open questions; the server-side ingest hook stays pending at the interface re-open; stays draft pending a gate review."
 description: "Spec for replicating content between registry instances - geo-distribution, disaster recovery and air-gapped mirroring - built on the content-addressed store and immutable snapshots."
 author: michielvha
 goal: "Let one logical registry span sites, so a build pulls locally and an air-gapped environment can be fed a verifiable snapshot."
@@ -195,14 +195,44 @@ row and re-reads its state** before committing, and so do the takeover, the oper
 the replica's deletion (`repository-lifecycle.md` AC22), which lock the same row: a sync still
 transferring when a takeover commits finishes its blob puts (content-addressed, unreferenced,
 grace-protected until the sweep) and then finds the link `ended` at its next apply, ends itself
-with nothing more applied, and the new leader's first write is the only writer of N+1 (AC26).
+`completed` with nothing more applied, and the new leader's first write is the only writer of
+N+1 (AC26).
 The exclusivity key keeps two syncs apart; the row lock is what keeps a sync apart from the
 operator. The transaction that ends a link also **disables the link's `Schedule`**, the takeover
 as the deletion already does (`async-operations.md`'s per-link `Schedule` row and its deletion
 rule, `repository-lifecycle.md` AC21), so nothing enqueues a sync for an `ended` link; a job
 enqueued before that commit finds the link `ended` at its next apply and ends itself as above,
-and an on-demand sync, a re-seed or a takeover requested against an `ended` link is refused as a
-state conflict, whose problem type `management-api.md`'s table fixes (AC23, AC26).
+and an on-demand sync, a re-seed or a takeover requested against an `ended` link is refused
+`conflict`, the type `management-api.md`'s problem table fixes for a state the write cannot
+apply to, as are a `PATCH` and a `DELETE` of the link itself (the link section below; AC23,
+AC26).
+
+**A sync's outcome is the link's, and the job completes.** `async-operations.md` gives a
+`Work` three error classes (`Permanent`, transient, `RetryAt`), each ending or retrying the job
+and the last two eventually raising `JobFailed`, and a `replication.sync` run that is refused
+or finds nothing to do had to be placed among them (the resolved sync-outcome decision below,
+was Q13). The rule: every outcome the link table names is written to the link row by the job
+and the job ends `completed`. A run the applier's entry point refuses `ErrReadOnly` writes
+`failed` with reason `read-only` and completes; a run that cannot reach the leader, is refused
+by it or finds the leader repository gone writes `failed` with `unreachable`, `unauthorized` or
+`not-found` and completes; a run that finds the histories forked writes `diverged` and
+completes; a run that finds the link `ended` by a takeover writes nothing, since the link is
+already terminal, and completes; and the next tick of the link's `Schedule` is the retry for
+every one of them, at `replication.sync_interval`, so the queue's backoff is never a second
+retry loop beside the schedule. A run that finds the link `ended` by the replica's deletion is
+the one that does not complete: the deletion transaction cancelled it through
+`CancelByRepository` and its next apply is refused `ErrDeleted` at the door, so it ends
+`cancelled` without a write (`async-operations.md`'s deletion rule, its AC9 and AC28). The
+queue's error classes are kept for a fault of the worker itself - a store or database error
+mid-apply, a lost lease - which `Work` returns unwrapped, transient, after writing `failed`
+with reason `error` to the link, so that the re-run from the checkpoint is the queue's ordinary
+rescue path and a worker that dies on its last attempt leaves a link the next tick's job
+rewrites; this kind never wraps `Permanent`. `syncing` is therefore written at the claim and
+stands only while a job runs. The consequence a monitor sees: `JobFailed` fires for a fault
+replication cannot attribute to a link state and never once per `sync_interval` on a replica
+an operator froze on purpose, whose `ReplicationLinkFailed` is the whole of the alerting; the
+job an operator reads under `/api/v1/system/jobs` says `completed` for a link that says
+`failed`, and the link is the record (AC22, AC23, AC26).
 
 A follower is an ordinary instance of the one binary, roles by configuration (`deployment.md`,
 "Process model"): the sync runs on whichever of its processes has workers, so a follower whose
@@ -353,9 +383,9 @@ state set is the one `observability.md`'s one-hot gauge reports:
 
 | State | Meaning | Reason carried |
 |---|---|---|
-| `syncing` | a `replication.sync` job holds the link's exclusivity key and is transferring | |
+| `syncing` | a `replication.sync` job holds the link's exclusivity key and is transferring; written at the claim, standing only while the job runs | |
 | `idle` | the last sync completed and the follower is at the leader's position for every mirrored pointer | |
-| `failed` | the last sync could not complete and nothing was applied | `not-found` (the leader repository is gone or renamed), `unauthorized`, `unreachable`, `source-type`, `read-only` (the replica is frozen; thaw resumes it) |
+| `failed` | the last sync ended short of the leader's position; what it applied before that stands, and the next tick retries | `not-found` (the leader repository is gone or renamed), `unauthorized`, `unreachable`, `source-type`, `read-only` (the replica is frozen; thaw resumes it), `error` (a fault of the worker itself, written before the job's transient return; the one reason behind which `JobFailed` can also fire) |
 | `reseeding` | a retention gap was detected and a checkpoint-based re-seed is in progress | `retention-gap` |
 | `diverged` | the identity check failed; nothing applies until an operator re-seed | the highest agreed snapshot number |
 | `ended` | terminal: the link no longer governs the repository | `takeover`, `deleted` |
@@ -364,7 +394,13 @@ state set is the one `observability.md`'s one-hot gauge reports:
 active link per repository" (`data-model.md` AC31) means at most one such link. A repository
 whose only link is `ended` is an ordinary local repository as far as `Writable` is concerned,
 which is what makes takeover a state change rather than a row deletion, and keeps the takeover
-record readable afterwards.
+record readable afterwards. An `ended` row is never written again and never deleted by the
+link's own routes: an on-demand sync, a re-seed, a takeover, a `PATCH` and a `DELETE` against
+an `ended` link are each refused `conflict` with nothing changed (`management-api.md`'s
+problem table: a state the write cannot apply to), so the row stays as the takeover or
+deletion record; a `PUT` on a repository whose only links are `ended` creates a new link
+beside them, the ordinary way a taken-over repository follows a new leader; and the link's
+`GET` answers the active link, or the most recently ended one when none is active (AC23).
 
 The link composes with `repository-lifecycle.md`'s repository states as follows, each clause
 asserted by AC22:
@@ -387,9 +423,11 @@ asserted by AC22:
   AC25, `repository-lifecycle.md` AC9, both planned and both asserting it in
   `internal/storage/arch_test.go`), so each sync ends having applied nothing and the link
   reports `failed` with reason `read-only` until the thaw, after which the next sync resumes
-  on the identity check alone. Freezing a replica is therefore not a no-op before takeover: it
-  stops the replica following, which is what an operator freezing it means, and the
-  `ReplicationLinkFailed` alert says so (AC22).
+  on the identity check alone. Each such job ends `completed`, the refusal being the link's
+  outcome and not the worker's fault (the sync section above, was Q13), so `JobFailed` stays
+  silent while the replica is frozen. Freezing a replica is therefore not a no-op before
+  takeover: it stops the replica following, which is what an operator freezing it means, and
+  the `ReplicationLinkFailed` alert, alone, says so (AC22).
 - **A deleted repository cannot be linked**, and neither can a `remote` or a `virtual` (the
   source section above; refused `failed` at configuration time with reason `source-type` on the
   leader side, or a type refusal on the follower side).
@@ -604,8 +642,12 @@ environment pointer.
   there, and its AC23; the replicated-repository key recipe in `deployment.md` shows the
   working configuration). The **takeover transaction** then, under the link row lock, ends the
   link, disables its schedule and registers the repository's per-pointer and repository-scoped
-  `signing.resign` schedules through the signing service with their next run now, so the
-  cadence exists from the first second whatever follows. The **same request** then runs the
+  `signing.resign` schedules through the signing service's one named entry point for those
+  rows, `signing.Service.RegisterSchedules(ctx, tx, repository, now)` (`signing-service.md`,
+  "Rotation profiles": idempotent on the caller's transaction, a new row at the caller's next
+  run, an existing row untouched; the takeover passes now where the runtime's first signed
+  write passes an expiry-derived value), so the cadence exists from the first second whatever
+  follows. The **same request** then runs the
   repository's re-sign as one repository batch over every pointer through the door's standard
   document-only form (`Renewable` passes, the link being `ended`), re-rendering every pointer
   document under the follower's resolved keys and writing the schedules' next runs from the
@@ -615,9 +657,14 @@ environment pointer.
   `Renewable` refuses while the link is active. The keys are thereby proven by use, not only
   resolved, at the one moment an operator is watching. If that render fails - a resolved key
   that will not sign - the takeover is not undone, since the operator has already fenced the
-  old leader: the link stays `ended`, the request answers the failure naming the key, the
-  documents stay the old leader's, and the schedules just registered retry on the cadence with
-  `SigningFailed` firing (`signing-service.md` AC17) until the key signs. A format that
+  old leader: the link stays `ended`, the request answers `500` with a problem whose `type` is
+  `about:blank` and whose `detail` names the key and says the link ended (a failure is not a
+  refusal, so no type from the closed list fits it: `management-api.md`'s resolved
+  failure-answer decision, was Q19 there, and its AC18), its `replication.link.takeover`
+  audit record reports the end of the link as `completed` because that write committed before
+  the render that failed (the monitor section below), the documents stay the old leader's, and
+  the schedules just registered retry on the cadence with `SigningFailed` firing
+  (`signing-service.md` AC17) until the key signs. A format that
   declares no signing has no keys to resolve, no documents to render and no schedule to
   register, and both steps are empty.
 - **Takeover honours what the old leader retired.** The leader's `Retirement` records arrived
@@ -749,8 +796,12 @@ are that spec's catalogue and this spec's tests assert them through `telemetry.N
   `.takeover`, `replication.export` and `replication.import`, each carrying `link` and `leader`,
   emitted through `telemetry.Auditor.Emit` by the management route that performs the write
   (`observability.md`'s vocabulary table and AC12); a `replication.link.reseed` record lists the
-  discarded snapshots in the fixed `objects` attribute. The link's `GET`, like every read, is
-  the request log's and emits no audit record.
+  discarded snapshots in the fixed `objects` attribute, and a `replication.link.takeover`
+  record reports `outcome` `completed` whenever the link ended, the failing-key request that
+  answers `500` included, because the end of the link committed before the render and the
+  fence the operator acknowledged cannot be undone (`management-api.md`'s was-Q19 and its
+  "Audit"; a SIEM reading `failed` there would read a committed fence as no takeover). The
+  link's `GET`, like every read, is the request log's and emits no audit record.
 - **Trace propagation**: a follower's requests to its leader carry `traceparent` and
   `tracestate`, so a follower's sync span is a child of the leader's trace and one trace spans
   both instances (`observability.md`'s resolved propagation decision, was Q4 there, and its
@@ -836,8 +887,9 @@ boundary between records and configuration.
       sync, re-seed and takeover and every export and import emits exactly one audit record
       under its event (`replication.link.create`, `.update`, `.delete`, `.sync`, `.reseed`,
       `.takeover`, `replication.export`, `replication.import`) carrying `link` and `leader`, the
-      re-seed's listing the discarded snapshots in `objects`, while the link's `GET` emits none
-      and leaves a request-log line; the replication read surface answers on the main listener
+      re-seed's listing the discarded snapshots in `objects` and the takeover's reporting
+      `completed` whenever the link ended, a failing-key request answering `500` included,
+      while the link's `GET` emits none and leaves a request-log line; the replication read surface answers on the main listener
       under the `replication` mount with `X-Request-Id` on every response; and a follower's
       requests to its leader carry `traceparent` and `tracestate` so the follower's sync span
       is a child of the leader's trace.
@@ -919,13 +971,15 @@ boundary between records and configuration.
       a problem naming each active key that does not resolve on the follower, and succeeds when
       every active key resolves (a shared `kms` fixture key, and a `file` key created and
       announced on the follower beforehand), registering the repository's `signing.resign`
-      schedules in the transaction that ends the link and re-rendering every pointer document
-      under those keys in the same request through the door's document-only form, so that with
-      no write after takeover a real client still installs after the old leader's documents
-      would have expired, and a linked follower has no such schedule at all; a resolved key
-      that fails to sign leaves the link `ended`, the documents unchanged and the schedules
-      registered, the request failing naming the key and `SigningFailed` firing until the
-      cadence's retry signs.
+      schedules through `signing.Service.RegisterSchedules` with their next run now in the
+      transaction that ends the link and re-rendering every pointer document under those keys
+      in the same request through the door's document-only form, so that with no write after
+      takeover a real client still installs after the old leader's documents would have
+      expired, and a linked follower has no such schedule at all; a resolved key that fails to
+      sign leaves the link `ended`, the documents unchanged and the schedules registered, the
+      request answering `500` with `type` `about:blank` and a `detail` naming the key and the
+      ended link, its audit record reporting the link ended, and `SigningFailed` firing until
+      the cadence's retry signs.
 - [ ] AC22: Deleting a replica ends its link with reason `deleted` in the deletion transaction;
       a leader-side rename or deletion of the leader repository makes the follower's next sync
       mark the link `failed` with reason `not-found` while the follower keeps serving its last
@@ -933,17 +987,27 @@ boundary between records and configuration.
       syncing with no re-seed; configuring a link on a deleted repository is refused, and a link
       whose leader repository is a `remote` or `virtual` fails naming `source-type`; freezing a
       replica `read_only` makes its next sync apply nothing and mark the link `failed` with
-      reason `read-only`, with `ReplicationLinkFailed` firing, and the thaw's next sync resumes
-      with no re-seed; and deleting the `UpstreamCredential` a link references is refused `409`
+      reason `read-only`, with `ReplicationLinkFailed` firing, each such sync job ending
+      `completed` so that `JobFailed` never fires while the replica stays frozen, and the
+      thaw's next sync resumes with no re-seed; a sync job that cannot reach the leader, is
+      refused by it, or finds the histories forked writes the matching link state and ends
+      `completed`, while a store fault injected mid-apply writes `failed` `error`, returns
+      transient, and the re-run from the checkpoint ends `idle` with `JobFailed` firing only
+      when the fault outlives `max_attempts`; and deleting the `UpstreamCredential` a link references is refused `409`
       `in-use` naming the link until the link is deleted or rotated to another credential.
 - [ ] AC23: Each active link is a `Schedule` on `internal/async` that enqueues a
       `replication.sync` job with exclusivity key `link:{id}`, so a second sync of the same link
       never runs while one holds the key, an on-demand sync enqueues the same kind, the job
       checkpoints after every completed snapshot, the `Schedule` is disabled in the transaction
       that ends the link (takeover or deletion) so no sync is enqueued for an `ended` link and
-      an on-demand sync, re-seed or takeover against one is refused, and an instance with
-      `proxy.offline: true` enqueues no `replication.sync` while its links keep their position
-      and still accept an archive import.
+      an on-demand sync, a re-seed, a takeover, a `PATCH` and a `DELETE` against one are each
+      refused `conflict` with the row unchanged and still readable as the takeover or deletion
+      record, a `PUT` creating a new link beside it and the `GET` answering the active link or
+      the most recently ended one; a sync job that finds its link ended by a takeover ends
+      `completed` with nothing more applied and one that finds it ended by the replica's
+      deletion ends `cancelled`; and an instance with `proxy.offline: true` enqueues no
+      `replication.sync` while its links keep their position and still accept an archive
+      import.
 - [ ] AC24: The configuration schema registers exactly `replication.sync_interval` (default
       `60s`) and `replication.blob_concurrency` (default `8`) under the `replication.` prefix
       and refuses any other key under it naming this spec; a link with no interval of its own
@@ -958,8 +1022,8 @@ boundary between records and configuration.
       while linked.
 - [ ] AC26: A takeover, an operator re-seed and a replica's deletion each serialise with a
       running `replication.sync` on the link row: a sync killed or paused mid-transfer when the
-      takeover commits applies no further snapshot, ends itself, and the new leader's first
-      write is the only snapshot numbered N+1; the link row's position advances in the same
+      takeover commits applies no further snapshot, ends itself `completed`, and the new
+      leader's first write is the only snapshot numbered N+1; the link row's position advances in the same
       transaction as each applied snapshot and a worker killed between that commit and its
       `job.Checkpoint` re-runs without applying the snapshot twice; and after an operator
       re-seed the discarded snapshots' rows and identity records are gone, the leader's
@@ -992,12 +1056,12 @@ boundary between records and configuration.
 | AC18 | architecture | `internal/replication/arch_test.go` (every replication route mapped through the central authorizer and mounted under `/replication/`); `internal/format/register_test.go` (the `replication` fixture pair refused at registration; shared with `format-handler-interface.md` AC11) |
 | AC19 | fault injection | `internal/replication/airgap_trust_test.go` (missing digest, wrong digest, rewritten self-consistent manifest) |
 | AC20 | integration | `internal/replication/pointers_test.go` (create, promote, rollback, delete; pin release on the follower; a leader rollback followed by the follower's retention pass with the position outside its window, then a leader write applied as one delta) |
-| AC21 | integration + conformance | `internal/replication/signing_records_test.go` (records on the read surface; follower's bytes equal the leader's; no `Signature` created, no backend call and no `signing.resign` schedule while linked); `internal/replication/takeover_keys_test.go` (refused `conflict` naming unresolvable keys; succeeds with a shared `kms` fixture key and with a pre-announced follower `file` key; the schedules registered in the ending transaction and every pointer document re-rendered in the request; a fixture `kms` key that resolves and refuses to sign: link `ended`, documents unchanged, schedules present, the request failing naming the key, `SigningFailed` through `telemetry.NewTestRecorder`, the cadence's retry succeeding once the fixture signs); `conformance/replication/takeover_expiry_test.go` (a Debian or Hackage replica taken over with no further write, the clock advanced past the old leader's document expiry, a real client installing); the first two shared with `signing-service.md` AC23 |
-| AC22 | integration | `internal/replication/lifecycle_test.go` (replica deletion ends the link; leader deletion observed as `failed` `not-found`, follower still serving; shared with `repository-lifecycle.md` AC22, and with `data-model.md` AC31 for the `ended`/`deleted` transition); `internal/replication/link_rename_test.go` (leader rename, name update, resume without re-seed; shared with `repository-lifecycle.md` AC13); `internal/replication/link_config_test.go` (deleted repository refused; credential `in-use`, shared with `repository-lifecycle.md` AC20); `internal/replication/readonly_replica_test.go` (freeze, `failed` `read-only`, alert, thaw and resume) |
-| AC23 | integration | `internal/replication/sync_job_test.go` (schedule per link, kind and exclusivity key, on-demand enqueue, checkpoint per snapshot, the schedule disabled by takeover and by deletion with no later enqueue and the on-demand routes refused on an `ended` link, offline instance enqueues nothing and still imports; the disabled-schedule half shared with `async-operations.md` AC14) |
+| AC21 | integration + conformance | `internal/replication/signing_records_test.go` (records on the read surface; follower's bytes equal the leader's; no `Signature` created, no backend call and no `signing.resign` schedule while linked); `internal/replication/takeover_keys_test.go` (refused `conflict` naming unresolvable keys; succeeds with a shared `kms` fixture key and with a pre-announced follower `file` key; the schedules registered through `RegisterSchedules` in the ending transaction with `next_run_at` now and every pointer document re-rendered in the request; a fixture `kms` key that resolves and refuses to sign: link `ended`, documents unchanged, schedules present, the request answering `500` with `type` `about:blank` and a `detail` naming the key, its `replication.link.takeover` record reporting `completed`, `SigningFailed` through `telemetry.NewTestRecorder`, the cadence's retry succeeding once the fixture signs; shared with `management-api.md` AC33's `internal/manage/replication_routes_test.go` for the wire shape); `internal/signing/schedules_test.go` (`RegisterSchedules` idempotent, the takeover's call with now beside the runtime's expiry-derived one; shared with `signing-service.md` AC23 and `async-operations.md` AC14); `conformance/replication/takeover_expiry_test.go` (a Debian or Hackage replica taken over with no further write, the clock advanced past the old leader's document expiry, a real client installing); the first, second and fourth shared with `signing-service.md` AC23 |
+| AC22 | integration | `internal/replication/lifecycle_test.go` (replica deletion ends the link; leader deletion observed as `failed` `not-found`, follower still serving; shared with `repository-lifecycle.md` AC22, and with `data-model.md` AC31 for the `ended`/`deleted` transition); `internal/replication/link_rename_test.go` (leader rename, name update, resume without re-seed; shared with `repository-lifecycle.md` AC13); `internal/replication/link_config_test.go` (deleted repository refused; credential `in-use`, shared with `repository-lifecycle.md` AC20); `internal/replication/readonly_replica_test.go` (freeze, `failed` `read-only`, the job `completed` and `JobFailed` silent through `telemetry.NewTestRecorder` across three ticks, `ReplicationLinkFailed` firing, thaw and resume; shared with `async-operations.md` AC14); `internal/replication/sync_outcome_test.go` (a leader stand-in answering connection refused, `401` and `404` and a forked fixture history: `unreachable`, `unauthorized`, `not-found` and `diverged` each written to the link with the job `completed` and the next tick retrying; a store fault injected mid-apply writing `failed` `error` and returning transient, the re-run from the checkpoint ending `idle`, and the fault held past `max_attempts` ending the job `failed` with `JobFailed` firing once; `syncing` written at the claim and never reported while no job runs; no `Permanent` return from the kind, asserted over the worker's error paths) |
+| AC23 | integration | `internal/replication/sync_job_test.go` (schedule per link, kind and exclusivity key, on-demand enqueue, checkpoint per snapshot, the schedule disabled by takeover and by deletion with no later enqueue; a sync paused at an apply boundary across a takeover ending `completed` with nothing more applied, and across the replica's deletion ending `cancelled` through `CancelByRepository` with its next apply refused at the door; offline instance enqueues nothing and still imports; the disabled-schedule half shared with `async-operations.md` AC14, the deletion half with `repository-lifecycle.md` AC21's `internal/repository/delete_jobs_test.go`); `internal/replication/link_routes_test.go` (sync, re-seed, takeover, `PATCH` and `DELETE` against an `ended` link each refused `conflict` with the row unchanged and the `GET` still answering it as the takeover or deletion record; a `PUT` after a takeover creating a second link, the `GET` then answering the active one; shared with `management-api.md` AC33's `internal/manage/replication_routes_test.go`) |
 | AC24 | unit + integration | `internal/replication/config_test.go` (defaults, per-link floor, concurrency bound observed at a counting leader); `scripts/check-config-keys.js` over this spec's key table (`deployment.md`'s Phase 1 tool, shared with it) |
 | AC25 | integration | `internal/replication/retirement_test.go` (records on the read surface and in the archive; idempotent apply; post-takeover claim refused at declaration and at commit, shared with `data-model.md` AC35's `internal/model/retirement_test.go`); provenance readable while linked in `internal/replication/airgap_test.go` |
-| AC26 | fault injection | `internal/replication/takeover_race_test.go` (sync paused mid-transfer at every apply boundary while takeover, re-seed and deletion commit; the single N+1 writer); `internal/replication/resume_test.go` (kill between the apply commit and `job.Checkpoint`); `internal/replication/reseed_test.go` (rows and identities removed, leader's numbers reapplied, reclamation by pruner and sweep under `storage-and-gc.md` AC15's deleter scan over `internal/replication`) |
+| AC26 | fault injection | `internal/replication/takeover_race_test.go` (sync paused mid-transfer at every apply boundary while takeover, re-seed and deletion commit; the paused sync ending `completed` after the takeover and `cancelled` after the deletion; the single N+1 writer); `internal/replication/resume_test.go` (kill between the apply commit and `job.Checkpoint`); `internal/replication/reseed_test.go` (rows and identities removed, leader's numbers reapplied, reclamation by pruner and sweep under `storage-and-gc.md` AC15's deleter scan over `internal/replication`) |
 
 ## Implementation Phases
 
@@ -1027,6 +1091,7 @@ configuration keys, checkpoint-based seed and re-seed, snapshot identity and div
 pointer-set mirroring including `Signature`, `PointerDocument`, `Retirement` and
 `FileProvenance` records, digest verification, atomic pointer moves, the link row as the
 position of record with every apply serialised on it, resume through the queue's rescue path,
+the sync job completing on every link outcome and transient only on a worker fault,
 read-only enforcement on replicas through the shared `Writable` entry point and its
 architecture test, replication authentication with its route mapping and architecture test,
 source-type refusal, the link's management operations and lifecycle composition, and the
@@ -1060,8 +1125,9 @@ Populated by `/tasks` now that this spec is `planned`.
 No questions are open. The seven raised by the first review were adopted on 2026-09-26 under
 the owner's standing delegation, and folding them exposed three further judgment calls (Q8-Q10),
 which were raised and adopted in the same pass. The 2026-09-28 reconciliation raised and adopted
-one more (Q11), and the Fable gate review of 2026-10-01 one more (Q12). Every adopted answer is
-reversible by the owner; `grep -n "standing delegation"` lists them.
+one more (Q11), the Fable gate review of 2026-10-01 one more (Q12), and the Fable follow-up of
+the same day one more (Q13). Every adopted answer is reversible by the owner;
+`grep -n "standing delegation"` lists them.
 
 ### Resolved: retention-gap recovery (was Q1)
 
@@ -1346,7 +1412,10 @@ owns.
 
 **Adopted 2026-10-01 under the owner's standing delegation**, on Fable, in the gate review that
 raised it. Option A: the takeover request re-signs. Its transaction ends the link and registers
-the per-pointer and repository-scoped `signing.resign` schedules with their next run now, and
+the per-pointer and repository-scoped `signing.resign` schedules with their next run now,
+through the entry point `signing-service.md` named for it in its round-3 follow-up,
+`signing.Service.RegisterSchedules(ctx, tx, repository, now)`, the only creator of those rows
+outside the runtime's first signed write, and
 the same request then runs the repository's re-sign as one repository batch through the door's
 standard document-only form, which `Renewable` passes once the link is `ended`, re-rendering
 every pointer document under the follower's resolved keys and writing the schedules' next runs
@@ -1359,8 +1428,11 @@ forward and the signatures are the follower's), so a client comparing the new le
 the old sees a different envelope over identical content; a takeover of a repository with many
 pointers does that much signing inside one operator request; and a resolved key that then
 refuses to sign leaves a taken-over repository serving the old leader's documents, loudly (the
-request fails naming the key, `SigningFailed` fires) and with the cadence already registered to
-retry, since the fencing the operator performed cannot be undone by rolling the takeover back.
+request answers `500` with `type` `about:blank` naming the key, the wire shape
+`management-api.md` fixed for a failure that is no refusal in its was-Q19 on the same day, its
+audit record reporting the link ended, and `SigningFailed` fires) and with the cadence already
+registered to retry, since the fencing the operator performed cannot be undone by rolling the
+takeover back.
 B lost because registering the schedules without re-signing leaves the old leader's documents
 in place until their renewal fraction, which keeps the bytes comparable a little longer but
 proves nothing about the keys until the cadence first fires, possibly days later and
@@ -1394,6 +1466,56 @@ Consequence for `signing-service.md` AC23 and `management-api.md`'s takeover row
 **Why this is yours:** it decides what a disaster-recovery takeover promises for a signed
 repository that is read but not written, and it moves signing work into the takeover request.
 
+### Resolved: what a sync job ends as when the link is its outcome (was Q13, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation**, on Fable, in the follow-up pass
+that raised it from `async-operations.md`'s round-4 consequence. Option A: the link row is the
+record of a sync's outcome and the job ends `completed` whenever it wrote one. A run refused
+`read-only` by the applier's entry point, one the leader refuses or does not answer, one that
+finds the leader repository gone and one that finds the histories forked each write the link's
+`failed` or `diverged` state with its reason and return nil; a run that finds the link `ended`
+by a takeover writes nothing and returns nil; a run cancelled by the replica's deletion ends
+`cancelled` under the queue's own cancellation rule; and the next tick of the link's `Schedule`
+is every one's retry. The queue's error classes are kept for a fault of the worker itself,
+returned unwrapped (transient) after the job writes `failed` with the new reason `error`, so
+the re-run from the checkpoint stays the rescue path and `JobFailed` fires only when such a
+fault outlives `max_attempts`. The kind never wraps `Permanent`. Accepted cost: an operator
+reading `/api/v1/system/jobs` sees `completed` jobs on a link that reads `failed` and must read
+the link, which the spec names as the record; a leader outage shows on the link within one tick
+rather than being absorbed by the queue's backoff, so `ReplicationLinkFailed` can fire on a
+blip the length of one `sync_interval` (its firing window is `observability.md`'s rule); and
+the `failed` reason vocabulary grows by `error`, a `data-model.md` consequence. B lost because
+it fires `JobFailed` once per `sync_interval` on a replica an operator froze on purpose, the
+one state in which nothing is wrong, and says the same thing twice; C lost because it splits
+the rule three ways and leaves the one-hot `syncing` state false while a job sits in backoff
+with a second tick's job queued behind the same key.
+
+Raised by the round-4 follow-up of `async-operations.md`: that spec's `Work` contract has three
+error classes and `JobFailed` on every `failed` ending, and this spec said only that a frozen
+replica's sync "ends having applied nothing" and that a sync meeting an `ended` link "ends
+itself", naming no terminal state. Left unnamed, an implementer choosing `Permanent` would make
+a deliberate freeze an alert storm and a choice of transient would make the leader's absence a
+40-minute retry inside one job while the schedule enqueued more.
+
+**Recommendation:** A. The link already carries the state a monitor alerts on, the schedule is
+already the cadence, and a queue alert should mean the queue failed.
+
+Folded into: Design (the sync section's outcome paragraph; the link table's `syncing` and
+`failed` rows and the `read_only` bullet), AC22, AC23 and AC26 and their Test Plan rows
+(`readonly_replica_test.go`, a new `sync_outcome_test.go`, `sync_job_test.go`,
+`takeover_race_test.go`). Consequence for `data-model.md` (the `failed` reasons gain
+`read-only`, which the gate review added here without reporting it, and `error`) and for
+`async-operations.md` (its `replication.sync` row may cite the rule).
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. The link records the outcome; the job completes; worker faults alone are transient** | `JobFailed` means the queue failed; a frozen replica alerts once, on the link; the schedule is the only retry loop | The job list reads `completed` for a failing link; a blip flips the link for one interval; one new reason |
+| **B. `Permanent` for every refused or empty run** | The job list and the link agree | `JobFailed` every `sync_interval` on a deliberate freeze and on an `ended` link's last job; two alerts for one state |
+| **C. Transient for the leader's absence, `Permanent` for `read-only`, `completed` for `ended`** | A leader blip is absorbed by backoff before the link changes | Three rules; the link reads `syncing` while no job runs; the schedule's next job queues behind the retrying one under the same key and duplicates its work |
+
+**Why this is yours:** it decides what a queue alert means for replication and whether a
+deliberate freeze is noise, which is an operations posture rather than a correctness question.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1405,3 +1527,4 @@ repository that is read but not written, and it moves signing work into the take
 | 2026-09-28 | 9f93794 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. Already done from the old folds: charter step 10 placement, the `replication` provisioner (Phase 1, AC15), auth's `pull` widening. Applied: signing-service 5 (`Signature` and `PointerDocument` records travel with the pointer set, a linked follower serves verbatim and signs nothing, takeover refused unless every active key resolves; the two "future signing-service" sentences are now citations; AC1 extended, AC21 added); async-operations 8 (a new Design section: each link a `Schedule` enqueuing `replication.sync` with exclusivity key `link:{id}` and a checkpoint per completed snapshot, resume as the queue's rescue path, offline mode runs no sync; AC3 rewritten, AC23 added); repository-lifecycle 7 (a new Design section with the link's six-state table including terminal `ended` with reasons `takeover` and `deleted`, the updatable leader name, `failed` naming `not-found` on leader rename or deletion, `read_only` surviving takeover, `repository.Writable` with `ErrReplica` as the shared predicate and the applier's waiving entry point; AC11, AC12, AC16 rewritten, AC22 added); observability 13 (the four `replication_*` series, four alerts, six audit events and peer trace propagation, folded into AC10 with two new Test Plan rows); deployment 8 (a `replication.` key table: `sync_interval` 60s, `blob_concurrency` 8, no checkpoint-interval key; AC24); format-handler-interface reconciliation 1 (the reserved segment is the string `replication`, fixture pair `replication` in `register_test.go`; AC18 names it); Open item 23 (freeze's dated first consumer, the HCP Vagrant recipe, with Q11 raised and adopted: a `read_only` remote carries the content until Phase 4 lands). Phase 0 restated against the specs that now exist. 24 criteria, zero open questions, one new resolved question; stays draft pending a gate review. Consequences for other files reported to the queue. |
 | 2026-09-28 | 6e6d503 | cross-spec reconciliation sweep of the foundation wave. Not a review | Not a review. Applied sweep 1 item 5 (AC16's and AC22's Test Plan rows share `internal/model/replication_link_test.go` with `data-model.md` AC31, verified against its current text) and, now that `management-api.md` carries them, cited the link, sync, re-seed, takeover, export and import routes and the `replica` problem type to that spec's endpoint table and AC33 in place of "a consequence for management-api.md's endpoint table". No question raised or adopted; `node scripts/check-spec.js` zero failures on this file. Stays draft pending a gate review. |
 | 2026-10-01 | 4dac925 | Fable gate review: claim verification at HEAD, adversarial, constitution (one pass, interrupted mid-apply by a usage limit and resumed on Fable the same day with every partial edit re-judged; the Opus sweeps since the last Fable pass treated as unreviewed; go-spec-reviewer lens inline; claim verification against code vacuous, `internal/` is an empty directory) | A review. Every sibling citation verified at HEAD against the planned texts of `storage-and-gc.md` (five roots, the deletion-intent barrier, the door's three forms, AC25's `Renewable` with no waiving entry point and its on-a-transaction form used only inside `Finish`, AC10, AC15, AC18, AC23), `signing-service.md` (was-Q9, AC17, AC23, the `archive` purpose, the cadence schedule written in `Finish`, the repository batch), `management-api.md` (the six replication rows, `replica`, AC23's every-write-past-the-authorizer rule, AC33, was-Q18 and AC35), `observability.md` (the eight `replication.*` events with the re-seed's `objects`, AC12, AC14, AC20, was-Q4, the `replication` mount on the main listener), `deployment.md` (one binary with roles, `async.workers: 0`, the `replication.` row, the key recipe), `repository-lifecycle.md` (AC9, AC13, AC20, AC21, AC22, was-Q11, deletion step 3 and 12), `async-operations.md` (the `replication.sync` row, one `Schedule` per active link, not suspended by `read_only`, disabled offline and by deletion, AC27's secret set, cross-instance jobs excluded), `data-model.md` (the `Pointer` row's default pointer tracking the newest snapshot, AC23, AC29 to AC31, AC35, AC37, AC43, "Replication's records"), `auth.md` (was-Q11, AC17, AC24, "What `pull` also authorizes"), `format-handler-interface.md` AC11, `conformance-harness.md` (the `replication` key), `formats/vagrant.md` and `docs/internal/HANDOFF.md` (Q11's dated item is recorded there; nothing owed). Corrected: "the replication listener" is the `replication` mount on the main listener. Applied the queued consequences: `.sync` and `.reseed` audit events beside the four, in Design, "What a monitor sees" and AC10, the re-seed listing discarded snapshots in `objects`, the link `GET` request-log only; AC12 covers the document-only form refusing `ErrReplica`; the management routes refuse in `management-api.md`'s was-Q18 order (AC33, AC35), cited. Adversarial findings, each folded: (1) a running sync and a takeover could both write N+1, so every apply, the takeover, the re-seed and the deletion serialise on the link row, the link row is the position of record, `job.Checkpoint` is advisory, and the link's `Schedule` is disabled in the transaction that ends it so an `ended` link enqueues nothing (AC23, AC26); (2) the core-held `Retirement` set and `FileProvenance` did not travel, so a taken-over repository could reuse a retired coordinate; both are on the read surface and in the archive (AC25); (3) the want-list named only delta-referenced blobs, missing `PointerDocument` bodies and declared blob-digest lists, which the follower's fourth root marks through, and treated verification-failed blobs as held; (4) a leader whose head is below the follower's position had no identity to compare and the spec was silent: `diverged` at the leader's head (AC17), and linking a written local repository is the same check; (5) `repository-lifecycle.md` says freezing a replica "changes nothing" while its AC9, `storage-and-gc.md` AC25 and `async-operations.md`'s kinds test have the applier refused `ErrReadOnly`: the link reports `failed` `read-only` until thaw (AC22), reported as a sibling consequence; (6) import onto a repository with no active link was unstated: refused `validation`, the target must be a replica (AC9); (7) the link's position across a leader rollback: the position is the mirrored default pointer's target, which the leader's default pointer tracking the newest snapshot keeps pinned, and a rollback repoints an environment pointer without a snapshot, so the chain stays linear and the next write is one delta (AC20); (8) AC18's "the response an unauthorized caller receives" was ambiguous under the existence rule: a token that cannot read the repository gets the absent repository's response byte for byte, a pattern-narrowed `pull` holder `unauthorized`, a credential-less request the challenge; (9) AC12 asserted a virtual merge swap refused on a linked replica, a case that cannot arise since a replica is `local`; dropped. Raised and adopted Q12 (the takeover request re-signs and registers the cadence schedules; a linked follower holds none, so a taken-over repository nobody writes to would expire). Its first fold, written before the interruption, ran the re-sign inside the takeover transaction through the door's document-only form, which `storage-and-gc.md` AC25 rules out (the standard form evaluates `Renewable` before `BeginTx`, the on-a-transaction form is `Finish`'s alone): refolded as two steps in one request, the ending transaction registering the schedules and the request then re-signing through the standard document-only form, with the failing-key path stated and asserted (AC21). Constitution: both paths (freeze covers the proxied path, AC14 and AC15), the shared data model with no handler table, named enforcers for the three boundaries (AC12, AC18, `storage-and-gc.md` AC15's scan), CI economy untouched. 26 criteria each with a Test Plan row, zero open questions, `node scripts/check-spec.js` zero mechanical failures; draft -> planned. Sibling consequences reported to the queue. |
+| 2026-10-01 | 4e92a60 | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the gate review: the whole of `agents/spec-loop/consequences.md` read, every item targeting this file after the 4dac925 row collected (the round-3 `management-api.md` follow-up's item 1, the round-4 `async-operations.md` follow-up's item 1, the round-3 `signing-service.md` follow-up's optional item 3, and the round-3 `management-api.md` follow-up's item 3 as the optional audit half), and every earlier item re-found applied (the observability recheck's item 4, the management-api recheck's item 2, the repository-lifecycle recheck's item 5 and its follow-up's item 2, all landed in the gate review). Each verified against the current text of its source at HEAD: `management-api.md`'s endpoint rows for the link, sync, re-seed, takeover and import, its `conflict` and `validation` problem rows, "A failure is not a refusal", "Audit", AC18, AC33 and its was-Q19 record; `async-operations.md`'s "Retry, backoff and permanent failure" (the three classes), "Cancellation, pause and resume" (a running job meeting the deleted state ends `cancelled`), its `replication.sync` kind row as amended in its round 4, AC5, AC7, AC20's `JobFailed` clause and AC14's row; `signing-service.md`'s "Rotation profiles" (`signing.Service.RegisterSchedules(ctx, tx, repository, nextRun)`, the takeover passing now), "Replication", AC17, AC23 and its `schedules_test.go` row; `observability.md`'s alert table (`ReplicationLinkFailed` on the one-hot state, `JobFailed` on `async_jobs_total{outcome="failed"}`) and audit `outcome` vocabulary; `data-model.md`'s `ReplicationLink` reason list. Applied, four of four. (1) Management-api round 3 item 1: `conflict` named for an ended link's sync, re-seed and takeover in the sync section, the link section and AC23, extended to `PATCH` and `DELETE` of the link; the `DELETE` reading confirmed as that spec applied it, the `ended` row is never written or deleted by the link's routes and stays as the takeover or deletion record, which the link section had already made the reason takeover is a state change; stated beside it, because a second row now exists after a `PUT` on a taken-over repository, which link the `GET` answers (the active one, else the most recently ended); the takeover section, AC21 and its row name the `500` with `type` `about:blank` and a `detail` naming the key, citing was-Q19 rather than restating it. (2) Async round 4 item 1: the terminal state of a sync job named under the three classes, which was a judgment call and is Q13, raised in decision shape and adopted under the standing delegation, owner-facing: the link row is the outcome and the job ends `completed` on every link state it writes (`read-only`, `unreachable`, `unauthorized`, `not-found`, `diverged`, an `ended`-by-takeover link), `cancelled` when the replica's deletion cancelled it (the queue's rule, cited), transient only on a fault of the worker itself after writing a new `failed` reason, `error`, and never `Permanent`; folded into the sync section, the link table (`syncing` written at the claim; `failed` no longer claims "nothing was applied", since a worker fault may have applied part, and the position stands), the `read_only` bullet, AC22, AC23, AC26 and their rows, with a new `sync_outcome_test.go`. (3) Signing-service round 3 item 3: the takeover section and was-Q12 name `RegisterSchedules` with its `now` argument and why the two callers pass different values; AC21's row shares `internal/signing/schedules_test.go`. (4) Management-api round 3 item 3, the audit half: the takeover's `replication.link.takeover` record reports `completed` whenever the link ended, the failing-key `500` included, in the monitor section and AC10, with the SIEM reason. Declined: none. Adversarial findings on the fold: (a) naming `completed` for a refused run invited the question of the third class, so the worker-fault path is stated rather than left to be rediscovered, with the one-hot `syncing` kept true (written at the claim, rewritten before every return); (b) a `failed` reason for the worker fault is new vocabulary, so it is reported to `data-model.md` together with `read-only`, which the gate review added here without reporting; (c) `cancelled` for the deletion case is not this spec's rule but `async-operations.md`'s, and is cited, not restated, so the two cannot drift; (d) a `PUT` after a takeover creating a second link row was implied by "at most one active link" and the kept `ended` row but never said, and without it the `GET` had no defined answer; (e) `ReplicationLinkFailed` firing on a one-interval leader blip is the cost of option A and is written into the record rather than smoothed over. Constitution: no handler table, no new boundary without its enforcer (the error paths are asserted in `sync_outcome_test.go`), nothing widens a token or touches `auth.md` AC10, the duplicated-path trap does not apply (one applier). No em-dashes on touched lines. `node scripts/check-spec.js`: zero failures on this file. 26 criteria, each with a Test Plan row; 13 questions resolved, zero open; stays planned. Sibling consequences reported, not applied: `data-model.md` (the `ReplicationLink` reason list gains `read-only` and `error`); `async-operations.md` (its `replication.sync` row may say the kind completes on every link outcome and returns transient only on a worker fault, never `Permanent`; `kinds_test.go`'s shape row may note the kind takes no `Finish` form of its own); `management-api.md` (its link `GET` row may say which link it answers when an `ended` row sits beside an active one, and `PUT` after a takeover creates a new link; optional); `observability.md` (the `failed` reason `error` is a new value behind the one-hot `failed` state, no series change). |
