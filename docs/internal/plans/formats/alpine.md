@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Format closing sweep 2026-09-28 at f8ad8b2 on Opus (not a review): the merging profile declares its member-input path ({tree}/{arch}/APKINDEX.tar.gz), replayed for every tree and architecture another member holds, remote adoption re-merges and a virtual-only remote is revalidated by the virtual's reads (signing-service was-Q16, AC35; proxy-cache AC26), and a remote with no upstream keys contributes nothing to a virtual under AC36 (AC20 extended); the architecture-set configure now has a client-observed effect, apk failing and then installing as the set loses and regains its architecture (management-surfaces item 14; AC8 extended); origin reported as the version's advisory key, closing the channel this spec had reported (supply-chain was-Q11, AC24; data-model AC46; AC21 extended); index revisions outside the quota in cache_metadata_bytes and the declared list's placement confirmed (proxy-cache was-Q21, Q22; new AC25); packages through ServeFile (signing-service was-Q14); claims checked at declaration and at commit and the declared unchanged publish (management-api was-Q14, Q15; AC6); the stale apk-row wording removed; two exception-list rows reported for conformance-harness. No question adopted; 25 criteria. Earlier: Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a remote retains one superseded index revision per tree and architecture, its APKINDEX body and filename map on the remote's declared blob-digest list, cached packages on their own cached references (proxy-cache was-Q19, AC27); a changed C: or S: now serves the current index's bytes and the new commit ends the old blob's cached reference (proxy-cache was-Q20, AC28), withdrawing the claim that each revision's clients receive their own bytes; AC19 and AC23 extended with sweeps run while the revision is retained. Earlier: Reconciled 2026-09-28 at 15ced69 with the foundation wave on Opus (not a review): indexes generated through signing-service's Indexer and generator package, the signature segment a Signature record framed onto the body at serve time, the dual-signature rotation profile as atomic batches with no snapshot (AC9), no pointer-scoped wrapper needed (confirmed: the segment carries no date and apk adopts whatever verifies), the virtual merge on the index.merge job (AC20), DESCRIPTION without the repository name so rename needs no re-sign; management operations on publish, delete-version, delete-package and configure with core-held retirement refused as retired (AC6, AC8); the key document a descriptor (AC12); refusals through WriteRefusal re-asserting the package-level binding row (AC13); the apk entry of artifact-verification (AC3, AC15); proxied packages through proxy-cache's verifier mode and cache-scoped Last-Modified (AC15, AC17); advisory_ecosystem as supply-chain's core-parsed field (AC21); AC14's fallback half on declared stand-ins; Capabilities with rename and virtual cases (AC24). Earlier: authored 2026-09-26 from captures of apk-tools 2.14.12 and 3.0.8; eleven questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-01 at 90102bf: a full review pass over the Opus-authored whole (claim verification at HEAD of every sibling citation, adversarial lens at full strength on the captured behaviour of both apk lines, key rotation, the architecture-set client case, origin as the advisory key and the data-loss keep-alive, constitution compliance) plus the re-examination of the eleven questions adopted at authoring and the three question-less Opus judgements. Brought current first: a keyless remote now contributes to a signed virtual under anchor class none with verdict absent (signing-service was-Q20, AC36; artifact-verification was-Q2 as amended), the alpine-keys recipe is advice for class signature, the member input is the was-Q21 template over the other members' trees and architectures with the was-Q22 read-driven cell for a tree only the remote holds (AC20), and the arch recheck's optional-member finding does not arise because the signature is inside the one document. Verdicts: Q1, Q3, Q5, Q8, Q9, Q10, Q11 confirmed; Q2 confirmed with the index-404 honesty note; Q4 amended (the key name's instance host defined; AC2 scoped outside a rotation window); Q6 amended in vocabulary; Q7 amended in fold and superseded in part by Q12, owner-facing (literal-name shadowing, records composed whole, the provider case captured, the rewrite held as fallback); Q13 raised and adopted after rpm was-Q12 (a withdrawn .SIGN entry on a keyless remote is a regression not adopted; AC19). The keep-alive fold confirmed with its row-contention and dl-cdn-404 costs stated. 25 criteria, each with a Test Plan row; thirteen questions resolved, zero open; check-spec zero failures; fable_recheck cleared. Build stays gated by the Tier 1 definition of done (charter AC9, catalogue AC5) and on signing-service, management-api, upstream-adapters and artifact-verification, all planned."
 description: "Spec for Alpine apk repositories served to apk-tools 2 and 3: repositories holding many trees with one APKINDEX.tar.gz per tree and architecture, generated and signed by the shared signing service with a prepended RSA signature segment, publisher-signed packages whose bytes the registry never alters and whose own signature no repository install checks, the two trust layers kept apart, a proxied path serving Alpine's signed indexes verbatim after verification, and virtual trees merged with per-name shadowing and re-signed."
 author: michielvha
 goal: "Serve Alpine hosts and container builds a private apk repository and a verified cache of an Alpine mirror that stock apk-tools 2 and 3 install from with only a key file added to /etc/apk/keys, credentials only in the repository line or netrc, and a network restricted to this registry."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/alpine/**"
   - "conformance/alpine/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q19 and Q20 into the proxied path (retained-revision keep-alive on the remote's declared list, the changed-record row serving the current revision), which needs the same recheck; the format closing sweep on Opus 2026-09-28 folded two design judgements without a question, which need the same recheck: the member-input path expanded over the trees and architectures other members of the virtual hold, and the client case chosen to observe an architecture-set change"
 ---
 
 # Plan: Alpine apk repositories
@@ -256,7 +255,11 @@ Found"; `apk add` exits with the number of failed packages. An index answered `4
 "HTTP 500: Internal Server Error" on 3.0.8. An index whose signature fails prints "UNTRUSTED
 signature" or "BAD signature". Either way the repository counts as unavailable, `apk update`
 exits non-zero (2 on 2.14.12, 1 on 3.0.8, for one repository), and `apk add` resolves as if the
-repository were absent.
+repository were absent. A `404` on the index itself was not among the captures (the captured
+`404` is the package path a `noarch` record sends the client to); this spec reads it as one more
+repository-level failure rendered like the three above, and AC8's architecture-set case, which
+answers exactly that `404` to a real client of a removed architecture, is where the reading is
+proved rather than assumed.
 
 ### Fallback: what a refusal can and cannot stop
 
@@ -413,8 +416,14 @@ The levels are exactly those `data-model.md` provides; no table is added.
   and keeps nothing alive; cached packages are held by their own cached references. The list sits
   on the repository-level document because a tree's index per architecture is a repository-wide
   revision set, where `proxy-cache.md`'s resolved declaring-document decision (was Q22) places
-  it, so adoptions of different trees and architectures of one remote serialise on that row,
-  bounded by the handful a remote serves, each adopted at most once per TTL. None of it is ever
+  it, so adoptions of different trees and architectures of one remote serialise on that row under
+  the revision-token retry `data-model.md` makes mandatory. The honest bound is the remote's
+  trees times its architectures, not a handful: a remote over a whole mirror root
+  (`https://dl-cdn.alpinelinux.org/alpine/`) serves every branch dl-cdn keeps times nine, each
+  cell adopted at most once per TTL and a filename map built at most once per adopted revision,
+  so the row sees at most that many commits per TTL, spread by the clients that drive them; the
+  recommended one-remote-per-branch shape (the resolved OSV decision below) keeps it at the
+  branch's components times nine. None of it is ever
   LRU-evicted: a remote's current metadata ends only when an adoption supersedes it beyond the
   retained count or the remote is deleted, and is counted in `cache_metadata_bytes{repository}`
   outside the quota (its resolved metadata-eviction decision, was Q21, AC29), while cached
@@ -570,7 +579,13 @@ below:
    `signing-service.md` AC29).
 2. **One RSA key per hosted and per virtual repository**, 4096 bits as `abuild-keygen` makes them,
    with a **key name** unique for the key's lifetime and never reused, of the form
-   `{repository}@{instance host}-{8 hex}` after abuild's `{email}-{hex}` convention, and a signing
+   `{repository}@{instance host}-{8 hex}` after abuild's `{email}-{hex}` convention, where
+   `{repository}` is the name at the key's creation (the grammar
+   `^[a-z0-9]+(?:[._-][a-z0-9]+)*$` of `repository-lifecycle.md` AC2 makes it a valid
+   `/etc/apk/keys` filename) and `{instance host}` the host of `server.public_url` then
+   (`deployment.md`), both fixed in the name from that moment: a rename or a changed public URL
+   changes no key name, because the name is a file on every client (Design, "Capabilities and
+   lifecycle"); and a signing
    operation over the index stream's bytes returning an RSA PKCS #1 v1.5 signature over SHA-256.
    The signature is stored as a `Signature` record and **framed onto the body at serve time** by
    the profile's assembly rule: a gzip-compressed tar segment holding one file per signature,
@@ -592,10 +607,11 @@ below:
    asynchronous half for a hosted write.
 5. **Rotation through a dual-signature window**: `signing-service.md`'s `dual-signature` rotation
    profile, which cites this format's capture (its "Rotation profiles", AC7, AC8). Activating the
-   new key produces, for every currently served index, a second signature record under it, so every
-   served index carries **two** signature segments over the same index stream, the old key's and
-   the new key's, and a client holding either key file verifies it (captured in both orders);
-   closing the window drops the old records. Each is **one atomic batch of signature records, no
+   new key produces, for every currently served index of the repository, hosted or virtual alike,
+   a second signature record under it, so every served index carries **two** `.SIGN` entries in
+   its leading segment over the same index stream, the old key's and the new key's, and a client
+   holding either key file verifies it (captured in both orders); closing the window drops the
+   old records, and AC2's one-entry shape is the shape outside a window. Each is **one atomic batch of signature records, no
    snapshot**, and no reader observes an index signed by a key the key document lacks. apk has no
    mechanism to fetch a key (apk-keys(5): keys are files an administrator adds), so rotation is
    invisible to clients that install the new key file during the window and breaks those that do
@@ -624,15 +640,20 @@ resolved verification-ownership decision; that spec lists both items as `alpine.
 and answers them with its apk v2 signed-stream entry and the integrity entry beside it:
 
 1. **An apk v2 signed-stream verification entry** that takes a file (an index or a package), a
-   set of named public keys, and answers verified with the key name, untrusted, or bad, with the
-   client's own semantics: signatures are read from the leading segment in order, those naming no
-   configured key are skipped, and the first naming a configured key decides; `RSA`, `RSA256` and
-   `RSA512` are supported, and the digest is over the stream that follows the segment (the index
-   stream, or the control stream of a package). Answered by the `apk` scheme with the
-   first-trusted-key rule (`artifact-verification.md` AC12), reached only through `Deps`'
-   `Verifier`, never by importing `internal/verify` (`format-handler-interface.md` AC15); the keys
-   are the repository's trust set, provisioned in cases through the harness's `trust` key
-   (`artifact-verification.md` AC25).
+   set of named public keys, and answers in that spec's vocabulary: `verified` with the key name,
+   `failed` with the reason `untrusted-key` (every signature names a key outside the set, or
+   there is no signature) or `bad-signature` (a configured key's signature does not verify), or
+   `absent` when the trust set holds no apk key at all (its resolved verdict decision, was Q2
+   there, as amended on Fable: `untrusted-key` needs at least one entry of the kind, so a keyless
+   remote's documents never read `failed`), with the client's own semantics: signatures are read
+   from the leading segment in order, those naming no configured key are skipped, and the first
+   naming a configured key decides; `RSA`, `RSA256` and `RSA512` are supported, and the digest is
+   over the stream that follows the segment (the index stream, or the control stream of a
+   package). Answered by the `apk` scheme with the first-trusted-key rule
+   (`artifact-verification.md` AC12), reached only through `Deps`' `Verifier`, never by importing
+   `internal/verify` (`format-handler-interface.md` AC15); the keys are the repository's trust
+   set, provisioned in cases through the harness's `trust` key (`artifact-verification.md`
+   AC25).
 2. **Package integrity**: the control stream's SHA-1 compared with an expected `C:`, the file size
    with `S:`, and the data stream's SHA-256 with the `datahash` in `.PKGINFO`, answering each
    separately, together with the package signature's verdict against the repository's trusted
@@ -776,14 +797,41 @@ Classification and behaviour:
 - **`APKINDEX.tar.gz` is mutable metadata with the proxy layer's TTL.** A new revision is verified
   before it is served, through the entry above, against the remote's configured upstream keys (for
   Alpine, the `alpine-keys` set, the live v3.24 main index being signed by
-  `alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub`); a remote with no keys configured
-  accepts on TLS alone, which its configuration records as unverified. A revision that fails is
-  never served; the previous verified revision keeps serving under serve-stale and the operator is
-  alerted. The verification is an integrity call through `Deps`' `Verifier` under the `apk` entry,
-  which may refuse the commit (`artifact-verification.md` AC12; `proxy-cache.md`'s line between
-  integrity calls and verdicts). The upstream keys are the remote's trust set. What a remote serves
-  as `Last-Modified` is its cache-scoped `adopted_at`, never the upstream's, forward-moving on each
-  adopted revision (`proxy-cache.md` AC22), which apk ignores and an intermediary honours.
+  `alpine-devel@lists.alpinelinux.org-6165ee59.rsa.pub`). The fetch-and-cache request declares the
+  `apk` `Verify` hook over the one document, and what the adoption records beside `adopted_at` is
+  the **anchor class** `artifact-verification.md` derives from that hook and the remote's trust set
+  as it stood (its "Anchor class", AC31; `proxy-cache.md` AC25), which is what a signed virtual
+  later admits the revision by (below; `signing-service.md` AC36). With at least one apk key in
+  the trust set the class is `signature`: a revision whose verdict is `verified` is adopted and
+  served, and one whose verdict is `failed`, because its signature names a key outside the set
+  (reason `untrusted-key`), does not verify (`bad-signature`), or is missing altogether, is never
+  adopted, the previous verified revision keeps serving under serve-stale and the operator is
+  alerted. That last case is right for this format where it was a trap for Arch: an Alpine index
+  without a signature is one no apk client installs from without `--allow-untrusted` (captured),
+  so refusing to adopt it matches the client, and because the signature is a segment inside the
+  one document rather than a separately served optional member, there is no adoption whose hook
+  "did not apply" and no third case (`arch.md`'s "The proxied path" has one; this format has not).
+  With no apk key configured the class is `none` and every revision's verdict reads `absent`
+  (`artifact-verification.md`'s resolved verdict decision, was Q2 there, as amended on Fable:
+  `untrusted-key` needs at least one entry of the kind): the revision is adopted on TLS to the
+  configured upstream alone and served, and the operator record says so. **A signature the
+  upstream stops serving is a regression not adopted** (the resolved withdrawn-signature
+  decision below, was Q13, which takes `rpm.md`'s resolved decision of the same name, was Q12
+  there, for this format): on such a remote the handler's adoption check records, as its own
+  fact on the remote's document, whether each adopted revision's leading segment carried a
+  `.SIGN` entry, and a revision arriving with none for a tree and architecture whose current
+  revision carried one is classed "regression not adopted" like an older revision would be,
+  the signed revision keeps serving, a divergence naming the missing signature is recorded, and
+  the operator's refresh is what adopts the unsigned successor; a cell first adopted without a
+  signature never arms the rule. Without it, a mirror that stripped the signature Alpine serves
+  would be composed into a signed virtual under class `none` while a direct client holding the
+  stock keys refuses it. The verification is an
+  integrity call through `Deps`' `Verifier` under the `apk` entry, which may refuse the commit
+  (`artifact-verification.md` AC12; `proxy-cache.md`'s line between integrity calls and verdicts);
+  the class is never a read of the handler's, which has no way to reach it
+  (`format-handler-interface.md` AC15). The upstream keys are the remote's trust set. What a remote
+  serves as `Last-Modified` is its cache-scoped `adopted_at`, never the upstream's, forward-moving
+  on each adopted revision (`proxy-cache.md` AC22), which apk ignores and an intermediary honours.
 - **A filename map per index revision.** A package can be verified only against its record, so
   the first package request under a revision builds, once per index digest, a map from
   `{P}-{V}.apk` to `C:`, `S:` and version by streaming the index, stored as CAS-backed metadata on
@@ -796,7 +844,8 @@ Classification and behaviour:
   `MIRRORS.txt` included).
 - **Packages are immutable artifacts**, verified under stream-and-verify against the record's `S:`
   and `C:` and the `datahash` inside them, and their signature verdict recorded for policy against
-  the remote's upstream keys, never as a precondition of serving. Because `C:` is a SHA-1 over the
+  the remote's upstream keys (`absent` on a remote holding no apk key), never as a precondition of
+  serving. Because `C:` is a SHA-1 over the
   control stream rather than a digest of the whole file, the handler supplies the integrity check
   as `proxy-cache.md`'s post-receipt verifier over the complete body (its resolved completion-only
   decision, was Q15, AC20, whose entry catalogue names the apk segment), with `S:` as the size
@@ -824,10 +873,11 @@ a package leaving the index is the ecosystem's normal flow:
 
 | Upstream event, as observed at revalidation or fetch | Class in `proxy-cache.md` |
 |---|---|
-| A package leaves the index in a new revision (a superseding build, routine on every branch) | **Ordinary metadata change**: the new revision serves; the cached file stays fetchable by clients holding the retained older revision, the file held by its own cached reference until LRU eviction and the revision's body and map by the declared list until the adoption that drops the revision; after that drop the filename answers `404`; no divergence is recorded |
+| A package leaves the index in a new revision (a superseding build, routine on every branch) | **Ordinary metadata change**: the new revision serves; the cached file stays fetchable by clients holding the retained older revision, the file held by its own cached reference until LRU eviction and the revision's body and map by the declared list until the adoption that drops the revision; after that drop the filename answers `404`; no divergence is recorded. Stated honestly, as `proxy-cache.md`'s resolved retained-revision decision (was its Q19) accepts: once LRU eviction has ended the file's cached reference, a client of the retained revision is served again only if the upstream still has the build, which a stand-in does and an Alpine mirror does not (a superseded build answers `404` on dl-cdn at once, live), so against the real mirror that client meets the negative entry and "package mentioned in index not found", exactly as it would against the mirror itself |
 | A new revision lists a different `C:` or `S:` for a filename already cached | **Immutability violation, revision-bound**, in the new-blob variant: recorded and alerted, no purge. A package path carries no digest and apk names no revision in the request, so the package route serves the bytes the **current** index names; the new bytes are fetched and verified as a new blob on the next request, and that commit ends the old blob's cached reference in the same transaction, so the sweep reclaims the old bytes, which no request can be served afterwards (`proxy-cache.md`'s resolved old-blob decision, was its Q20). Because apk verifies against the record it was given (captured), a client still holding the older index fails that package until its next `apk update`, exactly as against the upstream, while every refreshed client installs |
 | A new index fails its signature, or a package fails `C:`, `S:` or `datahash`, or a body is truncated | **Integrity failure at fetch**: nothing committed, no negative entry, the previous verified revision keeps serving, the operator is alerted, the next request tries again |
 | A new index is signed by a key outside the configured set (an Alpine key rotation) | **Integrity failure at fetch**, with the key name in the operator record, so the operator adds the key deliberately |
+| A new index arrives with no `.SIGN` entry on a remote holding no apk key, for a tree and architecture whose current revision carried one | **Regression not adopted** (the resolved withdrawn-signature decision below, was Q13, after `rpm.md` was-Q12): the signed revision stands, a divergence naming the missing signature is recorded, and only the operator's refresh adopts the unsigned successor; a cell first adopted unsigned never arms it. On a remote holding apk keys the same index is the integrity failure above, since an unsigned index reads `failed` there |
 
 ### Advisories, OSV and the security-signal rule
 
@@ -870,12 +920,24 @@ is this registry's, and per the resolved virtual-repository decision below:
 
 - **A virtual tree is the merge of its members' trees at the same path and architecture.** For
   each tree path and architecture any member holds, the service generates an index from the
-  members' records and signs it with the virtual repository's key. Remote members contribute
-  their cached, verified revisions only: a composed index the virtual signs admits a member's
-  index only under a `verified` verdict (`signing-service.md`'s resolved pass-through decision,
-  was Q17, AC36), so a remote with no upstream keys configured, whose revisions are accepted on
-  TLS alone with the verdict `absent`, contributes nothing to a virtual and the operator record
-  says why; the recipe configures the `alpine-keys` set on every remote a virtual lists. Remote
+  members' records and signs it with the virtual repository's key; the virtual's architecture set
+  for a tree is therefore the union of its members' (a hosted member's declared set, a remote's
+  upstream directories), and a hosted member's `noarch` versions are listed in every architecture
+  of that union, outside the member's own declared set included, since the merge reads records
+  rather than the member's indexes. A remote member contributes its **current adopted revision**
+  of each tree and architecture, admitted by the **anchor class** that adoption ran under
+  (`signing-service.md`'s resolved admission decision, was Q20 there, AC36, which superseded the
+  `verified`-only rule this spec first wrote under its was-Q17): class `signature`, a remote
+  holding at least one apk key, admits only a `verified` revision, and a verdict read as `absent`
+  after a trust-set change excludes it until re-evaluation; class `none`, a remote holding no
+  apk key, admits the current revision, which was adopted on TLS to the configured upstream
+  alone with verdict `absent` (Design, "The proxied path"); a `failed` verdict is never adopted,
+  so it is never current and never admitted. Each member's admission or exclusion is recorded
+  with its class on the merged set's input record (`data-model.md` AC45), which is this
+  format's operator record. What the virtual's signature attests is composition from members at
+  the trust level the operator configured for each, which the operator documentation states in
+  those words; configuring the `alpine-keys` set on a remote is the advice for a virtual whose
+  clients should get class `signature` behind it, not a condition of contributing. Remote
   members are re-merged when their revisions revalidate. The merge is the
   generator's `Merge`, run as the deferred `index.merge` job on the shared runner: enqueued by a
   member's write with the virtual as coalesce key, by a remote member's adoption of a new index
@@ -890,21 +952,40 @@ is this registry's, and per the resolved virtual-repository decision below:
   never-adopted one is fetched before any client asks. Serving a merged index whose input from a
   remote is past the remote's TTL enqueues one coalesced `proxy.revalidate` job that replays the
   remote's own routes below the authorizer, off the request's path (`proxy-cache.md`,
-  "Revalidation outside the request", AC26). The profile declares the **member-input path** of
-  the one document the `Merge` reads from a member, under the member's mount, which registration
-  refuses a merging profile without (`signing-service.md` AC35): `{tree}/{arch}/APKINDEX.tar.gz`.
-  A virtual's creation, or a member-list change adding a remote never adopted, replays it for
-  every tree path and architecture another member of the virtual already holds, so the virtual
-  lists the remote's packages there with no request ever made to the remote's own URL. A tree
-  only the remote holds reaches the virtual once a direct client of the remote has caused its
-  adoption; a read-driven first fetch for it is `signing-service.md`'s to add, reported by this
-  pass.
-- **Resolution is per package name, in member order**: the first member whose tree holds any
-  version of a name contributes every version of it, and later members' versions of that name are
-  omitted. This matters more here than for RPM, because apk installs the highest version across
-  all it can see (captured), so without shadowing a public `swhello-9.0` beats a private
-  `swhello-1.1`. The same rule applies to `provides` names: a name a first member provides is not
-  taken from a later member's `provides`.
+  "Revalidation outside the request", AC26). The profile declares the **member input** of the one
+  document the `Merge` reads from a member, under the member's mount, in the shape
+  `signing-service.md`'s resolved member-input decision (was Q21 there, AC35) gives it: the
+  template `{tree}/{arch}/APKINDEX.tar.gz` over two variables, `{tree}` sourced from the tree
+  paths the virtual's other members hold under the tree grammar of "Trees and architectures"
+  (segments of `[A-Za-z0-9._+-]`, none `.` or `..`), and `{arch}` from the architectures they
+  hold under `[a-z0-9_]+`, with no derivation, so the profile's round bound is one; registration
+  refuses the profile without the template, a variable without a source, or a grammar admitting
+  an empty, `.` or `..` segment. A virtual's creation, or a member-list change adding a remote
+  never adopted, expands it over the other members' values and replays every cell, so the
+  virtual lists the remote's packages there with no request ever made to the remote's own URL.
+  **A tree or architecture only the remote holds** is covered by no member and is fetched
+  **read-driven**: a request to the virtual for `{tree}/{arch}/APKINDEX.tar.gz` at a cell that
+  fits both grammars and that no member input covered is answered from the merged set as it
+  stands (a `404`), records the cell on the virtual's input record and enqueues each remote
+  member's revalidation in an enqueue-only transaction, after which the remote's replay requests
+  that cell, a cell the upstream answers `404` becomes the remote's negative entry and is not
+  asked again until it lapses, and a cell the upstream holds is in the merged set within the
+  staleness bound; the set is bounded by `index.requested_cells_max` and pruned once a cell is
+  cached or its negative entry lapsed unrequested (`signing-service.md`'s resolved requested-cell
+  decision, was Q22 there; `proxy-cache.md` AC26). The gap this spec once reported here is closed
+  by that mechanism.
+- **Resolution is per package name, in member order, by literal name**: the first member whose
+  tree holds any version of a name contributes every version of it, and later members' versions
+  of that name are omitted. This matters more here than for RPM, because apk installs the highest
+  version across all it can see (captured), so without shadowing a public `swhello-9.0` beats a
+  private `swhello-1.1`. Records are composed whole: a later member's package that **provides** a
+  name a first member holds keeps its `p:` field, because stripping it would make the merged
+  record say less than the package's own `.PKGINFO`, which apk reads at install and reconciles
+  with the index it holds, and no capture shows what either line does with that divergence. Which
+  of a first member's real package and a later member's provider of its name apk selects, with
+  and without `provider_priority` on the provider, is therefore recorded by AC20's case on both
+  lines rather than designed around; the resolved shadowing decision below (was Q12) holds the
+  record rewrite as the fallback should the capture show the provider winning.
 - **Package bytes are the members'**, served through the virtual route, their `C:` unchanged; since
   no repository install checks the package signature, a client of a virtual repository needs only
   the virtual repository's key file, whatever its members' keys are.
@@ -977,7 +1058,8 @@ replay: `RSA256` where Alpine signs `RSA`, the `DESCRIPTION` text, signature byt
       repository's key file; the transcript shows `APKINDEX.tar.gz` and then each package at
       `{tree}/x86_64/{name}-{version}.apk`, and the installed files equal the published package's.
 - [ ] AC2: Every hosted `APKINDEX.tar.gz` is a leading gzip stream holding a tar segment with
-      exactly one `.SIGN.RSA256.{keyname}.rsa.pub` entry and no end-of-archive blocks, followed by
+      exactly one `.SIGN.RSA256.{keyname}.rsa.pub` entry outside a rotation window (two inside
+      one, AC9) and no end-of-archive blocks, followed by
       the index stream, the signature an RSA 4096 PKCS #1 v1.5 signature over the SHA-256 of that
       stream, verifying on both lines; an index whose signature is removed, made by another key, or
       left stale after the stream changes is refused as "UNTRUSTED signature" or "BAD signature"
@@ -1019,8 +1101,8 @@ replay: `RSA256` where Alpine signs `RSA`, the `DESCRIPTION` text, signature byt
       across a backwards repoint, when seeded as a `Retirement` record through `state`, and when
       the deletion commits between the publish's claim declaration and its commit; and the stored
       filename is `{pkgname}-{pkgver}.apk` whatever the upload was called.
-- [ ] AC7: The `APKINDEX` member of every generated index, for every fixture tree and architecture,
-      equals field for field and in order what `apk index --rewrite-arch {arch}` from the pinned
+- [ ] AC7: The `APKINDEX` member of every generated hosted index, for every fixture tree and
+      architecture, equals field for field and in order what `apk index --rewrite-arch {arch}` from the pinned
       Alpine 3.22.6 image writes for the same packages, including `C:` as `Q1` plus the base64
       SHA-1 of each control stream and `S:` as each file's size; and the `DESCRIPTION` names the
       tree and the snapshot and not the repository's name.
@@ -1106,33 +1188,54 @@ replay: `RSA256` where Alpine signs `RSA`, the `DESCRIPTION` text, signature byt
 - [ ] AC19: A stand-in presenting each removal-table event produces this format's classification:
       a package leaving the index serves the new revision with no divergence recorded while a
       client holding the old revision still fetches it, including after a sweep run with the
-      grace lapsed while that revision is retained and after the file's cached reference was
-      evicted, and answers `404` once a further adoption has dropped the revision; a changed `C:`
+      grace lapsed while that revision is retained and, against a stand-in that still serves the
+      build, after the file's cached reference was evicted, while against a stand-in that answers
+      `404` for it as dl-cdn does the evicted file meets the negative entry and that client fails
+      as it would at the mirror; and the filename answers `404` once a further adoption has
+      dropped the revision; a changed `C:`
       for a cached filename records and alerts a divergence, a client that updated to the new
       index installs the new bytes on both lines, and after the next sweep past grace the old
-      blob is gone from the store with the divergence record naming both digests; as this
-      format's side of the removal policy in `proxy-cache.md` (its AC13, AC27, AC28).
+      blob is gone from the store with the divergence record naming both digests; on a remote
+      holding no apk key, an index arriving with no `.SIGN` entry for a cell whose current
+      revision carried one is not adopted, the signed revision still serving and installing on
+      both lines, a divergence naming the missing signature recorded, the operator's refresh then
+      adopting it, while a cell first adopted unsigned adopts its unsigned successor with no
+      divergence; as this format's side of the removal policy in `proxy-cache.md` (its AC13,
+      AC27, AC28).
 - [ ] AC20: A virtual repository over a hosted and a remote member serves, per tree and
       architecture, a merged index signed by the virtual repository's key, from which a hosted
       `swhello-1.1` placed first shadows an upstream `swhello-9.0` so that no upstream version of
-      that name is listed or fetched, asserted at the network layer; both lines install a hosted
-      and a proxied package in one transaction through one repository line holding only the
-      virtual key file; a member's change re-merges and re-signs the tree through the deferred
-      `index.merge` job within the staleness bound, creating no snapshot, with no merge on a
-      request's path and the previous merged set serving until the new one commits; and publish to
-      the virtual answers `405` with the `repository-type` problem. A virtual created over a hosted
-      member holding `v3.24/main` for `x86_64` and a remote never adopted fetches the remote's
-      `v3.24/main/x86_64/APKINDEX.tar.gz` at creation, both lines then installing a package only
-      the remote's upstream holds with no request ever made to the remote's own URL; the remote's
-      adoption of a new index revision enqueues the merge in the adoption transaction and the
-      change is installable through the virtual within the staleness bound; with the remote
-      reached only through the virtual, a read of the merged index past the remote's TTL
-      enqueues one `proxy.revalidate` job and is served the current merged index with no upstream
-      request on its path (`proxy-cache.md` AC26, `signing-service.md` AC35); a second remote
-      with no upstream keys configured, listed in the same virtual, contributes no package and
-      its exclusion is in the operator record (`signing-service.md` AC36); and registration
-      refuses an Alpine profile whose `Merge` reads a member document with no member-input path
-      declared.
+      that name is listed or fetched, asserted at the network layer; a hosted `noarch` version of
+      the first member is listed in an architecture only the remote holds and installs from the
+      virtual there; a later member's package providing `swhello` keeps its `p:` field in the
+      merged record, and what each line installs for `apk add swhello` with that provider
+      present, once without and once with `provider_priority` on it, is recorded in the case's
+      transcript, the case failing only if the merged record differs from the member's; both
+      lines install a hosted and a proxied package in one transaction through one repository
+      line holding only the virtual key file; a member's change re-merges and re-signs the tree
+      through the deferred `index.merge` job within the staleness bound, creating no snapshot,
+      with no merge on a request's path and the previous merged set serving until the new one
+      commits; and publish to the virtual answers `405` with the `repository-type` problem. A
+      virtual created over a hosted member holding `v3.24/main` for `x86_64` and a remote never
+      adopted fetches the remote's `v3.24/main/x86_64/APKINDEX.tar.gz` at creation, both lines
+      then installing a package only the remote's upstream holds with no request ever made to
+      the remote's own URL; a request to the virtual for `v3.24/community/x86_64/APKINDEX.tar.gz`,
+      a tree no member but the remote holds, answers `404`, records the cell and enqueues one
+      revalidation, after which the remote's replay fetches that cell and both lines install a
+      package only that tree holds through the virtual within the staleness bound, while a cell
+      with a `..` segment is neither recorded nor fetched; the remote's adoption of a new index
+      revision enqueues the merge in the adoption transaction and the change is installable
+      through the virtual within the staleness bound; with the remote reached only through the
+      virtual, a read of the merged index past the remote's TTL enqueues one `proxy.revalidate`
+      job and is served the current merged index with no upstream request on its path
+      (`proxy-cache.md` AC26, `signing-service.md` AC35); a second remote with no upstream keys
+      configured, listed in the same virtual, is adopted under anchor class `none` with verdict
+      `absent` and **contributes** its packages, both lines installing one through the virtual,
+      its admission and class on the operator record, while a third remote holding the vendor
+      key whose stand-in serves an index signed by another key never becomes current and
+      contributes nothing (`signing-service.md` AC36); and registration refuses an Alpine
+      profile whose `Merge` reads a member document with no member input declared, or whose
+      `{tree}` or `{arch}` variable has no source or a grammar admitting a `.` or `..` segment.
 - [ ] AC21: A policy rule depending on advisory data attached to an Alpine repository with no
       `advisory_ecosystem` declared is refused at configuration as unbindable, and declaring
       `Alpine:edge`, which no configured source lists, is refused `validation` naming the value;
@@ -1192,8 +1295,8 @@ replay: `RSA256` where Alpine signs `RSA`, the `DESCRIPTION` text, signature byt
 | AC16 | integration | `internal/format/alpine/proxied_integrity_test.go` (bad and foreign-key signatures, `C:`, `S:` and `datahash` mismatches, truncated body; CAS and reference assertions; previous revision still serving; operator record) |
 | AC17 | conformance + integration | `conformance/alpine/proxied_ttl_test.go` (mutating stand-in with `ETag` and `Last-Modified` variants, network-level counts); `internal/format/alpine/proxied_negative_test.go` (unknown paths, `MIRRORS.txt` and `last-updated` with no upstream request, `404`, `429` and `5xx`); `internal/format/alpine/proxied_freshness_test.go` (the cache-scoped `Last-Modified` under a stand-in whose dates move backwards; the layer half is `proxy-cache.md` AC22's `internal/proxy/freshness_test.go`) |
 | AC18 | integration + conformance | `internal/format/alpine/upstream_redirect_test.go` (allowlisted and refused redirect hosts, credential scope, `http://` root refused); `conformance/alpine/proxied_redirect_test.go` (install through a cross-host `302`) |
-| AC19 | integration | `internal/format/alpine/removal_test.go` (stand-in presenting each event; a sweep on an injected clock with the grace lapsed between adoptions, the object store read after each; the retained revision's package evicted then fetched; the changed-`C:` filename served the current bytes and the old blob gone after the next sweep; the shared-layer half is `proxy-cache.md` AC13, AC27 and AC28's) |
-| AC20 | conformance + integration | `conformance/alpine/virtual_test.go` (shadowing with the network layer showing no upstream request for the shadowed name; mixed install on both lines with one key file; `405`); `internal/format/alpine/index/merge_test.go` (the generator's `Merge`: per-name first member including `provides`); `internal/format/alpine/virtual_merge_test.go` (re-merge on member change and on remote adoption as the deferred job within the staleness bound, no snapshot, shared with `signing-service.md` AC19's `internal/index/virtual_merge_test.go` and AC35's `internal/index/virtual_remote_member_test.go`); `conformance/alpine/virtual_remote_test.go` (a virtual created over a never-adopted remote, the stand-in's transcript showing only the member-input path and the network layer no request to the remote's URL; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go`; a second remote with no upstream keys contributing nothing, with its operator record, the rule itself `signing-service.md` AC36's `internal/index/passthrough_test.go`); `internal/format/alpine/index/profile_test.go` (the declared member-input path, and a profile lacking it refused at registration) |
+| AC19 | integration + conformance | `internal/format/alpine/removal_test.go` (stand-in presenting each event; a sweep on an injected clock with the grace lapsed between adoptions, the object store read after each; the retained revision's package evicted then fetched from a stand-in that serves it and refused by one answering `404`; the changed-`C:` filename served the current bytes and the old blob gone after the next sweep; a keyless remote's index arriving without its `.SIGN` entry not adopted, the divergence, the refresh, and the never-armed unsigned-first cell; the shared-layer half is `proxy-cache.md` AC13, AC27 and AC28's); `conformance/alpine/proxied_withdrawn_signature_test.go` (both lines still installing from the signed revision while the stand-in serves the stripped index) |
+| AC20 | conformance + integration | `conformance/alpine/virtual_test.go` (shadowing with the network layer showing no upstream request for the shadowed name; the first member's `noarch` version in a remote-only architecture; the provider case on both lines, the transcript recording each line's choice without and with `provider_priority`, the assertion being the unmodified `p:` field; mixed install on both lines with one key file; `405`); `internal/format/alpine/index/merge_test.go` (the generator's `Merge`: per-name first member by literal name, records composed whole, the architecture union); `internal/format/alpine/virtual_merge_test.go` (re-merge on member change and on remote adoption as the deferred job within the staleness bound, no snapshot, shared with `signing-service.md` AC19's `internal/index/virtual_merge_test.go` and AC35's `internal/index/virtual_remote_member_test.go`); `conformance/alpine/virtual_remote_test.go` (a virtual created over a never-adopted remote, the stand-in's transcript showing only the expanded member-input cells and the network layer no request to the remote's URL; the remote-only tree fetched read-driven after the virtual's `404`, the `..` cell refused, shared with `signing-service.md` AC35's row; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go`; the keyless remote admitted under class `none` and installed from, and the foreign-key remote never current, with the operator record, shared with `signing-service.md` AC36's conformance row, the admission rule itself its `internal/index/admission_test.go`); `internal/format/alpine/index/profile_test.go` (the template with its two sourced variables and grammars, round bound one, and a profile lacking the template, a source or a safe grammar refused at registration) |
 | AC21 | integration + conformance | `internal/format/alpine/policy_config_test.go` (advisory rule without an `advisory_ecosystem` refused, an unlisted value refused `validation` through the repository `PATCH`; each version's `origin` reported as its advisory key where it differs from `pkgname`, stored on the `Version` row and absent from the document, and carried on a proxied miss's fetch-and-cache request refused before any upstream request; coordinate and signature-verdict rules; the matcher and storage halves are `supply-chain-policy.md` AC17's and AC24's and `data-model.md` AC46's); `conformance/alpine/advisory_policy_test.go` (controlled advisory through the `advisories` key, both paths) |
 | AC22 | conformance | `conformance/alpine/replay_test.go` (corpus replay); `conformance/alpine/real_upstream_test.go` (recording session: both stock images with only their `alpine-keys` through a remote over dl-cdn) |
 | AC23 | integration | `internal/storage/metadata_root_test.go` (threshold crossing with a generated index and a proxied filename map, sweep, serve); `internal/format/alpine/proxied_retention_gc_test.go` (the current and the retained revision's body and map declared on the remote's list, a sweep with the grace lapsed while retained, an install of a package only the retained revision names, both collected after the dropping adoption, a late map build discarded); `conformance/alpine/large_tree_test.go` (both lines install after the sweep) |
@@ -1268,7 +1371,9 @@ None open. The eleven questions this draft raised were each written in the templ
 shape and then adopted at their own recommendation under the owner's standing delegation of
 2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided,
 folded through Scope, Design, the criteria and the Test Plan in the same pass, and reversible by
-the owner at any time. `grep -rn "standing delegation"` is the owner's review queue.
+the owner at any time, and each carries the verdict of the Fable recheck of 2026-10-01. A
+twelfth, raised and adopted in that recheck, supersedes one clause of the seventh and is
+owner-facing. `grep -rn "standing delegation"` is the owner's review queue.
 
 ### Resolved: how a repository relates to the base URLs clients name (was Q1)
 
@@ -1294,6 +1399,11 @@ tree decision applied to the same problem.
 
 Accepted cost: the tree segment in the addressed object, which also lets a patterned grant confine
 a token to one branch.
+
+Rechecked on Fable 2026-10-01: confirmed. Under-stated: the tree path is also the `{tree}`
+variable of the virtual's member-input template, so the grammar stated in "Trees and
+architectures" is what registration checks for a safe expansion (was-Q21 of
+`signing-service.md`; AC20).
 
 ### Resolved: where `noarch` packages live and which architectures a tree serves (was Q2)
 
@@ -1322,6 +1432,15 @@ captured).
 
 Accepted cost: the nine-index regeneration, bounded by narrowing the declared set.
 
+Rechecked on Fable 2026-10-01: confirmed. Two things the record under-stated: the set lives in
+the repository-level document, so it is snapshot content and a repoint restores set and index
+bodies together (the management-api wording "a `settings` document" names the `configure` shape,
+as `arch.md` reads it too); and in a virtual the set per tree is the union of the members', a
+hosted `noarch` version appearing across it (Design, "Virtual repositories"). The client case the
+format sweep chose for AC8 (a removed architecture's index answering `404`, then restored) is
+confirmed, with the honesty note that an index `404` was not itself captured and the case is
+its proof (Design, "The wire surface").
+
 ### Resolved: who signs packages on the hosted path (was Q3)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: packages carry their
@@ -1346,6 +1465,12 @@ indexing-time check `apk index` performs.
 **Why this is yours:** it decides what "signed" means for a package in this registry.
 
 Accepted cost: the operator documentation's note on local-file installs.
+
+Rechecked on Fable 2026-10-01: confirmed. The options were framed fairly and the capture that
+decides it (no repository install checks the package signature, on both lines) is the strongest
+in the spec. Under-stated: the verdict a policy rule reads is `absent` on a hosted repository
+whose trust set holds no package key, so "require a verified signature" binds nothing until the
+operator provisions publisher keys, which the operator documentation states.
 
 ### Resolved: the index key, its algorithm and its distribution (was Q4)
 
@@ -1376,6 +1501,15 @@ descriptor under `auth.md`'s resolved name-free-document decision (was Q23 there
 `pull` reads it; the existence rule is untouched, since a descriptor still needs a scope on the
 repository.
 
+Rechecked on Fable 2026-10-01: confirmed, amended in two details. The key name's
+`{instance host}` was undefined and is now the host of `server.public_url` at creation, fixed
+in the name with the repository name of that moment (a rename changes no key name, which is
+what makes `Rename: supported` true); and AC2's "exactly one `.SIGN` entry" was contradicted by
+the dual-signature window AC9 asserts, so AC2 now says outside a window. The rotation profile
+itself (item 5) was examined against the captures: both orders verify, the first trusted
+signature decides, and a window is the only cutover that lets a client install the new key file
+on its own schedule; a virtual's key rotates under the same profile.
+
 ### Resolved: rendering a package policy refusal (was Q5)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: `403` with the
@@ -1398,6 +1532,10 @@ side-stepped.
 
 Accepted cost: the operator documentation explains both lines' messages.
 
+Rechecked on Fable 2026-10-01: confirmed. The capture that a refused package never falls back
+while a refused index is skipped silently is what makes A the only enforceable option, and the
+`package-level` row `supply-chain-policy.md` carries for Alpine says so.
+
 ### Resolved: what a proxied tree serves (was Q6)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: upstream indexes and
@@ -1416,6 +1554,16 @@ an upstream key rotation surfaces as a deliberate operator step instead of a sil
 **Why this is yours:** it decides whose key an Alpine user trusts through this registry.
 
 Accepted cost: the operator record of unverified remotes and of foreign-key revisions.
+
+Rechecked on Fable 2026-10-01: confirmed, and amended in vocabulary. "Unverified" is now the
+taxonomy's: a remote with no apk key adopts under anchor class `none` with verdict `absent`,
+never `failed` (`artifact-verification.md` was-Q2 as amended; Design, "The proxied path"), which
+is also what lets such a remote contribute to a signed virtual (was-Q20 there). The cost the
+record under-stated: a remote whose trust set holds apk keys for package verdicts refuses an
+unsigned upstream index as `failed`, which is right here because no apk client installs from one
+either, and is stated so that the Arch-shaped trap is seen not to apply. The one path the
+vocabulary change opened, a keyless remote whose upstream stops serving the signature it served,
+is closed by the resolved withdrawn-signature decision below (was Q13).
 
 ### Resolved: virtual Alpine repositories (was Q7)
 
@@ -1445,6 +1593,21 @@ rather than inside the member's write, and the handler's `Capabilities()` declar
 spec's adoption hook (its resolved remote-member decision, was Q16, AC35), with the member-input
 path this profile declares feeding a never-adopted remote (AC20).
 
+Rechecked on Fable 2026-10-01: confirmed in its shape (a merged, re-signed tree with per-name
+shadowing is the one configuration that closes the highest-version-wins exposure), amended in
+its fold, and **superseded in part** by the resolved shadowing decision below (was Q12), which
+is owner-facing. The fold: what a remote member contributes is decided by the anchor class its
+adoption ran under (`signing-service.md` was-Q20, AC36), so the "verified only" exclusion this
+record's body carried, written under that spec's was-Q17 and then applied by the format sweep as
+"a keyless remote contributes nothing", is gone; a keyless remote contributes under class `none`
+and the `alpine-keys` recipe is advice for class `signature`. The member input is a template
+over the other members' trees and architectures with a read-driven cell for a tree only the
+remote holds (its was-Q21, was-Q22), which closes the gap the sweep reported. Costs the record
+under-stated: the virtual's architecture set per tree is the union of its members', with a hosted
+member's `noarch` versions listed across it; and the shadowing of `provides` names, which this
+option's text included, is the part superseded, since it needs a merged record that says less
+than the package's own `.PKGINFO` and no capture backs that.
+
 ### Resolved: the v3 index and v3 packages (was Q8)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: v2 only; `Packages.adb`
@@ -1464,6 +1627,10 @@ another host (captured).
 **Why this is yours:** it decides whether the registry anticipates an ecosystem transition.
 
 Accepted cost: the revisit, whose trigger is dl-cdn publishing `Packages.adb`.
+
+Rechecked on Fable 2026-10-01: confirmed. The adversarial question is whether Alpine 3.24's
+apk-tools 3.0.8 changes the answer; it does not, because its default repository lines are
+untyped and therefore v2 (captured), so every stock client still reads what this spec serves.
 
 ### Resolved: the write boundary of a multi-package publish (was Q9)
 
@@ -1486,6 +1653,9 @@ client can hit.
 Accepted cost: recorded for `management-api.md`, whose reconciliation table now carries it: a
 batch publish is one `publish` operation and one write, authorized only if every object it adds is
 in pattern (its "The operation vocabulary", AC4, AC5).
+
+Rechecked on Fable 2026-10-01: confirmed; `management-api.md`'s reconciliation table carries
+the "RPM, Alpine, Arch | batch publish (one write)" row at this sha.
 
 ### Resolved: how an Alpine repository binds to OSV (was Q10)
 
@@ -1519,6 +1689,11 @@ channel `supply-chain-policy.md`'s resolved advisory-key decision (was Q11, AC24
 closes the consequence this record once left open (Design, "Advisories, OSV and the
 security-signal rule"; AC21).
 
+Rechecked on Fable 2026-10-01: confirmed, as revised by the reconciliation: the declaration is
+`supply-chain-policy.md`'s core-parsed `advisory_ecosystem` and the handler reports the origin
+as the version's advisory key, both verified in that spec's text at this sha (its "OS-package
+repositories declare their ecosystem", AC11, AC24).
+
 ### Resolved: the recommended credential form and preconfigured mirrors (was Q11)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: the operator documentation
@@ -1541,6 +1716,95 @@ Q10), and any single branch preconfigured would be the wrong one for most instal
 Accepted cost: proxied cases run against stand-ins; the real mirror is exercised by the recording
 session and the nightly job once configured.
 
+Rechecked on Fable 2026-10-01: confirmed. The record under-stated one cost, now stated:
+`.netrc` doubles the requests per file and therefore per `apk add`, which on a tree of a few
+hundred packages is a few hundred `401`s a run, all logged by `auth.md`'s request log, so the
+operator documentation's recipe should say that the `401`s are the protocol and not a fault.
+
+### Resolved: shadowing by literal name, records composed whole (was Q12, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation**, in the Fable recheck. Option A: a
+virtual tree shadows by **literal package name** only, the first member holding a name
+contributing every version of it and later members' versions of it omitted; every merged record
+is the member's record whole, its `p:` field included; and the client's own choice between a
+first member's real package and a later member's provider of that name is captured by AC20's case
+on both lines, once without and once with `provider_priority` on the provider, with the record
+rewrite of option B held as the fallback should the capture show the provider winning (Design,
+"Virtual repositories"; AC20). **This supersedes, in part, the resolved virtual-repository
+decision above (was Q7)**, an Opus adoption whose option A read "the same rule applies to
+`provides` names". It is owner-facing.
+
+The question: Q7 closed dependency confusion by name, and extended the same shadowing to
+`provides`, so that a public member's package providing a private name would lose its `p:` entry
+in the merged index. That needs the merge to rewrite a record field, and the rewritten record
+then says less than the package's own `.PKGINFO`, which both apk lines read at install and
+reconcile with the index they hold; nothing in this spec's captures shows what either line does
+with that divergence, and `arch.md`'s Fable recheck decided the identical shape for pacman as
+literal-name shadowing with providers kept whole (its was-Q14). Whether a provider can beat a
+real package at all is the client's rule, with `provider_priority` as its lever, and it was never
+captured.
+
+**Recommendation:** A, because it keeps every merged record equal to a member's record, which is
+what AC7's oracle and the "package bytes are the members'" rule assume; it turns an unverified
+protection into a recorded fact at the first conformance run; and it keeps the one case where
+the rewrite would matter, a provider winning over a real package, as a fallback that the capture
+either justifies or retires.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Literal-name shadowing; records whole; the provider case captured; rewrite as fallback** | Merged records identical to the members'; the client's real resolution on record; consistent with `arch.md` | A provider in a later member stays visible to the resolver until the capture says whether that matters |
+| **B. Shadow `provides` too, by rewriting later members' `p:` fields** | No provider of a first-member name reaches the resolver | A merged record that contradicts the package's `.PKGINFO` at install, with no capture of either line's behaviour; a rewrite step in `Merge` the oracle cannot check |
+| **C. Drop any later-member package that provides a first-member name** | No rewrite, no provider | Whole packages vanish from the virtual because of one `provides` line, which shadows far more than the name |
+
+**Why this is yours:** it sets what a virtual's shadowing promises for names a package provides
+rather than carries, and it reverses one clause of an adopted decision.
+
+Accepted cost: the provider case is recorded rather than refused until the capture exists; the
+exposure, if the capture shows it, is a public member's `provider_priority` beating a private
+name, cured by the fallback or by the operator placing no public member before a private one. B
+lost to the unverified divergence; C to over-shadowing.
+
+### Resolved: a signature the upstream stops serving (was Q13, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation**, in the Fable recheck, taking
+`rpm.md`'s resolved decision of the same name (was Q12 there, adopted on Fable the same day) for
+this format. Option A: on a remote holding no apk key, an `APKINDEX.tar.gz` revision arriving
+with no `.SIGN` entry for a tree and architecture whose current revision carried one is a
+**regression not adopted**: the signed revision keeps serving, a divergence naming the missing
+signature is recorded, and the operator's refresh is what adopts the unsigned successor; a cell
+first adopted without a signature never arms the rule. The fact the rule reads is the handler's
+own, recorded by its adoption check on the remote's document (whether the revision's leading
+segment carried a `.SIGN` entry), never the anchor class (Design, "The proxied path", the removal
+table; AC19).
+
+The question: `signing-service.md`'s admission-by-anchor-class decision (was Q20 there) lets a
+keyless remote compose into a signed virtual, which this spec now states. Alpine's mirrors always
+sign (live; apk refuses an unsigned index without `--allow-untrusted`, captured), so a mirror,
+or whoever controls one, that stops serving the segment is the signature-stripping case: a direct
+client holding the stock keys refuses it, but a virtual re-signing the composed tree would admit
+it under class `none` and its clients would trust the registry's signature over an index Alpine
+no longer vouches for. Where RPM's signature is a separately served `.asc`, so that its hook has
+to follow what was served, Alpine's is inside the one document and its hook is always declared;
+the shape of the downgrade is nevertheless the same. `arch.md` read an unserved optional `.sig`
+as class `none`; that reading is being aligned there and is not copied here.
+
+**Recommendation:** A, for `rpm.md`'s reasons: the regression class already exists for an older
+revision, a withdrawn signature is a regression of the same kind, `proxy-cache.md` already gives
+every regression its cure, and nothing is read that the handler is forbidden.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. A withdrawn signature is a regression not adopted** | No silent downgrade into a signed virtual; the cure is the existing refresh; no new read for the handler | A legitimately unsigning upstream serves its last signed revision until an operator refreshes; one more divergence kind |
+| **B. Class `none` adopts whatever arrives** | One rule, nothing to refresh | A stripping mirror composed into a signed virtual silently; the virtual weaker than a direct client with the stock keys |
+| **C. Require the operator to configure `alpine-keys` on every remote a virtual lists** | Strict by configuration | Reinstates the exclusion was-Q20 removed, for every private TLS upstream too |
+
+**Why this is yours:** it decides whether the registry's signature on a virtual can cover a
+tree whose upstream signature vanished, and it adds a regression kind to a settled class.
+
+Accepted cost: the refresh-gated adoption of a genuinely unsigned successor, and the divergence
+kind; `proxy-cache.md`'s "Regression not adopted" row may name this format for it (reported). B
+lost to the silent downgrade; C to reinstating the exclusion.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1549,3 +1813,4 @@ session and the nightly job once configured.
 | 2026-09-28 | 15ced69 | cross-spec reconciliation of the foundation wave, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From `signing-service.md` (item 9, consequences Open item 21): `Indexer` and generator package `internal/format/alpine/index`, pre-commit dispatch, per-document lock, the signature a `Signature` record framed onto the stored body as the prepended segment at serve time, rotation as the `dual-signature` profile with opening and closing each one atomic batch and no snapshot (item 5 reworded, AC9), the virtual merge as the `index.merge` job (AC20); Open item 21's question answered: no pointer-scoped signed wrapper, since neither the segment nor the index carries a date and apk adopts whatever verifies, AC4 extended with a rollback case; the seven-item list mapped onto the contract; `DESCRIPTION` no longer names the repository so a rename changes no index byte (`signing-service.md` AC29). From `management-api.md`: kinds `publish`, `delete-version`, `delete-package`, `configure` with key phases on the signing-key routes, core-held retirement refused with `retired` (AC6, AC8), `405` as `repository-type`, the batch-publish record discharged. From `auth.md` was Q23: the key document is a descriptor (AC12); the `apk` client-table row is still absent there (reported). From `artifact-verification.md` (AC12, AC21, AC24, AC25): the `apk` entry and integrity answers through `Verifier` (AC3, AC15), sharing its `conformance/alpine/signature_test.go`. From `upstream-adapters.md` item 12 and `proxy-cache.md` (was Q15, AC22, event classes): the `https` adapter's allowlist, root-only `basic` credential and `http://` refusal, packages fetched in verifier mode because `C:` is not a whole-file digest, cache-scoped `Last-Modified` (AC17), removal rows named by class. From `supply-chain-policy.md` (binding and coverage tables, was Q10, AC18): `WriteRefusal` and the phrase captured on 3.0.8 (AC13), the `package-level` row re-asserted, the OSV declaration now the core-parsed `advisory_ecosystem` (the OSV record revised, AC21), with the channel by which the core learns a version's origin reported as unspecified. From `conformance-harness.md` (reconciliation 4, was Q6, AC23, AC24, AC26): the seed-path obligation met, `signing` sub-entry and `trust` key, AC14's open-egress half re-expressed with a declared stand-in. From `repository-lifecycle.md` AC12: Capabilities and lifecycle section, new AC24. Twenty-four criteria, each with a Test Plan row; no question adopted, `fable_recheck` kept. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
 | 2026-09-28 | 93982ba | data-loss fix on Opus (storage-and-gc closing-sweep item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 0 of "From the storage-and-gc.md closing sweep" in `agents/spec-loop/consequences.md`, verified against `storage-and-gc.md`'s fourth mark root (its third reach, AC16) and `data-model.md` AC34, AC36 and AC45: a digest a document merely mentions keeps nothing alive, the declared blob-digest list is a document's only keep-alive, and a remote writes no content snapshot. The holes: the remote's retained index revisions and per-revision filename maps, stored as CAS-backed metadata on the remote's document, were named only in its body, and the changed-`C:` row kept the old blob "for older revisions" through nothing the sweep follows and through a route that cannot tell which revision apk holds (`{P}-{V}.apk` carries no digest). Now: one superseded revision retained per tree and architecture, its `APKINDEX.tar.gz` body and map on the remote's declared blob-digest list, dropped by the adoption that pushes the revision out, a late map build discarded (proxy-cache was-Q19, AC27, chosen over a cached reference because a map is metadata with no `File` row and must not be evicted while its revision still serves); cached packages held by their own cached references; the changed-record row serving the current index's bytes with the new commit ending the old blob's reference (proxy-cache was-Q20, AC28). AC19 and AC23 extended so each fails if a retained body or map is collected; Test Plan rows (`internal/format/alpine/proxied_retention_gc_test.go` added) and Phase 3 updated. The hosted path is unchanged. No new question adopted here; `fable_recheck` extended for the folded decisions. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
 | 2026-09-28 | f8ad8b2 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Applied: foundation-leftovers item 2 and `signing-service.md` AC35 (member-input path `{tree}/{arch}/APKINDEX.tar.gz`, replayed for every tree and architecture another member holds; a tree only the remote holds reported as a gap), signing-service closing-sweep item 6 and proxy-cache closing-sweep item 6 (remote adoption re-merges, was-Q16, AC35; the virtual-only remote's revalidation, `proxy-cache.md` AC26; item 7 of the service requirements and the Q7 record updated; AC20 and its row extended); management-surfaces item 14 (the architecture-set `configure` observed by a real client: `apk` installs nothing with the client's architecture removed and installs after it is restored, from captured 404 behaviour; AC8 and its row extended); supply-chain closing-sweep item 3 (origin reported as the version's advisory key, supply-chain was-Q11, AC24, `data-model.md` AC46, closing the channel this spec had reported; AC21, its row, the Q10 record and Phase 3); auth closing-sweep item 3 (the stale 'no apk row yet' wording removed); eviction settlement (index revisions outside the quota, was-Q21; the repository-level declared list confirmed under was-Q22; new AC25); `signing-service.md` was-Q14 (packages through `ServeFile`, Blocking preconditions, Phase 1); management-api closing-sweep item 5 (claims at declaration and again at commit, was-Q14; the declared unchanged publish, was-Q15; AC6 and its row). Found while verifying: `signing-service.md` AC36 excludes a remote accepted on TLS alone from a signed merge; stated and asserted. Data-loss wave 1 confirmed intact (AC19, AC23). The hosted half is recorded against a local `apk index` tree with no exception-list row yet; both alpine rows reported. Found already done: Open item 21's signing half, the no-pointer-wrapper confirmation. Skipped: nothing. No question adopted; `fable_recheck` extended for the member-input expansion and the architecture-set client case. 25 criteria, each with a Test Plan row. Stays draft. |
+| 2026-10-01 | 90102bf | Fable recheck: full review (claim verification at HEAD of every sibling citation: `signing-service.md` was-Q20 to was-Q22, AC7, AC8, AC11, AC12, AC19, AC25, AC28, AC29, AC35, AC36, its rotation profiles, "The produce/verify boundary" and "Virtual merges"; `artifact-verification.md` was-Q2 as amended, "Anchor class", AC12, AC21, AC24 to AC26, AC31; `proxy-cache.md` was-Q19 to was-Q22, AC9, AC13, AC14, AC20, AC22, AC25 to AC31, "Freshness of what a remote serves", "Revalidation outside the request" and its removal table; `supply-chain-policy.md`'s Alpine coverage and binding rows, AC11, AC18, AC24; `auth.md`'s `apk` row, AC12, AC17, AC27, AC31, AC36, was-Q23; `management-api.md`'s Alpine rows and `configure` paragraph, AC4, AC5, AC7, AC12, AC14, AC15, AC24, AC32; `data-model.md` AC28, AC33, AC35 to AC37, AC44 to AC46; `storage-and-gc.md` AC8, AC16, AC25, AC30; `conformance-harness.md`'s alpine exception rows, AC13, AC23, AC24, AC26, AC28; `upstream-adapters.md`'s alpine row, AC6 to AC8, AC14, AC15, AC19, AC22; `async-operations.md`'s `index.merge` and `proxy.revalidate` rows; `repository-lifecycle.md` AC2, AC12, AC29; `format-handler-interface.md` AC7, AC8, AC12 to AC15, AC17, AC18; `deployment.md`'s `server.public_url`; the catalogue, charter, prototype and management-surfaces rows; `rpm.md` was-Q12 at this sha; `arch.md`'s recheck as the sibling precedent; the tree holds no Alpine code, so no code claim was testable) + adversarial lens at full strength on the Opus-authored whole (the captured behaviour of both apk lines, key rotation, the architecture-set client case, origin as the advisory key, the data-loss keep-alive) + go-spec-reviewer inline (vacuous on code; the interface shape is pinned by the siblings) + constitution + re-examination of the eleven adoptions made without Fable and the three question-less Opus judgements | Brought current first: every open consequence against this file applied and verified against its source (signing-service recheck item 3: AC20's keyless-remote clause inverted, admission by anchor class stated, the `alpine-keys` recipe advice for class `signature`, the member input as the was-Q21 template with the was-Q22 read-driven cell replacing the gap the sweep reported; artifact-verification recheck item 8 and was-Q2 as amended: `verified`, `failed` with reason, `absent`, a keyless remote reading `absent` and class `none`; the arch recheck's optional-member finding checked and found not to arise, since the signature is inside the one document, stated). The coordinator's mid-pass item, `rpm.md` was-Q12, examined and found to be the same downgrade on a keyless remote: Q13 raised in decision shape and adopted (a withdrawn `.SIGN` entry is a regression not adopted; the removal table, AC19 and its rows). Verdicts: Q1, Q3, Q5, Q8, Q9, Q10, Q11 confirmed, each with an under-stated cost or edge recorded; Q2 confirmed, the architecture-set client case confirmed with the honesty note that an index `404` was not captured and AC8 is its proof; Q4 confirmed and amended (the key name's `{instance host}` defined and fixed at creation; AC2's one-entry shape scoped outside a rotation window, which AC9 had contradicted); Q6 confirmed and amended in vocabulary; Q7 confirmed in shape, amended in fold (admission by anchor class, the template and read-driven cell, the union of architectures with `noarch` across it) and SUPERSEDED IN PART by Q12, owner-facing (literal-name shadowing, records composed whole, the provider case captured on both lines with the record rewrite held as the fallback, matching `arch.md`'s was-Q14), because the `provides` clause needed a merged record saying less than the package's `.PKGINFO` with no capture of either line's behaviour. The data-loss fold (was-Q19, was-Q20) confirmed with two costs stated honestly: the repository-level row serialises trees times architectures, not a handful, and an evicted file of a retained revision is re-fetchable from a stand-in but meets `404` on dl-cdn (the removal table, AC19). The member-input expansion confirmed as the template it had anticipated. AC7 scoped to hosted indexes. Constitution: both paths asserted on every criterion that has them, no handler-owned table, every boundary named to an enforcer, the conformance gate intact, findings in this document; no em-dashes on touched lines. Sibling consequences reported to the orchestrator, not applied: proxy-cache (the "Regression not adopted" row may name Alpine), signing-service (AC36's conformance row may name the alpine keyless case), question-triage (alpine's row), the management-surfaces analysis (no change needed). 25 criteria, each with a Test Plan row; thirteen questions resolved, zero open; `node scripts/check-spec.js` zero failures; `fable_recheck` cleared. draft -> planned. |
