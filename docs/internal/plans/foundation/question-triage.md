@@ -468,7 +468,7 @@ decision:
 | `formats/composer.md` | Q10, Q11 |
 | `formats/conan.md` | Q11 |
 | `formats/homebrew.md` | Q15 |
-| `formats/debian.md` | Q10 |
+| `formats/debian.md` | Q10 (rechecked on Fable 2026-10-01 with Q1-Q9: all ten confirmed, six amended in fold; spec planned) |
 | `formats/hackage.md` | Q16 |
 | `formats/opam.md` | Q16 |
 | `formats/swift.md` | Q11 |

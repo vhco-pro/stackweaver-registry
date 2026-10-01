@@ -177,7 +177,7 @@
     "path": "docs/internal/plans/formats/debian.md",
     "description": "Spec for the Debian apt archive format: the dists and pool layout with InRelease, Release and Release.gpg, the Packages, Sources, Contents indices and their by-hash forms, hosted through the shared signing and index service with the signed envelope scoped to the serving pointer, proxied as a byte-for-byte, chain-verified cache of an upstream archive, and merged into signed virtual views, with apt on four generations as the oracle.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "31",
     "covers": [
       "internal/format/debian/**",
