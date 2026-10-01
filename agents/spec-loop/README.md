@@ -66,6 +66,28 @@ session ends). Each firing:
 
 ## Resume point
 
+**STOPPED 2026-10-01: Fable's monthly allowance is spent** (the owner's stop rule, heartbeat item 5).
+The heartbeat cron is cancelled. Resume when Fable credit returns, two agents at a time:
+1. **hackage.md recheck, interrupted mid-edit.** Its partial edits are saved as
+   `agents/spec-loop/wip/hackage-recheck-partial.patch` (the file itself is at HEAD). Apply the
+   patch, then relaunch `recheck-brief.md` on hackage.md telling the agent to continue from the
+   partial edits (its last note: "Now the virtual section: admission under signing-service was-Q20
+   in place of was-Q17, the removed bootstrap clause, was-Q21 on the member input, and the
+   `:override` recipe's ordering constraint"). Delete the patch once committed.
+2. **Queue signing-service was-Q23's sibling consequences** (its round-4 pass was stopped before it
+   reported them): read its Q23 record and queue what artifact-verification (the completion hook
+   `internal/verify` declares), data-model (the `pending` reason on the input record) and any
+   format need.
+3. **Remaining foundation follow-ups** listed under "Remaining foundation follow-ups" in
+   consequences.md (management-api round 4: CRAN's tree-qualified claim and conda's attach row;
+   data-model round 4: replication's read-only and error reasons; observability; replication and
+   proxy-cache wording, proxy-cache's HEAD gap from conda).
+4. **Format rechecks still to do**, with `recheck-brief.md`: hackage (item 1), rubygems, conan,
+   swift, puppet, vagrant, homebrew, then generic, oci, npm, pypi, ansible-collections, cargo,
+   go-modules, helm, pub, nuget, maven, hex, composer, julia, terraform, chef, luarocks, opam,
+   openvsx. Done and planned: arch, rpm, alpine, cpan, debian, cran, conda.
+5. Gate review of project-charter.
+
 **2026-10-01, foundation done on Fable.** Every foundation spec except the three drafts below is
 rechecked and planned, and the follow-up rounds converged (only optional wording remains, listed in
 consequences.md). Next, two agents at a time:

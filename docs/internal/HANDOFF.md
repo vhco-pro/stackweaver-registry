@@ -141,11 +141,10 @@ not satisfy it.
   boxes on 2026-10-01 and stops operating on 2026-12-31. After that there is no real upstream to
   record the Vagrant proxied-path corpus against, and content hosted there is gone unless it was
   mirrored first (`formats/vagrant.md`, the mirroring recipe; `replication.md` Q11 sequences it).
-- **Fable recheck queue.** Fable ran out of monthly credit mid-loop, so specs authored or
-  reviewed on another model carry `fable_recheck` frontmatter, listed by `make check-spec`. None
-  can reach `planned` until a Fable review clears the marker. Spend the next Fable credit there.
-  The question-level snapshot (146 adoptions across 27 specs, in a recheck-first order) is round
-  six of `plans/foundation/question-triage.md`; start with `storage-and-gc.md`, the first gate.
+- **Fable recheck queue (paused 2026-10-01, monthly allowance spent).** Every foundation spec is
+  planned on Fable except project-charter; 7 of 33 format specs are rechecked and planned. The
+  resume point, including a partial hackage recheck saved as a patch, is at the top of
+  `agents/spec-loop/README.md`; `make check-spec` lists the specs still carrying `fable_recheck`.
 - **RubyGems is the 33rd format and the last one authored** (2026-09-28, `plans/formats/rubygems.md`,
   on Opus with twelve adopted questions). Its first author died in the 2026-09-26 crash and the
   queue was wrongly marked done in the meantime (`tasks/lessons.md`).

@@ -1,0 +1,422 @@
+diff --git a/docs/internal/plans/formats/hackage.md b/docs/internal/plans/formats/hackage.md
+index 9c877b9..d6d7d3e 100644
+--- a/docs/internal/plans/formats/hackage.md
++++ b/docs/internal/plans/formats/hackage.md
+@@ -211,6 +211,11 @@ done requires the deliberately unimplemented surface to be named:
+   `package-index`. Nothing about Casa was captured, so nothing is claimed.
+ - **Author signing through TUF target delegations.** No implementation exists: the live `targets`
+   role has no keys and every `package.json` carries `"signatures": []` (captured).
++- **Stack's `upload` command.** It was not run in this spec's captures, so nothing is claimed about
++  where it posts or how it authenticates; the matrix's Stack oracle covers `update` and `unpack`
++  only. Recording it is a Phase 6 capture task: if its wire is cabal's `POST upload`, it lands on
++  the same binding with a client row and no design change, and if it is not, it is a new binding
++  decision. Until then a Stack user publishes with cabal.
+ 
+ ## Design
+ 
+@@ -294,10 +299,13 @@ What the clients read from `01-index.tar`, captured and read in `IndexUtils.hs`:
+   target, `<repo>/package/{name}-{version}.tar.gz`, with its `sha256` and `length` (live and
+   hackage-repo-tool alike; the live one adds `md5`, which hackage-security ignores, its 0.5.2.2
+   changelog). The live index writes `package.json` before the `.cabal` of a release.
+-- **`preferred-versions`** holds one version range; a version outside it is shown in parentheses
++- **`preferred-versions`** holds one line, `{name} {range}` in Cabal's version-range syntax (the
++  captured entry was `acme-base >=2`); a version outside the range is shown in parentheses
+   and avoided, but a deprecated release is still chosen when nothing else satisfies (captured:
+   `acme-base >=2` deprecated every release `acme-app` accepts and cabal installed 1.1.0 anyway). It
+-  is a preference, not PyPI's yank.
++  is a preference, not PyPI's yank. What a client does with a line it cannot parse was not
++  captured, so the registry never writes one: the range is validated at the `annotate` operation
++  (Design, "Revisions, deprecation and deletion").
+ - **A malformed `.cabal` breaks only its own release**, which the solver rejects, while every other
+   package resolves (captured on both lines).
+ - **The tar ends with 1,024 zero bytes** (live and generated alike), which the incremental unzip
+@@ -312,7 +320,12 @@ resolved index-compression decision below, this registry therefore never recompr
+ appends one gzip member** holding its new entries, followed by a final member holding the trailer.
+ The previous generation's bytes, minus that final member of a few dozen bytes, are a prefix of the
+ next, whatever compressor version produced them; all four clients read the multi-member stream
+-whole and incrementally (captured: `Range: bytes=437361-503400` answered `206` and verified).
++whole and incrementally (captured: `Range: bytes=437361-503400` answered `206` and verified). Two
++invariants make the splice correct rather than usually correct, and AC3 and AC4 assert them: the
++trailer member is always shorter than the 65,536-byte window the client re-fetches, so the prefix
++a client keeps never ends inside a stale trailer, and a repository with no release serves the
++trailer member alone (a 1,024-byte tar of zeros, which hackage-repo-tool's `bootstrap` also
++produces), so every later generation extends it.
+ 
+ ### Mapping onto the shared model
+ 
+@@ -551,7 +564,13 @@ the shape `debian.md` and `alpine.md` use; that spec lists these as `hackage.md`
+    repository-scoped pointer document (`signing-service.md` AC33); where the operator holds the
+    root, the `SigningDocumentExpiring` alert fires `signing.external_expiry_lead` (default 14 days)
+    before its expiry (its AC22). The default clients ignore expiry (captured), so this is for the
+-   opt-in clients, and it is a hard requirement for them.
++   opt-in clients, and it is a hard requirement for them. **The cadence runs on a frozen
++   repository too**: a `read_only` repository is a document-only transition's legitimate target
++   (`repository-lifecycle.md`'s resolved document-only-transitions decision, was Q11 there, its
++   AC10; `signing-service.md` AC22), so a frozen Hackage repository keeps an unexpired
++   `timestamp.json` and `snapshot.json` over bit-identical content, and the one signing surface
++   the freeze refuses is the key operations, including the submission of an operator-held root,
++   which needs a thaw.
+ 6. **Index generation inside the write**: the generator's `Generate` appends one segment for the
+    write, ustar entries with a fixed owner (the live index carries the uploader's name, which leaks
+    identities to every reader), each entry's time as in the write boundary above, one gzip member
+@@ -578,14 +597,32 @@ the shape `debian.md` and `alpine.md` use; that spec lists these as `hackage.md`
+    operator-set window), and rotation is announced, because a client bootstrapping with ids the new
+    root's signatures no longer reach fails: Stack 2.9.1's built-in pre-2025 Hackage key ids fail
+    against the live root today ("<repo>/root.json does not have enough signatures signed with the
+-   appropriate keys", captured).
++   appropriate keys", captured). The window has a hard edge, stated because the cross-signing
++   makes it easy to forget: the retire step at its end mints the root version that drops the old
++   keys from the key map and the signature set, and from then on a client that never updated
++   inside the window, holding the pre-rotation root, fails its verification loop with the same
++   "does not have enough signatures" (captured for a root signed by the new keys alone) until its
++   user re-bootstraps with the new ids, because hackage-security never walks intermediate roots.
++   The operator documentation states the window, the announcement and the re-bootstrap recipe,
++   and AC10 asserts the edge.
+ 8. **Operator-held root keys**, per the resolved root-custody decision below: the `external`
+    custody backend, which holds public material only, and its submit operation, which accepts a
+    `root.json` the operator signed offline (with hackage-repo-tool, for instance), verifies it
+    against the current root under this format's rule, refuses it with a problem naming the failing
+    check otherwise, and serves it (`signing-service.md`, "Key custody", AC16), so a deployment can
+    keep its root keys off the server while the online roles live on the `file` backend, the mix TUF
+-   intends.
++   intends. **This format's rule**, since that spec delegates it: the submitted document parses as
++   a TUF root under hackage-security's canonical JSON; every signature on it names a key in its
++   own key map; it carries a threshold of signatures from the current root's root role (for the
++   first root of a repository, which has no predecessor, from the root keys the `external` backend
++   registered at key creation); its `version` is exactly the current root's plus one (the first
++   root's is 1); its `expires` lies in the future; and every key it names for the `snapshot`,
++   `timestamp` and `mirrors` roles is a `SigningKey` the service holds in `active` or `announced`
++   state on a backend that signs, because a root naming an online key the service cannot use
++   would leave every later `timestamp.json` unsignable and every client failing. A root that names
++   an `announced` online key activates it in the acceptance batch, which is how online keys rotate
++   under an operator-held root (the `root-chain` profile's "online roles rotate by a new root
++   signed by the current root threshold", signed here by the operator). AC11 asserts each check.
+ 9. **The key ids and threshold** shown in the management surface's key listing with each key's
+    fingerprint (`signing-service.md` AC12), in the forms cabal's `root-keys` and Stack's `keyids`
+    take, readable by a conformance case's `script` before its client runs (its AC21).
+@@ -594,7 +631,8 @@ the shape `debian.md` and `alpine.md` use; that spec lists these as `hackage.md`
+     revision (its adoption hook, was Q16, AC35), coalesced per virtual, never on a request's path,
+     signed with the virtual repository's own keys at a TUF version the virtual pointer's counter
+     raises at every merge commit (its was-Q15, AC34) (`signing-service.md`, "Virtual merges", AC19),
+-    with the member-input path the profile declares.
++    with the member-input path the profile declares as a literal, the first of the three shapes
++    its resolved member-input decision admits (was Q21 there, AC35).
+ 
+ Verification of an upstream's TUF chain is not the signing service's: it belongs to artifact
+ verification (`signing-service.md`, "The produce/verify boundary"; Design, "The proxied path").
+@@ -616,9 +654,11 @@ among them: this format declares no `settings` document, so no repository `PATCH
+ `configure` to this handler, and the key operations of the last row arrive only on
+ `management-api.md`'s signing-key routes, each a `configure` whose `Apply` is `internal/signing`'s
+ with this format's generator run in the same transaction (its "Signing keys"; `signing-service.md`
+-AC15). The rename notice `management-api.md` hands every `Operator` inside a rename transaction is
+-accepted and changes nothing, since nothing this format serves names the repository (Design,
+-"Capabilities and lifecycle"). The per-kind rule therefore asks for three `script` cases, which
++AC15). The rename notice `management-api.md` hands every `Operator` inside a rename transaction,
++whether or not `configure` is among its kinds (its "Dispatch: the optional `Operator`
++interface", the rule its resolved dispatch decision states, was Q2 there), is accepted and
++changes nothing, since nothing this format serves names the repository (Design, "Capabilities
++and lifecycle"). The per-kind rule therefore asks for three `script` cases, which
+ AC12, AC15, AC16 and AC17 are, and AC10 and AC11 drive the signing-key routes from their case
+ `script` as well:
+ 
+@@ -642,12 +682,18 @@ write for the life of the repository and unaffected by any repoint (`management-
+ is core-held", AC12; `data-model.md` AC35); the `Package` row outlives its versions (`data-model.md`
+ AC33). A revision must keep `name` and `version` and carry `x-revision` equal to the previous number
+ plus one, and nothing else about it is checked (the resolved revision-checking decision below); the
+-revision's author and time are recorded. Key operations are `configure` operations whose `Apply` is
+-`internal/signing`'s, not the handler's, with this format's generator run in the same transaction to
+-re-render the documents the rotation changes; they are admin-only and no repository-scoped token can
+-perform them (`auth.md` AC30; `signing-service.md` AC15). A publish or management operation against
+-a remote or virtual repository answers `405` with the `repository-type` problem (`management-api.md`
+-AC7).
++revision's author and time are recorded. A `preferred-versions` `annotate` carries the range text
++in its `args`, and the handler refuses it `validation` with no snapshot unless the range parses
++under Cabal's version-range grammar (the operators `==`, `>`, `>=`, `<`, `<=`, `^>=`, `&&`, `||`,
++parentheses and the wildcard form, over versions in `[0-9]+(\.[0-9]+)*`), through a parser in the
++generator package that evaluates nothing, so the registry never appends a line whose effect on a
++client it did not capture; the entry written is the single line `{name} {range}`. Key operations
++are `configure` operations whose `Apply` is `internal/signing`'s, not the handler's, with this
++format's generator run in the same transaction to re-render the documents the rotation changes;
++they are admin-only, refused `unauthorized` to every repository-scoped token, one holding every
++action included (`management-api.md` AC32; `signing-service.md` AC15). A publish or management
++operation against a remote or virtual repository answers `405` with the `repository-type` problem
++(`management-api.md` AC7).
+ 
+ ### Names, versions and case
+ 
+@@ -823,21 +869,41 @@ the proxy design:
+ fetches `timestamp.json`; if it names a different snapshot, `snapshot.json`, then `root.json` and
+ `mirrors.json` when changed, then the index, and asks artifact verification's `tuf` entry to verify
+ the whole chain against the remote's trust set, its `tuf-root` entry holding the upstream's root key
+-ids and threshold (or, for a remote configured without them, the root it bootstrapped, as a client
+-would). The chain check is an integrity call that may refuse the commit, never a verdict recorded
++ids and threshold. **The trust set is required, never bootstrapped** (the resolved remote-trust
++decision below, was Q17): a remote whose trust set holds no `tuf-root` entry is accepted at
++configuration, as `debian.md`'s keyless remote is, and fails its first fetch at the root link with
++nothing committed and the operator record naming the missing entry, since the `tuf` entry has no
++anchor to verify against; the operator then administers the ids through `PUT
++/api/v1/repositories/{name}/trust`. cabal's own trust-on-first-use (a stanza without `root-keys`
++trusts the first root it sees, captured) is one user's choice on one machine; a registry that
++did the same would then vouch for that root to every client of every virtual over the remote.
++The chain check is an integrity call that may refuse the commit, never a verdict recorded
+ afterwards (`proxy-cache.md`, "Completion-only mode and the verifier hook": its catalogue names the
+-TUF chain). The five documents are declared to the proxy layer as **one paired set**: fetched
+-together, verified together, committed in one transaction and served under one cache-scoped
+-freshness record, the paired-set id `data-model.md` AC44 carries, so a client never meets a
+-timestamp whose snapshot or index is not already cached (`proxy-cache.md`, "Freshness of what a
+-remote serves", AC22); the revision it supersedes is retained, its blobs declared on the remote's
++TUF chain). The five documents are declared to the proxy layer as **one paired set with no
++optional member**: fetched together, verified together, committed in one transaction and served
++under one cache-scoped freshness record, the paired-set id `data-model.md` AC44 carries, so a
++client never meets a timestamp whose snapshot or index is not already cached (`proxy-cache.md`,
++"Freshness of what a remote serves", AC22). Because TUF requires every one of the five, an
++upstream answering `404` for any of them, or serving a document whose signatures fall below the
++threshold, is the integrity failure at fetch below and never an anchor class: every adopted
++revision of this format ran under a `signature` anchor with a `verified` verdict, which is what
++`proxy-cache.md`'s rule for a signature the wire makes optional says of a wire that makes none
++optional (its resolved withdrawn-signature decision, was Q23 there, "A signature the wire makes
++optional"; `artifact-verification.md` AC31). The revision it supersedes is retained, its blobs declared on the remote's
+ repository-level document, until the next adoption drops it (`proxy-cache.md`'s resolved
+ retained-revision decision, was its Q19, AC27), so a tarball only that revision names can still be
+ fetched and verified against its `package.json`. Upstream `root.json`
+ changes are verified against the cached upstream root, exactly as the clients verify them. **A
+ revision whose versions decrease is not adopted**: the TUF `version` is this format's revision
+ ordering, which `proxy-cache.md` names ("a TUF `version`"), so the cached revision keeps serving,
+-its record unchanged, and the regression is recorded for the operator as a divergence. A revision
++its record unchanged, and the regression is recorded for the operator as a divergence. The
++operator's refresh is the layer's cure for every regression (`proxy-cache.md` AC24;
++`management-api.md` AC29): a revision marked due by a refresh is adopted although its version is
++lower, and on this format that has a consequence the operator documentation states beside the
++route, because it is TUF's own: every client that updated past the higher version fails its
++verification loop ("Version of <repo>/timestamp.json is less than the previous version", captured)
++until the upstream's version exceeds the one it holds, exactly as the upstream's rollback would
++reach it directly. A revision
+ whose timestamp has expired, or whose chain fails, commits nothing and is alerted with the real
+ reason, and the previous one keeps serving within `proxy-cache.md`'s stale-if-error bound.
+ 
+@@ -875,6 +941,11 @@ Classification and behaviour:
+   governs. They are served through the same `ServeDocument` helper hosted documents use, with the
+   cache-scoped record in place of the pointer's (`proxy-cache.md`, "Freshness of what a remote
+   serves"), and never re-dated, since the remote's documents are byte-identical to the upstream's.
++  They are the remote's current documents, which LRU eviction never reaches and the storage quota
++  does not bound (`proxy-cache.md`'s resolved metadata-eviction decision, was Q21 there, AC29):
++  against hackage.haskell.org that is the 138 MB compressed index in chunks plus the retained
++  revision's own chunks, reported in `cache_metadata_bytes{repository}` and alerted by
++  `CacheMetadataLarge`, which the operator documentation names when sizing a Hackage remote.
+ - **Tarballs are immutable artifacts**, fetched on a miss with a **declared digest**: the SHA-256 and
+   length of their `package.json` in the current or the retained revision, the current one's where
+   both name the release, which the fetch-and-cache
+@@ -912,8 +983,8 @@ handler classifying and the layer responding, as this format's side of that cont
+ | A new revision gives a cached release a different SHA-256 | Immutability violation, revision-bound, the new-blob variant | Because the tarball path carries no digest, the route serves the bytes the current revision names: the new bytes are fetched and verified as a new blob on the next request, and that commit ends the old blob's cached reference in the same transaction, so the sweep reclaims the old bytes, which no request can be served afterwards (`proxy-cache.md`'s resolved old-blob decision, was its Q20); the divergence record keeps both digests |
+ | An indexed release's tarball answers `404` or `410` upstream | Removal with no signal | Cached bytes keep serving |
+ | The upstream root rotates and fails verification against the cached root | Integrity failure at fetch | The adopted revision keeps serving within the stale bound |
+-| A revision's timestamp has expired, or its chain fails | Integrity failure at fetch | As above |
+-| A revision's version decreases | Regression not adopted | The cached revision stands |
++| A revision's timestamp has expired, its chain fails, or any of the five documents is absent or signed below threshold | Integrity failure at fetch | As above; never an anchor class, since this wire makes no signature optional (`proxy-cache.md` was-Q23) |
++| A revision's version decreases | Regression not adopted | The cached revision stands; a refresh adopts it and every client past its version fails until the upstream overtakes them (above) |
+ 
+ Per the resolved preconfigured-upstream decision below, no Hackage upstream is preconfigured; the
+ operator documentation gives the remote for `https://hackage.haskell.org/` with its root key ids.
+@@ -934,14 +1005,17 @@ instead of Hackage's, per the resolved virtual-repository decision below:
+ - **Remote members are verified before they are merged**: a remote's current revision is adopted only
+   after the chain verification above passes, so the merge reads verified documents by construction,
+   and a revision that failed is never a remote's current one. The merge **composes** a remote's index
+-  into a body the virtual signs, so it contributes only under a `verified` verdict
+-  (`signing-service.md`'s resolved pass-through decision, was Q17, AC36; nothing on this format is
+-  declared pass-through, since a virtual serves no upstream-signed document unchanged). On this
+-  format the rule excludes no remote that serves anything: every adopted revision passed the chain
+-  check against the remote's trust set, including a trust set bootstrapped from the first root the
+-  remote saw rather than configured, whose virtual then vouches for a root no operator named, which
+-  the operator documentation states. The end-to-end check to Hackage's keys becomes a check by this
+-  registry followed by its own signature, the accepted cost.
++  into a body the virtual signs, so the member is admitted by the anchor class its adoption ran
++  under (`signing-service.md`'s resolved admission decision, was Q20 there, AC36, read through
++  the index runtime's `Admission` interface and never through `Deps`): on this format every
++  adoption runs under a `signature` anchor, since a remote with no `tuf-root` entry adopts nothing
++  (Design, "The proxied path", was Q17 below), so the virtual is strict by construction, exactly
++  as `debian.md`'s keyless-remote rule makes it there, and the `verified` verdict a signature
++  anchor requires is what every adopted revision carries. The rule therefore excludes no remote
++  that serves anything, and a trust-set change on the remote excludes its entries only until
++  re-evaluation, the class rule's stated cost. The end-to-end check to Hackage's keys becomes a
++  check by this registry against the key ids the operator configured, followed by its own
++  signature, the accepted cost.
+ - **Retroactive shadowing rebases.** When a member earlier in the order gains a name a later member's
+   entries already supplied, the merge regenerates the log without them, one whole download per client,
+   which is what keeps a private `acme-base` from being resolved against a public squatter's releases
+@@ -970,9 +1044,11 @@ instead of Hackage's, per the resolved virtual-repository decision below:
+   registration refuses a merging profile without (its AC35): `01-index.tar.gz`, the one document
+   the merge reads, requested on the remote's own route, where the proxied path fetches and verifies
+   the whole revision (`timestamp.json`, `snapshot.json`, `root.json`, `mirrors.json` and the index)
+-  as one paired set before anything is adopted (Design, "The proxied path"). The path is literal:
+-  a Hackage repository has one index, so no template and no path derived from an earlier document
+-  is needed, and a virtual's creation, or a member-list change adding a never-adopted remote,
++  as one paired set before anything is adopted (Design, "The proxied path"). The path is literal,
++  the first of the three member-input shapes `signing-service.md`'s resolved member-input decision
++  admits (was Q21 there): a Hackage repository has one index, so no template over another
++  member's values, no `DeriveInputs` derivation and no read-driven cell is needed, the round bound
++  is one, and a virtual's creation, or a member-list change adding a never-adopted remote,
+   fetches that remote's revision with no request ever made to the remote's own URL.
+ - **Each merge commit raises the virtual's TUF version.** A merge that served the same version with a
+   new index would be adopted but one that served a lower version would fail every client (the
+@@ -987,9 +1063,12 @@ instead of Hackage's, per the resolved virtual-repository decision below:
+ remote with Hackage's key ids and the hosted repository with its own, and
+ `active-repositories: {remote}, {hosted}:override`. Captured on cabal 3.16.1.0: without it cabal merges
+ repositories and a squatting `acme-base` 9.0.0 in the public one wins; with it the private 2.1.0 wins.
+-Stack reads one package index, and its docs warn that an index which does not mirror Hackage breaks most
+-snapshots, so a Stack user combining private and public packages needs the virtual repository. The
+-operator documentation carries both recipes.
++The recipe lists the hosted stanza **last**, because `cabal upload` posts to the last remote
++repository in the configuration (`last` in Upload.hs; the wire table above), so a user who lists
++the public remote last would publish private releases to it. Stack reads one package index, and
++its docs warn that an index which does not mirror Hackage breaks most snapshots, so a Stack user
++combining private and public packages needs the virtual repository. The operator documentation
++carries both recipes.
+ 
+ ### Content negotiation and headers
+ 
+@@ -1051,7 +1130,17 @@ never-existing repository (`repository-lifecycle.md` AC12). `repository-lifecycl
+ retires its keys in the deletion transaction and destroys their private material at tombstone time
+ (`signing-service.md` AC29), which the operator documentation states, because a Haskell client
+ configured with the deleted repository's root key ids cannot be pointed at a recreated one under the
+-same name without new ids.
++same name without new ids. Freezing a repository (`read_only`) changes what a client sees in one
++way only: no publish lands, while the cadence keeps `timestamp.json` and `snapshot.json` unexpired
++over bit-identical content (the service list's item 5; `repository-lifecycle.md` AC10) and a key
++operation or an operator-held root submission is refused `read-only` until a thaw. A replica
++serves the leader's TUF documents verbatim and signs nothing; at takeover the ending transaction
++registers both the per-pointer and the repository-scoped `signing.resign` schedules through
++`signing.Service.RegisterSchedules` and the same request re-renders every pointer's four
++documents under the keys now resolving on the follower, each pointer's counter advancing, so the
++first client update after a takeover sees versions above any the leader served
++(`signing-service.md` AC23; `replication.md`'s resolved takeover-signing decision, was Q12
++there).
+ 
+ ### Conformance, the clients and the corpus
+ 
+@@ -1086,9 +1175,11 @@ runnable locally and is recorded in Phase 6 (not captured this run): a `cabal up
+ token and with a password, an identical republish and a changed-bytes republish, against a
+ hackage-server container pinned by digest, because hackage.haskell.org accepts no test upload (an
+ upload needs a maintainer account and the live endpoint offers Digest alone, captured). That write
+-half recorded against a local reference is a row of `conformance-harness.md`'s authoritative-reference
+-exception list (its AC28), which this pass reports rather than adds, since that file is not this
+-spec's to edit; the read half stays recorded against hackage.haskell.org and needs no row. Recording gates on the harness's
++half recorded against a local reference is the `hackage` row of `conformance-harness.md`'s
++authoritative-reference exception list (its AC28), which names the reference, while the write
++half's corpus manifest pins the hackage-server image by digest (its resolved manifest-digest
++decision, was Q7 there); the read half stays recorded against hackage.haskell.org and needs no
++row. Recording gates on the harness's
+ redaction criterion (`conformance-harness.md` AC13), whose rule for this format names the
+ `Authorization` header, URL userinfo, the `X-ApiKey` value and upload bodies. Deliberate divergences go
+ on the exception list before their flow is expected to replay: a multi-member index, a fixed entry
+@@ -1109,9 +1200,11 @@ and legacy routes, and `405` on remote writes.
+       `Range: bytes={cached gz size - 65536}-{new gz size - 1}` answered `206`, verifies it, and resolves
+       the new release, for an index larger than 64 KiB compressed; across thirty consecutive writes under
+       two different compressor builds, every generation's compressed bytes minus its final member are a
+-      prefix of the next generation's.
++      prefix of the next generation's, and every final member is shorter than 65,536 bytes.
+ - [ ] AC4: Every generation's `snapshot.json` names the SHA-256 and length of exactly the bytes the
+-      `01-index.tar.gz` and `01-index.tar` routes serve, each index ends with 1,024 zero bytes, every
++      `01-index.tar.gz` and `01-index.tar` routes serve, each index ends with 1,024 zero bytes, a
++      repository with no release serves the trailer member alone and all four clients update
++      against it, every
+       entry's time is no earlier than its predecessor's including with the server clock stepped backwards,
+       a publish appends the release's `package.json` before its `.cabal` in one segment, and every
+       `package.json` is a `Targets` document with `"signatures": []`, `"expires": null` and one target
+@@ -1131,11 +1224,14 @@ and legacy routes, and `405` on remote writes.
+ - [ ] AC7: Promoting a snapshot to a second pointer serves byte-identical index and tarball bytes there,
+       with `timestamp.json` and `snapshot.json` on that pointer's own counter, and every client of the
+       second pointer updates and installs from it.
+-- [ ] AC8: An idle default pointer and an idle environment pointer are each re-signed before their
++- [ ] AC8: An idle default pointer, an idle environment pointer and the default pointer of a
++      `read_only` repository are each re-signed before their
+       `timestamp.json` and `snapshot.json` expire, over three windows under an injected clock, by the
+       `signing.resign` schedule on the production scheduler, surviving a restart mid-schedule, with no
+-      snapshot created; `cabal --ignore-expiry update` on both cabal lines and Stack with
+-      `ignore-expiry: false` on both lines succeed at every step.
++      snapshot created and the frozen repository's index and tarballs byte-identical throughout;
++      `cabal --ignore-expiry update` on both cabal lines and Stack with
++      `ignore-expiry: false` on both lines succeed at every step; and a key operation or an
++      external root submission against the frozen repository is refused `read-only`.
+ - [ ] AC9: Every served TUF document verifies under hackage-security's canonical JSON rules with ed25519
+       keys only; the root role, snapshot, timestamp and mirrors keys and an empty `targets` role are as
+       Design states, each role a `SigningKey` of that purpose; the TUF key ids equal
+@@ -1148,15 +1244,22 @@ and legacy routes, and `405` on remote writes.
+       role holds the new keys, whose key map keeps the old root keys, and which carries a threshold of both
+       sets' signatures, which a client holding the original root accepts directly and a fresh client
+       configured with either set's ids bootstraps from; the old root keys keep cross-signing for
+-      `signing.rotation_window`; each step is an admin-only `configure` operation on the signing-key
++      `signing.rotation_window`, and the retire step at the window's end serves a root the old keys
++      no longer sign, which a client still holding the pre-rotation root refuses with "does not
++      have enough signatures" and a fresh bootstrap with the new ids accepts; each step is an
++      admin-only `configure` operation on the signing-key
+       routes; and neither rotation creates a snapshot.
+ - [ ] AC11: A `root.json` signed offline by an operator and submitted through the `external`
+       backend's submit operation is accepted only when a threshold of the current root keys signed it
+-      and every signing key appears in its key map, and is then served on every pointer to every
+-      client, which follows it; a root failing either check is refused with a problem naming the
+-      failing check and never served; the service never holds the root's private keys; and
+-      `SigningDocumentExpiring` fires `signing.external_expiry_lead` before an operator-held root
+-      expires.
++      (of the registered root keys, for a repository's first root), every signing key appears in its
++      key map, its `version` is the current root's plus one, its `expires` is in the future, and
++      every online-role key it names is one the service holds `active` or `announced`, and is then
++      served on every pointer to every client, which follows it, an `announced` online key it names
++      becoming `active` in the same batch so the next `timestamp.json` verifies; a root failing any
++      check, a stale version, a past expiry and an unknown snapshot key each tried, is refused with
++      a problem naming the failing check and never served; the service never holds the root's
++      private keys; and `SigningDocumentExpiring` fires `signing.external_expiry_lead` before an
++      operator-held root expires.
+ - [ ] AC12: `cabal upload --publish --token` from cabal 3.16.1.0, sent as `POST upload` to
+       `https://{host}/hackage/{repo}`, stores the release in exactly one snapshot, prints the response under "Warnings:", and the release then
+       installs on all four clients; `--username` and `--password` over HTTPS publish the same way; an
+@@ -1184,8 +1287,9 @@ and legacy routes, and `405` on remote writes.
+       refused with no snapshot.
+ - [ ] AC16: Setting `acme-base`'s preferred versions to exclude 1.1.0 appends one `preferred-versions`
+       entry in one snapshot, after which both cabal lines list 1.1.0 in parentheses and resolve `acme-app` to 1.0.0; with every
+-      release `acme-app` accepts excluded, both still install one; and `cabal update '{repo},{instant}'`
+-      before the entry resolves 1.1.0 again.
++      release `acme-app` accepts excluded, both still install one; `cabal update '{repo},{instant}'`
++      before the entry resolves 1.1.0 again; and a range outside Cabal's version-range grammar is
++      refused `validation` with no snapshot and no entry appended.
+ - [ ] AC17: Deleting `acme-base` 1.1.0 through the `delete-version` operation rebases the index in one
+       snapshot without its entries and writes its `Retirement` record in the same transaction, its
+       tarball answers `404`, every client's next update succeeds with a whole index download, the
+@@ -1232,14 +1336,22 @@ and legacy routes, and `405` on remote writes.
+       and separately over the live hackage.haskell.org in the nightly job, serves `root.json`,
+       `timestamp.json`, `snapshot.json`, `mirrors.json` and the index byte-identical to the upstream's, and
+       every client configured with the upstream's root key ids updates and installs through it with only
+-      this registry reachable, the remote's trust set holding those ids as its `tuf-root` entry; the
++      this registry reachable, the remote's trust set holding those ids as its `tuf-root` entry; a
++      remote created with no `tuf-root` entry is accepted at configuration, adopts nothing at its
++      first fetch, answers every client `404` on `timestamp.json` with the operator record naming
++      the missing entry, and serves once the entry is administered through the trust route; the
+       upstream receives one incremental index request per upstream change, answered `206` and spliced, and
+       a second install from fresh containers produces no upstream request.
+ - [ ] AC25: For a proxied upstream revision whose snapshot hash, index hash, signature or root fails the
+-      `tuf` entry's chain verification, or whose timestamp has expired, nothing is committed, the adopted
+-      revision keeps serving within the stale bound, and the real reason reaches the operator record; a
++      `tuf` entry's chain verification, whose timestamp has expired, or any of whose five documents
++      the stand-in answers `404` or serves below threshold, nothing is committed, the adopted
++      revision keeps serving within the stale bound, the real reason reaches the operator record,
++      and the adoption's recorded anchor class stays `signature` with verdict `verified`, never
++      `none`; a
+       revision whose versions decrease is not adopted, the cached revision and its cache-scoped record
+-      standing and a divergence recorded; the five documents of a revision are committed and served as one
++      standing and a divergence recorded, while after a refresh the same revision is adopted and a
++      client holding the higher version fails its verification loop until a later revision
++      exceeds it; the five documents of a revision are committed and served as one
+       paired set, so clients never receive a timestamp whose snapshot or index is not cached; a proxied
+       tarball whose bytes do not match the declared SHA-256 and length of its `package.json`, or whose
+       body is truncated, is never committed; and a committed proxied tarball carries a `verified` verdict
+@@ -1260,7 +1372,10 @@ and legacy routes, and `405` on remote writes.
+       rebases the index; `cabal update '{repo},{instant}'` resolves by member entry times; Stack 3.11.1 and
+       2.9.1 update against a merged log whose entry times are not monotonic; a member publish is visible
+       in the virtual within the staleness bound through the `index.merge` job, never on a request's path,
+-      with every client of the virtual adopting the new merge because its TUF version rose; an upstream
++      with every client of the virtual adopting the new merge because its TUF version rose; the
++      remote member's entries are admitted under the `signature` class its adoption recorded and
++      excluded, with the exclusion recorded on the merged set's input record, after a trust-set
++      change until re-evaluation (`signing-service.md` AC36); an upstream
+       change adopted by the remote member is merged with no request to the virtual in between
+       (`signing-service.md` AC35), and a member-list change and a merge after a member's rollback each
+       serve a higher version than any served before, under an injected clock stepped backwards
