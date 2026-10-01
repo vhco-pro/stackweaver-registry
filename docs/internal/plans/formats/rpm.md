@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Format closing sweep 2026-09-28 at f8ad8b2 on Opus (not a review): Q11 adopted (every metadata document a current or retained repomd.xml revision names is, once fetched, declared on the remote's list beside its location index, so a virtual merge always has its inputs while eviction may still end the serving handle; AC25 extended, new AC27 with metadata outside the quota in cache_metadata_bytes, proxy-cache was-Q21); the merging profile declares member-input paths (repomd.xml, its signature and the hrefs it names), remote adoption re-merges and a virtual-only remote is revalidated by the virtual's reads (signing-service was-Q16, AC35; proxy-cache AC26); a TLS-only or metalink-only remote contributes nothing to a virtual under signing-service AC36, a metalink match being an integrity result (AC22 extended); the declared list's repository-level placement confirmed against proxy-cache was-Q22; packages and zchunk ranges through ServeFile (signing-service was-Q14, AC30, AC32; AC5); claims checked at declaration and at commit and the declared unchanged publish (management-api was-Q14, Q15; AC6). fable_recheck extended; 27 criteria. Earlier: Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a remote retains one superseded repomd.xml revision per tree, its location index (and any CAS-backed repomd.xml) on the remote's declared blob-digest list, files a retained revision names on their own cached references (proxy-cache was-Q19, AC27); a changed checksum at a cached location now serves the current primary's bytes and the new commit ends the old blob's cached reference (proxy-cache was-Q20, AC28), withdrawing the unimplementable claim that each revision's clients receive their own bytes; AC21 and AC25 extended with sweeps run while the revision is retained. Earlier: Reconciled 2026-09-28 at 15ced69 with the foundation wave (not a review): tree metadata is this format's Indexer generator in internal/format/rpm/index run by signing-service's write-path runtime and served through ServeDocument, the repomd.xml signature a Signature record, rotation the key-document profile as one atomic batch with no snapshot (AC11); management operations are publish, delete-version, delete-package and annotate on Operator, advisory withdrawal moving from delete to push under management-api's action rule, with core-held Retirement (AC6, AC7, AC10); repomd.xml, its signature and key document are descriptors, so a patterned pull now fails at primary (AC14); WriteRefusal and the binding row (AC15); the no-fallback case on the confined case network (AC16); the proxied path on the https adapter with a hosts allowlist, vendor keys and metalink in the remote's trust set, repomd.xml and signature as a paired set under cache-scoped freshness with older revisions not adopted (AC19, AC20); the OSV declaration is supply-chain's advisory_ecosystem (AC23); virtual merges deferred on index.merge (AC22); a real-client rollback clause (AC4); Capabilities, rename and deletion (new AC26). Earlier: authored 2026-09-26 from captures of dnf5 5.4.3, dnf 4.7, 4.14 and 4.20 and zypper 1.14.94 and 1.14.101; ten questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-01 at a4c9836: a full review pass over the Opus-authored whole (claim verification at HEAD of every sibling citation, adversarial lens at full strength on the captured dnf and zypper behaviour, zchunk, advisories, key rotation and the data-loss wave 1 keep-alive, constitution compliance) plus the re-examination of the eleven questions adopted without Fable. Verdicts: Q1, Q2, Q3, Q4, Q7, Q8, Q10 confirmed; Q5 amended in its fold (the xml:base refusal was placed on repomd.xml, which is served before primary is fetched, and a primary served verbatim is itself the credential leak; primary is now fetched under a completion-only verifier that refuses the body before it completes to any client and marks the tree); Q6 amended in its fold (the verified-only composition rule the format sweep folded was superseded on Fable by signing-service was-Q20, so a TLS-only remote and a metalink remote contribute under classes none and integrity, a failed verdict alone excludes; AC22 inverted); Q9 amended in its fold (the Version is an EVRA while OSV's RPM ranges are EVRs, so the handler reports the EVR without the arch as the version's advisory key, supply-chain was-Q11, AC24; AC23); Q11 confirmed and amended in its cost and fold (no document is re-fetched while a served revision names it, since the eviction pass skips a declared file, proxy-cache AC14 and AC29, and its collection follows storage AC8; the two pieces reported to signing-service are met by its was-Q21; AC22, AC25, AC27 rewritten). None superseded. New Q12 raised and adopted on Fable, owner-facing: a repomd.xml arriving without the repomd.xml.asc its tree was adopted with is a regression not adopted, cured by the operator's refresh, so a stripping mirror never composes silently into a signed virtual while Fedora and UBI, which never sign, are unaffected (AC21). Brought current first: every open consequence against this file applied (signing-service recheck item 2, proxy-cache recheck item 3, storage recheck item 7 and follow-up item 2, artifact-verification recheck item 8 found already consistent). Also fixed: the key-rotation configure named as a declared kind (it is the signing-key routes' only, management-api was-Q2 as amended); the member inputs restated as a template, a root literal and a DeriveInputs derivation with the read-driven remote-only tree; the planned preconditions cited as planned. 27 criteria, each with a Test Plan row; twelve questions resolved, zero open; check-spec zero failures; fable_recheck cleared. Earlier: Format closing sweep 2026-09-28 at f8ad8b2 on Opus (not a review): Q11 adopted (every metadata document a current or retained repomd.xml revision names is, once fetched, declared on the remote's list beside its location index, so a virtual merge always has its inputs while eviction may still end the serving handle; AC25 extended, new AC27 with metadata outside the quota in cache_metadata_bytes, proxy-cache was-Q21); the merging profile declares member-input paths (repomd.xml, its signature and the hrefs it names), remote adoption re-merges and a virtual-only remote is revalidated by the virtual's reads (signing-service was-Q16, AC35; proxy-cache AC26); a TLS-only or metalink-only remote contributes nothing to a virtual under signing-service AC36, a metalink match being an integrity result (AC22 extended); the declared list's repository-level placement confirmed against proxy-cache was-Q22; packages and zchunk ranges through ServeFile (signing-service was-Q14, AC30, AC32; AC5); claims checked at declaration and at commit and the declared unchanged publish (management-api was-Q14, Q15; AC6). fable_recheck extended; 27 criteria. Earlier: Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a remote retains one superseded repomd.xml revision per tree, its location index (and any CAS-backed repomd.xml) on the remote's declared blob-digest list, files a retained revision names on their own cached references (proxy-cache was-Q19, AC27); a changed checksum at a cached location now serves the current primary's bytes and the new commit ends the old blob's cached reference (proxy-cache was-Q20, AC28), withdrawing the unimplementable claim that each revision's clients receive their own bytes; AC21 and AC25 extended with sweeps run while the revision is retained. Earlier: Reconciled 2026-09-28 at 15ced69 with the foundation wave (not a review): tree metadata is this format's Indexer generator in internal/format/rpm/index run by signing-service's write-path runtime and served through ServeDocument, the repomd.xml signature a Signature record, rotation the key-document profile as one atomic batch with no snapshot (AC11); management operations are publish, delete-version, delete-package and annotate on Operator, advisory withdrawal moving from delete to push under management-api's action rule, with core-held Retirement (AC6, AC7, AC10); repomd.xml, its signature and key document are descriptors, so a patterned pull now fails at primary (AC14); WriteRefusal and the binding row (AC15); the no-fallback case on the confined case network (AC16); the proxied path on the https adapter with a hosts allowlist, vendor keys and metalink in the remote's trust set, repomd.xml and signature as a paired set under cache-scoped freshness with older revisions not adopted (AC19, AC20); the OSV declaration is supply-chain's advisory_ecosystem (AC23); virtual merges deferred on index.merge (AC22); a real-client rollback clause (AC4); Capabilities, rename and deletion (new AC26). Earlier: authored 2026-09-26 from captures of dnf5 5.4.3, dnf 4.7, 4.14 and 4.20 and zypper 1.14.94 and 1.14.101; ten questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for RPM repositories (rpm-md repodata) served to dnf, yum and zypper: repositories holding many trees, each tree's repomd.xml and its primary, filelists, other, updateinfo, comps and modules documents generated and signed by the shared signing service as a write-triggered index, publisher-signed packages whose bytes the registry never alters, the two trust layers kept apart, a proxied path that serves upstream metadata verbatim with its vendor signature, and virtual trees merged and re-signed."
 author: michielvha
 goal: "Serve RHEL, Fedora, SUSE, Rocky and AlmaLinux hosts a private RPM repository and a verified cache of their distributions' mirrors that stock dnf and zypper install from with gpgcheck and repo_gpgcheck on, credentials only in the repository file, and a network restricted to this registry."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/rpm/**"
   - "conformance/rpm/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q19 and Q20 into the proxied path (retained-revision keep-alive on the remote's declared list, the changed-checksum row serving the current revision), which needs the same recheck; the format closing sweep on Opus 2026-09-28 raised and adopted Q11 (every fetched metadata document of a current or retained repomd.xml revision declared on the remote's list so a virtual merge always has its inputs) and folded the member-input paths without a question (repomd.xml then the hrefs it names, expanded over the tree paths other members hold), both needing the same recheck"
 ---
 
 # Plan: RPM repositories (dnf, yum and zypper)
@@ -125,7 +124,7 @@ Tier 1 handler (`format-handler-interface.md` AC8), and the write-triggered serv
 prototype's finding is one of its inputs. This format adds no root-anchored mount: dnf and
 zypper take an arbitrary base URL with a path, so everything lives under `/rpm/{repository}/`.
 
-**The shared signing and index service must be `planned` before Phase 1 and built before the
+**The shared signing and index service is `planned` (2026-09-30) and must be built before the
 handler reaches `main`.** Every hosted and virtual tree's metadata is a write-triggered signed
 document produced by `docs/internal/plans/foundation/signing-service.md`, which the charter
 builds first in step 7: this format's generator is the handler's `Indexer` in
@@ -139,7 +138,8 @@ answer dnf5's zchunk refresh needs (its resolved handler-rendered decision, was 
 AC32). Hosted reads cannot be tested without it, because a tree with no generated metadata has
 nothing for a client to read.
 
-**The management API must be `planned` before Phase 2, and it is the only hosted write path.**
+**The management API is `planned` (2026-09-30), its core lands at charter step 2 before Phase
+2, and it is the only hosted write path.**
 Publishing packages, publishing and withdrawing advisories, setting comps groups and module
 metadata, deleting versions and packages, and key rotation are operations of
 `docs/internal/plans/foundation/management-api.md`, whose kind table and cross-format
@@ -389,8 +389,11 @@ The levels are exactly those `data-model.md` provides; no table is added.
   as the header gives it: names are case-sensitive, and Fedora 44, Rocky 9.8, AlmaLinux 8.10 and Tumbleweed all refused
   `SWHELLO` for `swhello` (captured).
 - **A `Version` is `{epoch}:{version}-{release}.{arch}`**, the epoch always written, `0` when
-  the header has none, the form OSV's RPM ecosystems use for fixed versions (1:3.0.7-24.el9,
-  live). Its document holds the parsed header fields the index needs (the package-level fields
+  the header has none. Its EVR without the arch, `1:3.0.7-24.el9`, is the form OSV's RPM
+  ecosystems use for fixed versions (live), so the handler reports that EVR as the version's
+  advisory key (Design, "Advisories, OSV and the security-signal rule"); the stored version
+  string itself carries the arch and would match no OSV range. Its document holds the parsed
+  header fields the index needs (the package-level fields
   `primary` carries: summary, description, URL, licence, vendor, group, build host, source RPM,
   header range, times and sizes, the `provides`, `requires`, `conflicts`, `obsoletes`,
   `recommends`, `suggests`, `supplements` and `enhances` lists with their flags and versions),
@@ -437,8 +440,12 @@ The levels are exactly those `data-model.md` provides; no table is added.
 Nothing on any RPM wire writes. The hosted path is fed by the registry-owned management API,
 `docs/internal/plans/foundation/management-api.md`, through its `POST
 /api/v1/repositories/{name}/operations` endpoint; the handler implements that spec's optional
-`Operator` interface and declares the kinds below through `Operations()`, with no bindings,
-since no RPM client drives any of them. Per the
+`Operator` interface and declares the four kinds below (`publish`, `delete-version`,
+`delete-package`, `annotate`) through `Operations()`, with no bindings, since no RPM client
+drives any of them; key rotation is the signing-key routes' `configure`, never a kind this
+handler declares, and the rename `configure` reaches every `Operator` whatever `Operations()`
+lists (`management-api.md`'s resolved dispatch decision, was Q2 there, as amended on Fable;
+Design, "Capabilities and lifecycle"). Per the
 cross-format precedent (`pypi.md`'s resolved hosted-yank decision, with `npm.md`, `cargo.md`,
 `hex.md`, `cran.md`, `julia.md` and `terraform.md`), each operation is one completed logical
 write through the shared write path, authorized in the settled `(repository, action)` vocabulary
@@ -457,7 +464,7 @@ follows the kind, never the format:
 | Withdraw an advisory | `annotate` | Tree and advisory id | It leaves `updateinfo`; no package leaves resolution | `push`, object none (this spec first said `delete`; see below) |
 | Set comps groups | `annotate` | Tree and a comps document | `dnf group list` shows the group and `dnf group install` installs its mandatory packages on dnf 4 and dnf5 (captured); zypper does not read comps groups as patterns (captured) | `push`, object none |
 | Set module metadata | `annotate` | Tree and a modulemd document set | `dnf module list` shows the stream on dnf 4 and dnf5; `dnf module install` installs a profile on dnf 4 (Rocky 9.8, AlmaLinux 8.10); dnf5 has no `module install` (captured: "Unknown argument") | `push`, object none |
-| Rotate the metadata key | `configure`, through the signing-key routes | Create, activate, retire | Every tree re-signed under the new key, the key document listing both for the window | admin role |
+| Rotate the metadata key | `configure`, through the signing-key routes only (not in `Operations()`; `internal/signing`'s `Apply` runs this generator in its transaction, `management-api.md` AC32) | Create, activate, retire | Every tree re-signed under the new key, the key document listing both for the window | admin role |
 
 **Withdrawing an advisory is `push`, not `delete`.** This spec first placed advisory withdrawal
 under `delete`. `management-api.md`'s action rule is stated by effect ("an operation that takes
@@ -626,9 +633,12 @@ them:
 7. **The virtual merge** (below): this generator's `Merge`, run as the deferred `index.merge`
    job when a member's tree changes and signed with the virtual repository's key (its "Virtual
    merges", AC19), re-run when a remote member adopts a new `repomd.xml` revision through the
-   runtime's adoption hook, and fed a never-adopted remote through the member-input paths this
-   profile declares (its resolved remote-member decision, was Q16, AC35: the re-merge on member
-   revalidation this spec asked for, now met).
+   runtime's adoption hook, and fed a never-adopted remote through the member inputs this
+   profile declares as a template, a literal and a `DeriveInputs` derivation (its resolved
+   remote-member and member-input decisions, was Q16 and Q21, AC35: the re-merge on member
+   revalidation, the path derived from a document read in the same replay and the read-driven
+   first fetch of a remote-only tree this spec asked for, all met), and admitting each member's
+   documents by anchor class (its resolved admission decision, was Q20, AC36).
 
 Verification of upstream signatures is not the signing service's: it belongs to artifact
 verification (that spec's resolved boundary decision, was Q5 there).
@@ -812,7 +822,28 @@ Classification and behaviour:
   unverified. A revision that fails is `proxy-cache.md`'s **integrity failure at fetch**: never
   committed or served; the previous verified revision keeps serving under serve-stale and the
   operator is alerted. `repomd.xml` and its signature are adopted as one **paired set**, so no
-  request observes a new `repomd.xml` with the old signature or the reverse.
+  request observes a new `repomd.xml` with the old signature or the reverse. The hook the
+  handler declares on the set, and so the **anchor class** the adoption records
+  (`artifact-verification.md`, "Anchor class", AC31; `proxy-cache.md` AC25), follows what the
+  upstream served: an `openpgp` `Verify` when the upstream answered the `.asc` (class
+  `signature` with a vendor key in the trust set, class `none` with the verdict `absent` when
+  there is none, never `failed`: `artifact-verification.md`'s resolved verdict-vocabulary
+  decision, was Q2 there, as amended on Fable), the `metalink` `Check` when the upstream served
+  no `.asc` and a metalink is configured (class `integrity`), and nothing otherwise (class
+  `none`). Fedora and UBI serve no `repomd.xml.asc` at all (live, `404`), so a remote over them
+  with the vendor key configured for its packages still adopts under `integrity` or `none`, and
+  the `.asc` route answers the negatively cached `404`. **A signature withdrawn is a regression
+  not adopted** (the resolved withdrawn-signature decision below, was Q12): a revision arriving
+  with no `.asc` on a tree whose current revision was adopted with one is not adopted, the
+  current revision keeps serving and a divergence is recorded, because a mirror that stops
+  serving the signature it served is the stripping attack a client under `repo_gpgcheck=1`
+  refuses on its own (captured) and a virtual that composes the tree would otherwise accept
+  under class `none`; an upstream that legitimately stopped signing reaches clients through the
+  operator's refresh after the divergence is read, the cure `proxy-cache.md` gives every
+  regression ("Freshness of what a remote serves"). The fact the rule reads, whether the current
+  revision's `.asc` was served, is the handler's own, kept on the remote's document, since no
+  handler reads an anchor class or a verdict (`format-handler-interface.md`, "The scheduled
+  re-open").
 - **Freshness is the cache's.** The served `Last-Modified` of a proxied `repomd.xml` is the
   remote's cache-scoped record, forward-moving on every adopted revision and never the
   upstream's (`proxy-cache.md` AC22; `data-model.md` AC44), although no captured RPM client sends
@@ -820,19 +851,33 @@ Classification and behaviour:
   `Last-Modified` (a lagging mirror behind a round-robin name) is **not adopted**: the cached
   revision stands and a divergence is recorded, so a client never moves backwards to a revision
   whose `primary` omits updates it has already seen.
-- **Every file a verified `repomd.xml` names is an immutable artifact**, verified under
-  stream-and-verify against the checksum `repomd.xml` gives (SHA-256 on the Red Hat family,
-  SHA-512 on openSUSE, live), and served thereafter through `ServeFile` with single and
-  multi-range support, so dnf5's zchunk deltas work against a cached Fedora tree
-  (`signing-service.md` AC30, which cites this refresh). Each is also **metadata of the revision
-  that names it** (the resolved merge-input decision below, was Q11): once fetched, its blob is
-  declared on the remote's list beside the revision's location index for as long as that
-  revision is current or the retained one, so the sweep never collects a document a merge may
-  read, while its cached reference is still the serving handle that LRU eviction may end. One
-  evicted while its revision is current or retained is re-fetched and verified against that
-  revision's checksum (the current one's where both name the location), the commit landing on
-  the blob the list already holds, and answers the upstream's `404` once the upstream has
-  removed it.
+- **Every file a verified `repomd.xml` names is an immutable artifact**, verified against the
+  checksum `repomd.xml` gives (SHA-256 on the Red Hat family, SHA-512 on openSUSE, live), and
+  served thereafter through `ServeFile` with single and multi-range support, so dnf5's zchunk
+  deltas work against a cached Fedora tree (`signing-service.md` AC30, which cites this
+  refresh). Every variant of `primary` the revision lists (`primary`, `primary_zck`) is fetched
+  in `proxy-cache.md`'s **completion-only mode** with a handler-supplied verifier that checks
+  the declared checksum and refuses the body if any element carries an `xml:base` attribute,
+  decompressing gz, xz, bz2, zstd and zchunk to look (the zchunk container is a header over
+  zstd chunks, read with the zstd codec; the reader lives in `internal/format/rpm`, a
+  handler-local structural check that spec admits); the other named documents are fetched
+  under their declared checksum with stream-and-verify. The verifier runs over the spooled body
+  before the commit, the initiating client's response completing only after it passes, so a
+  refused `primary` is never committed and never completes to a client (its "Completion-only
+  mode and the verifier hook", AC20), which is what keeps dnf from ever parsing it (below). Each
+  named document is also **metadata of the revision that names it** (the resolved merge-input
+  decision below, was Q11): once fetched, its blob is declared on the remote's list beside the
+  revision's location index for as long as that revision is current or the retained one, so the
+  sweep never collects a document a merge may read. Its cached reference stays the serving
+  handle, but the eviction pass **skips a cached file a declared list of the remote holds**,
+  however far over quota the remote is, and counts its bytes in `cache_metadata_bytes` rather
+  than the quota (`proxy-cache.md` AC14, AC29, as amended on Fable), so a named document is
+  never re-fetched while a served revision names it; at the adoption that drops its digest from
+  every list of the remote it becomes an ordinary candidate, and its blob is collected only
+  after both that drop and the end of its cached reference, in either order, each followed by a
+  sweep past grace (`storage-and-gc.md` AC8). A path only a dropped revision names answers the
+  `404` below with no upstream request, so a document is never re-fetched from the upstream at
+  all: it is either declared or no longer named.
 - **A location index per `primary`.** A package can be verified only against the checksum and
   size `primary` gives it, so the first package request under a revision builds, once per
   `primary` digest, an index from `location href` to checksum, size and NEVRA by streaming the
@@ -844,9 +889,20 @@ Classification and behaviour:
   miss is then a lookup and a stream-and-verify fetch. A path that is neither a document the
   current or a retained `repomd.xml` names nor a location in its index answers `404` with no
   upstream request, so the remote is not an open relay (zypper's `media.1/media` probe included).
-- **A tree whose `primary` carries `xml:base` is refused**: its `repomd.xml` answers `502` with
-  the reason in the operator record, because serving it verbatim sends dnf elsewhere with the
-  user's credential, and rewriting it breaks the upstream signature.
+- **A tree whose `primary` carries `xml:base` is refused, before the document reaches a
+  client.** The leak happens at the client: dnf parses a complete, checksum-matching `primary`
+  and sends the repository's credential to the `xml:base` host (captured), so a `primary` served
+  verbatim is the leak and a refusal after serving it is too late, while rewriting it breaks the
+  upstream signature. The verifier above therefore refuses the fetch: nothing is committed, the
+  initiating client's download ends short and fails its own checksum (every captured client
+  discards it and dnf retries four times and fails, "Integrity" in the wire table), no client
+  ever parses the document, and the handler marks the tree refused on the remote's document in
+  a transaction of its own (the refused fetch commits nothing), so from then on every route of
+  that tree, `repomd.xml` included, answers
+  `502` with the reason in the operator record. The refusal is lifted by the next revalidation
+  of the tree's `repomd.xml` whose `primary` passes. This spec first said the tree's
+  `repomd.xml` answers `502`, which could not hold: `repomd.xml` is served before `primary` is
+  fetched, and only `primary` carries the attribute.
 - **Packages are immutable artifacts** keyed by the checksum `primary` lists; their header
   signature is verified against the remote's configured vendor keys when set, as a verdict for
   policy, never as a precondition of serving, because the client verifies it itself.
@@ -868,6 +924,8 @@ the `primary` this registry serves verbatim:
 | A new revision lists a different checksum at a location already cached | A **revision-bound immutability violation**, in the new-blob variant, recorded and alerted with no purge: a location carries no digest and dnf and zypper name no revision in the request, so the package route serves the bytes the **current** `primary` names; the new bytes are fetched and verified as a new blob on the next request, and that commit ends the old blob's cached reference in the same transaction, so the sweep reclaims the old bytes, which no request can be served afterwards (`proxy-cache.md`'s resolved old-blob decision, was its Q20). A client still holding the older revision receives the new bytes and fails its checksum check until its next `makecache`, exactly as against the upstream. Because a client verifies against the checksum it was given (captured), kept bytes would fail every client that refreshed, and this variant fails only one still holding the older revision |
 | A new `repomd.xml` fails its signature or metalink check, or a document or package fails its checksum, or a body is truncated | An **integrity failure at fetch**: nothing committed, no negative entry, the previous verified revision keeps serving, the operator is alerted, the next request tries again |
 | An upstream `repomd.xml` older than the adopted one | **Regression not adopted**: the cached revision stands and a divergence is recorded (`proxy-cache.md` AC22) |
+| A new `repomd.xml` arrives with no `repomd.xml.asc` on a tree whose current revision was adopted with one | **Regression not adopted** (the resolved withdrawn-signature decision below, was Q12): the cached revision and its signature stand, a divergence naming the missing signature is recorded, and the operator's refresh is the only way the unsigned revision is adopted; a tree first adopted without a signature (Fedora, UBI) never arms the rule |
+| A `primary` carrying `xml:base` | An **integrity failure at fetch** that also marks the tree refused: nothing committed, the client's download ends short, every route of the tree answers `502` until a later revision's `primary` passes (above) |
 | An advisory appears in or changes in `updateinfo` | An **ordinary metadata change**, served with the revision |
 
 ### Advisories, OSV and the security-signal rule
@@ -891,9 +949,16 @@ never read by this handler ("OS-package repositories declare their ecosystem"; `
 stores it beside the retention rules, outside every snapshot). An advisory-dependent rule attached
 to a repository without one, or declaring one no source lists (`Fedora`), is refused at
 configuration as `validation` (422) naming the failed condition (its AC11). Coordinate rules and
-signature-verdict rules bind without it; the handler's part is handing the coordinate to the
-shared resolution call, whose EVRA ordering is the RPM ordering that spec implements. Detection is passive, per
-`proxy-cache.md`'s resolved signal-detection decision (was Q12).
+signature-verdict rules bind without it. The handler's part is the **advisory key**: OSV's RPM
+ecosystems give fixed versions as an EVR with no arch (`1:3.0.7-24.el9`, live), while this
+format's `Version` is the EVRA, so the handler reports the EVR without the arch as the version's
+advisory key in the metadata-store write that records the version, on the hosted path at
+publish and on the proxied path when the location index records the version, and carries it on
+the package's fetch-and-cache request (`supply-chain-policy.md`'s resolved advisory-key decision,
+was Q11 there, AC24; `data-model.md` AC46), the same shape as a RubyGems platform gem keyed by
+its bare version number. The matcher then compares under its vendored RPM EVR ordering with the
+epoch; a version reported with no key would be matched on the EVRA string and bind nothing.
+Detection is passive, per `proxy-cache.md`'s resolved signal-detection decision (was Q12).
 
 Per the resolved preconfigured-upstream decision below, no distribution mirror is preconfigured.
 
@@ -908,19 +973,28 @@ virtual-repository decision below:
 - **A virtual tree is the merge of its members' trees at the same path.** For each tree path any
   member holds, this format's generator's `Merge` produces a `primary`, `filelists`, `other`,
   `updateinfo`, `group` and `modules` from the members' records, and the service signs
-  `repomd.xml` with the virtual repository's key. Remote members contribute their cached,
-  verified revisions only (the merge reads the verdict through `Deps` and verifies nothing
-  itself), because a composed tree the virtual signs admits a member's documents only under a
-  `verified` verdict (`signing-service.md`'s resolved pass-through decision, was Q17, AC36): a
-  remote accepted on TLS alone contributes nothing and the operator record says why, and so does
-  a remote whose only trust anchor is a metalink (Fedora), because a metalink match is an
-  integrity result, never stored as a verdict (`artifact-verification.md`, "Two products"), which
-  leaves its revisions `absent`. A virtual therefore lists a distribution's packages only from a
-  remote whose vendor key is in its trust set (Rocky, AlmaLinux, openSUSE, UBI); whether a
-  metalink match should admit a Fedora remote is reported to `signing-service.md` rather than
-  decided here. The merge reads each named document by the digest the revision declares (the resolved
-  merge-input decision below, was Q11), and a remote member is re-merged when its revision
-  revalidates.
+  `repomd.xml` with the virtual repository's key. A remote member contributes its current
+  adopted revision **according to the anchor class its adoption ran under** (`signing-service.md`'s
+  resolved admission decision, was Q20 there, which superseded the verified-only rule this spec
+  first wrote under its was-Q17; AC36): a remote whose trust set holds the vendor key (Rocky,
+  AlmaLinux, openSUSE) is class `signature` and contributes only under a `verified` verdict; a
+  Fedora remote anchored on its metalink is class `integrity` and contributes its current
+  revision, since a mismatch was never adopted and the `absent` verdict is the taxonomy's
+  (`artifact-verification.md`, "Anchor class", AC31: a metalink match stays an integrity
+  result, never a verdict, and that is exactly what admits it); a remote with no anchor at all,
+  TLS to the configured mirror, is class `none` and contributes its current revision too; and a
+  `failed` verdict, a configured vendor key that rejected the signature, is never admitted. The
+  merge verifies nothing itself: the index runtime reads the verdict and the class beside it
+  through its own `Admission` interface, never `Deps`, and records per member and document the
+  class and whether it was admitted or excluded with the reason on the merged set's input record
+  (`data-model.md` AC45), the operator record AC22 names. What the virtual's signature therefore
+  attests is composition from members at the trust level the operator configured for each,
+  never a verification this registry performed, which the operator documentation states per
+  remote beside the recipe; a client that wants the vendor's own assurance on a package keeps
+  `gpgcheck=1` with the vendor key, which the virtual leaves untouched (package bytes are the
+  members', below). The merge reads each named document by the digest the revision declares
+  (the resolved merge-input decision below, was Q11), and a remote member is re-merged when its
+  revision revalidates.
 - **The merge is deferred, never on a request's path.** A member's write enqueues an
   `index.merge` job on `internal/async` through the pre-commit hook, and a remote member's adopted
   `repomd.xml` revision through the runtime's adoption hook inside the adoption transaction
@@ -937,18 +1011,28 @@ virtual-repository decision below:
   from a remote is past the remote's TTL enqueues one coalesced `proxy.revalidate` job that
   replays the remote's own routes below the authorizer, off the request's path
   (`proxy-cache.md`, "Revalidation outside the request", AC26). The profile declares the
-  **member-input paths** of every document the `Merge` reads from a member, under the member's
-  mount, which registration refuses a merging profile without (`signing-service.md` AC35): per
-  tree, `{tree}/repodata/repomd.xml` with its `repomd.xml.asc`, then the `location href` that
-  revision gives each document the merge reads (`primary`, `filelists`, `other`, `updateinfo`,
-  `group`, `modules`), a checksum-named path known only once `repomd.xml` is read. A virtual's
-  creation, or a member-list change adding a remote never adopted, replays these for every tree
-  path another member of the virtual already holds, so the virtual lists the remote's packages
-  there with no request ever made to the remote's own URL. Two things this needs are
-  `signing-service.md`'s to add and are reported by this pass: a member-input path derived from a
-  document read earlier in the same replay (the hrefs above), and a first fetch for a tree only
-  the remote holds, which until then reaches the virtual once a direct client of the remote has
-  caused its adoption.
+  **member inputs** of every document the `Merge` reads from a member, in the three shapes
+  `signing-service.md`'s resolved member-input decision provides (was Q21 there, AC35), which
+  registration refuses a merging profile without. The `repomd.xml` of a tree is a **template**,
+  `{tree}/repodata/repomd.xml`, whose variable `{tree}` is sourced from the tree paths the
+  virtual's other members hold, with the grammar of Design "Trees" (one or more segments of
+  `[A-Za-z0-9._+-]`, none `.` or `..`), plus the **literal** `repodata/repomd.xml` for the root
+  tree, which a template over one-or-more segments cannot name; the handler's own route fetches
+  `repomd.xml.asc` with it as the paired set, so the signature needs no input of its own. Each
+  document the merge reads (`primary`, `filelists`, `other`, `updateinfo`, `group`, `modules`)
+  is a **derivation**: the generator's pure `DeriveInputs` over a stored `repomd.xml` yields the
+  `location href` of each, resolved against the tree the document's key names, so the round
+  bound registration computes is two (the index, then what it names). A virtual's creation, or a
+  member-list change adding a remote never adopted, replays these in two rounds for every tree
+  another member holds, so the virtual lists the remote's packages there with no request ever
+  made to the remote's own URL. A tree **only the remote holds** is covered by no source and is
+  fetched read-driven: a request to the virtual for `{tree}/repodata/repomd.xml` at such a tree,
+  fitting the grammar, is answered `404` from the current merged set, records the cell on the
+  virtual's input record and enqueues each remote member's revalidation, after which the
+  remote's replay fetches that tree and the merge lists it within the staleness bound; a tree no
+  upstream holds costs one upstream request per negative window, and the set is capped at
+  `index.requested_cells_max` (its resolved requested-cell decision, was Q22). This replaces
+  the two gaps this spec first reported to `signing-service.md`, both met there.
 - **Resolution is per package name, in member order**: the first member whose tree holds any
   version of a name contributes every version of it, and later members' versions of that name are
   omitted. A hosted member placed first therefore shadows a same-named distribution package
@@ -963,7 +1047,9 @@ virtual-repository decision below:
 
 The recommended client configuration is one repository file per virtual tree, one `baseurl`,
 `gpgcheck=1`, `repo_gpgcheck=1`, and `gpgkey` listing the virtual repository's key document and
-the vendor keys; with that configuration a refusal holds with egress open (AC16).
+the vendor keys; with that configuration a refusal holds with egress open (AC16), and
+`gpgcheck=1` against the vendor key is what keeps the vendor's own assurance on every package
+whatever anchor class the remote member was composed under.
 
 ### Capabilities and lifecycle
 
@@ -1070,7 +1156,8 @@ republish.
       (`signing-service.md` AC30, AC32).
 - [ ] AC6: A publish of three RPM files to one tree creates exactly one snapshot; a file that is
       not an RPM, whose header or payload digest fails, or whose tree path is outside the grammar
-      is refused `validation` (422) and nothing committed; a republish of identical bytes
+      (a segment with a character outside `[A-Za-z0-9._+-]`, a `repodata`, `Packages`, `.` or
+      `..` segment) is refused `validation` (422) and nothing committed; a republish of identical bytes
       creates no snapshot, its `Operation` completing with no snapshot reference and
       `unchanged: true`, while a batch of one identical and one new file commits the new one in
       one snapshot; different bytes at an existing coordinate and a package whose
@@ -1167,8 +1254,12 @@ republish.
       outside it and answers `502` naming the host in the operator record, with no `Location`
       reaching the client, and forwards the upstream credential to the configured root
       host only, asserted at the network layer; a location climbing outside the remote's root is
-      refused with no upstream request; and a tree whose `primary` carries `xml:base` answers
-      `502` on `repomd.xml` with the reason recorded.
+      refused with no upstream request; and against a stand-in whose `primary` carries
+      `xml:base` naming a second stand-in host, in every listed variant (gz and zchunk), the
+      `primary` fetch is refused by the verifier with nothing committed, dnf 4's download fails
+      its checksum and the second host receives no request at the network layer, every route of
+      that tree then answers `502` with the reason recorded, and a later revision whose
+      `primary` is clean serves again.
 - [ ] AC21: A stand-in presenting each removal-table event produces this format's
       classification: a package leaving `primary` serves the new revision with no divergence
       recorded while a client holding the old revision still fetches it, including after a
@@ -1177,8 +1268,13 @@ republish.
       revision; a changed checksum at a cached location records and alerts a divergence, a
       client that refreshed to the new revision installs the new bytes, and after the next
       sweep past grace the old blob is gone from the store with the divergence record naming
-      both digests; and a changed `updateinfo` is served with the next revision, as this
-      format's side of the removal table in `proxy-cache.md` (its AC13, AC27, AC28).
+      both digests; a new `repomd.xml` arriving with no `repomd.xml.asc` on a tree adopted with
+      one is not adopted, the signed revision and its signature keep serving and installing on
+      dnf5 under `repo_gpgcheck=1`, a divergence names the missing signature, the operator's
+      refresh then adopts it, and a tree first adopted without a signature adopts its next
+      unsigned revision with no divergence; and a changed `updateinfo` is served with the next
+      revision, as this format's side of the removal table in `proxy-cache.md` (its AC13, AC27,
+      AC28).
 - [ ] AC22: A virtual repository over a hosted and a remote member serves, per tree path, a
       merged `primary` signed by the virtual repository's key, from which a hosted `swhello`
       placed first shadows the upstream's `swhello` so that no upstream version of that name is
@@ -1196,17 +1292,30 @@ republish.
       staleness bound; with the remote reached only through the virtual, a read of the merged
       `repomd.xml` past the remote's TTL enqueues one `proxy.revalidate` job and is served the
       current merged tree with no upstream request on its path (`proxy-cache.md` AC26,
-      `signing-service.md` AC35); a merge after the remote's cached `primary` was evicted still
-      lists the remote's packages; a second remote with no vendor key configured, accepted on TLS
-      alone or through a metalink, listed in the same virtual, contributes no package and its exclusion is in the operator
-      record (`signing-service.md` AC36); and registration refuses an rpm profile whose `Merge` reads a
-      member document with no member-input path declared.
+      `signing-service.md` AC35); the merge reads each member document by its declared digest
+      through the CAS, so a merge run with the remote's `primary` cached reference ended directly
+      by the test (the order the eviction pass never produces, `storage-and-gc.md` AC8) still
+      lists the remote's packages; a request to the virtual for `el8/x86_64/repodata/repomd.xml`,
+      a tree only the remote's upstream holds, answers `404`, records the cell and enqueues the
+      remote's revalidation, after which dnf 4 installs from that tree through the virtual within
+      the staleness bound with the stand-in's transcript showing the tree fetched once; a second
+      remote with no vendor key configured, accepted on TLS alone, and a third anchored on a
+      metalink, listed in the same virtual, each contribute their packages, which dnf5 installs
+      through the virtual with the virtual key and `gpgcheck=1` against the vendor key, their
+      admission recorded with class `none` and `integrity` on the input record, while a fourth
+      whose configured vendor key rejects its `repomd.xml.asc` contributes nothing and its
+      exclusion names the `failed` verdict (`signing-service.md` AC36, `artifact-verification.md`
+      AC31); and registration refuses an rpm profile whose `Merge` reads a member document with no
+      member input declared or whose `{tree}` grammar admits a `.` segment.
 - [ ] AC23: A policy rule depending on advisory data attached to an RPM repository with no
       `advisory_ecosystem`, or one declaring `Fedora`, is refused at configuration as
       `validation` naming the reason; with `advisory_ecosystem: Rocky Linux:9` declared, an advisory from the controlled source naming a
-      cached package's EVRA refuses it on the proxied path and the same rule refuses a hosted
-      package; coordinate rules and signature-verdict rules attach and refuse as configured on
-      both paths.
+      cached package's EVR (`1:3.0.7-24.el9`, no arch) refuses it on the proxied path for the
+      `x86_64` and the `noarch` version alike, before any upstream request on a miss, and the
+      same rule refuses a hosted package, the EVR stored as the version's core-parsed advisory
+      key and never read from the version document (`supply-chain-policy.md` AC24); an advisory
+      naming the EVRA string matches nothing; coordinate rules and signature-verdict rules attach
+      and refuse as configured on both paths.
 - [ ] AC24: Replay-match passes against a corpus recorded from dl.rockylinux.org,
       repo.almalinux.org, cdn-ubi.redhat.com, download.opensuse.org and dl.fedoraproject.org and
       from a pinned static server over a createrepo_c 1.2.1 tree, covering the recorded surface
@@ -1217,10 +1326,12 @@ republish.
       dnf5 and zypper, and a proxied location index above the threshold survives a sweep run
       with the grace lapsed while its revision is current or the retained one, a package only
       that revision names then installing on dnf5 and zypper, and is collected by the first
-      sweep past grace after the adoption that drops its revision; the same holds for every
-      metadata document a current or retained revision names once fetched (`primary` above the
-      threshold included), which survives a sweep with the grace lapsed after its cached
-      reference was evicted and is collected after the dropping adoption.
+      sweep past grace after the adoption that drops its revision; and every metadata document a
+      current or retained revision names once fetched (`primary` above the threshold included)
+      is skipped by an eviction pass while declared, survives a sweep with the grace lapsed with
+      its cached reference ended directly by the test, and is collected only after both the
+      dropping adoption and the end of its cached reference, proven in both orders
+      (`storage-and-gc.md` AC8; `proxy-cache.md` AC14).
 - [ ] AC26: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
       availability `available`, `Virtual: supported` and `Rename: supported`; after a rename dnf
       4, dnf5 and zypper install from the new name in both modes with the same imported key and
@@ -1230,12 +1341,17 @@ republish.
       `settings` document on create is refused `validation`.
 - [ ] AC27: On a remote far over its quota holding a tree's `repomd.xml`, its signature, the
       documents it names, a location index and cached packages, an eviction pass ends cached
-      references of files only: `repomd.xml`, its signature and the location index are unchanged
-      and served inside the TTL with no upstream request and the same `Last-Modified`, the named
-      documents' blobs stay in the store through a sweep with the grace lapsed, and
-      `cache_metadata_bytes{repository}` counts `repomd.xml`, its signature, the location index
-      and the named documents' declared blobs; dnf5 and zypper then install from the remote, the
-      evicted documents re-fetched and verified.
+      references of packages only: `repomd.xml`, its signature and the location index are
+      unchanged and served inside the TTL with no upstream request and the same
+      `Last-Modified`, the named documents keep their cached references and are served inside
+      the TTL with no upstream request, their blobs stay in the store through a sweep with the
+      grace lapsed, and `cache_metadata_bytes{repository}` counts `repomd.xml`, its signature,
+      the location index and the named documents' declared blobs while
+      `cache_referenced_bytes{repository}` counts none of them; after the adoption that drops a
+      revision from every list a pass ends a dropped document's reference and its bytes move
+      between the two gauges (`proxy-cache.md` AC14, AC29); dnf5 and zypper then install from
+      the remote, the evicted packages re-fetched and verified and no named document
+      re-fetched, at the network layer.
 
 ## Test Plan
 
@@ -1260,14 +1376,14 @@ republish.
 | AC17 | conformance | `conformance/rpm/proxied_install_test.go` (vendor-signed stand-in mirror; eight clients with vendor key only; byte comparison; network-level second-install assertion) |
 | AC18 | integration | `internal/format/rpm/proxied_integrity_test.go` (bad signature, metalink mismatch, document and package checksum mismatches, truncated body; CAS and reference assertions; previous revision still serving; operator record) |
 | AC19 | conformance + integration | `conformance/rpm/proxied_ttl_test.go` (mutating stand-in with `ETag` and `Last-Modified` variants, network-level counts; a lagging variant serving an older `repomd.xml`); `internal/format/rpm/proxied_negative_test.go` (unknown paths with no upstream request, `404`, `429` and `5xx`); `internal/format/rpm/proxied_freshness_test.go` (forward-moving cache-scoped `Last-Modified`, paired `repomd.xml` and signature, older revision not adopted; the layer half is `proxy-cache.md` AC22's `internal/proxy/freshness_test.go`) |
-| AC20 | integration + conformance | `internal/format/rpm/upstream_redirect_test.go` (allowlisted and refused redirect hosts, `502` naming the host, no `Location` to the client, credential scope, climbing location; the adapter halves are `upstream-adapters.md` AC6 to AC8); `conformance/rpm/proxied_redirect_test.go` (install through a cross-host `302` to a mirror declared as a `hosts` stand-in of the `upstreams` entry, `conformance-harness.md` AC23); `internal/format/rpm/xmlbase_refusal_test.go` |
-| AC21 | integration | `internal/format/rpm/removal_test.go` (stand-in presenting each event; a sweep on an injected clock with the grace lapsed between adoptions, the object store read after each; the retained revision's package evicted then fetched; the changed-checksum location served the current bytes and the old blob gone after the next sweep; the shared-layer half is `proxy-cache.md` AC13, AC27 and AC28's) |
-| AC22 | conformance + integration | `conformance/rpm/virtual_test.go` (shadowing with the network layer showing no upstream request for the shadowed name; mixed install on dnf 4, dnf5 and zypper; `405`); `internal/format/rpm/virtual_merge_test.go` (per-name first member, advisory and group merge, the `index.merge` job enqueued on a member change and on a remote adoption and held through the kind pause with the previous tree serving, a merge reading an evicted `primary` by its declared digest; the runtime half is `signing-service.md` AC19's and AC35's `internal/index/virtual_remote_member_test.go`); `conformance/rpm/virtual_remote_test.go` (a virtual created over a never-adopted remote, the stand-in's transcript showing only the member-input paths and the network layer no request to the remote's URL; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go`; a second remote with no vendor key, on TLS alone and on a metalink, contributing nothing, with its operator record, the rule itself `signing-service.md` AC36's `internal/index/passthrough_test.go`); `internal/format/rpm/index/profile_test.go` (the declared member-input paths, and a profile lacking one refused at registration) |
-| AC23 | integration + conformance | `internal/format/rpm/policy_config_test.go` (advisory rule without an `advisory_ecosystem` or with an unlisted one refused, the validation itself being `supply-chain-policy.md` AC11's; coordinate and signature-verdict rules); `conformance/rpm/advisory_policy_test.go` (controlled advisory through the `advisories` key, both paths) |
+| AC20 | integration + conformance | `internal/format/rpm/upstream_redirect_test.go` (allowlisted and refused redirect hosts, `502` naming the host, no `Location` to the client, credential scope, climbing location; the adapter halves are `upstream-adapters.md` AC6 to AC8); `conformance/rpm/proxied_redirect_test.go` (install through a cross-host `302` to a mirror declared as a `hosts` stand-in of the `upstreams` entry, `conformance-harness.md` AC23); `internal/format/rpm/xmlbase_refusal_test.go` (the verifier refusing a gz and a zchunk `primary` carrying `xml:base` with nothing committed, the tree marked refused and every route `502`, the mark lifted by a clean revision; the verifier itself runs in `proxy-cache.md` AC20's completion-only hook); `conformance/rpm/xmlbase_test.go` (dnf 4 against the stand-in with the `xml:base` host declared as a second `hosts` stand-in that must receive no request, the download failing its checksum) |
+| AC21 | integration | `internal/format/rpm/removal_test.go` (stand-in presenting each event; a sweep on an injected clock with the grace lapsed between adoptions, the object store read after each; the retained revision's package evicted then fetched; the changed-checksum location served the current bytes and the old blob gone after the next sweep; a revision arriving without its `.asc` after a signed one not adopted, the divergence read, the refresh adopting it, and a never-signed tree adopting freely; the shared-layer half is `proxy-cache.md` AC13, AC27 and AC28's); `conformance/rpm/proxied_signature_withdrawn_test.go` (dnf5 under `repo_gpgcheck=1` still installing from the retained signed revision while the stand-in serves an unsigned newer one) |
+| AC22 | conformance + integration | `conformance/rpm/virtual_test.go` (shadowing with the network layer showing no upstream request for the shadowed name; mixed install on dnf 4, dnf5 and zypper; `405`); `internal/format/rpm/virtual_merge_test.go` (per-name first member, advisory and group merge, the `index.merge` job enqueued on a member change and on a remote adoption and held through the kind pause with the previous tree serving, a merge reading each input by its declared digest with the `primary`'s cached reference ended directly; the runtime half is `signing-service.md` AC19's and AC35's `internal/index/virtual_remote_member_test.go`); `conformance/rpm/virtual_remote_test.go` (a virtual created over a never-adopted remote, the stand-in's transcript showing exactly the two rounds the member inputs yield, `repomd.xml` per tree then the derived hrefs, and the network layer no request to the remote's URL; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go`; the read-driven fetch of a tree only the remote holds, the first request `404`, the install after the merge, shared with `signing-service.md` AC35; a TLS-only and a metalink remote contributing under classes `none` and `integrity` and a failing-key remote excluded, the input record read, the rule itself `signing-service.md` AC36's `internal/index/admission_test.go`, shared with `artifact-verification.md` AC31); `internal/format/rpm/index/profile_test.go` (the template, the root literal and the derivation declared, `DeriveInputs` over fixture `repomd.xml` bodies yielding the hrefs and nothing else, the round bound two, and a profile lacking an input or with a dot-admitting grammar refused at registration) |
+| AC23 | integration + conformance | `internal/format/rpm/policy_config_test.go` (advisory rule without an `advisory_ecosystem` or with an unlisted one refused, the validation itself being `supply-chain-policy.md` AC11's; coordinate and signature-verdict rules); `internal/format/rpm/advisory_key_test.go` (the EVR without the arch reported on the hosted write and on the location index's version record, carried on the fetch-and-cache request, an EVRA-keyed advisory matching nothing; shared with `supply-chain-policy.md` AC24's `internal/policy/advisory_key_test.go`); `conformance/rpm/advisory_policy_test.go` (controlled advisory through the `advisories` key naming the EVR, both paths, `x86_64` and `noarch` versions) |
 | AC24 | conformance | `conformance/rpm/replay_test.go` |
-| AC25 | integration | `internal/storage/metadata_root_test.go` (threshold crossing with a generated tree and a proxied location index, sweep, serve); `internal/format/rpm/proxied_retention_gc_test.go` (a location index for the current and the retained revision declared on the remote's list, a sweep with the grace lapsed while retained, an install of a package only the retained revision names, the index collected after the dropping adoption, a late build discarded; a named `primary` declared on fetch, its cached reference evicted, surviving the sweep and collected after the dropping adoption); `conformance/rpm/large_tree_test.go` (dnf5 and zypper install after the sweep) |
+| AC25 | integration | `internal/storage/metadata_root_test.go` (threshold crossing with a generated tree and a proxied location index, sweep, serve); `internal/format/rpm/proxied_retention_gc_test.go` (a location index for the current and the retained revision declared on the remote's list, a sweep with the grace lapsed while retained, an install of a package only the retained revision names, the index collected after the dropping adoption, a late build discarded; a named `primary` declared on fetch, skipped by an eviction pass while declared, its cached reference ended directly by the test and surviving the sweep, collected only after both the dropping adoption and the ended reference in each order; shared with `storage-and-gc.md` AC8's `internal/storage/gc_property_test.go` and `proxy-cache.md` AC14's `internal/proxy/eviction_test.go`); `conformance/rpm/large_tree_test.go` (dnf5 and zypper install after the sweep) |
 | AC26 | unit + conformance + integration | `internal/format/rpm/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13; `settings` refusal); `conformance/rpm/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; dnf 4, dnf5 and zypper from the new name); `internal/format/rpm/delete_key_test.go` (no signature after deletion, key document retrievable to tombstone time; the key lifecycle itself is `signing-service.md` AC29's) |
-| AC27 | integration + conformance | `internal/format/rpm/proxied_metadata_test.go` (an eviction pass over a remote far over quota; `repomd.xml`, signature and location index untouched and served inside TTL; named documents' blobs through a sweep; the gauge read through `telemetry.NewTestRecorder`; the layer half is `proxy-cache.md` AC29's); `conformance/rpm/proxied_evict_test.go` (dnf5 and zypper install after the pass and the sweep) |
+| AC27 | integration + conformance | `internal/format/rpm/proxied_metadata_test.go` (an eviction pass over a remote far over quota; `repomd.xml`, signature and location index untouched and served inside TTL; the named documents' cached references intact and their blobs through a sweep; both gauges read through `telemetry.NewTestRecorder` before and after the dropping adoption; the layer half is `proxy-cache.md` AC14's and AC29's `internal/proxy/metadata_eviction_test.go`, which names this case); `conformance/rpm/proxied_evict_test.go` (dnf5 and zypper install after the pass and the sweep, the stand-in's transcript showing packages re-fetched and no named document) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their type, virtual member order, a
@@ -1291,8 +1407,8 @@ criterion.
 ## Implementation Phases
 
 ### Phase 1: Hosted reads and the signed trees
-- Waits on `docs/internal/plans/foundation/signing-service.md` reaching `planned` (Blocking
-  preconditions)
+- `docs/internal/plans/foundation/signing-service.md` is `planned` (2026-09-30); the build
+  waits on its Phase 2 landing (Blocking preconditions)
 - The format-first mount, tree path parsing, the `Indexer` generator in
   `internal/format/rpm/index`, the repodata routes through `ServeDocument` and the package routes
   through `ServeFile`, each with `HEAD` and ranges, percent-decoding, the Basic challenge, seeded
@@ -1301,28 +1417,33 @@ criterion.
   the `403` rendering through `WriteRefusal`; `Capabilities()` with the rename case (AC26)
 
 ### Phase 2: Publish and management
-- Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
-  preconditions)
+- `docs/internal/plans/foundation/management-api.md` is `planned` (2026-09-30); the build waits
+  on its core at charter step 2 (Blocking preconditions)
 - The `Operator` interface declaring `publish`, `delete-version`, `delete-package` and
   `annotate`; batch publish with its ingest rules, advisories, comps groups and module metadata,
   deletion with core-held retirement, key rotation under the `key-document` profile, the
   write-boundary declaration exercised under concurrency
 
 ### Phase 3: Proxied path
-- Waits on `upstream-adapters.md` and `artifact-verification.md` (Blocking preconditions)
+- Waits on `upstream-adapters.md` and `artifact-verification.md` landing (both `planned`,
+  2026-10-01; Blocking preconditions)
 - The `https` upstream binding with its `hosts` allowlist and the trust set's vendor keys and
   metalink, verified `repomd.xml` revisions adopted with their signature as a paired set under
-  cache-scoped freshness with older revisions not adopted, immutable documents and ranges, the
-  location index and every fetched metadata document declared on the remote's blob-digest list
-  for the current and one retained revision (was-Q11), metadata outside the quota in
-  `cache_metadata_bytes` (AC27), ranges through `ServeFile`, verified packages, `xml:base` refusal, negative caching, the removal table,
-  the coordinate under the declared `advisory_ecosystem`, `405` on remote writes
+  cache-scoped freshness with older revisions and withdrawn signatures not adopted (was-Q12),
+  the anchor class per adoption, immutable documents and ranges, `primary` under the
+  completion-only verifier with the `xml:base` scan and the zchunk reader, the location index
+  and every fetched metadata document declared on the remote's blob-digest list for the current
+  and one retained revision (was-Q11) and skipped by eviction while declared, metadata outside
+  the quota in `cache_metadata_bytes` (AC27), ranges through `ServeFile`, verified packages,
+  negative caching, the removal table, the EVR advisory key under the declared
+  `advisory_ecosystem`, `405` on remote writes
 
 ### Phase 4: Virtual repositories, corpus and gate
 - Waits on `signing-service.md`'s Phase 4 (the `index.merge` worker on `internal/async`)
 - The generator's per-tree `Merge` with per-name shadowing on the deferred `index.merge` job,
-  the profile's member-input paths, re-merge on remote adoption and the virtual-only remote's
-  revalidation (AC22), the recorded corpus against the five live
+  the profile's member inputs (template, root literal, `DeriveInputs`), admission by anchor
+  class, re-merge on remote adoption, the virtual-only remote's revalidation and the read-driven
+  remote-only tree (AC22), the recorded corpus against the five live
   upstreams and the createrepo_c reference, the eight clients in the matrix, the exception-list
   entries named in Design
 
@@ -1332,11 +1453,14 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None open. The ten questions this draft raised, and the eleventh the format closing sweep raised, were each written in the template's decision
-shape and then adopted at their own recommendation under the owner's standing delegation of
+None open. The ten questions this draft raised, the eleventh the format closing sweep raised,
+and the twelfth the Fable recheck raised, were each written in the template's decision shape
+and then adopted at their own recommendation under the owner's standing delegation of
 2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided,
 folded through Scope, Design, the criteria and the Test Plan in the same pass, and reversible by
-the owner at any time. `grep -rn "standing delegation"` is the owner's review queue.
+the owner at any time. `grep -rn "standing delegation"` is the owner's review queue. Every
+record carries the verdict of the Fable recheck of 2026-10-01, since the first eleven were
+adopted on Opus.
 
 ### Resolved: how a repository relates to the trees clients name (was Q1)
 
@@ -1361,6 +1485,11 @@ repository file serve a fleet; and it keeps writes to different trees uncontende
 
 Accepted cost: the tree segment in the addressed object, which also makes a patterned grant
 able to confine a token to one release.
+
+Rechecked on Fable 2026-10-01: confirmed. Under-stated: the tree grammar is also the grammar of
+the `{tree}` variable in the virtual profile's member-input template (`signing-service.md`
+was-Q21), so the root tree needs a literal input of its own, and a tree only a remote holds
+reaches a virtual read-driven (Design, "Virtual repositories").
 
 ### Resolved: who signs packages on the hosted path (was Q2)
 
@@ -1387,6 +1516,10 @@ gives an unsigning publisher an end-to-end chain (`gpgcheck=0` with `repo_gpgche
 
 Accepted cost: the operator documentation's two repository-file recipes, and a revisit through
 `signing-service.md` if unsigning publishers prove common.
+
+Rechecked on Fable 2026-10-01: confirmed. The captures carry it: zypper's default accepts an
+unsigned package under signed metadata and dnf's `gpgcheck=0` with `repo_gpgcheck=1` installs,
+so the unaltered-bytes rule costs an unsigning publisher a recipe, never a working client.
 
 ### Resolved: the metadata key and its distribution (was Q3)
 
@@ -1419,6 +1552,9 @@ descriptor kind (was Q23 there) classifies it as a descriptor, which changes wha
 `pull` may read and nothing about a credential-less request, so the existence rule this answer
 protects is intact.
 
+Rechecked on Fable 2026-10-01: confirmed. The option B cost is exactly `auth.md` AC17's rule,
+and the `file://` recipe was captured working, so the trade was priced with evidence.
+
 ### Resolved: rendering a package policy refusal (was Q4)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: `403` with the
@@ -1445,6 +1581,9 @@ binds, per format" table, and its shared refusal writer puts the condition in th
 reason phrase, which no RPM client prints, so the terse message stands (Design, "Policy refusals
 on the wire").
 
+Rechecked on Fable 2026-10-01: confirmed. Option B's impossibility on a verbatim proxied tree
+and option C's skipped repository are both captured facts, not estimates.
+
 ### Resolved: what a proxied tree serves (was Q5)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: upstream `repomd.xml`,
@@ -1465,6 +1604,14 @@ through `xml:base`, is refused rather than rewritten.
 
 Accepted cost: the `502` refusal for `xml:base` trees and the operator record of unverified
 upstreams.
+
+Rechecked on Fable 2026-10-01: confirmed and amended in its fold. The `xml:base` refusal was
+placed on `repomd.xml`, which is served before `primary` is fetched, and a `primary` served
+verbatim is itself the credential leak, since dnf parses it and sends the credential before
+any later refusal; `primary` is now fetched under a completion-only verifier that refuses the
+body before it completes to any client, and the tree is marked refused from then on (Design,
+"The proxied path"; AC20). And verbatim serving admits a mirror that stops serving its `.asc`,
+which the resolved withdrawn-signature decision (was Q12) closes as a regression.
 
 ### Resolved: virtual RPM repositories (was Q6)
 
@@ -1493,6 +1640,15 @@ runtime's adoption hook (`signing-service.md`'s resolved remote-member decision,
 and what the merge reads from a remote member is the resolved merge-input decision below (was
 Q11).
 
+Rechecked on Fable 2026-10-01: confirmed and amended in its fold. The format closing sweep had
+folded `signing-service.md`'s verified-only composition rule, which excluded every TLS-only
+remote and Fedora (a metalink anchor) from a signed virtual; that rule was superseded on Fable
+by its admission-by-anchor-class decision (was Q20 there), so a remote now contributes under
+the class its adoption ran under and a `failed` verdict alone excludes it, recorded per
+document (Design, "Virtual repositories"; AC22 inverted). The cost the record omitted is now
+stated: the virtual's signature attests composition at the trust level configured per member,
+which the operator documentation must say.
+
 ### Resolved: module metadata on hosted trees (was Q7)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: module documents are a
@@ -1511,6 +1667,10 @@ AppStream trees carry; the presence check closes the filtering trap captured.
 **Why this is yours:** it decides whether a retiring ecosystem feature is carried.
 
 Accepted cost: the `modules` document in the service's generation list.
+
+Rechecked on Fable 2026-10-01: confirmed. The artifact-presence check is the load-bearing half:
+the captured filtering trap (an enabled module hiding a non-modular package of the same name)
+is what a validation-free option A would have shipped.
 
 ### Resolved: the write boundary of a multi-package publish (was Q8)
 
@@ -1532,6 +1692,10 @@ visible between two snapshots is a resolution failure a client can hit.
 Accepted cost: recorded for `management-api.md`, which carries it: its reconciliation table lists
 RPM's batch publish as one `publish` write authorized only if every object it adds is in pattern,
 and its AC5 proves one snapshot for a batch `publish`.
+
+Rechecked on Fable 2026-10-01: confirmed. The mixed batch (identical and new files in one
+snapshot) and the unchanged publish (`management-api.md` was-Q15) are the two edges the record
+did not name; AC6 carries both.
 
 ### Resolved: how an RPM repository binds to OSV (was Q9)
 
@@ -1557,6 +1721,14 @@ against the advisory sources' ecosystem lists at configuration ("OS-package repo
 their ecosystem", AC11), so this answer stands unchanged and its storage is the core's, not this
 format's repository-level document.
 
+Rechecked on Fable 2026-10-01: confirmed and amended in its fold. The record left the
+coordinate's shape to "the shared resolution call", while this format's `Version` is an EVRA
+and OSV's RPM ranges are EVRs (the record's own live example, `1:3.0.7-24.el9`), so a
+string-keyed match would bind nothing; the handler now reports the EVR without the arch as the
+version's advisory key at write time and on the fetch-and-cache request, under
+`supply-chain-policy.md`'s resolved advisory-key decision (was Q11 there, AC24; Design,
+"Advisories, OSV and the security-signal rule"; AC23).
+
 ### Resolved: preconfigured distribution mirrors (was Q10)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option B: no RPM upstream is
@@ -1579,6 +1751,9 @@ recording session and the nightly job once configured. The set this record cites
 to six (`proxy-cache.md`'s was-Q14 and was-Q17 extensions added galaxy.ansible.com,
 api.nuget.org and repo.maven.apache.org), none an RPM upstream, and `upstream-adapters.md`'s
 profile table carries no RPM row, so this answer stands.
+
+Rechecked on Fable 2026-10-01: confirmed. The reason is structural (no canonical upstream, a
+regional mirror choice), so it does not weaken as the preconfigured set grows.
 
 ### Resolved: what a virtual merge reads from a remote member (was Q11, raised and adopted 2026-09-28)
 
@@ -1623,6 +1798,65 @@ pieces remain `signing-service.md`'s and are reported: a member-input path deriv
 document read earlier in the same replay (this format's hrefs), and a first fetch for a tree
 only the remote holds.
 
+Rechecked on Fable 2026-10-01: confirmed and amended in its cost and fold. The choice stands:
+B's silent lag and C's broken zchunk path were judged correctly, and the declared list is the
+one keep-alive a document has. The second accepted cost is gone: `proxy-cache.md`'s Fable
+recheck amended its eviction accounting so that a cached file a declared list of the remote
+holds is skipped by the pass while declared and counted in `cache_metadata_bytes` (its AC14,
+AC29), so no document is re-fetched while a served revision names it, and a path only a dropped
+revision names answers `404` with no upstream request, so a named document is never re-fetched
+from the upstream at all; its blob is collected only after both the dropping adoption and the
+end of its cached reference, in either order (`storage-and-gc.md` AC8). The two reported pieces
+are met by `signing-service.md`'s resolved member-input decision (was Q21 there): the hrefs are a
+`DeriveInputs` derivation and a remote-only tree is fetched read-driven. Design ("The proxied
+path", "Virtual repositories"), AC22, AC25 and AC27 were rewritten to match, AC27 having asserted
+the re-fetch that no longer happens.
+
+### Resolved: a signature the upstream stops serving (was Q12, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation**, in the Fable recheck. Option A: a
+`repomd.xml` revision arriving with no `repomd.xml.asc` on a tree whose current revision was
+adopted with one is a **regression not adopted**: the signed revision keeps serving, a
+divergence naming the missing signature is recorded, and the operator's refresh is what adopts
+the unsigned revision; a tree first adopted without a signature never arms the rule. The hook
+the handler declares follows what the upstream served (`Verify` when the `.asc` was answered,
+the metalink `Check` or nothing otherwise), so the anchor class is recorded honestly for Fedora
+and UBI, and the fact the rule reads, whether the current revision's `.asc` was served, is the
+handler's own on the remote's document (Design, "The proxied path", the removal table; AC21).
+
+The question: the supersession of the verified-only composition rule by `signing-service.md`'s
+admission-by-anchor-class decision (was Q20 there) opened this. Under it a remote adopted with
+no signature is class `none` and its documents compose into a signed virtual. A mirror, or
+whoever controls one, that stops serving the `repomd.xml.asc` it served before is the
+signature-stripping case: a direct client under `repo_gpgcheck=1` refuses it (captured, "GPG
+verification is enabled, but GPG signature is not available"), but a virtual that re-signs the
+composed tree would admit it under class `none` and its clients would trust the registry's
+signature over an index the vendor no longer vouches for, which is enough to freeze a tree or
+serve a vendor-signed but superseded package list. The same shape is `arch.md`'s unserved
+`.db.sig`, which its Fable recheck resolved as class `none` because the official mirrors never
+sign; RPM differs in that the distributions whose remotes matter most (Rocky, AlmaLinux,
+openSUSE) do sign, so a signature's disappearance is information.
+
+**Recommendation:** A, because it is the one answer that needs no knob and no read the handler
+is forbidden: the regression class already exists for an older `repomd.xml`, a withdrawn
+signature is a regression of the same kind, and `proxy-cache.md` already gives every regression
+its cure (the operator's refresh after the divergence is read), so a legitimately unsigning
+upstream costs one operator action and a stripping mirror never passes silently.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. A withdrawn signature is a regression not adopted; the hook follows what was served** | No silent downgrade into a signed virtual; Fedora and UBI unaffected, since they never served one; the cure is the existing refresh; no new field outside the handler's own document | An upstream that legitimately stops signing serves its last signed revision until an operator refreshes; one more divergence kind in the operator record |
+| **B. Class `none` on an unserved `.asc`, as `arch.md` chose** | One rule for both formats; nothing to refresh | A stripping mirror is composed into a signed virtual silently, visible only on the input record; the virtual is weaker than a direct client under `repo_gpgcheck=1` |
+| **C. A configured vendor key requires a served signature** | Strict by configuration | A Fedora or UBI remote with the vendor key configured for its packages adopts nothing, since those upstreams serve no `.asc` at all (live); the key set serves packages and metadata alike, so no entry distinguishes the two intents |
+
+**Why this is yours:** it decides whether the registry's signature on a virtual can ever cover a
+tree whose vendor signature vanished, and it adds a regression kind to a settled class.
+
+Accepted cost: the refresh-gated adoption of a genuinely unsigned successor, and the divergence
+kind. B lost to the silent downgrade; C to breaking the two live upstreams that never sign.
+`proxy-cache.md`'s event-class table may name this format under "Regression not adopted" for
+it (reported).
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1631,3 +1865,4 @@ only the remote holds.
 | 2026-09-28 | 15ced69 | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec (Open item 36; signing-service 9 and 11; upstream-adapters 8 and 12; conformance-harness reconciliation 4; management-api 11 and 12; Open item 19's foundation halves) and every requirement this spec placed on the ten foundation specs checked against what they say. Applied: every "to be authored" citation replaced by the real spec and criterion; the service requirement list rewritten as citations (generator package, RPM signing profile, key document through `PublicKeys`, write-path runtime, per-document lock, `key-document` rotation as one atomic batch of signature records with no snapshot, replacing "re-signed in one write", `Merge` on `index.merge`), and the verification list as `artifact-verification.md`'s `openpgp`, `rpm` and `metalink` entries; the signature over `repomd.xml` a `Signature` record, headers through `ServeDocument`; the management table gains kinds from `management-api.md`'s reconciliation table (`publish`, `delete-version`, `delete-package`, `annotate`, key rotation as `configure`), which moves advisory withdrawal from `delete` to `push` by that spec's effect rule (AC7, AC10 revised, stated in Design); retirement to core-held `Retirement` (`retired` 409, AC6 across a backwards repoint); `repomd.xml`, its signature, key document and zypper's probes declared descriptors under `auth.md` was-Q23 with the sentinel check (AC14: failure moves from `repomd.xml` to `primary`); `WriteRefusal` and the `package-level` binding row (AC15); AC16's open-egress half moved onto a stand-in on the confined case network (harness was-Q6, AC23); the proxied path on the `https` adapter with `allow_http`, a `hosts` allowlist answering `502` for an unlisted host, vendor keys and metalink in the remote's trust set, the integrity-failure and revision-bound classes named, `repomd.xml` and its signature adopted as a paired set under cache-scoped `Last-Modified` with a regression row (AC19, AC20); the OSV declaration as `advisory_ecosystem` (AC23, Q9 record); virtual merges deferred with a staleness bound (AC22, Q6 record); the seed path through the write-path hook and the `signing` and `trust` keys in the harness paragraph; a new Capabilities and lifecycle section with AC26 (rename, deletion retiring the key, no `settings` document). One grounding gap found and closed by a criterion rather than a claim: nothing captured shows dnf or zypper adopting an older `repomd.xml` after a rollback, so AC4 gains the real-client rollback clause. No new question adopted; the existing `fable_recheck` is kept. Stays draft. |
 | 2026-09-28 | 93982ba | data-loss fix on Opus (storage-and-gc closing-sweep item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 0 of "From the storage-and-gc.md closing sweep" in `agents/spec-loop/consequences.md`, verified against `storage-and-gc.md`'s fourth mark root (its third reach, AC16) and `data-model.md` AC34, AC36 and AC45: a digest a document merely mentions keeps nothing alive, the declared blob-digest list is a document's only keep-alive, and a remote writes no content snapshot. The holes: the remote's retained `repomd.xml` revisions and the location index built from each `primary`, stored as CAS-backed metadata on the remote's document, were named only in its body, and the changed-checksum row kept the old blob "servable to the older revision" through nothing the sweep follows and through a route that cannot tell which revision a client holds (a `location href` carries no digest). Now: one superseded revision retained per tree, its location index and any CAS-backed `repomd.xml` on the remote's declared blob-digest list, dropped by the adoption that pushes the revision out, a late build discarded (proxy-cache was-Q19, AC27, chosen over a cached reference because an index is metadata with no `File` row and must not be evicted while its revision still serves); files a retained revision names held by their own cached references; the changed-checksum row serving the current `primary`'s bytes with the new commit ending the old blob's reference (proxy-cache was-Q20, AC28). AC21 and AC25 extended so each fails if a retained index is collected (a sweep with the grace lapsed while retained, then an install of a package only that revision names); Test Plan rows (`internal/format/rpm/proxied_retention_gc_test.go` added) and Phase 3 updated. The hosted path is unchanged: its retained files are snapshot content under the snapshot roots. No new question adopted here; `fable_recheck` extended for the folded decisions. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
 | 2026-09-28 | f8ad8b2 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Applied: foundation-leftovers item 2 and `signing-service.md` AC35 (member-input paths: `repomd.xml` with its signature, then the hrefs it names, replayed for every tree another member holds; a path derived from a document read earlier in the replay and a tree only the remote holds reported as gaps), signing-service closing-sweep item 6 and proxy-cache closing-sweep item 6 (remote adoption re-merges through the adoption hook, was-Q16, AC35; the virtual-only remote's revalidation, `proxy-cache.md` AC26; AC22 and its row extended, the Q6 record updated; zchunk and multi-range through `ServeFile`, AC30, AC32; AC5 and Phase 1). Q11 raised and adopted: a virtual merge reads a remote member's `primary` and siblings, which were evictable cached files a sweep could collect before the merge ran; every fetched metadata document of a current or retained revision is now declared on the remote's list beside the location index (AC25 extended, new AC27). Data-loss wave 1 confirmed intact (was-Q19 retained revision on the declared list, was-Q20 new-blob variant, AC21, AC25) and consistent with was-Q21 (metadata outside the quota in `cache_metadata_bytes`) and was-Q22 (a tree's revision set is repository-wide, so the repository-level list is correct; adoptions of different trees serialise on it, stated). Found while verifying: `signing-service.md` AC36 excludes a remote whose revisions are `absent`, and a metalink match is an integrity result, not a verdict, so a Fedora remote contributes nothing to a virtual; stated and asserted, the question reported. Management-api closing-sweep items 4 and 5 (was-Q14 claims at declaration and at commit, was-Q15 declared unchanged publish; AC6 and its row). Found already done: Open item 36 descriptor wording, the auth `dnf`/`zypper` row, the conformance-harness exception rows for both halves. Skipped: nothing. `fable_recheck` extended. 27 criteria, each with a Test Plan row. Stays draft. |
+| 2026-10-01 | a4c9836 | Fable recheck: full review (claim verification at HEAD of every sibling citation: `signing-service.md` was-Q20, was-Q21, was-Q22, AC2, AC3, AC7 to AC9, AC11 to AC13, AC19, AC21, AC25, AC28 to AC30, AC32, AC35, AC36 and its "Virtual merges", "The produce/verify boundary" and generator contract; `proxy-cache.md` was-Q18 to was-Q22, AC9, AC13, AC14, AC22, AC25 to AC29, "Integrity of fetched content", "Completion-only mode", "Freshness", "Revalidation outside the request", "Interaction with GC" and the Obligation section; `artifact-verification.md` was-Q2 as amended, "Anchor class", AC13, AC21, AC25, AC31; `storage-and-gc.md` AC8, AC16, AC21; `supply-chain-policy.md`'s RPM coverage and binding rows, AC11, AC18, AC24 and its vendored orderings; `management-api.md`'s RPM rows and its key-rotation paragraph, AC5, AC7, AC9, AC12, AC24, AC32; `auth.md`'s `dnf`/`zypper` row, the descriptor examples, AC12, AC17, AC32; `data-model.md` AC33, AC35 to AC37, AC44 to AC46; `format-handler-interface.md` AC12 to AC14 and "The scheduled re-open"; `conformance-harness.md` AC13, AC23, AC24, AC26 to AC28 and its RPM exception rows; `upstream-adapters.md` AC6 to AC8, AC15, AC22 and its RPM requirement row; `async-operations.md` AC28; `repository-lifecycle.md` AC12, was-Q2; the charter's step 7 and AC12; the catalogue's RPM rows; the prototype's "second data point" finding; the tree holds no RPM code, so no code claim was testable) + adversarial lens at full strength on the Opus-authored whole (the captured dnf and zypper behaviour, zchunk, advisories, key rotation, the data-loss wave 1 keep-alive) + constitution + re-examination of the eleven adoptions made without Fable | Brought current first: every open consequence against this file applied and verified against its source (signing-service recheck item 2: AC22's exclusion inverted, Design and the Q11 record citing was-Q20 and was-Q21, the metalink question answered as an integrity anchor; proxy-cache recheck item 3 with storage recheck item 7 and follow-up item 2: the declared document never evicted, AC14 and AC29 cited, storage AC8 for collection; artifact-verification recheck item 8: no text said `failed` for a keyless remote, the anchor-class derivation now stated with was-Q2 as amended). Verdicts: Q1, Q2, Q3, Q4, Q7, Q8, Q10 confirmed, each with an under-stated cost or edge recorded; Q5 amended in its fold; Q6 amended in its fold; Q9 amended in its fold; Q11 confirmed and amended in its cost and fold. None superseded. Adversarial findings, each fixed in the body and the criteria: the `xml:base` refusal was unimplementable as written and too late to prevent the captured credential leak (`primary` is now a completion-only fetch with a verifier that scans every listed variant, zchunk included, before any client receives a complete body; the tree marked refused; AC20 and its rows); the advisory key was an EVRA against OSV's EVR ranges, so advisory rules would have bound nothing (the EVR reported as the version's key; AC23 and its row); the key-rotation `configure` was listed among the kinds `Operations()` declares; AC27 asserted a re-fetch of documents that the eviction pass no longer ends; the member inputs were a static list `signing-service.md` AC35 no longer admits (now a template, a root literal and a `DeriveInputs` derivation with the read-driven remote-only tree; AC22 and its rows); and the supersession of the verified-only rule opened a signature-stripping path into signed virtuals, closed by Q12 (raised in decision shape and adopted under the standing delegation, owner-facing; the removal table, AC21 and its rows). AC6 names the tree grammar it refuses, closing check-spec's advisory. Constitution: both paths asserted on every criterion that has them, no handler-owned table, every boundary named to an enforcer, the conformance gate intact, findings in this document. No em-dashes on touched lines. Sibling consequences reported to the orchestrator, not applied: proxy-cache, supply-chain-policy, signing-service, conformance-harness, question-triage. 27 criteria, each with a Test Plan row; twelve questions resolved, zero open; `node scripts/check-spec.js` zero failures; `fable_recheck` cleared. draft -> planned. |
