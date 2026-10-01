@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned by the Fable recheck of 2026-10-01 at 3247f69: a full review pass over the cloud-authored whole (claim verification of every sibling citation at HEAD, adversarial lens at full strength with the design judgement treated as unreviewed, constitution compliance, go-spec-reviewer inline) plus the re-examination of all thirteen questions adopted without Fable. Verdicts: Q1, Q2, Q9, Q11, Q12, Q13 confirmed (Q1, Q2, Q12 with under-stated costs added); Q3, Q4, Q8, Q10 confirmed with their folds amended; Q5, Q6, Q7 confirmed with fold and cost amended (Q5: the rotation was self-contradictory, a process cannot read records under a key it never received, so security.previous_master_key joins the owned keys, both keys are held for the rotation's duration and the AEAD is fixed as AES-256-GCM; Q6: a marked non-transactional class for CREATE INDEX CONCURRENTLY, the chart hook pre-install as well as pre-upgrade, readiness tolerating a schema ahead of the binary, the compat job skipped by name before the first minor; Q7: http.Server.Protocols, reason-phrase pass-through as a second proxy requirement, the ingress list gated by the kind e2e proof). None superseded. Brought current first: the async.job_retention relational check dropped and the connection budget restated per role (async recheck), alerts.yaml's three templated values with the lead and sweep interval read from the chart's config subtree and alerts.cacheMetadataBytes 10 GiB (observability recheck), the :9464 disclosure stated as the reason it is never public (auth and observability rechecks), the air-gap recipe carrying the export's Last-Modified into POST /api/v1/system/advisories/import?exported_at= (supply-chain and management-api rechecks), management.deferred_threshold gone and the management. row at three (84 sibling keys under 13 prefixes beside 30 owned), storage check --verify --restore-dangling repairing digest mismatches from the newest verifying version (storage-and-gc recheck), the unbound-host 404 as AC10's denial through a Scope(r) error (FHI recheck), and the first mint stated as the local admin's own credential presented as HTTP Basic resolving to the local admin human principal (credential-management recheck). Further adversarial findings fixed: a ServiceMonitor that needed the Service AC13 forbids (now a PodMonitor); the first-mint docs copying commands against the documentation rule (now a cited deploy/recipes/first-mint/ test); the two-way key check parsing any backticked first column (now gated on the Key/Default/Meaning header); AC2 asserting four sources for --config, which is no key; the environment-boundary test catching test fixtures. 32 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Consequences reported for puppet, signing-service, data-model, auth, management-api, observability and question-triage. Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus, reconciliation 2026-09-28 at ff7966e, authored 2026-09-27 at ff566dd in the cloud session with thirteen questions adopted under the standing delegation."
+status_description: "Fable follow-up of 2026-10-01 at b6ba642, still planned: the eight items queued against this spec since its recheck applied and verified against their source specs (the upload. row from data-model AC26 and index.requested_cells_max from signing-service was-Q22, the inventory recounted from every owner's table to 87 sibling keys under 14 prefixes beside 30 owned; unbound_hosts stated as per process with identical server.hosts across replicas held by the chart's one ConfigMap; allow_http, allow_local and insecure_skip_verify stated as Upstream row fields the schema never carries; make web-clean, the .gitignore rule and the staged-index placeholder step beside AC32's node-stripped build; internal/trustsource's egress under the same proxy variables, the env carve-out widened to exactly two packages; the first-mint form now cited to auth's local-admin-on-the-API decision, was-Q26, and management-api AC30), plus one contradiction of this spec's own found on the way: a registry token in the Basic slot is refused by the username discriminator, not by the route, so the first-mint paragraph and AC26 now state both readings. None declined, no question adopted. Planned by the Fable recheck of 2026-10-01 at 3247f69: a full review pass over the cloud-authored whole (claim verification of every sibling citation at HEAD, adversarial lens at full strength with the design judgement treated as unreviewed, constitution compliance, go-spec-reviewer inline) plus the re-examination of all thirteen questions adopted without Fable. Verdicts: Q1, Q2, Q9, Q11, Q12, Q13 confirmed (Q1, Q2, Q12 with under-stated costs added); Q3, Q4, Q8, Q10 confirmed with their folds amended; Q5, Q6, Q7 confirmed with fold and cost amended (Q5: the rotation was self-contradictory, a process cannot read records under a key it never received, so security.previous_master_key joins the owned keys, both keys are held for the rotation's duration and the AEAD is fixed as AES-256-GCM; Q6: a marked non-transactional class for CREATE INDEX CONCURRENTLY, the chart hook pre-install as well as pre-upgrade, readiness tolerating a schema ahead of the binary, the compat job skipped by name before the first minor; Q7: http.Server.Protocols, reason-phrase pass-through as a second proxy requirement, the ingress list gated by the kind e2e proof). None superseded. Brought current first: the async.job_retention relational check dropped and the connection budget restated per role (async recheck), alerts.yaml's three templated values with the lead and sweep interval read from the chart's config subtree and alerts.cacheMetadataBytes 10 GiB (observability recheck), the :9464 disclosure stated as the reason it is never public (auth and observability rechecks), the air-gap recipe carrying the export's Last-Modified into POST /api/v1/system/advisories/import?exported_at= (supply-chain and management-api rechecks), management.deferred_threshold gone and the management. row at three (84 sibling keys under 13 prefixes beside 30 owned), storage check --verify --restore-dangling repairing digest mismatches from the newest verifying version (storage-and-gc recheck), the unbound-host 404 as AC10's denial through a Scope(r) error (FHI recheck), and the first mint stated as the local admin's own credential presented as HTTP Basic resolving to the local admin human principal (credential-management recheck). Further adversarial findings fixed: a ServiceMonitor that needed the Service AC13 forbids (now a PodMonitor); the first-mint docs copying commands against the documentation rule (now a cited deploy/recipes/first-mint/ test); the two-way key check parsing any backticked first column (now gated on the Key/Default/Meaning header); AC2 asserting four sources for --config, which is no key; the environment-boundary test catching test fixtures. 32 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Consequences reported for puppet, signing-service, data-model, auth, management-api, observability and question-triage. Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus, reconciliation 2026-09-28 at ff7966e, authored 2026-09-27 at ff566dd in the cloud session with thirteen questions adopted under the standing delegation."
 description: "Spec for deployment, configuration and operations: one binary whose roles are configuration, one validated configuration schema behind file, environment and flags with a mechanical check that every key a spec defines is present and documented, PostgreSQL and S3-compatible object storage as the only runtime dependencies, the instance master key, TLS termination and the HTTP/1.1 reason-phrase constraint, host binding for hostname-addressed formats, the container image, Helm chart and Compose file, forward-only migrations with rollback by previous-minor compatibility, multi-replica constraints and the advisory-lock singletons, backup and restore of PostgreSQL plus the CAS, and resource sizing derived from the benchmark gate."
 author: michielvha
 goal: "Make the registry runnable, upgradable and recoverable by an operator who reads one configuration reference and one chart, with every key a spec defines present, validated and documented by construction, every multi-replica hazard held by a named mechanism, and no dependency beyond PostgreSQL and object storage."
@@ -51,29 +51,29 @@ criterion.
 | Citing spec | What it places here | Where it lands |
 |---|---|---|
 | `credential-management.md` (its Configuration table, resolved API-only decision, was Q7; "How who reaches the authorizer") | The eight `credentials.*` keys; the first-mint procedure (a `curl` with the local admin credential; no CLI in v1); the credential routes' third route requirement, a human principal (a session or the local admin account, never a token), which is what the first mint's credential form must satisfy | Key inventory; "First run and first mint" |
-| `signing-service.md` (its Configuration table, AC13, AC14, AC26, AC31) | The 14 `signing.*` and `index.*` keys (`index.render_memo_bytes`, 256 MiB, its was-Q13 memo bound, among them) plus the citation of `security.master_key`; master-key and PIN handling ("never a flag value", "never a flag or a logged value"); a SoftHSM2 recipe; a replicated-repository key recipe (its AC23, `replication.md` AC21) | Key inventory; "The instance master key"; Recipes |
-| `upstream-adapters.md` (its Configuration keys table, AC5, AC32) | The three `upstream.*` instance defaults it tables (concurrency 10, cool-down cap 1h, connect timeout 10s), the computed `User-Agent`, `HTTPS_PROXY`/`NO_PROXY` honoured once instance-wide | Key inventory; "Not keys, on purpose" |
+| `signing-service.md` (its Configuration table, AC13, AC14, AC26, AC31, AC35) | The 15 `signing.*` and `index.*` keys (`index.render_memo_bytes`, 256 MiB, its was-Q13 memo bound, and `index.requested_cells_max`, 256, its was-Q22 cap on a virtual's read-driven cells, among them) plus the citation of `security.master_key`; master-key and PIN handling ("never a flag value", "never a flag or a logged value"); a SoftHSM2 recipe; a replicated-repository key recipe (its AC23, `replication.md` AC21) | Key inventory; "The instance master key"; Recipes |
+| `upstream-adapters.md` (its Configuration keys table, "Configuration on the `Upstream` row", AC5, AC22, AC32, AC35) | The three `upstream.*` instance defaults it tables (concurrency 10, cool-down cap 1h, connect timeout 10s), the computed `User-Agent`, `HTTPS_PROXY`/`NO_PROXY` honoured once instance-wide; `allow_http`, `allow_local` and `insecure_skip_verify` as fields of the `Upstream` row, never keys, each refused unless set explicitly and named in the startup log | Key inventory; "Not keys, on purpose" |
 | `async-operations.md` (its Configuration table, AC22, AC26, its resolved worker-placement decision, was Q8) | The eleven `async.*` keys and the `async.workers: 0` web-replica recipe; "one binary and one deployment story"; a job of an unknown kind skipped, never failed, during a rolling upgrade (its resolved unknown-kind decision, was Q10) | Key inventory; "Roles"; Helm chart; "Upgrade and rollback policy" |
 | `observability.md` (its Configuration table, AC17, AC27, "What the listener discloses") | The 17 `telemetry.*` keys and defaults; the second listener `:9464` never exposed publicly, because its per-repository label values are repository names; `deploy/observability/alerts.yaml` packaging with three templated values (the signing lead, the GC sweep interval for `GCSweepStale`, the `CacheMetadataLarge` threshold); a Grafana dashboard reading the generated catalogue; log collection and rotation; `SIGHUP` for the audit file | Key inventory; Listeners; Packaging; Signals |
 | `storage-and-gc.md` (its Configuration table, AC26, AC27, AC29) | The six `gc.*` keys; the sweep lock through `internal/db/lock.LockSweep`; the consistency checker as `stackweaver-registry storage check` with `--verify` and `--restore-dangling`, the latter repairing dangling rows and digest mismatches alike from the newest verifying bucket version; bucket versioning as the requirement the restore relies on | Key inventory; CLI shape; Singletons; Backup and restore |
 | `supply-chain-policy.md` (its Configuration table, AC16, AC18, AC20, AC23; its resolved freshness-measure decision, was Q13) | The five `policy.*` keys; the operator page "When a refusal actually blocks an install" generated from its "When a refusal binds, per format" table; the refusal status line written by a hijacked HTTP/1.1 write in the shared refusal path (its resolved refusal-status-line decision, was Q10); an air-gapped instance's advisory feed fed by an OSV export whose declared export time is the source's freshness | Key inventory; "Refusal enforceability"; "HTTP/1.1 on the main listener"; Recipes (air gap) |
 | `management-api.md` (AC34) | `POST /api/v1/system/advisories/import?exported_at=&source=`: the import route the air-gap recipe calls, `exported_at` required and carried across the gap beside the archive as the export's `Last-Modified` | Recipes (air gap) |
 | `replication.md` (its Configuration table, AC21, AC24) | The two `replication.*` keys; the replicated-repository key recipe's follower half | Key inventory; Recipes |
-| `web-ui.md` (its "Serving and mounting", "The stack", AC1, AC26) | `make build` depends on `make web` (`npm ci` and `vite build` into `internal/ui/dist`), a GoReleaser `before` hook and a Node 22 Dockerfile build stage, so no release artefact carries the placeholder; the two `ui.*` keys; `ui` as a reserved first segment | CLI shape and packaging ("The web UI build"); Key inventory |
-| `auth.md` (its Configuration table, AC2, AC13, AC15, AC27) | The nine `auth.*` keys, `auth.allow_plaintext` and its flag `--allow-plaintext-auth` among them; TLS required on every credential-bearing path, enforced by the server; the plaintext flag doubles as the behind-a-terminating-proxy declaration, never inferred from `X-Forwarded-Proto`; the first-start local admin credential emitted to the log once (AC15) | TLS; Key inventory (the `auth.` row); "First run and first mint" |
+| `web-ui.md` (its "Serving and mounting", "The stack", its resolved placeholder decision, was Q8, AC1, AC26) | `make build` depends on `make web` (`npm ci` and `vite build` into `internal/ui/dist`), a GoReleaser `before` hook and a Node 22 Dockerfile build stage, so no release artefact carries the placeholder; `.gitignore` keeping every build output but `index.html` untracked, `make web-clean` restoring the placeholder, and a `scripts/verify-local.sh` step comparing the staged `index.html` with `internal/ui/placeholder.html`; the two `ui.*` keys; `ui` as a reserved first segment | CLI shape and packaging ("The web UI build"); Key inventory |
+| `auth.md` (its Configuration table, "The local admin credential on the API", its resolved local-admin-on-the-API decision, was Q26, AC2, AC13, AC15, AC27) | The nine `auth.*` keys, `auth.allow_plaintext` and its flag `--allow-plaintext-auth` among them; TLS required on every credential-bearing path, enforced by the server; the plaintext flag doubles as the behind-a-terminating-proxy declaration, never inferred from `X-Forwarded-Proto`; the first-start local admin credential emitted to the log once (AC15); the first mint's credential form, HTTP Basic on `/api/v1` with the username `admin` selecting the local admin reading | TLS; Key inventory (the `auth.` row); "First run and first mint" |
 | `proxy-cache.md` | Upstream credentials "stored encrypted" (AC6), the instance master key's first consumer; offline mode as "one instance-level setting" with no per-repository or per-upstream flag (AC5) | "The instance master key"; `proxy.offline` |
 | `storage-and-gc.md` | "At most one sweep runs at a time, enforced (a PostgreSQL advisory lock suffices)"; the single deleter (AC15); the store must be S3-compatible with LIST consistency treated as eventual; the consistency checker comparing references, blob rows and objects | Singletons; Object storage requirements; Backup and restore |
 | `async-operations.md` | The scheduler is an advisory-lock leader (River's model); `LISTEN`/`NOTIFY` wake-up; `SELECT ... FOR UPDATE SKIP LOCKED` claims | PostgreSQL requirements; Singletons |
-| `data-model.md` | No handler owns a table or issues DDL (its architecture test); adding a format requires zero schema migrations (AC8); the shared schema is the only schema | Migrations |
+| `data-model.md` (its "Session lifetime" key table, AC8, AC26) | No handler owns a table or issues DDL (its architecture test); adding a format requires zero schema migrations (AC8); the shared schema is the only schema; the two `upload.*` keys (the upload session's idle period and absolute cap), the cap being what the bucket's multipart lifecycle rule is set against | Migrations; Key inventory; Object storage requirements |
 | `format-handler-interface.md` | Root-anchored carve-outs for hostname-addressed formats (its "Host-bound claims"); the host binding `server.hosts` passed at construction through `Deps` and reloadable on `SIGHUP`, with its home a re-open input (its "The scheduled re-open"); reserved first path segments (AC11) | Host binding |
 | `supply-chain-policy.md` ("When a refusal binds, per format", AC20) | Refusals are enforceable only where client egress is restricted to the registry: a deployment precondition per format, tabled per ecosystem | "Refusal enforceability is a deployment precondition" |
 | `supply-chain-policy.md` (its resolved refusal-status-line decision, was Q10; AC18) | Reason-phrase-only clients need HTTP/1.1 on refusal routes: HTTP/2 has no reason phrase; "affects reverse proxies and TLS terminators" | "HTTP/1.1 on the main listener" |
 | `management-api.md` | The server binary is a Cobra CLI (`cmd/stackweaver-registry`) with a `serve` command and no management subcommands; configuration "follows the cobra-viper skill: a Viper instance created in the root factory, keys unmarshalled into a typed `manage.Config` the package receives (never Viper itself), every key with a default, bound to `STACKWEAVER_REGISTRY_` environment variables"; the three `management.*` keys (its Fable recheck removed `management.deferred_threshold`, a key nothing read); no key may disable the API | CLI shape; Configuration design; Key inventory |
 | `conformance-harness.md` | The `seed` subcommand of the server binary, run "against the instance's isolated database schema and storage prefix" (its resolved seed-path decision; AC18); the `repositories` hostname binding written through `server.hosts`' loader and every client container confined to the case network (its resolved client-confinement decision, was Q6; AC23) | CLI shape; `database.schema`, `storage.s3.prefix`; Host binding; "Refusal enforceability" |
-| `artifact-verification.md` (its Configuration table) | The four `verify.*` keys; the former `verify.workers` is `async.kind_limits` (the resolved worker-limit decision below, applied there) | Key inventory |
+| `artifact-verification.md` (its Configuration table; its `internal/trustsource` paragraph) | The four `verify.*` keys; the former `verify.workers` is `async.kind_limits` (the resolved worker-limit decision below, applied there); `internal/trustsource`'s keyserver and TUF egress honours the same process-wide `HTTPS_PROXY` and `NO_PROXY` as upstream egress, with no new key | Key inventory; "Not keys, on purpose" |
 | `replication.md` | A follower is an ordinary instance configured per repository; no instance identity | Roles (nothing to add to the binary) |
 | `repository-lifecycle.md` | Repository settings live in the repository record, not in this surface | Scope boundary between configuration and records |
-| `repository-lifecycle.md` (its resolved hostname-binding decision, was Q10; AC28) | `server.hosts` keeps binding by repository name; a rename leaves a binding naming the old name at a missing repository (warning and `404`) until the operator edits and reloads it | Host binding; AC12 |
+| `repository-lifecycle.md` (its resolved hostname-binding decision, was Q10, as amended on its Fable recheck; "Renaming"; AC28) | `server.hosts` keeps binding by repository name; a rename leaves a binding naming the old name at a missing repository (warning and `404`) until the operator edits and reloads it; the rename's `unbound_hosts` is what the renaming process loaded, so identical `server.hosts` on every replica is the shape its announcement assumes | Host binding; AC12 |
 | `formats/puppet.md` AC8 (format batch 8 item 7) | A configuration listing one hostname twice is refused at load | Host binding; AC12 |
 | `format-handler-interface.md` AC10 and "Host-bound claims" (as amended on its Fable recheck) | On an unbound hostname the claiming handler's `Scope(r)` returns an error and the request is denied as AC10 says, the handler never invoked; the `404` is the shared denial `auth.md` renders, not a handler-rendered response | Host binding; AC12 |
 
@@ -382,8 +382,10 @@ rather than silently dropped. CI regenerates it and fails when the committed cop
 same shape as the docs index check in `.github/workflows/ci.yml`.
 
 **The two-way spec check.** `scripts/check-config-keys.js` parses, under `docs/internal/plans/`,
-every table whose header row is exactly `| Key | Default | Meaning |` (the shape every owning
-spec's table already has at this sha) and reads each row of the form
+every table whose header row is exactly `| Key | Default | Meaning |` after any leading
+indentation (the shape every owning spec's table already has at this sha; `web-ui.md`'s sits
+indented under a list item, which is why the parser strips indentation before matching) and
+reads each row of the form
 `| \`prefix.key\` | default | meaning |`, then compares the set against
 `config schema --format json`: a key a spec tables that the schema lacks fails, a key the
 schema holds that no spec tables fails, and a default that differs between the two fails. The
@@ -436,8 +438,10 @@ that differs from the owner's table is a defect the two-way check catches. Durat
 | `proxy.offline` | `false` | `proxy-cache.md`'s one instance-wide offline switch, whose row lives here by that spec's statement ("Offline mode"); the schema has no per-repository or per-upstream variant (its AC5) |
 
 **Owned by sibling specs.** Each row is the owner's own three-column table, verified against its
-text at `3135d95` by counting each owner's rows; defaults are theirs, the meaning is stated there and not restated here, and
-the count is what `scripts/check-config-keys.js` must find in that spec.
+text at `b6ba642` by counting each owner's rows (a scan of every `| Key | Default | Meaning |`
+table under `docs/internal/plans/foundation/`, which is what the two-way check will do); defaults
+are theirs, the meaning is stated there and not restated here, and the count is what
+`scripts/check-config-keys.js` must find in that spec.
 
 | Prefix | Keys | Owner and count |
 |---|---|---|
@@ -445,7 +449,7 @@ the count is what `scripts/check-config-keys.js` must find in that spec.
 | `credentials.` | `default_token_lifetime` `2160h`, `max_token_lifetime` `8784h`, `allow_non_expiring` `true`, `expiry_warning_window` `336h`, `rotation_max_grace` `24h`, `exchange_token_lifetime` `15m`, `revoked_retention` `2160h`, `last_used_resolution` `10m` | `credential-management.md`, 8 |
 | `gc.` | `grace` `6h`, `sweep_interval` `1h`, `prune_interval` `1h`, `orphan_scan_interval` `24h`, `snapshot_retention` `720h`, `intent_gate_wait` `30s` | `storage-and-gc.md`, 6 (its AC29) |
 | `signing.` | `default_backend` `file`, `kms.allowed_schemes` `awskms, gcpkms, azurekms, hashivault`, `pkcs11.module` none, `pkcs11.token_label` none, `pkcs11.pin_file` none (secret), `rotation_window` `720h`, `resign_at_fraction` `0.5`, `external_expiry_lead` `336h`, `max_blob_sign_size` `1 GiB` | `signing-service.md`, 9; there is no `signing.master_key`, its table cites `security.master_key` (the resolved master-key decision below, applied there) |
-| `index.` | `lock_wait` `30s`, `max_retries` `8`, `virtual_merge_window` `5s`, `virtual_staleness_bound` `60s`, `render_memo_bytes` `256 MiB` (its was-Q13 memo bound) | `signing-service.md`, 5 (14 keys in its one table with the nine `signing.`) |
+| `index.` | `lock_wait` `30s`, `max_retries` `8`, `virtual_merge_window` `5s`, `virtual_staleness_bound` `60s`, `render_memo_bytes` `256 MiB` (its was-Q13 memo bound), `requested_cells_max` `256` (its was-Q22 cap on a virtual's read-driven cells) | `signing-service.md`, 6 (15 keys in its one table with the nine `signing.`) |
 | `async.` | `workers` `8`, `kind_limits` `{verify.reevaluate: 4}`, `poll_interval` `5s`, `lease` `60s`, `max_attempts` `8`, `backoff_base` `2s`, `backoff_cap` `15m`, `drain_timeout` `30s`, `job_retention` `168h`, `scheduler` `true`, `scheduler_interval` `10s` | `async-operations.md`, 11 (its AC22) |
 | `telemetry.` | `listen` `:9464`, `metrics.enabled` `true`, `metrics.on_main_listener` `false`, `metrics.repository_label_limit` `1000`, `metrics.name_label_limit` `200`, `metrics.state_interval` `30s`, `log.level` `info`, `log.format` `json`, `log.request` `true`, `log.trusted_proxies` none, `audit.sink` `stdout`, `audit.file` none, `trace.exporter` `none`, `trace.endpoint` none, `trace.sample_ratio` `0.05`, `health.timeout` `2s`, `pprof` `true` | `observability.md`, 17 (its AC27) |
 | `management.` | `operation_retention` `2160h`, `publish_spool_limit` `1GiB`, `upload_chunk_limit` `256MiB` | `management-api.md`, 3 (`deferred_threshold` removed on its Fable recheck: a handler declares inline or deferred per kind, so nothing read it) |
@@ -454,9 +458,12 @@ the count is what `scripts/check-config-keys.js` must find in that spec.
 | `replication.` | `sync_interval` `60s`, `blob_concurrency` `8` | `replication.md`, 2 (its AC24); it states there is no checkpoint-interval key |
 | `upstream.` | `default_concurrency` `10`, `default_cooldown_cap` `1h`, `connect_timeout` `10s` | `upstream-adapters.md`, 3 (its AC32: the only `upstream.` keys the schema knows) |
 | `ui.` | `instance_name` `Stackweaver Registry`, `help_url` `https://github.com/vhco-pro/stackweaver-registry/tree/main/docs` (changed in both specs if a docs site is fixed later) | `web-ui.md`, 2 (its AC26; neither can disable the UI) |
+| `upload.` | `idle_timeout` `1h`, `max_duration` `24h` | `data-model.md`, 2 (its "Session lifetime" table and AC26: the upload session's idle period and absolute cap, owned there because the session's definition is) |
 
-That is 84 sibling keys under 13 prefixes beside the 30 this spec owns (`_file` siblings not
-counted: they are a form of their key, not a key). **No prefix is reserved.** Every sibling that owns configuration tables it, so the schema's rule is simpler
+That is 87 sibling keys under 14 prefixes beside the 30 this spec owns (`_file` siblings not
+counted: they are a form of their key, not a key): 9 `auth.`, 8 `credentials.`, 6 `gc.`,
+9 `signing.` and 6 `index.`, 11 `async.`, 17 `telemetry.`, 3 `management.`, 4 `verify.`,
+5 `policy.`, 2 `replication.`, 3 `upstream.`, 2 `ui.` and 2 `upload.`. **No prefix is reserved.** Every sibling that owns configuration tables it, so the schema's rule is simpler
 than a reservation: a key under a sibling's prefix that the sibling's table does not carry is
 unregistered and fails startup with a message naming the owning spec, which is what stops a
 handler or a hurried fix squatting a sibling's namespace (AC3). The prefix-to-owner map is the
@@ -466,10 +473,24 @@ schema registry's `owner` field, one entry per row above.
 (`stackweaver-registry/<version> (+<server.public_url>)`, `upstream-adapters.md` AC5) and not
 configurable, because a configurable agent string is how a registry ends up impersonating a
 client. `HTTPS_PROXY`, `HTTP_PROXY` and `NO_PROXY` are process environment read once by
-`http.ProxyFromEnvironment` in the single upstream transport (`upstream-adapters.md`), not
-schema keys, so they cannot diverge per upstream. `OTEL_EXPORTER_OTLP_*` refine the trace
-exporter (`observability.md`). These three families are the only environment variables any
-package outside `internal/config` may read, and an enforcer holds that list.
+`http.ProxyFromEnvironment` (the standard library reads the three variables once per process,
+whichever transport asks first) and set as the proxy function of exactly two transports: the
+single upstream transport (`upstream-adapters.md`) and the transport `internal/trustsource`
+builds for its keyserver import and TUF updater (`artifact-verification.md`, its
+`internal/trustsource` paragraph: "the process-wide proxy settings `deployment.md` fixes"), whose
+destinations are the operator's own `verify.keyserver` and `verify.sigstore.tuf_url` rather than
+an upstream row; they are not schema keys, so they cannot diverge per upstream or per source.
+`OTEL_EXPORTER_OTLP_*` refine the trace exporter (`observability.md`). These three families are
+the only environment variables any package outside `internal/config` may read, and an enforcer
+holds that list. In the same spirit, the per-upstream transport switches `allow_http`,
+`allow_local` and `insecure_skip_verify` are **fields of the `Upstream` row**
+(`upstream-adapters.md`, "Configuration on the `Upstream` row"; `data-model.md` AC40),
+administered through the management API and never schema keys, so there is no instance-wide way
+to turn TLS, the local-address check or certificate verification off for every upstream at once;
+each is refused unless set explicitly on its row and, when set, is named in the startup log
+(`upstream-adapters.md` AC22, AC35), beside the one line of effective non-secret configuration
+this spec's start sequence prints, so a reader of the startup log sees every weakened row
+without opening the management API.
 
 ### The instance master key
 
@@ -546,10 +567,10 @@ orphan scan applies the grace period to object age. Two bucket settings are depl
 requirements, not suggestions: **object versioning or an equivalent soft-delete window at least
 as long as the database backup retention** (the restore contract below depends on it), and a
 **lifecycle rule aborting incomplete multipart uploads** after a period longer than the upload
-session's absolute cap (24 hours by default, `data-model.md`'s upload session definition, which
-says the cap is configurable instance-wide without tabling a key for it; until a key exists the
-rule is stated against the default, and the documentation says so), because an aborted client
-leaves parts that no LIST of objects shows. Where versioning is configured, the lifecycle rule
+session's absolute cap, `upload.max_duration` (24 hours by default, `data-model.md`'s "Session
+lifetime" table and AC26, which states the rule against that key by name; the documentation
+states the rule against the configured value, and the chart's and Compose file's defaults
+against 24 hours), because an aborted client leaves parts that no LIST of objects shows. Where versioning is configured, the lifecycle rule
 expiring non-current versions must keep them at least as long as the database backup
 retention, or the restore contract below silently loses its source. Readiness performs a `HeadBucket`
 and, once per `telemetry.metrics.state_interval` on the leader, a probe write and delete under
@@ -650,7 +671,15 @@ refused with an error log line naming them, the previously loaded binding stayin
 the repository by name, so a rename leaves a binding naming the old name pointing at a missing
 repository, the same warning and `404`, until the operator edits and reloads it; the rename
 itself names each such hostname in its audit record and `lifecycle` `Operation`
-(`repository-lifecycle.md`, "Renaming", its resolved hostname-binding decision, was Q10, AC28). Native TLS with several hostnames needs a certificate covering each SAN; the
+(`repository-lifecycle.md`, "Renaming", its resolved hostname-binding decision, was Q10, AC28).
+That `unbound_hosts` list is **per process**: it is what the renaming process loaded from its
+own `server.hosts`, so a replica started from a different file is not in it and logs its own
+missing-repository warning at its next request on that host (that spec's "Renaming" as amended
+on its Fable recheck). Identical `server.hosts` on every replica is therefore the assumed shape:
+the chart produces it by construction, since every Deployment it renders (the worker Deployment
+included) mounts the one ConfigMap rendered from `config`, and the operator documentation states
+it for hand-managed deployments, where the systemd unit and the Compose file each carry one
+file. Native TLS with several hostnames needs a certificate covering each SAN; the
 documentation says so. The harness's `repositories` setup key expresses the same binding
 (`conformance-harness.md` AC23: the `repositories` entry's `hostname` sub-entry), and the seed
 path writes it through this key's loader rather than a second mechanism.
@@ -881,7 +910,18 @@ UI, which `web-ui.md` AC1 asserts from the UI's side and AC32 here from the pack
 `actions/setup-node@v6`), so the release workflow reuses that step rather than adding a toolchain.
 `ui` is a reserved first path segment (`format-handler-interface.md`'s reserved table, `web-ui.md`
 AC2), which the chart's ingress path rules honour by routing `/ui/` and `/api/` with every other
-path to the same Service.
+path to the same Service. Three mechanics `web-ui.md` fixed on its recheck (its resolved
+placeholder decision, was Q8, as amended; AC1) belong to this build step as much as to the UI,
+because they are what keeps a developer's `make web` from turning into a committed built page:
+`.gitignore` ignores everything under `internal/ui/dist/` except `index.html`, so a build's
+chunks are never tracked; `make web-clean` restores the placeholder from
+`internal/ui/placeholder.html`, the placeholder's source of truth; and because `make web`
+overwrites the tracked `index.html`, `scripts/verify-local.sh` gains a step that compares the
+**staged** `internal/ui/dist/index.html` (`git show :internal/ui/dist/index.html`) with
+`internal/ui/placeholder.html` and fails when they differ, so a built working tree stays green
+and a built commit does not. That step sits in the same script, beside AC32's node-stripped
+build, under the `go` suite `scripts/verify-local.sh` already runs (`make verify` is that script,
+Makefile `verify` target), so both guarantees ride the pre-commit hook.
 
 **Observability artefacts.** `deploy/observability/alerts.yaml` is `observability.md`'s (its
 AC17); this spec packages it into the chart and the Compose file's Prometheus, filling the
@@ -918,11 +958,21 @@ authorizer, to the **local admin human principal**, which is what `credential-ma
 credential routes require ("How who reaches the authorizer": a session or the local admin
 account, never a token). It is accepted only where a session would be, only while the local
 admin account is enabled, and only over a connection that satisfies `auth.md`'s TLS rule
-(`auth.allow_plaintext` governs it like any credential); a registry token presented in the
-same Basic slot is still a token and is refused by those routes as `credential-management.md`
-AC14 says. `auth.md` and `management-api.md` name this form on their queued Fable follow-ups
-(the seam `credential-management.md`'s recheck reported to both); this spec states it so the
-three agree. The procedure lives as `deploy/recipes/first-mint/` (a configuration fragment and
+(`auth.allow_plaintext` governs it like any credential). `auth.md` owns the form and its
+discriminator ("The local admin credential on the API", its resolved local-admin-on-the-API
+decision, was Q26; AC2): on `/api/v1` the username is an authentication input, the one place it
+is, so a Basic credential whose username is `admin` is verified against the local admin
+account's hash alone and never looked up as a token, while any other username makes the password
+a registry token exactly as on a format route; the name `admin` is reserved in the principal
+namespace; a request carrying the form is never asked for a CSRF token, as a bearer request is
+not; and `/api/v1` never answers a refusal with a `WWW-Authenticate: Basic` challenge, so no
+browser is prompted for it. The consequence for the first mint's two failure cases follows from
+the discriminator rather than from the route: a registry token presented as the password under
+`admin` fails authentication (never anonymous, `auth.md` AC12), and under any other username it
+is read as a token, resolves to its principal and is then refused by the credential routes as
+`credential-management.md` AC14 says. `management-api.md`'s authentication paragraph and AC30
+admit the form on every route under `/api/v1`, contributed routes included, so the three specs
+agree at this sha. The procedure lives as `deploy/recipes/first-mint/` (a configuration fragment and
 the integration test that runs both commands), and the operator documentation references that
 test by path and step name rather than copying the commands, per the documentation rule that
 docs cite source files and never carry code blocks, so the procedure the docs point at is the
@@ -988,7 +1038,7 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | Boundary | Enforcer |
 |---|---|
 | Only `cmd/**` and `internal/config` import `github.com/spf13/cobra` or `github.com/spf13/viper` | `internal/config/arch_test.go` (module-wide import graph) |
-| No non-test file outside `internal/config` calls `os.Getenv`, `os.LookupEnv` or `os.Environ`, except the three carve-outs (`http.ProxyFromEnvironment` in `internal/upstream`, the OTel SDK's `OTEL_*` reads, `GOMEMLIMIT` by the runtime); `_test.go` files may read the environment for their own fixtures | `internal/config/env_boundary_test.go` (AST walk over non-test files; carve-outs listed in the test) |
+| No non-test file outside `internal/config` calls `os.Getenv`, `os.LookupEnv` or `os.Environ`, except the three carve-out families (`http.ProxyFromEnvironment` as the proxy function of the transports in `internal/upstream` and `internal/trustsource` and nowhere else, the OTel SDK's `OTEL_*` reads, `GOMEMLIMIT` by the runtime); `_test.go` files may read the environment for their own fixtures | `internal/config/env_boundary_test.go` (AST walk over non-test files; carve-outs listed in the test, the `ProxyFromEnvironment` reference allowed in exactly those two packages) |
 | No `flag`/`pflag` definition outside `cmd/**` | `internal/config/arch_test.go` |
 | Every field of every typed `Config` struct handed to a package maps to exactly one schema key, and every schema key to a field | `internal/config/schema_struct_test.go` (reflection over the registered structs) |
 | A key marked `secret` has no flag; derived environment names are unique | `internal/config/schema_test.go` |
@@ -1005,6 +1055,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | The chart never renders a Service or Ingress port for `telemetry.listen`, with `telemetry.podMonitor.enabled` on or off | `deploy/helm/tests/listeners_test.yaml` |
 | `alerts.yaml`'s signing lead and GC sweep interval follow the chart's `config` subtree | `deploy/helm/tests/alerts_test.yaml` (set `config.gc.sweep_interval` and `config.signing.external_expiry_lead`, assert the rendered rules) |
 | `values.schema.json` refuses `tls.native` together with `tls.terminatedUpstream`, and refuses a per-repository offline key | `deploy/helm/tests/schema_test.yaml` |
+| Every Deployment the chart renders (the worker Deployment included) mounts the one ConfigMap rendered from `config`, so every replica loads the same `server.hosts` | `deploy/helm/tests/config_test.yaml` (helm-unittest, both `workers.enabled` states) |
+| The schema offers no `upstream.allow_http`, `upstream.allow_local` or `upstream.insecure_skip_verify` key: the three are `Upstream` row fields | `internal/config/schema_test.go` (the `upstream.` prefix holds exactly `upstream-adapters.md`'s three keys) |
+| The tracked placeholder is never replaced by a built page in a commit, and no build output other than `index.html` is tracked under `internal/ui/dist/` | the `scripts/verify-local.sh` step comparing the staged `internal/ui/dist/index.html` with `internal/ui/placeholder.html` (shared with `web-ui.md` AC1); the `.gitignore` rule under `internal/ui/dist/` |
 
 ## Acceptance Criteria
 
@@ -1023,8 +1076,8 @@ Per the constitution, every boundary this spec introduces names the test that ho
       by setting all four sources to distinct values; `--config`, which names the file and is
       no schema key, wins over `STACKWEAVER_REGISTRY_CONFIG`, which wins over the default path.
 - [ ] AC3: A misspelt key in the file, an environment variable with the prefix matching no key,
-      and a key under a sibling-owned prefix (`gc.`, `policy.`, `replication.`, `ui.` among the
-      thirteen) that the owner's table does not carry each fail `config validate` and `serve`
+      and a key under a sibling-owned prefix (`gc.`, `policy.`, `replication.`, `ui.`, `upload.`
+      among the fourteen) that the owner's table does not carry each fail `config validate` and `serve`
       naming the offending key and, for the sibling prefix, the owning spec.
 - [ ] AC4: Every secret-classified key (`database.url`, `storage.s3.secret_key`,
       `security.master_key`, `security.previous_master_key`, `auth.oidc.client_secret`,
@@ -1041,7 +1094,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
 - [ ] AC6: `docs/deployment/configuration.md` equals `config schema --format markdown`, and CI
       fails when the committed file is stale.
 - [ ] AC7: No package outside `cmd/**` and `internal/config` imports Cobra or Viper, no package
-      outside `internal/config` reads the process environment except the three carve-outs, and
+      outside `internal/config` reads the process environment except the three carve-out
+      families (`http.ProxyFromEnvironment` referenced only from `internal/upstream` and
+      `internal/trustsource`), and
       no package outside `cmd/**` defines a flag; each violation planted in a test fixture fails
       the architecture test.
 - [ ] AC8: Every typed `Config` struct handed to a package is covered field-for-field by the
@@ -1083,7 +1138,11 @@ Per the constitution, every boundary this spec introduces names the test that ho
       `config validate` and `serve` naming the hostname and both entries, and a `SIGHUP` reload
       of such a file is refused with an error naming them while the previous binding keeps
       serving; after a rename of a bound repository the binding answers `404` with the
-      missing-repository warning until edited and reloaded (`repository-lifecycle.md` AC28).
+      missing-repository warning until edited and reloaded (`repository-lifecycle.md` AC28), the
+      rename's `unbound_hosts` listing the hostnames the renaming process loaded and a replica
+      started from a different file warning on its own at its next request on that host; and
+      the chart mounts the one ConfigMap rendered from `config` into every Deployment it
+      renders, so every replica loads the same `server.hosts`.
 - [ ] AC13: The telemetry listener is bound only to `telemetry.listen`, the chart renders no
       Service or Ingress port for it with `telemetry.podMonitor.enabled` off or on (on renders
       a `PodMonitor` naming the container port and nothing else), and `/metrics` is absent from
@@ -1153,13 +1212,19 @@ Per the constitution, every boundary this spec introduces names the test that ho
 - [ ] AC25: `values.schema.json` is generated from the configuration schema, refuses an unknown
       key under `config`, refuses `tls.native` together with `tls.terminatedUpstream`, and
       neither it nor the configuration schema offers any offline key other than `proxy.offline`
-      (no per-repository or per-upstream variant, `proxy-cache.md` AC5).
+      (no per-repository or per-upstream variant, `proxy-cache.md` AC5) nor any
+      `upstream.allow_http`, `upstream.allow_local` or `upstream.insecure_skip_verify` key, the
+      `upstream.` prefix holding exactly the three keys `upstream-adapters.md` tables (its
+      AC32) and the three switches living on the `Upstream` row (its AC22, AC35).
 - [ ] AC26: `docker compose up` from `deploy/compose` yields a ready registry against the
       bundled PostgreSQL and MinIO, prints the local admin credential once, and the documented
       first-mint `curl` (`POST /api/v1/tokens` with `admin` and that credential as HTTP Basic)
       returns a token that authenticates a real client pull; the same `curl` presenting a
-      registry token as the Basic password is refused by the route, and the same one after
-      OIDC has disabled the local account is refused.
+      registry token as the Basic password is refused twice over, under the username `admin` as
+      an authentication failure that is never anonymous (`auth.md` AC2, AC12) and under any
+      other username as that token's principal refused by the route (`credential-management.md`
+      AC14); the local admin credential under a username other than `admin` is refused as an
+      invalid token; and the same `curl` after OIDC has disabled the local account is refused.
 - [ ] AC27: `deploy/observability/alerts.yaml` installs through the chart as a PrometheusRule with
       its three header-named values filled: the signing lead from
       `config.signing.external_expiry_lead`, the `GCSweepStale` interval from
@@ -1180,8 +1245,9 @@ Per the constitution, every boundary this spec introduces names the test that ho
       recipe recorded at download sets the source's freshness to that time and condemns a
       fixture version afterwards; in the
       terminated-upstream recipe an `HTTPS_PROXY` set in the process environment is honoured by
-      every upstream request through the one `http.ProxyFromEnvironment` transport and by
-      nothing else.
+      every upstream request and by `internal/trustsource`'s keyserver import and TUF refresh,
+      through the two transports whose proxy function is `http.ProxyFromEnvironment`, and by
+      nothing else, a `NO_PROXY` entry naming the store exempting the store's requests alike.
 - [ ] AC30: The chart's default `resources` pass the benchmark gate's load profile with
       `GOMEMLIMIT` set from the container limit, run as a CI job whose thresholds are the
       gate's own.
@@ -1189,7 +1255,12 @@ Per the constitution, every boundary this spec introduces names the test that ho
       build first (`make web`: `npm ci` and `vite build` under Node 22 into `internal/ui/dist`): the binary
       `make build` produces, the image and every release archive serve the built UI at `/ui/`
       and not the committed placeholder, while `go build ./...` and `go test ./...` still
-      succeed on a checkout with no Node toolchain; and `ui.instance_name` (default
+      succeed on a checkout with no Node toolchain; `make web-clean` restores the placeholder
+      from `internal/ui/placeholder.html`, a commit that stages a built
+      `internal/ui/dist/index.html` over it is refused by the `scripts/verify-local.sh` step
+      comparing the staged file with that source (shared with `web-ui.md` AC1) while the built
+      working tree itself passes, and the `.gitignore` rule under `internal/ui/dist/` keeps
+      everything there but `index.html` untracked after `make web`; and `ui.instance_name` (default
       `Stackweaver Registry`) and `ui.help_url` are registered in the schema with `web-ui.md` as
       owner and no key disables the UI.
 - [ ] AC31: Two instances configured with distinct `database.schema` and `storage.s3.prefix`
@@ -1208,12 +1279,12 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | AC4 | unit | `internal/config/secret_test.go` (`_file` sibling, both-set refusal, no flag); `internal/config/redaction_test.go` (canary scan) |
 | AC5 | unit + script | `internal/config/schema_test.go`; `scripts/check-config-keys.js` with fixtures for each failure mode under `scripts/testdata/` |
 | AC6 | ci | `.github/workflows/ci.yml` docs job (`config schema --format markdown --check`) |
-| AC7 | architecture | `internal/config/arch_test.go`; `internal/config/env_boundary_test.go` |
+| AC7 | architecture | `internal/config/arch_test.go`; `internal/config/env_boundary_test.go` (the `ProxyFromEnvironment` reference allowed in `internal/upstream` and `internal/trustsource` only, a planted third caller failing) |
 | AC8 | unit | `internal/config/schema_struct_test.go` |
 | AC9 | unit + integration | `internal/security/envelope_test.go` (AES-256-GCM vectors, key id, unknown-id error); `internal/security/rotate_test.go` (rotation under a concurrent reader holding both keys, kill and resume, the refusals, the final count); `internal/security/arch_test.go`; dump-unreadability check in `internal/security/dump_test.go` |
 | AC10 | integration | `internal/server/tls_test.go` (min version, reload on `SIGHUP` and on file change, live connections); `internal/auth` plaintext refusal reused through `internal/server/plaintext_test.go` |
 | AC11 | integration + conformance + e2e | `internal/server/alpn_test.go` (ALPN set, `h2c` preface refused, `h2` over TLS when enabled); `conformance/transport/reason_phrase_test.go` (real `mvn` and `cpanm` against a refusing route, stdout scanned for the phrase); `deploy/helm/tests/e2e/reason_phrase_test.sh` (the Maven case through each documented ingress controller in the kind cluster) |
-| AC12 | integration | `internal/server/hosts_test.go` (bound, ordinary mounts on the bound host, unbound and other-format hosts answered by the shared denial with the handler's invocation counter at zero, missing repository, `SIGHUP` reload, a duplicated hostname refused at load and at reload with the previous binding kept, the post-rename `404` and warning shared with `repository-lifecycle.md` AC28); `internal/config/validate_test.go` (the duplicated-hostname case under `config validate`) |
+| AC12 | integration | `internal/server/hosts_test.go` (bound, ordinary mounts on the bound host, unbound and other-format hosts answered by the shared denial with the handler's invocation counter at zero, missing repository, `SIGHUP` reload, a duplicated hostname refused at load and at reload with the previous binding kept, the post-rename `404` and warning shared with `repository-lifecycle.md` AC28, two processes loading different files so that `unbound_hosts` names only the renaming process's hostname and the other warns on its own, shared with that spec's `internal/repository/rename_hosts_test.go`); `internal/config/validate_test.go` (the duplicated-hostname case under `config validate`); `deploy/helm/tests/config_test.yaml` (one ConfigMap mounted by every rendered Deployment, both `workers.enabled` states) |
 | AC13 | integration + chart | `internal/server/listeners_test.go`; `deploy/helm/tests/listeners_test.yaml` (both `podMonitor` states) |
 | AC14 | integration + chart | `internal/server/shutdown_test.go` (under `testing/synctest` with a real upload session); `deploy/helm/tests/lifecycle_test.yaml` |
 | AC15 | integration | `internal/server/probes_test.go` (database outage, `HeadBucket` refusal, spool below threshold) |
@@ -1226,14 +1297,14 @@ Per the constitution, every boundary this spec introduces names the test that ho
 | AC22 | ci | `.github/workflows/release.yml` (GoReleaser, cosign verify, SBOM verify, `--version` inside the image) |
 | AC23 | chart + e2e | `helm lint`; `deploy/helm/tests/*.yaml` (helm-unittest, the hook annotations included); `deploy/helm/tests/e2e/install_test.sh` (kind, external PostgreSQL and MinIO, the hook Job's log read for the credential) |
 | AC24 | e2e | `deploy/helm/tests/e2e/workers_test.sh` (enqueue through web pod, observe execution on worker pod through the job's `Operation`) |
-| AC25 | unit + chart | `internal/config/values_schema_test.go` (generation); `deploy/helm/tests/schema_test.yaml` |
-| AC26 | e2e | `deploy/compose/test/up_test.sh` (compose up, readiness, credential emission, first-mint `curl` as the local admin Basic form, the token-as-password refusal, the post-OIDC refusal, real client pull); shared with `deploy/recipes/first-mint/test.sh` |
+| AC25 | unit + chart | `internal/config/values_schema_test.go` (generation); `internal/config/schema_test.go` (the `upstream.` prefix holds exactly three keys, none of the three row switches); `deploy/helm/tests/schema_test.yaml` |
+| AC26 | e2e | `deploy/compose/test/up_test.sh` (compose up, readiness, credential emission, first-mint `curl` as the local admin Basic form, the token-as-password refusal under `admin` and under another username, the local admin credential under another username refused as a token, the post-OIDC refusal, real client pull); shared with `deploy/recipes/first-mint/test.sh` and, for the two refusal readings, with `auth.md` AC2's row |
 | AC27 | chart + ci | `deploy/helm/tests/alerts_test.yaml` (the three values, a changed `config` value followed, the defaults when unset); `deploy/compose/test/up_test.sh` (Prometheus loads the rules); `.github/workflows/ci.yml` docs job (`scripts/gen-dashboard.js --check`) |
 | AC28 | integration | `internal/telemetry` audit `SIGHUP` reuse through `deploy/systemd/test/rotate_test.sh` (write load, rotation, line count and continuity) |
-| AC29 | integration + e2e | `deploy/recipes/*/test.sh`, one per recipe; air-gap egress asserted by the kind cluster's NetworkPolicy plus a connection log, and the advisory import shared with `management-api.md` AC34's `internal/manage/advisory_import_test.go` fixture export |
+| AC29 | integration + e2e | `deploy/recipes/*/test.sh`, one per recipe; air-gap egress asserted by the kind cluster's NetworkPolicy plus a connection log, and the advisory import shared with `management-api.md` AC34's `internal/manage/advisory_import_test.go` fixture export; the terminated-upstream recipe's proxy half observes a recording proxy receiving an upstream fetch, a keyserver import (`internal/trustsource`, shared with `artifact-verification.md` AC23's fixture keyserver) and nothing from the store named in `NO_PROXY` |
 | AC30 | ci | `.github/workflows/ci.yml` job `sizing-gate` (benchmark profile against a pod with the chart's default `resources`) |
 | AC31 | integration | `internal/config/isolation_test.go` (two instances, one database and bucket, cross-visibility and `storage check` per prefix); `conformance/harness` seed isolation reuse |
-| AC32 | ci + integration | `.github/workflows/release.yml` (web build step precedes GoReleaser; the image's `/ui/index.html` is not the placeholder); `deploy/compose/test/up_test.sh` (built UI served); `scripts/verify-local.sh` step running `go build ./... && go test ./internal/ui/...` with `PATH` stripped of `node`; `internal/config/schema_test.go` (the two `ui.*` keys, owner, defaults, no disabling key) |
+| AC32 | ci + integration | `.github/workflows/release.yml` (web build step precedes GoReleaser; the image's `/ui/index.html` is not the placeholder); `deploy/compose/test/up_test.sh` (built UI served); `scripts/verify-local.sh` steps running `go build ./... && go test ./internal/ui/...` with `PATH` stripped of `node` and comparing the staged `internal/ui/dist/index.html` with `internal/ui/placeholder.html` (a built page staged on purpose in a throwaway index fails the step, the built working tree alone does not; `make web-clean` then restores it; shared with `web-ui.md` AC1); a `git ls-files internal/ui/dist` check that lists `index.html` alone after `make web`; `internal/config/schema_test.go` (the two `ui.*` keys, owner, defaults, no disabling key) |
 
 ## Implementation Phases
 
@@ -1664,3 +1735,4 @@ is the schema's `owner` field naming `auth.md`, which the two-way check keeps ho
 | 2026-09-28 | ff7966e | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. Key inventory made exhaustive and single-homed: `auth.` (9, from `auth.md`'s new table; `auth.allow_plaintext` left this spec's owned table), `gc.` (6), `policy.` (5), `replication.` (2), `upstream.` (3, now `upstream-adapters.md` AC32's; left this spec's owned table) and `ui.` (2) joined the sibling table with counts verified by grep of each owner's table; `signing.` reads 9 plus `index.` 4 with the master-key citation, `verify.` 4 with `verify.workers` retired; the "Prefixes reserved" paragraph is gone and AC3 asserts the unregistered-key refusal under a sibling prefix instead. CLI table gained `storage check [--restore-dangling]` (`storage-and-gc.md` AC27). Host binding cites `Deps` and the re-open input (`format-handler-interface.md`); the `podman --internal` reference cites the harness's resolved client-confinement decision (was Q6) and AC23; the refusal page is generated from `supply-chain-policy.md`'s binding table (its AC20) and the status-line write half cites its was-Q10 and AC18; rolling upgrades cite `async-operations.md`'s was-Q10 and AC26; the singleton table cites async AC14 and storage-and-gc AC26 through `internal/db/lock`; the replicated-key recipe cites `replication.md` AC21 and `signing-service.md` AC23. Web UI packaging absorbed from `web-ui.md`: "The web UI build" (make web, Node 22 stage, GoReleaser hook), new AC32 with a Test Plan row, Scope and Context updated. Resolved Q13 annotated as met. No em-dashes or en-dashes. `node scripts/check-spec.js`: zero failures for this file. Stays `draft`. |
 | 2026-09-28 | 3135d95 | closing reconciliation sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file from "From format batch 3 reconciliation" through the latest section, plus earlier items the progress log did not show applied, verified against its source's current text. Applied: the signing-service closing sweep item 5 (`index.render_memo_bytes` `256 MiB` in the `index.` row, now 5 keys; the signing-service requirements row names it); format batch 8 item 7 (a `server.hosts` list naming one hostname twice is refused at load by `config validate` and `serve`, and on `SIGHUP` with the previous binding kept, asserted in AC12, `puppet.md` AC8 relying on it); format batch 5 item 7's deployment half (the rename behaviour of a by-name binding, citing `repository-lifecycle.md`'s was-Q10 adopted in the same sweep, AC12 extended); format batch 1 item 11 (`server.public_url`'s row names its readers: handlers through `Deps` and `signing-service.md`'s serve-time `Render`, its was-Q13); the observability, deployment and web-ui reconciliation item 2 (`ui.help_url`'s concrete default). Recounted every sibling table at this sha: 85 keys under 13 prefixes, correcting the earlier '14 prefixes' (there were 13 rows) and AC3's 'fourteen'. Found already done: conformance-harness reconciliation 9, supply-chain reconciliation 2, replication reconciliation 4, upstream and async reconciliation 3. Two requirement rows added (repository-lifecycle was-Q10, puppet AC8). No question raised here; `node scripts/check-spec.js` zero failures on this file. Stays draft. |
 | 2026-10-01 | 3247f69 | Fable recheck: full review (claim verification at HEAD of every sibling citation in the Context table against the current text of `auth.md`, `credential-management.md`, `storage-and-gc.md`, `signing-service.md`, `async-operations.md`, `observability.md`, `management-api.md`, `artifact-verification.md`, `supply-chain-policy.md`, `replication.md`, `upstream-adapters.md`, `web-ui.md`, `format-handler-interface.md`, `repository-lifecycle.md`, `conformance-harness.md`, `data-model.md`, `proxy-cache.md`, `project-charter.md` and `formats/puppet.md`, every owner's key table recounted row by row, the tree facts re-read; adversarial lens at full strength on the cloud-authored whole with its design judgement treated as unreviewed; constitution compliance; go-spec-reviewer inline, its codebase step vacuous since `internal/` is empty and the module's only Go file is `cmd/stackweaver-registry/main.go`; prior-art citations left as fetched at authoring, not re-fetched) + re-examination of the thirteen adoptions made without Fable (Q1 to Q13, all in the 2026-09-27 cloud session) | Brought current first: every open consequence against this file applied and verified against its source's current text (async recheck item 3: the `async.job_retention` versus `management.operation_retention` check dropped, async AC22 refusing it, and the budget restated per role from async's amended topology cost; observability recheck item 2: the three header-named `alerts.yaml` values, the lead and the `GCSweepStale` interval now read from the chart's `config` subtree so they cannot drift from the running configuration, `alerts.cacheMetadataBytes` 10 GiB the one value with no key; auth recheck item 5 and observability's disclosure paragraph: `:9464` never public because its label values are repository names; supply-chain recheck item 5 and management-api recheck item 4: the air-gap recipe records the export root's `Last-Modified` and imports through `POST /api/v1/system/advisories/import?exported_at=&source=`, `management.deferred_threshold` gone; storage-and-gc recheck item 6: `--restore-dangling` repairs mismatches from the newest verifying version, `--verify` named; FHI recheck item 7: the unbound-host `404` is AC10's denial through a `Scope(r)` error; credential-management recheck items 2 and 3: the first mint's form stated here, the local admin's own credential as HTTP Basic resolving to the human principal, reported to `auth.md` and `management-api.md` for their follow-ups; format batch 8 item 7 and the earlier sweeps found applied at 3135d95 as claimed). Verdicts: Q1, Q2, Q9, Q11, Q12, Q13 confirmed (each record gains the under-stated cost where there was one); Q3, Q4, Q8, Q10 confirmed and amended in fold; Q5, Q6, Q7 confirmed and amended in fold and cost, each record saying what changed. None superseded. Adversarial findings fixed directly: the master-key rotation asserted that a process holding only the new key reads records wrapped under the old one (AC9 as written was unimplementable), now `security.previous_master_key` held alongside for the rotation's duration, the command reading both from configuration, a named error for an unmatched id, AES-256-GCM fixed; `CREATE INDEX CONCURRENTLY`, required by the compatibility rule, cannot run in the one transaction the migration section promised, now a marked statement-restricted idempotent class with `INVALID`-index cleanup (AC16, a new enforcer row); the chart's migration Job was `pre-upgrade` only, so a fresh install with `migrate_on_start: false` would never have become ready (AC23), and the first-start credential under the chart is therefore the Job's (AC20); readiness demanded the schema at the binary's version, failing the previous binary the rule exists to keep running; the `compat-previous-minor` job had no binary to run before the first minor release (AC17); `ingress.http1Only` claimed Traefik, a Go `net/http` proxy that cannot forward a reason phrase, now a list the kind e2e job proves (AC11 gains the ingress clause); a `ServiceMonitor` for a port the chart renders no Service for, now a `PodMonitor` (AC13); the first-mint docs reproduced commands verbatim against the documentation rule that docs cite source and never carry code blocks, now `deploy/recipes/first-mint/` cited by path (AC26, AC29; recipes moved from `docs/deployment/recipes/` to `deploy/recipes/` for the same reason); the two-way key check would have read any table with a backticked first column as keys, now gated on the `Key | Default | Meaning` header every owner's table already has; AC2 asserted four sources for `--config`, which is no schema key; the environment-boundary test would have failed test fixtures; the generated reference lacked the frontmatter the docs index requires; the rollback record's residue of unknown-kind jobs stated; the non-current-version lifecycle bound and the multipart cap's configurability stated. Constitution: findings in the doc, CI economy (the compat and sizing jobs `main`-only), the named enforcers, no handler-owned table, both paths (not applicable to a deployment spec beyond the harness citation) all hold; the one contradiction found (code blocks in docs) was the spec's, and is fixed. go-spec-reviewer: approved after the fixes (factory-built commands, `RunE`, typed configs, explicit env binding, stdlib AEAD, a stated shutdown path for every goroutine owner, no third-party dependency without a stdlib alternative weighed). No em-dashes or en-dashes. 32 criteria, each with a Test Plan row; zero open questions; `node scripts/check-spec.js` zero mechanical failures on this file; `fable_recheck` cleared; draft -> planned. Sibling consequences reported, not applied. |
+| 2026-10-01 | b6ba642 | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: every item in `agents/spec-loop/consequences.md` targeting this file after its 3247f69 row collected and verified against the source spec's current text before applying, the key inventory recounted mechanically from every `Key / Default / Meaning` table under `foundation/`. Applied, eight: repository-lifecycle recheck item 8 (`unbound_hosts` is what the renaming process loaded, a replica on another file warns on its own; identical `server.hosts` across replicas is the assumed shape, held under the chart by one ConfigMap mounted into every rendered Deployment, a new enforcer row and `deploy/helm/tests/config_test.yaml`; AC12 extended); upstream-adapters recheck item 8 (`allow_http`, `allow_local`, `insecure_skip_verify` are `Upstream` row fields, refused unless explicit and named in the startup log, never keys; AC25 now asserts the `upstream.` prefix holds exactly its three tabled keys); data-model follow-up item 1 (`upload.` row, `idle_timeout` 1h and `max_duration` 24h, its AC26; the bucket's multipart lifecycle rule now cites `upload.max_duration` by name); web-ui recheck item 5 (`.gitignore` under `internal/ui/dist/`, `make web-clean`, the staged `index.html` versus `internal/ui/placeholder.html` step in `scripts/verify-local.sh` beside AC32's node-stripped build, with `make verify` confirmed to be that script; AC32 and its row extended, enforcer row added); signing-service follow-up item 1 (`index.requested_cells_max` 256, its was-Q22; the `index.` row at six, the owner's table at fifteen); artifact-verification recheck item 10, raised after this spec's review HEAD (`internal/trustsource`'s keyserver and TUF egress honours the same `HTTPS_PROXY` and `NO_PROXY`, no key; the environment carve-out now names exactly two `ProxyFromEnvironment` callers, AC7 and AC29 and their rows extended); auth follow-up item 4 and management-api follow-up item 3 (the first-mint form cited to `auth.md` "The local admin credential on the API", was-Q26, AC2 and `management-api.md` AC30 as met, the "queued follow-ups" sentence gone). Counts made exact from the owners' tables: 87 sibling keys under 14 prefixes beside 30 owned, listed per prefix; AC3's "thirteen" is fourteen; the inventory's verification sha moved to b6ba642. Adversarial findings on the changes: the first-mint paragraph and AC26 said a registry token in the Basic slot is "still a token and refused by the route", which contradicts was-Q26's discriminator (under `admin` it is an authentication failure, never looked up as a token; only under another username does it resolve and get refused by the route), now stated as two readings in Design, AC26 and its row; `web-ui.md`'s key table sits indented under a list item, so the two-way check's header match is stated to strip leading indentation, or it would have missed two keys. Declined: none; nothing superseded. No question adopted. No em-dashes or en-dashes. 32 criteria, each with a Test Plan row; zero open questions; `node scripts/check-spec.js` zero mechanical failures on this file. Stays planned. Sibling consequences reported, not applied. |
