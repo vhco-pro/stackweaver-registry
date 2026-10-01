@@ -461,6 +461,7 @@ decision:
 |---|---|
 | `formats/rubygems.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12 |
 | `formats/alpine.md` | Q1-Q11 authored on Opus (rechecked on Fable 2026-10-01: nine confirmed, Q4, Q6 amended, Q7 superseded in part by Q12); Q12 and Q13 adopted on Fable; spec planned |
+| `formats/cpan.md` | Q1-Q17 authored on Opus (rechecked on Fable 2026-10-01: nine confirmed, eight amended); Q18 adopted on Fable; spec planned |
 | `formats/rpm.md` | Q11 (rechecked on Fable 2026-10-01 with Q1-Q10: Q5, Q6, Q9, Q11 amended, the rest confirmed; Q12 adopted on Fable; spec planned) |
 | `formats/arch.md` | Q13 (rechecked on Fable 2026-10-01: superseded by signing-service was-Q20; Q14 adopted on Fable; spec planned) |
 | `formats/cargo.md` | Q7 |
