@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned by the Fable recheck of 2026-09-30 at 4b05ace: a full review pass plus the re-examination of the three design judgements the Opus passes made without a question. The member-list floor derivation confirmed and amended (a removal reads a member's freshness values under a share lock, so a concurrent adoption or transition of that member can never be served through the virtual above the floor; AC36); the folds of proxy-cache's was-Q21 (a remote's current metadata never evicted; AC44) and was-Q22 (a per-package set's declared list on its package-level document; AC37) both confirmed. Queued items applied: the virtual merge commit as the declared list's third writer with the debian two-generation fixture (AC37), a commit of a marked digest clearing the mark and never a dedup hit (AC43), the claim re-check at READ COMMITTED with the head lock last (AC35), the per-document admission outcome and anchor class plus the requested cells on a virtual's input record, the cells surviving a swap (AC45), the advisory key replaced by any later write of its row (AC46), and a lifecycle rename's unbound_hosts (Operations). Adversarial finding folded: the anchor class an adoption ran under had no home, so the cache-scoped record carries it, set at adoption and never recomputed (AC44). AC8 gains an architecture test; AC40 and AC41 name the lease, schedule and rotation fields. Roots stay five; 46 criteria each with a Test Plan row; zero open questions; fable_recheck cleared. Earlier: metadata-eviction reconciliation 2026-09-28 at f0bfe75 on Opus (not a review): per proxy-cache's adopted Q21, a remote's metadata documents are current documents that LRU eviction never reaches, stated in Download policies, the cache-scoped record's bullet and its non-root row (no longer 'a cached reference or an evicted one'), with AC44 rewritten (record unchanged across an eviction pass over quota, replaced only by an adoption, dropped at the remote's deletion or tombstone time); per Q22 a per-package revision set declares its blobs on its package-level document (AC37 extended). No question adopted here; the set stays five. Earlier: Data-loss fix, second wave, 2026-09-28 at 36a137d on Opus (not a review): the declared blob-digest list is a field of the document's row beside its body, so it is marked whether the declaring document's body is inline or CAS-backed, and cache materialisation writes it on a remote (each adoption rewrites the remote's repository-level list, a map build appends to it, as reference creations with no snapshot), per proxy-cache was-Q19 and AC27; AC37 extended. No question adopted; the set stays five. Earlier: Second closing-sweep pass 2026-09-28 at 1d6b1c8, on Opus (not a review): a nullable, core-parsed advisory key on Package (one or more names) and on Version (names plus at most one version), outside every metadata document, written in the row's own transaction, queryable by name, a version-level key replacing the package-level one (supply-chain-policy was-Q11, AC24; AC46); coordinate_exemptions lives in the policy document and adds no field; the claim paragraph now defines the repository head as the default Pointer row and cites storage-and-gc was-Q12, AC30 and AC31 (AC35 extended). Neither is a mark root; the set stays five. 46 criteria, zero open questions, no question adopted. Earlier: closing reconciliation sweep 2026-09-28 at 13f3486 on Opus (not a review): the pointer freshness record now has target-moving and document-only transitions, with a repository batch (renewal, rotation or an accepted external document such as an operator TUF root) advancing every pointer of the repository and a virtual's merge commit and member-list change advancing its default pointer, the member-list change floored at the latest value the virtual served (signing-service was-Q15, hackage was-Q16; AC36); a virtual merged set's input record is metadata, not a mark root (signing-service was-Q16; AC45), and the virtual's merged documents are named as the fourth root's third reach (AC34); a declared unchanged publish completes with no snapshot reference (management-api was-Q15; AC32); claims are declared on the write transaction and checked at declaration and at commit (management-api was-Q14; AC35). No question adopted; the set stays five. Earlier: reconciled 2026-09-28 at 95346bd with the foundation wave's step-3 leftovers (not a review): the Blob row's segment_digests and verification-failed mark (storage-and-gc, AC43), the cache-scoped adopted_at and paired-set id on a remote's cached documents (proxy-cache, AC44), the refresh operation kind (management-api), advisory_ecosystem and the policy document on Repository (supply-chain-policy, AC28), the ReplicationLink's six-state lifecycle with reason and per-link interval (replication, AC31) and the optional repository reference on Schedule (async-operations, AC41); no new root, the set stays five. Earlier, 2026-09-27 at 97da8ab, reconciled with the foundation authoring wave, after the 2026-09-26 Wave 1 reconciliation: the shared model now carries every record the ten new foundation specs adopted and need, so no subsystem grows its own table. The core-held Retirement set and an Operation widened to every management operation (management-api); Principal, Credential, Grant and TrustPolicy (credential-management); the verification records' non-root row (artifact-verification); the per-pointer freshness record, PointerDocument, Signature, SigningKey, declared blob lists and the write transaction's pre-commit hook, with AC22 qualified (signing-service, closing the seven-format freshness theme); the Upstream row's transport fields and UpstreamCredential (upstream-adapters); Job and Schedule with cancelled as a terminal state and the job-held grace (async-operations, observability); repository identity, lifecycle state, tombstone, empty boundary snapshots and the per-format Virtual capability (repository-lifecycle); the Package.name index (web-ui). None adds a GC mark root; the set stays five, and the fourth root's reach widens under storage-and-gc's amendment. AC35-AC42 added with Test Plan rows, AC32-AC34 rewritten, every phase updated. Zero open questions; stays draft until a gate review."
+status_description: "Fable follow-up 2026-10-01 at 13192da: the seven items the sibling rechecks queued after this spec was planned applied (credential fields and indexes on Principal, Credential and TrustPolicy, AC39; cancel_requested, holds_grace and the PausedKind record with read_only suspending only retention.pass, AC41; allow_http and allow_local on Upstream, AC40; the verification records restated with superseded derived and the revocation want-list; the deletion write as the one default-pointer move rendering no PointerDocument, AC36; the tombstone reference outliving its Operation, AC38; the deferred claim retired between enqueue and run, AC32; the upload.idle_timeout and upload.max_duration keys tabled, AC26, flagged owner-facing); none declined; roots stay five; stays planned. Planned by the Fable recheck of 2026-09-30 at 4b05ace: a full review pass plus the re-examination of the three design judgements the Opus passes made without a question. The member-list floor derivation confirmed and amended (a removal reads a member's freshness values under a share lock, so a concurrent adoption or transition of that member can never be served through the virtual above the floor; AC36); the folds of proxy-cache's was-Q21 (a remote's current metadata never evicted; AC44) and was-Q22 (a per-package set's declared list on its package-level document; AC37) both confirmed. Queued items applied: the virtual merge commit as the declared list's third writer with the debian two-generation fixture (AC37), a commit of a marked digest clearing the mark and never a dedup hit (AC43), the claim re-check at READ COMMITTED with the head lock last (AC35), the per-document admission outcome and anchor class plus the requested cells on a virtual's input record, the cells surviving a swap (AC45), the advisory key replaced by any later write of its row (AC46), and a lifecycle rename's unbound_hosts (Operations). Adversarial finding folded: the anchor class an adoption ran under had no home, so the cache-scoped record carries it, set at adoption and never recomputed (AC44). AC8 gains an architecture test; AC40 and AC41 name the lease, schedule and rotation fields. Roots stay five; 46 criteria each with a Test Plan row; zero open questions; fable_recheck cleared. Earlier: metadata-eviction reconciliation 2026-09-28 at f0bfe75 on Opus (not a review): per proxy-cache's adopted Q21, a remote's metadata documents are current documents that LRU eviction never reaches, stated in Download policies, the cache-scoped record's bullet and its non-root row (no longer 'a cached reference or an evicted one'), with AC44 rewritten (record unchanged across an eviction pass over quota, replaced only by an adoption, dropped at the remote's deletion or tombstone time); per Q22 a per-package revision set declares its blobs on its package-level document (AC37 extended). No question adopted here; the set stays five. Earlier: Data-loss fix, second wave, 2026-09-28 at 36a137d on Opus (not a review): the declared blob-digest list is a field of the document's row beside its body, so it is marked whether the declaring document's body is inline or CAS-backed, and cache materialisation writes it on a remote (each adoption rewrites the remote's repository-level list, a map build appends to it, as reference creations with no snapshot), per proxy-cache was-Q19 and AC27; AC37 extended. No question adopted; the set stays five. Earlier: Second closing-sweep pass 2026-09-28 at 1d6b1c8, on Opus (not a review): a nullable, core-parsed advisory key on Package (one or more names) and on Version (names plus at most one version), outside every metadata document, written in the row's own transaction, queryable by name, a version-level key replacing the package-level one (supply-chain-policy was-Q11, AC24; AC46); coordinate_exemptions lives in the policy document and adds no field; the claim paragraph now defines the repository head as the default Pointer row and cites storage-and-gc was-Q12, AC30 and AC31 (AC35 extended). Neither is a mark root; the set stays five. 46 criteria, zero open questions, no question adopted. Earlier: closing reconciliation sweep 2026-09-28 at 13f3486 on Opus (not a review): the pointer freshness record now has target-moving and document-only transitions, with a repository batch (renewal, rotation or an accepted external document such as an operator TUF root) advancing every pointer of the repository and a virtual's merge commit and member-list change advancing its default pointer, the member-list change floored at the latest value the virtual served (signing-service was-Q15, hackage was-Q16; AC36); a virtual merged set's input record is metadata, not a mark root (signing-service was-Q16; AC45), and the virtual's merged documents are named as the fourth root's third reach (AC34); a declared unchanged publish completes with no snapshot reference (management-api was-Q15; AC32); claims are declared on the write transaction and checked at declaration and at commit (management-api was-Q14; AC35). No question adopted; the set stays five. Earlier: reconciled 2026-09-28 at 95346bd with the foundation wave's step-3 leftovers (not a review): the Blob row's segment_digests and verification-failed mark (storage-and-gc, AC43), the cache-scoped adopted_at and paired-set id on a remote's cached documents (proxy-cache, AC44), the refresh operation kind (management-api), advisory_ecosystem and the policy document on Repository (supply-chain-policy, AC28), the ReplicationLink's six-state lifecycle with reason and per-link interval (replication, AC31) and the optional repository reference on Schedule (async-operations, AC41); no new root, the set stays five. Earlier, 2026-09-27 at 97da8ab, reconciled with the foundation authoring wave, after the 2026-09-26 Wave 1 reconciliation: the shared model now carries every record the ten new foundation specs adopted and need, so no subsystem grows its own table. The core-held Retirement set and an Operation widened to every management operation (management-api); Principal, Credential, Grant and TrustPolicy (credential-management); the verification records' non-root row (artifact-verification); the per-pointer freshness record, PointerDocument, Signature, SigningKey, declared blob lists and the write transaction's pre-commit hook, with AC22 qualified (signing-service, closing the seven-format freshness theme); the Upstream row's transport fields and UpstreamCredential (upstream-adapters); Job and Schedule with cancelled as a terminal state and the job-held grace (async-operations, observability); repository identity, lifecycle state, tombstone, empty boundary snapshots and the per-format Virtual capability (repository-lifecycle); the Package.name index (web-ui). None adds a GC mark root; the set stays five, and the fourth root's reach widens under storage-and-gc's amendment. AC35-AC42 added with Test Plan rows, AC32-AC34 rewritten, every phase updated. Zero open questions; stays draft until a gate review."
 description: "Spec for the shared generic data model every format stores against, adapting Gitea's four-table package model and Pulp's RemoteArtifact and download policies."
 author: michielvha
 goal: "Make breadth affordable by giving all 33 ecosystems one metadata schema, so a format is parsing plus routes rather than a bespoke database design."
@@ -146,6 +146,20 @@ remote modelling together.
   (`storage-and-gc.md`'s recheck); and the general replace-on-later-write rule for the advisory
   key (`supply-chain-policy.md`'s recheck). None is a mark root, none widens a root's reach, and
   the third writer writes a list the fourth root already marks through. The set stays five.
+- **Fields the Fable follow-up of 2026-10-01 added**, transcribing what the siblings rechecked
+  after this spec was planned settled: `created_by` and an idempotency triple on `Credential`,
+  the same triple and `deleted_at` on `Principal`, a unique index on the token lookup prefix
+  and the issuer profile on `TrustPolicy` (`credential-management.md`); `cancel_requested` and
+  `holds_grace` on `Job`, with `read_only` suspending only the `retention.pass` schedule, and
+  the `PausedKind` record (`async-operations.md`, `repository-lifecycle.md`); `allow_http` and
+  `allow_local` on `Upstream` (`upstream-adapters.md`); the verification records restated as
+  `artifact-verification.md` now holds them (superseded derived from a verdict's revision, the
+  re-evaluation a `Job`, the revocation want-list); the deletion write as the one default-pointer
+  move that renders no `PointerDocument`, and the tombstone's operation reference as an
+  identifier that outlives its `Operation` (`repository-lifecycle.md`); a deferred operation
+  whose claim is retired between enqueue and run ending `failed` (`management-api.md`); and the
+  two keys behind the upload session lifetime (`deployment.md`'s two-way key check). None is a
+  mark root and none widens a root's reach. The set stays five.
 
 **Out of scope**
 
@@ -164,7 +178,7 @@ remote modelling together.
 | `Version` | version string, format-specific metadata document, last completed write time, advisory key (nullable: one or more names and at most one version) | Metadata is a JSON document the handler reads and writes; the core never interprets it. The write time is core-maintained and queryable. The advisory key, when present, replaces the package-level one for this version and is core-parsed like the write time, never read from the document |
 | `File` | filename, relative path, digest | Links a version to blobs; multiple files per version is the norm (wheel plus sdist, jar plus pom plus sources) |
 | `Blob` | digest, size, `segment_digests`, verification-failed mark | Content-addressed by the digest and by nothing else. Deduplicated across every format and repository, except that a row carrying the mark is never a dedup hit. The segment digests (one per fixed 4 MiB segment, recorded in the commit pass) and the mark a failing read sets and a verifying read or a commit of the digest clears are metadata for `storage-and-gc.md`'s verified read path, never a key ("A coordinate is not a storage key") |
-| `Upstream` | URL, credential ref, download policy, `adapter` (default `https`), `hosts` (the off-origin allowlist with a credential role per host), `tls`, `limits`, `http2` | Bound one-to-one to a `remote` repository. Rotating a credential touches one row. The transport fields are `upstream-adapters.md`'s to interpret ("Upstream configuration and upstream credentials") |
+| `Upstream` | URL, credential ref, download policy, `adapter` (default `https`), `hosts` (the off-origin allowlist with a credential role per host), `tls`, `limits`, `http2`, `allow_http`, `allow_local` | Bound one-to-one to a `remote` repository. Rotating a credential touches one row. The transport fields are `upstream-adapters.md`'s to interpret ("Upstream configuration and upstream credentials"); the two booleans are refused unless set explicitly |
 | `VirtualMember` | virtual repository ref, member repository ref, position | The ordered aggregation. Position **is** the resolution order; there is no separate failover field anywhere |
 | `Reference` | from version, to version, relation (for example OCI's `subject`) | A format-agnostic edge the core can traverse without parsing handler metadata. GC marks through it; the OCI referrers API is one indexed query over it |
 | `RemoteFile` | `Upstream` ref, upstream path, last-checked | An upstream source for a file, retained when the file gains a local blob so revalidation and failover keep their provenance |
@@ -184,17 +198,18 @@ exists in the shared model with these fields, so that no subsystem grows a table
 | Record | Owns | Defined by |
 |---|---|---|
 | `Retirement` | repository ref, format, canonical coordinate string, retired-at, retiring operation ref | `management-api.md`, "Retirement is core-held". Written in the retiring operation's transaction; never pruned; the shared write path refuses a write claiming a retired coordinate, checking each claim declared on the write transaction when it is declared and again at commit ("A package outlives its versions") |
-| `Job` | id, kind, opaque args document, state (`pending` / `running` / `completed` / `failed` / `cancelled`), `run_at`, `attempts`, `max_attempts`, created and finished times, `last_error`, `lease_owner`, `lease_expires_at`, `lease_token`, `coalesce_key`, `exclusive_key`, optional operation ref, optional repository ref, checkpoint document, `trace_context`, `request_id` | `async-operations.md`, "The `Job` record and the `Operation`"; the trace fields are `observability.md`'s (its AC16). Partial unique indexes over `coalesce_key` where pending and `exclusive_key` where running; pruned after its retention window and never before its `Operation` |
-| `Schedule` | name, kind, args, interval or `next_run_at`, `last_run_at`, `last_result`, enabled, optional repository ref | `async-operations.md`, "The scheduler". The repository reference marks the schedules that belong to one repository (its `retention.pass`, `signing.resign` and per-link `replication.sync`), which its deletion disables |
+| `Job` | id, kind, opaque args document, state (`pending` / `running` / `completed` / `failed` / `cancelled`), `cancel_requested`, `run_at`, `attempts`, `max_attempts`, created and finished times, `last_error`, `lease_owner`, `lease_expires_at`, `lease_token`, `coalesce_key`, `exclusive_key`, optional operation ref, optional repository ref, `holds_grace`, checkpoint document, `trace_context`, `request_id` | `async-operations.md`, "The `Job` record and the `Operation`"; the trace fields are `observability.md`'s (its AC16). Partial unique indexes over `coalesce_key` where pending and `exclusive_key` where running; `cancel_requested` is set by a cancel of a running job and read at every claim and heartbeat; `holds_grace` is copied from the kind's registration at enqueue; pruned after its retention window and never before its `Operation` |
+| `Schedule` | name, kind, args, interval or `next_run_at`, `last_run_at`, `last_result`, enabled, optional repository ref | `async-operations.md`, "The scheduler". The repository reference marks the schedules that belong to one repository (its `retention.pass`, `signing.resign` and per-link `replication.sync`), which its deletion disables and of which `read_only` suspends only `retention.pass` |
+| `PausedKind` | kind, paused at, pausing principal | `async-operations.md`, "Cancellation, pause and resume". One row per paused kind, absent when the kind runs; read by every claim in every process, so a process started after the pause honours it |
 | `PointerDocument` | pointer ref, document key, inline bytes or CAS digest, produced-at, the counter value it carries | `signing-service.md`, "Storage". A re-rendered body scoped to a pointer (Debian's `InRelease`, Hackage's `timestamp.json`); outside snapshot content |
 | `Signature` | repository ref, body digest, key id, signing profile, signature bytes, created | `signing-service.md`, "Storage". Keyed by body digest and key; pruned when no retained snapshot or pointer document holds its body |
 | `SigningKey` | repository ref, purpose, algorithm, state (`announced` / `active` / `retired`), backend kind and reference, public forms, created | `signing-service.md`, "Key custody". Private material lives in the backend the reference names, never in this row |
-| `Principal` | kind (`human` / `robot`), identity key or robot name, display fields, enabled | `credential-management.md`, "What a credential is, and who owns it" |
-| `Credential` | kind (`token` / `public-key`), owner ref, name, lookup prefix and SHA-256 hash or public key and fingerprint, scope rows (repository identity, actions, pattern) with the multi-repository mark, created, expiry or non-expiring, revoked at and by, rotated-from ref, last used | `credential-management.md`. A token's value is never stored recoverably (`auth.md`); a scope names a repository by identity and grants nothing once that repository is deleted |
+| `Principal` | kind (`human` / `robot`), identity key or robot name, display fields, enabled, `deleted_at`, idempotency triple (key, payload digest, requesting principal) | `credential-management.md`, "What a credential is, and who owns it". A robot's deletion sets `deleted_at` and keeps the row; the unique index on a robot's name is not partial, so the name stays reserved. The triple is written by the robot create that carried an `Idempotency-Key` |
+| `Credential` | kind (`token` / `public-key`), owner ref, `created_by`, name, lookup prefix and SHA-256 hash or public key and fingerprint, scope rows (repository identity, actions, pattern) with the multi-repository mark, created, expiry or non-expiring, revoked at and by, rotated-from ref, last used, idempotency triple (key, payload digest, requesting principal) | `credential-management.md`. A token's value is never stored recoverably (`auth.md`); a unique index holds the lookup prefix, which is the row's route key; a scope names a repository by identity and grants nothing once that repository is deleted. The triple is written by the create, rotate or key registration that carried an `Idempotency-Key` |
 | `Grant` | principal ref, repository ref, action, optional pattern | `auth.md`'s `(principal, repository, action, pattern)`; administered by `management-api.md`; deleted with its repository (`repository-lifecycle.md`) |
-| `TrustPolicy` | robot ref, issuer, audience, claim constraints | `credential-management.md`, "OIDC exchange: `/api/v1/tokens/exchange`" |
+| `TrustPolicy` | robot ref, issuer, issuer profile (`github` / `gitlab` / `generic`), audience, claim constraints | `credential-management.md`, "OIDC exchange: `/api/v1/tokens/exchange`". The profile names a row of that package's closed trusted-issuer table |
 | `UpstreamCredential` | name, kind, material encrypted under the instance master key, created, `rotated_at`, `last_used` | `upstream-adapters.md`, "Configuration on the `Upstream` row". The store `Upstream` and `ReplicationLink` credential references resolve in; a referenced record cannot be deleted |
-| Verification records | verdicts keyed `(repository, blob digest, scheme)`, trust sets and their revisions, superseded marks, the re-evaluation queue | `artifact-verification.md`, "The verdict is a stored fact". Owned by `internal/verify`, outside the format entity model beside the policy layer's records |
+| Verification records | verdicts keyed `(repository, blob digest, scheme)`, each carrying the trust-set revision it was computed under; trust sets and their numbered revisions; the revocation want-list (the CRL distribution points and OCSP responders of each chain a CMS verification walked, on the repository's trust set) | `artifact-verification.md`, "The verdict is a stored fact". Owned by `internal/verify`, outside the format entity model beside the policy layer's records. Superseded is derived (a verdict's revision differs from the repository's current one), never a written mark, and re-evaluation is a `verify.reevaluate` `Job` on the shared queue, not a record of its own |
 
 **Opaque metadata hangs at all three levels.** `Repository`, `Package` and `Version` each carry a
 metadata document the core never parses, so a handler stores state at whichever level the
@@ -305,8 +320,12 @@ parses, never a field inside the opaque document:
   `repository-lifecycle.md`'s; the columns are this spec's.
 - **The tombstone.** When the pruner drops a deleted repository's last snapshot, the row stays
   as a tombstone (identity, last name, format, type, `deleted_at`, deleting principal, the
-  deleting operation's reference) and is never removed, so a credential listing, an audit trail,
-  a `Retirement` and an `Operation` can always render the repository they name. It is listed
+  deleting `Operation`'s wire identifier) and is never removed, so a credential listing, an
+  audit trail, a `Retirement` and an `Operation` can always render the repository they name.
+  The operation reference is kept as an identifier, not a foreign key: `Operation` rows are
+  pruned after `management.operation_retention` ("Operations"), after which the reference
+  resolves to nothing but still names the request the audit trail recorded, and the tombstone
+  never keeps the `Operation` row alive (`repository-lifecycle.md`, "Tombstone"). It is listed
   only through the deleted-repositories listing, by identity. Its `Package` rows, trust set
   revisions, policy rules, `SigningKey` material and `PointerDocument` records are dropped at
   that moment; verdicts, condemnation and refusal records, retirements and operations are not.
@@ -404,13 +423,24 @@ Adopted 2026-09-26 with the in-flight-scope and session-lifetime decisions below
 request, and in any case at an absolute cap counted from its opening. Every continuation request
 (a chunk, a status query, the final commit request) refreshes the idle period; nothing refreshes
 the cap. The defaults are **one hour idle and 24 hours absolute**, both configurable
-instance-wide (the resolved session-lifetime-defaults decision below). The idle period is what a
+instance-wide (the resolved session-lifetime-defaults decision below) through the two keys this
+spec owns, tabled in the shape `deployment.md`'s two-way key check reads
+(`scripts/check-config-keys.js`: a key a spec tables that the schema lacks fails the build, and
+so does the reverse):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `upload.idle_timeout` | `1h` | How long an upload session survives with no continuation request; every chunk, status query and commit request restarts it |
+| `upload.max_duration` | `24h` | The absolute cap on an upload session counted from its opening; nothing extends it |
+
+The idle period is what a
 paused CI job or a client retrying across a network drop survives; the cap bounds a client that
 trickles bytes forever. Expiry ends the client's right to resume; it does not by itself reclaim
 anything - an expired session's partial bytes are orphans that `storage-and-gc.md`'s orphan scan
-collects once its repository's grace has also lapsed (its AC3). How a format answers a request
-on an expired session is wire format and belongs to the format's spec (for OCI, `404` with
-`BLOB_UPLOAD_UNKNOWN`).
+collects once its repository's grace has also lapsed (its AC3), and `deployment.md`'s bucket
+lifecycle rule for abandoned multipart uploads is set longer than `upload.max_duration`. How a
+format answers a request on an expired session is wire format and belongs to the format's spec
+(for OCI, `404` with `BLOB_UPLOAD_UNKNOWN`).
 
 ### Reads from in-flight publish state
 
@@ -668,8 +698,13 @@ and `proxy-cache.md` owns the cache-scoped equivalent for `remote` repositories.
   move, so it is re-rendered per pointer: a `PointerDocument` holds (pointer, document key,
   inline bytes or CAS digest, produced-at, the counter value it carries) and is produced inside
   the write for the default pointer, inside every repoint, on the expiry cadence and at a key
-  rotation. It is **outside snapshot content**: a snapshot holds the index a repository had,
-  the pointer holds the envelope this environment serves it under. When CAS-backed it is
+  rotation, with one exception: the deletion write of a `local`, which moves the default pointer
+  onto the final empty snapshot under the door's named exemption and renders nothing, because a
+  signed envelope over no packages would be a fresh current document the fourth root held until
+  tombstone time (`repository-lifecycle.md`, "Deletion" step 5, its AC14); the pointer's existing
+  record stays, serving nothing, until tombstone time drops it. It is **outside snapshot
+  content**: a snapshot holds the index a repository had, the pointer holds the envelope this
+  environment serves it under. When CAS-backed it is
   protected by the fourth mark root's current-document half, an extension of that root's reach
   that `storage-and-gc.md` carries as its own amendment; it is not a new root.
 - **Repository batches, for documents that belong to the repository.** Some pointer documents
@@ -961,7 +996,11 @@ format-agnostic and, like everything here, owned by the core:
   terminal state in the same request. `cancelled` arrived with `async-operations.md`'s
   cooperative cancellation (its resolved cancellation decision, was its Q5): a pending deferred
   operation that never ran, or a running one whose worker stopped at a checkpoint and committed
-  nothing.
+  nothing. A deferred operation's claims are checked once in the enqueuing transaction and
+  declared again on the write transaction the runner opens, so a coordinate retired between
+  enqueue and run meets the declaration-time check there and the operation ends `failed` with
+  nothing committed (`management-api.md`, "Deferred operations", its AC16; "A package outlives
+  its versions").
 - **It is not repository content.** No snapshot delta contains an operation, no repoint or
   rollback changes one, and creating or finishing one is never by itself a completed logical
   write, so a failed or cancelled operation creates no snapshot.
@@ -992,8 +1031,9 @@ format-agnostic and, like everything here, owned by the core:
   surface and carries its own authorization.
 - **A pending operation pins nothing.** Its uploaded bytes are protected by the repository-scoped
   grace, the same way any committed-but-unreferenced blob is ("Upload sessions and the upload
-  scope"), and the `Job` executing it holds that grace open while unfinished (next section), so
-  a deferred import never outlives the grace its bytes depend on. That answers the question the
+  scope"), and the `Job` executing it, whose kind `manage.apply` declares the hold, holds that
+  grace open while unfinished (next section), so a deferred import never outlives the grace its
+  bytes depend on. That answers the question the
   write-triggered services prototype was to test (its question 5), in design, so the prototype
   verifies rather than discovers; the root set stays five and there is no operation-side pin.
 
@@ -1013,6 +1053,10 @@ transition in one transaction so neither can be observed ahead of the other (its
 - **`Job`** carries an id, a `kind` from the registry of workers, an opaque `args` document only
   the kind's worker parses, a monotonic state (`pending`, `running`, then `completed`, `failed`
   or `cancelled`; a retry is `pending` again with `attempts` incremented and a later `run_at`),
+  a **`cancel_requested`** flag beside the state, set by a cancel of a `running` job and read at
+  every heartbeat and every claim, so that a cancel outlives a lost notification and a
+  lease-expiry reclaim (a rescued row with the flag set ends `cancelled` without running; its
+  resolved cancellation decision, was its Q5, as its Fable recheck amended it),
   the scheduling fields (`run_at`, `attempts`, `max_attempts`, created and finished times, a
   bounded `last_error` that never holds a credential), the lease fields (`lease_owner`,
   `lease_expires_at`, and `lease_token`, a fresh 128-bit fencing value per claim that every
@@ -1020,7 +1064,10 @@ transition in one transaction so neither can be observed ahead of the other (its
   indexes** (`coalesce_key` where `state = 'pending'`, so a burst of identical requests enqueues
   one job; `exclusive_key` where `state = 'running'`, so two jobs with the key never run at
   once), an optional `Operation` reference, an optional repository reference (the repository
-  whose grace it holds open), a `checkpoint` document the worker may write between attempts,
+  whose deletion cancels the job and, when the kind holds the grace, whose grace it holds
+  open), a **`holds_grace`** flag copied from the kind's registration at enqueue so the sweep
+  reads the row and consults no kind registry, a `checkpoint` document the worker may write
+  between attempts,
   and, set at enqueue, the W3C `traceparent` as `trace_context` and the originating
   `request_id`, so a job that runs hours later starts its span with a link to the request that
   asked for it and its audit line still names that request (`observability.md` AC16).
@@ -1028,19 +1075,37 @@ transition in one transaction so neither can be observed ahead of the other (its
   `next_run_at` the kind derives, `last_run_at`, `last_result`, enabled, and an **optional
   repository reference** for the schedules that belong to one repository: its `retention.pass`,
   its `signing.resign` entries and the `replication.sync` of each of its links. The reference
-  is what repository deletion disables in its transaction and what `read_only` suspends
-  (`async-operations.md`, "The scheduler", its AC28); an instance-wide schedule (a feed sync, a
+  is what repository deletion disables in its transaction (`async-operations.md`, "The
+  scheduler", its AC28). `read_only` suspends **only the `retention.pass`** among them: the
+  pass is a completed write and an archived repository is not emptied by its own rules, while
+  the cadence re-sign is a document-only transition the frozen repository needs to stay
+  installable and a replica's sync is governed by its link, so `signing.resign` and
+  `replication.sync` keep enqueuing (`repository-lifecycle.md`, its resolved read-only
+  transitions decision, was its Q11, AC10; `async-operations.md`'s kind table). An
+  instance-wide schedule (a feed sync, a
   sweep) carries none. The scheduler enqueues a job per due schedule with the schedule name as
   `coalesce_key`, so an outage yields one catch-up job, not one per missed tick.
-- **Placement.** Neither is repository content: in no snapshot, untouched by repoint and
-  rollback, never a mark root. A terminal `Job` is pruned after `async.job_retention` from its
-  finished time and **never before the `Operation` it references**, so a poll never finds an
-  operation whose execution record vanished first. An **unfinished job naming a repository holds
-  that repository's grace open**, exactly as an unexpired upload session does (its resolved
-  grace-hold decision, was its Q4): a timing input to the same grace clock, not a root and not a
+- **`PausedKind`** is the record behind the admin pause and resume of a kind
+  (`management-api.md`'s `.../jobs/kinds/{kind}/pause` routes; `async-operations.md`,
+  "Cancellation, pause and resume", its resolved pause decision, was its Q6): one row per
+  paused kind, holding the kind, when it was paused and the pausing principal, absent while the
+  kind runs. Every claim in every process reads it rather than memory, so a process started
+  after the pause agrees with the one that paused, and running jobs of a paused kind finish.
+  It is a record of the shared schema because a table of `internal/async`'s own would break
+  that spec's handler-table rule as surely as a format's would.
+- **Placement.** None of the three is repository content: in no snapshot, untouched by repoint
+  and rollback, never a mark root. A terminal `Job` is pruned after `async.job_retention` from
+  its finished time and **never before the `Operation` it references**, so a poll never finds
+  an operation whose execution record vanished first. An **unfinished job naming a repository
+  and carrying `holds_grace` holds that repository's grace open**, exactly as an unexpired
+  upload session does (its resolved grace-hold decision, was its Q4, as its Fable recheck
+  amended it: the hold is declared per kind at registration, `HoldsGrace` default `true`, and
+  `proxy.revalidate` declares it `false` because its adoption commits the `Blob` row and the
+  cached reference in one transaction and no byte of its own ever waits for a reference): a
+  timing input to the same grace clock, not a root and not a
   pin, released at the job's terminal transition. A repository's deletion cancels its pending
-  jobs in the deletion transaction, disables every `Schedule` carrying its reference, and
-  cooperatively cancels its running ones; the hold stands until each is terminal
+  jobs in the deletion transaction, sets `cancel_requested` on its running ones, disables every
+  `Schedule` carrying its reference, and the hold stands until each is terminal
   (`repository-lifecycle.md`, "Deletion").
 
 ### Replication's records
@@ -1095,15 +1160,31 @@ shared model (its Phase 0). Four additions, none of them format-specific:
 lists, rotates and revokes what it checks; the records both evaluate are the shared model's
 (`credential-management.md` AC24 gates its code on their presence here). A **`Principal`** is a
 human (identified by the OIDC identity key) or a robot (identified by name), with display fields
-and an enabled flag. A **`Credential`** is a token or a registered public key owned by one
-principal: for a token, a non-secret lookup prefix and the SHA-256 hash of the secret, never the
-value (`auth.md`, "Tokens are never stored recoverable"); for a public key, the key and its
-fingerprint; plus its scope rows, each (repository identity, actions, pattern) with the
-multi-repository mark `auth.md` AC29 requires, its creation, expiry or non-expiring mark,
-revocation time and revoker, the credential it was rotated from, and when it was last used. A
+and an enabled flag. A robot's deletion revokes its credentials, deletes its grants and trust
+policy and sets **`deleted_at`** on the principal rather than removing the row, and the unique
+index on a robot's name is not partial, so a name a deleted robot held is refused to a new
+robot and a grant or audit line naming it is never ambiguous. A **`Credential`** is a token or
+a registered public key owned by one principal: for a token, a non-secret lookup prefix and the
+SHA-256 hash of the secret, never the value (`auth.md`, "Tokens are never stored recoverable"),
+the prefix held by a **unique index** because it is the row's `id` and route key, the issuer
+regenerating on a collision; for a public key, the key and its fingerprint; plus its scope
+rows, each (repository identity, actions, pattern) with the multi-repository mark `auth.md`
+AC29 requires, **`created_by`** (the principal that minted it, which differs from the owner
+when an admin mints for a robot), its creation, expiry or non-expiring mark, revocation time and
+revoker, the credential it was rotated from, and when it was last used. Both `Principal` and
+`Credential` carry an **idempotency triple**, the `Idempotency-Key`, a digest of the request
+payload and the requesting principal, written by the robot create, token create, rotate or key
+registration that carried the key, because that surface writes no `Operation` to hold it
+(`credential-management.md`, "Where the `Idempotency-Key` lives", its resolved replay decision,
+was its Q4): a repeat is matched on (requesting principal, key) and never on the key alone, and
+whether a match replays the row or is refused is that spec's rule, inside
+`management.operation_retention`. A
 **`Grant`** is `auth.md`'s (principal, repository, action, optional pattern), administered by
 `management-api.md` and deleted in its repository's deletion transaction. A **`TrustPolicy`**
-binds a robot to an OIDC issuer, audience and claim constraints for the token exchange. Every
+binds a robot to an OIDC issuer, the issuer's **profile** (`github`, `gitlab` or `generic`, a
+row of that package's closed trusted-issuer table, which fixes the claims a policy under it must
+constrain and how they map onto a certificate identity), an audience and claim constraints for
+the token exchange. Every
 repository reference in these records is by identity, so a credential scope naming a deleted
 repository stays readable, renders its name from the tombstone, and grants nothing (AC39).
 
@@ -1117,7 +1198,14 @@ know is configuration on the `Upstream` row, core-parsed, never inside a metadat
 (a named second credential is presented), default empty, exact names or single-label wildcards;
 `tls`, an optional CA bundle reference, an optional client certificate and key reference, and
 `insecure_skip_verify`, refused unless set explicitly; `limits`, `concurrency` (default 10) and
-`cooldown_cap` (default one hour); and `http2`, default true. The adapter enforces them at
+`cooldown_cap` (default one hour); `http2`, default true; **`allow_http`**, which admits an
+`http://` root and `http://` redirect targets on allowlisted hosts and is refused beside a
+credential reference or an `own` host entry (its AC22, AC23); and **`allow_local`**, which admits
+loopback, link-local and unspecified destination addresses that every fetch otherwise refuses
+before any connection, meant for a stand-in on the loopback interface and never a real upstream
+(its resolved local-address decision, was its Q10, AC35). Both booleans are core-parsed, refused
+unless set explicitly like `insecure_skip_verify`, and named in the startup log by the adapter.
+The adapter enforces them at
 connect time; this spec only gives them a row. The credential references on `Upstream` and on
 `ReplicationLink` resolve in one store, the **`UpstreamCredential`** record: name, kind (the
 adapter spec's table), the kind's material encrypted at rest under the instance master key
@@ -1128,9 +1216,17 @@ refused (`repository-lifecycle.md`, its resolved in-use decision, was its Q9) (A
 ### Verification records
 
 `artifact-verification.md` stores what it concluded about a blob as a **verdict** keyed by
-(repository, blob digest, scheme), beside a per-repository **trust set** with numbered revisions,
-the **superseded marks** a revision change puts on the verdicts computed under the previous one,
-and the **re-evaluation queue** that recomputes them ("The verdict is a stored fact"). They are
+(repository, blob digest, scheme), carrying the **trust-set revision** it was computed under,
+beside a per-repository **trust set** with numbered revisions ("The verdict is a stored fact").
+**Superseded is derived, never written**: a verdict is superseded when its revision differs
+from the repository's current one, so a trust-set change writes one revision row and touches no
+verdict however many the repository holds, and no mark row exists (its resolved
+when-verification-runs decision, was its Q1, as its Fable recheck amended it). Re-evaluation is a `verify.reevaluate`
+`Job` on the shared queue, enqueued in the revision's transaction, not a queue record of this
+model's. The trust set also carries the **revocation want-list**, the CRL distribution points
+and OCSP responders of each chain a CMS verification walked, the one write a verification makes
+beside its verdict, which the `verify.revocation_refresh` schedule fetches; it holds URLs, never
+a digest. They are
 core-owned records of `internal/verify`, outside the format entity model in the place this spec
 made for the policy layer's records, and they must outlive the blob they describe for the same
 reason a refusal record does: "why was this refused" stays answerable after the bytes are gone,
@@ -1161,18 +1257,18 @@ cache-scoped freshness record's row below hangs on a current document, not on a 
 | `Blob.segment_digests` and the verification-failed mark | Columns on the row the roots already decide about; a segment digest is metadata for verifying a range read, never a key and never a reference, so the columns change nothing about whether the blob is live |
 | The cache-scoped freshness record on a `remote`'s cached documents | `adopted_at`, a paired-set id and the anchor class on the remote's current document; that document is a current document, protected when CAS-backed by the fourth root's current-document half and never reached by LRU eviction (`proxy-cache.md`, its resolved metadata-eviction decision, was its Q21), and the record adds nothing to it. Replaced only by the adoption that supersedes the document, dropped with it at the remote's deletion or at tombstone time |
 | `FileProvenance` | Holds an upstream URL and path, no digest; the frozen file's own published reference is what keeps its blob live |
-| `Operation` | A pending operation's uploaded bytes are protected only by the repository-scoped grace, the same way any committed-but-unreferenced blob is ("Upload sessions and the upload scope"), and the `Job` executing a deferred operation holds that grace open until it is terminal (`async-operations.md`, its resolved grace-hold decision, was its Q4), which is a timing input to the grace clock and never an operation-side pin. A produced-snapshot reference does not protect the snapshot from pruning |
-| `Job`, `Schedule` | An unfinished job holds its repository's grace open, which is the same clock the upload session already drives; neither record references a blob, and a job's checkpoint document is opaque state, not content. A schedule's repository reference is what deletion disables, not a reference into content. Pruned by `async.job_retention`, never before the job's `Operation` |
+| `Operation` | A pending operation's uploaded bytes are protected only by the repository-scoped grace, the same way any committed-but-unreferenced blob is ("Upload sessions and the upload scope"), and the `manage.apply` `Job` executing a deferred operation, a kind that declares the hold, holds that grace open until it is terminal (`async-operations.md`, its resolved grace-hold decision, was its Q4, as amended), which is a timing input to the grace clock and never an operation-side pin. A produced-snapshot reference does not protect the snapshot from pruning |
+| `Job`, `Schedule`, `PausedKind` | An unfinished job whose `holds_grace` is set holds its repository's grace open, which is the same clock the upload session already drives, and a job without the flag holds nothing; none of the three records references a blob, and a job's checkpoint document is opaque state, not content. A schedule's repository reference is what deletion disables, not a reference into content; a `PausedKind` row names a kind and a principal. Jobs are pruned by `async.job_retention`, never before the job's `Operation` |
 | `Retirement` | Names a coordinate string, never a blob; it must outlive every snapshot that ever held the coordinate, since its whole purpose is to refuse the coordinate after the content is gone |
-| `Repository` tombstone | A deleted repository's row survives its last snapshot forever with identity, name, format, type, deletion time and principal, and the deleting operation's reference; it references no content |
+| `Repository` tombstone | A deleted repository's row survives its last snapshot forever with identity, name, format, type, deletion time and principal, and the deleting `Operation`'s wire identifier, which outlives that `Operation`'s pruning as an identifier and keeps no row alive; it references no content |
 | The pointer freshness record | Two scalars on `Pointer`; the pointer's target is what the fifth root protects, and the record adds nothing to it. A document-only transition (a repository batch, a virtual's merge commit or member-list change) changes no target, so it changes nothing the fifth root reads |
 | A virtual merged set's input record | Per member and document, a repository identity, a freshness value, an admission outcome and an anchor class, plus the requested cells as variable names and values; metadata on the virtual's current documents, which the fourth root's current-document half already protects, and it references no blob and no snapshot. The merge inputs are replaced with their set at every merge commit, the requested cells are carried across swaps, and both are dropped at the virtual's deletion and at tombstone time |
 | `PointerDocument` | Not a root itself: when CAS-backed its blob is protected as a current document under the fourth root's reach while the record exists, and the record is dropped with its pointer or at tombstone time |
 | `Signature` | Its body digest is kept alive by the snapshot or pointer document that holds the body; a record whose body nothing holds is pruned with it, never the other way round |
 | `SigningKey` | References a custody backend, public forms and a repository, no content; public forms stay retrievable by digest until tombstone time, then are dropped |
-| `Principal`, `Credential`, `Grant`, `TrustPolicy` | Reference principals, repositories by identity, and key material; no blob and no snapshot. A scope naming a deleted repository stays readable and grants nothing |
+| `Principal`, `Credential`, `Grant`, `TrustPolicy` | Reference principals, repositories by identity, and key material; no blob and no snapshot. The idempotency triple's digest is of a request payload, never of content, and a deleted robot's row with `deleted_at` references nothing more than a live one. A scope naming a deleted repository stays readable and grants nothing |
 | `UpstreamCredential` | Encrypted material and bookkeeping, no content |
-| Verification records: verdicts keyed (repository, blob digest, scheme), trust sets and their revisions, superseded marks and the re-evaluation queue (`artifact-verification.md`) | A verdict must outlive the blob it explains, and a pinned blob would make refused content uncollectable; the record tolerates both the artifact digest and the verified signature's digest dangling. Trust set revisions are dropped at tombstone time, verdicts never |
+| Verification records: verdicts keyed (repository, blob digest, scheme) with the revision each was computed under, trust sets and their revisions, and the revocation want-list (`artifact-verification.md`) | A verdict must outlive the blob it explains, and a pinned blob would make refused content uncollectable; the record tolerates both the artifact digest and the verified signature's digest dangling. Superseded is derived from the verdict's revision against the repository's current one, so no mark row exists to place; the re-evaluation is a `Job` placed above; the want-list holds CRL and OCSP URLs and no digest. Trust set revisions and the want-list are dropped at tombstone time, verdicts never |
 | Retention rules, `advisory_ecosystem` and the `policy` document | Repository configuration that references no content at all; dropped at tombstone time, while the condemnation and refusal records the policy produced are kept |
 | The advisory key on `Package` and `Version` | Names and at most one version string, core-parsed on the row it describes; no digest and no snapshot reference, so it keeps nothing alive and changes nothing any root reads |
 | The policy layer's records: condemnation records, scan results, the component inventory index and refusal records (`supply-chain-policy.md`) | Owned by `internal/policy`, outside the format entity model, and keyed by digest and coordinate as audit provenance that must outlive the artifact: a refusal stays explainable after the blob is gone, and a policy record that pinned its blob would make refused malware uncollectable. They are the core-owned records the resolved metadata-typing decision below anticipated as "a separate index built later", so no handler owns them either |
@@ -1270,7 +1366,9 @@ afterwards.
       the absolute cap however active it is, and not before either: on an injected clock, a
       session receiving a continuation inside every idle window survives past one idle period
       and dies at the cap, an idle one dies one idle period after its last continuation, and
-      the defaults are one hour and 24 hours unless configured otherwise.
+      the periods are `upload.idle_timeout` and `upload.max_duration`, one hour and 24 hours
+      unless configured otherwise, the two keys this spec tables being exactly the `upload.`
+      keys the configuration schema knows under `scripts/check-config-keys.js`.
 - [ ] AC27: While any upload session in a repository is unexpired, that repository's grace does
       not lapse: on an injected clock, a blob committed earlier in the repository survives a
       sweep run after the grace period has elapsed with no other activity, provided a session
@@ -1320,7 +1418,10 @@ afterwards.
       declaring the unchanged-publish rule whose every claimed coordinate already holds
       identical bytes completes with no snapshot reference and `unchanged: true` in its result
       document while the snapshot table, every pointer and every freshness record are
-      unchanged, and the same publish with one byte different produces exactly one snapshot;
+      unchanged, and the same publish with one byte different produces exactly one snapshot; a
+      deferred operation whose claimed coordinate is retired between its enqueue and its run
+      ends `failed` with nothing committed, no snapshot and no snapshot reference, the claims
+      having been declared again on the runner's write transaction;
       no snapshot's content set contains an operation and
       a repoint or rollback changes none; its wire identifier carries at least 128 random bits;
       it records the request id and, when sent, the idempotency key of the request that created
@@ -1383,7 +1484,10 @@ afterwards.
       detachment sets the same floor from the values that transaction held; both fields are
       written only in the transaction that performs the
       transition; a `PointerDocument` is produced per pointer inside the write for the default
-      pointer and inside every repoint, lives in no snapshot's content set, is untouched by a
+      pointer and inside every repoint, with the one exception of a `local`'s deletion write,
+      whose move of the default pointer onto the final empty snapshot renders no document and
+      leaves the pointer's existing record in place until tombstone time, lives in no
+      snapshot's content set, is untouched by a
       repoint of any other pointer, and is dropped with its pointer or at tombstone time.
 - [ ] AC37: Signing a generated body creates one `Signature` record with key (repository, body
       digest, key id, profile) and no place in any snapshot's content set, created inside the
@@ -1416,18 +1520,31 @@ afterwards.
       metadata document; creation of a repository of any of the three types writes an initial
       empty checkpoint snapshot and the default pointer on it; deletion of a `local` is one
       completed write producing one final empty checkpoint snapshot; the tombstone row survives
-      pruning of its last snapshot and every later sweep; and a `virtual` repository of a format
+      pruning of its last snapshot and every later sweep, and survives the pruning of the
+      deleting `Operation` after `management.operation_retention` on an injected clock with its
+      operation reference unchanged and resolving to nothing; and a `virtual` repository of a format
       whose `Capabilities()` declares `Virtual: unsupported` is refused at creation and no
       `Repository` row is written.
 - [ ] AC39: `Principal`, `Credential`, `Grant` and `TrustPolicy` exist in the shared schema with
       the fields the entity table gives them; a token `Credential` stores a lookup prefix and a
-      SHA-256 hash and no column holds the token value; every repository reference in the four
+      SHA-256 hash and no column holds the token value, and a unique index refuses a second row
+      with the same lookup prefix; a `Credential` records `created_by` distinct from its owner
+      when an admin mints for a robot; a `Credential` written with an `Idempotency-Key` and a
+      `Principal` created with one each hold the key, the payload digest and the requesting
+      principal, found by (requesting principal, key) and not by the key alone, so two
+      principals' identical keys are two rows; a robot's deletion sets `deleted_at` and keeps
+      the row, and a new robot with that name is refused by the non-partial unique index on the
+      name; a `TrustPolicy` carries an issuer profile from exactly `github`, `gitlab` and
+      `generic`; every repository reference in the four
       records is by identity; and a credential scope naming a deleted repository stays readable,
       renders the repository's last name from the tombstone, and authorizes nothing.
 - [ ] AC40: An `Upstream` row carries `adapter` (default `https`), `hosts` with a role per entry
       (`none`, `root`, `own` with a credential reference), `tls` (CA bundle reference, client
       certificate and key reference, `insecure_skip_verify` refused unless explicit), `limits`
-      (`concurrency` default 10, `cooldown_cap` default one hour) and `http2` (default true), all
+      (`concurrency` default 10, `cooldown_cap` default one hour), `http2` (default true),
+      `allow_http` and `allow_local` (each a core-parsed boolean, absent unless set explicitly,
+      an `http://` root refused at configuration without `allow_http` and `allow_http` refused
+      beside a credential reference or an `own` host entry), all
       outside the metadata document; an `UpstreamCredential` stores its material encrypted under
       the instance master key and never in clear, rotating it changes exactly one row and sets
       its `rotated_at`, its `last_used` advances on use and on nothing else, and deleting one
@@ -1440,13 +1557,23 @@ afterwards.
       `coalesce_key` is not inserted; a second `running` job with the same `exclusive_key` is
       refused); a `Job`'s `trace_context` and `request_id` are set at enqueue and equal the
       enqueuing request's; a terminal job is pruned after `async.job_retention` from its
-      finished time and never while its `Operation` exists; an unfinished job naming a
-      repository holds that repository's grace open on an injected clock exactly as an unexpired
-      upload session does (AC27), released at its terminal transition; and a `Schedule` carries
+      finished time and never while its `Operation` exists; a `Job` carries `holds_grace`,
+      copied from its kind's registration at enqueue, and `cancel_requested`, set by a cancel of
+      a running job and read by the claim, so that a rescued row with the flag set ends
+      `cancelled` without running; an unfinished job naming a
+      repository and carrying `holds_grace` holds that repository's grace open on an injected
+      clock exactly as an unexpired
+      upload session does (AC27), released at its terminal transition, while an unfinished job
+      without the flag (a `proxy.revalidate`) holds nothing and the sweep decides it from the
+      row with no kind registry loaded; a `PausedKind` row exists per paused kind with the kind,
+      the pause time and the pausing principal, is read by the claim in a process started after
+      the pause, and is absent once the kind resumes; and a `Schedule` carries
       an optional repository reference, set on a repository's `retention.pass`, `signing.resign`
       and `replication.sync` schedules and null on an instance-wide one, such that deleting the
       repository disables every schedule carrying its reference in the deletion transaction and
-      no schedule without one.
+      no schedule without one, and freezing the repository `read_only` disables its
+      `retention.pass` schedule and no other, its `signing.resign` and `replication.sync`
+      schedules still enqueuing on their next due tick.
 - [ ] AC42: The shared schema carries an index over `Package.name` per repository, the
       search query plans against it rather than scanning the package table, and no new entity
       or mark root accompanies it.
@@ -1537,22 +1664,22 @@ afterwards.
 | AC23 | integration | `internal/model/rollback_test.go` |
 | AC24 | integration | `internal/proxy/immediate_test.go` (network-level assertion) |
 | AC25 | integration | `internal/storage/retention_test.go` (checkpoint and delta dependency across pruning) |
-| AC26 | integration | `internal/storage/upload_session_test.go` (injected clock) |
+| AC26 | integration + build check | `internal/storage/upload_session_test.go` (injected clock; the two keys read from the typed config); `scripts/check-config-keys.js` in `make verify` (the `upload.` keys tabled here equal to the schema's, shared with `deployment.md`'s two-way check) |
 | AC27 | property | `internal/storage/gc_property_test.go` (open-session interleavings on an injected clock) |
 | AC28 | unit + integration | `internal/model/retention_config_test.go` (rule shape, refused deep filter, rules absent from the metadata document); `internal/model/repository_config_test.go` (`advisory_ecosystem` and the `policy` document outside the document and the handler `settings`, in no snapshot, unchanged by a repoint, dropped at tombstone time with refusal records kept; the binding rules themselves are `supply-chain-policy.md` AC11's); `internal/model/write_time_test.go` (advanced by completed writes only) |
 | AC29 | integration | `internal/model/snapshot_identity_test.go` (recomputed chain across pruning; replica numbering and takeover continuation) |
 | AC30 | integration | `internal/model/freeze_test.go` (snapshot count, provenance fields, no `RemoteFile` in the target, source evicted and swept) |
 | AC31 | integration | `internal/model/replication_link_test.go` (state set, reason per state, second non-`ended` link refused, `sync_interval`, `ended` on takeover and deletion with the takeover record readable; shared with `replication.md` AC16 and AC22 for the transitions) |
-| AC32 | integration + fault injection | `internal/model/operation_test.go` (transitions, atomic terminal commit under an injected fault, non-writing kinds including `refresh` with no snapshot reference, the unchanged publish on a declaring fixture format with identical and one-byte-different bytes, pruning window on an injected clock, authorization on read); `internal/manage/accounting_test.go` (the unchanged publish through the API, shared with `management-api.md` AC5) |
+| AC32 | integration + fault injection | `internal/model/operation_test.go` (transitions, atomic terminal commit under an injected fault, non-writing kinds including `refresh` with no snapshot reference, the unchanged publish on a declaring fixture format with identical and one-byte-different bytes, pruning window on an injected clock, authorization on read); `internal/manage/accounting_test.go` (the unchanged publish through the API, and the commit-time refusal's `failed` record for a claim retired between enqueue and run, shared with `management-api.md` AC5); `internal/manage/deferred_test.go` (the retired-between-enqueue-and-run case on the deferred path, shared with `management-api.md` AC16) |
 | AC33 | integration | `internal/model/snapshot_test.go` (last-version removal, later snapshots, pruning) |
 | AC34 | property | `internal/storage/gc_property_test.go` (blobs mentioned only by non-root records collected; records readable after; pointer-document, merged-document and declared-list blobs live while current, collected after; input records present and absent) |
 | AC35 | integration + property | `internal/model/retirement_test.go` (same-transaction write, absent from snapshots, survives pruning and operation prune, refusal at claim declaration and at commit after an interleaved retiring write, a finer claim refused beside an accepted sibling claim, recreated identity not retired); `internal/manage/retirement_test.go` (the same checks through the API, a binding and a fixture wire write, shared with `management-api.md` AC12); `internal/storage/gc_property_test.go` (a claim racing a retiring write of the same coordinate under the default `Pointer` row lock, every interleaving of declaration, retiring commit and claiming commit step, shared with `storage-and-gc.md` AC30); `internal/storage/write_claim_test.go` (the declared-then-retired-then-committed order refused at `READ COMMITTED` and committing the retired coordinate under a test-build transaction forced to `REPEATABLE READ`; no document lock after the head lock; shared with `storage-and-gc.md` AC30) |
-| AC36 | integration | `internal/model/pointer_freshness_test.go` (every transition kind, target-moving and document-only, on an injected clock stepped backwards; document-only transitions leave the target and the snapshot table unchanged; a repository batch advancing every pointer of its repository only; the member-list floor after removing the supplying member, with an adoption of the removed `remote` and a transition of the removed `local`'s pointer interleaved at every point of the removal and every served `Last-Modified` recorded and compared against what the virtual serves afterwards; the floor set by a member's own deletion and detachment; written only by the transition; pointer documents per pointer, outside snapshots, dropped with the pointer); `internal/index/repository_pointer_documents_test.go` and `internal/index/virtual_freshness_test.go` (shared with `signing-service.md` AC33 and AC34) |
+| AC36 | integration | `internal/model/pointer_freshness_test.go` (every transition kind, target-moving and document-only, on an injected clock stepped backwards; document-only transitions leave the target and the snapshot table unchanged; a repository batch advancing every pointer of its repository only; the member-list floor after removing the supplying member, with an adoption of the removed `remote` and a transition of the removed `local`'s pointer interleaved at every point of the removal and every served `Last-Modified` recorded and compared against what the virtual serves afterwards; the floor set by a member's own deletion and detachment; written only by the transition; pointer documents per pointer, outside snapshots, dropped with the pointer); `internal/repository/delete_test.go` (no new `PointerDocument` on the deletion write's default-pointer move, the existing record kept to tombstone time; shared with `repository-lifecycle.md` AC14); `internal/index/repository_pointer_documents_test.go` and `internal/index/virtual_freshness_test.go` (shared with `signing-service.md` AC33 and AC34) |
 | AC37 | integration + property | `internal/model/signature_record_test.go` (keying, rotation batch with no snapshot, pruning with the body); `internal/model/signing_key_test.go` (no private material column); `internal/storage/metadata_blob_gc_test.go` (declared blob lists, on a CAS-backed and on an inline declaring document, and on a remote's inline repository-level document and a package-level document written by an adoption and appended by a map build, with two package-level adoptions committed concurrently and no revision-token retry counted, a sweep with the grace lapsed after each and after the dropping adoption, snapshot count unchanged; the adoption half shared with `proxy-cache.md` AC27's `internal/proxy/retained_revision_test.go`; the virtual half, a merged document declaring two predecessor generations across three swaps with the sweep paused at its mark and intent phases and the virtual's deletion, the fixture shared with `storage-and-gc.md` AC16, `signing-service.md` AC19 and `formats/debian.md` AC22); `internal/model/write_hook_test.go` (hook ordering, failing hook commits nothing) |
-| AC38 | unit + integration | `internal/model/schema_test.go` (schema introspection: identity foreign keys, no name column, partial unique index; shared with `repository-lifecycle.md` AC3); `internal/model/repository_lifecycle_test.go` (initial and final empty checkpoint snapshots on all three types, tombstone across pruning and sweeps, `Virtual: unsupported` refusal with a fixture handler) |
-| AC39 | unit + integration | `internal/model/credential_records_test.go` (fields, no token-value column, identity references, deleted-repository scope readable and inert) |
-| AC40 | unit + integration | `internal/model/upstream_test.go` (extended: transport fields outside the document); `internal/model/upstream_credential_test.go` (encrypted at rest, one-row rotation, in-use refusal) |
-| AC41 | integration + property | `internal/model/job_test.go` (fields, partial unique indexes, trace fields at enqueue, prune ordering against `Operation`); `internal/model/schedule_test.go` (repository reference set and null; scoped schedules disabled by deletion, instance-wide ones untouched; shared with `async-operations.md` AC28's `internal/repository/delete_test.go`); `internal/storage/gc_property_test.go` (queued and retrying job in the operation set on an injected clock) |
+| AC38 | unit + integration | `internal/model/schema_test.go` (schema introspection: identity foreign keys, no name column, partial unique index; shared with `repository-lifecycle.md` AC3); `internal/model/repository_lifecycle_test.go` (initial and final empty checkpoint snapshots on all three types, tombstone across pruning and sweeps and across the deleting `Operation`'s prune on the injected clock with its reference unchanged, `Virtual: unsupported` refusal with a fixture handler; the tombstone half shared with `repository-lifecycle.md` AC24's `internal/storage/retention_test.go`) |
+| AC39 | unit + integration | `internal/model/credential_records_test.go` (fields, no token-value column, the lookup-prefix unique index refusing a duplicate, `created_by` beside the owner, the idempotency triple on both records found by principal and key with two principals' identical keys as two rows, `deleted_at` with the name refused to a new robot, the profile's closed set, identity references, deleted-repository scope readable and inert); `internal/credential/create_test.go` (`created_by`, shared with `credential-management.md` AC1); `internal/credential/idempotency_test.go` (replay matched on principal and key, shared with its AC16); `internal/credential/robot_test.go` (deletion in one transaction and the name reservation, shared with its AC9) |
+| AC40 | unit + integration | `internal/model/upstream_test.go` (extended: transport fields outside the document; `allow_http` and `allow_local` absent unless explicit); `internal/upstream/validate_test.go` (the `http://` refusal and its override, `allow_http` beside a credential refused; shared with `upstream-adapters.md` AC22 and AC23); `internal/model/upstream_credential_test.go` (encrypted at rest, one-row rotation, in-use refusal) |
+| AC41 | integration + property | `internal/model/job_test.go` (fields, partial unique indexes, `holds_grace` copied at enqueue, `cancel_requested` read by the claim, trace fields at enqueue, prune ordering against `Operation`); `internal/async/cancel_test.go` (the flag met across a lost notification and a lease expiry, shared with `async-operations.md` AC9); `internal/async/pause_test.go` (the `PausedKind` row read by a second process, absent after resume; shared with its AC10); `internal/model/schedule_test.go` (repository reference set and null; scoped schedules disabled by deletion, instance-wide ones untouched; shared with `async-operations.md` AC28's `internal/repository/delete_test.go`; `read_only` disabling `retention.pass` alone, shared with `repository-lifecycle.md` AC10's `internal/repository/readonly_test.go`); `internal/storage/gc_property_test.go` (queued and retrying job in the operation set on an injected clock, with and without the flag; shared with `async-operations.md` AC13) |
 | AC42 | integration | `internal/model/package_index_test.go` (index present; `EXPLAIN` of the search query uses it) |
 | AC43 | unit + integration + property | `internal/model/blob_row_test.go` (segment digests written at commit and recomputed; mark unset, set and cleared through the read path; no resolution by segment digest); `internal/storage/read_verify_test.go` (the mark on an altered object; a commit of the marked digest re-uploading through the intent gate, clearing the mark with its reference, and the healed read whole and by range, with the sweep's phases interleaved; an unmarked digest still a dedup hit; shared with `storage-and-gc.md` AC21); `internal/storage/gc_property_test.go` (marking unchanged by either column) |
 | AC44 | integration + property | `internal/model/cache_freshness_test.go` (record on the remote's document entry, absent on hosted documents; the anchor class recorded per adoption from the trust set as it stood, unchanged by a later trust-set change and replaced by the next adoption, readable beside `adopted_at`; documents at all three levels, bodies and records unchanged across an eviction pass over quota and a sweep with the grace lapsed, the next adoption on a backwards clock still advancing; dropped at the remote's deletion and tombstone), shared with `proxy-cache.md` AC29's `internal/proxy/metadata_eviction_test.go`; `internal/proxy/freshness_test.go` (monotonic under a backwards clock; paired set committed atomically under concurrent reads; shared with `proxy-cache.md` AC22) |
@@ -1572,7 +1699,10 @@ and `policy` columns beside them, which `supply-chain-policy.md` Phase 1 reads, 
 key on `Package` and `Version` (AC46), which the same phase's matcher and feed sync read. The `Blob` row's
 `segment_digests` and verification-failed mark (AC43), which `storage-and-gc.md`'s verified read
 path writes and reads. The `Package.name` index (AC42). `Principal`, `Credential`, `Grant` and
-`TrustPolicy` (AC39), which `credential-management.md` Phase 1 needs at charter step 2.
+`TrustPolicy` (AC39), with `created_by`, the idempotency triples, `deleted_at`, the
+lookup-prefix index and the issuer profile, which `credential-management.md` Phase 1 needs at
+charter step 2. The `upload.idle_timeout` and `upload.max_duration` keys in the configuration
+schema (AC26).
 
 ### Phase 2: Snapshots and pointers
 `Snapshot` (deltas plus periodic checkpoints, capturing membership and metadata) and
@@ -1591,7 +1721,8 @@ completion. The `Retirement` record lands with it, together with the write trans
 declaration and its check at declaration and at commit, as this spec's AC35 requires.
 
 ### Phase 3: Remote modelling
-`Upstream` with its transport configuration, `UpstreamCredential`, `RemoteFile`, download
+`Upstream` with its transport configuration, `allow_http` and `allow_local` included,
+`UpstreamCredential`, `RemoteFile`, download
 policies, upstream failover (AC40, with `upstream-adapters.md` Phase 1), and the cache-scoped
 freshness record with its paired-set id and the anchor class of each adoption on a `remote`'s
 cached documents (AC44), which `proxy-cache.md`'s freshness phase writes, on documents that are
@@ -1604,11 +1735,13 @@ root's reach over pointer documents, virtual merged documents and declared blob 
 property tests that police them.
 
 ### Phase 5: Records for sibling subsystems
-`Job` and `Schedule` with its repository reference (AC41), which `async-operations.md` Phase 1
+`Job` with `cancel_requested` and `holds_grace`, `Schedule` with its repository reference and
+`PausedKind` (AC41), which `async-operations.md` Phase 1
 needs when the queue core lands; `Signature` and `SigningKey` (AC37), before `signing-service.md`
 Phase 1; a virtual merged set's input record with its merge inputs, admission outcomes and
 requested cells (AC45), before `signing-service.md` Phase 4 (virtual
-merges and the proxied path); the verification records' row, before `artifact-verification.md` Phase 1; and
+merges and the proxied path); the verification records' row with the verdict's revision column
+and the trust set's revocation want-list, before `artifact-verification.md` Phase 1; and
 replication's replication link with its six-state lifecycle and freeze write kind with its
 provenance record (AC30, AC31), which must land before `replication.md`'s Phase 1 and Phase 4
 respectively.
@@ -1668,6 +1801,21 @@ fold of its declaring-document decision (was its Q22) into the declared-list bul
 **confirmed**; the same recheck added the virtual merge commit as the list's third writer, which
 that fold could not have known. None of the three is a question of this spec, so the verdicts
 live here, in the Review Log and in the fields they changed.
+
+**Fable follow-up 2026-10-01.** The items the sibling rechecks queued against this spec after it
+was planned each transcribe a decision adopted there (`credential-management.md`'s replay
+decision and its field list; `async-operations.md`'s amended grace-hold and cancellation
+decisions and its pause record; `repository-lifecycle.md`'s read-only transitions decision, its
+deletion write and its tombstone cost; `upstream-adapters.md`'s local-address decision;
+`artifact-verification.md`'s amended when-verification-runs decision; `management-api.md`'s
+deferred claim check) and raised no question here. One item left a choice: `deployment.md`'s two-way key
+check reads every `| Key | Default | Meaning |` table, and this spec said the session lifetime
+was "configurable instance-wide" without tabling a key, so either the keys are tabled or the
+word goes. The keys are tabled (`upload.idle_timeout`, `upload.max_duration`), because dropping
+configurability would reverse the session-lifetime defaults decision below (was Q16), which
+adopted it, and because `deployment.md`'s bucket lifecycle rule already wanted a key to cite;
+recorded as an amendment of that record, and flagged owner-facing since it names two keys of
+the operator surface.
 
 Resolved decisions are kept below rather than deleted, so the reasoning survives the next time
 someone asks why it was done this way.
@@ -1746,6 +1894,13 @@ collection the grace period already bounds; option C abandons the adopted slidin
 an abandoned session pin its repository's grace for days. Folded into the Design section's
 "Session lifetime" paragraph and AC26; AC27 asserts the grace hold the defaults were priced
 against.
+
+Amended on the Fable follow-up of 2026-10-01: "configurable instance-wide" named no key, and
+`deployment.md`'s two-way key check (`scripts/check-config-keys.js`) fails a key the schema
+holds that no spec tables. The two keys are now tabled in the "Session lifetime" paragraph as
+`upload.idle_timeout` (`1h`) and `upload.max_duration` (`24h`), under a prefix this spec owns
+since it owns the definition; `deployment.md`'s sibling-prefix inventory gains the row
+(reported). The values and the sliding shape are unchanged.
 
 ### Resolved: what counts as a write (was Q4)
 
@@ -1981,3 +2136,4 @@ roots").
 | 2026-09-28 | 36a137d | data-loss fix, second wave, on Opus (data-loss fix item 2): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 2 of "From the data-loss fix" in `agents/spec-loop/consequences.md`, verified against `proxy-cache.md`'s resolved retained-revision decision (was its Q19, AC27) and `storage-and-gc.md` AC16, which already words the list generally. The hole: "Declared blob digests on a CAS-backed document" and AC37 scoped the list to a CAS-backed declaring document and to a completed write, while a remote's repository-level document, which now carries the declared list for every retained revision's blobs, is often inline and is written only by cache materialisation; read literally, the model would not mark a list on an inline document, and a remote's list would have no writer. Now: the bullet (renamed "Declared blob digests on a document, inline or CAS-backed") says the list is a field of the row beside the body, never inside it since the core never interprets a body, so it is marked whether the declaring body is inline or CAS-backed, and that on a `remote` each adoption rewrites the list and a later map build appends to it, both reference creations through the shared call and neither creating a snapshot; the Scope line matches. AC37 extended (inline declaring documents; a remote's list across a sweep with the grace lapsed and after the dropping adoption, no snapshot created) and its Test Plan row names the inline and remote cases in `internal/storage/metadata_blob_gc_test.go`, the adoption half shared with `proxy-cache.md` AC27. The row placement follows from the core never parsing a body, so no question was adopted and `fable_recheck` is unchanged. Noticed and reported, not changed: the non-root row for the cache-scoped freshness record says a remote's current-document entry "is a cached reference (the second root) or an evicted one", and AC44 drops the record "with its entry at eviction", while `proxy-cache.md` was-Q19 and `storage-and-gc.md` treat a remote's current metadata documents as held by the fourth root and not by LRU. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
 | 2026-09-28 | f0bfe75 | metadata-eviction reconciliation on Opus (data-loss fix second wave, item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Item 0 of "From the data-loss fix second wave" in `agents/spec-loop/consequences.md`, the contradiction this spec's own previous pass reported: the non-root row said a remote's current-document entry "is a cached reference (the second root) or an evicted one" and AC44 dropped the record "with its entry at eviction", while `proxy-cache.md` was-Q19 and `storage-and-gc.md` AC16 held a remote's current metadata under the fourth root. Settled in `proxy-cache.md`, whose Q21 was raised and adopted in this pass under the standing delegation: a remote's metadata documents at every level are current documents LRU eviction never reaches, changed only by an adoption and ended only with the remote's deletion. Folded here into a new "Download policies" paragraph, the cache-scoped record's bullet, the non-root table's intro and the record's row, and AC44 (unchanged across an eviction pass over quota with a sweep past grace, the next adoption on a backwards clock still advancing, dropped at deletion or tombstone time), its Test Plan row shared with `proxy-cache.md` AC29; Phase 3 notes it. Its Q22 (a per-package revision set's declared list on its package-level document) folded into the Scope line, the declared-list bullet and AC37 with its Test Plan row (concurrent package-level adoptions). Mark-root check: no root added and no reach widened, since a remote's documents were always the fourth root's current-document half; the set stays five. No criterion added, two extended. `fable_recheck` extended. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
 | 2026-09-30 | 4b05ace | Fable recheck: full review (claim verification against every cited sibling at this sha, `management-api.md` read at HEAD since another agent was editing it; adversarial lens on the freshness, declared-list and dedup designs; constitution; go-spec-reviewer inline, its codebase step vacuous since `internal/` holds no Go code) + re-examination of the three design judgements made on Opus without a question, treated as unreviewed | Brought current first: every open consequence against this file applied and verified against the current text of its source (storage-and-gc recheck item 5 a, b and c; signing-service recheck item 10; supply-chain recheck item 7; foundation leftovers item 3). Verdicts: the member-list floor derivation confirmed and amended (the removal reads a member's values under a share lock, closing a window in which a concurrent adoption could be served once through the virtual and then fall beneath the floor; AC36); the was-Q21 fold confirmed, with the dual-held blob clause added under "Download policies"; the was-Q22 fold confirmed, with the virtual merge commit as the list's third writer (AC37). Adversarial findings folded without a question: the anchor class a remote's adoption ran under had no home although `signing-service.md`'s admission rule is stated over it, so it is a column of the cache-scoped record, set at adoption and never recomputed (AC44); the input record's requested cells must survive a merge swap or a merge between the miss and the replay erases them, so the record has two parts and two writers (AC45); a commit of a marked digest clears the mark and is never a dedup hit (AC43); the claim re-check runs at `READ COMMITTED` with the head lock last (AC35); a `lifecycle` rename's result lists `unbound_hosts` (Operations); the advisory key is replaced by any later write of its row (AC46). AC8 gains an architecture test; AC40 and AC41 name the lease, schedule and rotation fields Design uses; the Review Log is in date order. Mark-root check: nothing added is a root and nothing widens a root's reach; the set stays five. Sibling consequences reported, not applied. 46 criteria, each with a Test Plan row; zero open questions; `node scripts/check-spec.js` zero failures; `fable_recheck` cleared. draft -> planned. |
+| 2026-10-01 | 13192da | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: every item queued against this file in `agents/spec-loop/consequences.md` after the 2026-09-30 row verified against the current text of its source spec, then applied and placed against the root set. Applied, seven items. `credential-management.md` recheck item 1: `created_by` and the idempotency triple on `Credential`, the triple and `deleted_at` on `Principal` (the robot name index not partial, so the name stays reserved), a unique index on the token lookup prefix, the issuer profile on `TrustPolicy` (entity table, "Principals, credentials and grants", AC39 and its row sharing that spec's AC1, AC9 and AC16 files). `async-operations.md` recheck item 1: `cancel_requested` and `holds_grace` on `Job`, the hold wording now "jobs whose `holds_grace` is set" with `proxy.revalidate` the declared exception, and a new `PausedKind` record (kind, paused at, pausing principal) placed in the non-root table (entity table, "Jobs and schedules", the `Operation` and `Job` non-root rows, AC41 and its row sharing that spec's AC9, AC10 and AC13 files). `repository-lifecycle.md` recheck item 3: `read_only` suspends only `retention.pass`, with `signing.resign` and `replication.sync` continuing (Schedule bullet and row, AC41); the deletion write's default-pointer move as the one `PointerDocument` the write does not render (the `PointerDocument` bullet, AC36 and its row sharing its AC14 file); the tombstone's operation reference as a wire identifier that outlives the `Operation`'s pruning (identity section, tombstone row, AC38 and its row). `upstream-adapters.md` recheck item 1: `allow_http` and `allow_local` on `Upstream`, refused unless explicit (entity table, "Upstream configuration and upstream credentials", AC40 and its row sharing its AC22 and AC23 file). `artifact-verification.md` recheck item 1: superseded derived from the verdict's revision column with no mark rows, re-evaluation a `verify.reevaluate` `Job` and not a record, the revocation want-list on the trust set as a non-root record holding URLs (entity table, "Verification records", the non-root row). `management-api.md` recheck item 7: a deferred operation whose claim is retired between enqueue and run ends `failed` with nothing committed ("Operations", AC32 and its row sharing its AC5 and AC16 files). `deployment.md` recheck item 3: the session lifetime's two keys tabled as `upload.idle_timeout` (`1h`) and `upload.max_duration` (`24h`) in the three-column shape the two-way check parses ("Session lifetime", AC26 and its row, the was-Q16 record amended). Declined: none; nothing queued was superseded. Adversarial check of what changed: the `holds_grace` qualification was carried into the `Operation` non-root row and the pins-nothing bullet, which had stated the hold unconditionally and would otherwise have contradicted the amended `async-operations.md` was-Q4; the deletion exception was checked against AC36's "produced inside every repoint" and against the tombstone drop, which still ends the surviving record; the `PausedKind` record names a kind and a principal and no content. Judgment flagged owner-facing: tabling two `upload.` keys rather than dropping "configurable", recorded as an amendment of was-Q16 since dropping it would have reversed that adopted decision. Mark-root check: nothing added is a root and nothing widens a root's reach (a want-list holds URLs, a `PausedKind` holds a kind and a principal, the triple holds a payload digest, never a content digest); the set stays five. Sibling consequences reported, not applied. 46 criteria, each with a Test Plan row; zero open questions; `node scripts/check-spec.js` on this file: zero failures. Stays planned. |

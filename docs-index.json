@@ -629,7 +629,7 @@
     "path": "docs/internal/plans/foundation/web-ui.md",
     "description": "Spec for the web UI: a TypeScript/React single-page application embedded in the server binary and served under a reserved ui segment, that signs a user in through OIDC or the local admin, browses and searches repositories, packages and versions of every implemented format through the management API alone, shows every user the client-configuration snippet for their tool generated from the same per-format declaration the conformance cases run, and gives an administrator repositories, upstreams, pointers, tokens, robots, grants, trust sets, verdicts, policy refusals, operations and pinned-storage visibility, at WCAG 2.2 AA, proven in a real browser by Playwright against a real server.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "53",
     "covers": [
       "web/**",
