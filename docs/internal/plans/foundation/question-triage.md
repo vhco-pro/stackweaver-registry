@@ -461,7 +461,7 @@ decision:
 |---|---|
 | `formats/rubygems.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12 |
 | `formats/rpm.md` | Q11 |
-| `formats/arch.md` | Q13 |
+| `formats/arch.md` | Q13 (rechecked on Fable 2026-10-01: superseded by signing-service was-Q20; Q14 adopted on Fable; spec planned) |
 | `formats/cargo.md` | Q7 |
 | `formats/composer.md` | Q10, Q11 |
 | `formats/conan.md` | Q11 |

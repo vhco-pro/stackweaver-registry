@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Format closing sweep 2026-09-28 at f8ad8b2 on Opus (not a review): Q13 adopted (a virtual composes a remote member's database only under a verified verdict, per signing-service AC36, so Arch's and Manjaro's unsigned official mirrors contribute nothing and the recipe puts them in a second section; AC23 extended); the merging profile declares member-input paths ({layout}/{db}.db and .files with their signatures), remote adoption re-merges and a virtual-only remote is revalidated by the virtual's reads (signing-service was-Q16, AC35; proxy-cache AC26); the architecture-set configure now has a client-observed effect, pacman's sync failing and then succeeding as the set loses and regains its architecture (management-surfaces item 14; AC9 extended); %BASE% reported as the version's advisory key so a future Arch source needs no code change (supply-chain was-Q11, AC24; AC24 extended); database revisions outside the quota and the declared list's placement confirmed (proxy-cache was-Q21, Q22; new AC28); packages through ServeFile (signing-service was-Q14), the exact conditional rule cited to its was-Q12; claims checked at declaration and at commit and the declared unchanged publish (management-api was-Q14, Q15; AC8); the stale pacman-row wording removed; two exception-list rows reported for conformance-harness. fable_recheck extended; 28 criteria. Earlier: Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a remote retains one superseded database revision per database and architecture, its .db body and filename map on the remote's declared blob-digest list, cached packages and signatures on their own cached references (proxy-cache was-Q19, AC27); a changed %SHA256SUM% now serves the current database's bytes and the new commit ends the old blob's cached reference (proxy-cache was-Q20, AC28), withdrawing the claim that each revision's clients receive their own bytes; AC22 and AC26 extended with sweeps run while the revision is retained. Earlier: Reconciled 2026-09-28 at 15ced69 with the foundation wave on Opus (not a review): databases and package signatures produced through signing-service's Indexer and generator package, signatures as Signature records rather than files, the announce-switch-retire profile as one atomic batch with no snapshot (AC10), freshness rendered from data-model's moved_at through ServeDocument (AC5), the virtual merge on the index.merge job (AC23); management operations on publish, delete-version, delete-package and configure with core-held retirement refused as retired (AC8, AC9); the key document a descriptor (AC13); refusals through WriteRefusal re-asserting the client-setting binding row (AC14); the openpgp all-flag entry and integrity entries of artifact-verification (AC3, AC17); upstream-adapters transport, proxy-cache paired sets, cache-scoped Last-Modified and removal classes (AC19, AC20, AC22); the Arch tracker kept out under supply-chain was-Q9; AC16's fallback half on declared stand-ins under the harness's client confinement; Capabilities with rename and virtual cases (AC27). Earlier: authored 2026-09-26 from captures of pacman 7.1.0 (Arch and Manjaro) and 6.0.2; twelve questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-01 at e298671: a full review pass over the Opus-authored whole (claim verification of every sibling citation at HEAD, adversarial lens at full strength on the captured behaviour, keyring rotation, the architecture-set configure, the GC keep-alive and the virtual, go-spec-reviewer inline, constitution compliance) plus the re-examination of the thirteen adoptions made without Fable. Verdicts: Q1 to Q12 confirmed (Q2's record gains the stolen-credential cost, Q4's the add-never-replace rule and the custody-rate cost of the switch, Q7's cost is now avoidable through the virtual, Q9 amended in fold, Q12 gains the virtual recipe); Q13 SUPERSEDED by signing-service's resolved admission decision (was Q20 there): a remote member's database is admitted to a signed virtual by the anchor class its adoption ran under, so Arch's and Manjaro's unsigned official mirrors contribute under class none, AC23's exclusion clause inverted, the one-section recipe restored, DatabaseRequired available over distribution content; Q14 adopted on Fable (shadowing by literal name, providers kept whole, the client's resolution recorded). Brought current first: signing-service was-Q21 (member inputs as templates over {db} and {arch} with grammars, no derivation, the read-driven cell under was-Q22's cap), artifact-verification's amended verdict vocabulary (a keyless remote reads absent, never failed). The adversarial pass found that an optional upstream .db.sig left the anchor class undefined: a remote holding archlinux-keyring for package verdicts would have classed its unsigned database signature-with-absent and excluded it, so the verifier hook now applies only when the upstream served the member and the adoption is class none (AC17, AC18; a sibling consequence for proxy-cache and artifact-verification). Also stated: the retained revision guarantees lookup and verification, not bytes an Arch mirror has already removed (AC22's row); removing an architecture deletes nothing (AC9); a straddled adoption fails once as a straddled publish does; the alias on a remote is one document. 28 criteria, each with a Test Plan row; 14 questions resolved, zero open; fable_recheck cleared. Earlier: Format closing sweep 2026-09-28 at f8ad8b2 on Opus (not a review): Q13 adopted (a virtual composes a remote member's database only under a verified verdict, per signing-service AC36, so Arch's and Manjaro's unsigned official mirrors contribute nothing and the recipe puts them in a second section; AC23 extended); the merging profile declares member-input paths ({layout}/{db}.db and .files with their signatures), remote adoption re-merges and a virtual-only remote is revalidated by the virtual's reads (signing-service was-Q16, AC35; proxy-cache AC26); the architecture-set configure now has a client-observed effect, pacman's sync failing and then succeeding as the set loses and regains its architecture (management-surfaces item 14; AC9 extended); %BASE% reported as the version's advisory key so a future Arch source needs no code change (supply-chain was-Q11, AC24; AC24 extended); database revisions outside the quota and the declared list's placement confirmed (proxy-cache was-Q21, Q22; new AC28); packages through ServeFile (signing-service was-Q14), the exact conditional rule cited to its was-Q12; claims checked at declaration and at commit and the declared unchanged publish (management-api was-Q14, Q15; AC8); the stale pacman-row wording removed; two exception-list rows reported for conformance-harness. fable_recheck extended; 28 criteria. Earlier: Data-loss fix 2026-09-28 at 93982ba on Opus (not a review): a remote retains one superseded database revision per database and architecture, its .db body and filename map on the remote's declared blob-digest list, cached packages and signatures on their own cached references (proxy-cache was-Q19, AC27); a changed %SHA256SUM% now serves the current database's bytes and the new commit ends the old blob's cached reference (proxy-cache was-Q20, AC28), withdrawing the claim that each revision's clients receive their own bytes; AC22 and AC26 extended with sweeps run while the revision is retained. Earlier: Reconciled 2026-09-28 at 15ced69 with the foundation wave on Opus (not a review): databases and package signatures produced through signing-service's Indexer and generator package, signatures as Signature records rather than files, the announce-switch-retire profile as one atomic batch with no snapshot (AC10), freshness rendered from data-model's moved_at through ServeDocument (AC5), the virtual merge on the index.merge job (AC23); management operations on publish, delete-version, delete-package and configure with core-held retirement refused as retired (AC8, AC9); the key document a descriptor (AC13); refusals through WriteRefusal re-asserting the client-setting binding row (AC14); the openpgp all-flag entry and integrity entries of artifact-verification (AC3, AC17); upstream-adapters transport, proxy-cache paired sets, cache-scoped Last-Modified and removal classes (AC19, AC20, AC22); the Arch tracker kept out under supply-chain was-Q9; AC16's fallback half on declared stand-ins under the harness's client confinement; Capabilities with rename and virtual cases (AC27). Earlier: authored 2026-09-26 from captures of pacman 7.1.0 (Arch and Manjaro) and 6.0.2; twelve questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for Arch Linux pacman repositories served to pacman 6 and 7: repositories holding many databases in Arch's {db}/os/{arch} layout, each database and files document generated and signed by the shared signing service on every write, every hosted package given a detached repository signature without its bytes changing, the database and package trust layers kept apart, a pointer-scoped forward-moving Last-Modified so a rollback reaches pacman's time-conditioned refresh, a proxied path serving Arch's unsigned databases and packager-signed packages verbatim, and virtual databases merged and re-signed."
 author: michielvha
 goal: "Serve Arch Linux and Manjaro hosts and container builds a private pacman repository and a verified cache of an Arch mirror that stock pacman 6 and 7 install from with the default SigLevel tightened to require database signatures, one repository key in the pacman keyring, credentials in a root-only Include file, and a network restricted to this registry."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/arch/**"
   - "conformance/arch/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q19 and Q20 into the proxied path (retained-revision keep-alive on the remote's declared list, the changed-record row serving the current revision), which needs the same recheck; the format closing sweep on Opus 2026-09-28 raised and adopted Q13 (unsigned upstream databases contribute nothing to a virtual under signing-service AC36) and folded the member-input paths and the architecture-set client case without a question, all needing the same recheck"
 ---
 
 # Plan: Arch Linux pacman repositories
@@ -223,8 +222,11 @@ the charter lands at the start of step 4b, before this format could be built.
   table.
 - **Virtual repositories**, merged per database name and architecture with per-name first-member
   resolution and signed with the virtual repository's own key (the resolved virtual-repository
-  decision below), a remote member contributing only a database that verified against its keys
-  (the resolved unsigned-member decision below).
+  decision below), a remote member's database admitted by the anchor class its adoption ran
+  under, so a remote over Arch's or Manjaro's unsigned official mirrors contributes
+  (`signing-service.md`'s resolved admission decision, was Q20 there, which superseded the
+  unsigned-member decision below, was Q13), and shadowing by literal package name only (the
+  resolved provider-shadowing decision below, was Q14).
 - The handler's `Capabilities()` declaration, repository rename and virtual aggregation
   (Design, "Capabilities and lifecycle").
 - The three pinned clients above as conformance oracles on both paths, with the client network
@@ -421,7 +423,10 @@ below:
   Arch's official mirrors serve. Every database serves a signed `.db` and `.files` for each
   declared architecture, an architecture with no packages serving a signed empty database, which
   both lines accept (captured with a 45-byte empty database under `DatabaseRequired`); a request for
-  an architecture outside the set answers `404`.
+  an architecture outside the set answers `404`. Removing an architecture from the set deletes
+  nothing: its packages stay in the snapshot and in every retained one, only their database stops
+  being served, and restoring the architecture regenerates and signs its database from them in
+  the restoring write (AC9).
 - **An `any` package is listed in every architecture's database** of its database name, as Arch's
   are (live: 42 `any` records in the `x86_64` `core.db`), and served from each
   `{db}/os/{arch}/` path, one file and one blob.
@@ -467,7 +472,9 @@ The levels are exactly those `data-model.md` provides; no table is added.
   (Design, "Pointers, rollback and freshness"); it is not snapshot content and this handler holds
   no freshness state of its own.
 - A remote repository's document holds, per database and architecture it has served, the current
-  and retained revisions with their upstream `Last-Modified`, verification results and the
+  and retained revisions with their upstream `Last-Modified`, the anchor class each adoption ran
+  under beside its `adopted_at` on the cache-scoped record (`data-model.md` AC44; the verdicts
+  themselves are `artifact-verification.md`'s records) and the
   filename map built from each (below); none of it is snapshot content. It retains one superseded
   revision per database and architecture, the default count of `proxy-cache.md`'s resolved
   retained-revision decision (was its Q19), and every blob it keeps for the current or the
@@ -698,9 +705,14 @@ below:
 8. **The virtual merge** (below): the generator's `Merge`, run as the deferred `index.merge` job
    when a member's database changes, coalesced per virtual, never on a request's path, and signed
    with the virtual repository's key (`signing-service.md`, "Virtual merges", AC19), re-run when a
-   remote member adopts a new database revision through the runtime's adoption hook and fed a
-   never-adopted remote through the member-input paths the profile declares (its resolved
-   remote-member decision, was Q16, AC35: the re-merge this spec asked for, now met).
+   remote member adopts a new database revision through the runtime's adoption hook (its resolved
+   remote-member decision, was Q16, AC35: the re-merge this spec asked for, now met), fed a
+   never-adopted remote through the member inputs the profile declares as templates over the
+   database names and architectures the virtual's other members hold, with a read-driven first
+   fetch for a database or architecture only the remote holds (its resolved member-input
+   decision, was Q21, AC35), and admitting a remote member's database by the anchor class its
+   adoption ran under rather than by a `verified` verdict alone (its resolved admission decision,
+   was Q20, AC36).
 
 Verification of upstream and publisher signatures is not the signing service's: it belongs to
 artifact verification (`signing-service.md`, "The produce/verify boundary").
@@ -712,9 +724,14 @@ resolved verification-ownership decision; that spec lists both items as `arch.md
 answers them with its `openpgp` detached entry and its integrity entries:
 
 1. **An OpenPGP detached-signature verification entry** that takes a file's bytes, a signature (a
-   detached file, or a record's base64 `%PGPSIG%`) and a key set, and answers verified (with every
-   key id), untrusted or bad, with pacman's semantics: **every** signature packet must verify with
-   a key in the set, and an expired key's valid signature counts as verified. It is used for
+   detached file, or a record's base64 `%PGPSIG%`) and a key set, and answers `verified` (with
+   every key id), `failed` with the reason `untrusted-key` or `bad-signature`, or `absent`, with
+   pacman's semantics: **every** signature packet must verify with a key in the set, and an
+   expired key's valid signature counts as verified. `absent` is the answer when no signature
+   reached the verifier and also when the repository's trust set holds no `openpgp` entry at all,
+   never `failed` (that spec's resolved verdict-record decision, was Q2, as amended on Fable), so a
+   remote configured with no keys reads its upstream's signatures as `absent` and its adoptions
+   run under anchor class `none` (below, "The proxied path"). It is used for
    publisher signatures at ingest, for upstream database signatures where an upstream serves one,
    and for upstream package signatures on the proxied path. Answered by the `openpgp` detached
    entry under its `all` flag, which counts a signature made before its key's expiry as verified
@@ -876,11 +893,25 @@ Classification and behaviour:
   as a **paired set** (`proxy-cache.md`, "Freshness of what a remote serves", which names this
   format's finding): a revalidation fetches the document and its `.sig` (a `404` recorded as
   unsigned), and the set is verified together, committed in one transaction and served under one
-  freshness record, so no request observes one member new and the other old (its AC22). Where the upstream signs and the remote has keys
-  configured, the signature is verified before the revision is served, through the entry above; an
-  unsigned upstream, which Arch and Manjaro are (live), is accepted on TLS alone and its revision
-  recorded as unverified. A revision that fails is never served; the previous verified revision
-  keeps serving under serve-stale and the operator is alerted.
+  freshness record, so no request observes one member new and the other old (its AC22). The
+  set's verifier hook is the `openpgp` detached entry above over the `.sig` member, declared on
+  the fetch-and-cache request as `proxy-cache.md`'s Obligation section shapes it, and it
+  **applies only when the upstream served the member**: the handler's adoption check reports a
+  revision whose `.sig` answered `404` as unsigned, and that adoption carries no hook. What the
+  adoption then records, beside `adopted_at`, is the anchor class `artifact-verification.md`
+  derives from the hook as applied and the remote's trust set as it stood (its "Anchor class",
+  AC31; `proxy-cache.md` AC25), and the class is what a signed virtual admits the database by
+  (`signing-service.md` AC36): a signed upstream on a remote whose trust set holds an `openpgp`
+  entry is class `signature`, its revision served only under a `verified` verdict; a signed
+  upstream on a remote with no `openpgp` entry is class `none` with verdict `absent`, served; and
+  an unsigned upstream, which Arch and Manjaro are (live), is class `none` with verdict `absent`
+  whatever keys the remote holds for its packages, served, because no hook applied to it. That
+  last case is the one `archlinux-keyring` makes common: a remote over the official mirror with
+  the keyring configured for package verdicts still adopts the unsigned database under `none`,
+  which keeps it admissible to a signed virtual; were the hook counted as declared while nothing
+  was there to verify, the class would read `signature` with an `absent` verdict and the
+  database would be excluded. A revision whose signature fails under a configured key is never
+  served; the previous revision keeps serving under serve-stale and the operator is alerted.
 - **An upstream regression is not adopted.** Per the resolved regression decision below, a new
   upstream revision whose upstream `Last-Modified` is earlier than the current revision's (a
   lagging mirror behind the same root, or a mirror switch) is not adopted; the current revision
@@ -890,7 +921,10 @@ Classification and behaviour:
 - **A cache-scoped `Last-Modified`.** What a remote serves on `.db`, `.files` and their signatures
   is the remote's `adopted_at` for the paired set, set to the later of the adoption time and one
   second after the previous value, never the upstream's, with the `304` rule of "Pointers,
-  rollback and freshness"; so a client of a remote sees each adoption and never pairs revisions.
+  rollback and freshness"; so a client of a remote sees each adoption and is never handed one
+  member of a pair from one revision and the other from another by the server's doing. An
+  adoption landing between a client's `.db` and `.db.sig` requests still fails that sync once,
+  exactly as a publish does on the hosted path, and recovers the same way.
   `proxy-cache.md` owns this record and `data-model.md` holds it on the remote's current-document
   entry (`proxy-cache.md` AC22, `data-model.md` AC44), the same rule `homebrew.md`'s resolved
   `Last-Modified` decision reached.
@@ -933,11 +967,11 @@ is the ecosystem's normal flow:
 
 | Upstream event, as observed at revalidation or fetch | Class in `proxy-cache.md` |
 |---|---|
-| A package leaves the database in a new revision (a superseding build, routine on every sync) | **Ordinary metadata change**: the new revision serves; the cached file stays fetchable by clients holding the retained older revision, the file held by its own cached reference until LRU eviction and the revision's body and map by the declared list until the adoption that drops the revision; after that drop the file name answers `404`; no divergence is recorded |
+| A package leaves the database in a new revision (a superseding build, routine on every sync) | **Ordinary metadata change**: the new revision serves; the cached file stays fetchable by clients holding the retained older revision, the file held by its own cached reference until LRU eviction and the revision's body and map by the declared list until the adoption that drops the revision; after that drop the file name answers `404`; no divergence is recorded. The retained revision guarantees the lookup and the verification, not the bytes: a file whose cached reference eviction ended is re-fetched from the upstream and verified against the retained record (`proxy-cache.md` AC27), and Arch's mirrors remove a superseded build at once (live), so against them that re-fetch answers `404` and is negatively cached, the window a direct client of the mirror has anyway; holding every retained revision's packages on the declared list instead is the option `proxy-cache.md`'s resolved retained-revision decision (was Q19) weighed and rejected for the quota it would escape |
 | A new revision lists a different `%SHA256SUM%` or `%CSIZE%` for a file name already cached | **Immutability violation, revision-bound**, in the new-blob variant: recorded and alerted, no purge. A `%FILENAME%` carries no digest and pacman names no revision in the request, so the package route serves the bytes the **current** database names; the new bytes are fetched and verified as a new blob on the next request, and that commit ends the old blob's cached reference in the same transaction, so the sweep reclaims the old bytes, which no request can be served afterwards (`proxy-cache.md`'s resolved old-blob decision, was its Q20). Because pacman verifies against the record it was given (captured), a client still holding the older database fails that package until its next `pacman -Sy`, exactly as against the upstream, while every synced client installs |
 | A package fails `%CSIZE%` or `%SHA256SUM%`, a body is truncated, or a signed upstream's database fails its signature | **Integrity failure at fetch**: nothing committed, no negative entry, the previous verified revision keeps serving, the operator is alerted, the next request tries again |
-| A new revision's upstream `Last-Modified` is earlier than the current one's | **Regression not adopted**: recorded as a regression for the operator (above) |
-| A package's signature does not verify against the remote's configured keys | Not a removal event: the verdict is recorded for policy with the key id in the operator record, and the package is served, since the client decides with its own keyring |
+| A new revision's upstream `Last-Modified` is earlier than the current one's | **Regression not adopted**: recorded as a regression for the operator (above; `proxy-cache.md` AC22) |
+| A package's signature does not verify against the remote's configured keys | Not a removal event: the verdict (`failed` with its reason; `absent` on a remote with no `openpgp` entry) is recorded for policy with the key id in the operator record, and the package is served, since the client decides with its own keyring |
 
 ### Advisories, OSV and the security-signal rule
 
@@ -977,12 +1011,27 @@ virtual-repository decision below:
 - **A virtual database is the merge of its members' databases of the same name and architecture.**
   For each database name and architecture any member holds (a remote's located through its layout
   template), the service generates `.db` and `.files` from the members' records and signs them with
-  the virtual repository's key. Remote members contribute their adopted revisions only where a
-  revision's database verified against the remote's configured keys (the resolved
-  unsigned-member decision below, was Q13): a composed database the virtual signs admits a
-  member's database only under a `verified` verdict (`signing-service.md`'s resolved pass-through
-  decision, was Q17, AC36), and Arch's and Manjaro's official mirrors sign no database (live), so a
-  remote over them contributes nothing to a virtual and the operator record says why. Remote
+  the virtual repository's key. A remote member contributes its current adopted revision of each
+  database by the **anchor class** that adoption ran under (`signing-service.md`'s resolved
+  admission decision, was Q20 there, AC36, which superseded this spec's unsigned-member decision
+  below, was Q13): a database adopted under class `signature` (a signed upstream on a remote
+  whose trust set holds an `openpgp` entry) is admitted only under a `verified` verdict and
+  excluded while its verdict reads `absent` after a trust-set change; a database adopted under
+  class `none` (Arch's and Manjaro's official mirrors, which sign no database, live, and any
+  remote with no `openpgp` entry) is admitted on the TLS its adoption rested on; a `failed`
+  verdict is never admitted under any class, and never arises on a keyless remote
+  (`artifact-verification.md`'s amended verdict vocabulary, "What artifact verification must
+  provide"). So a virtual over a hosted member and a remote over the official Arch mirror lists
+  the mirror's packages in a database signed by the virtual's key, which is the case this spec's
+  virtual design was made for and the one thing a direct client of that remote cannot have: a
+  `DatabaseRequired` section over distribution content. Each admission and exclusion is recorded
+  per member and database with its class on the merged set's input record (`data-model.md`
+  AC45), the operator record AC23 names. What the virtual's signature attests is composition
+  from the members the operator configured at the trust level the operator configured for each,
+  not a verification this registry performed over records fetched on TLS alone, and the
+  operator documentation says so beside the recipe (that decision's accepted cost); the
+  merged records keep each remote record's `%PGPSIG%`, so every package still carries the
+  packager's signature the client checks itself. Remote
   members are re-merged when their revisions change. The merge is the generator's `Merge`, run as the deferred
   `index.merge` job on the shared runner: enqueued by a member's write with the virtual as coalesce
   key, by a remote member's adoption of a new revision inside the adoption transaction through the
@@ -998,19 +1047,38 @@ virtual-repository decision below:
   never-adopted one is fetched before any client asks. Serving a merged database whose input from a
   remote is past the remote's TTL enqueues one coalesced `proxy.revalidate` job that replays the
   remote's own routes below the authorizer, off the request's path (`proxy-cache.md`,
-  "Revalidation outside the request", AC26). The profile declares the **member-input paths** of
-  every document the `Merge` reads from a member, under the member's mount through its layout
-  template, which registration refuses a merging profile without (`signing-service.md` AC35):
-  `{layout}/{db}.db` and `{layout}/{db}.files`, each replayed with its `.sig` as the paired set
-  the handler declares. A virtual's creation, or a member-list change adding a remote never
-  adopted, replays them for every database name and architecture another member of the virtual
-  already holds, so the virtual lists the remote's packages there with no request ever made to the
-  remote's own URL. A database only the remote holds reaches the virtual once a direct client of
-  the remote has caused its adoption; a read-driven first fetch for it is `signing-service.md`'s
-  to add, reported by this pass.
+  "Revalidation outside the request", AC26). The profile declares the **member inputs** of
+  every document the `Merge` reads from a member, which registration refuses a merging profile
+  without (`signing-service.md`'s resolved member-input decision, was Q21 there, AC35): two
+  **templates**, `{db}.db` and `{db}.files`, under the member's mount through its layout
+  template, over the variables `{db}` and `{arch}`, each bound to the values the virtual's other
+  members hold (a hosted member's database names and declared architecture set, another remote's
+  adopted databases and architectures), each with its grammar declared (`{db}` one segment of the
+  database-name grammar above, `{arch}` one segment of `[a-z0-9_]`, neither empty, `.`, `..` or
+  slash-bearing), and each replayed with its `.sig` as the paired set the handler declares. This
+  format declares no derivation, since no database names another document, so its round bound is
+  one. A virtual's creation, or a member-list change adding a remote never adopted, replays the
+  templates over every database name and architecture another member already holds, so the
+  virtual lists the remote's packages there with no request ever made to the remote's own URL. A
+  database or architecture **only the remote holds** is covered by nothing, so it is fetched
+  **read-driven**: a request to the virtual for `{db}/os/{arch}/{db}.db` at values that fit the
+  grammars and that no member input covered is answered from the merged set as it stands (a
+  `404`, which fails that client's sync once, as a missing section does against any mirror),
+  records the cell on the virtual's input record and enqueues each remote member's revalidation,
+  after which the remote's replay requests it, a `404` from the upstream becoming the remote's
+  negative entry; the record is bounded by `index.requested_cells_max` and pruned once the route
+  is cached or the negative entry lapses unrequested (that spec's resolved requested-cell
+  decision, was Q22); a client's repeated syncs of one section repeat one cell, and only distinct
+  section names fitting the grammar add cells, up to the cap. `any` packages ride along: a cell's merged database lists
+  every member's `any` packages for that database name, as each member's own does.
 - **Resolution is per package name, in member order**: the first member whose database holds any
-  version of a name contributes every version of it, and later members' versions of that name are
-  omitted, including a name a later member only `provides`. pacman already prefers the first
+  version of a `%NAME%` contributes every version of it, and later members' records of that
+  `%NAME%` are omitted. Shadowing is by literal name only: a later member's package that merely
+  `provides` a shadowed name is kept whole, its `%PROVIDES%` entry included, because dropping
+  it would make a package uninstallable through the virtual for a line in its metadata, with no
+  record (the resolved provider-shadowing decision below, was Q14); which package pacman then
+  resolves for a dependency on the shadowed name is the oracle's to show, and AC23 carries the
+  case. pacman already prefers the first
   section that lists a name (captured), so a client listing a private section before a public one
   is protected without a virtual; the virtual gives the same protection inside one section, one
   `Server` line and one credential.
@@ -1024,10 +1092,13 @@ virtual-repository decision below:
 The recommended client configuration is one section per database of the virtual repository, each
 with one `Server` line on it in a root-only included file and `SigLevel = Required
 DatabaseRequired`, and the keys above added and locally signed; with that configuration a refusal
-holds with egress open (AC16). For content from Arch's or Manjaro's official mirrors, which no
-virtual can list, the recipe places the private section before a section on the remote, where
-pacman's first-section preference already keeps a private name from being taken from the mirror
-(captured).
+holds with egress open (AC16). A virtual over a hosted member placed first and a remote over
+Arch's or Manjaro's official mirror is the recipe for distribution content: one section, one
+`Server` line, `DatabaseRequired` satisfied by the virtual's signature where the mirror offers
+none, and the hosted member's names never taken from the mirror. The two-section form, a private
+section before a section on the remote under the distribution's own `DatabaseOptional`, remains
+the recipe for an operator who wants no registry signature over mirror records, and relies on
+pacman's first-section preference (captured) for the same protection.
 
 ### Content negotiation and headers
 
@@ -1043,7 +1114,8 @@ handler-rendered decision, was Q14, AC32). A package's
 `Signature` record under the current key, so a key switch changes the bytes at the same URL, which a
 shared cache holding an immutable copy would keep serving to clients that no longer trust the old
 key. The aliases `{db}.db.tar.gz` and `{db}.files.tar.gz` serve the same bytes, headers and
-signature as `{db}.db` and `{db}.files`.
+signature as `{db}.db` and `{db}.files`; on a remote the alias resolves to the same cached
+document and paired set, so it causes no second upstream request and no second revision.
 
 ### What it needs from Deps
 
@@ -1135,7 +1207,9 @@ remote writes and `409` on republish.
 - [ ] AC3: Every hosted package route serves bytes whose digest equals the published bytes, asserted
       for every hosted package in the suite, and its `.sig` route a detached signature with exactly
       one packet by the repository key over those bytes; a publish carrying a publisher `.sig`
-      records the verifier's verdict (verified, untrusted or bad) in the version document, and a
+      records the verifier's verdict (`verified`, `failed` with `untrusted-key` or
+      `bad-signature`, or `absent` on a repository whose trust set holds no `openpgp` entry) in
+      the version document, and a
       repository rule requiring a verified publisher signature refuses an unsigned or rogue-signed
       publish with no snapshot; a client holding only the repository key installs a package whose
       publisher signed with a key the client does not hold; the publisher verdict is taken through
@@ -1193,7 +1267,8 @@ remote writes and `409` on republish.
       against a remote or virtual repository; and the architecture set's effect is observed by a
       real client: with `x86_64` removed from the set, `{db}/os/x86_64/{db}.db` answers `404` and
       `pacman -Sy` fails on all three, and with it restored the next `pacman -Sy` succeeds and
-      `pacman -S swhello` installs from a newly generated and signed database.
+      `pacman -S swhello` installs from a newly generated and signed database, the removal
+      having deleted no package and created no retirement.
 - [ ] AC10: No hosted or virtual signature is made by the handler: an architecture test proves the
       handler package holds no key and performs no signing; after a key announce the key document
       serves both keys and no signature changes; after the switch every current database, files
@@ -1248,13 +1323,18 @@ remote writes and `409` on republish.
       holding that key only: every database, files document, package and signature served is the
       upstream's byte for byte, every package was verified against `%CSIZE%` and `%SHA256SUM%`
       before commit, each package's signature verdict against the configured keys recorded and
-      readable through the management API, and a second install from a fresh container reaches
-      this registry while the stand-in receives no package request.
+      readable through the management API, each database revision recorded under anchor class
+      `none` with verdict `absent` although the remote's trust set holds the packager key,
+      because the stand-in served no `.db.sig` and no hook applied, and a second install from a
+      fresh container reaches this registry while the stand-in receives no package request.
 - [ ] AC18: A stand-in whose package mismatches `%CSIZE%` or `%SHA256SUM%` or whose body is
       truncated, or which signs its database and serves a failing or foreign-key signature to a
       remote with keys configured, is never committed to the CAS; the previous verified revision
       keeps serving and installing; the real reason is recorded observably to the operator; and the
-      next request fetches again.
+      next request fetches again; while the same signed stand-in behind a remote whose trust set
+      holds no `openpgp` entry is adopted under anchor class `none` with verdict `absent`, served
+      and installing, and a signed stand-in whose signature verifies under a configured key is
+      adopted under class `signature` with verdict `verified`.
 - [ ] AC19: A proxied `.db` is revalidated after its TTL and not before, conditionally against
       `ETag` and `Last-Modified` stand-ins, a package published upstream becoming installable after
       the TTL and not before absent an explicit refresh; the database and its signature are always
@@ -1307,11 +1387,27 @@ remote writes and `409` on republish.
       reached only through the virtual, a read of the merged database past the remote's TTL
       enqueues one `proxy.revalidate` job and is served the current merged set with no upstream
       request on its path (`proxy-cache.md` AC26, `signing-service.md` AC35); a second remote over
-      an Arch-shaped stand-in serving an unsigned database, listed in the same virtual,
-      contributes no package and its exclusion is in the operator record, while the same stand-in
-      installs through that remote's own URL (`signing-service.md` AC36); and registration
-      refuses an Arch profile whose `Merge` reads a member document with no member-input path
-      declared.
+      an Arch-shaped stand-in serving an unsigned database with embedded `%PGPSIG%`, as Arch's
+      are, listed in the same virtual with the packager key in its trust set, contributes its
+      packages: all three clients install one of them through the virtual under `SigLevel =
+      Required DatabaseRequired`, holding the virtual key and the packager key, the merged
+      record keeping the stand-in's `%PGPSIG%`, and the input record shows that database admitted
+      under anchor class `none` with verdict `absent`, while a third remote over a stand-in that
+      signs its database with a key in that remote's trust set shows class `signature` with
+      `verified`, and the same signed stand-in with its key removed from the trust set after
+      adoption shows the database excluded with the reason once re-evaluation turns the verdict
+      `absent` (`signing-service.md` AC36); a hosted `foo` placed first and a remote package `bar`
+      that `provides` `foo` yield a merged database listing the hosted `foo` and the remote `bar`
+      with its `%PROVIDES%` intact, `pacman -S bar` installing `bar` through the virtual on all
+      three and `pacman -S foo` installing the hosted `foo`, and the package all three clients
+      resolve for a package depending on `foo` is recorded in the case's transcript, so the
+      literal-name shadowing rule stands or falls with the clients; a request to the virtual for
+      a database only the remote holds, at a name fitting the grammar, answers `404` once,
+      records the cell, and is installable through the virtual within the staleness bound with
+      no request to the remote's own URL, while a name outside the grammar records nothing; and
+      registration refuses an Arch profile whose `Merge` reads a member document with no member
+      input declared, a template variable with no source, or a `{db}` or `{arch}` grammar that
+      admits an empty, dot or slash-bearing segment.
 - [ ] AC24: A policy rule depending on advisory data attached to an Arch repository is refused at
       configuration with the `validation` problem naming the missing coverage, while no configured
       advisory source lists an Arch ecosystem; coordinate rules and signature-verdict rules attach
@@ -1368,13 +1464,13 @@ remote writes and `409` on republish.
 | AC14 | conformance + integration | `conformance/arch/policy_test.go` (hosted and proxied modes; rules through the `policies` key; exit status, client text, transcript body, nothing installed, database `200` asserted); `internal/format/arch/refusal_record_test.go` (one record per refused package per attempt) |
 | AC15 | conformance | `conformance/arch/policy_db_test.go` (a refusing rule, then `pacman -Sy` exit 0 on all three and only the refused install failing) |
 | AC16 | conformance | `conformance/arch/no_fallback_test.go` (a second section on a declared stand-in host listing the identical file, and the two-`Server` variant on a declared stand-in mirror that falls back; the stand-ins declared through `upstreams` `hosts`, `conformance-harness.md` AC23; stand-in transcripts and network-layer assertions) |
-| AC17 | conformance | `conformance/arch/proxied_install_test.go` (Arch-shaped stand-in mirror with an unsigned database and embedded `%PGPSIG%`; the packager key through the `trust` key; all three with the packager key only; byte comparison; verdicts read through the management API, counted for `artifact-verification.md` AC24's proxied case; network-level second-install assertion) |
-| AC18 | integration | `internal/format/arch/proxied_integrity_test.go` (`%CSIZE%` and `%SHA256SUM%` mismatches, truncated body, failing and foreign database signatures with keys configured; CAS and reference assertions; previous revision still serving; operator record) |
+| AC17 | conformance | `conformance/arch/proxied_install_test.go` (Arch-shaped stand-in mirror with an unsigned database and embedded `%PGPSIG%`; the packager key through the `trust` key; all three with the packager key only; byte comparison; verdicts read through the management API, counted for `artifact-verification.md` AC24's proxied case; the database's cache-scoped record read as class `none` and verdict `absent` with the key configured, the classifier half `artifact-verification.md` AC31's `internal/verify/anchor_class_test.go`; network-level second-install assertion) |
+| AC18 | integration | `internal/format/arch/proxied_integrity_test.go` (`%CSIZE%` and `%SHA256SUM%` mismatches, truncated body, failing and foreign database signatures with keys configured; CAS and reference assertions; previous revision still serving; operator record; the same signed stand-in on a keyless remote adopted under `none` and `absent`, and under a verifying key as `signature` and `verified`, the class read from the cache-scoped record, shared with `proxy-cache.md` AC25's `internal/model/cache_freshness_test.go`) |
 | AC19 | conformance + integration | `conformance/arch/proxied_ttl_test.go` (mutating stand-in with `ETag` and `Last-Modified` variants, network-level counts); `internal/format/arch/proxied_pairing_test.go` (database and signature declared as a paired set and served from one revision under a stand-in changing both; the layer half is `proxy-cache.md` AC22's `internal/proxy/freshness_test.go`); `internal/format/arch/proxied_negative_test.go` (unknown paths, `lastupdate` and `lastsync` with no upstream request, `404`, `429` and `5xx`) |
 | AC20 | conformance + integration | `conformance/arch/proxied_freshness_test.go` (adoptions seen by a plain `pacman -Sy` on all three); `internal/format/arch/proxied_regression_test.go` (older upstream `Last-Modified` not adopted, operator record, cache-scoped time monotonic under an injected clock and shared by the pair, adoption after a refresh) |
 | AC21 | integration + conformance | `internal/format/arch/upstream_redirect_test.go` (allowlisted and refused redirect hosts, credential scope, `http://` root refused); `conformance/arch/proxied_redirect_test.go` (install through a cross-host `302`) |
 | AC22 | integration | `internal/format/arch/removal_test.go` (stand-in presenting each event; a sweep on an injected clock with the grace lapsed between adoptions, the object store read after each; the retained revision's package evicted then fetched; the changed-`%SHA256SUM%` file served the current bytes and the old blob gone after the next sweep; the shared-layer half is `proxy-cache.md` AC13, AC27 and AC28's) |
-| AC23 | conformance + integration | `conformance/arch/virtual_test.go` (shadowing with the network layer showing no upstream request for the shadowed name; mixed install on all three through one `Server` line; `405`); `internal/format/arch/index/merge_test.go` (the generator's `Merge`: per-name first member including `provides`, remote layout templates, member signatures untouched); `internal/format/arch/virtual_merge_test.go` (re-merge on member change and on remote adoption as the deferred job within the staleness bound, no snapshot, forward-moving `Last-Modified`, shared with `signing-service.md` AC19's `internal/index/virtual_merge_test.go` and AC35's `internal/index/virtual_remote_member_test.go`); `conformance/arch/virtual_remote_test.go` (a virtual created over a never-adopted remote on a signed stand-in, the stand-in's transcript showing only the member-input paths and the network layer no request to the remote's URL; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go`; a second remote on an unsigned stand-in contributing nothing, with its operator record, and installing through its own URL, the rule itself `signing-service.md` AC36's `internal/index/passthrough_test.go`); `internal/format/arch/index/profile_test.go` (the declared member-input paths through a layout template, and a profile lacking one refused at registration) |
+| AC23 | conformance + integration | `conformance/arch/virtual_test.go` (shadowing with the network layer showing no upstream request for the shadowed name; mixed install on all three through one `Server` line; `405`); `internal/format/arch/index/merge_test.go` (the generator's `Merge`: per-name first member by literal `%NAME%`, a later member's provider of a shadowed name kept with its `%PROVIDES%`, remote layout templates, member signatures and `%PGPSIG%` untouched, `any` packages in every architecture's cell); `internal/format/arch/virtual_merge_test.go` (re-merge on member change and on remote adoption as the deferred job within the staleness bound, no snapshot, forward-moving `Last-Modified`, the per-member admission outcome and class on the input record under the three classes and after a trust-set change, shared with `signing-service.md` AC19's `internal/index/virtual_merge_test.go`, AC35's `internal/index/virtual_remote_member_test.go` and AC36's `internal/index/admission_test.go`); `conformance/arch/virtual_remote_test.go` (a virtual created over a never-adopted remote on a signed stand-in, the stand-in's transcript showing only the template routes expanded over the hosted member's database and architecture and the network layer no request to the remote's URL; an upstream change adopted and merged; the virtual-only remote's revalidation from a read past its TTL, shared with `proxy-cache.md` AC26's `internal/proxy/revalidate_job_test.go`; a second remote over an unsigned Arch-shaped stand-in contributing, all three clients installing through the virtual under `DatabaseRequired`, the row `signing-service.md` AC36 shares; the provider case with the dependency resolution recorded; a remote-only database requested through the virtual, its `404`, the recorded cell and the later install, a name outside the grammar recording nothing); `internal/format/arch/index/profile_test.go` (the two templates through a layout template over `{db}` and `{arch}` with their grammars, no derivation and a round bound of one, and a profile lacking an input, a source or a sound grammar refused at registration) |
 | AC24 | integration + conformance | `internal/format/arch/policy_config_test.go` (advisory rule refused naming coverage; coordinate and signature-verdict rules; a split package's `%BASE%` stored as the version's advisory key on hosted publish and proxied adoption and absent from the document, none reported where base equals name; the storage half is `data-model.md` AC46's and `supply-chain-policy.md` AC24's); `conformance/arch/coordinate_policy_test.go` (both paths) |
 | AC25 | conformance | `conformance/arch/replay_test.go` (corpus replay); `conformance/arch/real_upstream_test.go` (recording session: stock Arch 7.1 and Manjaro images through remotes over their mirrors) |
 | AC26 | integration | `internal/storage/metadata_root_test.go` (threshold crossing with a generated database and a proxied filename map, sweep, serve); `internal/format/arch/proxied_retention_gc_test.go` (the current and the retained revision's `.db` body and map declared on the remote's list, a sweep with the grace lapsed while retained, an install of a package only the retained revision names, both collected after the dropping adoption, a late map build discarded); `conformance/arch/large_db_test.go` (all three install after the sweep) |
@@ -1427,15 +1523,17 @@ per criterion.
   preconditions)
 - Paired database and signature revisions declared as a paired set with TTL, conditional
   revalidation, non-regression and the cache-scoped `Last-Modified`, the filename map with the
-  current and one retained revision declared on the remote's blob-digest list, verified
-  packages with recorded signature verdicts, database revisions outside the quota in
+  current and one retained revision declared on the remote's blob-digest list, the verifier hook
+  applied only when the upstream served a `.sig` and the anchor class recorded per adoption,
+  verified packages with recorded signature verdicts, database revisions outside the quota in
   `cache_metadata_bytes` (AC28), each version's `%BASE%` reported as its advisory key, negative
   caching, the removal classes, layout templates, `405` on remote writes
 
 ### Phase 4: Virtual repositories, corpus and gate
-- The per-database, per-architecture merge with per-name shadowing as the `index.merge` job, the
-  profile's member-input paths, re-merge on remote adoption and the virtual-only remote's
-  revalidation (AC23), the recorded corpus against the
+- The per-database, per-architecture merge with literal-name shadowing as the `index.merge` job,
+  admission by anchor class, the profile's member-input templates with the read-driven cell,
+  re-merge on remote adoption and the virtual-only remote's revalidation (AC23), the recorded
+  corpus against the
   Arch and Manjaro mirrors and the `repo-add` reference, all three clients in the matrix, the
   exception-list entries named in Design
 
@@ -1445,12 +1543,15 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None open. The twelve questions this draft raised, and the thirteenth the format closing sweep
-raised, were each written in the template's decision
+None open. The twelve questions this draft raised, the thirteenth the format closing sweep
+raised, and the fourteenth the Fable recheck raised, were each written in the template's decision
 shape and then adopted at their own recommendation under the owner's standing delegation of
 2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided,
 folded through Scope, Design, the criteria and the Test Plan in the same pass, and reversible by the
-owner at any time. `grep -rn "standing delegation"` is the owner's review queue.
+owner at any time. `grep -rn "standing delegation"` is the owner's review queue. The Fable recheck
+of 2026-10-01 re-examined every adoption made without it: Q1 to Q12 confirmed (Q2, Q4, Q7, Q9 and
+Q12 with their records amended), Q13 superseded by `signing-service.md`'s resolved admission
+decision (was Q20 there), Q14 adopted.
 
 ### Resolved: how a repository relates to the databases clients name (was Q1)
 
@@ -1478,6 +1579,11 @@ databases never contend.
 
 Accepted cost: the database segment in the addressed object, which also lets a patterned grant
 confine a token to one database.
+
+Rechecked on Fable 2026-10-01: confirmed. The layout also fixes the virtual's member-input
+template, which expands over the database names and architectures the other members hold
+(`signing-service.md`'s resolved member-input decision, was Q21 there), so the one `Server` line
+covers a virtual too.
 
 ### Resolved: who signs packages on the hosted path (was Q2)
 
@@ -1507,6 +1613,13 @@ operator the end-to-end publisher check at ingest.
 Accepted cost: the publisher's signature is not visible to clients; the operator documentation
 says so and names the policy rule that enforces it at ingest.
 
+Rechecked on Fable 2026-10-01: confirmed, with a cost the record under-stated: the repository
+key attests every package a `push` credential publishes, so a stolen publisher credential yields
+a package every client of the repository trusts at the same level as any other, and the policy
+rule requiring a `verified` publisher signature is the only thing that narrows that to holders of
+a trusted publisher key. The operator documentation names the rule as the mitigation, not as an
+option.
+
 ### Resolved: the database key, its algorithm and its distribution (was Q3)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: one OpenPGP key per hosted
@@ -1529,6 +1642,8 @@ and the operator's `curl` can carry the credential.
 **Why this is yours:** it trades a client-configuration step against compromise scope.
 
 Accepted cost: the `pacman-key --add` and `--lsign-key` step in the operator documentation.
+
+Rechecked on Fable 2026-10-01: confirmed.
 
 ### Resolved: rotating the key (was Q4)
 
@@ -1562,6 +1677,15 @@ content, so the switch is **one atomic batch of signature records and creates no
 than a write; the cost is unchanged in size (every currently served database, files document and
 package re-signed) and bounded the same way.
 
+Rechecked on Fable 2026-10-01: confirmed, with two costs the record under-stated. The announce
+window protects only a client that **adds** the new key beside the old: one that replaces the
+old key during announce is refused until the switch, since every signature is still the old
+key's, so the operator documentation says add, never replace, until retire. And the switch's
+batch is one `SignBlob` per hosted package plus one per document: on a custody backend that
+signs at a remote's rate (`kms`, `pkcs11`) a repository of Arch `extra`'s size (15,000 packages,
+live) spends the switch at that rate, which `signing-service.md` AC8 keeps atomic but does not
+make quick, and the operator documentation says so.
+
 ### Resolved: rendering a package policy refusal (was Q5)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: `403` with the `{"errors":
@@ -1583,6 +1707,8 @@ database would re-sign databases on every policy change and differ per caller.
 side-stepped.
 
 Accepted cost: the operator documentation explains the message and the atomic transaction.
+
+Rechecked on Fable 2026-10-01: confirmed.
 
 ### Resolved: making a rollback reach pacman (was Q6)
 
@@ -1612,6 +1738,10 @@ counter, AC36), which names this spec among the seven formats that found it, and
 and its signature share one `Last-Modified`; `moved_at` is forward-moving even when the clock is
 not). The handler holds no freshness state; the behaviour asserted by AC5 is unchanged.
 
+Rechecked on Fable 2026-10-01: confirmed. The one hole the mechanism cannot close, a client
+whose `.db` and `.db.sig` requests straddle a write or an adoption, is stated in Design on both
+paths with its one-sync recovery; no server behaviour pairs two requests.
+
 ### Resolved: what a proxied repository serves (was Q7)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: upstream databases, packages
@@ -1633,6 +1763,15 @@ packages keep their packager signatures, which every client checks itself.
 Accepted cost: the recommended `DatabaseRequired` applies to hosted and virtual sections; a section
 on a remote of an unsigned upstream keeps the distribution's own `DatabaseOptional`, which the
 operator documentation states.
+
+Rechecked on Fable 2026-10-01: confirmed and amended in its cost. The cost is now avoidable: a
+virtual over the remote serves the same mirror content in a database signed by the virtual's
+key, so `DatabaseRequired` is available for distribution content through the virtual recipe
+(Design, "Virtual repositories"; `signing-service.md`'s resolved admission decision, was Q20).
+The fold also gained the hook rule: the database's verifier hook applies only when the upstream
+served a `.sig`, so an unsigned upstream adopts under anchor class `none` on a remote that holds
+keys for its packages (Design, "The proxied path"), which is what keeps this decision's verbatim
+serving and the virtual's admission compatible.
 
 ### Resolved: an upstream regression on a remote (was Q8)
 
@@ -1660,6 +1799,11 @@ database and its signature ("Freshness of what a remote serves", AC22), and the 
 adopted" class of its removal table. An upstream that legitimately rolls back reaches clients through
 the operator's refresh of the remote after the divergence is read (`management-api.md` AC29).
 
+Rechecked on Fable 2026-10-01: confirmed. A mirror switch to a lagging mirror freezes the remote
+at its current revision until the new mirror's `Last-Modified` passes it or the operator
+refreshes, which the divergence record makes visible; that is the cost of never handing clients
+the captured failure, and it is the right side of the trade.
+
 ### Resolved: virtual pacman repositories (was Q9)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a virtual database is the
@@ -1684,9 +1828,17 @@ runs the merge as the deferred, coalesced `index.merge` job with a staleness bou
 merges", AC19), so a member's change reaches the virtual within that bound rather than inside the
 member's write, and the handler's `Capabilities()` declares the choice as `Virtual: supported`
 (`format-handler-interface.md` AC13). A remote member's re-merge is that spec's adoption hook (its
-resolved remote-member decision, was Q16, AC35), with the member-input paths this profile declares
-feeding a never-adopted remote (AC23); which remote members can contribute at all is the resolved
-unsigned-member decision below (was Q13).
+resolved remote-member decision, was Q16, AC35), with the member-input templates this profile
+declares feeding a never-adopted remote and a read-driven first fetch for a database only the
+remote holds (its resolved member-input decision, was Q21, AC23).
+
+Rechecked on Fable 2026-10-01: confirmed and amended in two places. Which remote members
+contribute is no longer this spec's unsigned-member decision (was Q13, superseded below) but
+`signing-service.md`'s resolved admission decision (was Q20 there): every remote member's current
+database is admitted by the anchor class its adoption ran under, so the official mirrors this
+virtual was designed over contribute again. And the shadowing rule's `provides` clause was
+ambiguous enough that two implementors would build different merges; it is now literal-name
+shadowing with providers kept, the resolved provider-shadowing decision below (was Q14).
 
 ### Resolved: the write boundary of a multi-package publish (was Q10)
 
@@ -1708,6 +1860,11 @@ visible between two snapshots is a resolution failure a client can hit.
 Accepted cost: recorded for `management-api.md`, whose reconciliation table now carries it: a
 batch publish is one `publish` operation and one write, authorized only if every object it adds is
 in pattern (its "The operation vocabulary", AC4, AC5).
+
+Rechecked on Fable 2026-10-01: confirmed. The `.PKGINFO` each object is read from is a committed
+upload-session blob by the time `Authorize` peeks it (`management-api.md`, "Publish through the
+API", step 2; the multipart form commits its parts first), so the object is taken from repository
+state, never from an unauthenticated request body.
 
 ### Resolved: advisory coverage (was Q11)
 
@@ -1740,6 +1897,8 @@ change" holds because the handler reports each version's `%BASE%` as its advisor
 `supply-chain-policy.md`'s resolved advisory-key decision (was Q11, AC24) settled after this record,
 which closes the question of how the core would learn a package base it never parses.
 
+Rechecked on Fable 2026-10-01: confirmed.
+
 ### Resolved: the recommended client recipe and preconfigured mirrors (was Q12)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: the operator documentation
@@ -1764,7 +1923,25 @@ fixes the preconfigured set without Arch.
 Accepted cost: proxied cases run against stand-ins; the real mirrors are exercised by the
 recording session.
 
-### Resolved: what an Arch virtual composes from an unsigned remote database (was Q13, raised and adopted 2026-09-28)
+Rechecked on Fable 2026-10-01: confirmed and amended in its fold. The recipe gains the virtual
+form for distribution content, one section over a virtual whose first member is hosted and whose
+second is a remote over the official mirror, which gives `DatabaseRequired` where the mirror
+offers no signature; the two-section form stays for an operator who wants no registry signature
+over mirror records (Design, "Virtual repositories").
+
+### Resolved: what an Arch virtual composes from an unsigned remote database (was Q13, raised and adopted 2026-09-28; superseded 2026-10-01)
+
+**Superseded on Fable 2026-10-01** by `signing-service.md`'s resolved admission decision (was Q20
+there, adopted on Fable 2026-09-30 under the standing delegation, owner-facing): a signed virtual
+admits a remote member's current document by the **anchor class** its adoption ran under, so
+Arch's and Manjaro's official mirrors, adopted under class `none`, contribute to a virtual again,
+and the one-section recipe this record withdrew is restored. The Opus adoption below was the
+honest application of that spec's earlier `verified`-only rule (was Q17 there, whose composed
+half was-Q20 superseded); its option B, reported to that spec, lost there as uncomputable at merge
+time (`%PGPSIG%` signs package bytes the merge does not hold), and the better answer was neither
+A nor B but the class rule. Folded through Scope, Design ("The proxied path", "Virtual
+repositories"), AC17, AC18, AC23 and their rows, and the records of Q7, Q9 and Q12. The record is
+kept as adopted-then-superseded so the owner's review queue shows both.
 
 **Adopted 2026-09-28 under the owner's standing delegation**, in the format closing sweep, on
 Opus. Option A: a virtual composes a remote member's database only when that revision's
@@ -1801,6 +1978,42 @@ documentation's recipe for Arch's official mirrors is a second section. B is rep
 `signing-service.md` as a possible per-profile record-level admission rule, which would restore
 the one-section virtual if adopted there; C lost to the boundary.
 
+### Resolved: shadowing a name a later member only provides (was Q14, raised and adopted 2026-10-01)
+
+**Adopted 2026-10-01 under the owner's standing delegation**, in the Fable recheck. Option A: a
+virtual's merge shadows by literal `%NAME%` only; a later member's package that `provides` a name
+an earlier member holds is kept whole, `%PROVIDES%` included, and AC23 records which package the
+three clients resolve for a dependency on the shadowed name (Design, "Virtual repositories";
+AC23).
+
+The question: the virtual-repository decision (was Q9) said later members' versions of a name are
+omitted "including a name a later member only `provides`", which an implementor can read as
+dropping the providing package from the merged database or as dropping only its claim to the
+name. Dropping the package makes it uninstallable through the virtual because of one line in its
+metadata, silently, and `provides` is how Arch expresses alternatives (`libfoo-git` providing
+`libfoo`), so the case is common. Which package pacman resolves for a dependency on a name when
+the merged database lists both the literal package and a provider is not in this spec's captures;
+the first-section preference captured covers only the literal name.
+
+**Recommendation:** A, because the merged database must stay a database of whole packages, the
+protection against confusion that the virtual exists for is already given for the literal name
+(a client asking for or depending on `foo` finds the hosted `foo` listed), and the uncaptured
+part, how pacman weighs a provider against a literal in one database, belongs to the oracle: the
+case records it, and if the clients prefer the provider the rule is wrong and this record is
+reopened with the capture in hand.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Shadow by literal name; keep providers whole; the case records the resolution** | Every member's package installable by its own name; no metadata rewritten; the open point measured by the client | The confusion vector through `provides` is unmeasured until the case runs; if the clients prefer a provider, a follow-up decision |
+| **B. Drop a later member's package that provides a shadowed name** | No provider of a private name reaches a client | A whole package lost for one metadata line, with no record, and its own dependents broken through the virtual |
+| **C. Keep the package but strip the `%PROVIDES%` entry** | Package installable, vector closed | The registry rewrites a packager's record, and a dependent that relied on the provider is sent to the hosted package instead, which may not satisfy it |
+
+**Why this is yours:** it decides whether a virtual may lose or rewrite a member's package to close
+a confusion vector that only the client's resolver can confirm exists.
+
+Accepted cost: one more conformance case in AC23, and a possible reopening if the clients resolve
+a provider over a literal; C is held as the fallback should they.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1809,3 +2022,4 @@ the one-section virtual if adopted there; C lost to the boundary.
 | 2026-09-28 | 15ced69 | cross-spec reconciliation of the foundation wave, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From `signing-service.md` (items 9 and 11, consequences Open item 32): `Indexer` and generator package `internal/format/arch/index`, pre-commit dispatch, per-document lock, package signing by `SignBlob`, signatures as `Signature` records keyed by body digest rather than `File`s (the package `.sig` served `no-cache` because a switch changes it), rotation as the `announce-switch-retire` profile, one atomic batch with no snapshot (item 6 reworded, AC10, the rotation record revised), freshness from `data-model.md`'s `moved_at` through `ServeDocument` (the freshness record revised, AC5), the virtual merge as the `index.merge` job (AC23, the virtual record revised); the eight-item list mapped onto the contract. From `management-api.md`: kinds `publish`, `delete-version`, `delete-package`, `configure` with key phases on the signing-key routes, core-held retirement refused with `retired` (AC8, AC9), `405` as `repository-type`, the batch-publish record discharged. From `auth.md` was Q23: the key document is a descriptor (AC13); the `pacman` client-table row is still absent there (reported). From `artifact-verification.md`: the `openpgp` detached entry with the `all` flag and the integrity entries (AC10, AC18, AC21, AC24, AC25), verdicts through `Verifier` (AC3, AC17). From `upstream-adapters.md` item 12 and `proxy-cache.md` (reconciliation 10, AC22, event classes): the `https` adapter's allowlist, root-only `basic` credential and `http://` refusal, the paired set and cache-scoped `adopted_at`, removal rows named by class, regression-not-adopted cited (the regression record revised). From `supply-chain-policy.md` (was Q9, was Q10, reconciliation 10, binding table): the Arch tracker stays out because of its schema, not the feed count (the advisory record revised, AC24), `WriteRefusal` with the `client-setting` row re-asserted (AC14). From `conformance-harness.md` (reconciliation 4, was Q6, AC23, AC24, AC26): the seed-path obligation met, `signing` sub-entry and `trust` key, AC16's open-egress half re-expressed with declared stand-ins because the harness confines every client. From `repository-lifecycle.md` AC12 and `signing-service.md` AC29: Capabilities and lifecycle section, new AC27. Twenty-seven criteria, each with a Test Plan row; no question adopted, `fable_recheck` kept. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
 | 2026-09-28 | 93982ba | data-loss fix on Opus (storage-and-gc closing-sweep item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 0 of "From the storage-and-gc.md closing sweep" in `agents/spec-loop/consequences.md`, verified against `storage-and-gc.md`'s fourth mark root (its third reach, AC16) and `data-model.md` AC34, AC36 and AC45: a digest a document merely mentions keeps nothing alive, the declared blob-digest list is a document's only keep-alive, and a remote writes no content snapshot. The holes: the remote's retained revisions and per-revision filename maps, stored as CAS-backed metadata on the remote's document, were named only in its body, and the changed-`%SHA256SUM%` row kept the old blob "for older revisions" through nothing the sweep follows and through a route that cannot tell which database pacman holds (`%FILENAME%` carries no digest). Now: one superseded revision retained per database and architecture, its `.db` body and map on the remote's declared blob-digest list, dropped by the adoption that pushes the revision out, a late map build discarded (proxy-cache was-Q19, AC27, chosen over a cached reference for the same reasons as `alpine.md`); cached packages and signatures held by their own cached references; the changed-record row serving the current database's bytes with the new commit ending the old blob's reference (proxy-cache was-Q20, AC28). AC22 and AC26 extended so each fails if a retained body or map is collected; Test Plan rows (`internal/format/arch/proxied_retention_gc_test.go` added) and Phase 3 updated. The hosted path is unchanged. No new question adopted here; `fable_recheck` extended for the folded decisions. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
 | 2026-09-28 | f8ad8b2 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Applied: foundation-leftovers item 2 and `signing-service.md` AC35 (member-input paths `{layout}/{db}.db` and `.files` with their signatures, replayed for every database and architecture another member holds; a database only the remote holds reported as a gap), signing-service closing-sweep item 6 and proxy-cache closing-sweep item 6 (remote adoption re-merges, was-Q16, AC35; the virtual-only remote's revalidation, `proxy-cache.md` AC26; the virtual's forward-moving `Last-Modified`, was-Q15, AC34; item 8, the Q9 record, AC23 and its row); management-surfaces item 14 (the architecture-set `configure` observed by a real client: `pacman -Sy` fails with the client's architecture removed, from the captured 404-fails-the-sync behaviour, and succeeds after it is restored; AC9 and its row); supply-chain closing-sweep item 3 as it reaches this spec (`%BASE%` reported as the version's advisory key, supply-chain was-Q11, AC24, so the 'no code change' claim for a future Arch source holds; AC24, its row and the Q11 record); auth closing-sweep item 3 (the stale 'no pacman row yet' wording removed); eviction settlement (database revisions outside the quota, was-Q21; the repository-level declared list confirmed under was-Q22; new AC28); `signing-service.md` was-Q14 (packages through `ServeFile`) and was-Q12 (the exact conditional rule cited); management-api closing-sweep item 5 (claims at declaration and again at commit, was-Q14; declared unchanged publish, was-Q15; AC8 and its row). Q13 raised and adopted: `signing-service.md` AC36 admits a member's database into a signed merge only under `verified`, and Arch's and Manjaro's official mirrors sign no database, so the virtual this spec designed over them could list nothing from them; unsigned upstreams now contribute nothing, with a two-section recipe, and a record-level rule is reported to that spec. Data-loss wave 1 confirmed intact (AC22, AC26). The hosted half is recorded against a local `repo-add -s` tree with no exception-list row yet; both arch rows reported. Skipped: nothing. `fable_recheck` extended. 28 criteria, each with a Test Plan row. Stays draft. |
+| 2026-10-01 | e298671 | Fable recheck: full review (claim verification of every sibling citation at this sha, the thirty-odd criteria arch.md cites by number re-read in their current text; adversarial lens at full strength over the captured pacman behaviour, the two trust layers, keyring rotation, the architecture-set configure, the proxy-cache was-Q19 to was-Q22 keep-alive fold and the virtual; go-spec-reviewer inline, its codebase step vacuous since the tree holds only `cmd/stackweaver-registry/main.go`; constitution compliance) + re-examination of every adoption made without Fable (Q1 to Q12 at authoring, Q13 in the format sweep), the design judgement treated as unreviewed | Brought current first: every open consequence against this file verified against the current text of its source. Signing-service recheck item 1 applied (was-Q13 superseded by was-Q20: a remote member's database admitted by the anchor class its adoption ran under, class `none` for Arch's and Manjaro's official mirrors; Scope, Design "Virtual repositories", AC23's exclusion clause inverted and its `virtual_remote_test.go` shared with `signing-service.md` AC36's conformance row, the one-section recipe restored, the Q13 record given its superseded note and the Q7, Q9 and Q12 records amended); signing-service was-Q21 and was-Q22 applied (member inputs as two templates over `{db}` and `{arch}` with declared grammars, no derivation, round bound one, the read-driven cell with its cap and pruning, the stale "reported by this pass" gap closed; AC23 and its `profile_test.go` row); artifact-verification recheck item 8 and its amended was-Q2 applied (verdict vocabulary `verified`, `failed` with reason, `absent`; a keyless remote reads `absent` and class `none`; "What artifact verification must provide", AC3, AC18). Found already applied: the data-loss fold, the retired-check wording, the proxy-cache AC26 citation, the exception-list rows, the auth row wording. Verdicts: Q1, Q3, Q5, Q6, Q8, Q10, Q11 confirmed; Q2 confirmed with the stolen-credential cost stated; Q4 confirmed with the add-never-replace window and the custody-rate cost of a 15,000-package switch stated; Q7 confirmed, its cost now avoidable through the virtual; Q9 confirmed and amended in fold (admission moved to signing-service was-Q20; the `provides` clause resolved by Q14); Q12 confirmed and amended in fold (the virtual recipe for distribution content); Q13 SUPERSEDED, owner-facing, by a sibling's owner-facing decision; Q14 adopted (literal-name shadowing, providers kept whole, the clients' resolution recorded by AC23; option C held as the fallback). The adversarial pass found: (1) the optional `.db.sig` left the anchor class undefined, and under the classifier as written a remote holding `archlinux-keyring` for package verdicts, AC17's own setup, would have classed its unsigned database `signature` with an `absent` verdict and excluded it from every signed virtual, which would have made the restored one-section recipe fail exactly where it matters; the hook now applies only when the upstream served the member and the adoption is class `none` (Design "The proxied path", AC17, AC18 and their rows; a sibling consequence for `proxy-cache.md` and `artifact-verification.md` to admit the shape); (2) the "a client holding the old revision still fetches it after eviction" claim holds against a stand-in and not against an Arch mirror that removed the build, stated honestly in the removal table as was-Q19's accepted cost; (3) removing an architecture from the set deletes nothing, now stated (Design, AC9); (4) the cache-scoped record over-claimed "never pairs revisions", qualified to the straddle the hosted path already admits; (5) the alias on a remote is one cached document. Nothing found that adds a mark root, widens a token, or weakens `auth.md` AC10. Sibling consequences reported to the orchestrator, not applied. 28 criteria, each with a Test Plan row; 14 questions resolved, zero open; `node scripts/check-spec.js` zero failures; `fable_recheck` cleared. draft -> planned. |
