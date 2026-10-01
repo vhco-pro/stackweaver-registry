@@ -476,7 +476,7 @@ decision:
 | `formats/hex.md` | Q9, Q10 |
 | `formats/pub.md` | Q6 |
 | `foundation/artifact-verification.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 (rechecked on Fable 2026-10-01: Q4, Q5, Q6 confirmed, the other eight amended; spec planned) |
-| `foundation/proxy-cache.md` | Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22 (rechecked on Fable 2026-09-30: six confirmed, Q16 and Q18 amended; spec planned) |
+| `foundation/proxy-cache.md` | Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22 (rechecked on Fable 2026-09-30: six confirmed, Q16 and Q18 amended; spec planned; Q23 adopted on Fable 2026-10-01 in the second follow-up, reversing arch's per-format reading) |
 | `formats/vagrant.md` | Q13 |
 | `foundation/async-operations.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 (rechecked on Fable 2026-10-01: Q1, Q2, Q3, Q6, Q8, Q9, Q11 confirmed, Q4, Q5, Q7, Q10 amended; spec planned) |
 | `foundation/format-handler-interface.md` | Q10, Q11 (rechecked on Fable 2026-10-01: both confirmed and amended; spec planned) |
