@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned again by the Fable recheck of 2026-09-30 at d9f6f1c: full review plus re-examination of the two Opus adoptions (Q11 range-read segment digests, Q12 the commit-time claim check under the default Pointer row lock), both confirmed with amendments recorded on their resolved records. Fixed in the same pass: a marked (mismatching) blob is no longer a permanent loss, since a commit of its digest re-uploads through the intent gate and clears the mark and storage check --restore-dangling repairs mismatches from bucket versions (AC21, AC27); the write transaction runs at READ COMMITTED and takes the head lock last, both asserted (AC30); cache materialisation is write activity and commits row and reference together (AC8); the virtual merge commit is a declared-list producer with a two-generation fixture over debian AC22 (AC16, closing the last queued consequence); the rpm dual-held blob is in the op set (AC8); the proxy.revalidate grace hold cost is stated at full size (a leak under a persistent rate limit with continuous virtual reads, never a loss). Roots stay five; zero open questions; 31 criteria each with a Test Plan row; fable_recheck cleared. History: un-planned 2026-09-26 for the Wave 1 reconciliation, then reconciled on Opus through 2026-09-28 (read-path verification AC21 and AC22, the job-held grace AC23, the widened fourth root AC16, management and lifecycle paths as non-deleters AC15 and AC24, the sole write-transaction constructor with the claim declaration AC25, AC30 and AC31, the gc. keys, lock, jobs, checker and metric names AC26 to AC29), each pass recorded in the Review Log."
+status_description: "Fable follow-up 2026-10-01 at 073d744: the items the sibling rechecks queued after this spec was planned applied and it stays planned: the job-held grace reads holds_grace, so a proxy.revalidate job holds nothing and AC23's clause inverts (async was-Q4 as amended; the leak paragraph is history), the door gains a document-only form calling repository.Renewable so a frozen repository keeps renewing its envelope (AC24, AC25), its deletion exemption also skips the hook and the pointer-document render, and an on-a-transaction form lets the runner's Finish keep commit with the lock order documents, member rows, head, job row (AC25, AC30), the rpm dual-held blob follows proxy-cache's settled eviction order while the sweep is asserted in both (AC8), and the upload. keys and data-model's share lock are cited; no question raised, roots stay five, 31 criteria each with a Test Plan row. Previously: planned again by the Fable recheck of 2026-09-30 at d9f6f1c: full review plus re-examination of the two Opus adoptions (Q11 range-read segment digests, Q12 the commit-time claim check under the default Pointer row lock), both confirmed with amendments recorded on their resolved records. Fixed in the same pass: a marked (mismatching) blob is no longer a permanent loss, since a commit of its digest re-uploads through the intent gate and clears the mark and storage check --restore-dangling repairs mismatches from bucket versions (AC21, AC27); the write transaction runs at READ COMMITTED and takes the head lock last, both asserted (AC30); cache materialisation is write activity and commits row and reference together (AC8); the virtual merge commit is a declared-list producer with a two-generation fixture over debian AC22 (AC16, closing the last queued consequence); the rpm dual-held blob is in the op set (AC8); the proxy.revalidate grace hold cost is stated at full size (a leak under a persistent rate limit with continuous virtual reads, never a loss). Roots stay five; zero open questions; 31 criteria each with a Test Plan row; fable_recheck cleared. History: un-planned 2026-09-26 for the Wave 1 reconciliation, then reconciled on Opus through 2026-09-28 (read-path verification AC21 and AC22, the job-held grace AC23, the widened fourth root AC16, management and lifecycle paths as non-deleters AC15 and AC24, the sole write-transaction constructor with the claim declaration AC25, AC30 and AC31, the gc. keys, lock, jobs, checker and metric names AC26 to AC29), each pass recorded in the Review Log."
 description: "Spec for the content-addressable blob store and its garbage collector, including the fault-injection testing that conformance structurally cannot provide."
 author: michielvha
 goal: "Give every format a single durable blob layer, and make blob GC provably safe under concurrent push and interrupted upload, because this is where a registry silently loses data."
@@ -53,7 +53,8 @@ upload record that was never written.
 - Chunked/resumable upload support, since OCI requires it and large artifacts need it.
 - Mark-and-sweep GC, fully settled: a repository-scoped, touch-refreshed grace period
   defaulting to hours, held open while any upload session in the repository is unexpired or
-  any unfinished `Job` names the repository, a
+  any unfinished `Job` carrying `holds_grace` names the repository (every kind but
+  `proxy.revalidate` declares the hold), a
   deletion-intent table as the write barrier, and five mark roots - published references,
   cached references, snapshots inside the retention window, CAS-backed metadata
   documents (current and snapshot-held, the current half reaching pointer documents, virtual
@@ -75,12 +76,18 @@ upload record that was never written.
   (`reclaim: now` sets it to zero), and the pruner's duty to drop a deleted repository's final
   snapshot and default pointer and leave the tombstone in its own cycle (AC24).
 - **The single door onto the write path.** One unexported constructor opens every write
-  transaction; it calls `repository.Writable` before the transaction begins, exposes the
+  transaction; it calls `repository.Writable` before the transaction begins (or
+  `repository.Renewable` in its document-only form, which a cadence re-sign, a virtual's merge
+  commit and a member-list change take, so a frozen repository keeps renewing its signed
+  envelope), exposes the
   pre-commit hook `data-model.md` defines, carries the write's **claim declarations** and checks
   each against the repository's `Retirement` records when declared and again at commit, where
   the check is serialised with any retiring write on the repository head, and commits nothing
   for an unchanged publish, so writability, index regeneration, retired-coordinate refusal and
-  the no-op publish are decided in one place for every format (AC25, AC30, AC31).
+  the no-op publish are decided in one place for every format (AC25, AC30, AC31). Its
+  on-a-transaction form lets `async-operations.md`'s `Finish` keep the commit while the door
+  keeps every check, and its deletion exemption skips the writability check, the hook and the
+  pointer-document render together (AC25).
 - Orphan cleanup for interrupted uploads.
 - The sweep, the orphan scan and pruning as scheduled job kinds on `async-operations.md`'s
   queue, the sweep's advisory lock taken through `internal/db/lock.LockSweep`, and the `gc.`
@@ -110,7 +117,8 @@ upload record that was never written.
   transaction and says what the transaction commits, and adds the claim race to the property
   suite.
 - The job runtime (claiming, leases, retries, cancellation): `async-operations.md`. This spec
-  reads unfinished jobs as a grace input and registers three job kinds.
+  reads unfinished jobs carrying `holds_grace` as a grace input, registers three job kinds and
+  lends the runner's `Finish` the door's on-a-transaction form.
 - The metrics mechanism, the alert rules file and the benchmark gate script:
   `observability.md`. This spec fixes the names of its own metrics and alerts and states its
   own budgets.
@@ -213,7 +221,8 @@ and how long it lives, is defined once in `data-model.md` ("Upload sessions and 
 scope"), and this spec uses that definition rather than restating one: a session is exactly one
 blob's upload into one repository, ended by commit or by expiry, and it expires after an idle
 period with no continuation request or at an absolute cap from its opening, whichever comes
-first (one hour idle and 24 hours absolute by default, both configurable instance-wide).
+first (`upload.idle_timeout`, one hour, and `upload.max_duration`, 24 hours, the two keys that
+spec tables and its AC26 asserts).
 Continuation requests - a chunk, a status query, the final commit request - are write activity
 in the session's repository and refresh its grace like any other write, and while any upload
 session in the repository is unexpired that grace does not lapse at all. Without the hold, a
@@ -223,46 +232,45 @@ open session in the repository commits or expires; from then on the repository's
 from its last write activity like any other (AC20, and `data-model.md` AC27 from the model's
 side).
 
-**An unfinished job naming a repository holds its grace open the same way.** A deferred
+**An unfinished job naming a repository holds its grace open the same way, when its kind
+declares the hold.** A deferred
 management operation (`management-api.md`'s Galaxy-shaped import, a bulk operation past the
 deferred threshold) commits its bytes to the CAS in the request and references them only when
 its `Job` runs, minutes or a retry horizon later, on a repository nobody else may be writing to.
 That is the committed-bytes-awaiting-their-reference shape the session hold was created for, and
-`async-operations.md` adopted the same rule for it (its resolved grace-hold decision, was its Q4;
-`data-model.md` "Jobs and schedules" carries the record): every `Job` may name a repository, the
-sweep's grace computation reads unfinished jobs by repository exactly as it reads unexpired
-sessions, and the job's terminal transition (`completed`, `failed` or `cancelled`) releases the
-hold. It is a timing input to the grace clock, **not a mark root and not a pin**: no digest a job
-will reference is protected individually, the repository's unreferenced blobs are simply not yet
-expired, and the root set stays at five. The accepted cost is that a repository with a stuck
-retrying job is uncollectable until the job fails, about forty minutes at `async-operations.md`'s
-defaults, which is why that horizon is short. A repository's deletion cancels its pending jobs
-and cooperatively cancels running ones; each hold stands until its job is terminal
-(`repository-lifecycle.md`, "Deletion"), so a half-imported artifact's bytes are collected after
-the job ends and never under it (AC23).
+`async-operations.md` adopted the same rule for it (its resolved grace-hold decision, was its Q4,
+as its Fable recheck of 2026-10-01 amended it; `data-model.md` "Jobs and schedules" and AC41
+carry the record): every `Job` may name a repository and carries `holds_grace`, copied from its
+kind's registration at enqueue (`HoldsGrace`, default true), the sweep's grace computation reads
+unfinished jobs by repository `WHERE holds_grace` exactly as it reads unexpired sessions, loading
+no kind registry, and the job's terminal transition (`completed`, `failed` or `cancelled`)
+releases the hold. It is a timing input to the grace clock, **not a mark root and not a pin**: no
+digest a job will reference is protected individually, the repository's unreferenced blobs are
+simply not yet expired, and the root set stays at five. The accepted cost is that a repository
+with a stuck retrying job is uncollectable until the job fails, about forty minutes at
+`async-operations.md`'s defaults, which is why that horizon is short. A repository's deletion
+cancels its pending jobs and cooperatively cancels running ones; each hold stands until its job
+is terminal (`repository-lifecycle.md`, "Deletion"), so a half-imported artifact's bytes are
+collected after the job ends and never under it (AC23).
 
-The rule has one consumer whose retry horizon is longer. A `proxy.revalidate` job names its
-remote (`proxy-cache.md`, "Revalidation outside the request"; `async-operations.md` AC29), so a
-pending or retrying revalidation holds that remote's grace open like any other unfinished job. It
-needs no hold (its adoption commits body and reference in one transaction, so no byte of its own
-waits for a reference), but it gets one because the rule reads jobs by repository and a special
-case would be a second grace input to prove. What bounds it is the queue: a rate-limited replay is
-deferred through `RetryAt` past the upstream's `RetryAfter` and counts as an attempt
-(`async-operations.md`'s resolved retry-time decision, was Q11 there, AC7), and the adapter caps
-that deferral at the upstream's `limits.cooldown_cap` (`upstream-adapters.md` AC10), so the job is
-terminal within `async.max_attempts` times the longer of `limits.cooldown_cap` and
-`async.backoff_cap`, plus its leases (`async-operations.md`'s termination bound), about eight hours
-at the defaults, and the remote's grace then runs from its last write activity. That bound is per
-job, not per remote: the next virtual read past the TTL enqueues a new job the moment the failed
-one is terminal (`proxy-cache.md` AC26), so a remote behind an upstream whose rate limit never
-lifts and whose virtual is read continuously has its grace held open for as long as both
-conditions last, with only the gap between one job's terminal transition and the next enqueue in
-which a sweep can act. The accepted cost, stated at its full size, is that such a remote's
-unreferenced blobs (evicted cached files, a superseded revision's released blobs) are a leak for
-the duration, never a loss, visible as a `JobFailed` alert every bound and as
-`cache_referenced_bytes` falling while the store does not; the leak ends with the rate limit, the
-reads or the remote, and a kind-level exemption from the hold stays available if it ever matters
-in practice (AC23).
+**One kind declares `HoldsGrace: false`, and it is `proxy.revalidate`.** It names its remote
+(`proxy-cache.md`, "Revalidation outside the request"; `async-operations.md` AC29) but has the
+opposite shape to the hold's: its whole effect, the adoption, commits the `Blob` row and the
+cached reference in one transaction and is write activity for the remote's grace (AC8), so no
+byte of its own ever waits for a reference. It is also the one kind that reads re-enqueue for as
+long as a failure lasts, and its retry horizon is hours per job rather than minutes (a
+rate-limited replay is deferred through `RetryAt` past the upstream's `RetryAfter`, capped at
+`limits.cooldown_cap`, `upstream-adapters.md` AC10). Under the earlier uniform rule the Fable
+recheck of 2026-09-30 found those two facts chaining: behind an upstream whose rate limit never
+lifts, with the virtual read continuously, the per-job hold was re-created the moment the failed
+job was terminal, so the remote's evicted cached files and released revision blobs were a leak
+for the duration, never a loss but invisible to the quota because `cache_referenced_bytes` fell
+while the store did not. The per-kind flag closes it: a `pending` or retrying revalidation holds
+nothing, and the remote's grace runs from its last write activity, the adoption. The cost moved
+rather than vanished, and it is stated where it now sits: one declaration per kind that a wrong
+`false` would turn into a data-loss hazard, held by `internal/async/kinds_test.go`, which for
+every kind declaring `false` interrupts `Work` at each fault point and asserts no `Blob` row is
+left without a reference, shared with AC8's cache-fill case (AC23).
 
 **Cache materialisation is write activity, and it never leaves a row unreferenced.** A
 fetch-and-cache commit, an adoption and a map build are not completed writes and never pass
@@ -465,7 +473,10 @@ exercise:
   and by no snapshot; it is live while the record exists, and the record is dropped with its
   pointer or at tombstone time. A pointer document is re-rendered at every transition of its
   pointer, target-moving or document-only (a key switch, a cadence re-sign, and on a virtual
-  a merge commit or member-list change; `data-model.md` AC36), and each re-render is a
+  a merge commit or member-list change; `data-model.md` AC36), with one exception, the move of
+  a `local`'s default pointer onto the final empty snapshot in its deletion write, which renders
+  nothing and leaves the existing record in place until tombstone time (the door's exemption,
+  below), and each re-render is a
   reference birth for the new body and an end for the old. A **repository-scoped** pointer
   document (Hackage's `root.json` and `mirrors.json`, byte-identical on every pointer,
   `formats/hackage.md`'s resolved root-placement decision, was its Q16) is one blob named by
@@ -510,11 +521,16 @@ exercise:
   A blob may be held by more than one root at once, and the sweep marks it while any holds:
   `formats/rpm.md`'s resolved merge-input decision (was its Q11) declares a fetched metadata
   document on the remote's list while the same blob is a cached file under its own reference,
-  so LRU eviction ending the cached reference leaves it declared, the adoption dropping its
-  revision leaves it cached, and it is collectable only once both have ended; a fetch after the
-  eviction commits as a dedup hit on the held blob through the shared call, whatever
-  `proxy-cache.md` decides about re-reading the upstream bytes first (its serving handle is the
-  cached reference, so today it re-fetches and the commit finds the object present). All
+  so it is collectable only once both the declaration and the cached reference have ended,
+  whichever ends first. `proxy-cache.md`'s eviction pass settled which that is (its AC14 and
+  AC29, amended by its Fable recheck): a cached file a declared list of the same remote holds
+  is skipped while declared, since ending its reference would reclaim nothing and force a
+  re-fetch of tens of megabytes, and it becomes an ordinary candidate at the adoption that
+  drops its digest from every list of the remote, so on that layer the adoption always ends
+  first and the eviction follows. The sweep does not lean on that courtesy: it marks the blob
+  while either holds and is asserted in both orders, because it cannot know which layer ended
+  what, and a commit of the digest while either root holds it is a dedup hit on the held blob
+  through the shared call, storing no second object. All
   four producers are reference creations for the barrier: producing a pointer document,
   swapping a merged set with its declared list, appending a declared segment and rewriting a
   remote's list each go through the shared reference-creation call
@@ -592,9 +608,16 @@ exercise:
   passes (`generic.md`'s `retention.pass` kind, which would produce snapshots) are suspended,
   while pruning of its already-untargeted snapshots and the sweep continue unchanged, because
   neither is a write and a freeze that stopped reclamation would be option C of the pointer
-  decision in another coat. The duty is the **tombstone**: deleting a `local` ends with the
+  decision in another coat. The cadence re-sign continues too (`repository-lifecycle.md`'s
+  resolved document-only-transitions decision, was its Q11; `signing-service.md` AC22): it is a
+  document-only pointer transition through the door's document-only form, so a frozen
+  repository keeps producing pointer-document births and ends under the fourth root, and the
+  sweep collects each superseded envelope past grace exactly as on an active one (AC24). The
+  duty is the **tombstone**: deleting a `local` ends with the
   default pointer on a final empty checkpoint snapshot (`data-model.md` AC38), which the fifth
-  root protects like any targeted snapshot. When every content snapshot of the deleted
+  root protects like any targeted snapshot; the move renders no pointer document, `data-model.md`
+  AC36's one exception, and the pointer's existing record stays until tombstone time. When every
+  content snapshot of the deleted
   repository has been pruned, the pruner, in its own cycle and under its lock, drops that final
   snapshot and the default pointer together, deletes the `Package` rows and the other records
   `repository-lifecycle.md` lists as dropped at tombstone time, and leaves the `Repository` row
@@ -660,9 +683,26 @@ things happen there and nowhere else:
   every pointer create, repoint and deletion - and `replication.md`'s earlier architecture test
   that the write path refuses a repository with an active link generalises into this one check
   rather than standing beside it. Cache materialisation is not a completed write and does not
-  pass through the door. Repository deletion is the one write the predicate does not gate
-  (it is the transition out of every state) and it says so at the door explicitly, as a named
-  exemption the architecture test knows, never as a second constructor. The replication
+  pass through the door. A **document-only pointer transition** (`data-model.md` AC36: the
+  cadence re-sign's repository batch, a virtual's merge commit and its member-list change) is
+  neither, yet it writes a reference (the re-rendered pointer document's body) and advances a
+  freshness record, so it opens at the same door in the door's **document-only form**, which
+  calls `repository.Renewable(ctx, id)` instead: `nil` for an `active` or a `read_only`
+  repository with no active replication link, `ErrReplica` or `ErrDeleted` otherwise
+  (`repository-lifecycle.md`'s resolved document-only-transitions decision, was its Q11, AC9).
+  The split is what keeps a frozen signed repository installable: a `read_only` state that
+  stopped the cadence re-sign would let a Debian suite's `Valid-Until` or a Hackage TUF
+  `timestamp.json` lapse and serve nothing within a window. The document-only form declares no
+  claim and seals no snapshot, and it has no waiving entry point, since a follower renews
+  nothing (`signing-service.md` AC23). Repository deletion is the one write the predicate does
+  not gate (it is the transition out of every state) and it says so at the door explicitly, as
+  a named exemption the architecture test knows, never as a second constructor; **the exemption
+  covers the pre-commit hook and the pointer-document render as well** (`repository-lifecycle.md`,
+  "Deletion", AC14): the deletion write produces one final empty snapshot stored as a
+  checkpoint, runs no generator over the empty content set (a signed format's `Indexer` would
+  otherwise regenerate an empty index into fresh current documents the fourth root held until
+  tombstone time) and renders no pointer document for the default pointer's move onto that
+  snapshot (`data-model.md` AC36's one exception). The replication
   applier is the one caller allowed past `ErrReplica`, and only past that error: the same
   constructor exposes a second entry point that waives `ErrReplica` alone (a replica that is
   also `read_only` or `deleted` refuses the applier too), imported by `internal/replication` and
@@ -703,7 +743,11 @@ things happen there and nowhere else:
   snapshot is sealed and the default pointer advances (`data-model.md`: every completed write
   creates exactly one snapshot and advances the default pointer). The commit step of every write
   that seals a snapshot or declared a claim (a pointer create, repoint or deletion does neither
-  and keeps the pointer-state serialisation AC18 describes), run after the handler's changes and
+  and keeps the pointer-state serialisation AC18 describes; a document-only transition declares
+  no claim and seals no snapshot but advances the default pointer's freshness record, so it takes
+  the same lock in the same place, and a repository batch updates the repository's pointer rows
+  in one fixed order, the default pointer first, so two batches of one repository serialise
+  rather than deadlock), run after the handler's changes and
   after the pre-commit hook, takes that row's lock first (`SELECT ... FOR UPDATE`), then
   re-reads `Retirement` for every declared claim, then seals the snapshot and advances the
   default pointer and its freshness record, then commits. A **retiring write**
@@ -726,7 +770,13 @@ things happen there and nowhere else:
   takes**: `signing-service.md`'s per-document locks (its resolved contention decision, was
   its Q8) are taken in `Apply` and the pre-commit hook, before the commit step, and the commit
   step takes no document lock after the head, so every write orders documents before head and
-  two writes of one repository cannot deadlock across the two lock kinds. The resolved
+  two writes of one repository cannot deadlock across the two lock kinds. The order holds
+  across repositories too: the share lock a virtual's member-list change takes on the member
+  rows it reads (`data-model.md` AC36: the `local` member's pointer row, the `remote` member's
+  document entries) is taken before the virtual's head lock, and a member's own write takes
+  its documents and then its own head, so no transaction holds a head while waiting for a
+  member row. In the on-a-transaction form below the runner's fenced job-row update follows the
+  head, so the full order is documents, member rows, head, job row. The resolved
   head-serialisation question below (was Q12) records why this and not an isolation level or a
   per-coordinate lock.
 - **An unchanged publish commits nothing** (`management-api.md`, its resolved unchanged-publish
@@ -747,17 +797,45 @@ things happen there and nowhere else:
 - **Reference creation inside the transaction is the shared call** (AC10), so the intent check
   is unconditional here as everywhere.
 
+**The door has an on-a-transaction form, for the job runner.** `async-operations.md`'s `Finish`
+opens the transaction a job's effect commits in, at `READ COMMITTED`, and ends it with the fenced
+job-row update that makes a job's effect exactly-once; a worker whose effect is a repository
+write (`manage.apply`, `retention.pass`, the merge swap, the cadence re-sign) therefore cannot
+let the door open a transaction of its own. The on-a-transaction form takes the transaction
+`Finish` opened, a repository and the worker's function, and does on that transaction everything
+the standard form does: it calls `Writable` (or `Renewable`, for the document-only shape the
+merge swap and the cadence re-sign have) before any repository row is read or written and
+returns the typed refusal with the transaction untouched by the write, so the runner ends the
+job `failed` with `read-only` (`repository-lifecycle.md` AC10); it carries the claims, declared
+again by the job from its `Operation`; it runs the pre-commit hook; and it runs the commit step,
+head lock last, before it returns control to `Finish`. The form is callback-shaped so no write
+scope can escape it unsealed: the commit step runs when the worker's function returns, and
+`Finish`'s fenced update of the job row follows the head lock, the order `internal/repository`'s
+deletion also takes (repository rows, then the job rows `CancelByRepository` touches inside the
+deletion transaction), so a job's `Finish` and a deletion cancelling that job never deadlock.
+Two things the form cannot do and therefore checks: it cannot open the transaction, so it reads
+the joined transaction's isolation level and refuses any but `READ COMMITTED`, the level the
+claim re-check depends on; and it cannot commit, so the runner's commit after its fenced update
+is the one `Commit` for that transaction. `proxy.revalidate`, whose adoption commits before
+`Finish` in `proxy-cache.md`'s own transaction, never takes this form, since cache
+materialisation does not pass through the door (AC25, AC30).
+
 The architecture test in `internal/storage/arch_test.go` asserts all of it: the constructor is
-the only function that opens a write transaction, it calls `Writable` before `BeginTx`, it runs
-the registered hook between the handler's changes and the commit step, the commit step takes the
-head lock before it re-reads the declared claims and before it seals the snapshot, the
-transaction is opened at `READ COMMITTED` and nothing sets another isolation level on it, no
-per-document lock is taken after the head lock, the claim
+the only function that opens or joins a write transaction, its standard form calls `Writable`
+before `BeginTx` and its document-only form calls `Renewable` and has no waiving entry point,
+the deletion exemption is the one place the predicate, the hook and the render are skipped, it
+runs the registered hook between the handler's changes and the commit step, the commit step
+takes the head lock before it re-reads the declared claims and before it seals the snapshot, the
+transaction is opened at `READ COMMITTED` and nothing sets another isolation level on it, the
+on-a-transaction form reads the joined transaction's level and refuses any other, no
+per-document lock and no member-row share lock is taken after the head lock, the job row is
+touched only after the head in the on-a-transaction form, the claim
 declaration is a method of the transaction type and no other code path reads `Retirement` to
-decide a write, the only way to `Commit` is through that step, and no package other than
-`internal/storage` reaches the transaction type's constructor (AC25, AC30). This is the named
-mechanical enforcer the constitution requires for a shared concern; a door enforced by review is
-not a door.
+decide a write, the only way to `Commit` the standard form is through that step and the
+on-a-transaction form's commit step runs before control returns to `Finish`, and no package
+other than `internal/storage` reaches the transaction type's constructor (AC25, AC30). This is
+the named mechanical enforcer the constitution requires for a shared concern; a door enforced by
+review is not a door.
 
 ### Scheduling, locking and configuration
 
@@ -871,7 +949,8 @@ This is the part of the spec that exists because the harness is blind here. Requ
   retrying job naming a repository** whose bytes are committed and unreferenced while the sweep
   runs, and its **terminal transition** (`completed` with the referencing write, `failed`, or
   `cancelled` by a repository deletion), without which the job hold is a root that can be born
-  and never die (AC23). The **lifecycle operations** of `repository-lifecycle.md` are in the
+  and never die, plus a **job without `holds_grace`** (a `proxy.revalidate`) pending over a
+  remote whose grace has lapsed, which the sweep must read as no hold at all (AC23). The **lifecycle operations** of `repository-lifecycle.md` are in the
   set too, interleaved with publishes, the sweep and pruning: create (the initial checkpoint is
   a CAS write and the default pointer lands on it), delete of a `local` with and without
   `reclaim: now`, delete of a `remote`, detach of a virtual member, freeze and thaw, and rename,
@@ -894,14 +973,18 @@ This is the part of the spec that exists because the harness is blind here. Requ
   its revision and is refused, each on a declaring document whose body is sometimes inline and
   sometimes CAS-backed, since the list is marked either way (shared with `proxy-cache.md` AC27).
   The generator must also reach a **blob held by two roots at once**: a cached file that a
-  remote's list also declares, with the eviction of its cached reference and the adoption
-  dropping its revision scheduled in both orders around the sweep, so the suite shows it
-  collected only after both ends and never after one; and a **cache fill on a remote whose
+  remote's list also declares, with an eviction pass scheduled against it before the adoption
+  dropping its revision (which must end nothing, `proxy-cache.md` AC14) and after it (which
+  ends the cached reference), and with the cached reference ended directly before the
+  adoption, so the suite shows the blob marked while either holds, collected only after both
+  ends in either order and never after one, and a commit of its digest while held a dedup hit
+  storing no second object; and a **cache fill on a remote whose
   grace has lapsed**, with the sweep's phases schedulable between the fill's object put and its
   row commit and after that commit, so the suite shows the row and its reference land together
   and the fill refreshes the grace (AC8). Those births and deaths also arrive through the
   document-only pointer transitions, so the set includes a **key switch or cadence re-sign**
-  re-rendering one pointer's documents, a **repository batch** replacing a repository-scoped
+  re-rendering one pointer's documents, the cadence re-sign also on a `read_only` repository
+  through the door's document-only form, a **repository batch** replacing a repository-scoped
   pointer document on every pointer at once, and a virtual's **member-list change**, with the
   merged set's input record present on some swaps and absent on others so the suite can show it
   changes no marked set (`data-model.md` AC36, AC45). The **retirement machinery** needs two
@@ -968,7 +1051,7 @@ accepts one as evidence has missed the point of the spec.
       expired under `data-model.md`'s upload-session lifetime (its idle period or its absolute
       cap, one hour and 24 hours by default) and the repository-scoped grace has then lapsed;
       no orphan is collected while its session, or any other session in its repository, is
-      unexpired, or while any unfinished job names its repository.
+      unexpired, or while any unfinished job carrying `holds_grace` names its repository.
 - [ ] AC4: GC never deletes a referenced blob, under randomised concurrent
       push/pull/delete/eviction/pruning/GC interleavings, proven by a property test.
 - [ ] AC5: GC never deletes a blob belonging to an upload in progress, proven by a fault-injection
@@ -995,10 +1078,13 @@ accepts one as evidence has missed the point of the spec.
       unreferenced, the object before the commit is left to the orphan scan under raw age, and
       the filled blob survives every sweep until the reference is evicted and the grace lapses
       again. A blob that is both a cached file and a blob a remote's document declares is
-      collected only after the eviction of its cached reference and the adoption dropping its
-      declaring revision have both happened, in either order, and a fetch of the file after the
-      eviction and before the adoption commits as a dedup hit on the held blob, storing no
-      second object, whether or not the proxy layer re-reads the upstream bytes first.
+      marked while either holds: an eviction pass run against it while it is declared ends
+      nothing (`proxy-cache.md` AC14, AC29), it is collected only after the adoption dropping its
+      declaring revision and the end of its cached reference have both happened, in either order
+      on the sweep's side (the eviction pass only ever produces adoption first; the suite ends the
+      cached reference directly for the other order), never after one, and a commit of its
+      digest while either root holds it is a dedup hit on the held blob, storing no second
+      object.
 - [ ] AC9: A reference created for a digest after the sweep has recorded a deletion intent for
       it cancels that intent and the blob survives, proven in the property suite by
       interleavings that place a dedup hit, a cache arrival, a snapshot write and a
@@ -1117,19 +1203,23 @@ accepts one as evidence has missed the point of the spec.
       read sustains at least 90 percent of the unverified throughput, the tail range read fetches
       at most two 4 MiB segments beyond the requested window from the store, and a regression
       beyond either budget fails the `main` build through the same gate as AC7.
-- [ ] AC23: An unfinished `Job` naming a repository holds that repository's grace open: on an
+- [ ] AC23: An unfinished `Job` naming a repository and carrying `holds_grace` (copied from its
+      kind's `HoldsGrace` registration at enqueue, true for every kind but `proxy.revalidate`)
+      holds that repository's grace open: on an
       injected clock, a blob committed in a repository and not yet referenced survives a sweep
       run after the grace period has elapsed since the repository's last other write, provided a
       job naming the repository is `pending` or `running` (including one retrying after a
       failed attempt), and is collected once that job is `completed`, `failed` or `cancelled` and
       the grace then lapses; a repository deletion that cancels the job releases the hold only
-      at the job's terminal transition, never at the deletion's commit; a `proxy.revalidate` job
-      naming a remote and deferred by `RetryAt` past an upstream's `RetryAfter` holds that
-      remote's grace open while it is `pending`, releases it at its terminal transition, and
-      reaches that transition within `async.max_attempts` times the longer of the upstream's
-      `limits.cooldown_cap` and `async.backoff_cap`, plus its leases, under a rate limit that
-      never lifts; the mark-root set is unchanged at five; proven in the same property suite as
-      AC4 with the queued-or-retrying job and its terminal transition in the operation set
+      at the job's terminal transition, never at the deletion's commit; the sweep decides the
+      hold from the row's flag and loads no kind registry; a `proxy.revalidate` job naming a
+      remote, which declares `HoldsGrace: false`, holds nothing: with one `pending` and deferred
+      by `RetryAt` under a stand-in upstream whose rate limit never lifts, a sweep past the
+      remote's grace collects the remote's evicted, unreferenced bytes while the job is still
+      `pending`, and no byte the job's adoption commits is unreferenced across any sweep (AC8);
+      the mark-root set is unchanged at five; proven in the same property suite as
+      AC4 with the queued-or-retrying job, its terminal transition and the flagless job in the
+      operation set
       (`async-operations.md` AC13 and `data-model.md` AC41 state the same hold from their
       sides).
 - [ ] AC24: The GC property suite's operation set includes create, delete of a `local` with
@@ -1142,16 +1232,31 @@ accepts one as evidence has missed the point of the spec.
       the default pointer in one transaction and leaves the `Repository` row as a tombstone,
       with no interleaving in which a pointer targets a pruned snapshot; and on a `read_only`
       repository retention passes produce no snapshot while pruning of untargeted snapshots
-      and the sweep proceed unchanged.
-- [ ] AC25: Exactly one unexported constructor in `internal/storage` opens a write transaction,
-      it calls `repository.Writable` before the transaction begins and returns its typed
-      refusal without opening one, repository deletion is the single named exemption the
-      architecture test knows, its one `ErrReplica`-waiving entry point is imported by
-      `internal/replication` alone and still refuses `ErrReadOnly` and `ErrDeleted`, it runs the registered pre-commit hook after the handler's changes
+      and the sweep proceed unchanged and the cadence re-sign proceeds through the door's
+      document-only form, each re-render a pointer-document birth and an end whose superseded
+      body the sweep collects past grace (`repository-lifecycle.md` AC10 shows a real client
+      accepting the renewed envelope).
+- [ ] AC25: Exactly one unexported constructor in `internal/storage` opens or joins a write
+      transaction, it calls `repository.Writable` before the transaction begins and returns its
+      typed refusal without opening one, its document-only form (taken by every cadence re-sign,
+      merge commit and member-list change) calls `repository.Renewable` instead, proceeds on a
+      `read_only` repository and has no waiving entry point, repository deletion is the single
+      named exemption the architecture test knows and the exemption skips the writability check,
+      the pre-commit hook and the pointer-document render together (a fixture `Indexer`'s
+      generator is never called and no `PointerDocument` body appears for the deletion's
+      default-pointer move), its one `ErrReplica`-waiving entry point is imported by
+      `internal/replication` alone and still refuses `ErrReadOnly` and `ErrDeleted`, its
+      on-a-transaction form, callback-shaped and used only inside `async-operations.md`'s
+      `Finish`, runs the same predicate, claims, hook and commit step on the transaction
+      `Finish` opened, refuses a joined transaction at any level but `READ COMMITTED`, returns a
+      predicate refusal before any repository row is touched, and runs its commit step before
+      control returns to the runner, whose fenced job-row update follows the head lock, it runs
+      the registered pre-commit hook after the handler's changes
       and before commit in the same transaction with the snapshot's content set visible to the
       hook, and a hook that fails commits nothing - no row, no snapshot, no pointer move - while
       the blobs committed before the write stay as grace-protected unreferenced bytes; enforced by
-      an architecture test over the module and a fault-injection test that fails the hook.
+      an architecture test over the module and a fault-injection test that fails the hook, in
+      the standard form and inside a job's `Finish`.
 - [ ] AC26: The sweep's advisory lock is taken through `internal/db/lock.LockSweep` and no code
       in `internal/storage` calls `pg_advisory_lock`, `pg_try_advisory_lock` or their
       transaction-level forms directly, enforced by an architecture test; the sweep, orphan scan
@@ -1213,11 +1318,17 @@ accepts one as evidence has missed the point of the spec.
       order under a transaction forced to `REPEATABLE READ` in a test build committing the
       retired coordinate, which is the failure the level rules out; no per-document lock is
       taken after the head lock, so a write holding a document lock and waiting for the head
-      and a write holding the head never both exist; and the architecture test fails on a
+      and a write holding the head never both exist; a virtual's member-list change takes its
+      share lock on the member rows before the virtual's head lock, and a job's `Finish` touches
+      the job row only after the head, so a member's write, the virtual's change, a deletion
+      cancelling a job and that job's `Finish` interleaved in the property suite never deadlock;
+      the on-a-transaction form handed a transaction forced to `REPEATABLE READ` in a test build
+      refuses it before any row is touched; and the architecture test fails on a
       `Commit` reached other than through the commit step, on a commit step that re-reads
       claims before taking the head lock, on a transaction opened at or set to any isolation
-      level but `READ COMMITTED`, on a document lock taken after the head lock, and on any code
-      path outside the transaction type that reads `Retirement` to decide a write.
+      level but `READ COMMITTED`, on a document lock or a member-row share lock taken after the
+      head lock, on a job-row write before the head in the on-a-transaction form, and on any
+      code path outside the transaction type that reads `Retirement` to decide a write.
 - [ ] AC31: An unchanged publish commits nothing but its `Operation`: on a fixture handler
       declaring the rule, a `publish` whose every claimed coordinate already holds identical
       bytes still has its claims re-checked in the commit step (a retired claimed coordinate is
@@ -1242,7 +1353,7 @@ accepts one as evidence has missed the point of the spec.
 | AC5 | fault injection | `internal/storage/gc_race_test.go` |
 | AC6 | fault injection | `internal/storage/crash_recovery_test.go` (asserted through the `storage check` code path) |
 | AC7 | benchmark | `internal/storage/bench_test.go` (`// gate:` comments) + `scripts/bench-gate.sh` on `main` |
-| AC8 | property + fault injection | `internal/storage/gc_property_test.go` (cached reference as a root, eviction as its end; the cache fill on a lapsed-grace remote with the sweep's phases between object put and row commit; the blob held by a cached reference and a declared list, eviction and dropping adoption in both orders); `internal/storage/cache_fill_atomicity_test.go` (row and reference land in one transaction, the fill refreshes grace, the pre-commit object is the orphan scan's under raw age; shared with `proxy-cache.md`'s fetch-and-cache commit) |
+| AC8 | property + fault injection | `internal/storage/gc_property_test.go` (cached reference as a root, eviction as its end; the cache fill on a lapsed-grace remote with the sweep's phases between object put and row commit; the blob held by a cached reference and a declared list: an eviction pass against it while declared ending nothing, the dropping adoption then eviction, and the cached reference ended directly first, shared with `proxy-cache.md` AC14's `internal/proxy/eviction_test.go`); `internal/storage/cache_fill_atomicity_test.go` (row and reference land in one transaction, the fill refreshes grace, the pre-commit object is the orphan scan's under raw age; shared with `proxy-cache.md`'s fetch-and-cache commit and with `async-operations.md` AC13's `internal/async/kinds_test.go`, which interrupts every `HoldsGrace: false` kind's `Work` at each fault point and finds no unreferenced `Blob` row) |
 | AC9 | property | `internal/storage/gc_property_test.go` |
 | AC10 | architecture test | `internal/model/arch_test.go` |
 | AC11 | property + integration | `internal/storage/gc_property_test.go`; reporting: `internal/model/snapshot_test.go` |
@@ -1257,14 +1368,14 @@ accepts one as evidence has missed the point of the spec.
 | AC20 | property | `internal/storage/gc_property_test.go` (open-session and session-abandonment operations on an injected clock that ages sessions past the idle period and the cap) |
 | AC21 | fault injection + integration | `internal/storage/read_verify_test.go` (altered object whole and by range; a range over a declared-parts document and a multi-range request with one covering part altered, shared with `signing-service.md` AC30; abort shape; mismatch mark; in-flight read; a commit of the marked digest re-uploading through the intent gate with the sweep's phases interleaved, the mark cleared with the reference, no delete call, and the healed object read whole and by range; shared with `data-model.md` AC43, which asserts the `Blob` row's `segment_digests` and mark from the model side) |
 | AC22 | benchmark | `internal/storage/bench_test.go` (verified versus unverified full read and tail range read, `// gate:` comments; store egress counted by a recording backend) |
-| AC23 | property + integration | `internal/storage/gc_property_test.go` (queued-or-retrying job and its terminal transition in the operation set); `internal/storage/pending_operation_gc_test.go` (forced sweep past grace with a pending and a retrying job; release at terminal, not at deletion commit; a `proxy.revalidate` job deferred by `RetryAt` under a stand-in upstream that always answers a rate limit, holding its remote's grace until it ends `failed` inside the bound on the injected clock, the termination half shared with `async-operations.md` AC7 and AC24) |
-| AC24 | property + integration | `internal/storage/gc_property_test.go` (lifecycle operations in the operation set, interleaved with the sweep and pruning's phases); `internal/storage/retention_test.go` (age-out and `reclaim: now` on the injected clock; tombstone drop pairs pointer and snapshot; retention pass suspended on `read_only` while pruning continues) |
-| AC25 | architecture test + fault injection | `internal/storage/arch_test.go` (sole unexported write-transaction constructor; `Writable` before `BeginTx`; hook between handler changes and `Commit`; deletion as the named exemption; the `ErrReplica` waiver's single importer, shared with `repository-lifecycle.md` AC9 and `replication.md` AC12); `internal/repository/writable_test.go` (the waiver still refusing `read_only` and `deleted`, shared with `repository-lifecycle.md` AC9); `internal/storage/write_hook_test.go` (failing hook commits nothing; content set visible to the hook) |
+| AC23 | property + integration | `internal/storage/gc_property_test.go` (queued-or-retrying job and its terminal transition in the operation set); `internal/storage/pending_operation_gc_test.go` (forced sweep past grace with a pending and a retrying job; release at terminal, not at deletion commit; the hold read from the row's `holds_grace` with no kind registry loaded; a `proxy.revalidate` job deferred by `RetryAt` under a stand-in upstream that always answers a rate limit holding nothing, the remote's evicted bytes collected past grace while it is `pending` and no adopted byte ever unreferenced, shared with `async-operations.md` AC13) |
+| AC24 | property + integration | `internal/storage/gc_property_test.go` (lifecycle operations in the operation set, interleaved with the sweep and pruning's phases); `internal/storage/retention_test.go` (age-out and `reclaim: now` on the injected clock; tombstone drop pairs pointer and snapshot; retention pass suspended on `read_only` while pruning continues and the cadence re-sign proceeds through the document-only form, the superseded pointer-document body collected past grace; the client half is `repository-lifecycle.md` AC10's `conformance/debian/readonly_test.go`) |
+| AC25 | architecture test + fault injection | `internal/storage/arch_test.go` (sole unexported write-transaction constructor; `Writable` before `BeginTx`; the document-only form calling `Renewable` with no waiving entry point; hook between handler changes and `Commit`; deletion as the named exemption skipping predicate, hook and render; the on-a-transaction form's isolation check and its commit step before control returns to `Finish`; the `ErrReplica` waiver's single importer, shared with `repository-lifecycle.md` AC9 and `replication.md` AC12); `internal/repository/writable_test.go` (the waiver still refusing `read_only` and `deleted`; `Renewable` passing `read_only`, shared with `repository-lifecycle.md` AC9); `internal/repository/delete_test.go` (no hook run and no pointer document rendered on a fixture `Indexer`, shared with `repository-lifecycle.md` AC14); `internal/storage/write_hook_test.go` (failing hook commits nothing, in the standard form and inside a fixture job's `Finish`, where the job ends `failed` and nothing of the write commits; content set visible to the hook) |
 | AC26 | architecture test + integration | `internal/storage/arch_test.go` (no direct advisory-lock call outside `internal/db/lock`); `internal/storage/sweep_lock_test.go` (two concurrent `storage.sweep` jobs, one acts; schedules at the configured intervals on the injected clock) |
 | AC27 | integration | `internal/storage/restore_test.go` (dangling row on a versioned and an unversioned store; a corrupted object behind a live row, marked by a read and found by `--verify`, restored from the newest verifying version with the mark cleared, and reported unrecoverable when no version verifies; restore verified against the key; second run clean; checker in the AC15 scan) - the same file `deployment.md` AC21 runs |
 | AC28 | integration | `internal/storage/gc_metrics_test.go` (every named metric and label through `telemetry.NewTestRecorder`; alert conditions evaluated against recorded values) |
 | AC29 | integration | `internal/storage/config_test.go` (schema registration and defaults; each key read by its component on the injected clock; per-repository override; unregistered `gc.` key refused) |
-| AC30 | property + integration + architecture test | `internal/storage/gc_property_test.go` (a claim racing a retiring write of the same coordinate, with the declaration, the retiring commit and the claiming commit step as schedulable interleaving points, beside the sweep; refused writes' blobs collected after grace; this claim race is shared with `data-model.md` AC35, whose row names the same file); `internal/storage/write_claim_test.go` (refusal at declaration; declared-then-retired-then-committed refused at commit with nothing committed, and the same order committing the retired coordinate under a test-build transaction forced to `REPEATABLE READ`, which is the outcome the fixed level rules out; sibling claim under one object accepted; head lock taken before the re-check and not held across `Apply` or the hook; a write holding a document lock and one holding the head never coexist; lock wait ending retryable at the context deadline); `internal/storage/arch_test.go` (the only `Commit` is the commit step; lock before re-check; the transaction opened at `READ COMMITTED` with no isolation override; no document lock after the head lock; no `Retirement` read outside the transaction type); shared with `data-model.md` AC35's `internal/model/retirement_test.go` and `management-api.md` AC12's `internal/manage/retirement_test.go` |
+| AC30 | property + integration + architecture test | `internal/storage/gc_property_test.go` (a claim racing a retiring write of the same coordinate, with the declaration, the retiring commit and the claiming commit step as schedulable interleaving points, beside the sweep; refused writes' blobs collected after grace; this claim race is shared with `data-model.md` AC35, whose row names the same file); `internal/storage/write_claim_test.go` (refusal at declaration; declared-then-retired-then-committed refused at commit with nothing committed, and the same order committing the retired coordinate under a test-build transaction forced to `REPEATABLE READ`, which is the outcome the fixed level rules out; sibling claim under one object accepted; head lock taken before the re-check and not held across `Apply` or the hook; a write holding a document lock and one holding the head never coexist; the on-a-transaction form refusing a `REPEATABLE READ` transaction before touching a row; a member-list change's share lock before the virtual's head and a fixture job's row written after the head, a member write, the virtual's change, a cancelling deletion and the job's `Finish` interleaved without deadlock; lock wait ending retryable at the context deadline); `internal/storage/arch_test.go` (the only `Commit` is the commit step; lock before re-check; the transaction opened at `READ COMMITTED` with no isolation override, the on-a-transaction form checking the joined level; no document lock or member-row share lock after the head lock; no job-row write before the head; no `Retirement` read outside the transaction type); shared with `data-model.md` AC35's `internal/model/retirement_test.go` and `management-api.md` AC12's `internal/manage/retirement_test.go` |
 | AC31 | property + integration | `internal/storage/gc_property_test.go` (the unchanged publish interleaved with the sweep and a non-retiring delete of the same coordinate; reference set, snapshots, pointers and freshness records unchanged); `internal/storage/write_claim_test.go` (claim re-check still run; retired claim refused with identical bytes; no reference, document, snapshot, pointer or freshness advance and no hook run; the `Operation`'s terminal transition the only committed row; an unchanged outcome over handler-written rows fails with nothing committed); shared with `data-model.md` AC32's `internal/model/operation_test.go` and `management-api.md` AC5's `internal/manage/accounting_test.go` |
 
 ## Implementation Phases
@@ -1274,8 +1385,9 @@ accepts one as evidence has missed the point of the spec.
 - The verified read path: hashing reader on every read, segment digests at commit, range
   verification, the mismatch mark and metric, and the marked row's heal on the next commit of
   its digest (AC21)
-- The sole write-transaction constructor with `repository.Writable` and the pre-commit hook,
-  and its architecture test (AC25); the claim declaration, the commit step under the head lock
+- The sole write-transaction constructor with `repository.Writable`, its document-only form with
+  `repository.Renewable`, its on-a-transaction form for the job runner, the deletion exemption
+  and the pre-commit hook, and its architecture test (AC25); the claim declaration, the commit step under the head lock
   with its claim re-check, and the unchanged publish's empty commit (AC30, AC31); the `gc.` keys
   registered in the schema (AC29)
 
@@ -1285,7 +1397,8 @@ accepts one as evidence has missed the point of the spec.
 
 ### Phase 3: GC
 - The chosen strategy, plus the property and fault-injection suites **written before it**,
-  the open-session and job-held grace holds included (AC20, AC23), the lifecycle operations
+  the open-session and job-held grace holds included, the latter read from `holds_grace` with
+  the flagless `proxy.revalidate` holding nothing (AC20, AC23), the lifecycle operations
   in the operation set (AC24), the fourth root's widened reach with the document-only
   transitions and the virtual merge, the remote adoption and the map build as declared-list
   producers, the blob held by two roots and the cache fill on a lapsed-grace remote (AC8,
@@ -1604,3 +1717,4 @@ not by weakening the storage model.
 | 2026-09-28 | f0bfe75 | metadata-eviction reconciliation on Opus (data-loss fix second wave, item 0): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Item 0 of "From the data-loss fix second wave" in `agents/spec-loop/consequences.md`, verified against `data-model.md`'s non-root row and AC44 (which read a remote's current-document entry as a cached reference or an evicted one) and against this spec's fourth root, which named a proxied repository's current index as protected by the current-document half and nothing else. Settled in `proxy-cache.md`, whose Q21 was raised and adopted in this pass: LRU eviction ends cached references of files only and never a remote's current documents. Folded here: Scope's root list, the fourth root's paragraph ("No eviction ends it", with a remote document's only ends), the third reach's citation of Q22 (a per-package set's declared list on its package-level document), the end-of-life list, and the root-set history (tested again, added nothing); the property suite's eviction now runs over remotes holding current documents at every level and declared lists so an eviction that took a document is reachable and must never occur, and its declared-list producers include package-level declaring documents with interleaved adoptions of different packages; AC16 extended with both and its Test Plan row sharing `proxy-cache.md` AC29's case; AC8 says a cached file. Mark-root check: no root added and no reach widened; the set stays five. No criterion added, two extended. `fable_recheck` extended. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
 | 2026-09-28 | 4278ce0 | leftovers pass of the closing sweep on Opus: cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied the two optional items queued against this file after its eviction settlement, each verified against the owning spec's settled text. Async-operations closing sweep item 4: a `proxy.revalidate` job names its remote (`async-operations.md` AC29), so the existing job-held grace rule already holds that remote's grace open while the job is unfinished; Design now says so and why no special case is made, and bounds it from the queue's own rules, `RetryAt` deferrals counting as attempts (that spec's resolved retry-time decision, was Q11, AC7) and the adapter capping each deferral at `limits.cooldown_cap` (`upstream-adapters.md` AC10), so the hold ends within `async.max_attempts` times the longer of `limits.cooldown_cap` and `async.backoff_cap`, plus leases, about eight hours at the defaults, with the accepted cost stated; AC23 asserts it under a stand-in upstream that never lifts its limit, and its row shares the termination half with `async-operations.md` AC7 and AC24. Auth and data-model second passes item 4: AC30's row names `data-model.md` AC35 as sharing the claim race in `internal/storage/gc_property_test.go`. Found already done: data-loss fix item 3 (the adoption and map build as declared-list producers, applied in the second wave). No question raised or adopted; roots stay five; the fable_recheck marker is unchanged. 31 criteria, each with a Test Plan row. Stays draft. |
 | 2026-09-30 | d9f6f1c | Fable recheck: full review (claim verification against every cited sibling at this sha, adversarial GC-property hunt, constitution, go-spec-reviewer concurrency lens) + re-examination of the Opus adoptions (Q11, Q12) and of every non-Fable sweep since the un-planning (the proxy.revalidate hold, the declared list as the only keep-alive, the five roots with the intent barrier, the Q21/Q22 eviction fold). Claim verification against code is vacuous as in every prior pass: `internal/` holds no storage code at d9f6f1c | Brought current first: the one open consequence against this file (format closing sweep batch 3 item 3) applied, the virtual merge commit named as a declared-list producer in the third reach, the property op set, AC16 with a fixture over `formats/debian.md` AC22's two retained generations, its Test Plan row and Phase 3. Every sibling citation re-read at this sha held (proxy-cache was-Q19 to Q22, AC26 to AC29; data-model AC27, AC32, AC34 to AC37, AC41, AC43 to AC45 and its head definition; management-api was-Q13 to Q15; async-operations was-Q4, was-Q11, AC7, AC13, AC24, AC29 and the 8-attempt, 15-minute, 1-hour defaults behind the eight-hour bound; repository-lifecycle's deletion steps and AC9; replication AC7 and AC12; deployment's `gc.` row and `internal/db/lock` block; observability's `gc_*` and `storage_*` names; hackage was-Q16; artifact-verification was-Q5; rpm was-Q11). Verdicts: Q11 confirmed and amended, Q12 confirmed and amended, both recorded on their resolved records. The adversarial pass asked for any path by which a blob a client can still be served is collectable, and found none in the root set: the merged-generation and dual-held cases (debian, rpm Q11) mark correctly once the merge producer is in the op set. It found two holes elsewhere and one under-stated cost, all fixed directly. One: a corrupted object was permanent, since the read path's mark was trusted by deduplication and repaired by nothing, so a client re-pushing correct bytes was told they were stored; a commit of a marked digest now re-uploads through the intent gate and clears the mark, and `--restore-dangling` repairs mismatches from bucket versions (Design, AC21, AC27, the fault-injection list). Two: the Q12 fold depended silently on `READ COMMITTED` (at any stricter level the post-lock re-read misses the retirement) and on the head being the last lock taken after `signing-service.md`'s per-document locks; both stated, in AC30 and the architecture test. Three: cache materialisation was neither named as write activity for the grace clock nor required to commit row and reference together, so a fill on a lapsed-grace remote could in principle expose an unreferenced row to the sweep; stated and asserted (AC8). The proxy.revalidate hold's accepted cost was under-stated as "up to that bound longer": the bound is per job and continuous virtual reads re-enqueue, so under a rate limit that never lifts it is a leak for the duration, never a loss; stated at full size, with the kind-level exemption noted as available. The rpm dual-held blob added to AC8 and the op set. Mark roots re-derived at five; nothing found that adds a sixth. `fable_recheck` cleared. Zero open questions, 31 criteria each with a Test Plan row, `node scripts/check-spec.js` zero failures: draft -> planned. |
+| 2026-10-01 | 073d744 | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the recheck: every item in `agents/spec-loop/consequences.md` targeting this file after the 2026-09-30 row, verified against the current text of its source and of this spec, then read adversarially against the rest of this spec. Applied, five. Async-operations recheck item 2 (its was-Q4 as amended on Fable; `data-model.md` AC41): the grace hold is per kind, `holds_grace` copied to the row at enqueue and read `WHERE holds_grace` with no kind registry, and `proxy.revalidate` declares it false, so AC23's revalidate clause inverts from "holds the remote's grace within an eight-hour bound" to "holds nothing, the remote's evicted bytes collected past grace while it is pending"; the leak paragraph is rewritten as the history that produced the flag, with the cost stated where it now sits (one declaration per kind, held by `internal/async/kinds_test.go`, shared with AC8's cache-fill row); Scope, the op set, AC3 and Phase 3 follow; this supersedes and closes this spec's own recheck item 3, whose owner-facing option async took. The same item's on-a-transaction form: `Finish` opens the job's transaction and keeps its commit, so the door gains a callback-shaped form that runs the predicate, the claims, the hook and the commit step on the joined transaction, refuses any isolation level but `READ COMMITTED` (it cannot set one), and seals before control returns, the fenced job-row update following the head in the order the deletion takes (AC25, AC30 and the architecture test). Repository-lifecycle recheck item 1 (its was-Q11, AC9, AC10, AC14): the door's document-only form calls `repository.Renewable`, passes `read_only` and has no waiving entry point; the deletion exemption skips the hook and the pointer-document render too (`data-model.md` AC36's one exception, now named in the fourth-root reach and the tombstone paragraph); the cadence re-sign proceeds on a frozen repository, so AC24 gains the clause and the pruning-inputs paragraph and the op set carry it. Proxy-cache recheck item 7 (its AC14, AC29 as amended): the rpm dual-held blob is skipped by the eviction pass while declared, so that layer only ever produces adoption-then-eviction; the sweep stays asserted in both orders because it cannot know which layer ended what, the stale "today it re-fetches" parenthetical is gone, and AC8, the op set and its row (sharing `internal/proxy/eviction_test.go`) say so. Data-model recheck item 3 and follow-up item 2: the member-list share lock is placed before the virtual's head in the lock order, which now reads documents, member rows, head, job row, asserted in AC30; `upload.idle_timeout` and `upload.max_duration` cited at the session-lifetime sentence (its AC26); AC37 and AC43 were already cited. Declined, none. Adversarial pass on what changed: the flag removes a hold, so the question was whether any byte of a flagless kind can wait for a reference; `proxy.revalidate`'s adoption commits row and reference together (AC8) and its pre-commit object is the orphan scan's under raw age, so none does, and the kinds test holds that for every future `false`. The on-a-transaction form takes the head lock before the job row and the deletion takes repository rows before job rows, so the new lock kind adds no cycle; a repository batch over several pointer rows now states a fixed order so two batches serialise. Mark roots re-derived at five: a `Renewable`-gated transition is a pointer-document birth and end already in the fourth root's reach, the deletion exemption ends a render that would otherwise have been a birth, and the flag is a timing input removed, not a root. No question raised or adopted; zero open questions; 31 criteria, each with a Test Plan row; `node scripts/check-spec.js` zero failures on this file. Stays planned. Owner-facing: this pass folds three sibling adoptions that change planned criteria here (AC23 inverted, AC25 widened by two forms, AC8's eviction order), each already flagged on its own record. |
