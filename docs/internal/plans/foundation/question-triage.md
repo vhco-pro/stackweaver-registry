@@ -459,7 +459,7 @@ decision:
 
 | Spec | Questions adopted 2026-09-27 or 2026-09-28 |
 |---|---|
-| `formats/rubygems.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12 |
+| `formats/rubygems.md` | Q1-Q12 (rechecked on Fable 2026-10-08: eight confirmed, Q2, Q4, Q5 amended in fold, Q7 amended; spec planned) |
 | `formats/alpine.md` | Q1-Q11 authored on Opus (rechecked on Fable 2026-10-01: nine confirmed, Q4, Q6 amended, Q7 superseded in part by Q12); Q12 and Q13 adopted on Fable; spec planned |
 | `formats/cpan.md` | Q1-Q17 authored on Opus (rechecked on Fable 2026-10-01: nine confirmed, eight amended); Q18 adopted on Fable; spec planned |
 | `formats/cran.md` | Q1-Q9 authored on Opus (rechecked on Fable 2026-10-01: all confirmed, four amended in fold); the delete-file retirement rule superseded by Q10, adopted on Fable; spec planned |

@@ -385,7 +385,7 @@
     "path": "docs/internal/plans/formats/rubygems.md",
     "description": "Spec for the RubyGems format: the compact index (/versions, /info, /names) with its append-only, Range-fetched versions file, the legacy Marshal index, gem push and gem yank, hosted and proxied, with gem and bundle as the conformance oracle across three client generations.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "54",
     "covers": [
       "internal/format/rubygems/**",
