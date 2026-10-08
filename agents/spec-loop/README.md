@@ -69,6 +69,23 @@ session ends). Each firing:
 
 ## Resume point
 
+**STOPPED 2026-10-08 (evening CEST): Fable's monthly allowance is spent** (owner rule: the loop ends,
+no Opus fallback). Landed this session on Fable: signing-service round 8 (Q26, a shortened window
+renews through the cadence), hackage round 2, management-api round 6 (configure rows, pause pair at
+4a, the virtual settings carve-out, OWNER NOTE), data-model round 5, debian (virtual suite settings,
+shortened valid_until), async-operations round 6 (Q12, the period floor). Resume, two agents at a time:
+1. replication.md follow-up: the pass died mid-edit after drafting a new Q14 (the re-linked cadence
+   on a follower) and AC21's real-clock rows. Its partial diff is
+   `agents/spec-loop/wip/replication-followup-partial.patch` (`git apply` it, then relaunch telling
+   the agent to continue from `git diff` and never revert; Test Plan rows, phases and the Q14
+   record were still to write).
+2. project-charter.md follow-up: stopped before any edit; relaunch as briefed (step 4a places Job,
+   PausedKind and the pause routes).
+3. Then the rest of the queue in the newest consequences.md sections: observability (async
+   was-Q12 period floor), storage-and-gc, conformance-harness, signing-service and management-api
+   optional wording, upstream-adapters, auth, repository-lifecycle, maven, pub, nuget.
+
+
 **2026-10-08 16:09-17:10 CEST, one-hour Fable session.** Gate reviews landed (all planned): oci,
 npm, go-modules, pypi, helm, maven, nuget; ansible-collections and supply-chain-policy round 4 also landed: ALL 33 FORMAT SPECS ARE PLANNED.
 credential-management's follow-up (binding responses no-store) landed too. The session ended at 17:00 with nothing uncommitted.
