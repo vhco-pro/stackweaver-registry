@@ -342,7 +342,7 @@
     "path": "docs/internal/plans/formats/pub.md",
     "description": "Spec for the Pub format (Dart and Flutter): the hosted pub repository API v2, hosted and proxied, where the client unilaterally enforces content hashes, excludes retracted versions, and deletes its stored token on any 401.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "20",
     "covers": [
       "internal/format/pub/**",
