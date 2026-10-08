@@ -79,8 +79,14 @@ Next, two agents at a time:
    pub's advisories re-sync), proxy-cache (oci completion-only, Helm event rows, optional examples), hackage
    (AC8's injected clock), management-api (generic configure row), artifact-verification (npm
    keys document, hex key size), terraform (harness egress wording), catalogue (brew 7 under OCI).
-3. Gate review of project-charter: DONE 2026-10-08. Still draft and never gate-reviewed:
-   write-triggered-services-prototype.md (step 4a depends on it) and formats/catalogue.md.
+3. Gate reviews of project-charter, write-triggered-services-prototype and catalogue: DONE
+   2026-10-08. ALL 54 SPECS ARE PLANNED (33 formats, 21 foundation and analysis); none carries
+   `fable_recheck`. What remains is follow-up passes (followup-brief.md) landing the queued
+   consequences on planned specs: signing-service round 8 (the shortened-window reschedule),
+   management-api round 6 (pause routes at 4a, hackage and generic configure rows), then
+   data-model (Job and PausedKind before 4a), async-operations, storage-and-gc, project-charter,
+   conformance-harness, replication, upstream-adapters, auth, observability,
+   repository-lifecycle, maven, pub, nuget.
 
 **END OF THE 2026-10-08 RUN (12:45 CEST).** Done this run, all on Fable: the generic gate review (planned, the build-step gate), the hackage recheck from
 its patch; format rechecks of rubygems, conan, swift, puppet, vagrant, homebrew, terraform, chef,
