@@ -470,7 +470,7 @@ decision:
 | `formats/rpm.md` | Q11 (rechecked on Fable 2026-10-01 with Q1-Q10: Q5, Q6, Q9, Q11 amended, the rest confirmed; Q12 adopted on Fable; spec planned) |
 | `formats/arch.md` | Q13 (rechecked on Fable 2026-10-01: superseded by signing-service was-Q20; Q14 adopted on Fable; spec planned) |
 | `formats/cargo.md` | Q7 |
-| `formats/composer.md` | Q10, Q11 |
+| `formats/composer.md` | Q10, Q11 (rechecked on Fable 2026-10-08: Q10 confirmed, Q11 superseded by Q12 adopted on Fable; spec planned) |
 | `formats/conan.md` | Q11 (rechecked on Fable 2026-10-08 with Q1-Q10: all confirmed, four amended; spec planned) |
 | `formats/homebrew.md` | Q15 (rechecked on Fable 2026-10-08 with Q1-Q14: eleven confirmed, Q4, Q8, Q14, Q15 amended; spec planned) |
 | `formats/debian.md` | Q10 (rechecked on Fable 2026-10-01 with Q1-Q9: all ten confirmed, six amended in fold; spec planned) |

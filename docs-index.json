@@ -122,7 +122,7 @@
     "path": "docs/internal/plans/formats/composer.md",
     "description": "Spec for the Composer (PHP) repository format: the packages.json root, the per-package p2 metadata files with their minification and ~dev split, dist archives, the in-band filter-list and security-advisory channels, hosted through the registry-owned management API and proxied against Packagist, with Composer as the conformance oracle.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "24",
     "covers": [
       "internal/format/composer/**",

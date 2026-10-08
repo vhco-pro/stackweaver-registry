@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at 7c4d5bb with the foundation wave on Opus (not a review), this spec's first reconciliation: the hosted write path is management-api's publish, delete-version, delete-package and annotate kinds through Operator, publish from an upload session with Apply's archive peek refusing validation, an existing tagged version refused conflict and a deleted one retired through the core-held Retirement record (no set in the package document), 405 repository-type on remote and virtual (AC5, AC6); Q10 adopted: rendered documents take Last-Modified from the pointer's moved_at (virtual: the later of member records; remote: the cache-scoped adopted_at) with a byte-derived ETag set by the shared serving path, never the handler, exact-match 304, rollback visible (AC12, AC15, AC19; a ServeDocument form for handler-rendered bytes reported as a signing-service gap); Q11 adopted: hosted repositories still advertise no advisory channel although the advisory reader now exists, because advertising it makes 2.10.3 block by default and the reader matches colliding private names (AC13); the remote root is a descriptor so a patterned-only pull runs composer require through a remote (AC9); refusals through WriteRefusal, whose phrase reaches both clients' printed status line over HTTP/1.1, binding-row facts proposed (AC10); the proxied path on the https adapter with no probe at creation and the root checked at first request (AC16, AC17), dists under completion-only mode with a structural verifier and the short-close observation, the dist-host allowlist as hosts entries with the own GitHub credential, the forwarded advisories POST, cache-scoped freshness with regressions not adopted (AC11, AC12); server.public_url through Deps (AC20); Capabilities with rename (AC22). Earlier: authored 2026-09-26 from captures of Composer 2.10.3, 2.2.30 and 1.10.28; nine questions adopted under the standing delegation. Eleven resolved, none open. Awaits a /spec review pass and a Fable recheck."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-08 at e50e8b5: full review of the Opus reconciliation and re-examination of its two adoptions (Q10 confirmed and amended in fold: ServeRendered's lazy form, the door-derived ETag, HEAD, the virtual's member-list floor; Q11 SUPERSEDED by Q12, adopted under the standing delegation and owner-facing: a hosted repository advertises security-advisories answered from the advisory reader under its exemptions and no filter, because an unadvertised channel makes composer audit print an all-clear the registry never computed and the name-collision reason is now answered by supply-chain's hosted-matching decision), every sibling citation verified at HEAD and the consequences queue applied (ServeRendered and ServeFile, the handler-reported advisory key, metadata never evicted with a zero retained-revision count, the unchanged publish, the bounded archive peek, the claim vocabulary). Found and fixed under the adversarial lens: a slash-bearing branch version broke the dist URL grammar (percent-encoded segments, AC5); the Packagist recipe omitted packagist.org, the host of list, search and the advisories POST (AC11); the advisories route was none, so 2.10.3 could not run a patterned-only pull through a remote as AC9 claimed (now a descriptor, with its sentinel case); a branch-only package's main file was never exercised by a client (AC3); the supply-chain binding row was self-blocking (the second-repository fact is a stub capture, not the policy case); an unparsed upstream dist.type now drops the dist rather than serving an unverifiable URL. Earlier: authored 2026-09-26 from captures of Composer 2.10.3, 2.2.30 and 1.10.28; reconciled 2026-09-28 on Opus. Twelve resolved, none open; 22 criteria, each mapped. Sibling consequences reported, not applied."
 description: "Spec for the Composer (PHP) repository format: the packages.json root, the per-package p2 metadata files with their minification and ~dev split, dist archives, the in-band filter-list and security-advisory channels, hosted through the registry-owned management API and proxied against Packagist, with Composer as the conformance oracle."
 author: michielvha
 goal: "Serve PHP teams a private Composer repository and a Packagist cache from one handler whose every served URL is its own, whose dist archives are verified and immutable, and whose supply-chain channels pass through without ever asserting an all-clear the registry did not compute."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/composer/**"
   - "conformance/composer/**"
-fable_recheck: "reconciled on Opus 2026-09-28 with Q10 (freshness from the shared records) and Q11 (hosted advisory channels stay unadvertised) raised and adopted under the standing delegation; the new judgement was never Fable-reviewed"
 ---
 
 # Plan: Composer repository format
@@ -125,7 +124,7 @@ hosted reads are testable without it, because the harness's `state` vocabulary s
 through the shared write path (`conformance-harness.md`, "The `setup` vocabulary"). What this
 format declares to that surface is in Design ("The hosted write path").
 
-**The three shared-layer amendments this spec requested are now specified**, so each is cited
+**The four shared-layer amendments this spec requested are now specified**, so each is cited
 rather than requested:
 
 - The completion-only fetch-and-cache mode, because a Packagist dist carries no digest:
@@ -140,6 +139,12 @@ rather than requested:
   metadata down to the adapter's allowlist.
 - An uncached forwarded `POST`, for the advisories API: `upstream-adapters.md`'s "Forwarded
   `POST`" (its AC27), carried in `upstream.Options` through fetch-and-cache.
+- A serving form for a document the handler renders per request and one for a stored file, so
+  the freshness boundary can stay module-wide while this handler sets no validator itself:
+  `signing-service.md`'s `ServeRendered` and `ServeFile`, reached through `Documents` in `Deps`
+  (its resolved handler-rendered decision, was Q14; AC11, AC32), which the 2026-09-28
+  reconciliation had reported as a gap and the resolved freshness decision below (was Q10)
+  relies on.
 
 ## Scope
 
@@ -162,7 +167,8 @@ rather than requested:
   below).
 - Freshness on every served document from the shared records, never computed by the handler:
   the serving pointer's freshness record on the hosted path and the cache-scoped record on the
-  proxied path (the resolved freshness decision below, was Q10).
+  proxied path, rendered by `signing-service.md`'s serving door, which also answers every `HEAD`
+  as the `GET` with the body withheld (the resolved freshness decision below, was Q10).
 - The handler's `Capabilities()` declaration, repository rename and virtual aggregation (AC22).
 - Non-interactive authentication exactly as the client sends it: HTTP Basic with the token as
   password or `Authorization: Bearer`, preemptively on every request to the origin; the uniform
@@ -174,8 +180,11 @@ rather than requested:
   the upstream-removal table, with the upstream's malware list as the ecosystem's explicit
   security signal.
 - The supply-chain channels: pass-through of `filter` lists and `security-advisories` on the
-  proxied path under the name-forwarding rule of the resolved channel decision; nothing
-  advertised on the hosted path (the resolved hosted-channel decision below, was Q11).
+  proxied path under the name-forwarding rule of the resolved channel decision; on the hosted
+  path a `security-advisories` channel answered from `supply-chain-policy.md`'s advisory reader
+  for the repository served, and no `filter` list (the resolved hosted-advisory decision below,
+  was Q12, superseding was Q11); the advisory key this handler reports for every package and
+  version so the shared matcher keys on what OSV's `Packagist` records name.
 - Refusal of the Composer 1 layouts with the `warning` the ecosystem defines for exactly that
   (the resolved legacy-layout decision below).
 
@@ -204,16 +213,12 @@ of done requires the deliberately unimplemented surface to be named:
   `available-packages` list client-side and found both fixtures (captured), which is the whole of
   what a private repository needs; a ranked endpoint has no oracle, the reason `npm.md` gave.
   The proxied path forwards the upstream's search URL (Design, "The proxied path").
-- **Hosted `security-advisories` and `filter` lists.** The data source now exists
-  (`supply-chain-policy.md`'s advisory reader through `Deps`, its "A handler may read
-  advisories, never evaluate them" and AC19), and rendering it is still not done, for a
-  correctness reason rather than an effort one: advertising the channel makes Composer 2.10.3
-  block every advisory-covered version by default, the reader matches by ecosystem coordinate
-  alone, so a private package that shares a name with a public Packagist package would inherit
-  the public package's advisories as client-side blocks on a repository whose operator
-  configured no advisory policy. The hosted refusal path (omission and `403`, below) is where
-  advisory data binds on a hosted repository, under a policy the operator chose (the resolved
-  hosted-channel decision below, was Q11).
+- **Hosted `filter` lists.** The hosted `security-advisories` channel is in scope (above); the
+  `filter` list is not, because what it would carry on a hosted repository is the policy
+  engine's own verdict, a standing condemnation, which the refusal path below already enforces
+  by omission and `403` on both routes, so a filter list would be a second rendering of one
+  verdict with its own shape to keep equal to the evaluator's. It is the revision the resolved
+  refusal-rendering decision's option C names (was Q9), reversible by the owner.
 - **`notify-batch` statistics.** The `POST` is accepted and discarded (the resolved notify
   decision below); download counts are a UI-era feature with no oracle and no consumer.
 - **The `mirrors` key.** A preferred dist mirror makes the client try this registry first and
@@ -241,7 +246,7 @@ base URL from `repositories[].url` and appends `/packages.json` unless the URL a
 | Root document | `GET .../packages.json` first on every command that touches the repository, unconditionally on a fresh cache and with `If-Modified-Since` afterwards; a `304` is accepted and the cached copy used. Composer 2.10.3 fetches it on `composer install` from a lock too; 2.2.30 does not (captured: the lock install on 2.2.30 requested only dists and `notify`) |
 | Package metadata | `GET {metadata-url with %package% replaced}`: `.../p2/{vendor}/{name}.json`, name lowercased by the client before the URL is built; with `If-Modified-Since` when a cached copy exists, `304` accepted. One request per package in the dependency graph, in parallel, including transitive ones |
 | Branch versions | `GET .../p2/{vendor}/{name}~dev.json` beside every package file whenever dev stability is acceptable for that package: a `minimum-stability` of `dev`, an explicit `dev-main` requirement, or a lookup with no stability constraint (`composer show`, and the probe a `require` makes for a name the repository does not hold); never under `stable` for a `require` or `update` of a package the repository holds (captured on both) |
-| Absence | A `404` on a package file or its `~dev` twin means "not in this repository" and is remembered for the run; the client moves on. When `available-packages` lists the repository's names, a name outside the list is **never requested** (captured: `acme/nope` produced no request under a listing and two `404` probes, `.json` and `~dev.json`, without one) |
+| Absence | A `404` on a package file or its `~dev` twin means "not in this repository" and is remembered for the run; the client moves on. When `available-packages` lists the repository's names, a name outside the list is **never requested** (captured: `acme/nope` produced no request under a listing and two `404` probes, `.json` and `~dev.json`, without one). Neither pinned release sends `HEAD`; this registry answers one on every route anyway, as the `GET` with the body withheld (Design, "The rendered documents") |
 | Dist download | `GET {dist.url}` verbatim, absolute; the body's sha1 compared with `dist.shasum` when non-empty, a mismatch failing the install ("The checksum verification of the file failed", exit 1, captured on both). A non-5xx failure is not retried against the same URL; 5xx is retried three times; 2.10.3 then stops ("Source fallback is disabled"), 2.2.30 falls back to cloning the `source` URL (captured) |
 | Install from a lock | Dists by the absolute `dist.url` the lock recorded, `notify-batch`, and on 2.10.3 the root document; no package file is requested (captured on both) |
 | Notify | `POST {notify-batch}` after every install that downloaded something, `Content-Type: application/json`, body `{"downloads":[{"name":"acme/lib","version":"1.1.0.0"}]}` with the **normalised** version, a six-second timeout, every failure swallowed (`notifyInstalls`) |
@@ -298,12 +303,23 @@ The dist URL grammar this registry owns, on both paths:
 
 `/composer/{repository}/dist/{vendor}/{name}/{version_normalized}/{key}.{type}`
 
-where `{type}` is `zip` or `tar` and `{key}` is the archive's sha1 on the hosted path (also the
-`shasum` and the `reference` the version advertises) and, on the proxied path, the upstream
+where `{type}` is the version's `dist.type` (`zip` or `tar` on the hosted path; the upstream's
+value verbatim on the proxied path) and `{key}` is the archive's sha1 on the hosted path (also
+the `shasum` and the `reference` the version advertises) and, on the proxied path, the upstream
 version's `dist.reference` when it has one, otherwise `url-` followed by the sha256 of the
 upstream `dist.url`. The key makes the URL immutable for the bytes it names, makes a branch
 version's replacement a new URL rather than new bytes under an old one, and is derivable from
-the metadata before any fetch, which is what lets a lock file pin it.
+the metadata before any fetch, which is what lets a lock file pin it. Every variable segment is
+percent-encoded as one RFC 3986 path segment with `/` escaped as `%2F`, and the handler matches
+the escaped path: a branch version may be `dev-feature/login` (its normalised form keeps the
+slash) and an upstream `reference` is whatever string the upstream put there, so without the
+rule the version segment would split into two and the object the route reports would be wrong
+(AC5 carries the slash-bearing branch). On the proxied path a version whose `dist.type` is one
+the structural verifier below does not parse (Composer's `gzip`, `xz`, `phar` and `rar` single-file
+types; every Packagist dist sampled is `zip`) is rendered **without its `dist` entry**, so the
+client resolves it from its `source` as it would a dist-less version and never through a URL this
+registry cannot verify; the omission is on the recorded exception list. A hosted publish accepts
+`zip` and `tar` only.
 
 ### Mapping onto the shared model
 
@@ -322,7 +338,16 @@ The levels are exactly those `data-model.md` provides; no table is added.
   opaque object plus what the rendering needs and the archive does not carry: the normalised
   form, the dist type, the publish time (`time`), and for a branch version its
   `version_normalized` alias state. The registry never interprets `composer.json` beyond `name`
-  and `version` at publish time; everything else is rendered back verbatim.
+  and `version` at publish time; everything else is rendered back verbatim. Beside the document,
+  in the core-parsed field `data-model.md` AC46 provides and never inside it, the handler reports
+  the **advisory key** on every write that records a package or version and on every
+  fetch-and-cache request (`supply-chain-policy.md`'s resolved advisory-key decision, was Q11
+  there, AC24): the package key is the lowercase `{vendor}/{name}`, which is how OSV's
+  `Packagist` ecosystem names a coordinate, and the version key is the **pretty version as
+  published**, because an OSV record's enumerated `versions` list is matched by string equality
+  on the key and Packagist-derived records spell versions as the tag did, while a range is
+  matched under the vendored Composer ordering, which normalises both sides. A tagged version
+  therefore reports `1.1.0` or `v1.1.0` exactly as published and a branch version `dev-main`.
 - Each version has exactly one `File`, the dist archive, whose `Blob` is keyed by the CAS digest
   of its bytes; the sha1 the wire needs is metadata kept in the version-level document, never a
   storage key (`storage-and-gc.md`).
@@ -331,9 +356,16 @@ The levels are exactly those `data-model.md` provides; no table is added.
   document as its current-document entry, already transformed (Design, "The proxied path") and
   carrying the cache-scoped freshness record `data-model.md` AC44 gives it, the upstream's filter
   summary in the repository-level document, and every dist as a
-  `File` with a `RemoteFile` whose upstream path is the upstream `dist.url` verbatim; the
-  `RemoteFile` outlives the cached metadata that named it, so a dist URL a lock file pinned
-  months ago still resolves to a re-fetch after eviction.
+  `File` with a `RemoteFile` whose upstream path is the upstream `dist.url` verbatim. The
+  documents are current documents of the remote and are never evicted (`proxy-cache.md`'s
+  resolved metadata-eviction decision, was Q21 there); the dists are cached files under the
+  quota, and a dist's `RemoteFile` outlives both its cached bytes and the upstream revision that
+  named it, so a dist URL a lock file pinned months ago still resolves to a re-fetch after the
+  bytes were evicted or the version left the upstream's package file. This handler declares a
+  retained-revision count of **zero** for its package and branch files, on the package-level
+  document (its resolved retained-revision and declaring-document decisions, was Q19 and was
+  Q22 there): no route reads a superseded revision of a package file, and a replaced branch
+  version's old dist is its own cached file under its own key, held by its own reference.
 
 ### The rendered documents: rendered on request, never stored
 
@@ -350,12 +382,13 @@ records through the shared serving path (below).
 
 | Document | Path | Content |
 |---|---|---|
-| Root | `packages.json` | `packages: []`, `metadata-url` (absolute, `%package%` literal), `available-packages` (every package name in the head snapshot, sorted), `notify-batch` (absolute), `list` (absolute), `warning` and `warning-versions: "<2"` (Design, "Legacy layouts"), and on the proxied path the pass-through channel keys. No `providers-url`, `provider-includes`, `includes`, `mirrors`, `search` or `providers-api` |
-| Package file | `p2/{vendor}/{name}.json` | `{"minified":"composer/2.0","packages":{"{vendor}/{name}":[...]}}` with one entry per **tagged** version, newest first by normalised version, minified per the algorithm below. Each entry before minification is the version's `composer.json` with `name` (canonical), `version` (pretty), `version_normalized`, `dist` (`type`, absolute `url`, `shasum`, `reference` equal to the sha1), `time`, and `abandoned` when the package is marked, in that precedence over anything the archive claimed. A package with no tagged versions answers `404`; a name not in the repository answers `404` |
+| Root | `packages.json` | `packages: []`, `metadata-url` (absolute, `%package%` literal), `available-packages` (every package name in the head snapshot, sorted), `notify-batch` (absolute), `list` (absolute), `security-advisories` with `metadata: false` and an absolute `api-url` under this registry (Design, "The supply-chain channels"), `warning` and `warning-versions: "<2"` (Design, "Legacy layouts"), and on the proxied path the pass-through channel keys. No `providers-url`, `provider-includes`, `includes`, `mirrors`, `search`, `providers-api` or, on the hosted path, `filter` |
+| Package file | `p2/{vendor}/{name}.json` | `{"minified":"composer/2.0","packages":{"{vendor}/{name}":[...]}}` with one entry per **tagged** version, newest first by normalised version, minified per the algorithm below. Each entry before minification is the version's `composer.json` with `name` (canonical), `version` (pretty), `version_normalized`, `dist` (`type`, absolute `url`, `shasum`, `reference` equal to the sha1), `time`, and `abandoned` when the package is marked, in that precedence over anything the archive claimed. A name not in the repository answers `404`. A package with no tagged versions answers `404` as drafted; the real-client case AC3 runs over a branch-only package decides between that and a `200` with an empty list, with the shape Packagist serves for such a package as the reference, because the captures covered a package with no branch versions and not the converse |
+| Advisories | `security-advisories` (`POST`) | The advisories for every name in the form-encoded body, answered from the advisory reader for this repository in the shape Packagist's API answers, taken from the recorded corpus and the client's advisory loader in `Repository/ComposerRepository.php` rather than recalled, a name with no advisory omitted (Design, "The supply-chain channels") |
 | Branch file | `p2/{vendor}/{name}~dev.json` | The same shape over the **branch** versions (normalised form ending in `-dev`, or `dev-` prefixed), each with its branch alias carried through; a package with no branch versions answers `404`, as Packagist does (captured for `akrai/api~dev.json`) |
 | List | `list?filter={pattern}` | `{"packageNames":[...]}`, every name or those matching a filter in which `*` matches any substring, per the reference |
 | Notify | `notify-batch` | `POST` answered `200` with `{}`; the body is not stored (the resolved notify decision) |
-| Dist | the grammar above | The archive bytes from the blob store, `Content-Type: application/zip` or `application/x-tar`, `Content-Length`, and the `ETag` the shared serving path derives from the CAS digest |
+| Dist | the grammar above | The archive bytes from the blob store through `signing-service.md`'s `ServeFile`, `Content-Type: application/zip` or `application/x-tar`, `Content-Length`, and the strong `ETag` that form derives from the CAS digest |
 
 **Minification is exact or it is corruption.** The algorithm is `MetadataMinifier::minify()`
 verbatim: the first entry is emitted whole; each later entry carries only the keys whose value
@@ -383,22 +416,31 @@ it", AC36): every pointer carries a freshness record whose `moved_at` advances a
 transition, a write, a promotion or a rollback, to the later of the transition time and one
 second after its previous value, written only by the transition itself so that "no handler and
 no service computes freshness". Per the resolved freshness decision below (was Q10), every
-hosted document this handler renders on request (root, package file, branch file) is served with
-`Last-Modified` equal to the serving pointer's `moved_at` and an `ETag` derived from the rendered
-bytes, both set by the shared serving path rather than by the handler, and a conditional request
-answers `304` only when `If-Modified-Since` equals that `Last-Modified` exactly or
-`If-None-Match` equals the `ETag`, the rule `signing-service.md` states for `ServeDocument` (its
-AC11). The handler hands the shared path its rendered bytes and never names a date or a
-validator, which is what `signing-service.md`'s freshness boundary (`internal/format/freshness_boundary_test.go`,
-no handler package sets `Last-Modified` or `ETag` or reads `If-Modified-Since`) requires of every
-handler package. The accepted cost is coarseness: any write to the repository moves every
-document's `Last-Modified`, so a warm `composer update` after an unrelated publish re-downloads
-each package file it revalidates rather than receiving `304`; the documents are small and the
-rule is never wrong. `signing-service.md`'s `ServeDocument(w, r, key)` serves a stored generated
-document by key and states no form taking handler-rendered bytes, a gap this pass reports rather
-than works around. A `virtual` repository's document takes the later of its own pointer's record
-and each member's record for that name (a `local` member's pointer record, a `remote` member's
-cache-scoped record), so a member's publish moves it too.
+hosted document this handler renders on request (root, package file, branch file, the advisories
+answer) is served through `signing-service.md`'s **`ServeRendered`** (its resolved
+handler-rendered decision, was Q14; "Serving: one door for every validator"): the handler hands
+the door a **lazy renderer with a validator identity** (the document key, the serving snapshot's
+identity, `server.public_url` and the repository's current name) and the **freshness source**,
+the serving pointer, never a date; the door sets `Last-Modified` to that pointer's `moved_at`,
+derives a strong `ETag` from the identity and the freshness value without rendering, answers a
+conditional request `304` only when `If-Modified-Since` equals that `Last-Modified` exactly
+(the default `exact` rule; Composer echoes the served date, so `not-earlier` is not declared) or
+`If-None-Match` equals the `ETag`, invoking the renderer only for a `200` (its AC11, AC32). The
+handler never names a date or a validator and never branches on the method: a `HEAD` on any
+route is answered by the door as the `GET` with the body withheld, `Content-Length` included,
+which on a lazily rendered document costs one render into a counting sink (its resolved `HEAD`
+decision, was Q24). This is what the freshness boundary
+(`internal/format/freshness_boundary_test.go`, no handler package sets `Last-Modified` or `ETag`
+or reads a conditional header) requires of every handler package. The accepted cost is
+coarseness: any write to the repository moves every document's `Last-Modified`, so a warm
+`composer update` after an unrelated publish re-downloads each package file it revalidates
+rather than receiving `304`; the documents are small and the rule is never wrong. A `virtual`
+repository that renders per request passes the door its own pointer and each member's record for
+the name (a `local` member's pointer record, a `remote` member's cache-scoped record), and the
+door serves the latest of them, so a member's publish moves it too; removing the member that
+supplied the latest value is a member-list change that floors the virtual's own `moved_at` at
+one second past the latest value served, so `Last-Modified` never moves backwards
+(`signing-service.md`'s resolved virtual-freshness decision, was Q15; `data-model.md` AC36).
 
 **`available-packages` is always listed on the hosted path.** It costs one array of names in a
 document fetched once per change (conditional thereafter), and it buys three things: no `404`
@@ -435,11 +477,15 @@ operation vocabulary"), placed by its cross-format reconciliation table exactly 
 declared by this handler through the optional `Operator` interface (`Operations()` returning
 `publish`, `delete-version`, `delete-package` and `annotate`, `Bindings()` returning none,
 `Authorize` and `Apply`; its "Dispatch: the optional `Operator` interface"). `Submit` resolves
-the repository, refuses a `remote` or `virtual` target with `405` `repository-type` before
-authorization, evaluates every pair `Authorize` reports through the central authorizer, checks
-the retirement set, opens the write transaction and calls `Apply`, so each operation is one
-completed logical write in one snapshot (its "Every operation is one completed logical write")
-and a refused one leaves nothing. The action follows the kind, never this format: the table's
+the repository, refuses a `remote` or `virtual` target with `405` `repository-type` after the
+existence check and before any pair is evaluated, evaluates every pair `Authorize` reports
+through the central authorizer, declares on the write transaction the coordinates `Authorize`
+**claims** (refusing a retired one at the declaration and again at commit under the repository
+head lock; its resolved claimed-coordinate decision, was Q14; `storage-and-gc.md` AC30), opens
+the write transaction and calls `Apply`, so each operation is one completed logical write in one
+snapshot (its "Every operation is one completed logical write") and a refused one leaves
+nothing. This handler claims what it retires, `{vendor}/{name}/{version_normalized}` for the
+version a publish or a version deletion names, so the refusal can match. The action follows the kind, never this format: the table's
 action column is `management-api.md`'s, not a choice made here. Each operation's trigger is
 verified by this registry's integration tests and a `script`-driven conformance case per kind
 (`management-api.md` AC24; the harness refuses a case set missing one, `conformance-harness.md`
@@ -447,7 +493,7 @@ AC26), and its effect by the real client.
 
 | Operation | Kind | What the operation carries | Effect a client sees | Action |
 |---|---|---|---|---|
-| Publish a version | `publish` | The archive (`zip` or `tar`) committed through an upload session, and a declared coordinate: the package name and the version string (`management-api.md`, "Publish through the API"); `args` carry the dist type. `Apply` peeks the committed archive and refuses `validation` (422) before anything is referenced when the root `composer.json` (at the archive root or under its single top-level directory) names another package after lowercasing, when its `version`, if present, normalises to a different version, when either fails the grammar or the normaliser, or when a value is the literal string `__unset` | The version appears in the package file (or the `~dev` file), `available-packages` gains the name on its first version, a real `composer require` resolves and installs it with a matching sha1 | `push` on `{vendor}/{name}/{version_normalized}` |
+| Publish a version | `publish` | The archive (`zip` or `tar`) committed through an upload session, and a declared coordinate: the package name and the version string (`management-api.md`, "Publish through the API"); `args` carry the dist type. `Apply` peeks the committed archive and refuses `validation` (422) before anything is referenced when the root `composer.json` (at the archive root or under its single top-level directory) names another package after lowercasing, when its `version`, if present, normalises to a different version, when either fails the grammar or the normaliser, or when a value is the literal string `__unset`. The peek is **bounded**: it reads the archive's entry table (a zip's central directory; a tar's headers, skipping each body) and decompresses exactly one member, the `composer.json`, under a fixed byte bound, refusing `validation` when that member exceeds it, so an archive of any size costs one pass over its headers and never a full decompression; and it runs inside `Apply` before any row is written, so it holds no document lock and not the head lock, which the commit step takes last (`storage-and-gc.md` AC30). A publish naming an existing **tagged** version whose committed archive has the same CAS digest and the same dist type completes **unchanged**, with no snapshot and `unchanged: true` in its result (`management-api.md`'s resolved unchanged-publish decision, was Q15, which this format declares so a CI retry of a publish that landed succeeds); different bytes or another type is refused `conflict` (409) | The version appears in the package file (or the `~dev` file), `available-packages` gains the name on its first version, a real `composer require` resolves and installs it with a matching sha1 | `push` on `{vendor}/{name}/{version_normalized}` |
 | Republish a branch version | `publish` | The same, naming an existing `dev-*` or `*-dev` version | The branch version's dist, sha1 and `composer.json` change; a fresh `composer update` installs the new bytes; the old dist URL leaves the head | `push` on the same object |
 | Delete a version | `delete-version` | Name and version | The version leaves its file, its dist answers `404`, a lock pinning it fails to install; a tagged version is retired | `delete` on `{vendor}/{name}/{version_normalized}` |
 | Delete a package | `delete-package` | Name | Both files answer `404`, the name leaves `available-packages`, every tagged version is retired, the `Package` row stays (`data-model.md`, "A package outlives its versions") | `delete` on `{vendor}/{name}` |
@@ -461,7 +507,8 @@ The declaration `data-model.md` requires:
   previous archive stays in retained snapshots and leaves the head, per the resolved
   branch-version decision below.
 - **A tagged version is immutable, and a deleted one is retired forever.** A `publish` naming an
-  existing tagged version is refused `conflict` (409) with the same or different bytes. A
+  existing tagged version is refused `conflict` (409) with different bytes or a different dist
+  type, and completes unchanged with no snapshot with identical ones (the table above). A
   `delete-version` or `delete-package` returns in its `Outcome` the tagged versions it removes,
   as `{vendor}/{name}/{version_normalized}`, and `Submit` writes one core-held `Retirement`
   record per coordinate in the same transaction (`data-model.md` AC35; `management-api.md`,
@@ -535,7 +582,7 @@ from every spelling any route carries.
 | Dist download | named | `{vendor}/{name}/{version_normalized}`, from the URL |
 | `list`, and the forwarded `search` (proxied) | none | - (both answer package names) |
 | `notify-batch` | none | - (a repository-wide report; the client swallows every failure) |
-| Filter summary and advisories API (proxied) | none | - (the summary names packages; the advisories `POST` names packages in its body, which is not read before authorization) |
+| Advisories API (both paths) and filter summary (proxied) | descriptor | - (neither names anything the repository holds: the advisories answer carries advisory records for the names the **caller** supplied, read from the feed or forwarded upstream whether or not the repository holds them, and the summary is the upstream's condemnation list; a patterned `pull` is authorized, which AC9's remote run on 2.10.3 needs, since that release posts advisories during every `require`; the sentinel test posts the sentinel name and must find no sentinel in the answer, which holds because a name with no advisory is omitted) |
 | Publish, republish, delete a version (management API) | named | `{vendor}/{name}/{version_normalized}`, from the operation's declared name and version, never from the archive; an archive whose `composer.json` disagrees is refused `validation` after authorization |
 | Delete a package, mark abandoned (management API) | named | `{vendor}/{name}` |
 
@@ -595,10 +642,15 @@ client and holds on 2.2.30 only where the client's egress is restricted to this 
 the harness's client confinement provides in every case (`conformance-harness.md` AC23, its
 resolved client-confinement decision, was Q6), so AC10 observes 2.2.30's clone attempt failing
 at name resolution. Whether a second configured repository (Packagist left enabled beside this
-one) supplies an omitted version was not captured; it is the question this format's policy case
-answers before the row can leave `pending`, and `conformance-harness.md` AC26 refuses to run a
-`policies` case while the row is `pending`, so the row is proposed as a sibling consequence of
-this pass with the facts above.
+one) supplies an omitted version was not captured. It cannot be what AC10's case settles,
+because `conformance-harness.md` AC26 refuses to run a `policies` case while the row is
+`pending` and the row leaves `pending` only on that fact: the fact is captured the way every
+other fact in this spec was, by the pinned clients against the logging stub, with this registry
+standing in as the first repository and a stub Packagist as the second, under both values of
+the client's `canonical` repository flag and both orders, before the policy case is written. The
+`supply-chain-policy.md` row leaves `pending` on that capture, and AC10's case then runs under
+AC26. The row as it stands names AC10's case as the settling step, which is the circularity
+above; its rewording is a sibling consequence of this pass.
 
 ### The supply-chain channels: pass through, never assert
 
@@ -610,20 +662,33 @@ prints "No security vulnerability advisories found" (captured), the same shape `
 for the vulnerability resource and `npm.md` for the audit endpoints. Per the resolved
 supply-chain-channel decision below:
 
-- **A hosted repository advertises neither.** The handler cannot compute an advisory verdict
-  without crossing the policy boundary `supply-chain-policy.md` AC4 holds, and the read it could
-  render from now exists: `supply-chain-policy.md`'s advisory reader through `Deps` (its "A
-  handler may read advisories, never evaluate them", AC19), which names this route among its
-  consumers and returns advisory records and standing condemnations for an ecosystem and a
-  coordinate. It is still not rendered here, per the resolved hosted-channel decision below (was
-  Q11): an advertised `security-advisories` makes 2.10.3 block every covered version by default,
-  on every hosted repository, including one whose operator attached no advisory policy, and the
-  reader matches Packagist coordinates by name alone, so a private `acme/lib` that shares its
-  name with a public Packagist package would have its versions blocked by the public package's
-  advisories. On a hosted repository advisory data binds through the operator's own policy
-  rules and renders as the refusal above. The operator documentation says the channel is absent
-  and names the client's own remedy, a second `composer` repository entry pointing at a
-  repository that does serve it, or the proxied repository below.
+- **A hosted repository advertises `security-advisories` and answers it from the advisory
+  reader; it advertises no `filter`.** The handler cannot compute an advisory verdict without
+  crossing the policy boundary `supply-chain-policy.md` AC4 holds, and it does not: the root
+  advertises `security-advisories` with `metadata: false` and an `api-url` under this registry,
+  and the `POST` to it is answered from `supply-chain-policy.md`'s advisory reader through `Deps`
+  (its "A handler may read advisories, never evaluate them", AC19), which names this route among
+  its consumers and returns, **for the repository served and a coordinate**, the advisory
+  records matching it and the condemnations standing against it, under that repository's
+  `coordinate_exemptions` (its resolved hosted-matching decision, was Q12 there, AC25), so a
+  private name the operator exempted answers no coordinate-matched record. The handler renders
+  the records in the shape Packagist's API answers, with the field set and the affected-version
+  constraint grammar taken from the recorded corpus and from the client's advisory loader in
+  `Repository/ComposerRepository.php` (which fields it reads and which it tolerates missing),
+  never from recollection; an OSV range becomes a constraint from its `introduced` and `fixed`
+  events and an enumerated `versions` list an exact-version disjunction; a name with no
+  advisory is omitted; and no rule is evaluated. That is the resolved hosted-advisory decision
+  below (was Q12, superseding was Q11): a hosted repository that advertises nothing makes
+  `composer audit`
+  print "No security vulnerability advisories found" (captured), an all-clear this registry did
+  not compute and the one thing its goal forbids, while an advertised channel answered from the
+  feed asserts exactly what the feed holds, under a staleness the proxied path shares. The
+  client's own `policy` block decides what to do with an advisory (2.10.3 blocks a covered
+  version by default, 2.2.30 ignores the channel), as it does against Packagist; the operator's
+  policy rules decide what this registry refuses, through the refusal above; and a private
+  package whose name collides with a public one is the dependency-confusion shape
+  `supply-chain-policy.md` chose to surface rather than hide, cleared narrowly by an exemption.
+  No `filter` list is advertised on the hosted path (Scope).
 - **A `remote` repository passes both through.** Its root advertises `filter` exactly as the
   upstream does with `summary-url` rewritten to this registry, and `security-advisories` with
   `metadata` as the upstream states it and `api-url` rewritten to this registry. The summary is
@@ -636,10 +701,11 @@ supply-chain-channel decision below:
 - **A `virtual` repository forwards a name only to a remote member and only when no local member
   has that package.** The client posts every name in its lock to the one `api-url` the virtual
   root advertises; a name that resolves from a `local` member is private by construction and is
-  never forwarded (answered as absent), the leak `npm.md`'s audit decision exists to prevent;
-  every other name is forwarded to each `remote` member and the answers merged by name in
-  member order. The virtual root advertises `filter` and `security-advisories` only when it has a
-  `remote` member.
+  never forwarded, the leak `npm.md`'s audit decision exists to prevent, and is answered from
+  the advisory reader for that member (the reader's answer on a `virtual` is the resolving
+  member's, under that member's exemptions); every other name is forwarded to each `remote`
+  member and the answers merged by name in member order. The virtual root always advertises
+  `security-advisories`, and `filter` only when it has a `remote` member.
 
 The upstream's malware list is also this format's **explicit security signal** (Design, "The
 proxied path", the removal table): an entry naming a coordinate this registry has cached
@@ -655,8 +721,10 @@ to verify (its "Nothing" row and "Formats with nothing to verify"), and its veri
 in the catalogue is `none`; `signing-service.md` lists it under "Nothing, stated", and this
 handler declares no `Indexer`. Advisory matching is the policy engine's coordinate-level path
 (`supply-chain-policy.md`'s coverage table: OSV carries the `Packagist` ecosystem with
-`vendor/name` names) and needs no handler cooperation, and the component inventory catalogues an
-archive as it does any archive.
+`vendor/name` names under the vendored Composer ordering), keyed on the advisory key this
+handler reports at every write and on every fetch-and-cache request (Design, "Mapping onto the
+shared model"; its AC24), and the component inventory catalogues an archive as it does any
+archive.
 
 Where a client checks nothing, the registry's own read path is the check. A hosted dist always
 carries its `shasum`, which the client verifies; a proxied dist whose upstream published an
@@ -682,7 +750,15 @@ AC17), the same reason those layouts are not served.
   document and never served: it is how the handler learns the upstream's `metadata-url`,
   `search`, `list`, `filter` and `security-advisories` URLs, wherever they point (Packagist's
   `search` and `list` are on `packagist.org`, its `api-url` too, its metadata and summary on
-  `repo.packagist.org`). This registry's own root is rendered from it with every URL rewritten
+  `repo.packagist.org`). The handler resolves each of them exactly as the client's
+  `canonicalizeUrl` does (Design, "Every URL is absolute"): an absolute URL as given, a
+  path-absolute one against the upstream's scheme and host only, and a relative one refused as
+  a malformed root, so a private v2 upstream mounted under a path and advertising `/p2/...` is
+  fetched from the same place the client would fetch it. Every host those URLs name other than
+  the upstream root's is an **off-origin host** the upstream's allowlist must admit, which is
+  why the Packagist recipe lists `packagist.org` beside the dist hosts (below): without it a
+  Packagist remote could forward neither `list`, `search` nor the advisories `POST`, each of
+  which `HostNotAllowedError` would refuse before any connection. This registry's own root is rendered from it with every URL rewritten
   to this registry, `available-packages` and `available-package-patterns` omitted, the
   upstream's `warning` keys dropped and this registry's own emitted (Design, "Legacy layouts"),
   so it names no package and is a descriptor (Design, "Addressed objects and pattern scopes").
@@ -712,7 +788,10 @@ AC17), the same reason those layouts are not served.
   request carrying neither a digest nor a verifier: the spooled body must parse completely as the
   version's declared `dist.type`, carry no entry whose path escapes the archive root, and hold a
   `composer.json` (at the archive root or under its single top-level directory, the shape GitHub
-  zipballs have) whose `name`, when present, is the package after lowercasing. A body the
+  zipballs have) whose `name`, when present, is the package after lowercasing. The verifier
+  reads the entry table and decompresses that one member alone under the same byte bound the
+  hosted peek applies (Design, "The hosted write path"), so a body of any size costs one pass
+  over its headers and an oversized `composer.json` is a refusal, not a decompression. A body the
   verifier refuses, or one the adapter reports `ErrTruncated` or `ErrStalled` on, is never
   committed and creates no negative entry, and the initiating client, which streamed the body,
   sees the connection close short of completion (the short-close observation `proxy-cache.md`
@@ -726,9 +805,10 @@ AC17), the same reason those layouts are not served.
   entries ("Credential scoping and the off-origin allowlist"). The allowlist is configuration on
   the `Upstream`, never computed by the handler, and an operator-created upstream's list is empty
   until set (its AC7), so this format's default is the Packagist recipe `upstream-adapters.md`
-  records ("Preconfigured profiles", naming this spec's list): `api.github.com`,
-  `codeload.github.com`, `github.com`, `gitlab.com` and `bitbucket.org`, each with role `none`;
-  any other upstream's list stays empty until the operator sets it. The handler
+  records ("Preconfigured profiles", naming this spec's list): `packagist.org` (its `list`,
+  `search` and advisories hosts), `api.github.com`, `codeload.github.com`, `github.com`,
+  `gitlab.com` and `bitbucket.org`, each with role `none`; any other upstream's list stays
+  empty until the operator sets it. The handler
   hands fetch-and-cache the upstream's absolute `dist.url` as the location (`proxy-cache.md`,
   "The adapter seam"); a location on a host outside the list makes no connection and returns
   `HostNotAllowedError`, which this handler renders as `502` with a body naming the host
@@ -750,11 +830,18 @@ AC17), the same reason those layouts are not served.
   `text/html` body this registry replaces with its own JSON `404`. The `~dev` file of a package
   with no branches is a `404` on Packagist too and is negatively cached the same way. A `429` or
   `5xx` is never cached as absence.
+- **A `HEAD` on any proxied route is the `GET` with the body withheld**: never forwarded, a
+  cold one filling the cache through the same fetch-and-cache call in the same mode and
+  answered after the verified commit, a negative entry answering it `404` (`proxy-cache.md`'s
+  resolved `HEAD` decision, was Q24, AC32). No pinned client sends one; the rule is the layer's
+  and this handler has no branch on the method.
 - **`notify-batch` is answered locally and never forwarded** (the resolved notify decision).
 - **The advisories `POST` is forwarded uncached** through fetch-and-cache with the body carried
-  in `upstream.Options` and the root credential, sent once, never retried, a redirect answered
-  to it being an error (`upstream-adapters.md`, "Forwarded `POST`", AC27; the name-forwarding
-  rule of the supply-chain channels above decides which names reach it).
+  in `upstream.Options` and the credential the target host's allowlist role gives (the root's
+  own where the `api-url` is on the root host, `none` on Packagist's `packagist.org` entry),
+  sent once, never retried, a redirect answered to it being an error (`upstream-adapters.md`,
+  "Forwarded `POST`", AC27; the name-forwarding rule of the supply-chain channels above
+  decides which names reach it).
 - **Every management operation against a `remote` or `virtual` repository answers `405`** with
   problem type `repository-type`, before authorization (`management-api.md`, "Hosted only").
 - **A `virtual` repository** renders a root of its own; its package file for a name is the
@@ -763,7 +850,9 @@ AC17), the same reason those layouts are not served.
   `remote` member cannot be enumerated for a stored merge; its dist URLs are its own and resolve
   through the member that supplied the entry; `available-packages` is listed only when every
   member is `local`; `list` is the union of its members' lists. Its freshness is the later of its
-  own pointer's record and each member's record for the name (Design, "The rendered documents").
+  own pointer's record and each member's record for the name, served through `ServeRendered`
+  with the member-list floor (Design, "The rendered documents"); a `remote` member reached only
+  through the virtual is kept fresh by the virtual's reads (`proxy-cache.md` AC26).
 
 Upstream removal maps onto the event classes of `proxy-cache.md`'s "Upstream removal or
 replacement", where Composer's rows are its explicit-security-signal and
@@ -836,18 +925,28 @@ The recorded surface for the replay corpus, named now because a thin recording s
 thin specification: reads against Packagist (a cold `composer require` of a package with a
 transitive dependency, the same under `minimum-stability: dev` so `~dev` replays, a warm
 `composer update` for the conditional requests, `composer install` from a lock on both releases,
-a missing package, `composer show`, `composer audit` and a `require` blocked by an advisory, and
-an install with the malware summary fetched); and hosted flows against a reference v2 repository
-run in a container and pinned by digest, because no public Composer repository accepts an
-upload (a Satis-generated site served statically, with its `metadata-url` set to an absolute
-URL, is the reference for reads; writes have no reference and are exercised by this registry's
-own cases). Recording gates on the harness's redaction criterion (`conformance-harness.md`
-AC13); the Basic and Bearer values are exactly the headers an allowlist must name. Every
-deliberate divergence from Packagist goes on the recorded exception list before its flow is
-expected to replay: the JSON `404` body where Packagist sends `text/html`, `available-packages`
-present on hosted roots, the rewritten dist URLs and the dropped `providers-url`,
-`metadata-changes-url` and `providers-api` keys, the field order of re-minified documents, and
-the empty `{}` answered to `notify-batch`.
+a missing package, a package holding only branch versions under `dev-main` so the main file's
+shape for such a package is recorded, `composer show`, `composer audit` and a `require` blocked
+by an advisory with the advisories API's response body as the hosted rendering's reference
+shape, and an install with the malware summary fetched); and hosted flows against a reference
+v2 repository run in a container and pinned by digest, because no public Composer repository
+accepts an upload (a Satis-generated site served statically, with its `metadata-url` set to an
+absolute URL, is the reference for reads; writes have no reference and are exercised by this
+registry's own cases). Both halves are rows of `conformance-harness.md`'s
+authoritative-reference exception list (its AC28: the hosted half against the Satis container,
+the write half reading "none"), which that spec's table does not yet carry and this pass
+reports. Two client facts the captures did not settle are captured against the stub, the same
+way, before the cases that depend on them are written: what a branch-only package's main file
+should be (AC3) and whether a second configured repository supplies a version this registry
+omits (Design, "Policy refusals on the wire"). Recording gates on the harness's redaction
+criterion (`conformance-harness.md` AC13); the Basic and Bearer values are exactly the headers
+an allowlist must name. Every deliberate divergence from Packagist goes on the recorded
+exception list before its flow is expected to replay: the JSON `404` body where Packagist sends
+`text/html`, `available-packages` present on hosted roots, the rewritten dist URLs and the
+dropped `providers-url`, `metadata-changes-url` and `providers-api` keys, a proxied version
+rendered without its `dist` because its type is one the verifier does not parse, the field
+order of re-minified documents, the hosted advisories answer omitting names with no advisory
+where Packagist's may echo them, and the empty `{}` answered to `notify-batch`.
 
 ## Acceptance Criteria
 
@@ -874,8 +973,12 @@ the empty `{}` answered to `notify-batch`.
       file; a direct request for an absent package file, for the `~dev` file of a package with
       no branch versions, and for the package file of a package with no tagged versions each
       answers `404` with a JSON body, and a request in any other case of the name is folded and
-      served with canonical URLs; and a package's first publish adds its name to
-      `available-packages`.
+      served with canonical URLs; a package's first publish adds its name to
+      `available-packages`; and a real `composer require acme/branchonly:dev-main` of a package
+      holding only branch versions resolves and installs on both releases, the main file's
+      answer for such a package (the `404` drafted, or a `200` with an empty list) fixed by that
+      case against the shape recorded from Packagist and recorded on the exception list if the
+      two differ.
 - [ ] AC4: Every served package and branch file carries `"minified":"composer/2.0"` and expands
       through the client's `MetadataMinifier::expand()` to exactly the per-version entries the
       registry holds, with the first entry whole, each later entry a diff, and a key absent from
@@ -895,14 +998,22 @@ the empty `{}` answered to `notify-batch`.
       lowercasing, whose `version` normalises to something other than the declared version,
       whose name fails the client's grammar or carries uppercase, whose version the normaliser
       refuses, or which carries a literal `__unset` value, is refused `validation` (422) with no
-      snapshot; a publish naming an existing tagged version is refused `conflict` (409) with the
-      same bytes and with different ones; after that version is deleted, a publish of it, or of
+      snapshot, as is one whose `composer.json` member exceeds the peek's byte bound, while an
+      archive of several gigabytes with a small `composer.json` is validated by one pass over
+      its entry table with no other member decompressed and no document or head lock held
+      during the peek; a publish naming an existing tagged version with different bytes or a
+      different dist type is refused `conflict` (409), and one with the identical archive and
+      type completes with no snapshot, no pointer or freshness change and `unchanged: true`
+      in its `Operation` result; after that version is deleted, a publish of it, or of
       any version string normalising to it, is refused `retired` (409) by the shared write path,
       including after the deletion's snapshot has been pruned out of retention and after the
       default pointer has been repointed to a snapshot older than the deletion, while a new
-      version under the same name publishes normally; and a publish naming an existing branch
+      version under the same name publishes normally; a publish naming an existing branch
       version (`dev-*` or `*-dev`) replaces its archive in one snapshot, a fresh `composer
-      update` installs the new bytes, and the previous dist URL answers `404`.
+      update` installs the new bytes, and the previous dist URL answers `404`; and a branch
+      version whose name carries a slash (`dev-feature/login`) publishes, renders a dist URL
+      whose version segment is percent-encoded, reports `{vendor}/{name}/dev-feature/login`
+      as its object, and installs on both releases.
 - [ ] AC6: Deleting a version, deleting a package and marking a package abandoned through the
       management API each produce exactly one snapshot; after a version delete the package file
       omits it, its dist answers `404` and a real `composer require` of that exact version fails;
@@ -940,8 +1051,10 @@ the empty `{}` answered to `notify-batch`.
       under it, while a direct package-file and dist request for `acme/tool` under it succeeds
       and the same for `other/tool` is refused; and on a `remote` repository, whose root is a
       descriptor, the patterned-only `pull` token runs a real `composer require acme/tool` to
-      completion on both releases and is refused `other/tool`'s package file, and the remote's
-      root carries no sentinel package name seeded into its cache.
+      completion on both releases, 2.10.3's advisories `POST` under it answered as a descriptor
+      and asserted in the transcript, and is refused `other/tool`'s package file, and neither
+      the remote's root nor its advisories answer carries a sentinel package name seeded into
+      its cache or posted in the sentinel request.
 - [ ] AC10: A version the shared policy layer refuses is omitted from the package or branch file
       on the hosted and the proxied path, a package whose every version is refused answers `403`
       for its file, and the refused version's dist answers `403` with a `text/plain` body naming
@@ -949,10 +1062,15 @@ the empty `{}` answered to `notify-batch`.
       require` of an exact refused version on both releases fails naming no such version, and a
       real `composer install` from a lock pinning it fails naming the `403`, with the status
       line both releases print carrying the phrase `Refused by policy:` and the condition when
-      served over HTTP/1.1, written by `WriteRefusal`; and on 2.10.3 no `source` fetch follows
+      served over HTTP/1.1, written by `WriteRefusal`; on 2.10.3 no `source` fetch follows
       the refusal, asserted at the network layer, while 2.2.30's attempt to clone the `source`
       URL fails at name resolution inside the confined case network and is recorded in the
-      transcript as the client's own egress.
+      transcript as the client's own egress; every package and version this handler records,
+      hosted or proxied, carries the advisory key `{vendor}/{name}` and the pretty version as
+      published, so an advisory enumerating `v1.1.0` condemns the version published as
+      `v1.1.0` and not one published as `1.1.0`, while a range condemns both under the Composer
+      ordering; and with a name in the repository's `coordinate_exemptions` the same version is
+      served and the advisories answer carries no record for it.
 - [ ] AC11: The proxied path resolves a package and its dependency from a v2 upstream stand-in on
       both releases and, from fresh client caches, a second resolve reaches this registry while
       the upstream and the dist host receive no request, both asserted at the network layer;
@@ -967,16 +1085,22 @@ the empty `{}` answered to `notify-batch`.
       another package are each never committed, create no negative entry and reach the client as
       a transfer closed short of completion, while a good body is served byte-identical; a dist
       whose upstream URL is on a host outside the upstream's allowlist answers `502` naming the
-      host with no connection made, the Packagist recipe's allowlist naming `api.github.com`,
-      `codeload.github.com`, `github.com`, `gitlab.com` and `bitbucket.org`, each with role
-      `none`, and no other host, and an upstream created without it holding an empty list; a
-      token attached as an `own` credential on
+      host with no connection made, the Packagist recipe's allowlist naming `packagist.org`,
+      `api.github.com`, `codeload.github.com`, `github.com`, `gitlab.com` and `bitbucket.org`,
+      each with role `none`, and no other host, and an upstream created without it holding an
+      empty list; a token attached as an `own` credential on
       `api.github.com` reaches that host and not `codeload.github.com`, observed at the network
       layer; a missing package file and a missing `~dev` file are each negatively cached with a
       JSON `404` while a `429`, a GitHub-shaped `403` carrying `x-ratelimit-remaining: 0` or a
-      `5xx` from the upstream or the dist host is not and is never answered as not-found; and
-      the dist route for a URL a lock file pinned still resolves after the cached package file
-      has been evicted.
+      `5xx` from the upstream or the dist host is not and is never answered as not-found; a
+      stand-in version whose `dist.type` is `rar` is served without its `dist` entry and the
+      client installs it from its `source` inside the case network; a `HEAD` on a package file
+      and on a dist, cold, causes one upstream `GET` and no upstream `HEAD`, fills the cache
+      and answers the `GET`'s headers with no body, a `HEAD` on a negatively cached name
+      answering `404` with no upstream request; and the dist route for a URL a lock file
+      pinned still resolves after the dist's cached bytes have been evicted under the quota
+      and after the version has left the upstream's package file, the package file itself
+      never being evicted.
 - [ ] AC12: A proxied package file is revalidated after its TTL and not before, with
       `If-Modified-Since` so an unchanged document costs a `304` upstream; a version published
       upstream becomes visible to `composer update` after the TTL and, absent the operator's
@@ -999,10 +1123,16 @@ the empty `{}` answered to `notify-batch`.
       from a version the advisories API covers, and `composer install` from a lock pinning the
       listed version fails, while 2.2.30 installs both; a `virtual` repository with a `local`
       and a `remote` member forwards to the remote member only the names no local member holds,
-      asserted at the network layer with a private name in the client's lock; and a hosted
-      repository advertises neither key, even for a package whose name the advisory feed
-      covers, with `composer audit` on 2.10.3 reporting no advisories and the operator
-      documentation naming the gap.
+      asserted at the network layer with a private name in the client's lock, the local name
+      answered from the advisory reader; and a hosted repository advertises
+      `security-advisories` with `metadata: false` and its `api-url` under this registry and no
+      `filter`, its answer
+      rendered from the advisory reader in the recorded Packagist shape, so that with a
+      case-controlled advisory source (the `advisories` key) naming a hosted package's version,
+      `composer audit` on 2.10.3 reports that advisory, a real `composer require` on 2.10.3 is
+      blocked from that version by the client's default policy while 2.2.30 installs it, a
+      private name the source does not cover produces no entry, and a name with no advisory is
+      absent from the answer.
 - [ ] AC14: An upstream malware-list entry naming a cached coordinate condemns the versions it
       covers under the security-signal rule: every cached reference ends, the next request for
       such a version is refused naming the list with no upstream request, a refusal record
@@ -1014,13 +1144,18 @@ the empty `{}` answered to `notify-batch`.
       disagree with a published `shasum` is never committed and raises the alert: Composer's
       side of the settled removal table in `proxy-cache.md` (its AC13).
 - [ ] AC15: The root document and every package and branch file carry a `Last-Modified` equal to
-      the serving pointer's `moved_at` on the hosted path, the later of the members' records on
-      a virtual, and the document's cache-scoped `adopted_at` on the proxied path, with an
-      `ETag` derived from the served bytes, both set by the shared serving path and neither by
+      the serving pointer's `moved_at` on the hosted path, the later of the virtual's own and
+      its members' records on a virtual, and the document's cache-scoped `adopted_at` on the
+      proxied path, with a strong `ETag` the serving door derives from the lazy renderer's
+      validator identity and the freshness value, both set by `ServeRendered` and neither by
       the handler; an exactly matching `If-Modified-Since` or a matching `If-None-Match` answers
-      `304` with an empty body and any other `If-Modified-Since` is answered `200`; and every
-      `404` on a package or branch file is answered without any upstream request on the hosted
-      path.
+      `304` with an empty body and without invoking the renderer, and any other
+      `If-Modified-Since`, earlier or later, is answered `200`; removing from a virtual the
+      member whose record was the latest served leaves the next `Last-Modified` later still; a
+      `HEAD` on the root, a package file, a branch file and a dist answers the status and
+      headers the `GET` answers, `Content-Length` included, with no body, and a conditional
+      `HEAD` answers `304`; and every `404` on a package or branch file is answered without any
+      upstream request on the hosted path.
 - [ ] AC16: The hosted root document carries no `providers-url`, `provider-includes`,
       `includes`, inline `packages`, `mirrors`, `providers-api` or `metadata-changes-url`;
       requests under `/p/` and `/include/` answer `404`; the root carries `warning` and
@@ -1029,7 +1164,11 @@ the empty `{}` answered to `notify-batch`.
       before failing to find any version, and which neither pinned Composer 2 release prints;
       and a `remote` repository whose upstream root lacks `metadata-url` or offers only the v1
       layout is created with no upstream request and answers its first root request, and every
-      later one, `502` naming the requirement, caching nothing.
+      later one, `502` naming the requirement, caching nothing, while an upstream mounted under
+      a path whose root advertises a path-absolute `metadata-url` has its package files fetched
+      from the upstream's scheme and host with the mount path dropped, as the client's
+      `canonicalizeUrl` would, and one advertising a relative `metadata-url` is answered `502`
+      the same way.
 - [ ] AC17: Configuring a remote repository whose upstream URL is `http://` without the upstream's
       `allow_http` is refused `upstream-invalid` (422) with nothing committed
       (`upstream-adapters.md` AC23), and an unreachable but well-formed upstream is accepted; a
@@ -1044,8 +1183,10 @@ the empty `{}` answered to `notify-batch`.
 - [ ] AC19: Every package and branch file on the hosted path is rendered from version rows at
       request time, proven by an architecture test that the handler writes no rendered
       document into any metadata level and declares no `Indexer`, by
-      `signing-service.md`'s freshness-boundary test finding no `Last-Modified`, `ETag` or
-      `If-Modified-Since` handling in the handler package, and by a mutation to a version's
+      `signing-service.md`'s freshness-boundary test finding no `Last-Modified`, `ETag`,
+      `If-Modified-Since`, `If-None-Match` or `If-Range` handling and no branch on the request
+      method in the handler package, every rendered document reaching the wire through
+      `ServeRendered` and every dist through `ServeFile`, and by a mutation to a version's
       document being visible in the next rendered file with no regeneration step in between.
 - [ ] AC20: Every absolute URL a served document carries is under `server.public_url` read through
       `Deps` and the repository's current name, never derived from the request's `Host`, and
@@ -1071,23 +1212,23 @@ the empty `{}` answered to `notify-batch`.
 |-----------|-----------|---------------|
 | AC1 | conformance | `conformance/composer/hosted_test.go` (both pinned releases; `require` then `update`; fresh `COMPOSER_HOME` and `COMPOSER_CACHE_DIR` in setup; network-level assertions for the warm and fresh runs; `minimum-stability` variants) |
 | AC2 | conformance | `conformance/composer/lockfile_test.go` (lock produced in-case, fresh cache, byte comparison; deleted-version lock through a `state` mutation) |
-| AC3 | conformance + integration | `conformance/composer/missing_test.go` (no package-file request under the listing; `composer search` and `composer show` transcripts); `internal/format/composer/render_test.go` (`404` bodies for absent, branch-less and tag-less packages; listing gains a name) |
+| AC3 | conformance + integration | `conformance/composer/missing_test.go` (no package-file request under the listing; `composer search` and `composer show` transcripts; the branch-only package under `dev-main` on both releases, its main-file shape compared with the corpus's Packagist capture); `internal/format/composer/render_test.go` (`404` bodies for absent, branch-less and tag-less packages; listing gains a name) |
 | AC4 | unit | `internal/format/composer/minify_test.go` (round trip through a port of `expand()`, the `__unset` fixture, ordering); `internal/format/composer/normalize_test.go` (the `composer/semver` test table committed as a golden fixture; refusal parity; the literal `__unset` refusal) |
-| AC5 | integration + conformance | `internal/format/composer/publish_test.go` (archive validation cases through `Apply`'s peek with `validation`, snapshot count, `conflict` on an existing tagged version with same and different bytes, `retired` after deletion through the shared write path for every spelling normalising to it, after pruning under an injected clock and after a backwards repoint, branch replacement; `management-api.md` AC8's shared `internal/manage` harness); `conformance/composer/publish_test.go` (the `script` opens an upload session and submits `publish` through the operations endpoint, then real `require` and `update`) |
+| AC5 | integration + conformance | `internal/format/composer/publish_test.go` (archive validation cases through `Apply`'s peek with `validation`, the oversized `composer.json` refusal and a large archive validated with one member decompressed and no lock held, snapshot count, `conflict` on an existing tagged version with different bytes and with another type, the unchanged publish with identical bytes shared with `management-api.md` AC5's fixture, `retired` after deletion through the shared write path for every spelling normalising to it, after pruning under an injected clock and after a backwards repoint, branch replacement, the slash-bearing branch's encoded URL and object; `management-api.md` AC8's shared `internal/manage` harness); `conformance/composer/publish_test.go` (the `script` opens an upload session and submits `publish` through the operations endpoint, then real `require` and `update`, the identical republish and the `dev-feature/login` install on both releases) |
 | AC6 | integration + conformance | `internal/format/composer/manage_test.go` (one snapshot per operation, `Retirement` rows for tagged versions only, `pull`-only refusal, the kind table's actions, `405` `repository-type` on remote and virtual, the declared `Operations()` set); `conformance/composer/manage_test.go` (the `script`-driven case per declared kind `management-api.md` AC24 requires, presence enforced by `conformance-harness.md` AC26; real installs failing after deletes; the abandoned warning on both releases) |
 | AC7 | conformance + unit | `conformance/composer/checksum_test.go` (seeded mismatch through `state`, one dist request); `internal/format/composer/dist_test.go` (headers, `shasum` and `reference` equality) |
 | AC8 | conformance + integration | `conformance/composer/auth_test.go` (private repository on both releases; challenge equality across existing and missing repositories; `http-basic` and `bearer` through `COMPOSER_AUTH` keyed by host and port; the bare-host negative from a fresh cache; rejected credential; `pull`-less token); `internal/format/composer/auth_test.go` (plaintext refusal under `auth.md` AC27) |
-| AC9 | conformance + unit | `conformance/composer/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens through the `credentials` key; management-endpoint publishes and deletes; direct file and dist requests; the patterned-only `pull` running `composer require` through a remote, `auth.md` AC32); `internal/format/composer/scope_object_test.go` (the object table, per route and per repository type, `format-handler-interface.md` AC12, with the sentinel check on the remote root through the shared helper) |
-| AC10 | conformance + unit | `conformance/composer/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`, runnable once `supply-chain-policy.md`'s Composer binding row leaves `pending`, `conformance-harness.md` AC26; omission from the file, `403` on the dist with the body in the transcript; the `Refused by policy:` phrase in both releases' output over HTTP/1.1; exact-version `require` and lock install on both releases; network-level assertion of no `source` fetch on 2.10.3 and of 2.2.30's clone failing at name resolution); `internal/format/refusal_writer_test.go` (the writer as the only hand-written status line, `supply-chain-policy.md` AC18) |
-| AC11 | conformance + integration | `conformance/composer/proxied_test.go` (v2 upstream stand-in with dist-host stand-ins declared as `hosts` sub-entries of its `upstreams` entry, `conformance-harness.md` AC23, the first answering `302` to the second; transcript and network-level assertions; fresh client caches; byte comparison; `shasum` and empty-`shasum` variants; the short-close observation `proxy-cache.md` AC20 names for `composer`; negative caching; throttling); `conformance/composer/upstream_dist_host_test.go` (dist on a second host, `302` to a third, allowlist removal, the `own` credential reaching only `api.github.com`; shared with `upstream-adapters.md` AC25); `internal/format/composer/proxied_verify_test.go` (the structural verifier over each bad body, truncation, no `Blob` row and no negative entry, `RemoteFile` resolution after eviction; the layer half being `proxy-cache.md` AC20's `internal/proxy/completion_mode_test.go`) |
+| AC9 | conformance + unit | `conformance/composer/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens through the `credentials` key; management-endpoint publishes and deletes; direct file and dist requests; the patterned-only `pull` running `composer require` through a remote with 2.10.3's advisories `POST` in the transcript, `auth.md` AC32); `internal/format/composer/scope_object_test.go` (the object table, per route and per repository type, `format-handler-interface.md` AC12, with the sentinel check on the remote root and on the advisories route in both modes, the sentinel name posted, through the shared helper) |
+| AC10 | conformance + unit + integration | `conformance/composer/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories`, runnable once `supply-chain-policy.md`'s Composer binding row leaves `pending` on the second-repository stub capture, `conformance-harness.md` AC26; omission from the file, `403` on the dist with the body in the transcript; the `Refused by policy:` phrase in both releases' output over HTTP/1.1; exact-version `require` and lock install on both releases; network-level assertion of no `source` fetch on 2.10.3 and of 2.2.30's clone failing at name resolution; the exempted name served with no advisory rendered); `internal/format/refusal_writer_test.go` (the writer as the only hand-written status line, `supply-chain-policy.md` AC18); `internal/format/composer/advisory_key_test.go` (the reported key on both paths, the enumerated-spelling and range cases; shared with `supply-chain-policy.md` AC24's `internal/policy/advisory_key_test.go`) |
+| AC11 | conformance + integration | `conformance/composer/proxied_test.go` (v2 upstream stand-in with dist-host stand-ins declared as `hosts` sub-entries of its `upstreams` entry, `conformance-harness.md` AC23, the first answering `302` to the second; transcript and network-level assertions; fresh client caches; byte comparison; `shasum` and empty-`shasum` variants; the short-close observation `proxy-cache.md` AC20 names for `composer`; negative caching; throttling; the `rar` version installed from `source`; the cold `HEAD`s at the network layer, shared with `proxy-cache.md` AC32's `internal/proxy/head_test.go`); `conformance/composer/upstream_dist_host_test.go` (dist on a second host, `302` to a third, allowlist removal, the `own` credential reaching only `api.github.com`; shared with `upstream-adapters.md` AC25); `internal/format/composer/proxied_verify_test.go` (the structural verifier over each bad body, the oversized `composer.json`, truncation, no `Blob` row and no negative entry, `RemoteFile` resolution after the dist's eviction and after the version left the upstream file with the package file still present, the zero retained-revision declaration; the layer half being `proxy-cache.md` AC20's `internal/proxy/completion_mode_test.go`) |
 | AC12 | conformance + integration | `conformance/composer/proxied_ttl_test.go` (mutating stand-in serving `Last-Modified`; upstream and client `304`s at the network layer; served `Last-Modified` strictly increasing across adopted revisions; an older upstream revision not adopted; the refresh route inside the TTL); `conformance/composer/rollback_test.go` (a repoint to an earlier snapshot seen by a warm `composer update` on both releases); `internal/format/composer/lastmodified_test.go` (two writes in one second under an injected clock); the cache-scoped half is `proxy-cache.md` AC22's and `data-model.md` AC44's `internal/proxy/freshness_test.go`, the pointer half `data-model.md` AC36's |
-| AC13 | conformance + integration | `conformance/composer/channels_test.go` (stand-in advertising `filter` and `security-advisories`; malware and advisory cases on 2.10.3 with the 2.2.30 negatives; the virtual forwarding case with a private name asserted at the network layer; the hosted `audit` case with a feed-covered name); `conformance/composer/audit_forward_test.go` (a real `composer audit` through a remote reaching the stand-in's advisories endpoint exactly once; shared with `upstream-adapters.md` AC27); `internal/format/composer/channels_test.go` (URL rewriting, summary caching, uncached forwarding, the name-forwarding rule) |
+| AC13 | conformance + integration | `conformance/composer/channels_test.go` (stand-in advertising `filter` and `security-advisories`; malware and advisory cases on 2.10.3 with the 2.2.30 negatives; the virtual forwarding case with a private name asserted at the network layer and answered from the reader; the hosted cases: a case-controlled `advisories` source naming a hosted version, `composer audit` and the blocked `require` on 2.10.3, the 2.2.30 install, the uncovered private name, no `filter` key); `conformance/composer/audit_forward_test.go` (a real `composer audit` through a remote reaching the stand-in's advisories endpoint exactly once; shared with `upstream-adapters.md` AC27); `internal/format/composer/channels_test.go` (URL rewriting, summary caching, uncached forwarding, the name-forwarding rule, the hosted rendering from a fixture reader against the recorded Packagist shape, the OSV range and enumeration conversions; the reader half shared with `supply-chain-policy.md` AC19's `internal/policy/advisory_reader_test.go`) |
 | AC14 | integration | `internal/format/composer/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
-| AC15 | integration | `internal/format/composer/conditional_test.go` (`Last-Modified` from the pointer, virtual and cache records, byte-derived `ETag`, `304` on an exact `If-Modified-Since` and on `If-None-Match`, `200` on any other date, no upstream request on a hosted `404`) |
-| AC16 | conformance + integration | `conformance/composer/legacy_test.go` (Composer 1.10.28 on the pinned `php:7.4-cli` image; the warning in its output; no warning on either Composer 2 release); `internal/format/composer/render_test.go` (absent keys, `/p/` and `/include/` `404`s); `internal/format/composer/upstream_first_request_test.go` (creation with no upstream request; a v1-only root and one lacking `metadata-url` answered `502` at the first request with nothing cached, `upstream-adapters.md` AC23) |
+| AC15 | integration | `internal/format/composer/conditional_test.go` (`Last-Modified` from the pointer, virtual and cache records, the door-derived `ETag`, `304` on an exact `If-Modified-Since` and on `If-None-Match` with no render, `200` on any other date, the member-removal floor, `HEAD` on each route and a conditional `HEAD`, no upstream request on a hosted `404`; the door half shared with `signing-service.md` AC32's `internal/index/freshness_test.go` and `internal/index/head_test.go`) |
+| AC16 | conformance + integration | `conformance/composer/legacy_test.go` (Composer 1.10.28 on the pinned `php:7.4-cli` image; the warning in its output; no warning on either Composer 2 release); `internal/format/composer/render_test.go` (absent keys, `/p/` and `/include/` `404`s); `internal/format/composer/upstream_first_request_test.go` (creation with no upstream request; a v1-only root and one lacking `metadata-url` answered `502` at the first request with nothing cached, `upstream-adapters.md` AC23; a path-absolute `metadata-url` under a path-mounted stand-in resolved against its scheme and host, a relative one answered `502`) |
 | AC17 | integration + conformance | `internal/upstream/validate_test.go` (`http://` refusal without `allow_http` and the well-formed-unreachable acceptance, `upstream-adapters.md` AC22, AC23); `conformance/composer/virtual_test.go` (a virtual repository over a local and a remote member; a resolve that succeeds only through the merge; listing presence per member set; a member publish moving the virtual's `Last-Modified`) |
 | AC18 | conformance | `conformance/composer/replay_test.go` |
-| AC19 | architecture test + integration | `internal/format/composer/arch_test.go` (no stored rendering, no `Indexer`; render-on-request); `internal/format/freshness_boundary_test.go` (no freshness header handling in the handler package, `signing-service.md` AC11); `internal/format/composer/render_test.go` (a document mutation visible in the next render) |
+| AC19 | architecture test + integration | `internal/format/composer/arch_test.go` (no stored rendering, no `Indexer`; render-on-request; no branch on the request method; every response through `ServeRendered` or `ServeFile`); `internal/format/freshness_boundary_test.go` (no freshness header handling in the handler package, `signing-service.md` AC11); `internal/format/composer/render_test.go` (a document mutation visible in the next render) |
 | AC20 | integration + conformance | `internal/format/composer/base_url_test.go` (every rendered URL under a fixture `server.public_url` and the current name, a spoofed `Host` ignored); every conformance case above runs behind the harness's TLS termination with `COMPOSER_CAFILE` set and no `secure-http: false` in any case's `composer.json`, asserted by the case definitions carrying none |
 | AC21 | integration + conformance | `internal/format/composer/list_test.go` (filter semantics, patterned refusal, no hosted `search` key); `conformance/composer/proxied_test.go` (forwarded list and search from cache at the network layer) |
 | AC22 | unit + conformance | `internal/format/composer/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/composer/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; both releases in both modes, old name `not-found`, the pre-rename lock failing until re-locked) |
@@ -1095,11 +1236,12 @@ the empty `{}` answered to `notify-batch`.
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their visibility and type,
 `credentials`, an `upstreams` stand-in for the v2 repository whose `hosts` sub-entries declare
-the two dist-host stand-ins and whose `credential` declares the `bearer` GitHub token on the
+the two dist-host stand-ins, a `packagist.org`-shaped host for `list`, `search` and the
+advisories `POST`, and whose `credential` declares the `bearer` GitHub token on the
 `own` entry (`conformance-harness.md` AC23; images pinned by digest), `state` for pre-published
 versions, a seeded `shasum` mismatch, a deleted version and the `Retirement` record its deletion
-would have left (`management-api.md`, "Retirement is core-held"), and `policies` with
-`advisories` for AC10 once the binding row allows it. The issued credential reaches the client
+would have left (`management-api.md`, "Retirement is core-held"), `advisories` for the hosted
+channel (AC13), and `policies` with `advisories` for AC10 once the binding row allows it. The issued credential reaches the client
 as `COMPOSER_AUTH` keyed by the registry's host and port. The runner-enforced obligations, both
 modes, the unauthenticated, unauthorized and pattern-refusal cases in each, a `script` case per
 declared kind and the rename case, apply from the sibling specs and are not restated per
@@ -1111,22 +1253,28 @@ criterion here.
 - The format-first mount and `server.public_url` through `Deps`, the root document with
   `available-packages` and the legacy warning, package and branch files rendered on request
   with exact minification and the normaliser port, the tagged-versus-branch split, the dist
-  grammar with `shasum` and `reference`, freshness from the pointer's record through the shared
-  serving path (the freshness-boundary test green on this package), the `list` route, the
-  challenge and scope mapping, the per-route addressed objects and the refusal rendering
-  through `WriteRefusal` (omission on the files, `403` on the dist)
+  grammar with `shasum` and `reference` and the percent-encoded version segment, freshness
+  from the pointer's record through `ServeRendered` and dists through `ServeFile` (the
+  freshness-boundary test green on this package; `HEAD` answered by the door), the `list` route,
+  the hosted `security-advisories` route rendered from the advisory reader, the advisory key
+  reported on every write, the challenge and scope mapping, the per-route addressed objects and
+  the refusal rendering through `WriteRefusal` (omission on the files, `403` on the dist)
 
 ### Phase 2: The hosted write path
 - Waits on `management-api.md` reaching `planned` (Blocking preconditions)
 - The `Operator` declaration (`publish`, `delete-version`, `delete-package`, `annotate`),
-  publish from an upload session with `Apply`'s archive peek, branch replacement, tagged
-  immutability with `conflict` and core-held `Retirement` through `Outcome`, delete a version,
+  publish from an upload session with `Apply`'s bounded archive peek, the unchanged publish,
+  branch replacement, tagged immutability with `conflict`, the claim declaration and core-held
+  `Retirement` through `Outcome`, delete a version,
   delete a package, the abandoned mark, the write-boundary declaration exercised end to end with
   a `script` case per kind
 
 ### Phase 3: Proxied path
 - The `https` upstream with no probe at creation and the root's shape checked at first request,
-  root rewriting to a descriptor, package-file caching with dist URLs rewritten at adoption,
+  the upstream root's URLs resolved as the client resolves them and their hosts under the
+  allowlist, root rewriting to a descriptor, package-file caching with dist URLs rewritten at
+  adoption and a dist of an unparsed type dropped, the advisory key on every fetch-and-cache
+  request, the zero retained-revision declaration,
   `If-Modified-Since` revalidation under the cache-scoped `Last-Modified` with regressions not
   adopted, the dist-host allowlist as `hosts` entries with redirect following and the `own`
   GitHub credential, `shasum` stream-and-verify and completion-only verification with the
@@ -1149,11 +1297,12 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 None open. The nine questions this draft raised were each written in the template's decision
 shape and then adopted at their own recommendation under the owner's standing delegation of
 2026-09-26, so the loop can continue; the 2026-09-28 reconciliation with the foundation specs
-raised and adopted two more the same way (Q10, freshness; Q11, the hosted channels), on Opus,
-which is why this spec now carries `fable_recheck`. Each is recorded below as adopted rather than
-decided, folded through Scope, Design, the criteria and the Test Plan in the same pass, and
-reversible by the owner at any time. `grep -rn "standing delegation"` is the owner's review
-queue.
+raised and adopted two more the same way (Q10, freshness; Q11, the hosted channels), on Opus;
+the Fable recheck of 2026-10-08 confirmed Q10 and superseded Q11 with Q12 (the hosted advisory
+channel rendered from the advisory reader), adopted under the same delegation. Each is recorded
+below as adopted rather than decided, folded through Scope, Design, the criteria and the Test
+Plan in the same pass, and reversible by the owner at any time. `grep -rn "standing delegation"`
+is the owner's review queue.
 
 ### Resolved: the Composer 1 layouts are not served (was Q1)
 
@@ -1231,7 +1380,7 @@ carry the immutability every lock file and this registry's own proxy cache depen
 
 | Option | You get | It costs |
 |---|---|---|
-| **A. Branch versions mutable under a keyed URL; tagged versions immutable and retired** | The ecosystem's own semantics for both kinds; lock files never contradicted | An old branch archive leaves the head on replacement, so a lock pinning it fails to install once it is replaced, as it does against Packagist when a branch is force-pushed |
+| **A. Branch versions mutable under a keyed URL; tagged versions immutable and retired** | The ecosystem's own semantics for both kinds; lock files never contradicted | An old branch archive leaves the head on replacement, so a lock pinning it fails to install once it is replaced; against Packagist the old zipball URL keeps resolving for as long as GitHub holds the commit, so this registry is stricter than the ecosystem's own cache here, and a consumer re-locks |
 | **B. Every version immutable** | One rule | Branch versions cannot move, which is what a branch version is for |
 | **C. Every version mutable** | Operators can fix a tag in place | Every lock file that pinned the old `shasum` fails, and the proxy layer's cache-forever classification of dists becomes wrong |
 
@@ -1241,6 +1390,13 @@ Accepted cost: the retirement set, originally in the package-level document and 
 later write; since the 2026-09-28 reconciliation it is `management-api.md`'s core-held
 `Retirement` record, written by `Submit` from the tagged versions a deletion's `Outcome` names
 (its resolved retirement-placement decision, was Q3), so no write carries it.
+
+Rechecked on Fable 2026-10-08: confirmed, amended in two places. The cost row claimed Packagist
+breaks a lock the same way on a force-push, which it does not while GitHub holds the old commit;
+restated honestly above. And "immutable" had been folded as `conflict` on an identical republish
+too, which fails a CI retry of a publish that landed; under `management-api.md`'s resolved
+unchanged-publish decision (was Q15) an identical archive and type now completes with no
+snapshot, different bytes still `conflict` (Design, "The hosted write path"; AC5).
 
 ### Resolved: non-canonical request spellings are folded (was Q4)
 
@@ -1273,9 +1429,11 @@ with its URLs rewritten, the summary cached and the advisories `POST` forwarded 
 `virtual` repository forwards a name to its remote members only when no local member holds it;
 and the policy engine's own verdicts are rendered through these channels by a later revision
 once `supply-chain-policy.md` exposes an advisory read (Design, "The supply-chain channels";
-AC13). That read now exists (`supply-chain-policy.md`'s advisory reader, AC19), and whether to
-render it on hosted repositories was decided separately in the resolved hosted-channel decision
-(was Q11): not rendered, for the default-blocking and name-collision reasons recorded there.
+AC13). That read now exists (`supply-chain-policy.md`'s advisory reader, AC19). The
+reconciliation's resolved hosted-channel decision (was Q11) kept the hosted path unadvertised
+anyway; the Fable recheck superseded it with the resolved hosted-advisory decision (was Q12),
+which renders `security-advisories` on hosted repositories from the reader, as this record's
+"later revision" intended, and keeps `filter` unadvertised there.
 
 The question: the channels are the ecosystem's native supply-chain surface and the current
 client enforces them by default, so a hosted repository that advertises nothing silences
@@ -1403,12 +1561,13 @@ never reads the package file.
 |---|---|---|
 | **A. Omit from the file; `403` on the dist** | Version-scoped refusal that the solver handles natively; lock installs fail loudly | The client's message for a fresh resolve is "could not be found in any version", which names no policy; the transcript and the refusal record carry the reason |
 | **B. `403` on the whole file when any version is refused** | The sibling specs' shape | One condemned version makes the package unresolvable at every version |
-| **C. Render refused versions as `filter` entries** | The client explains the refusal in its own words | Requires advertising `filter` lists on hosted repositories, which the resolved channel decision (was Q5) deferred and the resolved hosted-channel decision (was Q11) keeps unadvertised |
+| **C. Render refused versions as `filter` entries** | The client explains the refusal in its own words | Requires advertising `filter` lists on hosted repositories, which the resolved channel decision (was Q5) deferred and the resolved hosted-advisory decision (was Q12) keeps unadvertised, since a filter list would be a second rendering of the policy engine's own verdict |
 
 **Why this is yours:** it decides what a consumer sees when a version is refused, per route.
 
 Accepted cost: an unexplained absence in the client's output on a fresh resolve, and C
-recorded as the revision that would follow a reversal of the hosted-channel decision (was Q11).
+recorded as the revision that would follow if the owner wants hosted `filter` lists (the
+resolved hosted-advisory decision, was Q12, renders advisories and not condemnations).
 The dist `403`'s status line does explain itself: `WriteRefusal`'s `Refused by policy:` phrase
 reaches both pinned clients' output over HTTP/1.1 (Design, "Policy refusals on the wire").
 
@@ -1439,7 +1598,7 @@ survive unrelated writes.
 
 | Option | You get | It costs |
 |---|---|---|
-| **A. Rendered on request; the pointer's `moved_at` through the shared serving path** | No handler-computed freshness; rollback and promotion move `Last-Modified` forward; the render-on-request class and AC19 unchanged | Any write to the repository moves every document's `Last-Modified`, so a warm `composer update` after an unrelated publish re-downloads each package file it revalidates; `ServeDocument` has no form taking handler-rendered bytes yet, a gap reported to `signing-service.md` |
+| **A. Rendered on request; the pointer's `moved_at` through the shared serving path** | No handler-computed freshness; rollback and promotion move `Last-Modified` forward; the render-on-request class and AC19 unchanged | Any write to the repository moves every document's `Last-Modified`, so a warm `composer update` after an unrelated publish re-downloads each package file it revalidates; at adoption `ServeDocument` had no form taking handler-rendered bytes, a gap reported to `signing-service.md` and since met by `ServeRendered` |
 | **B. Become an `Indexer` consumer with stored per-package documents served through `ServeDocument`** | Per-document forward-moving `Last-Modified`, so `304`s survive unrelated writes; no new shared form needed on the hosted path | Inverts the rendering decision and AC19; a generator package and stored documents for a format with no repository-wide document; a virtual with a `remote` member still renders on request, because a remote cannot be enumerated for a stored merge, so the gap remains there |
 | **C. Keep the handler-stored `Last-Modified`** | No change | Contradicts `data-model.md` AC36 and `signing-service.md` AC11's boundary; a rollback restores an older date |
 
@@ -1449,7 +1608,35 @@ document every resolve reads.
 Accepted cost: the coarser revalidation, and the shared-serving gap the consequences report
 carries for `signing-service.md`, which is the same for every format that renders on request.
 
-### Resolved: whether hosted repositories render the supply-chain channels now that the advisory read exists (was Q11, raised and adopted 2026-09-28)
+Rechecked on Fable 2026-10-08: confirmed. A is right and B and C lost for the reasons given; the
+coarseness cost is stated at its true size (every package file a warm `update` revalidates after
+any write, with no `ETag` help, since the client never sends `If-None-Match`). Amended in its
+fold, which was written against a door that did not exist yet: the form is
+`signing-service.md`'s `ServeRendered` (its was-Q14), this handler uses its lazy form with a
+validator identity so a `304` and an `ETag` cost no render, the `ETag` is derived from that
+identity and the freshness value rather than from the bytes, a `HEAD` is answered by the same
+door (its was-Q24), and the virtual's "later of the members' records" is served by the door with
+the member-list floor `data-model.md` AC36 states, so removing the member that supplied the
+latest value cannot move `Last-Modified` backwards, a case the adoption did not consider
+(Design, "The rendered documents"; AC15, AC19 and their rows).
+
+### Resolved: whether hosted repositories render the supply-chain channels now that the advisory read exists (was Q11, raised and adopted 2026-09-28; superseded 2026-10-08)
+
+**Superseded on Fable 2026-10-08 by the resolved hosted-advisory decision below (was Q12).** The
+record is kept as adopted so the reversal is visible. Rechecked: the adoption was wrong on both
+of its reasons. Its name-collision reason has since been answered where the matching lives:
+`supply-chain-policy.md`'s resolved hosted-matching decision (was Q12 there) keys the advisory
+reader by the repository served, applies that repository's `coordinate_exemptions`, and states
+that a private name colliding with a public one is the dependency-confusion shape to surface
+rather than hide, so the collision this record feared is now the operator's narrow exemption,
+not a reason to render nothing. Its default-blocking reason describes the client's own policy
+(2.10.3 blocks a covered version by default against Packagist too), which is not this
+registry's to pre-empt by withholding the data; and the cost side it under-stated is the one the
+spec's goal names outright: with nothing advertised, `composer audit` against a hosted
+repository prints "No security vulnerability advisories found" (captured), an all-clear this
+registry did not compute. The resolved channel decision (was Q5) had planned the hosted
+rendering for the moment the read existed; this record withdrew that plan on Opus without the
+read's shape having changed.
 
 **Adopted 2026-09-28 under the owner's standing delegation.** Option A: a hosted repository still
 advertises neither `security-advisories` nor `filter`; advisory data binds on hosted repositories
@@ -1481,9 +1668,52 @@ content it hosts.
 Accepted cost: the documented hosted gap, and the name-collision finding reported to
 `supply-chain-policy.md`, whose own hosted matching has the same property.
 
+### Resolved: the hosted `security-advisories` channel is rendered from the advisory reader (was Q12, raised and adopted 2026-10-08)
+
+**Adopted 2026-10-08 under the owner's standing delegation, on Fable, superseding the resolved
+hosted-channel decision above (was Q11), an Opus adoption and not an owner decision.** Option A:
+a hosted repository advertises `security-advisories` with `metadata: false` and an `api-url`
+under this registry, answers the `POST` from `supply-chain-policy.md`'s advisory reader for the
+repository served, under its `coordinate_exemptions`, in the shape Packagist's API answers as
+the corpus records it, and advertises no `filter`; a `virtual` answers a locally held name from
+the reader for the resolving member and forwards the rest. Folded through Scope (in and out),
+Design ("The rendered documents" root and advisories rows, "Addressed objects and pattern
+scopes", "The supply-chain channels"), AC9, AC13 and their Test Plan rows, Phase 1, the
+corpus's recorded surface and the exception list, and the Q5 and Q9 records.
+
+The question: the resolved channel decision (was Q5) deferred the hosted rendering until the
+advisory read existed and the resolved hosted-channel decision (was Q11) kept the deferral when
+it did, for two reasons that no longer hold (its record above). What remains to decide is which
+of three things a hosted root should say about vulnerabilities.
+
+**Recommendation:** A. It is the only option under which what `composer audit` prints against a
+hosted repository is something this registry computed: the feed's records for the names asked,
+under the operator's exemptions, which is exactly what the proxied path passes through from
+Packagist. The client's `policy` block then does what it does against Packagist, and the
+operator's rules do what they do through the refusal path; neither is re-stated by the other.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Advertise `security-advisories` on hosted, answered from the reader; no `filter`** | `composer audit` and 2.10.3's advisory blocking work on hosted repositories from the same feed the policy engine uses; a computed answer in place of silence; one rendering of advisories (data), none of verdicts | The client blocks a covered version by default on a repository with no advisory rule, which the developer lifts in Composer's own `policy` config or the operator by an exemption; the Packagist response shape and the OSV-to-constraint conversion to implement and hold against the corpus; a `descriptor` route under a patterned `pull` |
+| **B. Keep hosted unadvertised (was Q11)** | No client-side blocking the operator did not choose | `composer audit` on hosted prints an all-clear the registry did not compute, the thing the goal forbids; the name-collision reason it rested on is answered elsewhere |
+| **C. Advertise only on repositories carrying an advisory rule** | The channel explains refusals the policy makes | A hosted repository without a rule stays silent, so B's false all-clear remains there; and the rendering must then agree with the evaluator's refusal rather than with the feed, a second match to keep equal |
+| **D. Also render standing condemnations as a hosted `filter` list** | The client explains a condemnation in its own words (the refusal-rendering decision's option C) | A second rendering of the policy engine's verdict with the summary's shape and per-package `filter` entries to keep equal to the evaluator's; the refusal path already withholds condemned content on both routes |
+
+**Why this is yours:** it decides what this registry asserts to a client about vulnerabilities
+on content it hosts, the question was-Q11 answered the other way, and it reverses an adoption
+rather than confirming one.
+
+Accepted cost: default client-side blocking of a covered version on hosted repositories, which
+is the ecosystem's behaviour against Packagist and is lifted by the developer or by an operator
+exemption; the Packagist shape and the OSV conversion, held by AC13 against the corpus; and the
+advisories route declared a `descriptor`, with its sentinel case (Design, "Addressed objects
+and pattern scopes"). B lost on the false all-clear; C on leaving it in place where no rule
+exists; D on rendering a verdict twice, and stays the owner's revision path.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 9669f4b | authoring pass: grounded first draft, not a review | Grounded the wire contract three ways: captured traffic from Composer 2.10.3 and 2.2.30, pinned by digest, run in containers against a logging stub serving the documented repository shapes (cold and warm `require`, `update`, `install` from a lock, `show`, `search`, `audit`; `~dev` under `stable` and `dev`; a missing package with and without `available-packages`; a wrong `shasum`; `http-basic` and `bearer` through `COMPOSER_AUTH` keyed by host with and without the port; no credentials; `secure-http` at its default; relative, path-absolute and absolute `metadata-url` and dist URLs; an uppercase name; a malware filter list and an inline advisory on both releases; the v1, inline and `includes` layouts; `403` on a package file and on a dist; `--prefer-source` against an unreachable VCS), plus Composer 1.10.28 on a pinned `php:7.4-cli` image for the v1 layout, the `uid` requirement and the root warning; the Composer repository, config and authentication documentation and the client, metadata-minifier and Satis sources at 2026-09-25, and the Packagist Composer 1 shutdown post; and the live repo.packagist.org (root keys, p2 headers and minification, inline advisories, GitHub zipball dists with empty `shasum` and their `302` and rate limit, `304` on both validators, `404` bodies, a CDN case fold, the malware summary, the advisories `POST`, `list.json`). Design built from that: absolute URLs everywhere because the client resolves path-absolute ones against scheme and host only and relative ones not at all; documents rendered on request with exact minification, a normaliser port and a one-second `Last-Modified` rule; `available-packages` on hosted roots; the hosted write path stated as requirements of the management API with a per-operation write boundary, tagged immutability with a retirement set and mutable branch versions; preemptive Basic or Bearer keyed by origin with the port, the uniform challenge and the degraded-mode trap; the lowercase name as the addressed object; refusal by omission on the files and `403` on the dist with the reason-phrase limit confirmed and 2.2.30's source fallback recorded; the supply-chain channels passed through on remote with a name-forwarding rule for virtual and nothing advertised on hosted; the proxied classification with dist URL rewriting to a keyed grammar, an off-origin dist-host allowlist, completion-only verification for Packagist's empty `shasum`, `If-Modified-Since` revalidation, and Composer's rows of the removal table with the malware list as the explicit signal and regenerated GitHub archives as a divergence rather than a purge; and the Composer 1 refusal through the ecosystem's own `warning`. Nine questions written in decision shape and adopted under the standing delegation: legacy layouts refused (AC16), minified output (AC4), branch versions mutable (AC5, AC6), request spellings folded, the channels per path (AC13), the dist-host allowlist (AC11), Packagist user-configured, `notify-batch` discarded (AC1), refusal by omission (AC10). Twenty-one criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here: an `auth.md` client-table row for `composer`; the `proxy-cache.md` and `upstream-adapters.md` requirements (off-origin dist hosts with redirects and per-host credentials, an uncached forwarded `POST`, the completion-only mode) and Composer's rows in the removal table; the `management-api.md` operations and the AC33 retirement obligation; the `supply-chain-policy.md` advisory and condemnation reads for the later hosted rendering; a Composer row in the management-surfaces analysis. Stays draft; awaits an independent review. |
 | 2026-09-28 | 7c4d5bb | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec and of this file (Open item 13's requests, now met; themes 1, 2, 4, 6 and 7; management-api 11 and 12; upstream-adapters 11 and 12; signing-service 11; artifact-verification 16; proxy-cache reconciliation 4). Applied: the management table carrying kinds (`publish`, `delete-version`, `delete-package`, `annotate`) through `Operator`, publish from an upload session with `Apply`'s peek refusing `validation`, `conflict` on an existing tagged version, core-held `Retirement` from `Outcome` for tagged versions only with `retired` on republish including after a backwards repoint, `405` `repository-type` (AC5, AC6 and their rows, the Q3 record); the `auth.md` `composer` row and presentation forms cited; the remote root (and a virtual root with a remote member) a descriptor, so a patterned-only `pull` runs `composer require` through a remote, with the sentinel check (AC9); `WriteRefusal`, with the finding that both clients print the response's own status line so the `Refused by policy:` phrase reaches them over HTTP/1.1, and the binding-row facts from the captures (AC10); `artifact-verification.md`'s "Nothing" row and `signing-service.md`'s "Nothing, stated" cited, read-path verification named as the only check on an empty-`shasum` proxied dist; the proxied path on the `https` adapter with `allow_http`, no probe at creation and the root's shape checked at first request (AC16, AC17, the Q1 record), the completion-only mode as offered with a structural verifier and the short-close observation, the dist-host allowlist as `hosts` entries with role `none` and the GitHub token as an `own` credential, `RateLimitError`, the forwarded `POST` (AC11, AC13 rows gaining the two `upstream-adapters.md` conformance files), the cache-scoped `Last-Modified` with a regression row (AC12), the removal table mapped onto `proxy-cache.md`'s event classes, the was-Q17 extension in the Q7 record; `server.public_url` through `Deps` replacing a configuration refusal the handler cannot make (AC20); client confinement cited; new AC22 (`Capabilities()`, rename, the pre-rename lock). Mismatches found, adopted as new questions in decision shape: Q10, the handler-computed `Last-Modified` in the package document contradicting `data-model.md` AC36 and `signing-service.md` AC11's freshness boundary (A: pointer, member and cache records through the shared serving path; AC12, AC15, AC19); Q11, the hosted-channel deferral whose trigger (the advisory reader) has arrived (A: stays unadvertised, for default-blocking and name-collision reasons; AC13). Gaps reported, not queued: no `ServeDocument` form for handler-rendered bytes (the same for every render-on-request format); the Composer binding row. A dangling "resolved normalisation decision" citation replaced by AC4. `fable_recheck` added (new questions adopted on Opus). Stays draft. |
+| 2026-10-08 | e50e8b5 | Fable recheck: full review + re-examination of the Opus adoptions Q10 and Q11, with the whole 2026-09-28 reconciliation under the adversarial lens as unreviewed | A review. Every sibling citation verified at HEAD (`signing-service.md` "Serving", was-Q14, was-Q15, was-Q24, AC11, AC27, AC32 and its "Nothing, stated" row; `proxy-cache.md` "Completion-only mode", "The adapter seam", "`HEAD` on a proxied route", "Freshness of what a remote serves", "Negative caching", the Obligation list, was-Q12, was-Q14, was-Q15, was-Q17, was-Q19 to was-Q24, AC9, AC13, AC20, AC22, AC24, AC26, AC32; `management-api.md` the three Composer rows, "Dispatch", "Every operation is one completed logical write", "Retirement is core-held", "Publish through the API", was-Q10, was-Q14, was-Q15, was-Q20, AC5, AC7, AC12, AC24, AC36; `supply-chain-policy.md` "A handler may read advisories", "Rendering a refusal", the Composer binding and coverage rows, was-Q10 to was-Q12, AC4, AC18 to AC20, AC24, AC25; `upstream-adapters.md` "Credential scoping", "Redirects", "Rate limits", "Forwarded `POST`", "Preconfigured profiles", the `Request` shape, AC6 to AC9, AC22, AC23, AC25, AC27, AC35; `data-model.md` "Freshness scoped to the pointer", AC35, AC36, AC44, AC46; `auth.md` the `composer` row, the presentation forms, the descriptor examples, was-Q23, AC12, AC17, AC27, AC31, AC32; `format-handler-interface.md` AC6 to AC8, AC12 to AC14, AC17; `conformance-harness.md` AC13, AC23 to AC26, AC28 and its exception table; `storage-and-gc.md` AC21, AC30; `deployment.md` `server.public_url`, `server.http2`; `repository-lifecycle.md` "Renaming", was-Q2, AC12; `artifact-verification.md`'s "Nothing" row; `catalogue.md`'s verification column, AC1, AC5; `project-charter.md` AC9; `cargo.md` was-Q7; `nuget.md`'s folding decision; the management-surfaces analysis row; the tree still holds no handler code, so every claim checked is a cross-spec one). Brought current from the whole of `agents/spec-loop/consequences.md`: the signing closing sweep's item 7 (`ServeRendered` and `ServeFile`), the supply-chain closing sweep's item 3 (the reader keyed by the repository served; the advisory key), batch 7's items 1, 6, 9 and 10 as their owners resolved them, and proxy-cache's was-Q19, was-Q21, was-Q22 and was-Q24, management-api's was-Q14, was-Q15 and was-Q20, signing-service's was-Q24. Verdicts: Q10 confirmed, amended in fold (the lazy `ServeRendered` form with a validator identity, the door-derived `ETag`, `HEAD` through the door, the member-list floor of `data-model.md` AC36; AC15, AC19). Q11 SUPERSEDED by Q12 (hosted `security-advisories` rendered from the advisory reader under `coordinate_exemptions`, no hosted `filter`; a `virtual` answers local names from the reader and forwards the rest; AC13, AC9, the root row, the object table), because its name-collision reason is answered by `supply-chain-policy.md` was-Q12 and its default-blocking reason left in place the false all-clear the goal forbids; the Q5 record's planned revision restored. Found under the adversarial lens and fixed: `dev-feature/login` is a legal branch version whose slash split the dist URL's version segment (every variable segment percent-encoded, the escaped path matched; AC5); the Packagist recipe omitted `packagist.org`, where `list`, `search` and the advisories `api-url` live, so a Packagist remote could forward none of them (recipe and AC11; a sibling consequence); the advisories `POST` was object none, refused to a patterned `pull`, while AC9 asserted 2.10.3, which posts advisories during every `require`, runs under one through a remote (declared a descriptor on both paths with its sentinel case, the filter summary likewise; AC9); a branch-only package's main-file `404` had no client capture (AC3's real-client case and the corpus); the supply-chain binding row named AC10's case as what fills it while AC26 refuses that case until it is filled (the second-repository fact is a stub capture before the case; a sibling consequence); an upstream `dist.type` outside `zip` and `tar` had no rule (rendered without its `dist`, on the exception list; flagged as a design fold); the upstream root's path-absolute URLs had no stated resolution (the client's `canonicalizeUrl` rules applied; AC16); the archive peek and the structural verifier had no byte bound and no lock statement (one member decompressed under a bound, before any row write; AC5, AC11); "conflict with the same bytes" failed a CI retry (the unchanged publish of `management-api.md` was-Q15; AC5, the Q3 record amended); `RemoteFile` "outlives the cached metadata" assumed an eviction that never happens (was-Q21; a zero retained-revision count declared, was-Q19 and was-Q22; AC11). Constitution: both paths hold on every new clause, the shared model gains no table (the advisory key is `data-model.md` AC46's field), every boundary keeps its named enforcer (the freshness boundary, the sentinel test, the refusal writer, the egress rule), the conformance gate is untouched and nothing weakens `auth.md` AC10. go-spec-reviewer inline: the handler holds `Deps` and `Documents` alone, errors flow as the typed refusals, no goroutine or method branch in the handler; approved. `node scripts/check-spec.js`: zero failures on this file; no em-dashes on touched lines. Sibling consequences reported to the orchestrator, not applied. Twelve resolved, none open; 22 criteria, each mapped; `fable_recheck` cleared; draft to planned. |
