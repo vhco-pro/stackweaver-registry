@@ -541,7 +541,7 @@
     "path": "docs/internal/plans/foundation/project-charter.md",
     "description": "The project charter: what this builds, what it deliberately does not build, the autonomy experiment it doubles as, and the sequence that makes both work.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "1",
     "covers": []
   },

@@ -157,9 +157,10 @@ not satisfy it.
   go public (`conformance-harness.md`, blocking precondition on recording).
 - **Revisit the conformance CI trigger when the repository goes public.** Its accepted cost was
   priced against a private-repo minutes budget that will no longer exist.
-- **`project-charter` Q3 must be answered before npm starts.** npm is the baseline for the
-  experiment's headline measurement, and a baseline collected under an undefined procedure is not
-  a baseline.
+- **Before npm's first commit:** fix the cost ledger's location by a dated experiment-log entry
+  and freeze the price table (`project-charter` Q3 was adopted 2026-09-26; these are its surviving
+  obligations). npm is the baseline for the experiment's headline measurement, and a baseline
+  collected under an undefined procedure is not a baseline.
 - **The handler interface re-opens after OCI and before any Tier 1 work**, seeded by two real
   implementations and a Debian signed-index prototype. The gate is recorded on both sides
   (`format-handler-interface.md` AC8 and `formats/npm.md`).

@@ -79,7 +79,8 @@ Next, two agents at a time:
    pub's advisories re-sync), proxy-cache (oci completion-only, Helm event rows, optional examples), hackage
    (AC8's injected clock), management-api (generic configure row), artifact-verification (npm
    keys document, hex key size), terraform (harness egress wording), catalogue (brew 7 under OCI).
-3. Gate review of project-charter.
+3. Gate review of project-charter: DONE 2026-10-08. Still draft and never gate-reviewed:
+   write-triggered-services-prototype.md (step 4a depends on it) and formats/catalogue.md.
 
 **END OF THE 2026-10-08 RUN (12:45 CEST).** Done this run, all on Fable: the generic gate review (planned, the build-step gate), the hackage recheck from
 its patch; format rechecks of rubygems, conan, swift, puppet, vagrant, homebrew, terraform, chef,
