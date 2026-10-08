@@ -244,7 +244,7 @@
     "path": "docs/internal/plans/formats/homebrew.md",
     "description": "Spec for Homebrew bottles served to brew: hosted bottles at a tap's root_url in the legacy flat layout, a verified cache of ghcr.io's homebrew/core bottles in both the flat layout HOMEBREW_BOTTLE_DOMAIN reads and the OCI-shaped layout HOMEBREW_ARTIFACT_DOMAIN reads, and a byte-for-byte cache of formulae.brew.sh's JWS-signed API documents that no registry can re-sign, with a cache-scoped Last-Modified that lets a new API generation reach a client whose curl discards anything not newer, taps left on Git, and every route back to Homebrew's own hosts named because a refusal holds only where that route is closed.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "41",
     "covers": [
       "internal/format/homebrew/**",
