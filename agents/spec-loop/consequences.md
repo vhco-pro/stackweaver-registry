@@ -1235,3 +1235,9 @@ supply-chain-policy (rpm 2, cpan 3, cran 2), signing-service round 4 (debian 1: 
 
 ## From the round-3 supply-chain-policy.md follow-up (2026-10-01, on Fable)
 1. format-handler-interface.md (optional wording): the advisory-key bullet's illustrative shapes may add the RubyGems bare number, Arch base, RPM EVR and CRAN DESCRIPTION spelling.
+
+## From signing-service.md was-Q23 (2026-10-01, on Fable; queued 2026-10-08 from its record, since its pass was stopped before it reported)
+1. artifact-verification.md (Fable follow-up): Admission exposes the revision a verdict was computed under (the satisfier is this spec's store); the verify.reevaluate job calls a completion hook internal/verify declares at its final checkpoint, never from an overtaken job, which enqueues index.merge for every signed virtual listing the member.
+2. data-model.md (Fable follow-up): AC45's per-document admission outcome gains the reason pending (an absent verdict under a superseded trust-set revision, the previous outcome carried forward).
+3. async-operations.md (Fable follow-up): index.merge gains the verification-completion trigger; verify.reevaluate's final checkpoint fires the hook.
+4. formats/debian.md (optional): its stated transient after a trust-set change is resolved by signing-service was-Q23; cite it.

@@ -58,6 +58,9 @@ session ends). Each firing:
    partial edits in the tree (never revert them).
 3. Fill free slots, two agents at most, with the next items in the resume point below.
 4. If the API refuses with a usage limit, stop; the next firing retries.
+6. **Deadline (2026-10-08 run): 12:45 CEST.** Past it, do step 2 only (commit what finished; leave
+   a killed pass's partial edits as a patch under `agents/spec-loop/wip/`), launch nothing, update
+   the resume point and cancel the heartbeat with CronDelete (its id is in the run note above).
 5. **Owner, 2026-10-01: stop the loop when Fable is out of usage.** A 5-hour session limit
    ("your session limit resets <time>") is not that: recover after the reset as above. A refusal
    that is not a session reset (a weekly or monthly Fable allowance spent, or Fable unavailable)
@@ -65,6 +68,11 @@ session ends). Each firing:
    and never fall back to Opus for spec judgment.
 
 ## Resume point
+
+**RESUMED 2026-10-08 02:50 CEST for an unattended run that ends at 12:45 CEST** (owner: "the next
+10 hours, the same way"). After 12:45 the heartbeat commits finished work, launches nothing new,
+records the resume point and cancels itself (heartbeat cron id 3791fe37). The STOPPED note below is history; items 1 and 2 are
+under way at the resume.
 
 **STOPPED 2026-10-01: Fable's monthly allowance is spent** (the owner's stop rule, heartbeat item 5).
 The heartbeat cron is cancelled. Resume when Fable credit returns, two agents at a time:
