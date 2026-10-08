@@ -477,7 +477,7 @@ decision:
 | `formats/homebrew.md` | Q15 (rechecked on Fable 2026-10-08 with Q1-Q14: eleven confirmed, Q4, Q8, Q14, Q15 amended; spec planned) |
 | `formats/debian.md` | Q10 (rechecked on Fable 2026-10-01 with Q1-Q9: all ten confirmed, six amended in fold; spec planned) |
 | `formats/hackage.md` | Q16 (rechecked on Fable 2026-10-08 with Q1-Q15: eleven confirmed, five amended; Q17 adopted on Fable; spec planned) |
-| `formats/opam.md` | Q16 |
+| `formats/opam.md` | Q16 (rechecked on Fable 2026-10-08 with Q1-Q15: all sixteen confirmed, Q2, Q4, Q5, Q7, Q9, Q11 amended; spec planned) |
 | `formats/swift.md` | Q11 (rechecked on Fable 2026-10-08 with Q1-Q10: all confirmed, three amended in fold; spec planned) |
 | `foundation/credential-management.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7 (rechecked on Fable 2026-10-01: Q1, Q2, Q6, Q7 confirmed, Q3, Q4, Q5 amended; spec planned) |
 | `formats/openvsx.md` | Q19 |

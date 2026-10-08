@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at 7c4d5bb with the foundation wave on Opus (not a review), this spec's first reconciliation: the record set is this format's Indexer generator output (internal/format/opam/index), unsigned (signing-service AC24), regenerated in the write, served through ServeDocument with the ETag-only profile signing-service names this format for, the tarball's on-request rendering reported as the luarocks gap's second consumer (AC2, AC4, AC19); rewritten sources take server.public_url and the current name at render time; management through Operator as publish, annotate, delete-version and delete-package (the last missing from management-api's table, reported), upload sessions and Apply's peek refusing validation 422, conflict and retired 409 through core-held Retirement, unauthorized for out-of-pattern operations, 405 repository-type, an Operation per request (AC5, AC7, AC8, AC9, AC11, AC14); no policy refusal at publish, since supply-chain scans after ingest and enforces at resolution (AC15); WriteRefusal with the holds-by-rewrite row; the proxied path on the https adapter with no probe at creation and the index checked at first request (AC24), FromUpstream under the cache-scoped record with regressions not adopted (AC21), the ordered candidate list and declared digest set proxy-cache now offers over the hosts allowlist (AC22, AC23); Q16 adopted: versions whose source declares no checksum are left out, since fetch-and-cache refuses a fetch with neither digest nor verifier (AC22); the virtual merge on index.merge, which puts the virtual phase behind the queue core (AC26); Capabilities with rename (AC28). Earlier: authored 2026-09-26 from captures of opam 2.1.6 and 2.6.0; fifteen questions adopted under the standing delegation. Sixteen resolved, none open. Awaits a /spec review pass and a Fable recheck."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-08 at 254ed60: a full review pass over the Opus-authored whole (every sibling citation verified at HEAD against the eleven planned foundation specs it depends on; the adversarial lens at full strength on the repository layout, the whole-tarball update, 2.1.6 against 2.6.0, bound-tightening revisions and removal under upgrade) plus the re-examination of all sixteen adoptions: sixteen confirmed, none superseded, six amended in fold or cost (was-Q2: the base URL enters at the generator's Render stage, never through Deps, and the basename rule covers queries and empty paths; was-Q4: the parser is held to every opam file of the recorded opam.ocaml.org index and the reader's bounds are numbers; was-Q5: the on-request rendering gap is closed by signing-service was-Q13 and the stored-tarball fallback withdrawn; was-Q7: no unchanged publish declared, the spool bound cited; was-Q9: the remote's record set as a never-evicted current document with a retained count of zero and its size stated; was-Q11: the adoption hook, read-driven revalidation and the one literal member input index.tar.gz replace the warm-up recipe). The file brought current against the whole consequences queue: the management-api table carries delete-package and the auth table the opam row, so both stale sentences are gone; HEAD cited to both was-Q24s; archives through ServeFile; AC20, AC24, AC26 and AC27 extended with their rows. Found and fixed: PAX path records for over-long tar paths; the hosted corpus half is recorded against a local reference and needs two exception rows in conformance-harness, reported. Twenty-eight criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Earlier: reconciled 2026-09-28 at 7c4d5bb with the foundation wave on Opus (not a review), this spec's first reconciliation: the record set is this format's Indexer generator output (internal/format/opam/index), unsigned (signing-service AC24), regenerated in the write, served through ServeDocument with the ETag-only profile signing-service names this format for, the tarball's on-request rendering reported as the luarocks gap's second consumer (AC2, AC4, AC19); rewritten sources take server.public_url and the current name at render time; management through Operator as publish, annotate, delete-version and delete-package (the last missing from management-api's table, reported), upload sessions and Apply's peek refusing validation 422, conflict and retired 409 through core-held Retirement, unauthorized for out-of-pattern operations, 405 repository-type, an Operation per request (AC5, AC7, AC8, AC9, AC11, AC14); no policy refusal at publish, since supply-chain scans after ingest and enforces at resolution (AC15); WriteRefusal with the holds-by-rewrite row; the proxied path on the https adapter with no probe at creation and the index checked at first request (AC24), FromUpstream under the cache-scoped record with regressions not adopted (AC21), the ordered candidate list and declared digest set proxy-cache now offers over the hosts allowlist (AC22, AC23); Q16 adopted: versions whose source declares no checksum are left out, since fetch-and-cache refuses a fetch with neither digest nor verifier (AC22); the virtual merge on index.merge, which puts the virtual phase behind the queue core (AC26); Capabilities with rename (AC28). Earlier: authored 2026-09-26 from captures of opam 2.1.6 and 2.6.0; fifteen questions adopted under the standing delegation. Sixteen resolved, none open. Awaits a /spec review pass and a Fable recheck."
 description: "Spec for the opam format: the HTTP opam repository (repo file, index.tar.gz, archive cache by checksum path), where hosting means the registry holds every archive an opam file names, the served opam files point their sources at the registry so a refusal cannot be bypassed by the client's silent fallback to upstream hosts, the archive cache is a checksum-alias lookup onto the CAS, the index is generated by the shared service without ever evaluating an opam file, and an opam.ocaml.org cache regenerates the index rather than relaying it, with opam 2.1.6 and 2.6.0 as the oracles."
 author: michielvha
 goal: "Serve OCaml teams a private opam repository and an opam.ocaml.org cache they use with the opam they already have, in which every archive a client installs comes from the registry and is bound to the checksums its opam file declares, without the registry ever evaluating an opam file, with the real opam client as the oracle on both paths."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/opam/**"
   - "conformance/opam/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; reconciled on Opus 2026-09-28 with Q16 (no-checksum sources left out) raised and adopted under the standing delegation"
 ---
 
 # Plan: opam format
@@ -200,7 +199,9 @@ verification is the proxy layer's declared digest set, not a verdict source.
   declared checksum, pinned on first fetch where the upstream declared only md5, versions whose
   source declares no checksum left out (the resolved no-checksum decision below, was Q16),
   negative caching, and this format's rows of the removal table.
-- Virtual repositories with per-name member-ordered resolution.
+- Virtual repositories with per-name member-ordered resolution, merged by the shared
+  `index.merge` job over one declared member input, `index.tar.gz`, with the remote members
+  kept fresh by the virtual's own reads.
 - The handler's `Capabilities()` declaration and repository rename (AC28).
 - opam 2.1.6 and 2.6.0 as the conformance oracles on both paths.
 
@@ -352,16 +353,19 @@ opam file with exactly these changes, and no others:
 - The `src` (or legacy `archive`) of its `url` section, and of each `extra-source` section, is
   replaced by an absolute URL of the registry's own archive route,
   `{base}/archives/{name}.{version}/{key}/{basename}`, where `{base}` is `deployment.md`'s
-  `server.public_url` joined with `/opam/{repository}` under the repository's current name, read
-  through `Deps` as `npm.md`, `composer.md` and `chef.md` read it (a named input of
-  `format-handler-interface.md`'s re-open) and inserted by the generator package at render time,
-  never stored. `{key}` is `sha256-{hex}` or,
+  `server.public_url` joined with `/opam/{repository}` under the repository's current name. Both
+  values reach the generator package as the **serve-time inputs** of its `Render` stage, handed
+  by `signing-service.md`'s runtime (its resolved serve-time decision, was Q13, AC31; the stage
+  `chef.md`'s universe and `vagrant.md`'s catalogs use for the same purpose): the handler never
+  reads `server.public_url`, the stored record set holds no absolute URL, and the inserted URL
+  is never stored. `{key}` is `sha256-{hex}` or,
   absent a sha256, `sha512-{hex}` of the declared checksum, so a URL names exactly one set of
   bytes and a changed checksum is a new URL; on the proxied path, for a source the upstream
   declared no strong checksum for, it is `url-{hex}` of the sha256 of the upstream source URL.
-  `{basename}` is the last path segment of the original source URL, kept because a source that is
-  not an archive is copied into the build tree under that name (`opamSystem.ml` detects archives
-  by magic bytes, so the name matters only for non-archives).
+  `{basename}` is the last segment of the original source URL's path, query and fragment
+  excluded, or `{name}.{version}` when that path has no final segment; it is kept because a
+  source that is not an archive is copied into the build tree under that name (`opamSystem.ml`
+  detects archives by magic bytes, so the name matters only for non-archives).
 - The `mirrors` and `swhid` fields of those sections are removed.
 - The `checksum` field is left exactly as it was, in the same order, so the client's verification
   and its first-checksum mirror path are unchanged.
@@ -477,8 +481,10 @@ entries, archive aliases}`, produced inside the write that changes it, and rende
 - **The tarball**: `repo` first, then for each name in byte order and each version in byte order,
   the directory entries, `packages/{name}/{name}.{version}/opam` with the source rewrite applied,
   and its `files/` entries. USTAR entries with modification time zero, owner and group zero, mode
-  `0644` for files and `0755` for directories, no other entry type, gzip with no name and time
-  zero. The same record set renders byte-identical bytes (measured: a deterministic rendering of
+  `0644` for files and `0755` for directories, no other entry type, a path too long for USTAR's
+  name and prefix fields written with a PAX `path` record and no other PAX record (the client
+  extracts the index with its system `tar`, `opamSystem.ml`'s `extract_command`), gzip with no
+  name and time zero. The same record set renders byte-identical bytes (measured: a deterministic rendering of
   opam.ocaml.org's 43,028 entries is 53,463,040 bytes of tar and 4,044,500 bytes of gzip, in
   under two seconds on this host with a scripting-language prototype).
 - **The `repo` file**: exactly `opam-version: "2.0"`, `archive-mirrors: "cache"` and
@@ -487,9 +493,12 @@ entries, archive aliases}`, produced inside the write that changes it, and rende
 - **The alias map** from `(alg, hash)` to the `File` for the cache route, derived from the same
   record set.
 
-A rendering is memoised by the shared service keyed by the record set's digest, the base URL and
-the repository's current name, and can be dropped and recomputed at any time, since it is not
-snapshot state. Only a whole-document gzip is
+The rendering is the generator's serve-time `Render` stage (`signing-service.md`'s resolved
+serve-time decision, was Q13, AC31): the runtime memoises its output in process under
+`index.render_memo_bytes`, keyed by the stored record set's digest, the variant (`index.tar.gz`
+or `repo`) and the inputs (`server.public_url`, the repository's current name), derives the
+`ETag` from that key rather than from rendering, so a `304` costs no render, and can drop and
+recompute any entry at any time, since it is not snapshot state. Only a whole-document gzip is
 rendered: a multi-member gzip assembled from per-package members would let a write recompress
 one package, but measured 6,519,918 bytes against 4,044,500 for the same content, and the client
 downloads the whole index on every update (captured).
@@ -513,17 +522,22 @@ lost, and now mapped item by item onto `signing-service.md`'s generator contract
    `storage-and-gc.md` AC16).
 5. **The deterministic tar and gzip renderer with the byte-range rewrite** and the regenerated
    `repo` file; the handler never builds index bytes, which an architecture test enforces (AC4).
-   Met by the generator package, which that spec quotes this criterion for. Not yet met: the
-   tarball is **rendered on request** from the stored record set and memoised, and
-   `signing-service.md`'s contract states a stored output per key and `ServeDocument` serving it,
-   with no rendering a profile may declare to run on request; `luarocks.md` reported the same gap
-   for its 36 renderings of one record set, and this format is its second consumer. The fallback,
-   should that spec decline, is the rejected option B of the resolved index-generation decision
-   (was Q5): the tarball stored per write.
+   Met by the generator package, which that spec quotes this criterion for, and, for the
+   rendering on request, by the serve-time `Render` stage that spec's resolved serve-time decision
+   added (was Q13 there, AC31) for `luarocks.md`'s 36 renderings and this format's whole-gzip
+   tarball, its second consumer: one stored record set per write, the tarball and `repo`
+   rendered from it on request under the serving repository's `server.public_url` and name,
+   memoised under `index.render_memo_bytes`, the `ETag` derived from the stored body, the
+   variant and the inputs. The fallback this spec once named (the rejected option B of the
+   resolved index-generation decision, was Q5) is withdrawn.
 6. **The alias map** for the cache route, and **the virtual merge**, per name in member order
    (below), re-run when a member's record set changes. Met: the alias map is part of the stored
    record set, and the merge is the generator's `Merge` run as the `index.merge` job (its
-   "Virtual merges", AC19), with its coalescing window and staleness bound.
+   "Virtual merges", AC19), with its coalescing window and staleness bound, enqueued by a
+   member's write, by a `local` member's promotion or rollback, and by a `remote` member's
+   adoption of a new upstream index through the adoption hook (its resolved remote-member
+   decision, was Q16, AC35; `proxy-cache.md` AC25), with the one member input this profile
+   declares (Design, "Virtual repositories").
 7. **The same generation on the proxied path** from records parsed out of the upstream index, so
    hosted, proxied and virtual repositories share one generator and one stored form. Met by
    `FromUpstream` (its "The proxied path", AC20, which names this format).
@@ -539,7 +553,9 @@ the case `signing-service.md` names this format for ("Freshness scoped to the po
 rendered bytes, `Cache-Control: no-cache`, and **no `Last-Modified`**, so no comparison of times
 can go backwards across a rollback, and `If-None-Match` matching the current `ETag` answers
 `304`; the handler package sets neither header (`internal/format/freshness_boundary_test.go`,
-its AC11). Archive routes carry the `ETag` the shared blob-serving path derives from the CAS
+its AC11). Archive routes are served through that spec's `ServeFile` (its resolved
+handler-rendered decision, was Q14) under this format's `ETag`-only serve policy, a
+package-level constant (its AC30), so they carry the `ETag` the door derives from the CAS
 digest and no `Last-Modified`, since a URL's bytes never change and no client revalidates one.
 `data-model.md`'s per-pointer freshness record (its AC36) exists for every pointer and is simply
 not rendered into any signal this format serves, and on the proxied path the cache-scoped record
@@ -570,9 +586,11 @@ in `docs/internal/analysis/management-surfaces-and-the-oracle.md`, and the first
 | Remove a version | `delete-version` | Name and version | The version leaves the index; its archive routes answer `404` unless another current version names the same archive; `opam upgrade` downgrades an installed copy (captured) | `delete` on `{name}` |
 | Remove a package | `delete-package` | Name | Every version leaves the index; `opam upgrade` removes an installed copy and `opam install` fails "No package named ... found" (captured); the `Package` row stays | `delete` on `{name}` |
 
-`management-api.md`'s reconciliation table carries opam's publish, revision and version deletion
-but no package deletion; the `delete-package` kind exists in its vocabulary with exactly this
-meaning, so this spec declares it and reports the missing row rather than dropping the operation.
+`management-api.md`'s reconciliation table carries all four as two opam rows, publish and the
+opam-file revision as `publish` and `annotate` under `push`, version and package removal as
+`delete-version` and `delete-package` under `delete`, with no binding on any, and its kind table
+names "opam metadata revisions" under `annotate`; `docs/internal/analysis/management-surfaces-and-the-oracle.md`'s
+opam row records that no client triggers any of the four.
 
 The declaration `data-model.md` requires, per the resolved write-boundary decision below:
 
@@ -599,6 +617,17 @@ The declaration `data-model.md` requires, per the resolved write-boundary decisi
 - **Each removal is one write**; a package removal is one write however many versions it removes.
 - **All are synchronous**: `Apply` runs inline and the `Operation` completes in the request; no
   job is enqueued.
+- **No unchanged publish is declared.** `management-api.md` lets a format declare that a
+  `publish` finding identical bytes at its claimed coordinate completes with no snapshot (its
+  resolved unchanged-publish decision, was Q15, AC5), for clients that retry a publish with no
+  idempotency key; no opam client publishes, so a caller of this format's `publish` is a script
+  or a CI job that can send `Idempotency-Key`, and a publish naming an existing `name.version`
+  stays `conflict` (409) whatever its bytes (AC7).
+- **The publish body is bounded before it is parsed.** Whatever path a publish arrives by, the
+  bytes the registry spools before parsing are bounded once by `management.publish_spool_limit`
+  (`management-api.md`'s resolved spool-bound decision, was Q20, AC36); this handler reads no
+  bound of its own, and its 1 MiB opam-file limit and the `files/` and archive checks run over
+  blobs already committed through upload sessions, never over a spool.
 - **A proxied repository creates no snapshots**: arrival and revalidation are cache
   materialisation.
 
@@ -634,9 +663,8 @@ every cache request, with no challenge (captured), because the download tool is 
 URL is built from the repository URL. So the existing Basic form of `auth.md` suffices, with a
 registry token as the password: the "Basic password" row of its "Presentation forms" table, a
 universal form, which "URL userinfo arrives in"; this handler declares no route-scoped form.
-`auth.md`'s client table still has no `opam` row, which this pass reports again (the auth half of
-the consequences queue's Open item 29 was never applied). What follows, named rather than
-discovered:
+`auth.md`'s client table carries the `opam` row, taken from the captures in this section. What
+follows, named rather than discovered:
 
 - **The client prints and stores the credential.** Both clients printed the token in "retrieved
   hello.1.1 (http://alice:s3cr3tTOKEN@.../cache)", in `opam repository list` and in "no changes
@@ -757,10 +785,15 @@ credential is never forwarded.
 | `cache/...`, `archives/...` | Immutable by URL: fetched once on first request, verified before commit, cached indefinitely |
 | Management operations | `405` with problem type `repository-type` (`management-api.md`, "Hosted only") |
 
-**Reading an upstream index** is bounded: at most a fixed decompressed size and entry count; only
+**Reading an upstream index** is bounded: at most 1 GiB decompressed and 200,000 entries, each
+opam file at most 1 MiB, handler constants set twenty times above opam.ocaml.org's 53 MB and
+43,028 entries (Context) so that the one upstream this format exists for is never refused by
+the bound; only
 regular files and directories under `packages/{name}/{name}.{version}/` plus `repo` and `version`
 are read, and an entry with an absolute path, a `..` segment, a link or any other type is ignored
-with a divergence recorded; each opam file goes through the same parser as a hosted publish.
+with a divergence recorded; each opam file goes through the same parser as a hosted publish, and
+that parser accepts every opam file of the recorded opam.ocaml.org index (AC20), so a syntax
+the parser rejects is a regression the corpus catches rather than a version silently left out.
 The upstream `repo` file is read for `archive-mirrors` only; its `redirect`, `announce` and every
 other field are ignored (the resolved repo-file decision below). An index that fails the bounds or
 the tar grammar as a whole is an integrity failure: the previous records keep serving under
@@ -803,6 +836,17 @@ publish already applies and the treatment VCS sources receive.
   as absence (`proxy-cache.md` AC9).
 - **The upstream index is large**: 4.1 MB compressed and 19,187 opam files on opam.ocaml.org,
   fetched only when the TTL has lapsed and usually answered `304`.
+- **What the remote keeps, and for how long.** The record set is the remote's current
+  repository-level document, which LRU eviction never reaches and the quota does not count
+  (`proxy-cache.md`'s resolved metadata-eviction decision, was Q21, AC29; `data-model.md` AC44),
+  reported under `cache_metadata_bytes{repository}`: for an opam.ocaml.org remote, the record
+  set plus the 19,187 upstream opam files' bytes, about 60 MB, every one of them on that
+  document's declared blob-digest list (`proxy-cache.md`'s resolved declaring-document decision,
+  was Q22; `storage-and-gc.md` AC16). The handler declares a **retained-revision count of
+  zero** (that spec's resolved retained-revision decision, was Q19), because no route reads a
+  superseded record set: the cache route answers only hashes the current record set declares,
+  and an archive route addressed by an old `{key}` resolves the archive's own cached `File`,
+  which only LRU ends. Archives are cached files under the quota like any other.
 
 Upstream removal maps onto the event classes of `proxy-cache.md`'s "Upstream removal or
 replacement", which lists opam-repository among the wires whose removals carry no reason; this is
@@ -838,20 +882,37 @@ below, resolution is **per package name, in member order**:
   and cache routes resolve in the member that supplied the name, so an archive never comes from a
   different member than the index entry that led to it.
 - **The merge is the generator's `Merge`, run as the deferred `index.merge` job** on the shared
-  runner (`signing-service.md`, "Virtual merges", AC19): enqueued by a member's write with the
-  virtual as coalesce key, at the virtual's creation and on every member-list change, never on a
-  request's path; it creates no snapshot, and the previous merged record set serves until the new
-  one commits, a failed merge leaving it in place with an alert. A member's change therefore
-  reaches the virtual within that spec's staleness bound, not inside the member's write. A remote
-  member contributes its current record set, the `FromUpstream` output of its last adopted
-  upstream index, and is re-merged when it adopts a new one. Two things that sentence does not
-  settle are reported rather than invented here: adopting a remote revision is cache
-  materialisation, not a write, so no pre-commit hook enqueues the merge (the trigger the
-  consequences queue already asks `signing-service.md` to add for conda, Arch, Alpine and RPM);
-  and a remote reached only through a virtual receives no request of its own, so nothing drives
-  its TTL revalidation, and a freshly created remote contributes nothing until something fetches
-  its upstream index. Until those land, the operator recipe warms a new remote once through its
-  own URL.
+  runner (`signing-service.md`, "Virtual merges", AC19; `async-operations.md`'s kind table, the
+  job's repository reference being the virtual it merges): enqueued with the virtual as coalesce
+  key by a member's write through the pre-commit hook, by a `local` member's promotion or
+  rollback through the pointer transition, at the virtual's creation and on every member-list
+  change, never on a request's path; it creates no snapshot, and the previous merged record set
+  serves until the new one commits, a failed merge leaving it in place with an alert. A member's
+  change therefore reaches the virtual within that spec's staleness bound, not inside the
+  member's write. The merge reads each member's record set by the digest the member's current
+  document declares, so a hosted member contributes its default pointer's record set and a
+  remote member its current one, the `FromUpstream` output of its last adopted upstream index. A
+  remote member's adoption of a new upstream index is cache materialisation, not a write, so the
+  pre-commit hook never sees it: the runtime's `Adopt`, registered on `proxy-cache.md`'s
+  adoption commit, enqueues the merge inside the adoption (`signing-service.md`'s resolved
+  remote-member decision, was Q16, AC35; `proxy-cache.md` AC25). A remote reached only through
+  the virtual receives no request of its own, so the virtual's reads are its demand: serving the
+  merged index when the remote's input is past that remote's TTL enqueues one coalesced
+  `proxy.revalidate` job off the request path, which replays the remote's own `index.tar.gz`
+  route below the authorizer and adopts a changed index through the same hook (`proxy-cache.md`'s
+  resolved revalidation-replay decision, was Q18, AC26). A virtual that signs nothing has no
+  admission rule, so every member contributes whatever its anchor class (its AC36 binds signed
+  bodies only).
+- **Member inputs.** A merging profile declares, under the member's mount, each document the
+  merge reads from a member (`signing-service.md`'s resolved member-input decision, was Q21,
+  AC35; registration refuses a merging profile without them). This format declares one
+  **literal**, `index.tar.gz`, the one route the remote's classification resolves to the
+  upstream index (the upstream `repo` file travels inside it); no template, since every member
+  holds one index and nothing varies by cell, and no derivation, so the round bound is one. A
+  virtual's creation and a member-list change adding a never-adopted remote enqueue that
+  remote's first fetch inside the transaction making the change, replaying exactly that route,
+  so a fresh remote contributes before the virtual's first request and no operator warm-up
+  exists.
 - Every management operation against a virtual repository answers `405` with problem type
   `repository-type`.
 
@@ -865,7 +926,13 @@ root, with no other repository configured).
 - **Nothing is negotiated.** `index.tar.gz` is served `application/gzip`, `repo` as `text/plain`,
   archives as `application/octet-stream`, never with a `Content-Encoding` (no client sends
   `Accept-Encoding`, captured). No client reads `Content-Type`.
-- **`HEAD`** answers every `GET` route with the same headers, although no pinned client sends one.
+- **`HEAD`** on any route of either path is the `GET` with the body withheld, although no
+  pinned client sends one: on the hosted path the shared doors answer it with the `GET`'s status
+  and headers, `Content-Length` included, rendering nothing for a memoised index or a stored
+  archive (`signing-service.md`'s resolved `HEAD` decision, was Q24, AC32); on the proxied path
+  the layer never forwards a `HEAD`, a cold one makes the upstream `GET`, fills the cache after
+  the verified commit and is answered from it (`proxy-cache.md`'s resolved `HEAD` decision, was
+  Q24, AC32). This handler declares no revalidation probe and carries no branch on the method.
 - **The routes are served, never redirected**, although curl follows redirects (`-L`), because a
   handler never opens storage directly and a redirect to another host would drop the userinfo
   credential.
@@ -898,7 +965,15 @@ thin specification: against opam.ocaml.org, a cold `opam init` and update, a con
 fetch, cache fetches under an md5, a sha256 and a sha512 path, a missing cache path; against the
 reference (`opam admin index` and `opam admin cache` over a directory served statically), init,
 update, install through the cache, install after a cache miss, and a private repository with
-userinfo. Recording gates on the harness's redaction criterion (`conformance-harness.md` AC13);
+userinfo. opam.ocaml.org is the proxied half's authoritative reference; the hosted half is
+recorded against a local reference, because no public opam repository accepts a test publish
+(opam.ocaml.org is populated by pull request), and the write half records nothing, because no
+opam client publishes and every kind is a `script`-driven case (`management-api.md` AC24).
+Both halves are therefore rows of `conformance-harness.md`'s authoritative-reference exception
+list (its AC28), the hosted row naming the pinned image's `opam admin index` and `opam admin
+cache` tree behind a static server, whose digest the corpus manifest pins (its resolved
+exception-digest decision, was Q7), and the write row reading none; the rows are reported to
+that spec, and AC27 holds only once they exist. Recording gates on the harness's redaction criterion (`conformance-harness.md` AC13);
 URL userinfo and `Authorization` values are what the allowlist must name. Every deliberate
 divergence from the reference goes on the recorded exception list before its flow is expected to
 replay: rewritten sources with `mirrors` and `swhid` removed, the regenerated `repo` file
@@ -1053,8 +1128,11 @@ halves on both clients (AC28).
 - [ ] AC20: The proxied path installs packages on both clients from an opam.ocaml.org stand-in
       serving recorded answers, the served index regenerated by this registry (its opam files'
       sources rewritten, so not byte-identical to the stand-in's), each archive fetched by the
-      registry from the stand-in's `cache/` path; and from fresh containers a second install
-      reaches this registry while the stand-in receives no archive request.
+      registry from the stand-in's `cache/` path; from fresh containers a second install
+      reaches this registry while the stand-in receives no archive request; and against the
+      recorded opam.ocaml.org index every opam file parses and the served index lists every
+      version of it except exactly those the VCS-source and no-checksum rules leave out (4 and
+      19 on the recording), each with a divergence recorded, the counts asserted.
 - [ ] AC21: A proxied index is revalidated after its TTL and not before, with `If-None-Match`,
       and a `304` keeps the stored records; a version published upstream becomes installable
       after the TTL; an upstream index whose `Last-Modified` is older than the adopted one's is
@@ -1085,23 +1163,32 @@ halves on both clients (AC28).
       archive request goes to the absolute mirror; and a stand-in index holding an entry with an
       absolute path, a `..` segment, a link, an unparseable opam file, or a VCS source leaves
       those entries out of the served index with a divergence recorded, while an index failing
-      its size bound leaves the previous records serving and alerts the operator.
+      its size bound (1 GiB decompressed, 200,000 entries, 1 MiB per opam file) leaves the
+      previous records serving and alerts the operator, and the recorded opam.ocaml.org index
+      passes the bound with its entry count asserted below it.
 - [ ] AC25: A version or package vanishing from the upstream index, an archive answering `404` at
       every candidate, and a version's checksums changing upstream each keep cached archives
       served by URL, change the proxied index as the removal table says, and record a divergence;
       and an ordinary upstream metadata change is propagated at the next revalidation: opam's
       side of the settled removal table in `proxy-cache.md` (its AC13).
 - [ ] AC26: A virtual repository whose members are a hosted repository then an opam.ocaml.org
-      remote (warmed once through its own URL), configured as the only repository, resolves a
-      name held by the hosted member only from that member on both clients even when the remote
-      holds a higher version of the name or of a case-variant of it; resolves names only the
-      remote holds from it; serves every archive from the member that supplied the name; shows a
-      version newly published to the hosted member within the merge staleness bound, the
-      previous merged index serving until the `index.merge` job commits; and answers `405` with
-      problem type `repository-type` to every management operation.
+      remote that no client has ever requested directly, configured as the only repository,
+      resolves a name held by the hosted member only from that member on both clients even when
+      the remote holds a higher version of the name or of a case-variant of it; resolves names
+      only the remote holds from it, the remote's index having been fetched at member addition
+      through the one member input `index.tar.gz` with no request from any client; serves every
+      archive from the member that supplied the name; shows a version newly published to the
+      hosted member within the merge staleness bound, the previous merged index serving until the
+      `index.merge` job commits; shows a version published to the stand-in after the remote's
+      TTL within one `proxy.revalidate` job and the staleness bound, the virtual's reads making
+      no upstream request on their path and enqueuing one job however many arrive in its
+      window; and answers `405` with problem type `repository-type` to every management
+      operation.
 - [ ] AC27: Replay-match passes against a corpus recorded from opam.ocaml.org and from a static
       server over a tree built by the pinned image's `opam admin index` and `opam admin cache`,
-      covering the recorded surface named in Design, with every divergence named in Design on the
+      the hosted and write halves admitted by `conformance-harness.md`'s exception rows for
+      `opam` (its AC28) with the static server's image digest in the corpus manifest, covering
+      the recorded surface named in Design, with every divergence named in Design on the
       exception list and no userinfo or `Authorization` value in the committed corpus.
 - [ ] AC28: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
       `available`, `Virtual: supported` and `Rename: supported`; after a rename, both clients
@@ -1133,14 +1220,14 @@ halves on both clients (AC28).
 | AC17 | integration | `internal/format/opam/archive_binding_test.go` (every served archive hashed under every declared algorithm; all three cache paths; undeclared and other-repository hashes `404`) |
 | AC18 | benchmark | `internal/format/opam/index_bench_test.go` (a generated opam.ocaml.org-sized repository; publish and first render; budgets and tolerance in the benchmark gate) |
 | AC19 | integration | `internal/format/opam/concurrent_publish_test.go` (two writers per case, a publish racing a removal, fault injection at each write boundary, final index and snapshot contents asserted); `internal/index/accounting_test.go` (`signing-service.md` AC1 and AC3, with this generator as a registered fixture) |
-| AC20 | conformance + integration | `conformance/opam/proxied_test.go` (stand-in serving recorded opam.ocaml.org answers; both binaries; network-layer assertions from fresh containers); `internal/format/opam/proxied_index_test.go` (regenerated index differs from the stand-in's only as the rewrite says) |
+| AC20 | conformance + integration | `conformance/opam/proxied_test.go` (stand-in serving recorded opam.ocaml.org answers; both binaries; network-layer assertions from fresh containers); `internal/format/opam/proxied_index_test.go` (regenerated index differs from the stand-in's only as the rewrite says; every recorded opam file parses; the left-out counts and their divergence records) |
 | AC21 | conformance + integration | `conformance/opam/proxied_ttl_test.go` (mutating stand-in with `ETag`; installs before and after the TTL; an older upstream index not adopted); `internal/format/opam/proxied_negative_test.go` (negative caching, throttling responses); the cache-scoped half is `proxy-cache.md` AC22's `internal/proxy/freshness_test.go` |
 | AC22 | integration + conformance | `internal/format/opam/proxied_integrity_test.go` (bad checksum through the declared digest set, truncation, pinned-digest refetch after eviction, md5-only pin, a no-checksum version left out with no fetch; CAS and reference assertions; operator record; the layer half being `proxy-cache.md` AC20's `internal/proxy/completion_mode_test.go`); `conformance/opam/proxied_integrity_test.go` (a tampered archive through both binaries, failing through this registry) |
 | AC23 | integration | `internal/format/opam/source_allowlist_test.go` (candidate order, allowlisted and refused source hosts, default for an opam.ocaml.org upstream, rate-limit stop, redirects, `own` credential scope and client-credential non-forwarding, asserted at the network layer; `upstream-adapters.md` AC6, AC7) |
-| AC24 | conformance + integration | `conformance/opam/proxied_repo_file_test.go` (stand-in `redirect`, `announce` and absolute mirror; configured URL after update on both binaries); `internal/format/opam/proxied_hostile_index_test.go` (creation with no upstream request, `upstream-adapters.md` AC23; a whole-index failure answered `502` at first request; each hostile entry and the size bound; divergence and alert records) |
+| AC24 | conformance + integration | `conformance/opam/proxied_repo_file_test.go` (stand-in `redirect`, `announce` and absolute mirror; configured URL after update on both binaries); `internal/format/opam/proxied_hostile_index_test.go` (creation with no upstream request, `upstream-adapters.md` AC23; a whole-index failure answered `502` at first request; each hostile entry and the size bound, with the recorded index's entry count asserted under it; divergence and alert records) |
 | AC25 | integration | `internal/format/opam/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
-| AC26 | conformance + integration | `conformance/opam/virtual_test.go` (hosted then remote members, the remote warmed through its own URL; a higher upstream version and a case variant of the private name; both binaries; provenance from the network layer; management `405` `repository-type`); `internal/index/virtual_merge_test.go` (shared with `signing-service.md` AC19: the `index.merge` job for an opam-shaped virtual, the previous merged record set serving until commit) |
-| AC27 | conformance | `conformance/opam/replay_test.go` |
+| AC26 | conformance + integration | `conformance/opam/virtual_test.go` (hosted then remote members, the remote never requested directly; a higher upstream version and a case variant of the private name; a stand-in publish seen after the TTL; both binaries; provenance and the upstream request count from the network layer; management `405` `repository-type`); `internal/index/virtual_merge_test.go` (shared with `signing-service.md` AC19: the `index.merge` job for an opam-shaped virtual, the previous merged record set serving until commit); `internal/index/virtual_remote_member_test.go` (shared with `signing-service.md` AC35: the first fetch at member addition requesting exactly `index.tar.gz`, the adoption enqueuing the merge); `internal/proxy/revalidate_job_test.go` (shared with `proxy-cache.md` AC26: one coalesced job per window from the virtual's reads, none on the request path) |
+| AC27 | conformance + unit | `conformance/opam/replay_test.go`; `conformance/record/reference_exceptions_test.go` (shared with `conformance-harness.md` AC28: the two `opam` rows and the manifest's pinned digest admit the hosted and write halves) |
 | AC28 | unit + conformance | `internal/format/opam/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/opam/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; both clients in both modes, old name `not-found`, the old root failing until `set-url`) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
@@ -1179,14 +1266,17 @@ case, apply from the sibling specs and are not restated per criterion here.
 ### Phase 3: Proxied path
 - The `https` upstream with no probe at creation and the index checked at first request,
   conditional index revalidation with regressions not adopted, bounded index reading and
-  `FromUpstream` regeneration, the ordered candidate list over the `hosts` allowlist, declared
-  digest sets, md5-only pinning, no-checksum versions left out, negative caching, the removal
-  table, `405` `repository-type` on remote management operations
+  `FromUpstream` regeneration with the record set as a never-evicted current document declaring
+  its blobs and a retained-revision count of zero, the ordered candidate list over the `hosts`
+  allowlist, declared digest sets, md5-only pinning, no-checksum versions left out, negative
+  caching, the removal table, `405` `repository-type` on remote management operations
 
 ### Phase 4: Virtual repositories and rename
 - Waits on `async-operations.md`'s queue core (Blocking preconditions)
-- The per-name `Merge` on the `index.merge` job, member-scoped archive and cache resolution,
-  `405` on virtual management operations, `Capabilities()` with the rename case (AC28)
+- The per-name `Merge` on the `index.merge` job with the one literal member input
+  `index.tar.gz`, remote members fetched at member addition and revalidated from the virtual's
+  reads, member-scoped archive and cache resolution, `405` on virtual management operations,
+  `Capabilities()` with the rename case (AC28)
 
 ### Phase 5: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate) against
@@ -1205,7 +1295,9 @@ shape and then adopted at their own recommendation under the owner's standing de
 raised and adopted one more the same way (Q16, sources with no checksum), on Opus. Each is
 recorded below as adopted rather than decided, folded through Scope, Design, the criteria and the
 Test Plan in the same pass, and reversible by the owner at any time. `grep -rn "standing
-delegation"` is the owner's review queue.
+delegation"` is the owner's review queue. All sixteen were re-examined on Fable on 2026-10-08
+as if decided fresh; each record closes with that verdict (sixteen confirmed, six with their
+fold or stated cost amended, none superseded).
 
 ### Resolved: what hosting means (was Q1)
 
@@ -1229,6 +1321,14 @@ on bytes, or survive the source host disappearing, which is what an artifact rep
 **Why this is yours:** it defines the product for this ecosystem.
 
 Accepted cost: the re-upload for mirrored packages, and VCS-sourced packages unhostable.
+
+Rechecked on Fable 2026-10-08: confirmed. Option C is what `opam admin index` over a directory
+of opam files gives for free, and it is exactly the shape Gitea-class hosting already offers;
+the captured fallback shows it cannot refuse, so it is not an artifact repository. B was
+re-weighed against the proxied path, which already fetches from source hosts under an
+allowlist: a hosted write doing the same would put egress on the write path with a third
+party's availability deciding a publish, and the proxied remote plus a freeze serves the
+mirroring case B was for.
 
 ### Resolved: serving sources that point at the registry (was Q2)
 
@@ -1256,6 +1356,14 @@ userinfo credentials.
 Accepted cost: the rewrite, its exception-list entries, and the loss of per-file Software Heritage
 fallback for users who enabled it.
 
+Rechecked on Fable 2026-10-08: confirmed; fold amended. The record and Design had the handler
+reading `server.public_url` through `Deps` and inserting it "at render time", a path that no
+longer exists: the rewrite runs inside the generator's `Render` stage with the base URL and the
+current name as the runtime's serve-time inputs (`signing-service.md` was Q13, AC31), so the
+handler reads nothing and the stored record set holds no absolute URL. Two gaps in the
+`{basename}` rule closed in the same fold: a source URL's query and fragment are excluded, and
+a path with no final segment falls back to `{name}.{version}`.
+
 ### Resolved: how the archive cache maps onto the CAS (was Q3)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: archives are blobs keyed
@@ -1278,6 +1386,14 @@ a probe of the store.
 Accepted cost: users who point a global `archive-mirrors` at this registry get only archives some
 index here declares.
 
+Rechecked on Fable 2026-10-08: confirmed. Tested against the virtual case the record did not
+mention: the cache route carries no name, so "resolve in the member that supplied the name"
+holds only because the virtual's alias map is derived from the merged record set, in which
+each hash is declared by the versions of the member that supplied their name (Design, "Virtual
+repositories"); a hash two members' different names declare names identical bytes under a
+strong algorithm, and under md5 alone the archive is still verified by every checksum its own
+opam file lists.
+
 ### Resolved: the registry never evaluates an opam file (was Q4)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a bounded, non-evaluating
@@ -1297,6 +1413,13 @@ and the rewrite needs positions, not evaluation.
 **Why this is yours:** it fixes a security property of the whole format.
 
 Accepted cost: the parser and its equivalence test against both clients.
+
+Rechecked on Fable 2026-10-08: confirmed; fold amended. A parser that rejects a syntax the
+clients accept leaves a proxied version out "with a divergence recorded", which is silent in
+practice, so the parser is now held to the recorded opam.ocaml.org index: every one of its
+opam files parses, and the served index's left-out set equals exactly the VCS-source and
+no-checksum sets (AC20). The bounds the parser and the index reader apply are now numbers
+rather than "fixed" (AC24).
 
 ### Resolved: how the index is generated (was Q5)
 
@@ -1321,6 +1444,13 @@ the generator this decision names, but its contract stores an output per key and
 rendering run on request, the gap `luarocks.md` reported first; option B here is the fallback
 should that spec decline it (Design, "What the signing and index service must provide", item 5).
 
+Rechecked on Fable 2026-10-08: confirmed; the fallback withdrawn. `signing-service.md`'s
+resolved serve-time decision (was Q13 there, AC31) added the `Render` stage this option
+needs, naming this format's whole-gzip tarball as its second consumer, so the gap is closed and
+option B is no longer held in reserve. The memo key this record described is that stage's
+(stored body digest, variant, inputs), the memo bounded by `index.render_memo_bytes`, and the
+`ETag` is derived from the key rather than from rendering.
+
 ### Resolved: revising a released version's opam file (was Q6)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a revision may change any
@@ -1341,6 +1471,13 @@ one set of bytes.
 
 Accepted cost: the revision operation in `management-api.md`, which places it as the `annotate`
 kind under `push` in its reconciliation table.
+
+Rechecked on Fable 2026-10-08: confirmed. One widening was weighed and declined, recorded so it
+is not re-raised: letting a revision add a checksum algorithm whose value matches the stored
+archive (opam-repository's `opam admin add-hashes` workflow). It changes no byte, but it can
+change the first-listed checksum and so the cache path the client asks by, and a hosted version
+already carries a strong checksum at publish, so the workflow it would serve does not arise
+here; AC8's equality rule stands.
 
 ### Resolved: write boundaries, immutability and retirement (was Q7)
 
@@ -1363,6 +1500,14 @@ core-held `Retirement` record written from each removal's `Outcome` (its resolve
 retirement-placement decision, was Q3), so no write carries it; the `409` this record names is
 `conflict` for an existing version and `retired` for a removed one.
 
+Rechecked on Fable 2026-10-08: confirmed; fold amended. `management-api.md`'s resolved
+unchanged-publish decision (was Q15 there) lets a format declare an identical republish as a
+success with no snapshot, for clients that retry without an idempotency key; this format
+declines it, stated now in Design ("The hosted write path"), because no opam client publishes
+and the API caller can send `Idempotency-Key`, so AC7's `conflict` on identical bytes stands.
+The spool bound (its was Q20, AC36) applies to the publish body before parsing and this handler
+declares none of its own.
+
 ### Resolved: name case (was Q8)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: names are stored as first
@@ -1380,6 +1525,11 @@ so two names differing in case would be ambiguous to it, while 68 live names use
 **Why this is yours:** it limits what a publisher may name a package.
 
 Accepted cost: the case-folded set in the repository document.
+
+Rechecked on Fable 2026-10-08: confirmed. The rule is also what makes the virtual's "case-
+insensitively equal names count as the same name" safe: a hosted `acmetool` shadows an upstream
+`AcmeTool` rather than sitting beside it, which is the dependency-confusion shape the captured
+lowercase lookup would otherwise open.
 
 ### Resolved: where a proxied archive comes from (was Q9)
 
@@ -1409,6 +1559,14 @@ than md5. Of the 21 this record counted, the 19 that declare no checksum at all 
 the served index by the resolved no-checksum decision (was Q16), because fetch-and-cache refuses a
 fetch with neither a digest nor a verifier; the 2 md5-only ones keep this record's pin.
 
+Rechecked on Fable 2026-10-08: confirmed; cost amended. The record never said what the remote
+keeps or for how long, which `proxy-cache.md`'s data-retention decisions (was Q19, Q21, Q22
+there) now require every proxied format to state: the record set is the remote's current
+document, never LRU-evicted and outside the quota, about 60 MB for opam.ocaml.org with the
+upstream opam files on its declared list; the retained-revision count is zero, since no route
+reads a superseded record set; archives are cached files under the quota (Design, "The proxied
+path").
+
 ### Resolved: versions whose source is a VCS URL (was Q10)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: refused on hosted publish
@@ -1429,6 +1587,10 @@ affected.
 
 Accepted cost: the divergence entries and the missing variants.
 
+Rechecked on Fable 2026-10-08: confirmed. The four are branch-tracking compiler variants with
+no checksum, which the client itself cannot verify ("can't check directory checksum"), so
+serving them untouched would also be the one place a proxied install left the registry.
+
 ### Resolved: virtual repositories (was Q11)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: per-name resolution, the
@@ -1447,6 +1609,14 @@ the defence against the captured union.
 **Why this is yours:** it sets the precedence between private and public content.
 
 Accepted cost: the documented shadowing.
+
+Rechecked on Fable 2026-10-08: confirmed; fold amended. The adoption left two mechanisms
+"reported rather than invented" and an operator warm-up recipe in their place; both landed
+on the other tier since (`signing-service.md` was Q16 and Q21, `proxy-cache.md` was Q18), so
+the fold now states them: the adoption hook enqueues the merge, the virtual's reads drive a
+remote member's revalidation off the request path, and the profile declares its one member
+input, `index.tar.gz`, through which a never-requested remote is fetched at member addition.
+The warm-up recipe is gone from Design and AC26.
 
 ### Resolved: the addressed object, and what a pattern refusal looks like (was Q12)
 
@@ -1469,6 +1639,11 @@ rule.
 
 Accepted cost: the documented limitations.
 
+Rechecked on Fable 2026-10-08: confirmed. The index enumerates every name, so it cannot be a
+`descriptor` under `auth.md`'s name-free-document decision (was Q23 there), the same verdict
+`helm.md` records for `index.yaml`; a patterned `pull` therefore cannot run `opam update`, and
+the record's option B would reopen the leak that kind exists to close.
+
 ### Resolved: how a policy refusal is rendered (was Q13)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: `403` with `{"errors":
@@ -1487,6 +1662,11 @@ other host contacted (captured shape), and it is the no-elision precedent.
 **Why this is yours:** it trades user-visible explanation against where a refusal holds.
 
 Accepted cost: the operator documentation on the generic message and on clearing global mirrors.
+
+Rechecked on Fable 2026-10-08: confirmed. The accepted cost is real on the official
+`ocaml/opam` images, where a 2.2+ client asks opam.ocaml.org's cache before this registry, and
+no server-side choice closes it; the recipe (a fresh root, or `opam option --global
+archive-mirrors=` on 2.6.0) is the only cure and is documented beside the refusal.
 
 ### Resolved: what of an upstream `repo` file reaches a client (was Q14)
 
@@ -1508,6 +1688,11 @@ proxied path"; AC24).
 
 Accepted cost: the missing notices.
 
+Rechecked on Fable 2026-10-08: confirmed. A relayed `redirect` is the one upstream field that
+permanently detaches a client from this registry (captured on both clients), which no other
+format's upstream metadata can do, so this is the strongest case in the corpus for regenerating
+rather than relaying.
+
 ### Resolved: opam.ocaml.org as a preconfigured upstream (was Q15)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option B: user-configured in v1, not
@@ -1528,6 +1713,11 @@ on.
 
 Accepted cost: the proxied cases run against a stand-in; the real upstream is exercised by the
 recording session.
+
+Rechecked on Fable 2026-10-08: confirmed. `proxy-cache.md`'s second extension (was Q17 there,
+rechecked on Fable) covered Tier 1 only, so the sequencing reason stands; opam.ocaml.org's
+recipe (an `https` root, no off-origin host, since its cache holds every archive) is ready to
+be added by that mechanism at the Tier 3 verdict.
 
 ### Resolved: proxied versions whose source declares no checksum (was Q16, raised and adopted 2026-09-28)
 
@@ -1560,9 +1750,17 @@ delegated for the proxy layer.
 
 Accepted cost: the 19 missing versions and their divergence entries.
 
+Rechecked on Fable 2026-10-08: confirmed. The options were framed fairly: B's structural
+verifier binds nothing to the coordinate and still leaves non-archive sources unservable, and C
+is the verifier-in-name-only the layer's invariant exists to exclude. The adoption applies to
+the proxied path the rule the hosted path already had, and `proxy-cache.md`'s was-Q15 was
+confirmed on Fable with the refusal of a verifier-less request intact (its AC20), so no later
+decision reopens it. AC20 now asserts the count on the recorded index.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 5efda96 | authoring pass: grounded first draft, not a review | Grounded four ways: captured traffic from opam 2.1.6 and 2.6.0 (with 2.2.1, 2.3.0, 2.4.1 and 2.5.2 for mirror order) from one digest-pinned ocaml/opam image, fresh roots, on a dedicated Podman network against logging, rule-injecting stubs serving repositories built by the image's own `opam admin index` and `opam admin cache` and a separate source host (one full index download per update with no conditional request, cache requests by the first-listed checksum, the silent fallback to the source host on a refused or tampered cache, source checksum failure, index refusals at init and update leaving old state, the union across repositories whatever their rank, rollback and package removal applied by `opam upgrade`, preemptive Basic from userinfo with the token printed and stored, the unauthenticated fallback on a private repository, permanent `redirect`, `announce` and absolute mirrors, the global mirror order change at 2.2, `extra-files` and `extra-source`, case-insensitive name lookup, and a repository with sources rewritten to itself holding a refusal with no other host contacted); the opam 2.1.6 and 2.6.0 sources and Manual; the live opam.ocaml.org (index size and headers, `304`, `repo` fields, cache aliases, 100 of 100 sampled archives cached, a parse of all 19,187 opam files); and OSV (29 OSEC advisories over 18 opam packages, no `MAL-`). Design built from that: the wire table; six decisive client behaviours; hosting as holding every archive; sources rewritten to the registry with the relative cache mirror kept for credentials; the cache as a checksum-alias lookup onto the CAS; a non-evaluating parser with an architecture test; the shared-model mapping; the index as a deterministic rendering of a stored record set; freshness headers without `Last-Modified`; management-API publish, revision and removal with their write boundaries; case-insensitive uniqueness; Basic from userinfo; name, content-addressed and none objects with `404` pattern refusals; `403` without elision; OSV coverage with opam version ordering; a regenerating opam.ocaml.org cache with ordered, allowlisted, fully verified archive fetches; opam's removal-table rows; per-name virtual repositories. Fifteen questions written in decision shape and adopted under the standing delegation: hosting holds archives (AC5), source rewrite (AC3, AC13, AC16), cache as alias lookup (AC17), never evaluate (AC4), rendered index (AC2, AC18), metadata revisions (AC8), write boundaries and retirement (AC5, AC7, AC9, AC19), case-insensitive names (AC11), proxied archive sourcing (AC20, AC22, AC23), VCS sources omitted (AC5, AC24), per-name virtual resolution (AC26), addressed objects (AC14), `403` without elision (AC15), regenerated `repo` file (AC24), opam.ocaml.org user-configured. Twenty-seven criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here. Stays draft; awaits an independent review. |
 | 2026-09-28 | 7c4d5bb | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec and of this file (Open item 29's requests, now met or routed; themes 1, 2, 4 and 7; management-api 11 and 12; upstream-adapters 12; signing-service 11; artifact-verification 16; proxy-cache reconciliation 4). Applied: the seven index requirements mapped one by one onto `signing-service.md`'s generator contract (AC1, AC3, AC4, AC5, AC19, AC20, AC24, AC25), the record set in `internal/format/opam/index`, `ServeDocument` under the `ETag`-only profile that spec names this format for, archive routes with no handler-set `Last-Modified` (AC2, AC4, AC19 rows); the rewrite base as `server.public_url` and the current name at render time, in the memo key; the management table carrying kinds through `Operator` with no bindings, upload sessions, `Apply` refusing `validation` 422 where this spec said `400`, `conflict` and `retired` where it said `409`, core-held `Retirement` from `Outcome`, `unauthorized` for out-of-pattern operations per `management-api.md` AC3, `not-found` for an absent target, `405` `repository-type`, and an `Operation` recorded per synchronous request (AC5, AC7, AC8, AC9, AC11, AC14; the Q6 and Q7 records); `WriteRefusal`, the code-only client message and the `holds` binding row, the opam ordering cited to `supply-chain-policy.md` AC17 (AC15); `artifact-verification.md`'s "Nothing" row and read-path verification cited; the `auth.md` Basic row cited; the proxied path on the `https` adapter with `allow_http`, no configuration-time fetch and the index checked at first request (AC24), `FromUpstream` under the cache-scoped record with the regression row (AC21), the declared digest set and ordered candidates `proxy-cache.md` now offers over the `hosts` allowlist with `none` and `own` roles and a rate-limit stop (AC22, AC23; the Q9 record), the removal table mapped onto `proxy-cache.md`'s event classes; the virtual merge as the `index.merge` job with its staleness bound and a warmed remote (AC26); client confinement cited; the was-Q17 extension in the Q15 record; new AC28 (`Capabilities()`, rename). Mismatches found: a byte-dependent policy refusal at publish contradicts `supply-chain-policy.md`'s scan-after-ingest, enforce-at-resolution design (withdrawn, AC15 restated); "nothing is required of async-operations" contradicts the virtual merge running on `internal/async` (Phase 4 now waits on the queue core); a first-fetch pin for sources with no checksum contradicts `proxy-cache.md`'s refusal of a fetch with neither digest nor verifier, raised as Q16 in decision shape and adopted (A: left out, like VCS sources; AC22). Gaps reported, not queued: the tarball's on-request rendering (the `luarocks.md` gap, second consumer); `management-api.md`'s table lacking opam's `delete-package`; no trigger or revalidation driver for a remote member of a virtual merge; `auth.md` still has no `opam` client row. `fable_recheck` extended (new question adopted on Opus). Stays draft. |
+| 2026-10-08 | 254ed60 | Fable recheck: full review (claim verification at HEAD against every cited sibling, all eleven foundation specs now `planned`; adversarial lens at full strength on the Opus-authored whole: the repository layout, the whole-tarball update with no conditional request, 2.1.6 against 2.6.0, bound-tightening revisions, removal under `opam upgrade`; constitution compliance) + re-examination of the sixteen Opus adoptions | Brought current first against the whole of `agents/spec-loop/consequences.md`: format batch 7 items 3, 5, 7, 8 and 12 to 14, the auth closing sweep's stale-wording item, the signing-service closing sweep's citation item, the proxy-cache closing sweep's AC26 citation, the management-surfaces item 7, the foundation-leftovers member-input item, and the round-6 signing-service `HEAD` item, each verified against the source spec's current text: the serve-time `Render` stage (signing-service was-Q13, AC31) replaces "not yet met" and the stored-tarball fallback, with the base URL and name as the runtime's inputs rather than a `Deps` read; the adoption hook, the virtual's reads as a remote member's revalidation demand and the first fetch at member addition (signing-service was-Q16, was-Q21, AC35; proxy-cache was-Q18, AC25, AC26) replace the two "reported rather than invented" gaps and the operator warm-up, with the one literal member input `index.tar.gz` declared and the round bound one; the management-api table's two opam rows and the auth table's opam row replace the two stale "missing row" sentences; `HEAD` cited to both was-Q24s with no handler branch; archives served through `ServeFile` under the `ETag`-only policy (was-Q14, AC30); the remote's record set stated as a never-evicted current document outside the quota with its declared list and a retained count of zero (proxy-cache was-Q19, was-Q21, was-Q22); no unchanged publish declared and the spool bound cited (management-api was-Q15, was-Q20). Verdicts: was-Q1, Q3, Q6, Q8, Q10, Q12, Q13, Q14, Q15, Q16 confirmed; was-Q2, Q4, Q5, Q7, Q9, Q11 confirmed with their fold or stated cost amended as each record says; none superseded. Adversarial findings fixed: a tar path too long for USTAR now takes a PAX `path` record (the client extracts with its system `tar`); the index reader's "fixed" bounds are numbers with the live upstream asserted under them (AC24); the parser is held to every opam file of the recorded opam.ocaml.org index with the left-out counts asserted (AC20), since a version "left out with a divergence" is otherwise silent; `{basename}` excludes query and fragment and falls back on an empty path; the hosted corpus half is recorded against a local `opam admin` tree and the write half records nothing, so AC27 depends on two `opam` rows of `conformance-harness.md`'s exception list (AC28) that do not yet exist, reported. AC26 rewritten (the never-requested remote, the stand-in publish seen after the TTL, one job per window) with three shared test files; AC27's row gains the shared exception test. Twenty-eight criteria, each with a Test Plan row; zero open questions; `node scripts/check-spec.js` zero failures on this file. `fable_recheck` cleared; draft to planned. |
