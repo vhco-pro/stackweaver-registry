@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Fable follow-up 2026-10-08 at d15997f, stays planned: the eight exception rows queued by the terraform, composer, julia and luarocks rechecks added from their corpus sections, the vagrant row re-dated, the optional format cases recorded; found while verifying, six sibling-placed core cases listed and Q8 adopted under the standing delegation, owner-facing (no clock in the harness: a case crosses time through a shortened repository setting and a real wait, never an injected clock; AC30), which binds hackage AC8 and replication AC21 and is reported to them. 30 criteria, zero open questions. Earlier: Planned by the Fable gate review of 2026-10-01 at d4540af: every sibling citation verified at HEAD against all sixteen planned foundation specs and the twelve exception-row formats' corpus sections; the exception list's digest rule corrected (AC28 was unsatisfiable by its own table: the digest now lives in the corpus manifest, Q7 adopted under the standing delegation), the rubygems row's misattributed client-image digest removed, the owed conan row added; the four queued items folded (web-ui's single-recipe runner entry as AC29, allow_local on loopback stand-in rows in AC19, named advisory sources with osv reserved, the paused kind named as manage.apply). 29 criteria, zero open questions, check-spec zero failures. Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): the authoritative-reference exception list the settled decision (was Q3) provided for now exists, naming Helm's write half (pinned ChartMuseum), Debian's hosted half (reprepro), RPM's hosted half (a createrepo_c tree) and RPM's absent write reference, held by a manifest check (AC28); the credentials key gains a trust_policy sub-entry naming the harness's fixture OIDC issuer for pypi AC19 and openvsx AC33 (AC25 extended); cran's pak stand-ins and swift's presigned-store stand-in named as upstreams hosts sub-entries; OCI's two-repository suite namespaces and the first format batch's named cases recorded. 28 criteria, zero open questions; stays draft pending a gate review. Earlier: Sweep 2026-09-28 at 6e6d503 (not a review): AC26 also refuses a policies case for a format whose supply-chain binding row is still pending (supply-chain AC20); advisories entries may name a second source (AC21); the replication entry carries a per-link sync_interval; proxy-cache AC20 and AC22 case placements recorded; the stale package-level retirement wording replaced by the core-held Retirement record. Reconciled 2026-09-28 at b5424a2 with the foundation authoring wave (not a review): the closed setup vocabulary gains the trust key (artifact-verification.md) and owner-assigned sub-entries on repositories (read_only state, recreated names, hostname binding through server.hosts, signing key material), credentials (robot-owned tokens, registered public keys, expiring tokens) and upstreams (adapter, credential, off-origin hosts), each validated and rejected as not yet landed exactly as a key is (AC17); seeded state on an Indexer handler comes out generated and signed through the write-path hook (AC24); the client block gains recipe and the case-set rules gain declared operation kinds, rename cases and recipes (AC26); Q6 adopted under the standing delegation: every client container is confined to the case network and resolves only declared names (AC23); holds on the inspecting proxy (AC27); redaction covers every credential position (AC13). Earlier (2026-09-26): AC21 and AC22 from the Wave 1 folds; Q4 and Q5 adopted. 27 criteria, zero open questions; stays draft pending a gate review."
+status_description: "Second Fable follow-up 2026-10-08 at e051c35, stays planned: the ten exception rows the opam, openvsx, cargo, hex, pub, maven and ansible-collections passes queued added from their corpus sections (AC28 gaining the no-reference shape of a none row for cargo's private read), the body field added to the redaction positions (AC13, five positions), the advisories key stated as load-bearing for npm, nuget and pub with pub's freshness advance through the import route rather than a clock, the local admin credential every admin-route script presents stated, and Q9 adopted under the standing delegation, owner-facing (an external suite's tolerant cases are held to named overlay cases by the runner, AC21). 30 criteria, zero open questions. Earlier: Fable follow-up 2026-10-08 at d15997f, stays planned: the eight exception rows queued by the terraform, composer, julia and luarocks rechecks added from their corpus sections, the vagrant row re-dated, the optional format cases recorded; found while verifying, six sibling-placed core cases listed and Q8 adopted under the standing delegation, owner-facing (no clock in the harness: a case crosses time through a shortened repository setting and a real wait, never an injected clock; AC30), which binds hackage AC8 and replication AC21 and is reported to them. 30 criteria, zero open questions. Earlier: Planned by the Fable gate review of 2026-10-01 at d4540af: every sibling citation verified at HEAD against all sixteen planned foundation specs and the twelve exception-row formats' corpus sections; the exception list's digest rule corrected (AC28 was unsatisfiable by its own table: the digest now lives in the corpus manifest, Q7 adopted under the standing delegation), the rubygems row's misattributed client-image digest removed, the owed conan row added; the four queued items folded (web-ui's single-recipe runner entry as AC29, allow_local on loopback stand-in rows in AC19, named advisory sources with osv reserved, the paused kind named as manage.apply). 29 criteria, zero open questions, check-spec zero failures. Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): the authoritative-reference exception list the settled decision (was Q3) provided for now exists, naming Helm's write half (pinned ChartMuseum), Debian's hosted half (reprepro), RPM's hosted half (a createrepo_c tree) and RPM's absent write reference, held by a manifest check (AC28); the credentials key gains a trust_policy sub-entry naming the harness's fixture OIDC issuer for pypi AC19 and openvsx AC33 (AC25 extended); cran's pak stand-ins and swift's presigned-store stand-in named as upstreams hosts sub-entries; OCI's two-repository suite namespaces and the first format batch's named cases recorded. 28 criteria, zero open questions; stays draft pending a gate review. Earlier: Sweep 2026-09-28 at 6e6d503 (not a review): AC26 also refuses a policies case for a format whose supply-chain binding row is still pending (supply-chain AC20); advisories entries may name a second source (AC21); the replication entry carries a per-link sync_interval; proxy-cache AC20 and AC22 case placements recorded; the stale package-level retirement wording replaced by the core-held Retirement record. Reconciled 2026-09-28 at b5424a2 with the foundation authoring wave (not a review): the closed setup vocabulary gains the trust key (artifact-verification.md) and owner-assigned sub-entries on repositories (read_only state, recreated names, hostname binding through server.hosts, signing key material), credentials (robot-owned tokens, registered public keys, expiring tokens) and upstreams (adapter, credential, off-origin hosts), each validated and rejected as not yet landed exactly as a key is (AC17); seeded state on an Indexer handler comes out generated and signed through the write-path hook (AC24); the client block gains recipe and the case-set rules gain declared operation kinds, rename cases and recipes (AC26); Q6 adopted under the standing delegation: every client container is confined to the case network and resolves only declared names (AC23); holds on the inspecting proxy (AC27); redaction covers every credential position (AC13). Earlier (2026-09-26): AC21 and AC22 from the Wave 1 folds; Q4 and Q5 adopted. 27 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -211,7 +211,27 @@ applied here as runner behaviour for every external source:
   never quietly outlives its cause;
 - a skip or failure that matches no entry fails the run.
 
-AC21 asserts the four rules against fixture suite results.
+An external source has a second class of case beside the skip, and the four rules above cannot
+see it. A **tolerant case** is written to pass on either branch of an optional surface: read
+against the v1.1.1 source, the official OCI suite accepts a `400` or `405` where a registry
+disallows tag deletion, a `202` on the mount of an existing blob, a `202` for a single-`POST`
+monolithic upload, and an unfiltered referrers list with a warning printed to stderr that
+reaches no report (`formats/oci.md`, "The official suite", its tolerant-case table). Such a case
+skips nothing and fails nothing, so a run is green with every one of those surfaces missing: the
+suite's verdict is necessary and not sufficient, and a pass on a tolerant case is evidence of
+nothing on its own. The rule is the one the resolved tolerant-case decision below adopted (was
+Q9): the owning format spec lists its source's tolerant cases in a table re-derived at every
+pinned tag, each entry naming the **overlay case** in the format's own set that asserts the
+strict branch with a scripted client (`conformance/oci/strict_test.go`, `formats/oci.md` AC18),
+and the machine-readable copy under `conformance/<format>/` carries that table beside the
+exception list. The runner fails the run when an entry's overlay case did not run and pass in
+the same run, exactly as a structural entry's partner must, and when an entry names a suite
+case absent from the run's results, so a tag upgrade that renames or drops a tolerant case
+re-derives the table rather than orphaning an entry. What the runner cannot see is a tolerant
+case the table omits, since which cases are tolerant is a reading of the suite source; that
+reading is the format spec's review obligation at every pinned tag, stated beside the table.
+
+AC21 asserts the four skip rules and the two tolerant-case rules against fixture suite results.
 
 ### The `setup` vocabulary
 
@@ -345,12 +365,24 @@ implementation discovers it has no counterparty:
   deprecated version, a deleted version with its core-held `Retirement` record
   (`management-api.md`'s resolved retirement-placement decision, was its Q3; the set is no
   longer carried in the package-level document). `setup` never calls a management endpoint,
-  whatever surface exists.
+  whatever surface exists. The registry-wide admin routes a `script` drives (the pause routes,
+  the repository routes, the advisories import) refuse every token, an admin-owned one included
+  (`async-operations.md` AC21, `management-api.md` AC35), so beside the case's `credentials`
+  the harness hands every script the instance's own **local admin credential**, read from the
+  instance's first-start emission (`auth.md` AC15; a case instance runs with no OIDC provider,
+  so the account is enabled) and presented on `/api/v1` as HTTP Basic with the username `admin`
+  (`auth.md`'s resolved local-admin-on-the-API decision, was Q26; `management-api.md` AC30). No
+  `credentials` entry provisions it, since it is the instance's and not the case's, and a
+  script never presents it on a format route, where a Basic password is read as a registry
+  token and this one fails as an invalid one.
 - **Galaxy's namespace and signature cases fit the vocabulary as it stands.**
   `ansible-collections.md` AC10 presents a token patterned to one namespace (`alpha/**`)
   through a `credentials` entry, and its AC11 binds its upstream to a stand-in fixture server
   serving a collection signed with a fixture key through `upstreams`, the keyring import being
-  client-side in the `script`. Neither needs a new key.
+  client-side in the `script`. Neither needs a new key. Its AC6 adds a network-layer assertion
+  the ordinary stand-in already supports: the proxied install's upstream stand-in observes no
+  request carrying the client's `Authorization: Token` value on either install, the
+  `download_url` rewrite being what keeps the credential off the upstream.
 - **Every declared management operation has a `script`-driven case.** `management-api.md`
   AC24 requires that every kind a handler declares through `Operations()` has at least one case
   in its format's set whose `script` calls the operation and then runs the real client, and
@@ -394,7 +426,32 @@ implementation discovers it has no counterparty:
   with one multi-repository `credentials` entry spanning both; `conformance/oci/name_split_test.go`
   (its AC17), `conformance/generic/manage_binding_test.go` (the delete-file binding, `generic.md`),
   and `conformance/npm/virtual_test.go` and `conformance/pypi/virtual_test.go` (each format's
-  virtual resolution) use the vocabulary as it stands.
+  virtual resolution) use the vocabulary as it stands. `generic.md`'s gate review added three
+  more on the same vocabulary: `conformance/generic/configure_test.go` (the `script`-driven
+  `configure` case its AC8 names, flipping `immutable` through the API and reading the `409`
+  with real `curl`), `conformance/generic/serving_test.go` (its AC18: `curl` with `-i`, `-r` and
+  `--etag-compare` against a public and a private repository provisioned through `setup`,
+  sharing `signing-service.md` AC38's `head_test.go` cases) and
+  `conformance/generic/virtual_listing_test.go` (its AC19: two members with an overlapping path,
+  a paged `curl` walk, a member detached between pages). Generic records no corpus half and so
+  has no row in the exception list (the rule paragraph under that list says so).
+- **The hosted advisory surfaces lean on the `advisories` key.** `npm.md` AC18 (the bulk audit
+  endpoint rendered from the advisory reader), `nuget.md` AC17 (the `VulnerabilityInfo`
+  resource, its page's `@updated` equal to the source's freshness) and `pub.md` AC11 (the
+  listing's `advisoriesUpdated` and the advisories document) each run a real client against a
+  controlled advisory the key provisions, on hosted, proxied and virtual repositories, so the
+  key is load-bearing for three formats' hosted surfaces and not only for policy refusals. Two
+  properties follow from how the key is applied. Provisioning is complete, the source carrying a
+  freshness value, before the client container starts, as every `setup` entry's is (the
+  provisioner is `supply-chain-policy.md`'s, on the seed path, its AC2's row); a case never
+  races the first sync. And a source's freshness **advances inside a case with no clock and no
+  wait**: the `script` calls `POST /api/v1/system/advisories/import?exported_at=&source=`
+  (`management-api.md` AC34; `supply-chain-policy.md` AC16) under the local admin credential
+  with the case's records and an `exported_at` later than the source's current value, since
+  freshness after an import is the declared export time, which is what `pub.md` AC11's
+  "freshness advances, the client refetches" step and `nuget.md` AC17's `@updated` assertion
+  run on (the resolved time decision, was Q8: a management trigger from `script`, never a
+  clock). The key provisions no re-sync of its own, and needs none.
 - **Trust sets are provisioned, never fetched.** `artifact-verification.md` AC25 lands the
   `trust` key's provisioner and provisions its AC6, AC7, AC9 and AC12 through it, including the
   virtual Sigstore's `sigstore-root`; this harness validates the key and rejects it as not yet
@@ -534,14 +591,21 @@ a path segment (`conda.md`'s `/t/{token}/`, `luarocks.md`'s `api/1/{key}/`, `ter
 download capability, `openvsx.md`'s `-/t/{token}`), a query parameter (`vagrant.md`'s
 `access_token`, `openvsx.md`'s `token`, the presigned `X-Amz-*` and `X-Goog-Signature` families
 an upstream redirect carries), a vendor header (`X-NuGet-ApiKey`, `X-Jfrog-Art-Api`, `X-ApiKey`,
-`X-OpenVSX-Token`), a signed-request header set (`chef.md`'s `X-Ops-*`), and a per-machine
-identifier that is not a credential but identifies the recording machine (`conan.md`'s
-`X-Client-Anonymous-Id`). The allowlist therefore applies to **every position**: userinfo is
-never permitted; a query parameter survives only if the format's list names it; a path segment
-survives only if it is not at a position the format's list marks as credential-bearing (the
-list names those positions by route template, the same forms `auth.md` AC31 enumerates), so a
-format whose list omits a declared form fails the list's review; and a header survives only if
-named. AC13's proof carries a credential in each position.
+`X-OpenVSX-Token`), a signed-request header set (`chef.md`'s `X-Ops-*`), a **body field** (the
+`token` field of `openvsx.md`'s `api/-/trusted-publishing/token` body and of `pypi.md` AC19's
+token-mint route, each carrying the identity token `credential-management.md`'s exchange
+verifies; neither flow is in a corpus, but both run in cases whose transcripts the drift job
+attaches), and a per-machine identifier that is not a credential but identifies the recording
+machine (`conan.md`'s `X-Client-Anonymous-Id`). The allowlist therefore applies to **every
+position**: userinfo is never permitted; a query parameter survives only if the format's list
+names it; a path segment survives only if it is not at a position the format's list marks as
+credential-bearing (the list names those positions by route template, the same forms `auth.md`
+AC31 enumerates), so a format whose list omits a declared form fails the list's review; a body
+field survives only if the format's list names it, and a list for a format with an exchange
+binding marks that route's `token` field credential-bearing; and a header survives only if
+named, `Authorization` in every scheme (`openvsx.md`'s ovsx sends Basic on every request once
+its environment names a password) never being. AC13's proof carries a credential in each
+position.
 
 Normalisation rules are per-format and are themselves reviewed: an over-eager normaliser hides
 real differences, and that failure is invisible because everything goes green. The same review
@@ -583,6 +647,16 @@ any other half is still settled by the public registry.
 | julia | Write | none: no Julia client publishes to a Pkg server (the ecosystem publishes through git), so no write corpus exists; publish and every management kind are `script`-driven cases (AC26) proven by the effect both clients observe | there is nothing to record | `formats/julia.md`, "Conformance, the two clients and the corpus" |
 | luarocks | Hosted: the manifests and files a hosted repository serves as both clients read them, with the hosted divergences this half records (the development split `make-manifest` does not make, the `.zip` and `.json` manifest forms a static server lacks) | the rocks server a pinned `luarocks-admin make-manifest` builds over a directory, behind a static server | luarocks.org serves no tree a case controls; the read half stays recorded against luarocks.org | `formats/luarocks.md`, "Conformance, the clients and the corpus" |
 | luarocks | Write: an upload with and without `--sign`, a duplicate upload with `--force`, an invalid key | luarocks-site, the Lapis application behind luarocks.org, built by the harness from its repository's `Dockerfile` at the pinned commit `b3819b9` (2026-09-27) with a user and a key seeded, and pinned by its built digest (AC4's rule) | luarocks.org accepts no test upload without an account and revokes keys on incident | `formats/luarocks.md`, "Conformance, the clients and the corpus" |
+| opam | Hosted: `opam init` and `opam update`, an install through the cache, an install after a cache miss, a private repository with userinfo | a static server over a tree the pinned `ocaml/opam` image's `opam admin index` and `opam admin cache` wrote | no public opam repository accepts a test publish (opam.ocaml.org is populated by pull request); the proxied half is recorded against opam.ocaml.org | `formats/opam.md`, "Conformance, the clients and the corpus", AC27 |
+| opam | Write | none: no opam client publishes, so no write corpus exists; `publish`, `annotate`, `delete-version` and `delete-package` are `script`-driven cases (AC26) proven by the effect both clients observe | there is nothing to record | `formats/opam.md`, "Conformance, the clients and the corpus" |
+| openvsx | Write: a publish per target, a duplicate, an unknown namespace, a namespace creation, `verify-pat`, an unpublish | the `eclipse/openvsx` server image | open-vsx.org accepts a publish only from an Eclipse account into a namespace it owns and keeps every test extension as a permanent public publication; the read half is recorded against open-vsx.org; the trusted-publishing exchange is in neither half, its oracle being ovsx 1.2.0 against the harness's fixture issuer (its AC33) | `formats/openvsx.md`, "Conformance, the clients and the corpus" |
+| cargo | Write: `cargo publish` with its poll, the duplicate refusal on each client generation, `cargo yank` and `--undo`, `cargo owner --list` | `rust-lang/crates.io` at a pinned commit in a container with its database | crates.io accepts no test publication and a yank there is permanent; the read half is recorded against crates.io | `formats/cargo.md`, "Conformance, the two clients and the corpus", AC16 |
+| cargo | Private read: the `401` challenge, the token retry, `auth-required` on index and download requests | none: the half is grounded in the Cargo book's protocol and the captured client reaction, and its manifest declares it recorded against no reference (the rule below) | crates.io has no private mode and no reference implementation of `auth-required` exists | `formats/cargo.md`, "Conformance, the two clients and the corpus", AC16 |
+| hex | Write: a publish on each client generation (the `/publish` and `/packages/{name}/releases` routes), the duplicate and retired refusals, `mix hex.retire` and `--unretire`, `rebar3 hex retire`, `rebar3 hex publish docs --doc-dir`, both reverts | hexpm/hexpm at commit `151266fa` (2026-10-07), built by the harness in its `dev` configuration (every bucket on `Hexpm.Store.Local`, its `test/fixtures/private.pem` as signing key, Postgres beside it) and pinned by its built digest (AC4's rule) | hex.pm accepts no test publish: a publication there is permanent once its replace window closes; the read half is recorded against repo.hex.pm | `formats/hex.md`, "Conformance, the three clients and the corpus", AC20 |
+| hex | Private read: the `401` on a private read, the keyed retry, the organization-prefixed forms | the same hexpm/hexpm container | the organizations where a private read could be recorded are hex.pm's customer tenancy, not a fixture | `formats/hex.md`, "Conformance, the three clients and the corpus", AC20 |
+| pub | Write: the three-step `dart pub publish` flow | pub.dev's own server in its fake mode (`app/bin/fake_server.dart` in `dart-lang/pub-dev`, the real application over in-memory services) at a pinned commit, built by the harness and pinned by the built image's digest (AC4's rule) | a pub.dev publish is permanent and unrecordable without leaving a package behind; the read half is recorded against pub.dev | `formats/pub.md`, "Conformance, auth and the corpus" |
+| maven | Write: a release deploy on each Maven release, a Gradle publish with `.module`, two SNAPSHOT deploys on each, a duplicate redeploy, a signed deploy, a plugin deploy, the `401` challenge on a read followed by a preemptive `PUT` | a plain-layout reference server run in a container (`formats/maven.md` names no product for it; the manifest's kind and digest are the row's reference until that spec names one, reported) | no public Maven repository accepts a test deploy; the read half is recorded against Central | `formats/maven.md`, "Conformance, the pinned clients and the corpus", AC20 |
+| ansible | Write: the publish, the import poll in its unfinished, finished and failed shapes, the duplicate refusal | the `pulp/pulp` single-container image with `pulp_ansible` included | a publish to galaxy.ansible.com is permanent and public and a publisher cannot remove it, so the failed-import and duplicate shapes would consume a public namespace on every recording; the read half is recorded against galaxy.ansible.com | `formats/ansible-collections.md`, resolved corpus-reference decision (was Q10), AC7 |
 
 The rule is mechanical (AC28): each format's corpus manifest under `conformance/<format>/` names
 the reference each recorded half was captured against and, for a local reference, the digest it
@@ -595,8 +669,18 @@ only once the reference is built and recorded, and a hand-kept copy here would b
 the external-suite rule above already refuses (the resolved digest-location decision, was Q7). A
 format spec that records any half against a local reference server, hosted or otherwise (the
 mirror protocol of `terraform.md` is one), adds its row here in the same pass, under the half's
-name as its manifest declares it. A write row reading "none" records that no write corpus exists
-for that format, and its manifest declares none.
+name as its manifest declares it. A row reading "none" has two shapes, told apart by the
+manifest: a write row reading "none" records that no write corpus exists for that format, and its
+manifest declares none; a row reading "none" for a half that does carry a corpus (cargo's private
+read) records that the half was recorded against no reference at all, its manifest declares the
+half with no reference, and the row says what grounds it instead (a published protocol and the
+captured client reaction), which is the authority a disagreement on that half is settled by. The
+test matches each "none" row to exactly its shape, so a manifest carrying a write corpus against a
+"none" write row fails, as does a half declared against no reference that no row admits. Two
+formats need no row and say so: `generic.md` records no corpus half at all (its `Capabilities()`
+declares reference-implementation availability `none` and AC20 renders it exempt), and `npm.md`
+records its write half against the public registry under a throwaway scoped name, so neither has
+a local reference for the test to find.
 
 ### Upstream client drift
 
@@ -673,8 +757,9 @@ an acceptance criterion rather than a design note.
       capture time, URL userinfo is always redacted, a path segment at a position the list marks
       credential-bearing is redacted, and the runner rejects a corpus containing any
       non-permitted field. Proven by a recording session carrying a credential in each of a
-      header, the userinfo, a path segment and a query parameter the list does not permit, each
-      of which must arrive redacted while the permitted path segments beside it survive.
+      header, the userinfo, a path segment, a query parameter and a body field the list does
+      not permit, each of which must arrive redacted while the permitted path segments and
+      body fields beside it survive.
 - [ ] AC17: The case `setup` vocabulary is closed: before any container starts, the runner
       rejects a case whose `setup` uses a key or sub-entry the vocabulary table does not define,
       and rejects a defined key or sub-entry whose provisioner has not landed (today the keys
@@ -710,8 +795,10 @@ an acceptance criterion rather than a design note.
       an entry of the owning format's machine-readable exception list under
       `conformance/<format>/`; the run also fails when an entry lacks an issue number, when a
       structural entry's partner case did not run and pass in the same run, and when a listed
-      case ran and passed. Proven by fixture suite results, one per rule, plus one fully
-      matching run that passes.
+      case ran and passed; and the run fails when an entry of the same copy's tolerant-case
+      table names an overlay case that did not run and pass in the same run, or names a suite
+      case absent from the run's results. Proven by fixture suite results, one per rule, plus
+      one fully matching run that passes.
 - [ ] AC22: The runner rejects a format's case set that lacks an unauthenticated, an
       unauthorized or a pattern-refusal case in any mode the format supports, with an error
       naming the missing kind and mode, and a `credentials` entry provisions a pattern-scoped
@@ -776,7 +863,9 @@ an acceptance criterion rather than a design note.
       manifest fails on an unlisted local reference, on a manifest whose local reference carries
       no digest, and on a row no manifest uses, proven by fixture manifests one per rule plus a
       fixture manifest per current row passing, a write row reading "none" passing only with a
-      manifest that declares no write corpus.
+      manifest that declares no write corpus, and a row reading "none" for a half that carries
+      a corpus (cargo's private read) passing only with a manifest declaring that half against
+      no reference, a half so declared that no row admits failing.
 - [ ] AC30: No case moves an instance's clock: a case carrying a field "Case definition" does
       not define (`clock` among them) is rejected before any container starts with an error
       naming it, the first-layer rule AC17 applies to `setup` applied to the case's top level;
@@ -803,7 +892,7 @@ an acceptance criterion rather than a design note.
 | AC10 | ci | `.github/workflows/ci.yml` docs job |
 | AC11 | unit | `conformance/core/case_validate_test.go` |
 | AC12 | ci | scheduled drift workflow, proven by a written manual-dispatch procedure |
-| AC13 | unit + integration | `conformance/record/redact_test.go` (allowlist per position: header, userinfo, path segment by route template, query parameter; corpus rejection), plus a recording session in `conformance/record/proxy_test.go` carrying a credential in each of the four positions, per the criterion's own proof |
+| AC13 | unit + integration | `conformance/record/redact_test.go` (allowlist per position: header, userinfo, path segment by route template, query parameter, body field; corpus rejection), plus a recording session in `conformance/record/proxy_test.go` carrying a credential in each of the five positions, per the criterion's own proof, the body field being an exchange-shaped `token` beside a permitted sibling field |
 | AC14 | integration | `conformance/record/stateful_replay_test.go` (OCI chunked-upload corpus; a minimal chunked-upload fixture server stands in until the OCI handler exists, as AC2's broken-handler fixture already does) |
 | AC15 | integration | `conformance/record/seeded_replay_test.go` (pull-flow corpus; missing-declaration fixture) |
 | AC16 | integration | `conformance/core/topology_test.go` (including a network-isolated pair) |
@@ -811,16 +900,16 @@ an acceptance criterion rather than a design note.
 | AC18 | integration + architecture test | `conformance/core/seed_test.go` (a `state`-seeded generic artifact fetched by `curl`, and a fixture handler whose version metadata flag changes what the client receives); `conformance/core/arch_test.go` (seed-path imports) |
 | AC19 | integration | `conformance/core/upstream_binding_test.go` (one case file, two fixture upstream servers, plus the missing-stand-in rejection) |
 | AC20 | unit | `conformance/core/matrix_test.go` (passing, replay-exempt, virtual-exempt and missing fixture formats); shared with `format-handler-interface.md` AC13 and `repository-lifecycle.md` AC4, which assert the same rendering from the `Capabilities()` side |
-| AC21 | unit | `conformance/core/external_skip_test.go` (fixture suite results: unlisted skip, entry without an issue, structural entry whose partner failed, listed case that passed, a fully matching run) |
+| AC21 | unit | `conformance/core/external_skip_test.go` (fixture suite results: unlisted skip, entry without an issue, structural entry whose partner failed, listed case that passed; a tolerant-case entry whose overlay case failed, a tolerant-case entry naming a case absent from the results; a fully matching run with both tables) |
 | AC22 | unit + integration | `conformance/core/case_validate_test.go` (case sets missing each auth case kind in each mode); `conformance/core/seed_test.go` (patterned and multi-repository `credentials` entries) |
 | AC23 | integration | `conformance/core/network_test.go` (undeclared hostname fails to resolve while the instance is reached; `hostname` sub-entry resolved in the container and present in the instance's effective `server.hosts`; a proxied case through a redirecting stand-in to a second declared `hosts` name) |
 | AC24 | integration + architecture test | `conformance/core/seed_test.go` (`read_only` entry against a real client; recreated name serves nothing of the old repository); `conformance/core/seed_signed_state_test.go` (fixture `Indexer` handler: seeded versus published bytes equal, public key readable first, the real client installing; the file `signing-service.md` AC21 names, shared with it); `conformance/core/arch_test.go` (seed-path imports, shared with AC18) |
 | AC25 | integration | `conformance/core/seed_test.go` (robot-owned token, registered public key with the private half delivered as a file, `expiring` token, `trust_policy` against the fixture issuer with a matching and a foreign identity token; each authorized per `auth.md` and `credential-management.md`, the listing route's `state` in the transcript); `conformance/core/oidc_issuer_test.go` (the fixture issuer's discovery document and keys reachable by the instance and the client by its case-network name) |
 | AC26 | unit + integration | `conformance/core/case_validate_test.go` (fixture handler declaring two kinds and two recipes; case sets missing a kind's `script` case, missing `rename_test.go`, naming an undeclared recipe, leaving a recipe unnamed, a `policies` case against a fixture binding table with a `pending` row; a complete set); `conformance/core/runner_test.go` (a recipe named only by failing cases fails the run); shared with `management-api.md` AC24, `web-ui.md` AC17 and `supply-chain-policy.md` AC20, which assert the same rules from their side |
 | AC27 | integration + architecture test | `conformance/core/hold_test.go` (held request, script publish, release, transcript order); `conformance/core/arch_test.go` (no hold symbol reachable from `cmd/` or `internal/`) |
-| AC28 | unit | `conformance/record/reference_exceptions_test.go` (parses this spec's exception table and every corpus manifest; fixture manifests for an unlisted local reference, a manifest whose local reference carries no digest, and an unused row; a fixture manifest per current row passing, the "none" write rows with a manifest declaring no write corpus) |
+| AC28 | unit | `conformance/record/reference_exceptions_test.go` (parses this spec's exception table and every corpus manifest; fixture manifests for an unlisted local reference, a manifest whose local reference carries no digest, an unused row, a write corpus declared against a "none" write row, and a half declared against no reference that no row admits; a fixture manifest per current row passing, the "none" write rows with a manifest declaring no write corpus and cargo's private-read row with a manifest declaring that half against no reference) |
 | AC29 | integration + architecture test | `conformance/core/recipe_entry_test.go` (the entry invoked as a subprocess against a fixture instance on a prepared network: steps that install succeed and the transcript is reported; steps naming an undeclared host fail at name resolution); `conformance/core/arch_test.go` (the entry and a case's recipe step call one implementation; shared with `web-ui.md` AC8's Playwright flow, which is its consumer) |
-| AC30 | unit + integration + architecture test | `conformance/core/case_validate_test.go` (an unknown top-level field, `clock` among the fixtures, rejected naming it); `conformance/core/clock_test.go` (AC24's fixture `Indexer` handler under a seconds-long window: valid, expired after a real wait with `signing.resign` paused through the admin route, renewed after resume); `conformance/core/arch_test.go` (the real clock alone wired in `cmd/`, none selectable by configuration or flag; `deployment.md`'s key inventory, checked by its `scripts/check-config-keys.js`, lists no time key) |
+| AC30 | unit + integration + architecture test | `conformance/core/case_validate_test.go` (an unknown top-level field, `clock` among the fixtures, rejected naming it); `conformance/core/clock_test.go` (AC24's fixture `Indexer` handler under a seconds-long window: valid, expired after a real wait with `signing.resign` paused through the admin route under the local admin credential the harness hands the script, renewed after resume); `conformance/core/arch_test.go` (the real clock alone wired in `cmd/`, none selectable by configuration or flag; `deployment.md`'s key inventory, checked by its `scripts/check-config-keys.js`, lists no time key) |
 
 ## Implementation Phases
 
@@ -857,7 +946,8 @@ an acceptance criterion rather than a design note.
 
 ### Phase 4: Official suites and reporting
 - OCI distribution-spec suite as a case source, with external-suite skips matched against the
-  format's machine-readable exception list (AC21)
+  format's machine-readable exception list and its tolerant cases held to their named overlay
+  cases from the same copy (AC21)
 - Matrix generation, including the replay-match column and its declared exemption, the virtual
   column and its declared exemption, and the CI staleness gate
 - Scheduled latest-client drift job
@@ -883,10 +973,43 @@ Populated by `/tasks` once this spec reaches `planned`.
 
 None open. Q4 (raised by the 2026-09-23 gate review) and Q5 (exposed while folding Q4's answer)
 were adopted on 2026-09-26, Q6 (raised by the format specs' fallback findings) on 2026-09-28,
-Q7 (raised by the 2026-10-01 gate review) on 2026-10-01, and Q8 (raised by the 2026-10-08
-follow-up) on 2026-10-08, under the owner's standing delegation, so the owner may reverse any of
-them. Resolved decisions are kept rather than deleted, so the reasoning survives the next time
-someone asks why it was done this way.
+Q7 (raised by the 2026-10-01 gate review) on 2026-10-01, and Q8 and Q9 (raised by the two
+2026-10-08 follow-ups) on 2026-10-08, under the owner's standing delegation, so the owner may
+reverse any of them. Resolved decisions are kept rather than deleted, so the reasoning survives
+the next time someone asks why it was done this way.
+
+### Resolved: how an external suite's tolerant cases are held (was Q9, raised and adopted 2026-10-08)
+
+**Adopted 2026-10-08 under the owner's standing delegation.** Option A: the owning format spec
+tables its source's tolerant cases, each naming an overlay case of the format's own set that
+asserts the strict branch with a scripted client; the table is carried in the machine-readable
+copy under `conformance/<format>/` beside the exception list, and the runner fails a run in
+which an entry's overlay case did not run and pass, or an entry names a suite case the results
+do not contain. Raised by this follow-up from `formats/oci.md`'s gate review, which read the
+v1.1.1 suite source and found seven places where a case passes on either branch of an optional
+surface with at most a warning to stderr, so that "zero skips" was a soft gate the four skip
+rules here could not see; that review closed the gap for OCI with a strict overlay (its AC18)
+and asked this spec whether the class is the harness's to hold. Folded into "Skips inside an
+external suite", AC21 and its Test Plan row, and Phase 4.
+
+**Recommendation:** A. It is the structural-entry rule applied to the other class: a skip hides
+a surface by not running, a tolerant case by running and proving nothing, and in both the cure
+is a named case of ours that must run and pass in the same run.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. A tolerant-case table in the machine-readable copy, each entry naming its overlay case, enforced by the runner** (adopted) | A missing or failing overlay fails the run rather than printing to stderr; a tag upgrade that renames a tolerant case fails loudly; one list beside the exception list, the shape the skip rules already use | Which suite cases are tolerant is a reading of the suite source the runner cannot make, so an omitted case is caught only by the format spec's review at each pinned tag; one more table per external source |
+| **B. The format spec's concern alone: the overlay is an ordinary case, the table human-read** | Nothing to build in the runner | An overlay case that is renamed, skipped under an issue or dropped leaves the tolerant case green with no signal; the table rots on a tag upgrade with nothing failing, which is the soft gate under another name |
+| **C. Fork the suite and make its tolerant branches strict** | The suite's own verdict becomes sufficient | AC8 no longer runs the standards body's suite but ours; every upstream tag is a merge; the standards body's tolerance exists because the surfaces are optional in the spec, so a fork asserting them is a format decision smuggled into a test fork |
+
+**Why this is yours:** it adds runner behaviour and a second machine-readable table per external
+source, and it puts an obligation on `formats/oci.md` (and on any later format that integrates a
+published suite) to carry that table beside its exception list.
+
+Accepted cost: the omitted-tolerant-case blind spot, held by review at each pinned tag and
+stated beside the table in the format spec; the oci table's machine-readable copy is a sibling
+consequence. B lost because it leaves the only mechanical gate unable to see the class; C lost
+because it stops running the official suite.
 
 ### Resolved: how a conformance case moves time (was Q8, raised and adopted 2026-10-08)
 
@@ -1137,3 +1260,4 @@ question in `formats/npm.md`.**
 | 2026-09-28 | a3a9d78 | RubyGems authoring bookkeeping on Opus. Not a review | Not a review. Added the rubygems exception-list row (hosted and write halves against a geminabox container pinned by its base image digest, since the image is built locally). No question, no criterion changed. |
 | 2026-10-01 | d4540af | Fable gate review: claim verification at HEAD, adversarial, constitution (go-spec-reviewer inline on the runner entry's contract; claim verification against the tree still vacuous, there is no `conformance/` directory, so every claim checked is a cross-spec one) | A review. Every cited criterion, resolved decision and section of the sixteen planned foundation specs and the twelve exception-row formats verified at HEAD, and the whole of `agents/spec-loop/consequences.md` read for items naming this file. Corrections: AC28 was unsatisfiable by the table it reads, since it failed "a row whose reference carries no digest" while eleven of twelve rows carried none and could not before their references are built, and the twelfth (rubygems) carried a digest `formats/rubygems.md` records for a client image, not for geminabox; Q7 raised in the decision shape and adopted under the standing delegation (the digest lives in the corpus manifest, the row names the reference), folded into the table heading, the rule paragraph, AC28 and its Test Plan row; the conan row owed since the six-spec sweep added from `formats/conan.md`'s corpus section (hosted and write against a `conan_server` 2.32.0 container, proxied read against ConanCenter); the was-Q3 record no longer says the list is "today" four rows. Folded from the ledger: `web-ui.md`'s single-recipe runner entry (Scope, "Case definition", the sibling bullet, new AC29 with `conformance/core/recipe_entry_test.go` and an architecture test holding one code path, Phase 1), with the precondition that the entry creates no instance and the steps' target must already be reachable on the network it is handed; `upstream-adapters.md`'s loopback refusal (the seed path sets `allow_local` on a row bound to a loopback stand-in and never on a case-network or real binding, in the `upstreams` row, "Upstream bindings" and AC19); `supply-chain-policy.md`'s source names (`osv` reserved for the entry standing in for the default feed, every further entry named, duplicates rejected at validation); the paused kind named as `manage.apply` with its case file and the two sibling criteria. Eleven exception rows match their format's current corpus section; every other citation held. Constitution lenses clear (the gate itself, both modes under AC11, the seed path on the shared layers, the main-gated CI trigger matching the constitution's accepted hazard). Open Questions empty, 29 criteria each with a Test Plan row, `node scripts/check-spec.js` zero failures: draft to planned. |
 | 2026-10-08 | d15997f | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the gate review: the whole of `agents/spec-loop/consequences.md` read, every item targeting this file after the d4540af row collected (the terraform, composer, julia and luarocks rechecks' exception rows; the upstream-adapters recheck's `allow_local` item; the optional rpm, arch, conda, signing-service round-3, proxy-cache round-3 and vagrant items) and each verified against its source's current text. Applied: eight exception rows, each written from its format's corpus section at HEAD (terraform's mirror half against the `terraform providers mirror` tree and a write row reading none; composer's hosted half against a Satis-generated static site and a write row reading none; julia's hosted half against PkgServer.jl at `88c6d80` in front of a storage stand-in and a write row reading none; luarocks's hosted half against a `make-manifest` tree and its write half against luarocks-site at `b3819b9`), the rule paragraph widened to any half and the half's name as the manifest declares it; the vagrant hosted row re-dated (no boxes since 2026-10-01; the live half recorded before 2026-12-31 with any recorder writing the manifest shape, committed only under AC13; the HANDOFF date cited); the optional format cases recorded in the sibling list with what each asserts (rpm and arch `proxied_signature_withdrawn_test.go`, rpm `xmlbase_test.go`, the five `virtual_remote_test.go`), none needing a key. Declined: the `allow_local` item, already folded by the gate review (the `upstreams` row, "Upstream bindings", AC19); the shared `head_test.go` wording, which names `internal/proxy/head_test.go` and `internal/index/head_test.go`, internal tests that ask nothing of this harness (the one conformance HEAD case, `conformance/maven/head_test.go`, needs no key). Found while verifying: six `conformance/core/` cases placed by siblings and listed nowhere here (`upstream_hygiene`, `existence_oracle`, `verdict_enforcement`, `setup_trust`, `timecond_rollback`, `seed_signed_state`), now a sibling bullet, with AC24's row naming `seed_signed_state_test.go` as `signing-service.md` AC21 does; and two sibling conformance cases assuming a clock the harness cannot set (`hackage.md` AC8; `replication.md` AC21, shared with `signing-service.md` AC23 and `management-api.md` AC33): Q8 raised in the decision shape and adopted under the standing delegation, owner-facing (no clock; a window shortened through a repository setting and a real wait; a fixed window's crossing is the owning layer's integration test), folded as a sibling bullet, the closed case field list, AC30 with a Test Plan row, and Phase 1. Also found, reported not applied: `terraform.md` AC14 and its corpus paragraph say the case "declares egress open", which the resolved client-confinement decision (was Q6) offers no opt-out for; its own Test Plan row already describes the Q6 shape (a stand-in origin declared and reachable, asserted to receive no request), so the fix is wording there. Dash scan clean; `node scripts/check-spec.js` zero failures on this file. 30 criteria, zero open questions: stays planned. |
+| 2026-10-08 | e051c35 | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the gate review: the whole of `agents/spec-loop/consequences.md` read, every item targeting this file after the d15997f row collected (the opam, openvsx, cargo, hex and pub rechecks' and the maven and ansible-collections gate reviews' exception rows; openvsx's redaction item; pub's no-clock re-sync question; the generic, npm and nuget notes; oci's soft-pass item) and each verified against its source's corpus section at HEAD, the spec winning where the queue text and the spec disagreed (pub's write row names only the three-step publish flow its corpus paragraph records, not the refusals the queue listed; ansible's row uses the `conformance/ansible/` format id; maven's row says its spec names no product for the plain-layout server, reported). Applied: ten exception rows (opam hosted and write; openvsx write; cargo write and private read; hex write and private read; pub write; maven write; ansible write), the rule paragraph and AC28 extended for the second shape of a "none" row (a half that carries a corpus recorded against no reference, cargo's private read, admitted only by a manifest declaring it so) and stating why generic and npm have no row; the body field added to the credential positions (the exchange bodies' `token` for openvsx and pypi, `Authorization` never permitted in any scheme) with AC13's proof and row widened to five positions; the sibling list gains generic's `configure_test.go`, `serving_test.go` and `virtual_listing_test.go`, Galaxy AC6's no-credential-at-the-stand-in assertion, and a bullet on the `advisories` key being load-bearing for npm AC18, nuget AC17 and pub AC11, with the answer to pub's question: freshness advances inside a case through the advisories import route from `script` with a later `exported_at`, no clock and no wait (was-Q8's shape). Found while verifying: every script that drives a registry-wide admin route (the pause routes, repository creation, the import) needs a principal no token satisfies, and nothing here said what it presents; the harness now hands each script the instance's local admin credential from its first-start emission, presented as Basic with the username `admin` on `/api/v1` only (auth was-Q26, management-api AC30), stated in the management-trigger bullet and AC30's row. Q9 raised in the decision shape and adopted under the standing delegation, owner-facing: an external suite's tolerant cases are a second class beside skips, tabled by the owning format spec in the machine-readable copy with each entry naming its overlay case, the runner failing a run whose overlay did not run and pass or whose entry names a case absent from the results (the "Skips inside an external suite" paragraph, AC21 and its row, Phase 4; oci's tolerant-case table owes a machine-readable copy, reported). Declined: nothing; the generic and npm items are confirmations recorded in the rule paragraph. Dash scan clean; `node scripts/check-spec.js` zero failures on this file. 30 criteria, zero open questions: stays planned. |
