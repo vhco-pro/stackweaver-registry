@@ -101,7 +101,7 @@
     "path": "docs/internal/plans/formats/catalogue.md",
     "description": "The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "11",
     "covers": [
       "internal/format/**"

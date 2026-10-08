@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at b31b889 with the foundation authoring wave (not a review): a table of the clients the format specs add beyond the multiplier floor (Ivy prove-or-strike, SUSE by the SLES BCI image, Pop!_OS built from ubuntu:24.04, OpenTofu, the Chef, Open VSX, Arch and Hex clients; provable reach about 60, advertised only from the matrix), virtual aggregation and verification recorded as per-ecosystem matrix columns (Hex the first Virtual: unsupported) with AC7, and AC8 requiring every ecosystem once in supply-chain-policy's binding table. Folded 2026-09-26 under the owner's standing delegation: Git-backed split (33 across 33), Ansible promoted to Tier 1 with the gate binding Tiers 2 and 3 handler code but never speccing, client reach proven per client, and a named Terraform trigger. Totals 2 + 9 + 10 + 12 = 33. Zero open questions; stays draft pending a gate review."
+status: planned
+status_description: "Planned by the Fable gate review of 2026-10-08 at 6a0b78d: every tier, family, client and capability claim verified against all 33 format specs, now all planned, and every sibling citation at HEAD. Tier tables, totals (2 + 9 + 10 + 12 = 33, 33 families) and the verification none list hold; Hex is still the only Virtual: unsupported. Corrected: the named-clients table was an accident of which reconciliation items named this file and missed Conda, CPAN, CRAN, Hackage, Puppet, RubyGems and OCI's brew, so it is now the complete inventory with the counting rule written out (reach the specs name about 74, not 60; the floor stays 52); AC4 and AC3 honour the constitution's generic proxy exemption and bind the figures advertised as supported rather than the labelled target; Phase 0's authoring half recorded as done. Q7 adopted under the standing delegation (gem and bundle as two clients), owner-facing. Zero open questions, eight criteria each with a Test Plan row; awaits /tasks. Earlier: reconciled 2026-09-28 at b31b889 (named-clients table, AC7 virtual and verification columns, AC8 binding-table check); folded 2026-09-26 (Git-backed split, Ansible promoted to Tier 1, client reach per client, the Terraform trigger)."
 description: "The full format catalogue: every ecosystem targeted, grouped by shared wire protocol into families, tiered by build order, with the count that defines the breadth moat."
 author: michielvha
 goal: "Fix the breadth target at 33 ecosystems, record which protocol families multiply client reach, and set the order and the gate that decide whether breadth is affordable."
@@ -56,31 +56,54 @@ Every entry in the "Reaches" column is a **claim to be proven by that real clien
 illustration (AC2). Counted once each, with the six multiplier handlers' clients plus one client
 for each of the other 27 ecosystems and the `helm` CLI counted once although it appears under
 both Helm and OCI, the named reach is about 52; the clients the format specs add below lift the
-provable figure to about 60. So **33 ecosystems across 33 implementations reach 50+ named client
-tools and distributions**, and the advertised figure is never larger than the number the
+figure the specs name to about 74. So **33 ecosystems across 33 implementations reach 50+ named
+client tools and distributions**, and the advertised figure is never larger than the number the
 conformance matrix shows passing (AC3). That is the honest version of the claim, and it is still
 the strongest position available: nobody free offers this breadth *with* upstream caching.
+
+The counting rule, stated once so the figure cannot drift by re-reading: a **client tool** is
+counted once however many ecosystems or versions it appears under (`helm`, `brew`, the two
+generations of every pinned client); a **distribution** is counted once (Ubuntu, Manjaro,
+OpenVox's agent line); a tool running on a counted distribution is not counted again (dnf on
+Rocky is Rocky's entry, not a second one); and a wrapper that invokes a counted tool is not a
+second client (`flutter pub` runs `dart pub`, `pub.md`). The figure is what the matrix's Client
+column would show if every named client passed, which is why it is never advertised.
 
 ### Named clients the format specs add
 
 The multiplier table is the floor, not the inventory. Each format spec names the clients it
 captured traffic from and proves, and every one of them appears in the matrix's Client column
-under its ecosystem's row, never as a row of its own (AC2). The ones that add to the count above,
-or qualify an entry in the table, as the specs record them:
+under its ecosystem's row, never as a row of its own (AC2). This table is the complete inventory
+of what the 33 specs name beyond the floor, read from each spec's "Conformance, the clients and
+the corpus" section at HEAD on 2026-10-08 (an earlier version of it listed only the specs whose
+reconciliation items happened to name this file, and undercounted by fourteen). The ones that add
+to the count above, or qualify an entry in the table, as the specs record them:
 
 | Ecosystem | Clients the spec names | What it changes here |
 |---|---|---|
-| Maven | Maven, Gradle, sbt, Leiningen proven; **Apache Ivy was not run** | Ivy stays in the table as a claim `maven.md` AC19 makes prove-or-strike: it passes the same cases before Maven is advertised, or it is struck from the table and the reach figure falls by one |
+| Maven | Maven, Gradle, sbt, Leiningen captured; **Apache Ivy was not run** | Ivy stays in the table as a claim `maven.md` AC19 makes prove-or-strike: it passes the same cases before Maven is advertised, or it is struck from the table and the reach figure falls by one |
 | RPM | eight pinned clients: dnf5, dnf 4 and zypper across the five distributions | SUSE is proven by the SLES 15 SP7 BCI image, not by openSUSE (`rpm.md`); the count stays at five distributions, the matrix lists all eight |
 | Debian | apt on Debian, Ubuntu, Linux Mint 22 and Pop!_OS 24.04 | Mint's and Pop!_OS's apt are Ubuntu's build; Pop!_OS has no official image, so its client image is built from the pinned `ubuntu:24.04` with its repository configured (`debian.md` AC25); both stay counted |
+| OCI | Docker, Podman, ORAS, `helm pull oci://` and **Homebrew 7.0.6** under a `/v2/`-bearing `HOMEBREW_ARTIFACT_DOMAIN` | brew is a fifth client of the OCI row on both paths (`oci.md`, its resolved brew-client decision, was Q9, and AC13); it is the Homebrew row's one client, so it appears under two rows and counts once, as `helm` does (+0) |
 | Terraform / OpenTofu | `terraform` and `tofu`, two releases each | OpenTofu is a distinct client and counts as one (+1) |
 | Chef | Berkshelf, chef-cli (Policyfile), knife | three clients under one row (+2) |
 | Open VSX | VS Code, VSCodium, code-server, `ovsx` | four clients under one row (+3) |
 | Arch | pacman on Arch Linux and on Manjaro | Manjaro counts once proven (+1) |
 | Hex | `mix`, `rebar3` | two clients under one row (+1) |
+| RubyGems | `gem`, `bundle`, three generations each | two clients under one row, separate resolvers on separate routes (the resolved gem-and-bundle decision below, was Q7) (+1) |
+| Conda | conda, mamba, micromamba, pixi, rattler-build (`conda.md`, "Conformance, the five clients and the corpus") | five clients under one row; rattler-build drives the publish cases only (+4) |
+| CRAN | base R, pak, renv (`cran.md`, "the three clients") | three clients under one row (+2) |
+| CPAN | cpanm, cpm, CPAN.pm, Carton, cpan-upload (`cpan.md`, "Nine clients as oracles", two generations of the first four) | five tools under one row (+4) |
+| Hackage | cabal-install, Stack, two lines each (`hackage.md`) | two clients under one row (+1) |
+| Puppet | the `puppet module` tool on Puppet 7 and on OpenVox 8, and r10k (`puppet.md`, "the three clients") | r10k is a second tool and OpenVox's agent a second distribution of the first (+2) |
 
-That is eight more than the one-per-ecosystem floor, hence "about 60". Neither figure is
-advertised: `README.md` carries only what the matrix shows passing on both paths (AC3).
+That is twenty-two more than the one-per-ecosystem floor, the column's increments summed
+(1 + 2 + 3 + 1 + 1 + 1 + 4 + 2 + 4 + 1 + 2), hence "about 74". The other sixteen ecosystems
+outside the multiplier table name exactly one client each, on one or more generations: generic
+(`curl`), Ansible (`ansible-galaxy`), Go (`go`), NuGet (`dotnet`), Helm (`helm`, with `cm-push`
+as its plugin), Cargo, Composer, Alpine (`apk`), Conan (Conan 1 and 2 are one tool), Swift
+(SwiftPM), Pub (`dart pub`), Vagrant, LuaRocks, opam, Julia (Pkg) and Homebrew (`brew`). Neither
+figure is advertised: `README.md` carries only what the matrix shows passing on both paths (AC3).
 
 ### What the matrix carries per ecosystem beyond pass or fail
 
@@ -92,17 +115,23 @@ has to assert them by hand:
   `supported` or `unsupported` in `Capabilities()` (`format-handler-interface.md` AC13,
   `repository-lifecycle.md` AC4), and the matrix's virtual column renders `unsupported` as
   exempt, citing the format's spec, never as passing (`conformance-harness.md` AC20). **Hex is
-  the first ecosystem to declare it unsupported**: its signed payload names exactly one
-  repository and every unmodified client checks that name, so a virtual repository has no name
-  it could sign under (`hex.md`, its resolved was-Q1 record). Conda shows the opposite, that
-  virtual works wherever nothing is signed with the repository name, which is why the capability
-  is per format rather than a rule. No row here promises virtual aggregation; the column does.
+  the first ecosystem to declare it unsupported**, and with all 33 specs planned on 2026-10-08
+  it is the only one: every other spec declares `Virtual: supported` (`pub.md` weighed declaring
+  it unsupported and chose a per-request first-member-wins merge instead). Its signed payload
+  names exactly one repository and every unmodified client checks that name, so a virtual
+  repository has no name it could sign under (`hex.md`, its resolved repository-name decision,
+  was Q1). Conda shows the opposite, that virtual works wherever nothing is signed with the
+  repository name, which is why the capability is per format rather than a rule. No row here
+  promises virtual aggregation; the column does.
 - **Verification is per ecosystem too.** `artifact-verification.md` AC24 gives the matrix a
   verification column: a format whose spec asked for a verification entry shows a passing hosted
   and a passing proxied verification case, and a format whose spec asked for nothing shows
-  `none` with its spec cited (as of that spec's authoring: chef, composer, cran, debian,
-  go-modules, hex, opam, pub, cargo, conan and generic). A format asking for an entry without
-  both cases fails the matrix build, so the column cannot overstate.
+  `none` with its spec cited. At HEAD on 2026-10-08 that spec's table of what each format asks
+  lists cargo, chef, composer, cran, debian, go-modules, opam and pub as asking nothing, conan
+  as nothing in v1, hex as nothing on artifacts (its proxied payload check is an integrity call,
+  not an artifact verdict), and generic cites that spec not at all; Helm asks for an entry (its
+  `.prov` as an optional verdict source), so it is not on the list. A format asking for an
+  entry without both cases fails the matrix build, so the column cannot overstate.
 
 One more per-ecosystem obligation lives outside the matrix: `supply-chain-policy.md`'s table
 "When a refusal binds, per format" must list every ecosystem row of this document exactly once,
@@ -234,11 +263,18 @@ had already given it without making the tier gate ceremonial.
       under the resolved family-divergence decision. Any future family label shared by two
       ecosystem rows is proven by conformance cases from both member ecosystems passing against
       one handler before the rows may share it.
-- [ ] AC3: The ecosystem count and the client-reach figure advertised in `README.md` never
-      exceed, respectively, the number of ecosystem rows and the number of distinct clients the
-      conformance matrix shows passing on both paths, with one matrix row per ecosystem, never
-      per family.
-- [ ] AC4: No ecosystem is advertised as supported until both its hosted and proxied paths pass.
+- [ ] AC3: The ecosystem count and the client-reach figure `README.md` advertises as
+      **supported** never exceed, respectively, the number of ecosystem rows and the number of
+      distinct clients the conformance matrix shows passing on both paths (a declared, honoured
+      proxy exemption counting as that path for the exempt format), with one matrix row per
+      ecosystem, never per family. The target figures (33, 50+) may appear only labelled as the
+      target, as `README.md`'s pre-alpha status line and the charter's "a target list, not a
+      marketing claim" already frame them; the check parses the supported statement, so a
+      README that states only the target states zero supported.
+- [ ] AC4: No ecosystem is advertised as supported until both its hosted and proxied paths pass,
+      where the proxied path of a format whose `Capabilities()` declares proxy support
+      `unsupported` under the constitution's one named exemption (`generic`, its own spec naming
+      it) is the runner's honoured exemption, rendered as exempt and never as passing.
 - [ ] AC5: No handler code for a Tier 2 or Tier 3 ecosystem exists before every Tier 1 format
       has met its definition of done and the Phase 3 continue-or-shrink verdict is recorded in
       the experiment log with the Tier 1 per-format cost trend as its evidence; an ecosystem is
@@ -262,8 +298,8 @@ had already given it without making the tier gate ceremonial.
 |-----------|-----------|---------------|
 | AC1 | ci | structure check in `make verify`: every catalogue row resolves to a spec under `docs/internal/plans/formats/`, every `internal/format/<name>` maps to one, and a recorded gate verdict fails while any row lacks a spec |
 | AC2 | conformance | `conformance/<ecosystem>/`, each suite run once per named client image; the matrix Client column is generated from those runs |
-| AC3 | ci | matrix generation for `docs/internal/conformance/matrix.md`, plus a check in `make verify` comparing the figures in `README.md` against the matrix's passing counts |
-| AC4 | conformance | `conformance/<format>/hosted_test.go`, `proxied_test.go` |
+| AC3 | ci | matrix generation for `docs/internal/conformance/matrix.md`, plus a check in `make verify` comparing the supported figures in `README.md` against the matrix's passing counts, with a fixture README stating only the target passing at zero supported and one overstating by one failing |
+| AC4 | conformance | `conformance/<format>/hosted_test.go`, `proxied_test.go`; for `generic`, the declared-exemption rendering in `conformance/core/matrix_test.go` (shared with `conformance-harness.md` AC20) |
 | AC5 | ci + manual | structure check in `make verify`: an `internal/format/<name>` for a Tier 2 or Tier 3 row fails without the gate verdict entry in `docs/internal/tasks/experiment-log.md`; the verdict's evidence is reviewed manually at Phase 3 against the charter's gate definition |
 | AC6 | ci | structure check in `make verify`: parses the tier tables and the totals line, and fails on any count mismatch or on a shared Family value without a two-member AC2 suite |
 | AC7 | unit + ci | `conformance/core/matrix_test.go` (virtual and verification columns from fixture handlers: supported, `Virtual: unsupported` rendered exempt with citation, verification `none` with citation; shared with `format-handler-interface.md` AC13, `conformance-harness.md` AC20 and `artifact-verification.md` AC24); the AC3 check in `make verify` extended to refuse a `README.md` virtual or verification claim for an exempt or `none` row |
@@ -272,8 +308,11 @@ had already given it without making the tier gate ceremonial.
 ## Implementation Phases
 
 ### Phase 0: Spec every ecosystem
-All 33 ecosystem specs authored in the spec loop, per the owner's 2026-09-26 direction. Under
-way now; AC1's second clause is what closes it.
+All 33 ecosystem specs authored in the spec loop, per the owner's 2026-09-26 direction. The
+authoring half is done: on 2026-10-08 every one of the 33 specs under
+`docs/internal/plans/formats/` is `planned` on Fable (`node scripts/check-spec.js`). What
+remains of this phase is AC1's mechanical half, the structure check that keeps it true as
+handlers appear.
 
 ### Phase 1: Tier 0
 Generic and OCI, proving the harness.
@@ -303,9 +342,41 @@ Populated by `/tasks` once this spec reaches `planned`.
 None open. The three questions raised by the 2026-09-22 review (Q3, Q4, Q5) were adopted on
 2026-09-26 under the owner's standing delegation and folded into the family section, the tier
 tables, the criteria and the phases above; folding Q4 exposed one further judgment call (Q6),
-adopted the same way. Every adopted answer is reversible by the owner. The two decisions settled
-by the owner in the first round are kept below as Resolved entries, so the reasoning survives
-the next time someone asks why it was done this way.
+adopted the same way. The gate review of 2026-10-08 raised and adopted Q7, the one judgment
+call `rubygems.md`'s authoring had left to this document. Every adopted answer is reversible by
+the owner. The two decisions settled by the owner in the first round are kept below as Resolved
+entries, so the reasoning survives the next time someone asks why it was done this way.
+
+### Resolved: gem and bundle count as two named clients under RubyGems (was Q7)
+
+**Adopted 2026-10-08 under the owner's standing delegation.** Option A: `gem` and `bundle` are
+two clients under the RubyGems row, each appearing in the matrix's Client column and each
+counted once in the reach figure (+1 over the one-per-ecosystem floor), folded into the "Named
+clients the format specs add" table and the reach figure above.
+
+Accepted cost: the reach figure rests on a tool-level rule that has to be applied evenly, so the
+counting rule is now written out above and every other multi-tool ecosystem (Conda, CPAN, CRAN,
+Hackage, Puppet) is counted by the same rule in the same pass, which is what lifted the figure
+from "about 60" to "about 74". Counting one (B) lost because it would have been the only place
+where two separately-shipped executables with different resolvers on different routes were
+folded into one, against `mix` and `rebar3`, `pip` and `uv`, `conda` and `mamba`.
+
+Raised by `rubygems.md`'s authoring consequence of 2026-09-28 ("consider counting gem and bundle
+as two named clients under RubyGems, separate resolvers on different routes; the catalogue's
+call"), which carried no recommendation, so one was written here before adoption.
+
+**Recommendation:** A. `gem` resolves through the legacy Marshal index and the dependency API;
+`bundle` resolves through the compact index, and the spec proves the two on different routes
+across three generations (`rubygems.md`, "Conformance, the three clients and the corpus").
+A client is counted by what it is on the wire, and these are two.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Two clients, counted by the tool-level rule** | A reach count that applies one rule to every ecosystem; two matrix entries that each have to pass | A rule that has to be applied everywhere, which this pass did |
+| **B. One client, "RubyGems"** | A smaller, more conservative figure | An exception to the rule the other multi-tool rows follow, so the figure is no longer reproducible from the specs |
+
+**Why this is yours:** the reach figure is a product claim, and where its counting line sits is
+a marketing judgment as much as an engineering one.
 
 ### Resolved: "Git-backed" is three protocols, not one family (was Q3)
 
@@ -426,3 +497,4 @@ the tested count.
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Adopted Q3 (B: Git-backed split into GOPROXY module proxy, Swift package registry and Julia Pkg server; headline now 33 ecosystems across 33 implementations), Q4 (A: Ansible collections promoted to Tier 1 third in order, AC5 extended to Tier 3, reconciled with the owner's spec-everything direction so the gate binds building only) and Q5 (A: client reach proven per named client in the matrix Client column), plus Q6 exposed by the fold (Terraform promotes only when Stackweaver adopts this registry as its module and provider backend). Body changes: family section and multiplier table rewritten (Git-backed row removed, uncountable entries reworded, reach recounted at about 52); promotion rule and spec-everything statement added; tier tables and totals line corrected to 2 + 9 + 10 + 12 = 33 with 33 distinct families; AC1 (all 33 specs before the gate), AC2 (client reach), AC3 (advertised figures bounded by the matrix) and AC5 (Tier 2 and 3 handler code gated, early builds only by promotion) rewritten, AC6 (mechanical totals and family check) added, each with a Test Plan row; Phase 0 (spec everything) added and Phase 2 lists the nine in order; Tasks placeholder added. Stays draft: no gate review has been run. |
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. No queued consequence targets this file, and check-spec reports none. Verified that the format specs now honour its resolved client-reach decision (npm AC21, PyPI AC17, OCI AC13 carry the multiplier table's named clients; pub records that it has no multiplier row) and its Git-backed split (go-modules cites it). No change beyond this record. Stays draft. |
 | 2026-09-28 | b31b889 | cross-spec reconciliation of the foundation authoring wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the source spec's current text before applying. Open items 11, 18, 19, 20, 24, 31 and 32 (maven, terraform, rpm, debian, chef, openvsx, arch) and `hex.md`'s two-client note: a new table "Named clients the format specs add" records Ivy as prove-or-strike (`maven.md` AC19), SUSE proven by the SLES 15 SP7 BCI image, Mint and Pop!_OS running Ubuntu's apt with the Pop!_OS image built from pinned `ubuntu:24.04` (`debian.md` AC25), and OpenTofu, Berkshelf, chef-cli, knife, VS Code, VSCodium, code-server, `ovsx`, Manjaro and `rebar3` as counted clients under their ecosystem rows; the reach paragraph now states both the table floor (about 52) and the provable figure (about 60), neither advertised ahead of the matrix. Repository-lifecycle item 16 and Open item 12 (theme 9): virtual aggregation recorded as a per-format `Capabilities()` declaration rendered as a matrix column, Hex the first `unsupported`. Artifact-verification item 16: the verification column and its `none` list cited to that spec's AC24. Both asserted by AC7 with a Test Plan row shared with the matrix test. Supply-chain reconciliation item 9: AC8 requires every ecosystem row exactly once in the binding table, checked with AC6's parser. Tier tables, totals and families unchanged. Stays draft. |
+| 2026-10-08 | 6a0b78d | Fable gate review: claim verification at HEAD, adversarial, constitution | Every tier claim checked against all 33 format specs (each states its tier and family; 2 + 9 + 10 + 12 = 33, 33 distinct Family values, no label shared); every `Capabilities()` declaration checked (Hex the only `Virtual: unsupported`; generic the only proxy `unsupported`); the multiplier table's clients checked against npm AC21, pypi AC17, oci AC13, maven AC19 (Ivy prove-or-strike holds), rpm's eight clients and SLES BCI, debian AC25's Mint 22 and Pop!_OS 24.04; the cited sibling criteria (FHI AC13, repository-lifecycle AC4, harness AC20, artifact-verification AC24, supply-chain AC20 and its binding table, which names all 33 with four grouped in one row; charter "Speccing is not gated", steps 4b, 6a, 7, 8 and AC9; hex's was-Q1; terraform's trigger paragraph; the nine Tier 1 rows of the experiment log) all resolve; `README.md`, `CLAUDE.md`, the charter and the matrix carry 33 across 33. The whole of `agents/spec-loop/consequences.md` read: the two still-open items naming this file applied (OCI's brew row; rubygems' gem-and-bundle question, written in decision shape and adopted as Q7). Adversarial findings corrected: the named-clients table was incomplete by construction (only specs whose reconciliation items named this file were listed), undercounting the reach the specs name by fourteen; it is now the full inventory read from every spec's clients section with the counting rule stated (about 74, floor 52, neither advertised); AC4 as written could never let `generic` be advertised, contradicting the constitution's named exemption, and AC3 would have failed on `README.md`'s own charter-sanctioned target statement, so both now bind the supported claim and honour the declared exemption; the verification `none` list re-cited to the producer's table at HEAD with Helm's entry stated; Phase 0's authoring half recorded done. No owner decision touched; nothing reverses Q1 to Q6. `check-spec --gate`: clear. Every AC has a Test Plan row, no question open: draft to planned. Sibling consequences reported, none applied here. |
