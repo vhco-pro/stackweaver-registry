@@ -200,7 +200,7 @@
     "path": "docs/internal/plans/formats/go-modules.md",
     "description": "Spec for the Go modules format: the GOPROXY protocol hosted and proxied, the checksum-database passthrough, and what hosted means for an ecosystem with no publish API.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "18",
     "covers": [
       "internal/format/go/**",

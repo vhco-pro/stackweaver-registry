@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at ddc73fb with the foundation wave (not a review): the proxied zip verifier is proxy-cache's completion-only mode (was-Q15, AC20), the client streaming with completion withheld, the buffer-before-first-byte cost relaxed and the short-close case added (AC7); the checksum database is an https upstream on its own remote per upstream-adapters, no adapter kind; deletion is management-api's delete-version kind with the core-held Retirement record and the 410 rendered from it (AC17); refusals through WriteRefusal with the status-line phrase and the supply-chain binding row filled by the policy case (AC10); no descriptor route, decided for the passthrough; artifact-verification records Go as none; the go client row still owed to auth.md; Capabilities with rename and virtual cases (AC19). Earlier: 2026-09-26 at da0aecd, deletion through the management API with 410 (AC17), addressed objects (AC18); grounded first draft 2026-09-26 from the module reference, the go command's source and real runs of go1.25.5 and go1.26.0; six questions adopted under the standing delegation; none open."
+status: planned
+status_description: "Planned by the Fable gate review of 2026-10-08 at 8d1877a: full review plus the recheck brief's step 1 over the consequences queue; brought current with signing-service was-Q14, Q18, Q24, Q25, auth was-Q27, management-api was-Q14 to Q16 and Q20, proxy-cache was-Q19 to Q24, supply-chain was-Q11 and Q12, harness was-Q7 and Q8; the unreachable security-signal row, the empty-list 410 after the last deletion and the hosted @latest on a non-empty list corrected; zero open questions, 19 criteria mapped. Earlier: reconciled 2026-09-28 at ddc73fb with the foundation wave (completion-only verifier, checksum database as an https upstream, delete-version with the core-held Retirement record, WriteRefusal, Capabilities); 2026-09-26 at da0aecd; grounded first draft 2026-09-26 from the module reference, the go command's source and real runs of go1.25.5 and go1.26.0; six questions adopted under the standing delegation."
 description: "Spec for the Go modules format: the GOPROXY protocol hosted and proxied, the checksum-database passthrough, and what hosted means for an ecosystem with no publish API."
 author: michielvha
 goal: "Serve the go command as a module proxy and a checksum-database mirror so a build fleet resolves, verifies and downloads every module, private and public, through this registry alone."
@@ -295,8 +295,10 @@ against the registry later rather than trusted on first use forever.
 
 Hosted `list` is rendered from the package's version rows: every canonical non-pseudo version,
 one per line. Hosted `@latest` is served for the case the reference reserves it for: when the
-list is empty, the newest pseudo-version by `Time`. A hosted `.info` request for anything that
-is not a stored version is a 404.
+list is empty, the newest pseudo-version by `Time`; otherwise the highest release, else the
+highest pre-release, the choice the client itself makes from `list`, so `@latest` is never a
+404 on a module that has a version. A hosted `.info` request for anything that is not a stored
+version is a 404.
 
 **Hosted modules and the checksum database.** `sum.golang.org` cannot see a private module, so
 a client with the default `GOSUMDB` that downloads a hosted module asks the database for it,
@@ -313,7 +315,17 @@ without it to assert the refusal and that the module path never left the registr
 `data-model.md` requires each format spec to declare its ecosystem's write boundaries. Go's:
 
 - **One accepted zip `PUT` is one completed logical write** and produces one snapshot carrying
-  the version, both files and the derived metadata. A refused upload leaves nothing behind.
+  the version, both files and the derived metadata. A refused upload leaves nothing behind. The
+  `PUT` is a handler wire write, not a binding: it declares `{module}@{version}` as its claim on
+  the write transaction it opens through `Deps`, checked at declaration and again at commit
+  (`management-api.md`'s resolved retirement-check decision, was Q14), and the central `retired`
+  refusal is rendered in this wire's shape, the 409 above (its was Q16). The body is spooled
+  whole before parsing, because `zip.CheckZip` reads the central directory at the end of the
+  file, under `management.publish_spool_limit` through the `Deps` facility (its was Q20, AC36):
+  an operator serving modules near the reference's 500 MiB cap sets that key to admit them, and a
+  body over it is refused `413` with nothing committed. Go does not declare the unchanged-publish
+  exception (its was Q15): no Go client retries a publish, a scripted `curl` sees the 409 and
+  compares, and a byte-identical re-`PUT` is refused like any other.
 - **A retraction is not a registry write.** It arrives as content inside a later version's
   `go.mod`, published like any other version; the registry stores it and never reads it.
 - **A deletion is one management write**, the `delete-version` kind of the registry-owned
@@ -323,7 +335,11 @@ without it to assert the refusal and that the module path never left the registr
   no binding. Go's protocol contribution is the contract that operation must meet: a deleted
   version leaves `list` and its `.info`, `.mod` and `.zip` answer 410 Gone, the status the
   protocol assigns to "was here, may be found elsewhere", so a `GOPROXY` fallback list still
-  works; and the version is **retired**: the handler returns `{module}@{version}` as the
+  works; once the module's last version is deleted, `list` and `@latest` answer 410 as well,
+  never an empty 200, because an empty list is a success that stops a `GOPROXY` list at this
+  entry and leaves `go get m@latest` with "no matching versions" instead of the next proxy, and
+  the `Package` row the model keeps alive (`data-model.md` AC33) exists to render exactly that
+  410; and the version is **retired**: the handler returns `{module}@{version}` as the
   coordinate to retire in the operation's `Outcome`, the core writes a `Retirement` record in
   the same transaction (`data-model.md` AC35; `management-api.md`, "Retirement is core-held",
   its resolved retirement-placement decision, was Q3), outside snapshot content, and the shared
@@ -440,15 +456,16 @@ Upstream removal maps onto the settled purge-or-flag table as Go's side of that 
 
 | Upstream event, as observed at revalidation | Classification |
 |---|---|
-| A cached `.zip` or `.mod` whose dirhash disagrees with the checksum-database record, or an upstream serving different bytes for a coordinate already cached | The **explicit security signal**: purge the cached content and alert the operator. Go has no holding-package convention; the transparency log disagreeing with served bytes is the ecosystem's one machine-detectable "this is not the module" event |
+| A `.zip` or `.mod` whose dirhash disagrees with the checksum-database record | Caught at fetch, never at revalidation: the verifier refuses the commit (AC7, `proxy-cache.md` AC20), so there is nothing to purge, and a committed artifact is immutable and never re-read from the upstream. Go's wire carries **no explicit security signal** in the sense of `proxy-cache.md` AC13: no GOPROXY or checksum-database response ever says "this is not the module", the transparency log is append-only, and a forked log is the client's own detection. The post-commit purge channel for this format is `supply-chain-policy.md`'s advisory feed alone |
 | A version vanishing from the upstream (404 or 410 where content was cached, or dropped from `list`) | Keep serving, record an operator-visible divergence. The reference wants retracted versions to "remain available in version control repositories and on module proxies to ensure that builds that depend on them are not broken", and proxy.golang.org states it keeps serving deleted releases for the same reason |
 | A `retract` directive appearing in a newer version's `go.mod` | An ordinary metadata change: a new version arrived. Never a removal event; the client, not the registry, hides the retracted version |
 | `Origin` or `Time` changing in an `.info` | An ordinary metadata change, propagated at the next revalidation |
 
-Detection happens at revalidation: per `proxy-cache.md`'s resolved answer (was Q12) the proxy
-layer never polls an upstream, and the active channel is `supply-chain-policy.md`'s advisory
-feed under the shared security-signal rule. Serve-stale applies to `list`, `@latest` and `.info` under the settled
-bound; `.mod` and `.zip` are immutable and never stale.
+Detection of the three live rows happens at revalidation of the mutable documents: per
+`proxy-cache.md`'s resolved answer (was Q12) the proxy layer never polls an upstream, and the
+active channel is `supply-chain-policy.md`'s advisory feed under the shared security-signal rule.
+Serve-stale applies to `list`, `@latest` and `.info` under the settled bound; `.mod` and `.zip`
+are immutable, never stale and never revalidated.
 
 ### The checksum-database passthrough
 
@@ -606,9 +623,9 @@ So this format's row in `auth.md`'s client table is: HTTP Basic from `.netrc` (u
 arbitrary, token as password, the same Basic form pip and Maven use) or a header a `GOAUTH`
 command emits (`Bearer` being the one this registry accepts), HTTPS only. Both forms are already
 in that spec's presentation-forms table and AC31 (the Basic password and `Bearer` forms are
-universal), so nothing new is asked of the verifier; the `go` row itself is still absent from
-the client table at ddc73fb and remains a consequence for `auth.md`, recorded again in this
-pass's Review Log. For the harness this means every Go case runs over TLS with the harness CA
+universal), and its client table carries the `go` row (verified at 8d1877a: Basic from `.netrc`
+or `GOPROXY` userinfo, or a `GOAUTH` command's header, every form HTTPS only), so nothing new is
+asked of the verifier. For the harness this means every Go case runs over TLS with the harness CA
 injected through
 `SSL_CERT_FILE` (honoured by `crypto/x509` on Linux, verified in `root_unix.go`), which the
 harness's TLS-interception rule already requires; the `setup` vocabulary's token provisioning
@@ -667,6 +684,36 @@ advisories are published in OSV form at vuln.go.dev, `GO-` identifiers), and a r
 rendered as the 403 above so the client stops on it. Retraction is an author's signal and is
 never a policy input, because the registry never reads it.
 
+### Serving, caching and the shared bounds
+
+Hosted `list`, `@latest` and `.info` are rendered per request from the version rows and served
+through `ServeRendered`'s lazy form with the serving pointer as the freshness source; `.mod`,
+`.zip` and every cached file on the proxied path go through `ServeFile` (`signing-service.md`'s
+resolved handler-rendered decision, was Q14; its AC11 forbids any validator or `Cache-Control`
+set inside `internal/format/go`). The handler's serve policy (its was Q18) declares
+`public, max-age=60` on `list` and `@latest`, `public, max-age=10800` on `.info` and
+`public, max-age=31536000, immutable` on `.mod`, `.zip` and full tiles, the values
+proxy.golang.org serves (observed), which a downstream Athens or a second instance of this
+registry can reuse; the door narrows them to `private` on any repository that is not anonymously
+readable and on any credentialed request, which is every build fleet using `.netrc`
+(`signing-service.md` was Q25; `auth.md` was Q27 for the refusals the authentication layer
+writes itself). The `go` command sends no conditional header and no `HEAD` (observed), so the
+`304` path and the `HEAD` answer, the `GET` with the body withheld on every form
+(`signing-service.md` was Q24; `proxy-cache.md` was Q24 on the proxied path, where a cold `HEAD`
+fills the cache), are exercised by `curl` in the hosted upload case only. On the proxied path a
+remote's `list`, `@latest` and `.info` documents, and the mirror's lookup records and tree head,
+are current documents outside the quota that eviction never reaches, growing with every module
+version a client has asked for and reported in `cache_metadata_bytes` (`proxy-cache.md` was Q21);
+the handler declares a retained-revision count of zero for every document set, since no route
+reads a superseded `list` or tree head (its was Q19 and was Q22), and tiles, `.mod` and `.zip`
+bodies are cached files under LRU. Go has no optional signature member, so `proxy-cache.md`'s
+was Q23 does not reach it. For the advisory matcher the handler reports, at write time and on
+every fetch-and-cache request, the module path as the name key and the version with its leading
+`v` removed as the version key, which is how OSV's `Go` ecosystem spells both
+(`supply-chain-policy.md` was Q11, AC24; AC10's case confirms the spelling against the feed
+before the key is fixed); a hosted module sharing a public path inherits the public advisories
+unless the operator exempts it through `coordinate_exemptions` (its was Q12).
+
 ### What it needs from Deps
 
 The pinned `Deps` (`format-handler-interface.md`): the CAS, the metadata store at all three
@@ -705,7 +752,14 @@ Go 1.21's toolchain switching (a 1.20 client never requests `golang.org/toolchai
 1.24's `GOAUTH`; 1.20 also predates the `Origin` field, so it exercises the reference's
 "other names are reserved" promise from the client side. Hosted publishing has no `go` client,
 so its cases drive the upload with `curl` and then prove the result with `go`, the same split
-the generic format uses.
+the generic format uses. The fixtures the 1.20 pin reads carry a `go` directive of 1.20 or
+lower, because a client before Go 1.21 cannot switch toolchains and refuses a newer `go` line
+outright rather than exercising the registry. No Go case moves a clock: the TTL cases (AC5, AC6,
+AC10) shorten the remote's TTL through the repository setting and wait through it on the real
+clock, and the only injected clock is `internal/format/go/manage_delete_test.go`'s
+(`conformance-harness.md`'s resolved clock decision, was Q8, AC30). Both halves of the corpus
+are recorded against the public reference, so no exception row and nothing under its was-Q7
+digest rule applies to this format.
 
 **The recorded surface** for AC12's corpus, named now because a thin recording script yields a
 thin specification (the harness spec's own warning), recorded against proxy.golang.org and
@@ -736,7 +790,9 @@ before its flow is expected to replay.
       by the real client with the `.info`, `.mod` and `.zip` the registry derived from it; the
       `.mod` is the zip's `go.mod` byte for byte, or the one-line synthetic form when absent;
       the client's resulting `go.sum` lines equal the `h1:` sums the registry recorded; and a
-      second upload of the same version is refused with 409 and leaves no snapshot behind.
+      second upload of the same version, byte-identical or not, is refused with 409 and leaves
+      no snapshot behind; a body over `management.publish_spool_limit` is refused `413` with
+      nothing committed.
 - [ ] AC3: A module path with uppercase letters and a version with uppercase letters resolve
       through the real client's `!`-encoded, percent-encoded requests on both paths, are
       stored under the unescaped path, and a `+incompatible` version and a `/v2`-suffixed
@@ -782,7 +838,9 @@ before its flow is expected to replay.
       package-path `go get` are answered 404 from the negative cache within the short TTL,
       so that `GOPROXY=registry,direct` falls through to `direct` for the unknown module
       (asserted with the real client and at the network layer) and the package resolves
-      without a stall; a supply-chain policy refusal is answered 403 through `WriteRefusal`
+      without a stall; a supply-chain policy refusal, matched on the advisory key the handler
+      reported (the module path and the `v`-less version, confirmed against the OSV `Go`
+      spelling), is answered 403 through `WriteRefusal`
       with a `text/plain` body naming policy and, on the HTTP/1.1 connection the harness
       terminates, the status line `Refused by policy: {condition}` observed on the raw socket,
       the real client printing the condition and the same `GOPROXY` list not falling through for
@@ -804,9 +862,11 @@ before its flow is expected to replay.
       are denied as `auth.md` requires.
 - [ ] AC14: A version vanishing from the upstream keeps serving with an operator-visible
       divergence, a retraction arriving in a newer `go.mod` propagates as an ordinary new
-      version and purges nothing, and a cached `.zip` found to disagree with the
-      checksum-database record at revalidation is purged with the operator alert raised, as
-      Go's side of the settled removal table in `proxy-cache.md` (its AC13).
+      version and purges nothing, a coordinate condemned through the shared advisory channel
+      is purged with the operator alert raised, and no revalidation ever re-reads a committed
+      `.zip` or `.mod` from the upstream, asserted at the network layer, as Go's side of the
+      settled removal table in `proxy-cache.md` (its AC13; Go's wire carries no explicit
+      security signal of its own).
 - [ ] AC15: A virtual repository fronting a hosted member and a proxied member serves a
       private module from the hosted member and a public one through the proxied member
       under one `GOPROXY` base, resolves each module path at the first member that has it
@@ -826,7 +886,8 @@ before its flow is expected to replay.
       refused with 409 as AC2 refuses a duplicate, on the core-held `Retirement` record,
       including after the deletion's snapshot has been pruned, after the default pointer has
       been repointed to a snapshot older than the deletion and back, and after the module's last
-      version is gone.
+      version is gone, at which point `list` and `@latest` answer 410 and `go get m@latest`
+      falls through to `direct` rather than failing with "no matching versions".
 - [ ] AC18: A token holding `pull` and `push` under the pattern `corp.example.com/**` uploads
       `corp.example.com/lib` and `corp.example.com/lib/v2` and downloads both through the real
       client with `GONOSUMDB` covering the prefix, and is refused `list`, `.info` and `.zip` for
@@ -1088,3 +1149,4 @@ and the Phase 5 gate. B lost on the precedent.
 | 2026-09-26 | 4d1aeb1 | authoring pass: grounded first draft, not a review | Wire surface, status semantics, case-encoding, client request sequencing, retraction behaviour, prefix probing, the `list` second column, credential transmission (none over plain HTTP; URL userinfo refused), toolchain downloads (zip-only, upstream 302, mandatory sumdb even with `GOSUMDB=off`) and the checksum-database passthrough (supported probe, lookup and tile sequence, proxy.golang.org answering 404 to `supported`) all grounded against the module reference source, the go command's source in GOROOT 1.25.5 (`proxy.go`, `sumdb.go`, `fetch.go`, `toolchain.go`, vendored `x/mod` `module`, `zip`, `sumdb`, `dirhash`), the sumdb design, and real runs of go1.25.5 and go1.26.0 through a logging proxy in front of proxy.golang.org and sum.golang.org with fresh `GOMODCACHE` and `GOPATH`. Six questions written in decision shape and adopted under the standing delegation: hosted publishing as a registry-owned zip `PUT` on the zip's URL; the checksum-database passthrough with private-path refusal; fetch-then-verify for proxied zips (an exception to stream-and-verify requested of `proxy-cache.md`); client pins 1.26 and 1.20; GOPROXY-speaking upstreams only, VCS origins deferred; no Go-specific deletion endpoint with the 410 effect fixed. Sixteen criteria, each with a Test Plan row. Sibling consequences reported, not applied: an `auth.md` client-table row for `go`, a `proxy-cache.md` verify-after-receipt mode and a checksum-database adapter kind, and a `catalogue.md` note that this spec is family-neutral. |
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the catalogue's Git-backed split (was Q3) cited in Context; the origin-checksum-database exclusion re-cited to the signing service (charter step 7) and `artifact-verification.md` (supply-chain was Q6); the Cluster 5 answer folded: deletion through `management-api.md` with 410, retirement set in the package-level document, republish refusal extended, AC17, Phase 5 and a precondition, and the Q6 record updated; proxy-cache's resolved Q12 cited; the addressed-object table (`{module}` for list and latest, `{module}@{version}` for version routes and upload, every `/sumdb/` route none) with AC18. Nothing found already done. Stays draft. |
 | 2026-09-28 | ddc73fb | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From `proxy-cache.md` (its reconciliation item 2; was Q15, AC20) and `conformance-harness.md`: the verify-after-full-receipt mode this spec requested is offered as the completion-only mode with a handler-supplied verifier, and its own accepted cost, the client waiting for the whole fetch before its first byte, was weighed there as option B and declined; this spec takes the shared mode as-is (client streams, completion withheld until the verifier passes, a refusal a short-closed transfer), the Design integrity paragraph, the was-Q3 record, AC7 and its Test Plan row rewritten with `conformance/go/proxied_test.go` as the short-close case. From `upstream-adapters.md` (its row for this spec, AC1, the git-origin exclusion): the checksum database is an `https` upstream bound to its own `remote`, no adapter kind; the Blocking preconditions, Mapping, Scope, Deps section, Phase 2 and the was-Q5 record updated. From `management-api.md` (kind table, reconciliation table with the 410, binding rule, AC7, AC24) and its was Q3 with `data-model.md` AC35: deletion is `delete-version` declared through `Operator`, no binding, the retirement set replaced by the core-held `Retirement` record with the 410 rendered from it (the write boundary, Mapping, Hosted validation, AC17, Phase 5, the was-Q6 record). From `auth.md` was Q23: no Go route is a descriptor, decided and explained for the passthrough (`supported` as `none` sends a patterned client direct to the database, which works). From `supply-chain-policy.md` (was Q10, AC18, AC20) and `format-handler-interface.md` AC14: refusals through `WriteRefusal` with the status-line phrase; AC10 asserts the raw status line and its non-fallback capture fills Go's `pending` binding-table row, a `policy_test.go` added. From `artifact-verification.md` AC24 and `signing-service.md`: Go asks nothing, recorded as `none` in the matrix. From `repository-lifecycle.md` AC12 and `format-handler-interface.md` AC13: a Capabilities and lifecycle section, new AC19 with `rename_test.go` and `virtual_test.go`. Nineteen criteria, each with a Test Plan row. Already done before this pass: the pypi was-Q1 citations carried historical qualifiers. Consequences for other files: `auth.md`'s client table still has no `go` row (Basic from `.netrc`, or a `GOAUTH` header, HTTPS only; both forms already in its AC31), verified absent at ddc73fb; `supply-chain-policy.md`'s Go binding row stays `pending` until AC10's case lands. Stays draft. |
+| 2026-10-08 | 8d1877a | Fable gate review: full review (claim verification at HEAD against every cited foundation record, the adversarial lens at full strength on the ddc73fb Opus reconciliation and on the Fable-authored protocol design, constitution compliance), plus the recheck brief's step 1 over the whole consequences queue | No `fable_recheck` marker and no question adopted without Fable (the six adoptions are Fable's own), so the re-examination was of the ddc73fb reconciliation and the original authoring; all six adoptions stand. Brought current: `auth.md`'s `go` client row exists (the stale "still absent" wording replaced); signing-service was-Q14 (hosted `list`, `@latest` and `.info` through `ServeRendered`'s lazy form, `.mod`, `.zip` and cached files through `ServeFile`), was-Q18 (the serve policy's `Cache-Control` values, proxy.golang.org's own), was-Q24 and proxy-cache was-Q24 (`HEAD` as the `GET` without its body; the client sends none), was-Q25 with auth was-Q27 (narrowed to `private` off the anonymous public path); management-api was-Q14 (the `PUT` claims `{module}@{version}`, checked at declaration and commit), was-Q15 (Go not a declarer of the unchanged-publish exception; AC2 says byte-identical or not), was-Q16 (the central `retired` refusal rendered as the 409), was-Q20 (the zip spooled under `management.publish_spool_limit`, `413` over it; AC2); proxy-cache was-Q19 and was-Q22 (retained count zero), was-Q21 (a remote's documents and the mirror's records outside the quota in `cache_metadata_bytes`), was-Q23 (no optional signature, does not reach Go); supply-chain was-Q11 (the advisory key: module path and `v`-less version, OSV's `Go` spelling, on both paths and the fetch-and-cache request; AC10) and was-Q12 (hosted public-path matching with `coordinate_exemptions`); harness was-Q7 and was-Q8 (no exception row; no case moves a clock, the 1.20 fixtures carry a `go` directive of 1.20 or lower). Found by the adversarial lens and corrected: the removal table's "explicit security signal" row was unreachable, since `.zip` and `.mod` are never revalidated and the transparency log is append-only, so the mismatch is AC7's fetch-time refusal and Go's wire carries no security signal of its own (row, paragraph and AC14 rewritten); a hosted module whose last version was deleted would have answered `list` with an empty 200, which stops a `GOPROXY` list at this entry and leaves `go get m@latest` with "no matching versions", so `list` and `@latest` answer 410 once the last version is gone (write boundary, AC17); hosted `@latest` on a non-empty list was unspecified (now the client's own choice from `list`). The GOPROXY grammar, the `!` case-encoding, `zip.CheckZip` and `dirhash.Hash1`, the 410 fall-through on the comma form, the `GONOSUMDB` interplay and the `GOSUMDB=off` toolchain rule re-verified against the go source citations and stand. Zero open questions; 19 criteria, each with a Test Plan row; check-spec zero failures. draft to planned. |
