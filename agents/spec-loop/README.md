@@ -69,17 +69,16 @@ session ends). Each firing:
 
 ## Resume point
 
-**END OF THE 2026-10-08 RUN (12:45 CEST).** Done this run, all on Fable: the hackage recheck from
+**END OF THE 2026-10-08 RUN (12:45 CEST).** Done this run, all on Fable: the generic gate review (planned, the build-step gate), the hackage recheck from
 its patch; format rechecks of rubygems, conan, swift, puppet, vagrant, homebrew, terraform, chef,
-composer, julia, luarocks, opam, openvsx, cargo, hex and pub (24 of the 33 format specs planned in
+composer, julia, luarocks, opam, openvsx, cargo, hex and pub (25 of the 33 format specs planned in
 all); foundation follow-ups on artifact-verification, async-operations (rounds 5), data-model,
 signing-service (rounds 5 to 7: external-root cutover, HEAD and the freshness input, Q25 private
 responses never shared-cacheable), proxy-cache (Q24 HEAD), management-api (rounds 4 and 5: Q20
 spool bound, Q21 /api/v1 private no-store), upstream-adapters (Q11 deterministic git tar), auth
 (Q27 refusals no-store) and conformance-harness (eight exception rows, Q8 no clock).
 Next, two agents at a time:
-1. generic.md gate review: running at 12:23 at the end of the run; if it did not finish, its
-   partial edits are saved under `agents/spec-loop/wip/` and it resumes from them.
+1. generic.md gate review: DONE (planned, 12:4x); its management-api row is queued.
 2. Gate reviews (recheck-brief, review mode) of the Fable-authored drafts without `fable_recheck`:
    oci (first: the revalidation probe and brew 7 as a client are queued), npm, pypi,
    ansible-collections, go-modules, helm, nuget, maven.
@@ -97,7 +96,7 @@ all-clear, homebrew's fallback token leak and brew 7 /v2/ support, renv capture,
 
 **RESUMED 2026-10-08 02:50 CEST for an unattended run that ends at 12:45 CEST** (owner: "the next
 10 hours, the same way"). After 12:45 the heartbeat commits finished work, launches nothing new,
-records the resume point and cancels itself (heartbeat cron id 3791fe37). The STOPPED note below is history; items 1 and 2 are
+records the resume point and cancels itself (heartbeat cron id 3791fe37, cancelled at the end of the run). The STOPPED note below is history; items 1 and 2 are
 done (hackage planned 2026-10-08; Q23's consequences queued).
 
 **STOPPED 2026-10-01: Fable's monthly allowance is spent** (the owner's stop rule, heartbeat item 5).

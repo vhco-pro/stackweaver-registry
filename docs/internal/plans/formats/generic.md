@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at a6d72b3 with the foundation wave (not a review): DELETE is a binding onto management-api's delete-file kind, the handler's one Operator kind, retiring nothing (AC8); Capabilities declares Virtual and Rename supported and the lifecycle, read-only, rename, virtual-detach and admin cases are gathered (AC9, AC16); immutability distinct from read_only; retention scheduled as async-operations' retention.pass kind, one schedule per ruled repository, disabled while read_only or deleted (AC17); the verification column reads none; WriteRefusal and the pending binding-table row filled by AC15's capture; the operator API cited to management-api.md Phase 1 instead of owed. Earlier: reconciled 2026-09-26 at da0aecd (addressed objects AC14, policy rendering AC15); Q4 to Q7 and Q9 to Q13 adopted 2026-09-26 at 4d1aeb1 under the owner's standing delegation. Zero open questions; 17 criteria, each with a Test Plan row; stays draft pending a gate review."
+status: planned
+status_description: "Fable gate review 2026-10-08 at b10d639, planned: the handler declares configure beside delete-file so the immutability switch is settable at all (management-api refuses a settings document for a handler without configure); every read goes through signing-service's ServeFile and ServeRendered with declared serve policies, HEAD by the door, Cache-Control narrowed to private on private repositories and authenticated requests (new AC18); the owner's path grammar stated rule by rule; Q14 adopted under the standing delegation (a virtual's listing is the members' merged by path, first member wins; new AC19); central refusals rendered in this format's text/plain wire shape; AC2, AC6, AC7 tightened. Zero open questions; 19 criteria, each with a Test Plan row. Earlier: reconciled 2026-09-28 at a6d72b3 with the foundation wave (not a review): DELETE is a binding onto management-api's delete-file kind, the handler's one Operator kind, retiring nothing (AC8); Capabilities declares Virtual and Rename supported and the lifecycle, read-only, rename, virtual-detach and admin cases are gathered (AC9, AC16); immutability distinct from read_only; retention scheduled as async-operations' retention.pass kind, one schedule per ruled repository, disabled while read_only or deleted (AC17); the verification column reads none; WriteRefusal and the pending binding-table row filled by AC15's capture; the operator API cited to management-api.md Phase 1 instead of owed. Earlier: reconciled 2026-09-26 at da0aecd (addressed objects AC14, policy rendering AC15); Q4 to Q7 and Q9 to Q13 adopted 2026-09-26 at 4d1aeb1 under the owner's standing delegation. Zero open questions; 17 criteria, each with a Test Plan row; stays draft pending a gate review."
 description: "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end."
 author: michielvha
 goal: "Exercise every shared layer with a protocol simple enough that any failure is unambiguously a harness or infrastructure failure, not a protocol misreading."
@@ -37,9 +37,14 @@ worked examples for every later format.
 **In scope:** authenticated PUT to a repository path, GET, HEAD, listing by segment-aligned
 prefix with snapshot-consistent pagination, delete, overwrite semantics with a per-repository
 immutability switch, and retention policies by age and by count, scoped per repository with
-optional path-prefix filters. Also the per-route addressed objects `auth.md`'s pattern scopes
-evaluate (Design, "Addressed objects and pattern scopes"), and the rendering of a shared policy
-refusal.
+optional path-prefix filters. Also the strict path grammar (Design, "Path grammar"), the
+per-route addressed objects `auth.md`'s pattern scopes evaluate (Design, "Addressed objects and
+pattern scopes"), the rendering of a shared policy refusal, the two management kinds this
+handler declares (`delete-file` and `configure`, Design, "The handler's `Operator` kinds"),
+serving every artifact and listing through `signing-service.md`'s door, which is what gives this
+format its validators, conditional requests, byte ranges and cacheability (Design, "Serving
+through the door"), and the listing of a virtual generic repository (the resolved
+virtual-listing decision below, was Q14).
 
 **Out of scope:** the proxied path. This is the one format permitted to declare proxy support
 `unsupported` (see `format-handler-interface.md`, resolved Q2) - there is no upstream protocol
@@ -84,10 +89,16 @@ invocation. Artifact URLs follow the resolved mapping below:
 
 - **PUT** streams a body to an artifact path, records its digest, and commits the blob through
   the shared CAS. The handler never opens object storage directly
-  (`format-handler-interface.md`). A PUT to an unoccupied path returns `201 Created`. What a
-  PUT to an **occupied** path does is below.
-- **GET** returns the bytes; **HEAD** returns the same status and metadata headers with no
-  body.
+  (`format-handler-interface.md`). The body is never spooled: it streams into the CAS commit
+  and is parsed by nobody, so `management.publish_spool_limit` does not apply to it
+  (`management-api.md`'s resolved spool decision, was Q20, binds paths that spool). The PUT
+  declares the artifact path as its claim on the write transaction (`management-api.md`'s
+  resolved retirement-check decision, was Q14; `storage-and-gc.md` AC30), a check that always
+  passes here because this format writes no `Retirement` record. A PUT to an unoccupied path
+  returns `201 Created`. What a PUT to an **occupied** path does is below.
+- **GET** returns the bytes through `signing-service.md`'s `ServeFile` form; **HEAD** is
+  answered by the door as the GET without its body, `Content-Length` included, so the handler
+  has no HEAD code of its own (Design, "Serving through the door").
 - **Listing** is a GET on the repository root, `/generic/{repository}`, which the strict path
   grammar guarantees can never be an artifact path (an artifact path needs a package, a version
   and a filename). It returns every artifact beneath an optional `prefix`, recursively, as a
@@ -104,8 +115,9 @@ invocation. Artifact URLs follow the resolved mapping below:
 
   The route is a **binding** onto `management-api.md`'s `delete-file` kind, under `delete` on
   the artifact path (its cross-format reconciliation table's generic row): the handler
-  implements that spec's `Operator` interface with `delete-file` as its one declared kind, its
-  `DELETE` translates the wire into `Submit`, and the same deletion is reachable through the
+  implements that spec's `Operator` interface with `delete-file` as one of its two declared kinds
+  (the other is `configure`, below), its `DELETE` translates the wire into `Submit`, and the
+  same deletion is reachable through the
   operations endpoint, which is the evidence that spec's AC27 brings to the interface re-open
   as the first real kind. **The deletion retires nothing.** The kind table lets `delete-file`
   retire the file coordinate and leaves the coordinates to the handler's `Outcome`; generic
@@ -115,7 +127,17 @@ invocation. Artifact URLs follow the resolved mapping below:
   PyPI filename or an npm `name@version` is bound. So a deleted path uploads again, and this
   format writes no `Retirement` record (`data-model.md` AC35 is exercised by the formats that
   do). `management-api.md` AC24 asks one `script`-driven case per declared kind, which AC8 now
-  carries.
+  carries. The binding is exactly as wide as the operation: the route's `Scope(r)` object is the
+  one pair `Authorize` reports, `delete` on that path (`management-api.md`'s resolved
+  binding-scope decision, was Q13, and AC8).
+
+Every refusal the shared layers decide is rendered on this format's wire in this format's one
+shape, a `text/plain` body naming the rule (`management-api.md`'s resolved central-refusal
+decision, was Q16): the `409` of the immutability rule, the `405` of a `read_only` repository,
+the `400` of the path grammar and the `403` of the policy layer all look alike to `curl`. The
+authentication layer's own answers, the `401` challenge and the existence rule's `404`, are
+written by `auth.md`'s layer, not by this handler, and carry `Cache-Control: private, no-store`
+as its resolved decision (was Q27) fixes.
 
 A request the shared policy layer refuses (`supply-chain-policy.md`, the typed refusal its
 resolution calls in `Deps` return) is answered `403` with a `text/plain` body naming the policy
@@ -159,6 +181,53 @@ are not discovered:
   outside its pattern: this format has no content-addressed route for `auth.md`'s
   content-addressed allowance to widen.
 
+### The handler's `Operator` kinds
+
+`Operations()` returns `delete-file` and `configure`, and nothing else. `delete-file` is the
+`DELETE` binding above. `configure` exists because the immutability switch travels as this
+handler's `settings` document on `POST` and `PATCH /api/v1/repositories/{name}`, and
+`management-api.md` refuses a `settings` field as `validation` for any format whose handler
+declares no `configure` (its "Dispatch" rule): a handler that owns a settings document must
+declare the kind that receives it. Generic's document is `{"immutable": bool}`; any other field
+is refused `validation` naming it, so a typo never silently leaves a repository mutable. The
+`configure` is admin-only through the API, has no binding and no client trigger, so its AC24
+case is `script`-driven (AC8's row). Applying it is one completed write of the repository's
+metadata document, the accounting `management-api.md` AC19 fixes. The rename notice reaches this
+`Operator` as it reaches every other and changes nothing stored, since every reference is by
+repository identity (the "Capabilities and lifecycle" section).
+
+### Serving through the door
+
+Nothing this handler serves carries a validator, a date, a `Cache-Control` or a range it computed
+itself: `signing-service.md`'s architecture test refuses a handler package that sets `ETag`,
+`Last-Modified` or `Cache-Control` or reads a conditional header (its AC11 row,
+`internal/format/freshness_boundary_test.go`), and this format is the simplest consumer of the
+forms that boundary exists for.
+
+- **Artifacts** go through `ServeFile` from the artifact's `File` record: the strong `ETag` is
+  the CAS digest, `Last-Modified` is the record's creation (a replacement creates a new record,
+  so an overwrite moves it), `If-None-Match` answers `304`, and a single byte range answers
+  `206` with `Content-Range`, verified through `storage-and-gc.md`'s segment digests (its AC21),
+  an unsatisfiable one `416`. The serve policy, a package-level constant: conditional rule
+  `exact`, `Cache-Control: no-cache` (a cached copy is always revalidated against the digest,
+  which is the only answer that is right in both overwrite modes with one constant; a `304`
+  costs nothing), identity encoding only, ranges supported.
+- **Listings** go through `ServeRendered`'s lazy form: the validator identity is the pinned
+  snapshot number, the `prefix`, the continuation position and the page size, so a page is a
+  `304` to a client re-walking an unchanged snapshot and never a stale `200` after a write; the
+  freshness value folded into it is the serving pointer's record (`signing-service.md` AC32).
+  Policy: `exact`, `no-cache`, no ranges.
+- **HEAD** on either route is the door's: the GET's status and headers with `Content-Length`
+  and no body (`signing-service.md`'s resolved HEAD decision, was Q24, AC32). AC7 asserts the
+  visible half.
+- **Cacheability is narrowed by the door, never by this handler.** `no-cache` is served as
+  declared only to an anonymous request on an anonymously readable repository; every other
+  response carries `private` as well, and a request authenticated by a URL-borne form gets
+  exactly `private, no-store` (`signing-service.md`'s resolved cacheability decision, was Q25,
+  AC38). Generic repositories are private by default, so in the common case every artifact
+  response reads `private, no-cache`. This format declares no URL-borne form, so the last rule
+  binds here only through a form `auth.md` recognises on every route.
+
 ### Prefixes are segment-aligned
 
 Listing and retention filter by the same kind of prefix, and it matches whole path segments: the
@@ -194,13 +263,17 @@ A per-repository setting, stored in the repository's metadata document, which th
 
 In **either** mode, a PUT whose content digest equals the digest already stored at that path is
 an idempotent success returning `200 OK`: it is not a write, creates no snapshot and does not
-refresh the version's write time (the resolved same-content decision below). A CI job retrying
+refresh the version's write time (the resolved same-content decision below; the shape
+`management-api.md`'s resolved unchanged-publish decision, was Q15, later gave every publish,
+except that generic's wire PUT is no management operation and so records nothing at all). A CI
+job retrying
 an upload after a lost response must not fail against an immutable repository for re-sending
 exactly what it already sent.
 
 **Immutability is not `read_only`.** `repository-lifecycle.md` defines the `read_only` state,
 which refuses every completed write, PUT, DELETE, management operation and retention pass alike,
-with `405` and its `read-only` problem type, and leaves reads bit-identical (its AC10).
+with `405` (its `read-only` problem type on the API; this format's `text/plain` shape on the
+wire, per the central-refusal rule above), and leaves reads bit-identical (its AC10).
 Immutability forbids replacing a path in place and still permits new uploads and deletes. A
 repository may hold both, and thawing a `read_only` immutable repository restores its uploads and
 deletes while the immutability rule keeps refusing replacement. The two are stored separately:
@@ -288,8 +361,11 @@ the shared word suggests.
 `none` (the two exemptions above), and `Virtual: supported` and `Rename: supported`
 (`format-handler-interface.md` AC13; `repository-lifecycle.md` runs its virtual and rename cases
 against both Tier 0 handlers). A virtual generic repository resolves a path in its first member
-that holds it, and a rename changes nothing this handler stores, since every reference is by
-repository identity. The lifecycle cases that spec places under `conformance/generic/`, all
+that holds it, and its listing is the members' listings merged by path, the first member
+winning a path several hold, with the continuation token pinning every member's snapshot and
+the virtual's own pointer generation, so a member-list change mid-walk fails the walk exactly
+as a pruned snapshot does (the resolved virtual-listing decision below, was Q14; AC19). A rename
+changes nothing this handler stores, since every reference is by repository identity. The lifecycle cases that spec places under `conformance/generic/`, all
 driven by the real `curl` client, are `lifecycle_test.go` (a repository created through the API
 serves from its first request, and answers `not-found` after deletion; `repository-lifecycle.md`
 AC1, AC15), `readonly_test.go` (a `read_only` repository refuses PUT and DELETE `405`, keeps
@@ -312,10 +388,21 @@ replay-match item rather than failing it. Those gaps fall to whichever format fi
 mechanism (OCI and npm on current sequencing) and are stated here so "generic is green" is never
 read as "the shared layers are proven".
 
-### Paths
+### Path grammar
 
-Settled (below): paths are arbitrarily deep. A path is metadata resolved through the shared
-model and never becomes a filesystem or object-store path; blobs stay keyed by digest alone.
+The grammar the owner settled (was Q3), stated so a refusal can name its rule: an artifact path
+is `{package}/{version}/{file}` with `{file}` itself one or more segments; every segment is
+non-empty, is neither `.` nor `..`, and is drawn from `[A-Za-z0-9._+-]`; the request path is
+percent-decoded exactly once at the edge and must then equal its own normalisation (no doubled,
+leading or trailing slash); and a PUT is refused when its path is a strict prefix of an existing
+artifact's path or has an existing artifact's path as a strict prefix, in either direction, so no
+name is ever both a file and a directory. A violation is `400` with a `text/plain` body naming
+the rule and the offending segment. The grammar's repository segment is
+`repository-lifecycle.md`'s name grammar, not this one.
+
+Settled (below): paths are deep beneath a package and a version. A path is metadata resolved
+through the shared model and never becomes a filesystem or object-store path; blobs stay keyed
+by digest alone.
 Every consequence that resolution priced in outline is now settled: the path maps onto the
 shared model via the GitLab hybrid and the grammar is strict with file-versus-prefix collisions
 rejected (both answered by the owner), and listing shape, overwrite semantics, retention scoping
@@ -326,7 +413,8 @@ conformance credential was settled by `auth.md` rather than here.
 
 - [ ] AC1: An authenticated client can PUT a file and GET back a byte-identical copy.
 - [ ] AC2: An unauthenticated PUT is rejected, and an unauthenticated GET to a private
-      repository is rejected.
+      repository is rejected, each answer carrying `Cache-Control: private, no-store` as
+      `auth.md`'s resolved decision (was Q27) fixes for every response its layer writes.
 - [ ] AC3: Uploading identical content to two different paths stores one blob (proves CAS
       deduplication through a real request path).
 - [ ] AC4: Listing the repository root returns every artifact beneath the given prefix,
@@ -339,12 +427,15 @@ conformance credential was settled by `auth.md` rather than here.
       packages or version it names, several rules remove the union of what each selects, and a
       rule whose filter reaches below a version is refused at configuration with a message
       saying retention deletes whole versions.
-- [ ] AC6: Conformance cases for all of the above pass with at least two `curl` client versions
-      pinned by image digest, satisfying the two-client-version rule in
-      `format-handler-interface.md`'s definition of done.
-- [ ] AC7: A HEAD request for an existing artifact returns the same status and metadata headers
-      (including size) as the corresponding GET, with no body; HEAD for a missing artifact
-      returns the same status as the missing GET.
+- [ ] AC6: Every conformance case this spec names passes with at least two `curl` client
+      versions pinned by image digest, satisfying the two-client-version rule in
+      `format-handler-interface.md`'s definition of done; no case moves a clock
+      (`conformance-harness.md` AC30), the one time-crossing assertion here (AC5's age rule)
+      living in the owning layer's integration test.
+- [ ] AC7: A HEAD request for an existing artifact returns the same status and headers
+      (`Content-Length`, `ETag`, `Last-Modified` and `Cache-Control` included) as the
+      corresponding GET, with no body, and the handler package contains no HEAD handling of
+      its own; HEAD for a missing artifact returns the same status as the missing GET.
 - [ ] AC8: After a DELETE, GET and HEAD for that path return 404 and the listing no longer
       includes it; deleting a version's last file removes the version from the listing too; the
       same path then accepts a new PUT in both overwrite modes, because generic retires no
@@ -399,6 +490,22 @@ conformance credential was settled by `auth.md` rather than here.
       enqueued for a `read_only` repository until `thaw` and none after deletion, and the pass's
       one snapshot commits only through the runner's fenced completion, so a pass whose lease
       was lost commits nothing.
+- [ ] AC18: Every artifact and listing response comes from the serving door: a GET's `ETag` is
+      the artifact's CAS digest and a matching `If-None-Match` answers `304` with no body; an
+      overwrite changes the `ETag` and moves `Last-Modified` forward; `curl -r` on an artifact
+      answers `206` with the exact requested bytes and a correct `Content-Range`, and a range
+      past the end `416`; a listing page re-requested with its `ETag` answers `304` on an
+      unchanged snapshot and `200` after a write; an anonymous GET on an anonymously readable
+      repository carries `Cache-Control: no-cache`, the same GET with a credential, and every
+      GET on a private repository, `private, no-cache`; and an architecture test fails if
+      `internal/format/generic` sets `ETag`, `Last-Modified` or `Cache-Control` or reads a
+      conditional or `Range` header itself.
+- [ ] AC19: Listing a virtual generic repository returns the union of its members' artifacts by
+      path, once each, a path held by several members reported with the first member's size and
+      digest, in byte order across members, paginated under the same snapshot pinning as a
+      local; a member added or removed during a walk fails the next page with an error naming
+      the member-list change, never a page merged from a different member set; `configure`
+      with a `settings` document on a virtual is refused `repository-type`.
 
 ## Test Plan
 
@@ -408,10 +515,10 @@ conformance credential was settled by `auth.md` rather than here.
 | AC2 | conformance | `conformance/generic/auth_test.go` |
 | AC3 | integration | `internal/format/generic/dedup_test.go` |
 | AC4 | conformance | `conformance/generic/listing_test.go` (recursive listing, byte order, segment-aligned prefix against a `ci` and a `ci-tools` package) |
-| AC5 | integration | `internal/retention/retention_test.go` (injected clock; generic repositories seeded through the shared model; age, count, prefix-filter, union and refused-filter cases) |
+| AC5 | integration | `internal/retention/retention_test.go` (injected clock, permitted because this is the owning layer's integration test and no harness case, `conformance-harness.md` AC30; generic repositories seeded through the shared model; age, count, prefix-filter, union and refused-filter cases) |
 | AC6 | ci | conformance job |
-| AC7 | conformance | `conformance/generic/hosted_test.go` |
-| AC8 | conformance + integration | `conformance/generic/hosted_test.go` (delete, then re-PUT in both modes); `conformance/generic/manage_binding_test.go` (twin artifacts in one `script`: one deleted through the operations endpoint, one through `curl -X DELETE`, real `curl` then 404s both; the `script`-driven case `management-api.md` AC24 requires for `delete-file`); `internal/format/generic/operator_test.go` (snapshot count per entry point, `delete` grant, empty `Outcome` retirement set; shared with `management-api.md` AC27's `internal/manage/operator_test.go`) |
+| AC7 | conformance + architecture test | `conformance/generic/hosted_test.go`; `internal/format/generic/arch_test.go` (no HEAD dispatch in the package; shared with AC18's header assertion) |
+| AC8 | conformance + integration | `conformance/generic/hosted_test.go` (delete, then re-PUT in both modes); `conformance/generic/manage_binding_test.go` (twin artifacts in one `script`: one deleted through the operations endpoint, one through `curl -X DELETE`, real `curl` then 404s both; the `script`-driven case `management-api.md` AC24 requires for `delete-file`); `internal/format/generic/operator_test.go` (snapshot count per entry point, `delete` grant, empty `Outcome` retirement set; shared with `management-api.md` AC27's `internal/manage/operator_test.go`); `conformance/generic/configure_test.go` (the `script`-driven `configure` case `management-api.md` AC24 requires: flip `immutable` through `PATCH`, real `curl` refused `409` after and accepted before; an unknown settings field refused `validation`) |
 | AC9 | unit | `internal/format/generic/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/core/matrix_test.go` (the exempt replay-match rendering and the `none` verification column, `conformance-harness.md` AC20, `artifact-verification.md` AC24) |
 | AC10 | conformance | `conformance/generic/listing_test.go` (a `curl` script that pages with a small page size and writes between pages) |
 | AC11 | conformance | `conformance/generic/overwrite_test.go` (repositories provisioned mutable and immutable through `setup`) |
@@ -421,6 +528,8 @@ conformance credential was settled by `auth.md` rather than here.
 | AC15 | conformance | `conformance/generic/policy_test.go` (a rule provisioned through the harness's `policies` key; written when the policy layer lands at charter step 4b; what `curl` shows replaces the `pending` binding-table row in the same change, `supply-chain-policy.md` AC20) |
 | AC16 | conformance | `conformance/generic/admin_test.go` (`management-api.md` AC19), `conformance/generic/lifecycle_test.go`, `conformance/generic/readonly_test.go` (mutable and immutable repositories provisioned `read_only` through the `repositories` entry's `state`, thawed from `script`), `conformance/generic/rename_test.go`, `conformance/generic/virtual_detach_test.go` (`repository-lifecycle.md` AC1, AC10, AC12, AC15, AC18, shared) |
 | AC17 | integration | `internal/retention/schedule_test.go` (one schedule per ruled repository, exclusivity under two runners, disabled on `read_only` and on deletion, re-enabled on `thaw`, lost-lease commit refused; shared with `async-operations.md` AC28 and `repository-lifecycle.md` AC10) |
+| AC18 | conformance + architecture test | `conformance/generic/serving_test.go` (`curl` with `-i`, `-r`, `--etag-compare`; a public and a private repository provisioned through `setup`; shared with `signing-service.md` AC38's `head_test.go` cases for the hosted path); `internal/format/freshness_boundary_test.go` (`signing-service.md` AC11, covers this package) |
+| AC19 | conformance | `conformance/generic/virtual_listing_test.go` (two members with an overlapping path, a `curl` walk with a small page size, a member detached between pages; the `repository-type` refusal through `PATCH`) |
 
 ## Implementation Phases
 
@@ -431,8 +540,10 @@ conformance credential was settled by `auth.md` rather than here.
 - `Capabilities()` declaring proxy `unsupported`, reference-implementation availability `none`,
   `Virtual: supported` and `Rename: supported`
 - The per-route addressed-object declaration and the pattern-scope cases
+- Every read through `ServeFile` and `ServeRendered` with the two serve policies, and no header
+  code in the package (AC7, AC18); the merged virtual listing (AC19)
 - `DELETE` as the binding onto `management-api.md`'s `delete-file`, the handler's `Operator` with
-  that one kind and an empty retirement outcome (AC8); the operator API and lifecycle cases as
+  that kind and `configure` and an empty retirement outcome (AC8); the operator API and lifecycle cases as
   `management-api.md` Phase 1 and `repository-lifecycle.md` Phases 1 and 2 land at charter
   steps 2 and 3 (AC16)
 
@@ -457,9 +568,32 @@ Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 
 None open. Q4 to Q7 were adopted on 2026-09-26 under the owner's standing delegation, and folding
 them exposed five further judgment calls (Q9 to Q13), each written in the decision shape and
-adopted the same way; the owner may reverse any of them. Q2 and Q3 were answered by the owner on
-2026-09-23. Resolved decisions are kept rather than deleted, so the reasoning survives the next
-time someone asks why it was done this way.
+adopted the same way; Q14 was adopted the same way at the 2026-10-08 gate review; the owner may
+reverse any of them. Q2 and Q3 were answered by the owner on 2026-09-23. Resolved decisions are
+kept rather than deleted, so the reasoning survives the next time someone asks why it was done
+this way.
+
+### Resolved: listing a virtual generic repository (was Q14)
+
+**Adopted 2026-10-08 under the owner's standing delegation.** Raised at the gate review:
+`Capabilities()` declares `Virtual: supported` and a virtual resolves artifact paths in its first
+member, but the listing route, the one route with no addressed object and the one scripts
+mirror from, said nothing about a virtual.
+
+**Recommendation:** A, merge the members' listings by path with the first member winning,
+because it is the listing that agrees with what GET through the same virtual returns, and the
+snapshot pinning already in the token extends to one snapshot per member.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Merged listing: union by path, first member wins, token pins every member's snapshot and the virtual's pointer generation** (adopted) | A listing consistent with the virtual's GET; mirror scripts and the UI work against a virtual as against a local | A k-way merge per page; a member-list change mid-walk fails the walk, which the client restarts |
+| **B. Refuse the listing on a virtual** | Nothing to specify | A virtual cannot be browsed or mirrored, which is most of what a generic virtual is for |
+
+**Why this is yours:** it is a public listing contract users will script against.
+
+Accepted cost: a walk across a member-list change restarts. B lost because it makes a virtual
+useless to the scripts that use the listing most. Specified in Design ("Capabilities and
+lifecycle") and asserted by AC19.
 
 ### Resolved: listing shape (was Q4)
 
@@ -716,3 +850,4 @@ metadata and never becomes a filesystem path.
 | 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review: adoption and fold. Adopted Q4 option A (flat recursive listing on the repository root with a segment-aligned prefix), Q5 option C (overwrite by default, immutable mode refusing replacement with 409 but not deletion), Q6 option A (per-repository rules; the version is the deleted unit, count rules count within a package, filters reach at most `{package}/{version}`, one last-write clock), Q7 option A (formal replay-match exemption mirroring the proxy one: spec record, `Capabilities()` declaration, matrix renders exempt). Folding exposed and adopted Q9 (pagination pinned to the first page's snapshot), Q10 (same-digest re-PUT is an idempotent 200 in both modes, not a write), Q11 (retention cannot be handler code under the pinned interface, so it is a format-agnostic `internal/retention` pass over shared entities with core-parsed rules), Q12 (declared write boundaries: one snapshot per PUT, DELETE and retention pass, with per-package exclusion of concurrent writes) and Q13 (rules combine as a union of deletions). Design rewritten around these, including the statement that retention adds no GC mark root and frees space only after the snapshot-retention window. AC4, AC5 and AC8 rewritten; AC9 to AC13 added with Test Plan rows; phases and `covers` updated. Sibling amendments reported rather than made: format-handler-interface.md (a `Capabilities()` reference-implementation field and definition-of-done item 2), data-model.md (core-parsed retention rules on `Repository`). |
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the per-route addressed-object table `auth.md` requires (artifact path named on PUT, GET, HEAD and DELETE; listing none, so a patterned token cannot list, its AC24), with AC14 carrying the pattern-refusal case `auth.md` AC8 requires, the AC19 grammar cases one segment deeper, and the refused listing, in `conformance/generic/auth_test.go` plus the per-route table test; the supply-chain per-format rendering of the typed policy refusal (403, `text/plain` naming the policy; AC15, Phase 3 after charter step 4b); the 'Depended on' paragraph now cites the charter's step-2 management surface core and the owed `management-api.md`, and the harness seed path. Found already done: the data-model side of retention (core-parsed rules on `Repository`, per-version last-write time) landed in the foundation reconciliation. Nothing else queued for this file. Stays draft. |
 | 2026-09-28 | a6d72b3 | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the management-api authoring (items 8, 11, 12) and its reconciliation table: the "Depended on" paragraph cites `management-api.md` Phase 1 (`POST`/`PATCH /api/v1/repositories`, retention rules core-parsed, immutability as the handler's `settings` document dispatched as `configure`, its AC19) and `conformance/generic/admin_test.go`; `DELETE` is a binding onto the `delete-file` kind, the handler's one declared `Operator` kind, retiring nothing in either overwrite mode, with the reason (the resolved overwrite decision already permits delete-and-re-upload; no lockfile binds a generic path), so no `Retirement` record is written; AC8 extended with the re-PUT and the twin-entry-point binding case that its AC24 requires. From the repository-lifecycle authoring (items 15 and 18) and the format-handler-interface reconciliation (item 3): `Capabilities()` declares `Virtual` and `Rename` supported (AC9 extended; new "Capabilities and lifecycle" section), immutability stated as distinct from `read_only` with both able to hold, and the `lifecycle_test.go`, `readonly_test.go`, `virtual_detach_test.go`, `rename_test.go`, `admin_test.go` and `expiring_token_test.go` cases gathered as AC16. From the async-operations authoring (item 9, re-raised by the upstream and async reconciliation as still unapplied): the pass is the `retention.pass` kind, one `Schedule` per ruled repository, exclusivity key `repo:{repository}`, disabled while `read_only` or deleted (Design "When it runs", AC17, Phase 2). From the artifact-verification authoring (item 16) and catalogue AC7: this format asks for no verifier entry and the matrix's verification column reads `none` (Scope, AC9). From the supply-chain reconciliation (item 11) and Open item 5: the refusal goes through `WriteRefusal` with the shared status-line phrase (was Q10, AC18) and AC15's case fills the `pending` binding-table row (its AC20, harness AC26). Found already done: the harness and generic fold's items (data-model retention rules, applied at the foundation reconciliation) and the auth and interface fold's item 2 (applied at da0aecd). No question raised. `node scripts/check-spec.js` zero failures for this file. Stays draft pending a gate review. |
+| 2026-10-08 | b10d639 | Fable gate review: full review (claim verification of every cited sibling criterion at HEAD, adversarial lens on the PUT/GET/HEAD/DELETE surface, the overwrite modes and the immutability switch, the delete-file binding, retention, Range and listing; constitution compliance) + the foundation decisions landed since a6d72b3 folded (signing-service was-Q14, was-Q24, was-Q25 and AC38; auth was-Q27; management-api was-Q13 to Q21; conformance-harness was-Q7, was-Q8, AC28, AC30). Resumed after a session kill: the 11-line Scope edit kept and its forward references written. | Every cited sibling AC re-verified at HEAD (management-api AC19, AC24, AC27; lifecycle AC1, AC10, AC12, AC15, AC18; async AC28; auth AC8, AC19, AC24; FHI AC4, AC7, AC12, AC13, AC14; harness AC11, AC20, AC26; artifact-verification AC24; catalogue AC7; credential-management AC5; supply-chain AC18, AC20; data-model AC35; storage AC21), all still at the cited numbers. Findings fixed: (1) the handler declared `delete-file` as its only kind while its immutability switch travels as a `settings` document, which management-api refuses `validation` for a handler with no `configure`, so the switch could never be set; `configure` is now declared with the document `{"immutable": bool}`, a `script` case and the rename-notice rule (new section "The handler's `Operator` kinds", AC8's row). (2) Nothing said how artifacts and listings are served: every read now goes through `ServeFile` and `ServeRendered` with two declared serve policies (`exact`, `no-cache`, ranges on artifacts), HEAD is the door's (was-Q24), cacheability narrowed to `private` on private repositories and authenticated requests (was-Q25, AC38), no header code in the package (AC11's boundary test); new AC18 with a conformance case and the architecture test; AC7 reworded onto the door. (3) The path grammar the owner settled was recorded only as a summary; its rules are now stated so a `400` can name one (segment set, no dot or empty segment, single percent-decoding, both directions of the file-versus-prefix collision). (4) `Virtual: supported` was declared with no listing semantics for a virtual: Q14 raised and adopted under the standing delegation (merged by path, first member wins, token pins every member's snapshot and the virtual's pointer generation; new AC19). (5) Central refusals on the wire are rendered in this format's `text/plain` shape (management-api was-Q16), so the `405` read-only sentence no longer promises a problem type on a `curl` route; the PUT is never spooled (was-Q20) and declares its path as its claim (was-Q14); the DELETE binding is exactly as wide as its operation (was-Q13, AC8); the same-content re-PUT cites was-Q15's shape while recording nothing, being no operation. (6) AC2 asserts `private, no-store` on the authentication layer's answers (auth was-Q27). (7) AC6 claimed conformance cases "for all of the above" while AC3, AC5, AC12, AC13 and AC17 are integration tests; reworded, and the one injected clock (AC5) placed in the owning layer per harness AC30, no harness case crossing time. Adversarial pass found nothing else blocking: the delete-and-re-upload hole in immutability is priced and gated on a separate `delete` grant; retention's per-package exclusion holds under the count rule; a listing walk outliving its snapshot fails loudly. No corpus half is recorded for this format, so harness AC28's exception list needs no generic row (reported for the harness to confirm). Zero open questions, 19 criteria each with a Test Plan row; `node scripts/check-spec.js` zero failures for this file. draft -> planned. |

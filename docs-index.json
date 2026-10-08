@@ -188,7 +188,7 @@
     "path": "docs/internal/plans/formats/generic.md",
     "description": "Spec for the generic/raw artifact format - the trivial protocol used to prove the harness, CAS, auth and CI wiring end to end.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "6",
     "covers": [
       "internal/format/generic/**",
