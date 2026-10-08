@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at 20ff418 with the foundation wave on Opus (not a review): the registry, its tree hash and the listing generated through signing-service's Indexer and generator package internal/format/julia/index as an unsigned consumer with no key, the previous generation carried forward by the generator, per-document lock and determinism (AC23, AC27); publish, withdraw and restore (yank), annotate (deprecate), delete-version and delete-package on management-api with core-held retirement and the declared-coordinate rule (AC3 to AC8); tree hashes through artifact-verification's internal/verify/treehash integrity entry via the Verifier, as the proxied path's handler-supplied verifier (AC9, AC17); the 20-second low-speed abort answered by proxy-cache's FirstByteWithin (was-Q16, AC19 shared with its AC21); upstream-adapters transport with allowlisted redirect hosts and the zstd opt-in (AC20); proxy-cache event classes and refresh (AC16, AC21); WriteRefusal and the restricted-egress binding row (AC14); client confinement now inherited from the harness (was-Q6); virtual as an unmerged union with no index.merge (AC22); Capabilities and the rename case (AC28). Earlier: authored 2026-09-26 from captures of Julia 1.10.12 and 1.13.0; eight questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-08 at 792cd2e: a full review pass over the Opus-authored whole (every sibling citation verified at HEAD, the protocol claims re-read in the pinned julia:1.13.0 image's Pkg, Tar, Artifacts and Downloads sources, the adversarial lens at full strength on the Pkg server protocol, the General tree, resolution, the 1.13-only markers and pinned manifests, constitution compliance) plus the re-examination of the eight questions adopted on Opus: all eight confirmed, Q2, Q3 and Q4 with their folds amended. Folded: supply-chain was-Q11 (the UUID a package-level advisory key reported at write time, AC26); proxy-cache was-Q19, Q21, Q23 and Q24 (retained count zero, the index and listing never evicted, anchor class none, HEAD on proxied routes); signing-service was-Q14 and Q24 (ServeFile for every stored file, ServeRendered for the virtual listing, HEAD as the GET without its body); management-api was-Q14, Q15 and Q20 (claims checked again at commit, the unchanged publish, the spool bound); upstream-adapters AC23 (the flavor probe moved from configuration to the first request, AC20 rewritten); the auth Pkg row now present. Found and fixed: no entry rules or decompression bound on the hosted ingest and the proxied verifier (AC9); a proxied representation keyed by the request rather than the body's magic bytes (AC10); a package with every version deleted still named in Registry.toml (AC27); JuliaArtifacts.toml unhandled (AC11); virtual resolution underspecified when two members hold one UUID, and a refusal that could fall through (AC14, AC22); the window between a generation's fetch and its index build (AC24); build metadata as part of a claim's identity (AC4). Two rows owed to conformance-harness.md's exception list, reported. 28 criteria, each with a Test Plan row; zero open questions; check-spec zero failures. Earlier: reconciled 2026-09-28 at 20ff418 on Opus with the foundation wave; authored 2026-09-26 on Opus from captures of Julia 1.10.12 and 1.13.0 with eight questions adopted under the standing delegation."
 description: "Spec for the Julia format: the Pkg server protocol (the registries listing, registry, package and artifact tarballs addressed by git tree hash), hosted as a registry this registry generates from management-API publishes and proxied from pkg.julialang.org, with the tree hash verified as a coordinate rather than used as a storage key, and virtual repositories as the one way a client sees a private registry beside General."
 author: michielvha
 goal: "Serve Julia teams a private registry that Pkg consumes through JULIA_PKG_SERVER with no git anywhere, and a pkg.julialang.org cache whose every package and artifact tree is verified against its git tree hash before it is committed, with Pkg on the LTS and current lines as the oracle."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/julia/**"
   - "conformance/julia/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed"
 ---
 
 # Plan: Julia Pkg server format
@@ -120,7 +119,7 @@ handler (`format-handler-interface.md` AC8). Julia is Tier 3, so the catalogue's
 is recorded here anyway, from this side, because a gate enforced on one side only is enforced
 nowhere.
 
-**The shared signing and index service must be `planned` before Phase 1.** Every registry
+**The shared signing and index service, `planned` on Fable 2026-09-30, precedes Phase 1.** Every registry
 tarball a hosted repository serves is a write-triggered generated document produced by
 `docs/internal/plans/foundation/signing-service.md`, which the charter builds at step 7 as the
 production form of what the step 4a prototype learned (`write-triggered-services-prototype.md`):
@@ -133,7 +132,7 @@ of that service is stated in Design ("What the signing and index service must pr
 mapped onto its contract, never designed here. A Julia handler without it can serve no registry,
 and a Pkg server with no registry serves nothing a client can resolve.
 
-**The management API must be `planned` before Phase 2, and it is the only hosted write path.**
+**The management API, `planned` on Fable 2026-09-30, precedes Phase 2 and is the only hosted write path.**
 Publish, yank, unyank, deprecate, delete a version and delete a package are operations of
 `docs/internal/plans/foundation/management-api.md`, whose core the charter builds at step 2 and
 whose publish lands in its Phase 2; its cross-format reconciliation table carries this format's four
@@ -142,7 +141,8 @@ without it, because the harness's `state` vocabulary seeds versions through the 
 and the write-path hook regenerates the registry for seeded state as for any write; the publish and
 management criteria are untestable until that surface exists.
 
-**The proxied path depends on shared services that now exist as specs**: the transport of
+**The proxied path depends on shared services that are now `planned`** (`proxy-cache.md` on
+2026-09-30, `upstream-adapters.md` and `artifact-verification.md` on 2026-10-01): the transport of
 `docs/internal/plans/foundation/upstream-adapters.md` (built at charter step 4; its requirements
 table row for this format: cross-host redirects, the credential to the configured host only, the
 zstd opt-in and no `Julia-CI-Variables`, its AC4 to AC8), the fetch-and-cache contract of
@@ -370,7 +370,20 @@ never a key the store resolves"):
   server produce, captured in `tar -tv` of the `Example` tarball), then compressed in each
   representation; the re-pack's tree hash is recomputed and must equal the coordinate before
   commit. What the client unpacks is then exactly what was hashed, and a received tarball with
-  hard links, device files or absolute paths never reaches a client in its original form.
+  hard links never reaches a client in its original form. The received archive is read under
+  the rules the client's own extraction implies: an entry whose path is absolute, climbs with
+  `..` or repeats an earlier path, and a device, FIFO or socket entry, is refused `validation`
+  (422), because no git tree can hold it and the tree hash is undefined for it; a hard link is
+  materialised as the file it names, which is what `GitTools.tree_hash` sees after extraction.
+  Materialising the tree for the re-pack is the one place this format holds a whole archive, so
+  it runs under a **decompression bound**, a handler constant on entry count and on total
+  uncompressed bytes as a multiple of the compressed size (`homebrew.md`'s and `conan.md`'s
+  shape), refused `validation` naming the bound after reading at most the bound; the multipart
+  form that may carry the archive is bounded before it by `management.publish_spool_limit`
+  (`management-api.md`'s resolved spool-bound decision, was Q20, AC36). On the proxied path the
+  handler-supplied verifier wraps the shared entry in the same bound, and an archive that
+  exceeds it is a verifier refusal: nothing committed, no negative entry, the reason recorded
+  (`proxy-cache.md` AC20).
 
 The consequence stated for operators: the SHA-256 that a package's `Artifacts.toml` records
 for its `download` URLs is the upstream builder's tarball digest and matches neither
@@ -388,28 +401,50 @@ application/octet-stream`, **no `Content-Encoding`** (the body is the archive, n
 it, which is what the live storage server does), and `Vary: Accept-Encoding`. A representation
 not yet held is produced on demand: on the hosted path by compressing the canonical re-pack, on
 the proxied path by fetching the upstream's representation for the same coordinate; both are
-verified before commit. The listing is plain text and never compressed.
+verified before commit. On the proxied path the representation a fetch yields is keyed by the
+magic bytes of the body that arrived, never by the `Accept-Encoding` the handler sent: a private
+PkgServer.jl without zstd answers a zstd-accepting request with the gzip tarball, which is stored
+as the gzip representation and served as it is to the zstd-accepting client, since both clients
+detect the format by magic bytes (captured). The listing is plain text and never compressed.
+
+A `HEAD` on any route of either path is the `GET` with the body withheld. On the hosted path
+the shared doors answer it with the `GET`'s status and headers, `Content-Length` included,
+rendering nothing for a stored document or file (`signing-service.md`'s resolved HEAD decision,
+was Q24, AC32); on the proxied path the layer never forwards a `HEAD`, a cold one makes the
+upstream `GET`, fills the cache after the verified commit and is answered from it
+(`proxy-cache.md`'s resolved HEAD decision, was Q24, AC32). Neither client sends a `HEAD`; the
+rule is for `curl` and is stated here so that this handler carries no branch on the method.
 
 ### Mapping onto the shared model
 
 The levels are exactly those `data-model.md` provides; no table is added.
 
 - `Package.name` holds the Julia package name as published, and the package-level document
-  holds the UUID and the `[metadata.deprecated]` table when set. Deleted versions are **not**
+  holds the UUID and the `[metadata.deprecated]` table when set. The UUID is also reported as
+  the package's **advisory key** on the metadata-store write that records the row, hosted and
+  proxied alike, and stored core-parsed on the `Package` row outside the document
+  (`supply-chain-policy.md`'s resolved advisory-key decision, was Q11, AC24; `data-model.md`
+  AC46), each version reporting its canonical version string as the version-level key; the
+  policy engine matches on the stored key, never on a value supplied with a request (Design,
+  "Integrity, signing and provenance"). Deleted versions are **not**
   recorded here: each is a core-held `Retirement` record, written in the deleting operation's
   transaction, outside snapshot content and never pruned (`management-api.md`, "Retirement is
   core-held", its resolved retirement-placement decision, was Q3 there; `data-model.md` AC35), so
   no repoint can restore a document that predates a deletion. Julia identifies a package by its UUID, not its name, and the name is
   unique within one registry; a hosted repository is one registry, and a proxied repository's
   names come from its upstream's registries, so a `Package` row per name per repository is
-  sound. A virtual repository has no rows of its own.
+  sound. A proxied repository's `Package` and `Version` rows are created at the first request
+  for a package, from the registry index (cache materialisation, which creates cached references
+  and rows and never content), so a General remote carries rows only for what its clients asked
+  for, and the advisory key rides that first write. A virtual repository has no rows of its own.
 - `Version.version` holds the canonical `VersionNumber` string (`1.0` is stored and served as
   `1.0.0`; build metadata such as `1.18.0+0`, which every JLL package uses, is kept). The
   version-level document holds the tree hash, the dependency, compatibility, weak-dependency
   and weak-compatibility entries read from the published `Project.toml`, the `yanked` flag,
   and the tree hashes of the artifacts the version carries.
 - Each version's files are its package representations and the representations of each
-  artifact it carries, all keyed by CAS digest.
+  artifact it carries, all keyed by CAS digest and served through `ServeFile`, whose `ETag` is
+  the CAS digest (`signing-service.md` AC11, AC32), so no handler code sets a validator.
 - The repository-level document of a hosted repository holds the registry's UUID, name and
   description fixed at creation, the generated registry documents (below), and the lookup
   from `(uuid, hash)` and artifact `hash` to owning versions; a `remote` repository's holds its
@@ -453,6 +488,14 @@ as the service's design:
   document therefore keeps the tarballs of the current generation and of the one before it,
   and a request for either is served; an older hash answers `404`, and the client's next
   command reads the listing again.
+- **A package with no current version is omitted.** `Registry.toml` names only packages holding
+  at least one current version (yanked ones included); after `delete-package`, or once every
+  version is deleted, the package leaves the generated tree while its `Package` row survives, so
+  the client's `is_pkg_in_pkgserver_registry` answers no and `Pkg.instantiate()` of a manifest
+  pinning a deleted version goes straight to the fallback chain, which a hosted package ends
+  with no egress. Pkg tolerates a listed package without a `Versions.toml`
+  (`registry_instance.jl` reads an empty table, checked in the 1.13.0 image), so this is a
+  choice, made so that the registry never names a package that resolves to nothing.
 - **A repoint restores the documents.** Because the generated documents live in the snapshot
   delta, a rollback serves exactly the registry of the snapshot it targets; a pointer moved
   backwards across a deletion leaves the deleted coordinate retired, because its `Retirement`
@@ -555,15 +598,24 @@ What this registry enforces on ingest:
   another UUID, or of the same UUID under another name, is refused with `409`; so is a name
   equal to an existing one under Unicode-insensitive case folding, because Pkg installs into
   `{depot}/packages/{name}/` and two such names collide on a case-insensitive file system.
-- **A coordinate that already exists with the same tree hash is idempotent** (no snapshot: the
-  CI retry); **with a different tree hash it is refused with `409`**, because every
-  `Manifest.toml` pins the tree hash. **A retired coordinate is refused** with any tree, including
-  after the deleting snapshot has been pruned and across a backwards repoint, by the shared write
-  path before `Apply` runs, with the `retired` problem (409) naming it (`management-api.md` AC12;
-  `data-model.md` AC35): the cross-format rule, with nothing for this handler to carry forward.
+- **A coordinate that already exists with the same tree hash is idempotent**: the handler
+  declares the unchanged publish and the operation completes with no snapshot, no pointer or
+  freshness change and `unchanged: true` in its `Operation` (the CI retry; `management-api.md`'s
+  resolved unchanged-publish decision, was Q15, AC5); **with a different tree hash it is refused
+  with `409`**, because every `Manifest.toml` pins the tree hash. **A retired coordinate is
+  refused** with any tree, including after the deleting snapshot has been pruned and across a
+  backwards repoint, by the shared write path when the claim `{name}/{version}` is declared,
+  before `Apply` runs, and again at commit under the repository head, with the `retired` problem
+  (409) naming it (`management-api.md`'s resolved claim decision, was Q14, AC12; `data-model.md`
+  AC35): the cross-format rule, with nothing for this handler to carry forward. The claim is the
+  canonical `VersionNumber` string with its build metadata, because Julia orders build metadata
+  (`v"1.18.0+1"` is a distinct version above `v"1.18.0+0"`, the form every JLL release takes,
+  checked in the 1.13.0 image) and the registry lists them as distinct versions, so retiring
+  `1.18.0+0` leaves `1.18.0+1` publishable.
 - Each carried artifact tarball is hashed with the artifact semantics and refused with `422`
   when its tree hash differs from the one it claims or from every hash the version's
-  `Artifacts.toml` names; an artifact the `Artifacts.toml` names and the publish neither carries
+  `Artifacts.toml` names (or `JuliaArtifacts.toml`, which `Artifacts.jl` looks for first, its
+  `artifact_names`); an artifact the `Artifacts.toml` names and the publish neither carries
   nor references is allowed and is served by the client's own fallback to its `download` URLs,
   which the response records so the operator sees what this registry will not serve.
 - The response is `201` with a completed `Operation` whose result document names the coordinate,
@@ -624,10 +676,10 @@ cache materialisation creates cached references rather than content.
 
 Pkg's one presentation form is `Authorization: Bearer` with the `access_token` from
 `{depot}/servers/{host}/auth.toml` (the protocol reference's "Authentication" and
-`get_auth_header`), which `auth.md`'s verifier already accepts as its universal `Bearer` form (its
-presentation-form table, AC31). Its client table still has no Pkg row, although consequences Open
-item 16 asked for one; it is reported again as a sibling consequence. How this meets `auth.md`,
-whose rules this spec does not bend:
+`get_auth_header`), which `auth.md`'s verifier accepts as its universal `Bearer` form (its
+presentation-form table, AC31) and whose client table carries the `julia` (Pkg) row from this
+spec's capture (the file keyed by host and port, sent only over `https://` or to a loopback host,
+four listing retries). How this meets `auth.md`, whose rules this spec does not bend:
 
 - **Provisioning is a file.** The harness writes `access_token = "{token}"` to
   `{depot}/servers/{host}/auth.toml` before the client starts (captured working on both at
@@ -661,7 +713,13 @@ there; `format-handler-interface.md` AC12). The canonical named object is `{name
 the package name and canonical version that the `(uuid, hash)` resolves to through the
 repository's lookup (hosted) or its registry index (proxied); a `(uuid, hash)` that resolves to
 nothing makes `Scope(r)` return an error, which denies the request with the unauthorized
-response, a `404` for an authenticated caller.
+response, a `404` for an authenticated caller. That lookup is a metadata-store read and nothing
+else, inside the interim bound `format-handler-interface.md` sets on what `Scope(r)` may read
+("What `Scope(r)` may read"); on a cold remote the index is empty, so the request is denied
+exactly as the unknown-coordinate rule would refuse it (AC24). When several versions of one
+package share a tree (one tree registered under two version numbers, which nothing in the
+registry format forbids), the request addresses every one of them and is authorized only when
+every one is in pattern.
 
 | Route | Object kind | Canonical object |
 |---|---|---|
@@ -718,6 +776,19 @@ build fleet and cites this format's capture ("Refusal enforceability is a deploy
 precondition"), generating the operator page from that table. Each refusal writes one record,
 readable at `GET /api/v1/repositories/{name}/refusals` (`supply-chain-policy.md` AC5).
 
+Three edges of the refusal, stated so no implementation guesses them. A package route whose tree
+is shared by several versions is refused when the shared resolution refuses any of them, since
+the bytes are the same. An artifact route carries no coordinate, so the shared resolution
+evaluates it by blob digest alone (scan verdicts and digest-level condemnations); a coordinate
+rule naming a package does not reach the artifacts its versions carry, the policy-side twin of
+`auth.md`'s content-addressed cost. In a virtual repository the refusal is the answer: a
+`(uuid, hash)` the first member holding it refuses is never resolved through a later member.
+And under `supply-chain-policy.md`'s refuse-until-scanned setting `FirstByteWithin` is not
+honoured (its "Scanning is asynchronous"; `proxy-cache.md` AC21 as amended on its recheck), so a
+cold proxied miss on such a repository fails Pkg's 20-second deadline and the client does what
+its binding row says, failing with restricted egress and installing from GitHub without it: the
+setting's cost on this format, stated where it is paid.
+
 ### Integrity, signing and provenance
 
 The git tree hash is the ecosystem's only integrity primitive, carried by the registry for
@@ -748,11 +819,15 @@ defines the `Julia` ecosystem** and every record names its package by name **and
 (`pkg:julia/{name}?uuid={uuid}`). Matching by name alone would condemn a private package that
 happens to share a public name, the one confusion Julia's UUIDs otherwise rule out, so the
 requirement carried to `supply-chain-policy.md` is that a Julia coordinate is matched by its
-UUID, which the handler supplies with the name and version when it calls the shared resolution;
-that spec's coverage table now carries it ("Julia | covered (`Julia`, 1,717 JLSEC advisories, no
-`MAL-` entries) | the package UUID, `pkg:julia/{name}?uuid={uuid}`, never the name alone", its
-AC17), with the advisories' `SEMVER` ranges under its vendored semver ordering. AC26 states the end
-state. No `MAL-` entry exists for the ecosystem today, so the feed carries no security signal for
+UUID, which the handler reports as the package-level advisory key on the write that records the
+`Package` row (a hosted publish; on the proxied path the index-driven materialisation of the row
+at first request) and the fetch-and-cache request carries, stored core-parsed outside the
+document and matched at resolution and at a feed sync with no request in flight (its resolved
+advisory-key decision, was Q11, AC24; `data-model.md` AC46), never supplied per request; that
+spec's coverage table carries it ("Julia | covered (`Julia`, 1,717 JLSEC advisories, no `MAL-`
+entries) | the package UUID, `pkg:julia/{name}?uuid={uuid}`, never the name alone", its AC17),
+with the advisories' `SEMVER` ranges under its vendored semver ordering over the version-level
+key, the canonical version string. AC26 states the end state. No `MAL-` entry exists for the ecosystem today, so the feed carries no security signal for
 Julia yet; the shared rule applies unchanged if one appears.
 
 ### The proxied path
@@ -760,10 +835,14 @@ Julia yet; the shared rule applies unchanged if one appears.
 The handler owns the request and classifies for the proxy layer's fetch-and-cache API per the
 settled decisions in `proxy-cache.md`. The upstream is a Pkg server base URL
 (`https://pkg.julialang.org` or a private PkgServer.jl) with a configured **flavor**
-(`conservative` by default, `eager` by choice), validated at configuration by fetching
-`/registries.{flavor}` and requiring at least one line of the listing grammar (AC20), beside the
-transport validation `upstream-adapters.md` runs on every remote create and update (its AC23; an
-invalid upstream is refused `upstream-invalid`). The transport is that spec's `https` adapter under
+(`conservative` by default, `eager` by choice). Creation runs only the transport validation
+`upstream-adapters.md` runs on every remote create and update (its AC23, which accepts an
+unreachable but well-formed upstream and refuses a malformed one `upstream-invalid`); the
+protocol check runs at the first request that needs the upstream, where every format's moved
+once that sibling settled it: a `/registries.{flavor}` whose body holds no line of the listing
+grammar is a fetch failure answered `502` naming the flavor path, recorded under
+`cache_fetch_failures_total`, adopted as nothing and retried at the next request (AC20). The
+transport is that spec's `https` adapter under
 the upstream's allowlist and credential role, and its requirements table carries this format's row;
 the protocol half (which documents to fetch, the flavor, the registry index) stays in this handler.
 Each item this spec asked of it is placed: redirects across hosts are followed inside the adapter
@@ -800,7 +879,18 @@ which it does with `zstd, gzip` only for the zstd representation, receiving the 
   what resolves a `/package/{uuid}/{hash}` to the `{name}/{version}` the policy call and the
   addressed object need; General at 11 MB gzip is the design point, so the parse streams and
   a CI benchmark gate bounds its time and peak memory (AC15), because `CLAUDE.md` makes
-  performance a gate.
+  performance a gate. The parse runs inside the fetch that caches the generation, in the
+  handler's verifier once the tree hash has matched, and the index is rewritten in the commit
+  that creates the tarball's cached reference, so a version new in a generation is resolvable
+  from the moment a client holds that generation (the race AC24 closes). The index and the
+  cached listing are the remote's current documents: never LRU-evicted, outside the cache quota
+  and counted in `cache_metadata_bytes{repository}` (`proxy-cache.md`'s resolved
+  metadata-eviction decision, was Q21, AC29), the honest cost of an index that only grows,
+  bounded by General's version count rather than by any request. The format declares a
+  retained-revision count of zero (its was-Q19, AC27): every generation a client can request is
+  a cached file under its own reference, no superseded listing is kept, and nothing is held by
+  mention. Nothing on this wire is signed, so each adoption runs under anchor class `none` (its
+  AC25; `data-model.md` AC44) and what a signed virtual may admit never arises.
 - **Package and artifact tarballs are immutable artifacts**, cached indefinitely, fetched with the
   tree-hash entry with package and artifact semantics as the verifier and the same
   `FirstByteWithin`, never committed on a mismatch, a truncated body (the adapter's `ErrTruncated`
@@ -863,11 +953,18 @@ any document** (the resolved virtual-repository decision below):
 
 - Its listing is the concatenation of its members' listings in member order, **deduplicated by
   registry UUID, first member wins**; a hosted member contributes its one line and a remote
-  member the lines of its cached upstream listing.
-- A registry, package or artifact request resolves through the members in order: a registry
-  by `(uuid, hash)`, a package through the member whose listing names the registry that holds
-  its UUID, an artifact by hash through each member in turn. Content addressing makes the
-  first match authoritative, since a tree hash names one tree.
+  member the lines of its cached upstream listing. It is rendered per request through
+  `ServeRendered`'s lazy form, its `Last-Modified` the latest of the virtual's own pointer
+  record and its members' records and its `ETag` covering that value (`signing-service.md`
+  AC32), because no handler sets a validator itself (its AC11); Pkg reads neither, so the
+  door's rule costs nothing here.
+- A registry, package or artifact request resolves through the members in order by its whole
+  coordinate: a registry by `(uuid, hash)`, a package by `(uuid, hash)` through the first member
+  whose registry index or lookup holds that pair (two members may hold one UUID, a hosted fork
+  beside General, and only the member holding the requested tree serves it), an artifact by hash
+  through each member in turn. Content addressing makes the first match authoritative, since a
+  tree hash names one tree; a refusal by the first member holding the pair is the answer, never
+  a fall-through (Design, "Policy refusals on the wire").
 - Configuring a virtual repository whose members' registries share a **name** under different
   UUIDs is refused at configuration naming both, because Pkg files packed registries by name
   and the second would replace the first in the client's depot.
@@ -952,10 +1049,17 @@ in a container pinned by digest in front of a storage stand-in, so `Capabilities
 reference-implementation availability `available`; one fact about it is recorded rather than
 trusted: at the pinned commit its download verification is commented out
 (`src/resource.jl`), so the corpus asserts this registry's verification against the recorded
-hashes, never against the reference's behaviour. For the hosted write surface there is no
-reference implementation of a publish anywhere (the ecosystem publishes through git), so
-publish flows are exercised through the management endpoint and verified by the real clients'
-installs, an exception-list entry. Recording gates on the harness's redaction criterion
+hashes, never against the reference's behaviour. Both halves are rows of
+`conformance-harness.md`'s authoritative-reference exception list (its AC28, which fails an
+unlisted local reference): the hosted read half, recorded against that PkgServer.jl in front of
+a storage stand-in serving the fixture registry, packages and artifact hashed by the pinned
+images' own Pkg, because no public Pkg server serves a registry a test can publish into, while
+the proxied half is recorded against `pkg.julialang.org`; and a write row reading none, because
+no Julia client publishes to a Pkg server (the ecosystem publishes through git), so publish and
+every management kind are `script`-driven cases proven by the effect the real clients observe
+(its AC26). The rows are reported to that spec as a sibling consequence; the reference's digest
+lives in the corpus manifest (its resolved digest-location decision, was Q7). Recording gates
+on the harness's redaction criterion
 (`conformance-harness.md` AC13); the `Authorization` header and the `auth.toml` written into
 the depot are both named by this format's redaction rule, and `Julia-System`,
 `Julia-CI-Variables` and `Julia-Interactive` are normalised out of replay because they describe
@@ -990,14 +1094,15 @@ index does not know, `405` on remote writes and `409` on a changed-tree republis
       hash and the registry tree hash; a fresh `Pkg.add` on both clients installs it; and a body
       that is not a tar, has no root `Project.toml`, lacks `name`, `uuid` or `version`, or disagrees
       with its declared coordinate is refused `validation` (422) with nothing referenced.
-- [ ] AC4: A republish with the same tree hash creates no snapshot; one with a different tree
-      hash is refused with `409`; a publish binding an existing name to another UUID, an
+- [ ] AC4: A republish with the same tree hash creates no snapshot and completes with
+      `unchanged: true` in its `Operation`; one with a different tree hash is refused with `409`; a publish binding an existing name to another UUID, an
       existing UUID to another name, or a name equal to an existing one under case folding is
       refused with `409`; a deleted coordinate is refused with any tree by the shared write path's
       retirement check with the `retired` problem, including after the deleting snapshot has been
       pruned out of retention and after a backwards repoint; and versions are parsed as a
       `VersionNumber`, so `1.0` and `1.0.0` publish as one version stored as `1.0.0`, and build
-      metadata such as `1.18.0+0` is kept.
+      metadata such as `1.18.0+0` is kept, so that after `1.18.0+0` is deleted and retired,
+      `1.18.0+1` publishes and `1.18.0+0` is refused `retired`.
 - [ ] AC5: A yank through the management API's `withdraw` kind regenerates the registry in one snapshot,
       after which `Pkg.add(name = ..., version = ...)` of the yanked version fails on both
       clients with the captured unsatisfiable-requirements message, `Pkg.instantiate()` of a
@@ -1015,8 +1120,10 @@ index does not know, `405` on remote writes and `409` on a changed-tree republis
       captured "has no repository URL available" error and on 1.10 with the captured
       "ArgumentError: collection must be non-empty", with no
       request leaving the client for any host but this registry; deleting a package through
-      `delete-package` retires every version and keeps its name bound to its UUID; and no
-      package-level document carries retirement state.
+      `delete-package` retires every version, removes the package from the generated registry
+      so that neither client asks this registry for any of its trees afterwards (the
+      `is_pkg_in_pkgserver_registry` check answering no, asserted at the network layer), and
+      keeps its name bound to its UUID; and no package-level document carries retirement state.
 - [ ] AC8: Every management operation driven through the registry-owned endpoint produces the
       documented effect in exactly one snapshot, is refused with no snapshot for a principal
       lacking its kind's action (`push` for `publish` and `annotate`; `delete` for `withdraw`,
@@ -1027,20 +1134,28 @@ index does not know, `405` on remote writes and `409` on a changed-tree republis
       file and a symlink is stored under the tree hash `GitTools.tree_hash` computes and
       installs on both clients; the shared tree-hash entry's SHA-1 reports a detected collision on the
       SHAttered inputs, and a tree whose hashing reports one is refused at ingest with the
-      collision named on the hosted path and on the proxied path; and a received tarball
-      holding a hard link or an absolute path is served only as the canonical re-pack.
+      collision named on the hosted path and on the proxied path; a received tarball holding a
+      hard link is served only as the canonical re-pack with the link materialised as a file,
+      one holding an absolute path, a `..` segment, a repeated path or a device entry is refused
+      `validation` (422), and an archive exceeding the decompression bound is refused
+      `validation` on the hosted path and never committed on the proxied path, each after
+      reading at most the bound.
 - [ ] AC10: A package, registry or artifact request whose `Accept-Encoding` names `zstd` (1.13's
       `Accept-Encoding: zstd, gzip`) is
       answered with a zstd body and any other request with a gzip body, both with
       `Content-Type: application/octet-stream`, no `Content-Encoding` and `Vary:
       Accept-Encoding`; each representation is a distinct blob verified against the same tree
-      hash before commit; 1.13 installs the zstd body and 1.10 the gzip body of one version.
+      hash before commit; 1.13 installs the zstd body and 1.10 the gzip body of one version; a
+      proxied zstd-accepting fetch answered by a stand-in with a gzip body stores and serves it
+      as the gzip representation; and a `HEAD` on every route of both paths answers the `GET`'s
+      status and headers with `Content-Length` and no body, a cold proxied `HEAD` filling the
+      cache with one upstream `GET`.
 - [ ] AC11: A publish carrying an artifact tarball makes `/artifact/{hash}` serve it and both
       clients install the artifact from this registry with no request to its `download` URL;
       an artifact claimed under a wrong tree hash is refused with `422`; an artifact carried
       by two versions is one blob and survives the deletion of one of them; after the last
-      holder is deleted it answers `404`; and an artifact the `Artifacts.toml` names but the
-      publish did not carry is listed in the `201` body.
+      holder is deleted it answers `404`; and an artifact the `Artifacts.toml` (or
+      `JuliaArtifacts.toml`) names but the publish did not carry is listed in the `201` body.
 - [ ] AC12: On a private repository a credential-less request answers `401` byte-identical for
       a private and a non-existent repository; both clients with the token as `access_token` in
       `{depot}/servers/{host}/auth.toml` resolve and install, the transcript showing
@@ -1063,7 +1178,9 @@ index does not know, `405` on remote writes and `409` on a changed-tree republis
       network restricted to this registry, `Pkg.add` of a refused hosted version exits
       non-zero on both clients with their captured no-repository errors and a refused proxied General version
       exits non-zero on both clients naming the failed clone of its GitHub `repo`, with the
-      body captured in the transcript and no request reaching any other host.
+      body captured in the transcript and no request reaching any other host; and a version
+      refused in the first member of a virtual repository that holds it is refused through the
+      virtual, never served by a later member holding the same tree.
 - [ ] AC15: Against a stand-in serving the recorded General tarball (11,463,725 bytes gzip)
       behind the recorded `302` to a storage stand-in, both clients install a General package
       with an artifact through a proxied repository; each tarball was verified against its tree
@@ -1091,9 +1208,10 @@ index does not know, `405` on remote writes and `409` on a changed-tree republis
       Pkg's 20-second low-speed limit, because the handler's fetch declares `FirstByteWithin` of
       20 seconds and both responses stream from the in-flight spool and complete only after the
       verified commit; and the upstream serves the tarball once.
-- [ ] AC20: Configuring a remote repository whose upstream does not answer the configured
-      `/registries.{flavor}` with at least one line of the listing grammar is refused at
-      configuration naming the requirement; a proxied fetch follows the stand-in's cross-host
+- [ ] AC20: Creating a remote repository makes no upstream request; the first listing request
+      against a stand-in answering the configured `/registries.{flavor}` with no line of the
+      listing grammar is answered `502` naming the flavor path with nothing adopted, and the
+      request after the stand-in is corrected succeeds; a proxied fetch follows the stand-in's cross-host
       redirects, forwards the upstream credential to the configured host only, and sends no
       `Julia-CI-Variables` header, asserted at the network layer.
 - [ ] AC21: An upstream generation that yanks a version or deprecates a package is propagated at
@@ -1107,7 +1225,8 @@ index does not know, `405` on remote writes and `409` on a changed-tree republis
       install from a fresh depot a hosted package that depends on a General package, while the
       same install against the hosted repository alone fails with the captured "cannot find
       name corresponding to UUID" error; package, registry and artifact requests resolve
-      through the members in order; and configuring a virtual repository whose members'
+      through the members in order by their whole coordinate, a package UUID held by both
+      members resolving to whichever holds the requested tree; and configuring a virtual repository whose members'
       registries share a name under different UUIDs is refused naming both; and a member's publish is
       visible in the virtual listing at the next request with no merge job.
 - [ ] AC23: Every hosted registry generation is produced by the shared index service inside the
@@ -1121,7 +1240,9 @@ index does not know, `405` on remote writes and `409` on a changed-tree republis
       between a client's listing request and its registry request leaves that client's install
       succeeding.
 - [ ] AC24: A proxied `/package/{uuid}/{hash}` whose coordinate is in no cached registry
-      generation answers `404` with no upstream request, a version absent from the newest
+      generation answers `404` with no upstream request, a version new in a generation is served
+      to the client that just received that generation's tarball with no window in which the
+      tarball is held and the version unknown, a version absent from the newest
       generation but present in an earlier cached one still serves, and a UUID or hash in a
       non-canonical spelling answers `404` on both paths.
 - [ ] AC25: Replay-match passes against a corpus recorded from `pkg.julialang.org` and from a
@@ -1130,11 +1251,14 @@ index does not know, `405` on remote writes and `409` on a changed-tree republis
       out and the `Authorization` header and depot `auth.toml` redacted.
 - [ ] AC26: With a case-controlled advisory naming `pkg:julia/{name}?uuid={uuid}`, a policy
       refusing it refuses that package's affected version on the hosted and the proxied path,
-      and a package of the same name under another UUID in another member of the same virtual
-      repository still installs on both clients.
+      at resolution and at a feed sync with no request in flight, the UUID being the stored
+      package-level advisory key and the version string the version-level one, and a package
+      of the same name under another UUID in another member of the same virtual repository
+      still installs on both clients.
 
 - [ ] AC27: A hosted registry generation carries exactly the published state: `Registry.toml`
-      names every current package's UUID, name and path; each `Package.toml` carries `name` and
+      names every package holding a current version, yanked ones included, by UUID, name and
+      path, and no package whose every version is deleted; each `Package.toml` carries `name` and
       `uuid` and no `repo`; `Versions.toml` maps each version to the tree hash this registry
       computed, with `yanked = true` on yanked versions; `Deps.toml`, `Compat.toml`,
       `WeakDeps.toml` and `WeakCompat.toml` carry each version's `Project.toml` entries under
@@ -1154,29 +1278,29 @@ index does not know, `405` on remote writes and `409` on a changed-tree republis
 | AC1 | conformance | `conformance/julia/hosted_test.go` (both pinned images, network-restricted client containers, fresh depots in setup; `Manifest.toml` parsed for tree hashes; warm and offline runs asserted from the transcript and at the network layer) |
 | AC2 | conformance + integration | `conformance/julia/registry_test.go` (`curl` on the three listing paths and `HEAD`; `Pkg.Registry.add` by UUID, with no argument and by name on both clients); `internal/format/julia/listing_test.go` (line grammar, no prefix, `Tar.tree_hash`-equivalent verification of the served tarball, `General` name refusal) |
 | AC3 | conformance + integration | `conformance/julia/publish_test.go` (the `script` publishes through the management endpoint, then real installs on both clients from fresh depots; refusal fixtures through `curl`); `internal/format/julia/publish_test.go` (snapshot count and content set, head-listing visibility before the response, canonical re-pack hash) |
-| AC4 | integration | `internal/format/julia/immutability_test.go` (idempotent republish, changed tree, name and UUID binding, case-fold collision, retired coordinate after pruning under an injected clock and after a backwards repoint; the core check is `management-api.md` AC12's) |
+| AC4 | integration | `internal/format/julia/immutability_test.go` (idempotent republish with `unchanged: true` and no snapshot, `management-api.md` AC5; changed tree; name and UUID binding; case-fold collision; retired coordinate after pruning under an injected clock and after a backwards repoint, and the `1.18.0+1` sibling of a retired `1.18.0+0`; the core check is `management-api.md` AC12's) |
 | AC5 | conformance + integration | `conformance/julia/yank_test.go` (explicit pin refused on both; `Pkg.instantiate` of a pinned manifest on both; 1.13 marker; unyank); `internal/format/julia/yank_test.go` (one snapshot per operation, tarball retained) |
 | AC6 | conformance | `conformance/julia/deprecate_test.go` (1.13 status and `status --deprecated` text, 1.10 unaffected, undeprecate) |
-| AC7 | conformance + integration | `conformance/julia/delete_test.go` (the operations from the case `script`; pinned manifest fails on both, network layer showing no other host contacted); `internal/format/julia/delete_test.go` (`Retirement` records in the deleting transaction, no retirement state in any document, name-UUID binding kept) |
+| AC7 | conformance + integration | `conformance/julia/delete_test.go` (the operations from the case `script`; pinned manifest fails on both, network layer showing no other host contacted; after `delete-package` the generated `Registry.toml` omits the package and the network layer shows no package request for it); `internal/format/julia/delete_test.go` (`Retirement` records in the deleting transaction, no retirement state in any document, name-UUID binding kept) |
 | AC8 | conformance + integration | `conformance/julia/manage_test.go` (each declared kind through the management endpoint from the case `script`, followed by a real resolve; the per-kind case rule of `management-api.md` AC24 and `conformance-harness.md` AC26); `internal/format/julia/manage_auth_test.go` (`pull`-only and `push`-only refusals with snapshot count unchanged, `405` `repository-type` on remote and virtual) |
-| AC9 | conformance + unit + integration | `conformance/julia/treehash_test.go` (the edge-case tree installed on both clients); `internal/verify/treehash/treehash_test.go` (the shared entry checked against `Pkg.GitTools.tree_hash` and `Tar.tree_hash` outputs recorded from the pinned images under both resource kinds; the SHAttered inputs through the collision-detecting SHA-1; shared with `artifact-verification.md` AC18); `internal/format/julia/repack_test.go` (hard-link and absolute-path re-pack); `internal/format/julia/collision_ingest_test.go` (a detected collision injected at the `Verifier` seam on the hosted ingest and the proxied fetch, nothing committed) |
-| AC10 | conformance + integration | `conformance/julia/encoding_test.go` (1.13 and 1.10 transcripts, magic bytes, headers); `internal/format/julia/representation_test.go` (two blobs, one tree hash, verification before commit on both paths) |
+| AC9 | conformance + unit + integration | `conformance/julia/treehash_test.go` (the edge-case tree installed on both clients); `internal/verify/treehash/treehash_test.go` (the shared entry checked against `Pkg.GitTools.tree_hash` and `Tar.tree_hash` outputs recorded from the pinned images under both resource kinds; the SHAttered inputs through the collision-detecting SHA-1; shared with `artifact-verification.md` AC18); `internal/format/julia/repack_test.go` (hard-link materialisation; absolute, climbing, repeated and device entries refused; the decompression bound refused on the hosted ingest and uncommitted on the proxied fetch, memory bounded); `internal/format/julia/collision_ingest_test.go` (a detected collision injected at the `Verifier` seam on the hosted ingest and the proxied fetch, nothing committed) |
+| AC10 | conformance + integration | `conformance/julia/encoding_test.go` (1.13 and 1.10 transcripts, magic bytes, headers; `curl -I` on each route of both paths); `internal/format/julia/representation_test.go` (two blobs, one tree hash, verification before commit on both paths; a gzip body behind a zstd-accepting proxied fetch keyed by its magic bytes); `internal/proxy/head_test.go` (the cold proxied `HEAD`, shared with `proxy-cache.md` AC32) and the serving doors' `HEAD` cases of `signing-service.md` AC32 |
 | AC11 | conformance + integration | `conformance/julia/artifact_test.go` (artifact installed from this registry on both clients, the `download` URL's stand-in asserting no request); `internal/format/julia/artifact_test.go` (wrong-hash refusal, shared blob, deletion of one and of both holders, the `201` listing) |
 | AC12 | conformance + integration | `conformance/julia/auth_test.go` (private repository on both clients with `auth.toml` written by the case; challenge equality; `pull`-less and rejected tokens; TLS through the harness CA; the credential absent from the fallback host); `internal/format/julia/auth_test.go` (plaintext refusal under `auth.md` AC27) |
 | AC13 | conformance + unit | `conformance/julia/pattern_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; `Pkg.add` failing at the listing on both; `curl` in and out of pattern; artifact by hash; patterned publishes, the mislabelled and undeclared fixtures); `internal/format/julia/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
-| AC14 | conformance + integration | `conformance/julia/policy_test.go` (hosted and proxied modes, network-restricted clients; rules through the `policies` key, admitted because the Julia binding row is `restricted-egress`, `conformance-harness.md` AC26; a controlled advisory through `advisories`; exit status, failure text and the transcript's `403` body asserted); `internal/format/refusal_writer_test.go` (`WriteRefusal` the only writer, shared with `supply-chain-policy.md` AC18) |
+| AC14 | conformance + integration | `conformance/julia/policy_test.go` (hosted and proxied modes, network-restricted clients; rules through the `policies` key, admitted because the Julia binding row is `restricted-egress`, `conformance-harness.md` AC26; a controlled advisory through `advisories`; exit status, failure text and the transcript's `403` body asserted; a virtual over two members holding the refused tree, refused through the virtual); `internal/format/refusal_writer_test.go` (`WriteRefusal` the only writer, shared with `supply-chain-policy.md` AC18) |
 | AC15 | conformance + benchmark | `conformance/julia/proxied_test.go` (the recorded General tarball and a package with an artifact behind a redirecting stand-in; both clients; network-level assertion from fresh depots); `internal/format/julia/index_bench_test.go` (index build over the recorded General tarball, peak RSS and time against the gate thresholds) |
 | AC16 | conformance | `conformance/julia/proxied_ttl_test.go` (mutating stand-in listing; `Pkg.Registry.update` before and after the TTL and after a refresh from the case `script`; the flavor path asserted at the network layer under both preference headers; the previous generation's tarball) |
 | AC17 | integration | `internal/format/julia/proxied_integrity_test.go` (mismatched tree, truncated body, unpackable archive, recompressed same tree; CAS and reference assertions; operator record); the verifier-hook contract is `proxy-cache.md` AC20's |
 | AC18 | conformance | `conformance/julia/proxied_negative_test.go` (missing package and artifact, throttling and error stand-in responses, network-level counts including the three client retries) |
 | AC19 | conformance | `conformance/julia/proxied_slow_test.go` (a stand-in throttled to 40 seconds for the General-sized tarball; two concurrent clients; both complete; one upstream fetch; shared with `proxy-cache.md` AC21) |
-| AC20 | integration + conformance | `internal/format/julia/upstream_config_test.go` (listing validation per flavor); `conformance/julia/proxied_redirect_test.go` (two-host redirect chain to declared `hosts` stand-ins, credential only to the configured host at the network layer; the adapter half is `upstream-adapters.md` AC4 to AC8) |
+| AC20 | integration + conformance | `internal/format/julia/upstream_first_request_test.go` (creation with no upstream request at the network layer; the grammar-less first listing answered `502` naming the flavor path with nothing adopted, the corrected stand-in succeeding on the next request); `conformance/julia/proxied_redirect_test.go` (two-host redirect chain to declared `hosts` stand-ins, credential only to the configured host at the network layer; the adapter half is `upstream-adapters.md` AC4 to AC8) |
 | AC21 | integration + conformance | `internal/format/julia/removal_test.go` (stand-in presenting each event, asserting the class; the shared-layer half is `proxy-cache.md` AC13's); `conformance/julia/removal_test.go` (upstream-yanked version installed from a manifest; advisory-condemned coordinate refused with no upstream request) |
-| AC22 | conformance + integration | `conformance/julia/virtual_test.go` (hosted plus General remote; cross-registry dependency on both clients; the hosted-only failure text; member-order resolution; a member publish visible at the next listing); `internal/format/julia/virtual_config_test.go` (UUID deduplication, registry-name collision refusal) |
+| AC22 | conformance + integration | `conformance/julia/virtual_test.go` (hosted plus General remote; cross-registry dependency on both clients; the hosted-only failure text; member-order resolution, including a UUID held by both members resolved to the member holding the requested tree; a member publish visible at the next listing); `internal/format/julia/virtual_config_test.go` (UUID deduplication, registry-name collision refusal) |
 | AC23 | architecture test + integration | `internal/format/julia/arch_test.go` (no registry-tree writer in the handler); the module-wide import test of `signing-service.md` AC2 covering `internal/format/julia/**`; `internal/format/julia/concurrent_publish_test.go` (two writers, both listed, predecessor repoint byte comparison); `internal/storage/metadata_blob_gc_test.go` (threshold crossing, sweep, serve); `conformance/julia/registry_race_test.go` (a publish injected between a client's listing and registry requests) |
-| AC24 | conformance + unit | `conformance/julia/proxied_index_test.go` (unknown coordinate with the network layer showing no upstream request; a version dropped from the newest generation still served); `internal/format/julia/route_test.go` (non-canonical UUID and hash spellings on both paths) |
+| AC24 | conformance + unit | `conformance/julia/proxied_index_test.go` (unknown coordinate with the network layer showing no upstream request; a version new in a generation requested by the client that just fetched it, with a hold on the inspecting proxy between the two requests, `conformance-harness.md` AC27; a version dropped from the newest generation still served); `internal/format/julia/route_test.go` (non-canonical UUID and hash spellings on both paths) |
 | AC25 | conformance | `conformance/julia/replay_test.go` |
-| AC26 | conformance | `conformance/julia/advisory_uuid_test.go` (a virtual repository whose two members each hold a package of one name under different UUIDs; the advisory through the `advisories` key; both clients) |
+| AC26 | conformance + integration | `conformance/julia/advisory_uuid_test.go` (a virtual repository whose two members each hold a package of one name under different UUIDs; the advisory through the `advisories` key; both clients); `internal/policy/advisory_key_test.go` (the UUID stored on the `Package` row and matched at a feed sync with no request in flight, shared with `supply-chain-policy.md` AC24 and `data-model.md` AC46) |
 | AC27 | integration + conformance | `internal/format/julia/index/registry_gen_test.go` (generated files parsed and compared with the published `Project.toml` entries; byte-identical regeneration under the runtime's determinism harness, `signing-service.md` AC25); `conformance/julia/registry_gen_test.go` (a version-specific dependency and compat bound resolved on both clients) |
 | AC28 | unit + conformance | `internal/format/capabilities_test.go` (this handler's four declarations, `format-handler-interface.md` AC13); `conformance/julia/rename_test.go` (both clients against the renamed repository, byte comparison, old name `not-found`; required by `repository-lifecycle.md` AC12) |
 
@@ -1273,6 +1397,13 @@ ecosystem-tool compatibility for a registry whose contents are all verified.
 Accepted cost: the publish path is a registry-specific API call and the exception list records
 that no reference implementation of it exists.
 
+Rechecked on Fable 2026-10-08: confirmed. The options were fairly framed, B being a git server
+on the wire no sibling speaks and C a constitution change. One cost the record under-stated: a
+package none of whose versions is current leaves the generated registry (Design, "Every hosted
+registry tarball is a write-triggered document"), so deleting every version of a package also
+removes it from `Registry.toml`, which is what makes a manifest pinning a deleted version fail
+closed.
+
 ### Resolved: how the shared model stores and verifies tree-hash-addressed content (was Q2)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: blobs stay keyed by the
@@ -1302,6 +1433,14 @@ Accepted cost: a verification entry requested of `artifact-verification.md` that
 format needs, now provided as its tree-hash integrity entry `internal/verify/treehash` (its AC18),
 and the hosted re-pack recorded on the exception list. `data-model.md` states the rule this record
 adopted, with this format as its example ("A coordinate is not a storage key").
+
+Rechecked on Fable 2026-10-08: confirmed, fold amended. The record said what the re-pack keeps
+and not what the ingest refuses, and it bounded nothing: absolute, climbing, repeated and device
+entries are now refused, hard links materialised, and both paths run under a decompression bound
+(Design, "The tree hash is a verified coordinate"; AC9), since the re-pack is the one place this
+format materialises a whole archive. The verification semantics were re-read in the 1.13.0
+image: `verify_archive_tree_hash` is `Tar.tree_hash` under its `skip_empty = false` default,
+as the table states.
 
 ### Resolved: policy refusals against a client that falls back to origin (was Q3)
 
@@ -1336,6 +1475,13 @@ makes client egress restriction the deployment precondition and cites this captu
 harness confines every client container to its case network (`conformance-harness.md`'s resolved
 client-confinement decision, was Q6 there, AC23).
 
+Rechecked on Fable 2026-10-08: confirmed. Each sibling fold verified at HEAD:
+`supply-chain-policy.md`'s binding row (`restricted-egress`), `deployment.md`'s precondition
+paragraph and `conformance-harness.md`'s confinement (was Q6, AC23) each cite this capture. Two
+edges added to the fold: a refusal in a virtual never falls through to a later member (AC14),
+and refuse-until-scanned withholds the first byte Pkg's deadline needs, a cost now stated
+(Design, "Policy refusals on the wire").
+
 ### Resolved: virtual repositories as a union of registries (was Q4)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a virtual repository
@@ -1363,6 +1509,12 @@ repository, a product and documentation commitment.
 
 Accepted cost: the recipe in the operator documentation and the name-collision refusal.
 
+Rechecked on Fable 2026-10-08: confirmed, fold amended. Resolution is by the whole
+`(uuid, hash)`, so two members holding one UUID (a hosted fork beside General) serve whichever
+holds the requested tree, and a refusal never falls through; the per-request listing goes
+through `ServeRendered`'s lazy form so no handler sets a validator (`signing-service.md` AC11,
+AC32; AC22).
+
 ### Resolved: how hosted artifacts are stored and owned (was Q5)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: an artifact is a `File`
@@ -1387,6 +1539,11 @@ belong to packages, which shapes the management API.
 
 Accepted cost: the publish operation carries artifacts, now `management-api.md`'s rule ("`julia.md`'s
 artifacts-with-the-version rule", one publish carrying several files).
+
+Rechecked on Fable 2026-10-08: confirmed. The fold now names `JuliaArtifacts.toml`, which
+`Artifacts.jl` reads before `Artifacts.toml` (its `artifact_names`, checked in the 1.13.0
+image), and states that an artifact route is evaluated by digest alone, no coordinate rule
+reaching it.
 
 ### Resolved: which action yank requires (was Q6)
 
@@ -1415,6 +1572,12 @@ unyank on its `withdraw` and `restore` kinds under `delete` and deprecation on `
 `push` (its resolved withdraw-action decision, was Q1 there, which settled the Cargo and PyPI
 divergence this record cited in the same direction).
 
+Rechecked on Fable 2026-10-08: confirmed. `management-api.md`'s Julia rows carry `withdraw` and
+`restore` under `delete` and `annotate` under `push`, verified at HEAD; the `[yanked]` and
+`[deprecated]` markers the record relies on are 1.13's `Operations.status` output and the
+`[metadata.deprecated]` table its `registry_instance.jl` reads, found in the image's source,
+and 1.10 has neither.
+
 ### Resolved: a proxied package coordinate the registry index does not know (was Q7)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: answer `404` with no
@@ -1439,6 +1602,10 @@ path.
 
 Accepted cost: the transient failure, stated in the operator documentation.
 
+Rechecked on Fable 2026-10-08: confirmed. The accepted cost is tighter than the record said: the
+index is rewritten in the commit that caches a generation, so the only window is the listing TTL
+and no client holding a generation is answered `404` for a version it names (AC24).
+
 ### Resolved: `pkg.julialang.org` as a preconfigured upstream (was Q8)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option B: user-configured in v1,
@@ -1460,9 +1627,14 @@ call.
 Accepted cost: proxied cases run against a stand-in only until the revisit; the real service is
 exercised by the recording session.
 
+Rechecked on Fable 2026-10-08: confirmed. `proxy-cache.md`'s extension mechanism (was Q14,
+extended by was Q17) stands for the revisit, and nothing in this spec depends on the
+preconfigured entry.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 5cf8b0c | authoring pass: grounded first draft, not a review | Grounded the Pkg server protocol four ways: captured traffic from Julia 1.10.12 (Pkg 1.10.0) and 1.13.0 (Pkg 1.13.0), the official images pinned by digest, against a logging stub serving a registry, packages and an artifact tree-hashed with the images' own GitTools and Tar plus the real General tarball and `Example` (fresh and warm installs, offline, registry update, yanked resolve and manifest-pinned install, deprecation on both, tree-hash mismatch on registry and package, 404 and 403 with the fallback chain to GitHub, to the registry `repo` and to `Artifacts.toml` URLs, the same refusal on a Podman internal network failing closed, the `/registries` failure cloning General, Bearer auth from `auth.toml` right, wrong and absent, the format-first path prefix, zstd negotiation both ways, no-argument and by-name `Registry.add`, the missing-dependency resolver failure, and Downloads' 20-second low-speed abort found through a buffering stub); the protocol reference and registry documentation shipped in the image, the Pkg, Tar, Downloads and NetworkOptions sources; PkgServer.jl at 88c6d80 (flavor redirect, storage client, verification commented out); the live pkg.julialang.org and storage.julialang.net (redirect chain, no caching headers on the listing, zstd variant, 404 shape); and OSV's Julia ecosystem (1,717 JLSEC records keyed by name and UUID, no MAL entries). Design: the tree hash as a verified coordinate with three client semantics, collision-detecting SHA-1 and a canonical hosted re-pack; compression negotiation as two blobs per tree; a hosted repository as one generated registry fed by management-API publishes with artifacts owned by versions; the index service's requirement list; the Bearer `auth.toml` form keyed per host; addressed objects with registry routes as none; the `403` rendering and the client's origin fallback; the proxied path with flavor, listing TTL, the growing registry index and Julia's removal rows; virtual repositories as a union of registries by UUID, required for any private package depending on General. Eight questions written in decision shape and adopted under the standing delegation: hosted as a generated registry (AC2, AC3, AC7, AC23, AC27), tree hash as coordinate (AC9, AC10, AC17), refusals enforceable only under egress restriction (AC14), virtual as a union (AC22, AC26), artifacts as files of versions (AC11), yank under `delete` (AC8), unknown proxied coordinates answered 404 (AC24), pkg.julialang.org user-configured. Twenty-seven criteria, each with a Test Plan row. Stays draft; awaits an independent review. |
 | 2026-09-28 | 20ff418 | cross-spec reconciliation of the Wave 1 folds and the foundation wave, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying: conformance-harness reconciliation items 1 and 4 (client confinement inherited from was-Q6 and AC23, redirect stand-ins as `hosts` sub-entries; seed-path regeneration through the write-path hook, AC24 and `signing-service.md` AC21; the Test Plan obligation discharged); proxy-cache reconciliation item 3 (the 20-second abort resolved by was-Q16, `FirstByteWithin` on every tarball fetch, AC19 sharing `conformance/julia/proxied_slow_test.go` with its AC21; the Design paragraph rewritten from a request into its answer); format-management item 11 and management-api items 11 and 12 (retirement core-held; kinds `publish`, `withdraw`, `restore`, `annotate`, `delete-version`, `delete-package`, no bindings; the declared-coordinate rule; `repository-type` and `retired`; AC3 to AC8; the yank-action record discharged); signing-service item 11 (generator contract and package, unsigned consumer with no key, previous generation carried by the generator, per-document lock, determinism; the six items mapped; AC23, AC27); upstream-adapters item 12 (`https` adapter, allowlisted regional and storage hosts with role `none`, credential to the root host, no client header forwarded, the zstd opt-in; AC20); supply-chain reconciliation item 10 (the `restricted-egress` row, the UUID coverage row, `WriteRefusal`; AC14); artifact-verification (the tree-hash integrity entry AC18, reached through `Verifier`, as the completion-only verifier; AC9, AC17; the verification-column obligation); data-model (the coordinate rule cites this spec; AC44 cache record); auth was-Q23 (no descriptor: listing and registry enumerate); repository-lifecycle AC12 and FHI AC13 (Capabilities and lifecycle section, the registry name fixed at creation, new AC28); async-operations (no merge job: the virtual is an unmerged union, which `signing-service.md` names). No question adopted, `fable_recheck` kept. Found and reported rather than assumed: `auth.md` still has no Pkg client row, which consequences Open item 16 asked for. Twenty-eight criteria, each with a Test Plan row. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
+| 2026-10-08 | 792cd2e | Fable recheck: full review (claim verification at HEAD against every cited sibling; the protocol claims re-read in the pinned `julia:1.13.0` image's Pkg, Tar, Artifacts and Downloads sources; adversarial lens at full strength on the Opus-authored whole; constitution compliance) + re-examination of the Opus adoptions Q1 to Q8 + the queued consequences | A review. The tree holds no `internal/format/julia`, so claim verification ran against the sibling specs at HEAD and the pinned image. Every sibling citation verified: `auth.md`'s `julia` (Pkg) row, AC12, AC17, AC27, AC29, AC31 and was-Q23; `signing-service.md`'s consumer table (six items), AC1, AC2, AC5, AC11, AC21, AC24, AC25, AC28, AC32 and was-Q24; `proxy-cache.md` AC9, AC13 (Julia `yanked` an ordinary metadata change), AC20, AC21 as amended, AC24, AC25, AC27, AC29, AC32, was-Q16 and was-Q19 to Q24; `management-api.md`'s four Julia rows, AC5, AC7, AC12, AC14, AC15, AC24, AC29, AC36 and was-Q13 to Q20; `supply-chain-policy.md`'s coverage and binding rows, AC5, AC17, AC18, AC20, AC24; `artifact-verification.md` AC18, AC24, AC26 and its entry table; `upstream-adapters.md`'s requirements row, AC4 to AC8, AC13, AC23; `data-model.md` AC33, AC35, AC44, AC46; `conformance-harness.md` AC13, AC23, AC24, AC26, AC28; `format-handler-interface.md` AC7, AC8, AC12 to AC15 and "What `Scope(r)` may read"; `repository-lifecycle.md` AC12; `storage-and-gc.md` AC3, AC16; `catalogue.md` AC5 and the charter's AC9. In the image: the `[metadata.deprecated]` table (`registry_instance.jl`), the `[yanked]` and `[deprecated]` markers (`Operations.status`), `get_server_dir`, `is_pkg_in_pkgserver_registry`, the listing regex, `CURLOPT_LOW_SPEED_TIME` 20 with limit 1, `verify_archive_tree_hash` as `Tar.tree_hash` under `skip_empty = false`, `artifact_names` reading `JuliaArtifacts.toml` first, a listed package tolerated without `Versions.toml`, and `v"1.18.0+1" > v"1.18.0+0"`. Consequences applied: the supply-chain recheck's item 1 (was-Q11: the UUID a package-level advisory key reported at write time, matched at a feed sync; AC26's row shares `advisory_key_test.go`); the auth closing sweep's stale-wording item (the Pkg row exists); the management-api closing sweep's optional item 5 (claims checked again at commit, was-Q14) with was-Q15 (the unchanged publish, AC4) and was-Q20 (the spool bound); proxy-cache was-Q19 (count zero), was-Q21 (index and listing never evicted, `cache_metadata_bytes`), was-Q23 (anchor class `none`) and was-Q24 (HEAD on proxied routes, AC10); signing-service was-Q14 (`ServeFile` for every stored file, `ServeRendered` for the virtual listing) and was-Q24 (HEAD on the doors); the blocking preconditions updated to the siblings' planned dates. Found by the adversarial lens and fixed: AC20 refused an upstream at configuration, contradicting `upstream-adapters.md` AC23 (the probe moved to the first request, `502` naming the flavor path); no entry rules and no decompression bound on the hosted ingest or the proxied verifier, the one place the format materialises a whole archive (AC9); a proxied representation keyed by the request's `Accept-Encoding` rather than the body's magic bytes, wrong for a PkgServer.jl without zstd (AC10); a package with every version deleted still named in `Registry.toml` (AC27); `JuliaArtifacts.toml` unhandled (AC11); virtual resolution underspecified when two members hold one UUID and a refusal could fall through to a later member (AC14, AC22); the window between a generation's fetch and its index build in which a client holding the generation could be answered `404` (AC24); build metadata as part of a claim's identity (AC4); several versions sharing one tree, for scopes and policy; artifacts evaluated by digest alone; the refuse-until-scanned cost on Pkg's deadline; `Scope(r)` reading the metadata store alone. Verdicts: Q1, Q5, Q6, Q7, Q8 confirmed; Q2, Q3, Q4 confirmed with their folds amended; none superseded. Reported, not applied: two rows owed to `conformance-harness.md`'s exception list (the hosted read half against PkgServer.jl `88c6d80` in front of a storage stand-in; a write row reading none). Twenty-eight criteria, each with a Test Plan row; no open question; `fable_recheck` cleared; `node scripts/check-spec.js` reports no failure in this file. draft -> planned. |
