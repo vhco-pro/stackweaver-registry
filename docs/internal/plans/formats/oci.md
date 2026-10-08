@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at a6d72b3 with the foundation wave (not a review): Q8 adopted under the owner's standing delegation (the first component of an OCI name is the registry repository, the rest the image, so one remote covers a whole upstream registry; AC17); GET /v2/ declared a descriptor; Capabilities with Virtual and Rename plus the lifecycle, read-only-remote, rename and refresh cases (AC15); the handler's half of Cosign discovery and verification (AC14, sharing artifact-verification AC6); the proxied path on the distribution adapter and the Docker Hub profile (AC16, sharing upstream-adapters AC25); the suite credential minted through credential-management's POST /api/v1/tokens with multi_repository: true (its AC7); WriteRefusal and the pending binding-table row filled by AC12's capture; no management kinds and no retirement, stated. Earlier: reconciled 2026-09-26 at da0aecd (the opt-in multi-repository suite credential, AC11-AC13); folded 2026-09-26 at 4d1aeb1 (Q3-Q7 adopted, AC1 rewritten, AC7-AC10 added). Zero open questions; 17 criteria, each with a Test Plan row; stays draft until a gate review, with Phase 1 waiting on credential-management.md Phase 1."
+status: planned
+status_description: "Planned by the Fable gate review of 2026-10-08 at 4f929c7: the two queued items applied (the revalidation probe on the tag fetch, AC6; Homebrew 7.0.6 as a client under a /v2/-bearing artifact domain, Q9 adopted, AC13), the Opus adoption Q8 rechecked and confirmed, and the authoring re-grounded against the distribution spec and the v1.1.1 conformance sources: the suite's tolerant cases get a strict overlay (AC18), every refused write renders 405 UNSUPPORTED with docker's output captured (AC19), the fetch modes and deletion semantics corrected, zero open questions, 19 criteria each with a Test Plan row. Phase 1 waits on credential-management.md Phase 1 landing. Earlier: reconciled 2026-09-28 at a6d72b3 with the foundation wave (not a review): Q8 adopted under the owner's standing delegation (the first component of an OCI name is the registry repository, the rest the image, so one remote covers a whole upstream registry; AC17); GET /v2/ declared a descriptor; Capabilities with Virtual and Rename plus the lifecycle, read-only-remote, rename and refresh cases (AC15); the handler's half of Cosign discovery and verification (AC14, sharing artifact-verification AC6); the proxied path on the distribution adapter and the Docker Hub profile (AC16, sharing upstream-adapters AC25); the suite credential minted through credential-management's POST /api/v1/tokens with multi_repository: true (its AC7); WriteRefusal and the pending binding-table row filled by AC12's capture; no management kinds and no retirement, stated. Earlier: reconciled 2026-09-26 at da0aecd (the opt-in multi-repository suite credential, AC11-AC13); folded 2026-09-26 at 4d1aeb1 (Q3-Q7 adopted, AC1 rewritten, AC7-AC10 added). Zero open questions; 17 criteria, each with a Test Plan row; stays draft until a gate review, with Phase 1 waiting on credential-management.md Phase 1."
 description: "Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor."
 author: michielvha
 goal: "Pass the official OCI distribution-spec conformance suite with zero skips, proving the harness and the shared layers against a standards-body gate."
@@ -51,6 +51,17 @@ Hub profile (AC16); and the split of an OCI name into the registry repository an
 inside it, which is what lets one `remote` cover a whole upstream registry (the resolved
 name-split decision below, was Q8; AC17).
 
+Added by the Fable gate review of 2026-10-08: the **strict overlay** on the pinned suite's
+tolerant cases, which pass at v1.1.1 whether or not the surface they name is implemented
+(Design, "The official suite"; AC18); the wire rendering of every write this handler refuses
+on a shared layer's decision, a `read_only` repository, a `remote` or `virtual` target, and a
+blob a manifest still references, as `405` with `UNSUPPORTED` (Design, "Deletion and the
+read-only wire"; AC19); the **revalidation probe** declared on the proxied tag fetch, the one
+`HEAD` the proxy layer ever sends (`proxy-cache.md`'s resolved HEAD decision, was Q24, and its
+AC32; AC6); and **Homebrew 7.0.6 as an OCI client** under a `/v2/`-bearing
+`HOMEBREW_ARTIFACT_DOMAIN`, on both paths (the resolved brew-client decision below, was Q9;
+AC13).
+
 **Out of scope for v1, and owned elsewhere:** replication between instances is
 `foundation/replication.md`'s, built at charter step 10, and vulnerability scanning of image
 layers is `supply-chain-policy.md`'s component inventory (its AC10); neither is reimplemented
@@ -92,8 +103,21 @@ the same tokens), so it is not specced here: `auth.md`'s resolved token-manageme
 Q21) homes it in `docs/internal/plans/foundation/credential-management.md`, which now exists and
 owns it: issuance, listing, rotation and revocation under `POST /api/v1/tokens` (its Phase 1,
 built at charter step 2), the expiry-warning criterion (its AC5) and the robot-account principal
-(its "Robot accounts", AC9). Phase 1 here depends on that spec reaching `planned` and its Phase
-1 landing first.
+(its "Robot accounts", AC9). That spec is `planned` since its Fable recheck of 2026-10-01, so
+Phase 1 here depends only on its Phase 1 landing first.
+
+Two shared rules reach this subsystem's wire and are cited rather than re-decided. The `401`
+challenge and the existence rule's `404` are written by `auth.md`'s layer with the format's
+challenge, not by this handler (its AC32), and every response that layer writes itself, the
+token endpoint's JSON included, carries `Cache-Control: private, no-store` (its resolved
+refusal-cacheability decision, was Q27, and AC38); the handler sets no `Cache-Control` of its
+own on them. And a registry token is also accepted **presented directly as `Bearer` on the
+`/v2/` routes**, without the challenge and exchange, because that is `auth.md`'s universal
+Bearer form (its presentation-forms table, where `brew` is listed for exactly this): Homebrew
+never follows a `WWW-Authenticate` challenge and sends `HOMEBREW_DOCKER_REGISTRY_TOKEN` as a
+Bearer on every OCI-shaped request (`homebrew.md`, "Authentication"; `auth.md`'s `brew` client
+row, captured), which is what makes it a client of this format at all (the resolved brew-client
+decision below, was Q9; AC13).
 
 A registry token authorizes one repository by default, and the token service grants only the
 subset of a multi-repository scope request the token covers (`auth.md` AC26). That default is
@@ -121,6 +145,38 @@ manifest delete, cross-repository blob mount (`OCI_CROSSMOUNT_NAMESPACE`), and t
 API among them. Manifest lists and the referrers API are exercised through AC1's pinned suite;
 if a pinned release turns out not to cover a surface this spec puts in scope, that surface gets
 bespoke harness cases rather than silent non-coverage.
+
+**Zero skips is still a soft gate at v1.1.1, and the strict overlay is what closes it.** Read
+against the suite source at the v1.1.1 tag (the Fable gate review of 2026-10-08), several cases
+are written to pass on either branch of an optional surface, with no skip and no failure on the
+tolerant branch: the suite accepts a `400`/`405` where a registry disallows tag deletion, a
+`404` on the manifest-by-digest delete and a `200` on the read of a "deleted" manifest, a `405`
+on blob deletion (after which the deleted-blob read is guarded by `blobDeleteAllowed`, the one
+tolerance that does surface as a skip), a `202` on the mount of an existing blob, a referrers
+query answered without `OCI-Filters-Applied` (the full unfiltered list, with a warning printed
+to stderr), a manifest with no layers refused with the same warning, and a single-`POST`
+monolithic upload answered `202` instead of `201`. The `Warn` helper prints to stderr and
+reaches no report, so a run can be green with every one of those surfaces missing. AC1
+therefore gates the suite's own verdict, and **AC18 asserts the strict branch of every tolerant
+case with a scripted client**, listed here so an upgrade of the pinned tag re-derives the list:
+
+| Tolerant case (v1.1.1) | What it accepts | What AC18 requires |
+|---|---|---|
+| Content Management: "DELETE request to manifest tag should return 202, unless tag deletion is disallowed (400/405)" | `202`, `400` with `UNSUPPORTED`, or `405` | `202`; the tag gone from the tag list; the manifest still served by digest |
+| Content Management: "DELETE request to manifest (digest) should yield 202 response unless already deleted" and "GET request to deleted manifest URL should yield 404 response, unless delete is disallowed" | `202` or `404`, then `404` or `200` | `202`, then `404` with `MANIFEST_UNKNOWN`, and every tag that pointed at it gone |
+| Content Management: "DELETE request to blob URL should yield 202 response" | `202`, `404` or `405` | `202` for an unreferenced blob, then `404` with `BLOB_UNKNOWN` (the suite's "GET request to deleted blob URL" case must run, never skip) |
+| Push: "POST request to mount another repository's blob should return 201 or 202" | either | `201` under the suite credential, which the exception list's third entry already requires |
+| Push: "POST request with digest and blob should yield a 201 or 202" | either | `201`, the blob readable at the `Location` |
+| Push: "Registry should accept a manifest upload with no layers" | `201`, or anything else with a warning | `201` |
+| Content Discovery: "GET request to existing blob with filter should yield 200" | a filtered list with `OCI-Filters-Applied: artifactType`, or the unfiltered list with a warning | the filtered list and the header |
+
+Three suite variables are fixed by the harness for the same reason. `OCI_AUTH_SCOPE` stays
+unset, so the suite's client exchanges the scope our `WWW-Authenticate` challenge names rather
+than a scope the harness wrote, which is the only way the run exercises the challenge rendering
+this handler owns. `OCI_DELETE_MANIFEST_BEFORE_BLOBS` stays at its default (`true`), the order
+under which a blob delete follows the manifest's and meets an unreferenced blob.
+`OCI_SKIP_EMPTY_LAYER_PUSH_TEST` is declared in the v1.1.1 `setup.go` and read nowhere, so it
+guards nothing at this tag; the empty-layer case is the warning branch above, closed by AC18.
 
 **Literal zero skips is unreachable at v1.1.1, for any registry.** Read against the suite's
 source at the v1.1.1 tag (2026-09-26), several cases sit in complementary pairs whose members
@@ -155,7 +211,7 @@ The list at v1.1.1, all four entries structural:
 |---|---|---|---|
 | Pull: "Get tag name from environment" | Runs only when content is pre-seeded through `OCI_TAG_NAME`, `OCI_MANIFEST_DIGEST` and `OCI_BLOB_DIGEST`; the harness lets the suite push its own content, which exercises more of the registry | Pull: the "Populate registry with test ..." setup cases | to be filed before AC1 is first claimed; an entry without one fails the runner |
 | Content Discovery: "Populate registry with test tags (no push)" | Runs only when `OCI_TAG_LIST` pre-seeds tags; same reasoning | Content Discovery: "Populate registry with test tags" | as above |
-| Push: "Cross-mounting of nonexistent blob should yield session id" | Runs only when the preceding mount of an existing blob answers `202`; ours answers `201`, because the suite credential can read the source (the resolved suite-credential decision below) | Push: "GET request to test digest within cross-mount namespace should return 200" | as above |
+| Push: "Cross-mounting of nonexistent blob should yield session id" | Guarded by `RunOnlyIf(lastResponse.StatusCode() == 202)`, where `lastResponse` is assigned only by the mount case and by nothing after it (v1.1.1 `02_push_test.go`, verified 2026-10-08); ours answers `201`, because the suite credential can read the source (the resolved suite-credential decision below) | Push: "GET request to test digest within cross-mount namespace should return 200" | as above |
 | Push: "Cross-mounting without from, and automatic content discovery enabled should return a 201" | Runs only under `OCI_AUTOMATIC_CROSSMOUNT=true`; a mount without `from` never mounts here (see "Cross-repository mount"), so the harness declares it `false` | Push: "Cross-mounting without from, and automatic content discovery disabled should return a 202" | as above |
 
 **The suite credential spans two repositories.** The pinned suite configures one client from
@@ -214,6 +270,27 @@ that never existed, so the client restarts that blob. Committed blobs are unaffe
 session's expiry: their survival until the manifest arrives is the repository-scoped grace
 period's job, and an open session holds that grace open.
 
+Three wire rules the gate review of 2026-10-08 found unstated. **A `416` does not end the
+session**: an out-of-order or repeated chunk is answered `416` with `BLOB_UPLOAD_INVALID` and
+the session's accepted range is unchanged, so the client's next in-order chunk continues it;
+the pinned suite sends a retried chunk and then the correct one against the same session
+("Retry previous blob chunk should return 416", then the second chunk), so a handler that
+closed the session on `416` would fail AC1 without the reason being visible. **A session
+belongs to the `<name>` it was opened under**: the same session URL presented under another
+`<name>` answers `404` with `BLOB_UPLOAD_UNKNOWN`, since `data-model.md` makes the session the
+repository's and a session id that resolves across repositories would be a second
+cross-repository oracle. **The manifest `PUT` is a bounded, claim-free write**: its body is
+spooled under the shared `management.publish_spool_limit` facility handed through `Deps`
+(`management-api.md`'s resolved spool-bound decision, was Q20, and AC36) and a manifest over it
+is refused `413` with `MANIFEST_INVALID`, the distribution spec's status for an oversize
+manifest (its "Pushing Manifests", which asks registries to accept at least 4 MiB); the write
+opens the shared write transaction through `Deps` and declares no retirement claims, because
+no OCI coordinate is ever retired (`management-api.md`'s resolved claim-comparison decision,
+was Q14); and a `PUT` of bytes identical to what the same tag already names completes `201`
+with no new snapshot, the shape `management-api.md`'s resolved unchanged-publish decision (was
+Q15) gives a write that changes nothing, so a CI job that re-pushes an unchanged image does not
+grow the snapshot chain.
+
 ### Cross-repository mount
 
 A mount (`POST /v2/<name>/blobs/uploads/?mount=<digest>&from=<other>`) asks the registry to make
@@ -244,6 +321,15 @@ protected by the target's grace until a manifest references it, and routed throu
 reference-creation barrier like every other reference-to-an-old-blob path
 (`storage-and-gc.md`'s write barrier already names cross-repository mount among them). The
 target never depends on the source keeping the blob.
+
+Two cases the rule left implicit (gate review of 2026-10-08). **A `from` naming a `remote`
+resolves only against that remote's cached content and never fetches upstream**: a mount is a
+push-path request, an upstream fetch on it would be a cache fill no reader asked for and, on
+Docker Hub, a pull counted against the budget, so the "upstream-resolvable" half of
+`data-model.md`'s resolution rule for a remote does not apply to a mount, and a digest the
+remote has not cached falls back to `202` like any other miss. **A mount into a `remote` or a
+`virtual` is a push into it** and is refused as one, `405` with `UNSUPPORTED` (Design,
+"Deletion and the read-only wire"), before any source is consulted.
 
 Accepted cost, visible to users: a client whose credential cannot read the source never
 mounts, and pushes the bytes again - and since registry tokens are single-repository unless
@@ -281,7 +367,9 @@ challenge otherwise. It is declared a **descriptor** (`auth.md`'s resolved name-
 decision, was Q23; `format-handler-interface.md` named this route as the Tier 0 candidate) with
 an empty repository: its body carries no name, version or digest, so the sentinel test holds
 trivially, and the central authorizer evaluates a repository-less descriptor against
-authentication alone. The consequence that matters is that a token holding only a patterned
+authentication alone (`auth.md` AC32's repository-less clause: any verified credential passes
+it whatever its scopes, a credential-less request receives the format's challenge, and a
+failing credential an authentication error, never anonymous). The consequence that matters is that a token holding only a patterned
 `pull` passes docker's first request and goes on to pull its tag, which AC11 exercises; under
 `none` it would have been refused before reaching any manifest.
 
@@ -343,6 +431,18 @@ repository rule requiring an identity then refuses the unsigned or wrongly signe
 the `DENIED` rendering above. The registry never strips or alters a signature manifest, on
 either path. AC14 is this format's half of `artifact-verification.md` AC6 and shares its case.
 
+Two wire facts the referrers API rests on. **A manifest `PUT` carrying `subject` is answered
+with `OCI-Subject: <subject digest>`**, which the distribution spec makes the signal that the
+registry processed the subject; a client that does not see it maintains the fallback referrers
+tag (`<alg>-<ref>`) itself, so the header is what keeps cosign and ORAS on the referrers API
+rather than writing index tags into the repository. **On a `remote`, the referrers listing is
+an upstream document**: the `Reference` edge holds only what this registry has cached, so
+`GET /v2/<name>/referrers/<digest>` on a remote is a fetch-and-cache of the upstream's own
+referrers listing as mutable metadata under the metadata TTL, verified by the handler-supplied
+verifier the proxied-path section names, and an upstream that answers it `404` (no referrers
+API) is read through the fallback tag `<alg>-<ref>` instead, which is how AC14's proxied half
+finds the signature through both conventions.
+
 ### Capabilities, lifecycle and management
 
 `Capabilities()` declares proxy support `supported`, reference-implementation availability
@@ -365,8 +465,42 @@ tag and manifest deletion included, so the handler implements none of `managemen
 tag frees it for a later push, because a tag is a mutable pointer the distribution spec lets
 clients move, and a digest is content-addressed and cannot be re-bound. OCI therefore writes no
 `Retirement` record (`data-model.md` AC35 is a foundation criterion this format never exercises),
-and a `read_only` repository refuses its pushes and deletes `405` on the wire exactly as
-`repository-lifecycle.md` AC10 states for a binding.
+and what a `read_only` repository answers its pushes and deletes is this handler's rendering to
+fix, stated next.
+
+### Deletion and the read-only wire
+
+OCI's writes are this handler's own wire routes, not bindings, so `repository-lifecycle.md`
+AC10's `405 read-only` and `management-api.md` AC7's `405 repository-type` do not reach them as
+stated: both specs scope a handler's own wire write out and leave its status and wording to the
+format spec, fixed from what its client prints (`management-api.md`'s resolved central-refusal
+decision, was Q16). The rendering here is one shape for every write the shared layers refuse:
+**`405 Method Not Allowed` with an `errors` entry whose `code` is `UNSUPPORTED`**, the status
+the distribution spec itself lists for a disallowed delete (end-9 and end-10) and its code-13
+for an unsupported operation, with a `message` naming the reason (`read-only`, the repository
+type, or the referencing manifest below). It applies to `POST`, `PATCH` and `PUT` on upload
+sessions and the mount, `PUT` and `DELETE` on manifests and `DELETE` on blobs, on a
+`read_only` `local` and on any `remote` or `virtual`. An upload session open when its
+repository is frozen is not ended: its continuation answers `405` until `thaw`, and it resumes
+if it has not expired meanwhile, because a freeze is a pause, not a loss. What `docker push`
+prints on this answer is uncaptured and is exactly what AC19 captures; the status and code are
+fixed here so that capture grounds the message, not the shape.
+
+Deletion itself follows the shared model rather than a local choice. **Deleting by tag
+removes the tag and nothing else**: the manifest stays served by digest and by every other tag,
+which is what the distribution spec's separate tag-deletion route means and what the suite's
+strict branch asserts (AC18). **Deleting a manifest by digest removes the manifest and every
+tag pointing at it**, and its config and layer blobs are untouched: they remain resolvable in
+the repository while another manifest references them or while in flight under the upload
+scope, and otherwise leave only through `storage-and-gc.md`'s sweep after grace, never through
+the delete. **Deleting a blob by digest** ends the repository's own hold on it, an in-flight or
+otherwise unreferenced blob answering `202` and then `404` with `BLOB_UNKNOWN`; a blob a
+manifest in the repository still references is refused `405` with `UNSUPPORTED` and a message
+naming one referencing manifest's digest, because a `Snapshot` is immutable and a manifest
+version's files are part of its content set (`data-model.md`, `Snapshot`), so the only write
+that can remove a referenced file is the manifest's own deletion. The pinned suite never meets
+the refused case (its default order deletes the manifest first), and `docker` never sends a
+`DELETE`, so AC19 asserts it with a scripted client.
 
 ### The name split: repository and image
 
@@ -395,17 +529,48 @@ make two names resolve to one image on some upstreams and not others.
 ### The proxied path
 
 A tag-to-digest mapping is mutable metadata under the proxy layer's TTL rules
-(`proxy-cache.md`); blobs and by-digest manifests are immutable and cache indefinitely. Every
-fetch this handler asks of fetch-and-cache carries a declared digest: a blob's from its URL, a
-manifest's from the tag resolution's `Docker-Content-Digest` or the URL, so OCI never uses the
-completion-only mode `proxy-cache.md` added for formats without one (its resolved
-completion-only decision, was Q15, AC20). Upstream authentication and quirks belong to the
-upstream adapter axis, now `upstream-adapters.md`'s: the handler passes the upstream location
-and `upstream.Options` and the `distribution` adapter (`internal/upstream/distribution`) does the
-`401` Bearer challenge and anonymous or credentialled token exchange, reads
-`Docker-Content-Digest` as the declared digest, honours Docker Hub's `ratelimit-*` headers as a
-typed `RateLimitError` with a bounded cool-down, and follows blob redirects to CDN hosts only
-inside the upstream's allowlist (its AC16, AC24). The preconfigured **Docker Hub profile**
+(`proxy-cache.md`); blobs and by-digest manifests are immutable and cache indefinitely. The
+fetch mode is per fetch and this handler uses both of `proxy-cache.md`'s (its resolved
+completion-only decision, was Q15, and AC20: a request carries a declared digest or a
+handler-supplied verifier, never neither). **By-digest manifests and blobs carry a declared
+digest** from the URL, stream-and-verify. **The tag fetch, the tag list and the referrers
+listing carry a handler-supplied verifier**, because no digest is known before the fetch: the
+tag fetch's verifier parses the body as a manifest or index, computes its digest and requires
+it to equal the `Docker-Content-Digest` the adapter surfaced verbatim (`upstream-adapters.md`
+AC14), and that digest is recorded as the adopted revision's identity; the two listings'
+verifiers parse the body as the tag-list document and as an image index. The reconciliation of
+2026-09-28 had this as "OCI never uses the completion-only mode", which the gate review of
+2026-10-08 corrected: a tag fetch cannot declare a digest it is about to learn.
+
+**The tag fetch declares the revalidation probe.** Under `proxy-cache.md`'s resolved HEAD
+decision (was Q24) an inbound `HEAD` is never forwarded, and the one `HEAD` that layer ever
+sends is a probe a handler declares on the fetch-and-cache request for a mutable document whose
+identity a `HEAD` exposes: this handler declares it on the tag fetch, naming
+`Docker-Content-Digest`, so at TTL revalidation the layer sends one `HEAD` to the tag's upstream
+location and re-fetches the manifest only when that header moved from the adopted revision's
+identity (its AC32; `upstream-adapters.md` AC14 surfaces the header on the probe and its "Rate
+limits and the cool-down" names it as the version check Docker Hub does not count against the
+pull budget). The tag list and the referrers listing declare no probe and revalidate by the
+conditional `GET`. A proxied tag list for `n`/`last` pagination is served from the cached
+upstream listing, never by forwarding the query. Upstream authentication and quirks belong to
+the upstream adapter axis, now `upstream-adapters.md`'s: the handler passes the upstream
+location and `upstream.Options` and the `distribution` adapter (`internal/upstream/distribution`)
+does the `401` Bearer challenge and anonymous or credentialled token exchange, surfaces
+`Docker-Content-Digest` on `GET` and on the probe's `HEAD`, parses Docker Hub's `ratelimit-*`
+headers into the budget gauge and a `429` into a typed `RateLimitError` (a successful response
+carrying `ratelimit-remaining: 0` starts **no** cool-down: its resolved cool-down decision, was
+Q5, as amended on its recheck), and follows blob redirects to CDN hosts only inside the
+upstream's allowlist (its AC16, AC24). **A `RateLimitError` is rendered to the client as `429`
+with the error code `TOOMANYREQUESTS`** (the spec's code-14) and the upstream's message, which
+is what `docker pull` prints as `toomanyrequests:`; the proxy layer's cool-down answers every
+request to that upstream the same way without a connection until the retry time (AC16).
+Every proxied response, `HEAD` included, is written by `signing-service.md`'s serving door: a
+`HEAD` on a manifest or blob is the `GET` with the body withheld (its resolved HEAD decision,
+was Q24), and the serve policy's `Cache-Control` is downgraded to `private` on a repository that
+is not anonymously readable and on any authenticated request (its resolved cacheability
+decision, was Q25, and AC38), which for a `docker pull` through the token flow is every request
+after the first, so a shared cache in front of this registry ever stores only anonymous pulls
+of public repositories. The preconfigured **Docker Hub profile**
 (`https://registry-1.docker.io`, adapter `distribution`, credential `none`, realm
 `auth.docker.io` with role `root`) is that spec's row for this format, and its blob-redirect CDN
 hosts are **captured at Phase 4, not recalled**: Docker Hub answers blob `GET`s with a cross-host
@@ -426,20 +591,29 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
       whose credential cannot read the source namespace, since the mount then answers `202`
       and the excepted `202`-branch case runs.
 - [ ] AC2: `docker push` and `docker pull` round-trip an image with an unchanged digest, for
-      at least two pinned Docker client versions.
+      at least two pinned Docker client versions; a second `docker push` of the unchanged image
+      succeeds and creates no snapshot.
 - [ ] AC3: `helm push` and `helm pull` round-trip a chart as an OCI artifact.
-- [ ] AC4: A chunked upload interrupted partway resumes and completes with a correct digest.
+- [ ] AC4: A chunked upload interrupted partway resumes and completes with a correct digest;
+      an out-of-order and a repeated chunk each answer `416` with `BLOB_UPLOAD_INVALID`, the
+      status `GET` afterwards reports the range unchanged, and the next in-order chunk
+      continues the same session to a `201`.
 - [ ] AC5: The token auth flow issues correctly scoped tokens, and a token scoped to one
       repository cannot read another.
 - [ ] AC6: The proxied path serves an image fetched from an upstream registry and serves the
       second pull entirely from cache, with no upstream request within the metadata TTL,
-      asserted at the network layer.
+      asserted at the network layer; past the TTL, a pull of the same tag sends the stand-in
+      exactly one `HEAD` on the tag and no `GET` while its `Docker-Content-Digest` is unmoved,
+      and one `HEAD` then one manifest `GET` once the stand-in has re-tagged, with the tag list
+      and the referrers listing revalidated by a conditional `GET` and never by a `HEAD`.
 - [ ] AC7: An upload session answers `404` with `BLOB_UPLOAD_UNKNOWN` to a `PATCH`, a status
       `GET` and a closing `PUT` once it has sat idle past the idle period or reached the
       absolute cap, and not before: on an injected clock, a session receiving a chunk inside
       every idle window completes after more than one idle period has elapsed, and a blob
       committed before another session in the same repository expired is still accepted by the
-      manifest that names it, inside the repository's grace.
+      manifest that names it, inside the repository's grace; and a live session's URL presented
+      under another `<name>` answers `404` with `BLOB_UPLOAD_UNKNOWN` while the session stays
+      continuable under its own.
 - [ ] AC8: A real `docker` client that pulled an image from repository A and then pushes it to
       repository B under a credential that cannot read A completes the push, and every mount
       request it sends is answered `202` with an upload session, asserted at the network
@@ -451,7 +625,10 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
       the access token grants `pull` on the source and the source holds the digest (including a
       blob in flight in the source); a mount without `from` always answers `202`; and a mounted
       blob that no manifest in the target references stays resolvable in the target after the
-      source deletes its own reference, until the target's grace lapses.
+      source deletes its own reference, until the target's grace lapses; a mount whose `from` is
+      a `remote` answers `201` for a digest the remote has cached and `202` for one it has not,
+      with no upstream request in either case (asserted at the network layer); and a mount into
+      a `remote` or a `virtual` answers `405` with `UNSUPPORTED` before any source is consulted.
 - [ ] AC10: `docker login --password-stdin`, given a registry token as the password and an
       arbitrary username, succeeds non-interactively for both pinned Docker versions, and a
       push and pull then work under it; the token endpoint's responses carry no refresh token;
@@ -473,10 +650,23 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
       image digest, passes against this handler on both paths: `podman push` and `podman pull`
       round-trip an image, `oras push` and `oras pull` round-trip a non-image artifact, and
       `podman pull`, `oras pull` and `helm pull oci://` each succeed through a proxied
-      repository with the second pull served from cache.
+      repository with the second pull served from cache; and `brew install` on pinned Homebrew
+      7.0.6 with `HOMEBREW_ARTIFACT_DOMAIN={registry}/v2/{repository}`,
+      `HOMEBREW_ARTIFACT_DOMAIN_NO_FALLBACK=1` and `HOMEBREW_DOCKER_REGISTRY_TOKEN` set to a
+      registry token installs a bottle copied into a hosted repository with `skopeo` and a bottle
+      through a remote over a `ghcr.io`-shaped stand-in, every request of both runs captured as
+      `{registry}/v2/{repository}/homebrew/core/{image}/manifests/{tag}` and
+      `.../blobs/sha256:{digest}` with the token as a Bearer and no token exchange, no request
+      reaching the `ghcr.io` stand-in on the hosted run, and the same install refused `401` with
+      the token unset on a private repository and served on a public one (the resolved
+      brew-client decision below, was Q9).
 - [ ] AC14: An image signed with a real `cosign sign` against the fixture Sigstore has its
       signature manifest found through both the referrers query and the `sha256-<hex>.sig` tag,
-      on the hosted path and through a remote whose upstream stand-in serves the signed image;
+      on the hosted path and through a remote whose upstream stand-in serves the signed image,
+      and through a remote whose stand-in answers the referrers query `404`, where the
+      signature is found through the `<alg>-<ref>` fallback tag and the stand-in receives
+      exactly one referrers request before the fallback; a hosted manifest `PUT` carrying
+      `subject` is answered with `OCI-Subject` naming that digest;
       the handler hands the subject digest and the signature manifest's layers to the verifier
       and never alters or withholds the signature manifest; and under a repository rule
       requiring the signing identity, `docker pull` of the signed image succeeds while an
@@ -494,7 +684,11 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
       redirect to a third, a pull budget), the proxied path completes a `docker pull` with the
       anonymous token exchange, follows the blob redirect only to a host on the profile's
       allowlist and makes no connection to one off it, and surfaces the stand-in's `429` to the
-      client as the adapter's rate-limit message; the shipped Docker Hub profile's allowlist
+      client as `429` with the error code `TOOMANYREQUESTS` and the stand-in's message, which
+      `docker pull` prints, with the next pull inside the cool-down answered the same way and
+      no connection made to the stand-in (asserted at the network layer), while a successful
+      stand-in response carrying `ratelimit-remaining: 0` starts no cool-down and the pull
+      after it reaches the stand-in; the shipped Docker Hub profile's allowlist
       holds the CDN hosts captured from the real registry at Phase 4, and the nightly job
       exercises the real Docker Hub (`proxy-cache.md` AC15).
 - [ ] AC17: A `docker push` to `{repository}/{image}:tag` where `{repository}` exists stores the
@@ -504,7 +698,30 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
       remote bound to a registry stand-in, `docker pull {remote}/library/nginx:tag` and `docker
       pull {remote}/grafana/grafana:tag` each fetch the upstream image of that path on the first
       pull and serve from cache on the second, while `{remote}/nginx:tag` is a miss with one
-      upstream request for exactly that path and no other.
+      upstream request for exactly that path and no other. The unreadable-versus-nonexistent
+      comparison holds at the token endpoint too: the exchange for a scope on either repository
+      answers byte-identically, a JWT carrying no scope for it.
+- [ ] AC18: With a scripted client against the registry as configured for AC1, every tolerant
+      case of the pinned suite passes on its strict branch (Design, "The official suite", the
+      tolerant-case table): `DELETE` of a tag answers `202`, removes the tag from the list and
+      leaves the manifest served by digest and by its other tags; `DELETE` of a manifest by
+      digest answers `202`, after which the digest answers `404` with `MANIFEST_UNKNOWN`, every
+      tag that pointed at it is gone from the list and its blobs still answer `200`; `DELETE`
+      of an unreferenced blob answers `202` and then `404` with `BLOB_UNKNOWN`; a
+      single-`POST` monolithic upload answers `201` with the blob readable at its `Location`; a
+      manifest with no layers is accepted `201`; and a referrers query with `artifactType`
+      answers the filtered list with `OCI-Filters-Applied: artifactType`; and the AC1 run shows
+      the suite's "GET request to deleted blob URL" case as run and passed, never skipped.
+- [ ] AC19: On a `read_only` `local` and on a `remote`, a real `docker push` is refused and
+      exits non-zero, every refused request (`POST` on uploads, `PATCH` and `PUT` on a session,
+      `PUT` and `DELETE` on a manifest, `DELETE` on a blob, a mount) answers `405` with an
+      `errors` entry whose `code` is `UNSUPPORTED` and whose `message` names `read-only` or the
+      repository type, nothing is committed, and the lines `docker` prints are captured into
+      the case; a session open at the freeze answers `405` to its next chunk, still exists
+      after `thaw` and completes under it; `docker pull` of the frozen repository's images is
+      unaffected; and a scripted `DELETE` of a blob a manifest in the repository still
+      references answers `405` with `UNSUPPORTED` and a message naming a referencing manifest's
+      digest, after which the blob and the manifest still answer `200`.
 
 ## Test Plan
 
@@ -519,14 +736,16 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
 | AC7 | integration | `internal/format/oci/upload_session_test.go` (scripted wire client, injected clock) |
 | AC8 | conformance | `conformance/oci/crossmount_test.go` (real `docker` client, network-level assertion; scripted client for the indistinguishability cases) |
 | AC9 | integration | `internal/format/oci/crossmount_test.go` (access tokens minted by the token service with the scopes under test) |
-| AC10 | conformance | `conformance/oci/login_test.go` (both pinned Docker versions; revocation via the auth layer) |
+| AC10 | conformance | `conformance/oci/auth_test.go` (the file `auth.md` AC3's row names for this case; both pinned Docker versions; revocation via the auth layer) |
 | AC11 | conformance + unit | `conformance/oci/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; the tag-scoped multi-architecture pull, refused digest delete and refused tag list `auth.md` AC24 names; a tag-patterned token provisioned through the `credentials` key); `internal/format/oci/scope_object_test.go` (the object table, per route, all four kinds, `GET /v2/` as the descriptor with the sentinel test, `format-handler-interface.md` AC12) |
 | AC12 | conformance | `conformance/oci/policy_test.go` (hosted and proxied modes, the file `supply-chain-policy.md` AC1 and AC2 name; rules through the `policies` key and a controlled advisory through `advisories`; the captured fallback behaviour of docker, podman and oras replaces the `pending` binding-table row in the same change, its AC20) |
-| AC13 | conformance | `conformance/oci/clients_test.go` (Podman, ORAS and Helm-as-OCI, pinned by digest, hosted and proxied; the catalogue's client-reach evidence for this row) |
+| AC13 | conformance | `conformance/oci/clients_test.go` (Podman, ORAS and Helm-as-OCI, pinned by digest, hosted and proxied; the catalogue's client-reach evidence for this row); `conformance/oci/brew_test.go` (Homebrew 7.0.6 pinned by digest, a `skopeo`-copied bottle on the hosted path, a `ghcr.io`-shaped stand-in on the proxied path, network-level capture of every request, the token-unset `401` on a private repository) |
 | AC14 | conformance + integration | `conformance/oci/cosign_test.go` (real cosign against the fixture Sigstore, hosted and proxied, identity rule; shared with `artifact-verification.md` AC6); `internal/format/oci/verifier_test.go` (discovery by referrers query and by tag, the subject digest and layers handed to a fake `Verifier`, signature manifest served byte-identical) |
 | AC15 | unit + conformance | `internal/format/oci/capabilities_test.go` (the four declarations; `format-handler-interface.md` AC13); `conformance/oci/lifecycle_test.go`, `conformance/oci/readonly_remote_test.go`, `conformance/oci/rename_test.go` (`repository-lifecycle.md` AC1, AC11, AC12; the read-only case shared with `proxy-cache.md` AC23); `conformance/oci/refresh_test.go` (`management-api.md` AC29, shared with `proxy-cache.md` AC24) |
 | AC16 | conformance | `conformance/oci/upstream_dockerhub_test.go` (shared with `upstream-adapters.md` AC25; the profile's allowlist compared to the Phase 4 capture); the nightly real-upstream job (`proxy-cache.md` AC15) |
 | AC17 | conformance + integration | `conformance/oci/name_split_test.go` (real `docker` push and pull under `{repository}/{image}`, the refused single-component name, the unreadable-repository answer compared byte for byte with a nonexistent one, the remote over a registry stand-in serving two image paths with network-level assertion of the exact upstream paths requested); `internal/format/oci/name_test.go` (the split against the repository name grammar, `NAME_INVALID` cases) |
+| AC18 | conformance | `conformance/oci/strict_test.go` (scripted client over the tolerant-case table, run in the same harness configuration as AC1; the AC1 report parsed for the deleted-blob case's run-and-passed verdict) |
+| AC19 | conformance + integration | `conformance/oci/readonly_test.go` (real `docker push` against a `read_only` `local` provisioned through the `repositories` entry's `state`, and against a `remote`; the frozen session across `thaw`; `docker`'s printed lines captured); `internal/format/oci/delete_test.go` (the referenced-blob refusal, the tag-only and manifest-by-digest deletions against the shared model) |
 
 ## Implementation Phases
 
@@ -551,18 +770,25 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
 - Tag listing, blob and manifest delete, manifest lists, the referrers API
 - Cross-repository mount under the read-proof rule, with the indistinguishable fallback (AC8,
   AC9)
+- Tag-only and manifest-by-digest deletion against the shared model, the referenced-blob
+  refusal, and the `405` `UNSUPPORTED` rendering of every write a `read_only` or
+  non-`local` repository refuses, captured from `docker` (AC19)
 
 ### Phase 4: Proxied path
 - Cache policy per resource class over `upstream-adapters.md`'s `distribution` adapter and the
   preconfigured Docker Hub profile, with the blob-redirect CDN hosts captured from the real
   registry into the profile's allowlist (AC16); a remote covering a whole upstream registry
   under the name split (AC17's proxied half); the read-only-remote and refresh cases (AC15)
+- The two fetch modes per route, the revalidation probe declared on the tag fetch, the
+  proxied tag list and referrers listing with their verifiers and the referrers tag fallback,
+  the `429` `TOOMANYREQUESTS` rendering of a rate limit (AC6, AC14's proxied half, AC16)
 
 ### Phase 5: The gate
 - Official suite at zero skips outside the exception list, with its issues filed and its
   machine-readable copy in `conformance/oci/`; the two-repository suite credential as an opt-in
-  multi-repository token; the client version matrix (Docker x2, Helm) and the catalogue's
-  named clients (Podman, ORAS, AC13); matrix reporting
+  multi-repository token; the strict overlay on the suite's tolerant cases (AC18); the client
+  version matrix (Docker x2, Helm), the catalogue's named clients (Podman, ORAS) and Homebrew
+  7.0.6 under a `/v2/`-bearing artifact domain (AC13); matrix reporting
 
 ### Phase 6: Policy refusal rendering and signature discovery
 - Waits on `supply-chain-policy.md`'s enforcement and `artifact-verification.md`'s core and
@@ -579,8 +805,49 @@ Left empty by design. Populated by `/tasks` once this spec reaches `planned`.
 None are open. Q3 through Q6, raised by the 2026-09-22 review, and Q7, raised while folding
 them, were adopted on 2026-09-26 under the owner's standing delegation and folded through Design,
 AC1 and AC7 through AC10, the Test Plan and the phases; Q8, raised by the 2026-09-28
-reconciliation, was adopted the same way. Resolved decisions are kept rather than deleted, so
-the reasoning survives the next time someone asks why it was done this way.
+reconciliation, was adopted the same way and rechecked on Fable on 2026-10-08; Q9, raised by
+that Fable gate review from `homebrew.md`'s recheck, was adopted under the delegation in the
+same pass. Resolved decisions are kept rather than deleted, so the reasoning survives the next
+time someone asks why it was done this way.
+
+### Resolved: Homebrew 7.0.6 as a client of this format (was Q9, raised and adopted 2026-10-08)
+
+**Adopted 2026-10-08 under the owner's standing delegation**, on Fable, in the gate review.
+Option A: Homebrew 7.0.6 is declared a client of this format on both paths, under
+`HOMEBREW_ARTIFACT_DOMAIN={registry}/v2/{repository}`, and proven by a captured conformance
+case rather than by the source reading that raised it. Folded into Scope, Design ("Token auth
+is a separate subsystem", the direct-Bearer paragraph), AC13 and its Test Plan row, and Phase 5.
+
+The question, from `homebrew.md`'s Fable recheck (its "How much of this `oci.md` already
+covers"): brew 7.0.6's curl download strategy substitutes an artifact domain that already
+carries `/v2/` for `https://ghcr.io/v2/` itself (`domain_contains_v2`, read in source, not
+captured), so `HOMEBREW_ARTIFACT_DOMAIN={registry}/v2/{repository}` makes brew request
+`{registry}/v2/{repository}/homebrew/core/{image}/manifests/{tag}` and the blobs by digest,
+which is this handler's own surface: a hosted repository holding bottles copied in with
+`skopeo`, or a remote over `ghcr.io` under the name split. `homebrew.md` keeps its own bottle
+remote for 4.6.20 and the flat layout and says that configuration is this spec's to prove.
+Declaring a client the catalogue does not list for OCI is a product judgment: the matrix's
+Client column under the OCI row grows, and `catalogue.md`'s rule is that a format names only
+the clients it captured traffic from.
+
+**Recommendation:** A, because the surface is already built for docker and the only new work is
+the capture, because `homebrew.md` has explicitly left this configuration unproven, and because
+an uncaptured source reading is exactly the kind of client claim this project refuses to carry
+unverified in either direction.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Declare brew 7.0.6 a client, proven by capture** (adopted) | The one configuration under which a Homebrew user can point brew at an OCI repository of this registry is tested on both paths; the matrix shows brew under OCI as well as under Homebrew; the registry-token-as-Bearer presentation gets a real-client case | One more pinned client image in the OCI set; the case depends on a `ghcr.io`-shaped stand-in `homebrew.md` already builds; the catalogue's "named clients the format specs add" table gains an OCI row |
+| **B. Decline: brew stays `homebrew.md`'s client only** | Nothing new here | The `/v2/` rewrite is documented by nobody, so an operator who sets it discovers the behaviour unassisted, and `homebrew.md`'s "oci.md's to prove" stays an open hand-off |
+
+**Why this is yours:** it adds a client to the advertised reach of a format, which the
+catalogue guards against inflation, on the strength of a source reading until the capture
+lands.
+
+Accepted cost: the client image and the stand-in dependency, and the catalogue row, reported
+as a sibling consequence. Option B lost because the hand-off would otherwise sit unresolved
+between two specs that each name the other. The adoption changes nothing for 4.6.20, which has
+no `/v2/` rewrite and is `homebrew.md`'s alone.
 
 ### Resolved: where the registry repository ends inside an OCI name (was Q8, raised and adopted 2026-09-28)
 
@@ -623,6 +890,19 @@ it multiplies the conformance surface to preserve a distinction no client can ob
 harness consequence is recorded in Design: `OCI_NAMESPACE` and `OCI_CROSSMOUNT_NAMESPACE` live
 under two different registry repositories so the suite's mount crosses the boundary the
 multi-repository token exists for.
+
+Rechecked on Fable 2026-10-08: **confirmed**, with two costs the record under-stated. The
+first component is held to the registry's repository grammar
+(`^[a-z0-9]+(?:[._-][a-z0-9]+)*$`, 63 characters, `repository-lifecycle.md` AC2), which is
+stricter than the distribution spec's own name-component grammar (`__` and runs of `-` are
+valid OCI components), so an OCI name whose first component is OCI-valid but outside the
+registry grammar is refused `NAME_INVALID` and an OCI name whose first component is a
+repository that does not exist answers as an unreadable one does; AC17 asserts the first and
+the name test the grammar edge. And the oracle the split must not open has a second channel the
+record did not name: the token endpoint, which is `docker`'s first request and answers an
+unreadable and a nonexistent repository identically (AC17's last clause). The options were
+framed fairly and the alternatives lost for the reasons given; B's cost was, if anything,
+understated, since `proxy-cache.md` AC19 seeds exactly one Docker Hub remote on a fresh install.
 
 ### Resolved: the manifest reference graph (was Q2)
 
@@ -808,7 +1088,8 @@ its credibility.
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
-| 2026-09-28 | a6d72b3 | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the credential-management authoring (item 10): every "(to be authored)" citation replaced by the spec's Phase 1, `POST /api/v1/tokens`, AC5 and "Robot accounts" (AC9); the suite credential is minted with `multi_repository: true` (its AC7, whose Test Plan runs this suite). From the auth and interface reconciliation and auth's resolved name-free-document decision (was Q23): `GET /v2/` declared a descriptor with no repository, so a patterned-only `pull` passes docker's first request (AC11, the scope table test with the sentinel check). From the format-handler-interface reconciliation (item 3) and `repository-lifecycle.md`: `Capabilities()` declares `Virtual` and `Rename` supported, and the `lifecycle_test.go`, `readonly_remote_test.go`, `rename_test.go` and `refresh_test.go` cases those specs and `management-api.md` AC29 place under `conformance/oci/` are gathered as AC15. From the artifact-verification authoring (item 14): signature verification is no longer out of scope; a "Signatures and the verifier" section states the handler's half (discovery by referrers query and by the `sha256-<hex>.sig` tag, the hand-off through `Deps`' `Verifier`, never altering a signature manifest), asserted by AC14 sharing `conformance/oci/cosign_test.go` with its AC6. From the upstream-adapters authoring (item 10): Phase 4 runs on `internal/upstream/distribution` and the preconfigured Docker Hub profile, whose blob-redirect CDN hosts are captured at Phase 4, asserted by AC16 sharing `upstream_dockerhub_test.go` with its AC25; OCI never uses `proxy-cache.md`'s completion-only mode (was Q15) because every fetch carries a declared digest. From the supply-chain reconciliation (item 11) and Open item 5: the refusal goes through `WriteRefusal` with the shared status-line phrase (was Q10, AC18), and AC12's capture fills the `pending` binding-table row (its AC20, harness AC26). From the management-api authoring (items 11 and 12): this format declares no `Operator` kinds and retires nothing, stated in Design with the reason. Open item 30's OCI half raised Q8 (where the registry repository ends inside an OCI name), written in decision shape and adopted: the first component is the repository, the rest the image, so one remote covers a whole upstream registry and the one-component name grammar holds; folded through the object table (`{image}/{tag}`), AC11, a new "The name split" section, the suite-credential paragraph and AC17. Replication and vulnerability scanning re-cited to `replication.md` and `supply-chain-policy.md` AC10. Nothing found already done. `node scripts/check-spec.js` zero failures for this file. Stays draft pending a gate review. |
-| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the two-repository suite credential is met by `auth.md`'s resolved Q22 and AC29 (opt-in multi-repository token, repositories named by identity), rewritten through Design, the cross-mount accepted cost, the Q7 record, the AC1 Test Plan row and Phase 5; the token-management surface and robot accounts cited to `credential-management.md` (auth's resolved Q21), Phase 1 depending on it reaching planned; the addressed-object table (manifest by tag named; manifests by digest, blobs and upload sessions content-addressed; tag list, referrers and catalog none; the JWT carrying the pattern per auth AC26) with AC11 as the pattern-refusal case in both modes; the per-format policy rendering (403, `DENIED`, AC12, Phase 6) the supply-chain fold queued for OCI first; the catalogue's resolved client-reach decision applied as AC13. Nothing found already done. Stays draft. |
-| 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review. Adopted Q3 option A (the `auth.md` registry token as the Basic password at the token endpoint; derived: no refresh token, and token issuance on the Phase 1 critical path), Q4 option B (documented exception list; grounding against the v1.1.1 suite source showed complementary `RunOnlyIf`/`RunOnlyIfNot` pairs make literal zero skips unreachable for any registry, so the list holds four structural entries, each needing its partner to pass, and the admissible classes widened to upstream-defect and structural), Q5 option A (mount only with `pull` on the source and the digest held there, indistinguishable `202` fallback otherwise, no mount without `from`, `OCI_AUTOMATIC_CROSSMOUNT=false`), Q6 option B (sliding idle expiry with a cap, recorded in `data-model.md`'s single upload-session definition because the storage spec is planned and was not edited). Also raised and adopted in this pass: Q7 (the suite presents one credential across two repositories, so the harness needs a credential holding grants on both; `auth.md` must supply the kind). Changed: Scope, the token-auth, suite, chunked-upload and new cross-repository-mount Design sections, AC1 rewritten, AC7 (session expiry on the wire), AC8 (the mount leak closed through a real `docker` client plus indistinguishable scripted responses), AC9 (mount success path and the mounted blob under the target's upload scope) and AC10 (`docker login` with a registry token) added, Test Plan rows and all phases but Phase 4. Zero open questions. |
 | 2026-09-22 | afbb4e4 | adversarial + constitution + go-spec-reviewer (claim verification vacuous pre-code; suite claims grounded against the v1.1.1 and main conformance READMEs) | Expanded Design: suite pinned to a tagged release, zero-skips implications spelled out, token-service placement derived from the handler boundary, data-model mapping gap and durability split named; tightened AC1/AC2/AC6; raised Q2-Q6 (manifest graph, docker login credential, zero-skips escape hatch, cross-mount leak policy, session lifetime); stays draft. |
+| 2026-09-26 | 4d1aeb1 | folding adopted recommendations under the standing delegation | Not a review. Adopted Q3 option A (the `auth.md` registry token as the Basic password at the token endpoint; derived: no refresh token, and token issuance on the Phase 1 critical path), Q4 option B (documented exception list; grounding against the v1.1.1 suite source showed complementary `RunOnlyIf`/`RunOnlyIfNot` pairs make literal zero skips unreachable for any registry, so the list holds four structural entries, each needing its partner to pass, and the admissible classes widened to upstream-defect and structural), Q5 option A (mount only with `pull` on the source and the digest held there, indistinguishable `202` fallback otherwise, no mount without `from`, `OCI_AUTOMATIC_CROSSMOUNT=false`), Q6 option B (sliding idle expiry with a cap, recorded in `data-model.md`'s single upload-session definition because the storage spec is planned and was not edited). Also raised and adopted in this pass: Q7 (the suite presents one credential across two repositories, so the harness needs a credential holding grants on both; `auth.md` must supply the kind). Changed: Scope, the token-auth, suite, chunked-upload and new cross-repository-mount Design sections, AC1 rewritten, AC7 (session expiry on the wire), AC8 (the mount leak closed through a real `docker` client plus indistinguishable scripted responses), AC9 (mount success path and the mounted blob under the target's upload scope) and AC10 (`docker login` with a registry token) added, Test Plan rows and all phases but Phase 4. Zero open questions. |
+| 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the two-repository suite credential is met by `auth.md`'s resolved Q22 and AC29 (opt-in multi-repository token, repositories named by identity), rewritten through Design, the cross-mount accepted cost, the Q7 record, the AC1 Test Plan row and Phase 5; the token-management surface and robot accounts cited to `credential-management.md` (auth's resolved Q21), Phase 1 depending on it reaching planned; the addressed-object table (manifest by tag named; manifests by digest, blobs and upload sessions content-addressed; tag list, referrers and catalog none; the JWT carrying the pattern per auth AC26) with AC11 as the pattern-refusal case in both modes; the per-format policy rendering (403, `DENIED`, AC12, Phase 6) the supply-chain fold queued for OCI first; the catalogue's resolved client-reach decision applied as AC13. Nothing found already done. Stays draft. |
+| 2026-09-28 | a6d72b3 | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the credential-management authoring (item 10): every "(to be authored)" citation replaced by the spec's Phase 1, `POST /api/v1/tokens`, AC5 and "Robot accounts" (AC9); the suite credential is minted with `multi_repository: true` (its AC7, whose Test Plan runs this suite). From the auth and interface reconciliation and auth's resolved name-free-document decision (was Q23): `GET /v2/` declared a descriptor with no repository, so a patterned-only `pull` passes docker's first request (AC11, the scope table test with the sentinel check). From the format-handler-interface reconciliation (item 3) and `repository-lifecycle.md`: `Capabilities()` declares `Virtual` and `Rename` supported, and the `lifecycle_test.go`, `readonly_remote_test.go`, `rename_test.go` and `refresh_test.go` cases those specs and `management-api.md` AC29 place under `conformance/oci/` are gathered as AC15. From the artifact-verification authoring (item 14): signature verification is no longer out of scope; a "Signatures and the verifier" section states the handler's half (discovery by referrers query and by the `sha256-<hex>.sig` tag, the hand-off through `Deps`' `Verifier`, never altering a signature manifest), asserted by AC14 sharing `conformance/oci/cosign_test.go` with its AC6. From the upstream-adapters authoring (item 10): Phase 4 runs on `internal/upstream/distribution` and the preconfigured Docker Hub profile, whose blob-redirect CDN hosts are captured at Phase 4, asserted by AC16 sharing `upstream_dockerhub_test.go` with its AC25; OCI never uses `proxy-cache.md`'s completion-only mode (was Q15) because every fetch carries a declared digest. From the supply-chain reconciliation (item 11) and Open item 5: the refusal goes through `WriteRefusal` with the shared status-line phrase (was Q10, AC18), and AC12's capture fills the `pending` binding-table row (its AC20, harness AC26). From the management-api authoring (items 11 and 12): this format declares no `Operator` kinds and retires nothing, stated in Design with the reason. Open item 30's OCI half raised Q8 (where the registry repository ends inside an OCI name), written in decision shape and adopted: the first component is the repository, the rest the image, so one remote covers a whole upstream registry and the one-component name grammar holds; folded through the object table (`{image}/{tag}`), AC11, a new "The name split" section, the suite-credential paragraph and AC17. Replication and vulnerability scanning re-cited to `replication.md` and `supply-chain-policy.md` AC10. Nothing found already done. `node scripts/check-spec.js` zero failures for this file. Stays draft pending a gate review. |
+| 2026-10-08 | 4f929c7 | Fable gate review: full review + re-examination of the Opus adoption (Q8), adversarial pass on the Opus reconciliation and the original authoring (suite conformance, push sessions, cross-mount, deletion, referrers, Docker Hub limits, the read-only `405`), constitution compliance | A review. Brought current first: the whole of `agents/spec-loop/consequences.md` read, both queued items applied and verified against their sources at HEAD (proxy-cache round 3 item 3: the revalidation probe declared on the tag fetch, citing was-Q24 and AC32, asserted by AC6; homebrew recheck item 2: brew 7.0.6 under a `/v2/`-bearing artifact domain declared a client as Q9, adopted under the standing delegation, AC13); the optional auth AC32 citation applied. Protocol claims re-grounded against the distribution spec and the conformance sources at the v1.1.1 tag, fetched this pass: the four exception-table guards hold (`lastResponse` is assigned only by the mount case), but the suite is a soft gate in seven places beyond skips (tag and manifest deletion disallowed, blob deletion `405`, mount `202`, monolithic `202`, the empty-layer manifest and the `artifactType` filter pass on a `Warn` to stderr that reaches no report), so a strict overlay is now Design's tolerant-case table and AC18; `OCI_AUTH_SCOPE` left unset and `OCI_SKIP_EMPTY_LAYER_PUSH_TEST` found declared-but-unused. Design corrections: the 2026-09-28 claim that OCI never uses the completion-only mode was wrong (a tag fetch, the tag list and the referrers listing cannot declare a digest; they carry a verifier); the adapter cool-down wording predated upstream-adapters was-Q5's amendment (no cool-down on `ratelimit-remaining: 0`); a `RateLimitError` is rendered `429` `TOOMANYREQUESTS`; the read-only `405` was cited to repository-lifecycle AC10 "for a binding" when OCI has no bindings and management-api AC7 and was-Q16 leave the rendering to this spec, now fixed as `405` `UNSUPPORTED` with docker's output captured (new Design section, AC19); deletion semantics stated from the immutable snapshot (tag-only, manifest-by-digest, the referenced-blob refusal); a `416` leaves the session open and a session URL is bound to its `<name>` (AC4, AC7); a mount from a `remote` never fetches upstream and a mount into a non-`local` is a push refusal (AC9); the manifest `PUT` is bounded by the shared spool (`413`), claim-free and idempotent on identical bytes (AC2); `OCI-Subject` and the proxied referrers listing with the `<alg>-<ref>` fallback (AC14); the serving door's `HEAD` and `Cache-Control` rules and auth was-Q27 cited; the token endpoint named as the second oracle channel (AC17); AC10's file aligned with auth AC3's row. Q8 rechecked: confirmed, with the stricter first-component grammar and the token-endpoint channel added to its record; Q3 to Q7 attacked and left standing. Open Questions empty; 19 criteria, each with a Test Plan row; `node scripts/check-spec.js` zero failures for this file. Sibling consequences reported, not applied. Status: planned. |
