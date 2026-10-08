@@ -222,7 +222,7 @@
     "path": "docs/internal/plans/formats/helm.md",
     "description": "Spec for the classic Helm chart repository format (index.yaml plus .tgz and .prov over HTTP), hosted and proxied, and how it relates to the OCI path that oci.md already covers.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "19",
     "covers": [
       "internal/format/helm/**",

@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Question records re-checked 2026-09-28 at 15ced69 (not a review): Q3 cites the renamed upload section, Q5 records how the optional after-commit .prov verdict sits beside never-signature-verified, Q7 notes its harness exception entry is still owed. Reconciled 2026-09-28 at 2cf0d01 with the foundation wave (not a review): index.yaml is the handler's Indexer generator in internal/format/helm/index run by signing-service's index runtime (AC3); deletion and attachment are the management-api kinds delete-version and attach on the Operator interface with core-held Retirement, conflict 409 and validation 422 (AC6, AC18); index.yaml stays none under auth's descriptor kind with the reason recorded; the .prov is artifact-verification's optional openpgp verdict source, recorded never enforced (AC7); WriteRefusal, the refusal status line and the binding-table row, and OSV lists no Helm ecosystem (AC17); capabilities, rename and a merged virtual index (new AC19). Earlier: Reconciled 2026-09-26 at da0aecd (not a review): Q2 revised to the registry-owned management API (ChartMuseum's upload stays the publish route; deletion and provenance attachment move to management-api.md and ChartMuseum's routes are not served, AC6, AC18, Phase 5), Q8 raised and adopted (upload object from a bounded Chart.yaml peek), per-route addressed objects (AC16) and the 403 policy rendering (AC17) added, retirement set placed in the package-level document, charter AC12 recorded. Earlier: Authored 2026-09-26 at 4d1aeb1 as a grounded first draft: the classic index.yaml wire contract captured from three real Helm releases (3.20.0, 3.22.0, 4.3.0) and the cm-push plugin against a logging server, the ChartMuseum write API grounded in its source, and the classic-versus-OCI relationship settled. All seven questions adopted under the owner's standing delegation; awaits its first review."
+status: planned
+status_description: "Planned by the Fable gate review of 2026-10-08 at ecb2028: brought current with every queued consequence (auth helm row landed, harness exception row and digest manifest, member input, serving forms and serve policy, cacheability floor, spool bound and claims, advisory key, no-clock TTL case), the eight question records rechecked (Q3 amended: the documented cm-push context path is the repository's full path, captured; Q7 confirmed with the landed harness row; the rest confirmed), and one design correction: the proxied changed-digest case follows proxy-cache's new-blob-beside-the-old variant instead of pinning the cached digest. Earlier: Question records re-checked 2026-09-28 at 15ced69 (not a review): Q3 cites the renamed upload section, Q5 records how the optional after-commit .prov verdict sits beside never-signature-verified, Q7 notes its harness exception entry is still owed. Reconciled 2026-09-28 at 2cf0d01 with the foundation wave (not a review): index.yaml is the handler's Indexer generator in internal/format/helm/index run by signing-service's index runtime (AC3); deletion and attachment are the management-api kinds delete-version and attach on the Operator interface with core-held Retirement, conflict 409 and validation 422 (AC6, AC18); index.yaml stays none under auth's descriptor kind with the reason recorded; the .prov is artifact-verification's optional openpgp verdict source, recorded never enforced (AC7); WriteRefusal, the refusal status line and the binding-table row, and OSV lists no Helm ecosystem (AC17); capabilities, rename and a merged virtual index (new AC19). Earlier: Reconciled 2026-09-26 at da0aecd (not a review): Q2 revised to the registry-owned management API (ChartMuseum's upload stays the publish route; deletion and provenance attachment move to management-api.md and ChartMuseum's routes are not served, AC6, AC18, Phase 5), Q8 raised and adopted (upload object from a bounded Chart.yaml peek), per-route addressed objects (AC16) and the 403 policy rendering (AC17) added, retirement set placed in the package-level document, charter AC12 recorded. Earlier: Authored 2026-09-26 at 4d1aeb1 as a grounded first draft: the classic index.yaml wire contract captured from three real Helm releases (3.20.0, 3.22.0, 4.3.0) and the cm-push plugin against a logging server, the ChartMuseum write API grounded in its source, and the classic-versus-OCI relationship settled. All seven questions adopted under the owner's standing delegation; awaits its first review."
 description: "Spec for the classic Helm chart repository format (index.yaml plus .tgz and .prov over HTTP), hosted and proxied, and how it relates to the OCI path that oci.md already covers."
 author: michielvha
 goal: "Serve and cache classic Helm chart repositories with the real helm client as the oracle, with the repository-wide generated index and the de facto ChartMuseum upload API handled deliberately rather than discovered."
@@ -162,8 +162,9 @@ spec's definition of done requires the deliberately unimplemented surface to be 
   publish route every such script also calls is unchanged.
 - **ChartMuseum's read API** (`GET /api/charts`, `GET /api/charts/{name}`,
   `HEAD /api/charts/{name}/{version}`, the `templates` and `values` sub-resources). No Helm
-  client reads them: `helm cm-push` fetches `index.yaml` to detect a repository and nothing
-  else (captured), and the index is the ecosystem's read contract. A UI-era listing surface
+  client reads them: `helm cm-push` fetches `index.yaml` only when no context path is set, to
+  detect a repository, and nothing else (captured; under the documented context path it fetches
+  nothing before the upload), and the index is the ecosystem's read contract. A UI-era listing surface
   belongs to the registry's own management API, not to a per-format imitation.
 - **Signature verification of provenance files by the handler.** Verification belongs to the
   shared producer `docs/internal/plans/foundation/artifact-verification.md`, per
@@ -401,12 +402,18 @@ implied.
 Two routing facts follow from the plugin's URL construction, both captured:
 
 - `cm-push` builds the upload URL as `path.Join(contextPath, "api", trimPrefix(repoPath,
-  contextPath), "charts")`. With a repository URL of `http://host/helm/{repo}` and no context
-  path, it POSTs to **`/api/helm/{repo}/charts`**, a root-anchored path outside the handler's
-  format-first mount. With `--context-path /helm` (or `HELM_REPO_CONTEXT_PATH=/helm`) it POSTs
-  to `/helm/api/{repo}/charts`. This registry serves the latter and claims no root-anchored
-  mount (Resolved: cm-push URL shape, below); the documented invocation sets the context path,
-  and the conformance case uses it.
+  contextPath), "charts")`. Captured again on the Fable recheck of 2026-10-08 against a logging
+  server with a repository URL of `http://host/helm/{repo}`: with no context path it POSTs to
+  **`/api/helm/{repo}/charts`**, a root-anchored path outside the handler's format-first mount,
+  after a `GET /helm/{repo}/index.yaml`; with `--context-path /helm` it POSTs to
+  `/helm/api/{repo}/charts`, outside the repository's own prefix, which would reserve `api` as
+  a chart repository name; with **`--context-path /helm/{repo}`** (the repository's full path,
+  or `HELM_REPO_CONTEXT_PATH` set to it) it POSTs to **`/helm/{repo}/api/charts`**, exactly the
+  wire table's `{repo}/api/charts` and the shape Gitea's and GitLab's `curl` scripts use, and
+  fetches no index first. This registry serves only that route, inside the repository's prefix,
+  and claims no root-anchored mount and no reserved repository name (Resolved: cm-push URL
+  shape, below); the documented invocation sets the context path to the repository's path, and
+  the conformance case uses it.
 - `cm-push` uploads only the `chart` part. A `.prov` file sitting next to the archive was
   **not** attached (three captures: archive with provenance beside it, archive alone, and a
   chart directory it packaged itself), and passing the `.prov` path as the chart argument is an
@@ -428,6 +435,17 @@ because `cm-push` and `curl --fail-with-body` surface it:
   provenance coherence). The signature is not verified.
 - The stored filename is `{name}-{version}.tgz` and the served URL basename is the same, for
   the `helm verify` reason above.
+- The upload is the handler's own wire write in `management-api.md`'s terms. Its body is spooled
+  through the bounded facility handed through `Deps` under `management.publish_spool_limit`
+  (its resolved spool-bound decision, was Q20, AC36), which matters here because `cm-push` sends
+  a chunked body with no `Content-Length` (captured), and an over-limit upload is refused
+  `too-large` before parsing. The write declares its **claim**, the coordinate `{name}/{version}`
+  read from the spooled archive's `Chart.yaml`, on the transaction it opens, checked when declared
+  and again at commit (its resolved retirement-comparison decision, was Q14, AC12): the
+  retirement and duplicate refusals compare the claim, never the bounded peek `Scope(r)` reported
+  for authorization, so an archive whose `Chart.yaml` is not its first entry is still refused on
+  its true coordinate. Helm declares **no unchanged publish** (its was-Q15): an identical
+  re-upload is the 409 above, as ChartMuseum answers it, and `cm-push` retries nothing.
 
 ### Management operations
 
@@ -550,6 +568,20 @@ as the client.
   as `application/gzip`; provenance as `text/plain`. The client ignores all three (it sends an
   `Accept` only on chart fetches and never negotiates), so there is no content negotiation to
   design, only a transcript to keep tidy.
+- **Every byte goes out through the serving door**, and the handler sets no freshness or
+  cacheability header (`signing-service.md` AC11): the hosted and merged index through
+  `ServeDocument`, the rewritten proxied index through the same form under the cache-scoped
+  record, and every archive and provenance file through `ServeFile` with the CAS digest as a
+  strong `ETag` (its resolved non-generated-documents decision, was Q14, AC32). The serve policy
+  Helm's profile declares (its was-Q18) is `Cache-Control: no-cache` on `index.yaml`, which is
+  mutable and refetched whole, and `public, max-age=31536000, immutable` on archives and
+  provenance files, whose coordinates never change bytes (Resolved: republish and retirement).
+  Those values reach a cache only on an anonymous read of an anonymously readable repository:
+  on a private repository, or on any request `helm` authenticated, the door serves `private`
+  with `public` removed (its resolved cacheability decision, was Q25, AC38), and since `helm`
+  sends Basic preemptively on every fetch of a private repository, a shared cache in front of
+  the registry never stores a private chart. A `HEAD` on any hosted route is the `GET` with the
+  body withheld, `Content-Length` included (its was-Q24).
 
 ### The proxied path
 
@@ -617,13 +649,18 @@ feed covers, per ecosystem"), an advisory-dependent rule on a Helm repository is
 configuration as unbindable (its AC11), and coverage arrives only when an operator declares an
 OSV-schema source that lists one through `policy.feed.sources` (its resolved advisory-sources
 decision, was Q9, and AC21). Coordinate rules and signature-verdict rules bind without it. The
-handler classifies each observed event into one of `proxy-cache.md`'s event classes ("Upstream
+handler reports no advisory key beyond the coordinate itself: the chart name and version are
+the only names an advisory could carry, so the core-parsed key `supply-chain-policy.md`'s
+resolved advisory-key decision (was Q11, AC24) stores is the package name and the version
+string as written; and once a declared source covers Helm, a `local` repository matches public
+advisories by coordinate with `coordinate_exemptions` as the operator's lever (its was-Q12,
+AC25). The handler classifies each observed event into one of `proxy-cache.md`'s event classes ("Upstream
 removal or replacement") and the layer executes the response; Helm's rows of its AC13 table:
 
 | Upstream event, as observed at index revalidation | Classification |
 |---|---|
 | A version's entry vanishes from `index.yaml` (deleted upstream, or a regenerated index that dropped it) | **Removal with no signal**: keep serving the cached archive under the cached index entry, record an operator-visible divergence and alert once |
-| A cached version's `digest` changes upstream (the same coordinate republished with different bytes) | The **revision-bound immutability** class in the layer's response, recorded and alerted, no purge; this format's specific is that the rewritten index this registry serves keeps advertising the digest of the cached bytes, never the new one, so no client ever holds the newer revision and the new bytes are never fetched, because a silent byte swap under one coordinate is the shape of a supply-chain event even though the format cannot mark it as one and the client verifies nothing against the digest itself |
+| A cached version's `digest` changes upstream (the same coordinate republished with different bytes) | The **revision-bound immutability** class in the layer's response, recorded and alerted, no purge, in its **new-blob-beside-the-old** variant (`proxy-cache.md`'s resolved old-blob decision, was Q20, and AC28): the chart path carries no digest, so the route follows the current adopted revision; the rewritten index this registry serves carries the current revision's `digest`, the next pull fetches the new bytes stream-and-verify against it as a new blob, the commit that creates the new blob's cached reference at the coordinate ends the old blob's in the same transaction, and the divergence record keeps both digests. The earlier reading here, that the served index kept advertising the cached digest and the new bytes were never fetched, was neither of the layer's two variants and is withdrawn on the Fable recheck: a served index whose `digest` disagreed with the bytes the registry would fetch is exactly the incoherence Helm 4's digest-keyed content cache punishes |
 | `deprecated: true` appears, or any other metadata field changes | An **ordinary metadata change**, propagated at the next revalidation; never a removal event |
 | An upstream index older than the adopted one (a rolled-back or lagging upstream) | **Regression not adopted**: the cached revision stands, a divergence is recorded (`proxy-cache.md` AC22) |
 | The whole upstream index becomes unreachable | Serve-stale up to the bound, then error, per the settled revalidation-failure decision |
@@ -631,6 +668,17 @@ removal or replacement") and the layer executes the response; Helm's rows of its
 Detection happens at revalidation: per `proxy-cache.md`'s resolved answer (was Q12) the proxy
 layer never polls an upstream, and the only active channel is `supply-chain-policy.md`'s
 advisory feed.
+
+What a Helm remote keeps, declared in the terms `proxy-cache.md` settled on its Fable recheck:
+the handler retains **no superseded index revision** (its resolved retained-revisions decision,
+was Q19: the declared count is zero, and the remote's repository-level document, the rewritten
+index, carries no declared blob-digest list beyond itself, its was-Q22), because no chart route
+can name a revision and the current rewritten index serves every client; the rewritten index is
+a current metadata document LRU eviction never reaches (its was-Q21), while cached archives and
+provenance files are cached files under the repository's quota, held by their ordinary cached
+references. A `HEAD` on any proxied route is the `GET` with the body withheld, never forwarded,
+filling the cache on a cold miss (its was-Q24, AC32); no Helm client sends one (captured: only
+`GET` on every surface), so the rule serves intermediaries and `curl`.
 
 Two assertion traps, both grounded this run. The client caches the index locally and reads it
 for search and resolution, so a case proving a publish is visible runs `helm repo update` and
@@ -657,9 +705,10 @@ The management operations report `{name}/{version}` too, a requirement on
 `management-api.md` recorded in "Management operations".
 
 What that gives and costs, applying `auth.md`'s rules rather than re-deciding them. Every Helm
-read starts from `index.yaml`, which enumerates every chart in the repository, and `helm cm-push`
-fetches it before uploading, so a credential holding **only** a patterned `pull` is refused at
-the first request and no Helm command works under it. `auth.md`'s fourth object kind, the
+read starts from `index.yaml`, which enumerates every chart in the repository, so a credential
+holding **only** a patterned `pull` is refused at the first request and no Helm read works under
+it; `helm cm-push` under the documented context path fetches no index (captured 2026-10-08), so a
+credential holding a patterned `push` alone publishes its own charts without any `pull`. `auth.md`'s fourth object kind, the
 `descriptor` a patterned `pull` may read (its resolved name-free-document decision, was Q23),
 does not apply here and the table above is unchanged by it: a descriptor is a repository-wide
 document whose body carries no name, version or digest of any object the repository holds, held
@@ -702,7 +751,14 @@ the first member in member order that holds any version of it and later members'
 that name omitted, the dependency-confusion-closing rule every format spec adopts; chart URLs
 in the merged index are relative under the virtual mount and resolve through the member that
 supplied the entry, the previous merged index serves until the new one commits, and no merge
-runs on a request's path. A rename changes no served byte: no Helm document carries the
+runs on a request's path. The profile declares the one **member input** the merge reads from a
+member, in the shape `signing-service.md`'s resolved member-input decision gives it (was Q21
+there, AC35): the literal path `index.yaml` under the member's mount, no template and no
+derivation, so the round bound is one, a virtual's creation or a member-list change adding a
+never-adopted remote enqueues that remote's first fetch of exactly that path, and registration
+refuses a profile without it. Helm's index is unsigned, so the signed-virtual admission rule
+(its was-Q20) does not bind: a proxied member's rewritten index contributes under its own
+adoption, whatever anchor class it adopted under. A rename changes no served byte: no Helm document carries the
 repository name, every hosted URL is relative, so the index serves under the new base URL
 unchanged and the old name answers exactly what a never-existing repository answers, while every
 generated document, retirement and grant still resolves to the repository by identity
@@ -717,14 +773,15 @@ token as password, username not an input); the harness's existing `setup` token 
 suffices, injected as `--username`/`--password` on `helm repo add` (and `--pass-credentials`
 where a case's index deliberately points at a second host). `helm cm-push` reads the same
 repository entry, or takes `--access-token` for the Bearer form, so no new harness vocabulary is
-needed. Two corrections to the `foundation/auth.md` client table follow from the captures and
-are still owed to that spec, whose `helm` row reads "Bearer or Basic depending on the endpoint"
-and which names it the least certain row: the classic read path is Basic only, sent
-preemptively, with no bearer option in `helm repo add`; and Bearer appears on the classic path
-only from the `cm-push` plugin's `--access-token`. That spec's rule that each row is confirmed
-against captured traffic before a format's auth cases are written gates AC15 and AC16 on the
-correction landing. The OCI path's `helm registry login` is the docker credential flow `oci.md`
-owns.
+needed. `foundation/auth.md`'s client table carries the `helm` row from this spec's captures
+(verified at HEAD on the Fable recheck: Basic only on the classic read path, sent preemptively
+and confined to the repository's scheme and host unless `--pass-credentials`; Bearer only from
+`cm-push --access-token`), so AC15 and AC16 are no longer gated on a correction. Every response
+the authentication layer writes itself, the challenge, the authentication error and the
+existence-rule `404` a private repository answers `helm repo add`, carries
+`Cache-Control: private, no-store` (`auth.md`'s resolved refusal-cacheability decision, was Q27,
+and AC38), which AC15 observes. The OCI path's `helm registry login` is the docker credential
+flow `oci.md` owns.
 
 `Scope(r)` for this handler: `GET index.yaml`, chart and provenance fetches map to `pull`;
 `POST api/charts` to `push`; the addressed object each reports is declared in "Addressed objects
@@ -748,10 +805,12 @@ provenance present and absent, `helm install --dry-run` from a named repository,
 chart and of a duplicate (the 409), and `curl` upload of chart plus provenance. ChartMuseum's
 provenance-upload and delete routes are not recorded, since this registry does not serve them;
 the management operations that replace them have no reference implementation to record, and
-their effects replay through the index-refetch and pull flows above. Recording gates on the harness's redaction criterion
-(`conformance-harness.md` AC13). The reference for the read half is two public repositories of
-different hosting classes; the reference for the write half is ChartMuseum itself, because no
-public registry serves the write API (Resolved: corpus reference, below).
+their effects replay through the index-refetch and pull flows above. Recording gates on the
+harness's redaction criterion (`conformance-harness.md` AC13). The reference for the read half is
+two public repositories of different hosting classes; the reference for the write half is
+ChartMuseum itself, because no public registry serves the write API (Resolved: corpus
+reference, below): the harness's exception table carries the `helm` row, and the write half's
+corpus manifest pins the ChartMuseum image by digest at recording time (its was-Q7, AC28).
 
 ## Acceptance Criteria
 
@@ -760,7 +819,9 @@ public registry serves the write API (Resolved: corpus reference, below).
       including against a freshly created empty repository, with every index the registry
       serves loading in both clients with zero skipped entries, asserted from the clients'
       output and the transcript.
-- [ ] AC2: A chart uploaded through the real `helm cm-push` plugin, and a chart plus
+- [ ] AC2: A chart uploaded through the real `helm cm-push` plugin under the documented
+      `--context-path /helm/{repo}`, reaching `POST /helm/{repo}/api/charts` and no other
+      route, and a chart plus
       provenance uploaded through the multipart `chart` and `prov` fields, each become visible
       to a subsequent `helm repo update` and retrievable by `helm pull` with bytes whose sha256
       equals the index entry's `digest`; and `helm pull --verify` succeeds against the uploaded
@@ -820,8 +881,10 @@ public registry serves the write API (Resolved: corpus reference, below).
       provenance` error when it does not, the latter negatively cached so a repeat within the
       negative TTL makes no upstream request.
 - [ ] AC12: A cached version vanishing from the upstream index keeps serving with a recorded
-      operator-visible divergence; a cached version whose upstream `digest` changes keeps
-      serving the cached bytes under the cached digest with a divergence alert; a `deprecated`
+      operator-visible divergence; a cached version whose upstream `digest` changes is recorded
+      and alerted with both digests, the served index carries the current digest, the next pull
+      fetches and verifies the new bytes and the old blob's cached reference ends in that commit
+      (`proxy-cache.md` AC28), with no purge of anything else; a `deprecated`
       mark appearing upstream propagates as an ordinary metadata change; an upstream index older
       than the adopted one is not adopted and the served index's `Last-Modified` never moves
       backwards; no upstream index event purges cached content - Helm's side of the settled
@@ -837,7 +900,11 @@ public registry serves the write API (Resolved: corpus reference, below).
       chart and provenance fetches; `helm cm-push` authenticates with the same token as Basic
       and as `Bearer`; an invalid token is rejected on every one of those paths; and an
       unauthenticated `helm repo add` against a private repository fails with the same
-      `not a valid chart repository` outcome as against a repository that does not exist.
+      `not a valid chart repository` outcome as against a repository that does not exist, that
+      `404` carrying `Cache-Control: private, no-store` (`auth.md` AC38); and every authenticated
+      index, chart and provenance response carries `private` without `public`, while an
+      anonymous chart fetch from a public repository carries the declared `public, max-age=31536000,
+      immutable` (`signing-service.md` AC38).
 - [ ] AC16: A token holding an unpatterned `pull` beside `push` under the pattern `acme-*/**`
       uploads `acme-web` through the real `helm cm-push` and is refused uploading `other-web`,
       with no snapshot created by the refusal; an upload whose archive does not begin with
@@ -877,7 +944,7 @@ public registry serves the write API (Resolved: corpus reference, below).
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
 | AC1 | conformance | `conformance/helm/hosted_test.go` (pinned Helm 3.22.0 and 4.3.0; empty-repository case; zero-skipped-entries assertion on client output) |
-| AC2 | conformance | `conformance/helm/publish_test.go` (cm-push with `--context-path`; curl multipart chart+prov; digest assertion from the transcript) |
+| AC2 | conformance | `conformance/helm/publish_test.go` (cm-push with `--context-path /helm/{repo}`, the transcript showing only `POST /helm/{repo}/api/charts`; curl multipart chart+prov; digest assertion from the transcript) |
 | AC3 | integration + architecture test | `internal/format/helm/snapshot_test.go` (snapshot count per write, refused-upload no-snapshot, repoint serves the older index with `Last-Modified` moved forward) + a conformance repoint case in `conformance/helm/hosted_test.go`; `internal/format/helm/arch_test.go` (no renderer and no regeneration request in the handler package; the generator lives in `internal/format/helm/index`); `internal/index/dispatch_test.go` (`signing-service.md` AC1, with the Helm generator as a registered fixture) |
 | AC4 | integration + property | `internal/format/helm/concurrent_publish_test.go` (N concurrent uploads, index completeness and digest agreement); `internal/format/helm/large_index_test.go` (threshold crossing, sweep, then a real-client fetch) |
 | AC5 | conformance | `conformance/helm/publish_test.go` (duplicate with and without `?force`; retired coordinate; invalid archive and invalid semver; snapshot-table assertion via the registry state, not the client) |
@@ -885,16 +952,16 @@ public registry serves the write API (Resolved: corpus reference, below).
 | AC7 | conformance + integration | `conformance/helm/provenance_test.go` (`helm verify` round trip; unknown-key signature accepted then failing at the client); `internal/format/helm/prov_coherence_test.go` (name, version and sum mismatches through the multipart field and the attachment operation); `conformance/helm/verification_test.go` (hosted and proxied verdict cases over a `trust` entry holding the fixture RSA key, `artifact-verification.md` AC21 and AC24) |
 | AC8 | conformance | `conformance/helm/naming_test.go` (`+` version through the real client; case-distinct packages) |
 | AC9 | conformance | `conformance/helm/proxied_test.go` (transcript + network-level assertion; fresh client caches in setup; relative-URL and absolute-cross-host upstream fixtures; basename-preservation assertion on the served index) |
-| AC10 | conformance | `conformance/helm/proxied_ttl_test.go` (mutating local stand-in upstream with and without validators; 304 asserted at the network layer) |
+| AC10 | conformance | `conformance/helm/proxied_ttl_test.go` (mutating local stand-in upstream with and without validators; 304 asserted at the network layer; the remote's metadata TTL shortened to seconds through its `repositories` entry and waited through on the real clock, since the harness provides no clock, `conformance-harness.md`'s resolved time decision, was Q8, AC30) |
 | AC11 | integration + conformance | `internal/format/helm/fetch_integrity_test.go` (digest mismatch commits nothing); `conformance/helm/proxied_verify_test.go` (`--verify` with and without an upstream `.prov`; negative-cache assertion at the network layer) |
-| AC12 | integration | `internal/format/helm/removal_test.go` (test upstream presenting each event class, an older upstream index included; the shared-layer half is `proxy-cache.md` AC13's and AC22's) |
+| AC12 | integration | `internal/format/helm/removal_test.go` (test upstream presenting each event class, an older upstream index included, the changed-digest case asserting the new blob's fetch and the old reference's end in one commit; the shared-layer half is `proxy-cache.md` AC13's, AC22's and AC28's) |
 | AC13 | conformance | `conformance/helm/replay_test.go` |
 | AC14 | integration + conformance | `internal/format/helm/oci_separation_test.go` (one stored object, one `Blob` row, no cross-listing); `conformance/helm/separation_test.go` (`helm push oci://` then `helm repo update` on every classic repository; classic upload then `helm pull oci://` failing) |
-| AC15 | conformance | `conformance/helm/auth_test.go` (Basic on reads; cm-push Basic and Bearer; invalid token on each path; private-versus-missing `helm repo add` outcome) |
+| AC15 | conformance | `conformance/helm/auth_test.go` (Basic on reads; cm-push Basic and Bearer; invalid token on each path; private-versus-missing `helm repo add` outcome; `Cache-Control` asserted from the transcript on the `404`, on an authenticated chart fetch and on an anonymous public one) |
 | AC16 | conformance + unit | `conformance/helm/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; `curl` for the direct chart fetches); `internal/format/helm/scope_object_test.go` (the object table, per route, including the bounded-peek upload cases, `format-handler-interface.md` AC12) |
 | AC17 | conformance + integration | `conformance/helm/policy_test.go` (hosted and proxied modes; rules through the `policies` key, a controlled advisory through `advisories` from a second declared source; raw-socket status line; second-repository fallback capture that fills the binding-table row, `supply-chain-policy.md` AC18 and AC20); `internal/format/helm/policy_config_test.go` (advisory rule refused as uncovered while no source lists a Helm ecosystem, `supply-chain-policy.md` AC11) |
 | AC18 | integration + conformance | trigger: `internal/format/helm/manage_prov_test.go` (the `attach` operation's snapshot, `validation` on an incoherent file, `conflict` on an existing one, action refusals, `repository-type` on remote and virtual); effect: `conformance/helm/provenance_test.go` (the `script` attaches through the management endpoint, then `helm pull --verify` succeeds; the `script`-driven case `management-api.md` AC24 requires for the kind) |
-| AC19 | unit + conformance | `internal/format/helm/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/helm/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; update, pull and `cm-push` under the new name); `conformance/helm/virtual_test.go` (merged index over a hosted and a proxied member, first-member chart resolution); `internal/format/helm/virtual_merge_test.go` (per-name first member; the merge runs as `index.merge`, `signing-service.md` AC19) |
+| AC19 | unit + conformance | `internal/format/helm/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/helm/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; update, pull and `cm-push` under the new name); `conformance/helm/virtual_test.go` (merged index over a hosted and a proxied member, first-member chart resolution); `internal/format/helm/virtual_merge_test.go` (per-name first member; the merge runs as `index.merge`, `signing-service.md` AC19; the profile's literal member input `index.yaml` and registration refusing a profile without it, its AC35) |
 
 The runner-enforced obligations, both modes with unauthenticated and unauthorized cases in each,
 apply from the sibling specs and are not restated per criterion. The case set needs nothing
@@ -962,7 +1029,11 @@ on, and raised and adopted Q8 on what an upload reports to the pattern scopes.
 `POST api/charts` peeks a bounded prefix of the body and reports `{name}/{version}` from the
 archive's `Chart.yaml` when that is the archive's first entry, which is where `helm package`
 writes it; when the cap is reached first, or the first entry is anything else, it reports none.
-Folded through Design ("Addressed objects and pattern scopes"), AC16 and Phase 1.
+Folded through Design ("Addressed objects and pattern scopes"), AC16 and Phase 1. Rechecked on
+Fable 2026-10-08: confirmed, and the record under-stated one thing the fold now says: the peek
+authorizes only; the coordinate the retirement and duplicate checks compare is the claim declared
+from the spooled archive (`management-api.md` was-Q14), so a mis-placed `Chart.yaml` can widen
+nothing.
 
 The judgment call it settles: `auth.md` requires every route to report the object it addresses,
 and an upload's coordinate is inside the gzipped tarball, never in the URL. The object has to be
@@ -1011,7 +1082,8 @@ unified handler would have the Helm handler serving under the OCI handler's root
 Accepted cost: no cross-visibility, stated in Scope. Why the alternatives lost: both require a
 boundary crossing the constitution names as evidence the model is wrong, and neither is
 something a Helm user expects, since the client itself treats the two as different worlds.
-Folded into Context, Scope, the "Classic and OCI" section and AC14.
+Folded into Context, Scope, the "Classic and OCI" section and AC14. Rechecked on Fable
+2026-10-08: confirmed.
 
 ### Resolved: the ChartMuseum API is the hosted write surface (was Q2)
 
@@ -1051,14 +1123,22 @@ Accepted cost: D's, stated in Scope; B lost because no Helm client drives it; C 
 lost in revision because its aliases are the per-format management surface the cross-format
 precedent rules out wherever no client drives the route. Folded into Context, Scope, the wire
 table, "The upload API is ChartMuseum's publish route", "Management operations", the
-write-boundary declaration, AC2, AC3, AC5, AC6, AC7, AC18 and Phase 5.
+write-boundary declaration, AC2, AC3, AC5, AC6, AC7, AC18 and Phase 5. Rechecked on Fable
+2026-10-08: confirmed; the publish is the handler's own wire write under the shared spool bound
+and claim declaration (`management-api.md` was-Q14, was-Q20), stated in the upload semantics.
 
 ### Resolved: no root-anchored mount for cm-push's default URL (was Q3)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option B: the handler claims only
-its format-first mount and the documented `cm-push` invocation sets `--context-path /helm`
-(or `HELM_REPO_CONTEXT_PATH=/helm`), under which the plugin POSTs to `/helm/api/{repo}/charts`
-inside the mount, as captured this run.
+its format-first mount and the documented `cm-push` invocation sets the context path. Rechecked
+on Fable 2026-10-08: confirmed, and amended in the value. As adopted the documented flag was
+`--context-path /helm`, under which the plugin POSTs to `/helm/api/{repo}/charts`: inside the
+mount but outside the repository's prefix, so the handler would have had to reserve `api` as a
+repository name and the route would have disagreed with the wire table's `{repo}/api/charts`.
+Captured on the recheck: `--context-path /helm/{repo}` (the repository's full path, or
+`HELM_REPO_CONTEXT_PATH` set to it) makes the plugin POST to `/helm/{repo}/api/charts`, the
+wire table's route, with no index fetch first; that is the documented invocation now, folded
+through "The upload API is ChartMuseum's publish route", AC2 and its row.
 
 The question arose because without a context path the plugin POSTs to `/api/helm/{repo}/charts`,
 outside any format-first mount, and `format-handler-interface.md` admits a root-anchored mount
@@ -1097,7 +1177,10 @@ registry's own caching layer relies on for correctness. The retired coordinates 
 `Retirement` records, the cross-format home `management-api.md`'s resolved
 retirement-placement decision (was Q3) settled after this record first placed them in the
 package-level document; the semantics are unchanged.
-Folded into Scope, the upload semantics, "What counts as a write", AC5 and AC6.
+Folded into Scope, the upload semantics, "What counts as a write", AC5 and AC6. Rechecked on
+Fable 2026-10-08: confirmed, with the consequence stated that Helm declares no unchanged publish
+(`management-api.md` was-Q15) and that the proxied changed-digest case follows the layer's
+new-blob variant rather than pinning the cached digest.
 
 ### Resolved: provenance is coherence-checked, never signature-verified (was Q5)
 
@@ -1123,7 +1206,8 @@ optional verdict source: with an `openpgp` trust set on the repository the share
 records a `verified` or `failed` verdict after the commit (its AC21), recorded and never
 enforced, and only a policy rule requiring `verified` refuses the chart, at resolution. That is
 not C: no keyring is required, nothing is refused at upload, and with no trust set the verdict
-is `absent` and behaviour is exactly as adopted. AC7 asserts both halves.
+is `absent` and behaviour is exactly as adopted. AC7 asserts both halves. Rechecked on Fable
+2026-10-08: confirmed.
 
 ### Resolved: the hosted index is generated on write and stored (was Q6)
 
@@ -1143,7 +1227,9 @@ lock wait and retry (`signing-service.md` AC28) and measured by AC4. Since adopt
 regeneration moved from the handler's own write into the shared index runtime, which runs this
 handler's `Indexer` generator before every commit (`signing-service.md`'s resolved Helm
 question, was Q1 there); the stored-document shape this record chose is unchanged. Folded into
-Scope, the mapping table, "The index document" and AC3, AC4.
+Scope, the mapping table, "The index document" and AC3, AC4. Rechecked on Fable 2026-10-08:
+confirmed; the stored document now goes out through `ServeDocument` under the declared serve
+policy, and the chart files through `ServeFile` (`signing-service.md` was-Q14, was-Q18).
 
 ### Resolved: corpus reference is two public read repositories plus ChartMuseum for writes (was Q7)
 
@@ -1165,9 +1251,12 @@ repository is an independent static host.
 
 Accepted cost: an exception-list entry in `conformance-harness.md` for the write half, under its
 resolved authoritative-reference decision (was Q3 there), which still names only public
-registries as authoritative; the entry is a sibling consequence, not applied here, and was not
-yet on that spec when this record was last checked (2026-09-28). Folded into "Conformance, auth
-and the corpus" and AC13.
+registries as authoritative. Rechecked on Fable 2026-10-08: confirmed; the entry exists (that
+spec's exception table, `helm` row, naming a ChartMuseum container and this record), and under
+its resolved digest-placement decision (was Q7 there, AC28) the write half's corpus manifest
+pins the ChartMuseum image by digest at recording time, so the row names the reference by kind
+and version and the manifest carries the digest. Folded into "Conformance, auth and the corpus"
+and AC13.
 
 ## Review Log
 
@@ -1177,3 +1266,4 @@ and the corpus" and AC13.
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the management surface re-homed from ChartMuseum's routes onto the registry-owned management API (Q2 revised to option D; Context, preconditions, Scope, the wire table, a new 'Management operations' section stating what this format requires of `management-api.md`, the write boundary, AC2, AC3, AC6, AC7, the new AC18, Test Plan and Phase 5); the retirement set placed in the package-level document; the charter AC12 signing-and-index-service precondition; the addressed-object table with Q8 raised and adopted (bounded peek at a first-entry `Chart.yaml`, none otherwise) and AC16, including the consequence that patterned-only `pull` cannot run helm; the policy rendering (AC17); stale citations of supply-chain Q6, proxy-cache Q12, harness Q4, pypi Q1 and Q3 and ansible Q5 rewritten to what was adopted. Stays draft. |
 | 2026-09-28 | 2cf0d01 | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` targeting this file verified against the source spec's current text before applying. Index: the handler's through-`Deps` regeneration assumption withdrawn for `signing-service.md`'s `Indexer` generator in `internal/format/helm/index` run by the index runtime (its resolved Helm question, was Q1; AC1, AC3, AC5, AC11, AC24, AC28), `Last-Modified` from the pointer's freshness record, the prototype's question 1 recorded as answered pending the re-open (AC3 gains the architecture half). Management: `delete-version` and `attach` as kinds on the `Operator` interface, `Apply` inside the write so the index regenerates in the same snapshot, `conflict` 409 for an existing `.prov` and `validation` 422 for an incoherent one (management-api reconciliation item 8), `repository-type` 405 on remote and virtual, the retirement set moved to the core-held `Retirement` record (AC6, AC18). Descriptor kind: `index.yaml` stays `none` with the reason recorded against `auth.md`'s resolved Q23 and the sentinel test (Open item 37). Verification: `artifact-verification.md`'s `openpgp` cleartext entry lists the `.prov` as an optional verdict source, recorded and never enforced (AC7 extended, verification case added). Policy: `WriteRefusal` and the refusal status line (`supply-chain-policy.md` was Q10, AC18), the binding-table row filled by AC17's case (AC20), and the coverage question answered: OSV `ecosystems.txt` fetched 2026-09-28 lists no Helm ecosystem, so Helm is uncovered until a `policy.feed.sources` source declares one (AC17 extended). Proxied: `upstream-adapters.md` AC6 and AC29 cited, cache-scoped freshness (proxy-cache AC22), the removal rows mapped onto the shared event classes with a regression row (AC12). New "Capabilities and lifecycle" section and AC19 (`Virtual: supported` over an `index.merge`-built merged index, `Rename: supported`, `rename_test.go`). Seeding through the write-path hook (signing-service AC21, harness AC24) and the `trust` key recorded. The `auth.md` `helm` row correction is still owed to that spec and now gates AC15 and AC16. Stays draft. |
 | 2026-09-28 | 15ced69 | cross-spec reconciliation of the Wave 1 folds on Opus: completion check of the question records the interrupted batch-3 agent was finishing. Not a review | Not a review. Every `### Resolved:` record checked for completeness (decision shape, adoption line, accepted cost, folding list) and for folding into the body. Q1, Q2, Q4, Q6 and Q8 complete and folded. Fixed: Q3's folding list named the pre-revision section "The upload API is a management surface", now "The upload API is ChartMuseum's publish route"; Q5 ("never signature-verified") gained a paragraph reconciling it with the optional after-commit `openpgp` verdict `artifact-verification.md` AC21 records for a stored `.prov`, and the Design sentence "the registry ... verifies no signature" now says the handler's upload path, which the paragraph beneath it already assumed; Q7's accepted cost states its `conformance-harness.md` exception entry is still owed. No criterion changed. Stays draft. |
+| 2026-10-08 | ecb2028 | Fable gate review: full review pass over the whole, the Opus reconciliation edits treated as unreviewed, plus re-examination of every question record | Brought current: `auth.md`'s `helm` row verified at HEAD and the AC15/AC16 gate wording lifted; `conformance-harness.md`'s `helm` exception row verified and its was-Q7 digest manifest cited (was-Q7 here confirmed); the virtual's literal member input `index.yaml` declared (`signing-service.md` was-Q21, AC35) and the signed-virtual admission rule recorded as not binding; every byte through the serving door with `ServeFile` for files and a declared serve policy (`no-cache` on the index, `immutable` on files), the cacheability floor on private repositories and authenticated requests (`signing-service.md` was-Q25, AC38; `auth.md` was-Q27, AC38) and `HEAD` as the body-withheld `GET` on both paths (`signing-service.md` was-Q24, `proxy-cache.md` was-Q24); the publish as a wire write under the spool bound with a declared claim and no unchanged publish (`management-api.md` was-Q14, was-Q15, was-Q20); retained revisions zero, index never evicted (`proxy-cache.md` was-Q19, was-Q21, was-Q22); the advisory key as the coordinate and `coordinate_exemptions` (`supply-chain-policy.md` was-Q11, was-Q12); AC10's TTL case on the real clock through a shortened repository TTL (`conformance-harness.md` was-Q8). Adversarial findings, each captured against `helm cm-push` 0.11.1 and a logging server on this host: the adopted `--context-path /helm` makes the plugin POST to `/helm/api/{repo}/charts`, outside the repository's prefix and disagreeing with the wire table, which would have reserved `api` as a repository name; `--context-path /helm/{repo}` POSTs to `/helm/{repo}/api/charts`, the wire table's route, with no index fetch first, so was-Q3 is amended to that value (AC2 and its row), and the claim that `cm-push` always reads the index before uploading is corrected (a patterned `push` alone can publish). The proxied changed-digest row pinned the cached digest and never fetched the new bytes, a shape neither of `proxy-cache.md`'s two variants allows; rewritten to the new-blob-beside-the-old variant (its was-Q20, AC28) with AC12 and its row amended. Q1, Q2, Q4, Q5, Q6, Q8 confirmed. Sibling consequences reported, not applied: `proxy-cache.md`'s event-class table carries no Helm rows. Open Questions empty, every criterion mapped: draft to planned. |
