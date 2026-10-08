@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned by the Fable gate review of 2026-10-01 at d4540af: every sibling citation verified at HEAD against all sixteen planned foundation specs and the twelve exception-row formats' corpus sections; the exception list's digest rule corrected (AC28 was unsatisfiable by its own table: the digest now lives in the corpus manifest, Q7 adopted under the standing delegation), the rubygems row's misattributed client-image digest removed, the owed conan row added; the four queued items folded (web-ui's single-recipe runner entry as AC29, allow_local on loopback stand-in rows in AC19, named advisory sources with osv reserved, the paused kind named as manage.apply). 29 criteria, zero open questions, check-spec zero failures. Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): the authoritative-reference exception list the settled decision (was Q3) provided for now exists, naming Helm's write half (pinned ChartMuseum), Debian's hosted half (reprepro), RPM's hosted half (a createrepo_c tree) and RPM's absent write reference, held by a manifest check (AC28); the credentials key gains a trust_policy sub-entry naming the harness's fixture OIDC issuer for pypi AC19 and openvsx AC33 (AC25 extended); cran's pak stand-ins and swift's presigned-store stand-in named as upstreams hosts sub-entries; OCI's two-repository suite namespaces and the first format batch's named cases recorded. 28 criteria, zero open questions; stays draft pending a gate review. Earlier: Sweep 2026-09-28 at 6e6d503 (not a review): AC26 also refuses a policies case for a format whose supply-chain binding row is still pending (supply-chain AC20); advisories entries may name a second source (AC21); the replication entry carries a per-link sync_interval; proxy-cache AC20 and AC22 case placements recorded; the stale package-level retirement wording replaced by the core-held Retirement record. Reconciled 2026-09-28 at b5424a2 with the foundation authoring wave (not a review): the closed setup vocabulary gains the trust key (artifact-verification.md) and owner-assigned sub-entries on repositories (read_only state, recreated names, hostname binding through server.hosts, signing key material), credentials (robot-owned tokens, registered public keys, expiring tokens) and upstreams (adapter, credential, off-origin hosts), each validated and rejected as not yet landed exactly as a key is (AC17); seeded state on an Indexer handler comes out generated and signed through the write-path hook (AC24); the client block gains recipe and the case-set rules gain declared operation kinds, rename cases and recipes (AC26); Q6 adopted under the standing delegation: every client container is confined to the case network and resolves only declared names (AC23); holds on the inspecting proxy (AC27); redaction covers every credential position (AC13). Earlier (2026-09-26): AC21 and AC22 from the Wave 1 folds; Q4 and Q5 adopted. 27 criteria, zero open questions; stays draft pending a gate review."
+status_description: "Fable follow-up 2026-10-08 at d15997f, stays planned: the eight exception rows queued by the terraform, composer, julia and luarocks rechecks added from their corpus sections, the vagrant row re-dated, the optional format cases recorded; found while verifying, six sibling-placed core cases listed and Q8 adopted under the standing delegation, owner-facing (no clock in the harness: a case crosses time through a shortened repository setting and a real wait, never an injected clock; AC30), which binds hackage AC8 and replication AC21 and is reported to them. 30 criteria, zero open questions. Earlier: Planned by the Fable gate review of 2026-10-01 at d4540af: every sibling citation verified at HEAD against all sixteen planned foundation specs and the twelve exception-row formats' corpus sections; the exception list's digest rule corrected (AC28 was unsatisfiable by its own table: the digest now lives in the corpus manifest, Q7 adopted under the standing delegation), the rubygems row's misattributed client-image digest removed, the owed conan row added; the four queued items folded (web-ui's single-recipe runner entry as AC29, allow_local on loopback stand-in rows in AC19, named advisory sources with osv reserved, the paused kind named as manage.apply). 29 criteria, zero open questions, check-spec zero failures. Earlier: closing reconciliation sweep 2026-09-28 at 3135d95 on Opus (not a review): the authoritative-reference exception list the settled decision (was Q3) provided for now exists, naming Helm's write half (pinned ChartMuseum), Debian's hosted half (reprepro), RPM's hosted half (a createrepo_c tree) and RPM's absent write reference, held by a manifest check (AC28); the credentials key gains a trust_policy sub-entry naming the harness's fixture OIDC issuer for pypi AC19 and openvsx AC33 (AC25 extended); cran's pak stand-ins and swift's presigned-store stand-in named as upstreams hosts sub-entries; OCI's two-repository suite namespaces and the first format batch's named cases recorded. 28 criteria, zero open questions; stays draft pending a gate review. Earlier: Sweep 2026-09-28 at 6e6d503 (not a review): AC26 also refuses a policies case for a format whose supply-chain binding row is still pending (supply-chain AC20); advisories entries may name a second source (AC21); the replication entry carries a per-link sync_interval; proxy-cache AC20 and AC22 case placements recorded; the stale package-level retirement wording replaced by the core-held Retirement record. Reconciled 2026-09-28 at b5424a2 with the foundation authoring wave (not a review): the closed setup vocabulary gains the trust key (artifact-verification.md) and owner-assigned sub-entries on repositories (read_only state, recreated names, hostname binding through server.hosts, signing key material), credentials (robot-owned tokens, registered public keys, expiring tokens) and upstreams (adapter, credential, off-origin hosts), each validated and rejected as not yet landed exactly as a key is (AC17); seeded state on an Indexer handler comes out generated and signed through the write-path hook (AC24); the client block gains recipe and the case-set rules gain declared operation kinds, rename cases and recipes (AC26); Q6 adopted under the standing delegation: every client container is confined to the case network and resolves only declared names (AC23); holds on the inspecting proxy (AC27); redaction covers every credential position (AC13). Earlier (2026-09-26): AC21 and AC22 from the Wave 1 folds; Q4 and Q5 adopted. 27 criteria, zero open questions; stays draft pending a gate review."
 description: "Spec for the conformance harness that drives real package clients against the server in containers, including the recording proxy that turns real client traffic into a golden corpus."
 author: michielvha
 goal: "Make protocol correctness an exit code rather than a judgment call, so format work can be driven autonomously and regressions from upstream client changes are caught by a scheduled job."
@@ -188,6 +188,12 @@ code. Roughly:
   never leave the client, a name that must fail to resolve)
 - `skip`: when present, **must** carry an issue number. A bare skip is a silent regression and
   the runner rejects it.
+
+That list is closed exactly as the `setup` vocabulary is: a case carrying a field it does not
+name is rejected before any container starts, with an error naming the field (AC30). There is
+deliberately no `clock` among the fields: an instance runs on the real clock, and a case that
+needs elapsed time shortens a window the format exposes as a repository setting and waits through
+it (the resolved time decision, was Q8).
 
 **Skips inside an external suite.** A case source this harness does not write - the official
 `opencontainers/distribution-spec` suite is the first - can skip cases from inside its own
@@ -425,6 +431,54 @@ implementation discovers it has no counterparty:
   `conformance/oci/refresh_test.go` (a `remote` refreshed from the API revalidates upstream
   inside the TTL, observed at the stand-in) and its AC19 `conformance/generic/admin_test.go` (a
   repository created through the API serves a real client); both call the API from `script`.
+- **Siblings place more cases in the core set than the two observability ones.**
+  `upstream-adapters.md` AC4 and `observability.md` AC20 share
+  `conformance/core/upstream_hygiene_test.go` (a real client sending leak headers through the
+  instance to a recording stand-in under an active server span, the outbound header set compared
+  with the declared one); `auth.md` AC17 places `conformance/core/existence_oracle_test.go`
+  (private versus missing, credentialed and credential-less, the `WWW-Authenticate` value
+  byte-compared per format; `pub.md` AC4 shares its assertion shape); `artifact-verification.md`
+  AC21 places `conformance/core/verdict_enforcement_test.go` (one recorded-not-enforced and one
+  enforcing case per listed format, shared with each format's suite) and its AC25
+  `conformance/core/setup_trust_test.go` (the seed path applying `trust`, an unknown entry kind
+  rejected), which is the `trust` key's provisioner proof seen from this side;
+  `signing-service.md` AC11 places `conformance/core/timecond_rollback_test.go` (curl
+  `--time-cond` sees a rollback under both conditional rules; `homebrew.md` AC4 shares it) and
+  its AC21 `conformance/core/seed_signed_state_test.go`, the signing half of AC24's proof, which
+  AC24's Test Plan row names. Each runs over the vocabulary as it stands: an `upstreams`
+  stand-in, a `credentials` entry or none, the `trust` key, and the fixture `Indexer` handler
+  AC24 already needs.
+- **Signature withdrawal, `xml:base` and a virtual over a remote are format cases on the
+  ordinary stand-in.** `rpm.md`'s resolved withdrawn-signature decision (was Q12), generalised
+  by `proxy-cache.md`'s (was Q23), names `conformance/rpm/proxied_signature_withdrawn_test.go`
+  (dnf5 under `repo_gpgcheck=1` still installing from the retained signed revision while the
+  stand-in serves an unsigned newer one) and `conformance/arch/proxied_signature_withdrawn_test.go`
+  (all three pacman clients under `DatabaseRequired` still installing from the refused revision,
+  then from the refreshed one); `rpm.md` names `conformance/rpm/xmlbase_test.go` (dnf 4 against a
+  stand-in whose `xml:base` host is a second `hosts` stand-in that must receive no request); and
+  `signing-service.md` AC36's admission by anchor class is proven by
+  `conformance/<format>/virtual_remote_test.go` for arch, alpine, conda, cran and rpm (a virtual
+  created over a never-adopted remote, the stand-in's transcript showing only the member-input
+  routes, the remote-only tree reached read-driven, the virtual-only remote revalidated from a
+  read past its TTL). Each uses the ordinary `upstreams` stand-in with recorded revisions and
+  its `hosts` sub-entry, as `proxy-cache.md` AC22's rollback cases do; the TTL crossed is a
+  repository setting shortened through the `repositories` entry, the pattern the resolved time
+  decision below (was Q8) makes the rule; no key.
+- **No case moves an instance's clock.** `hackage.md` AC8 (`conformance/hackage/expiry_test.go`,
+  "over three windows under an injected clock") and `replication.md` AC21
+  (`conformance/replication/takeover_expiry_test.go`, "the clock advanced past the old leader's
+  document expiry"; the row shared with `signing-service.md` AC23 and `management-api.md` AC33)
+  assume a clock the harness can set. It cannot, by the rule AC27 already applies to holds: the
+  shipped binary runs on the real clock, with no time-offset key or flag to start it under (the
+  resolved time decision, was Q8; AC30). A case that needs elapsed time shortens a window the
+  format or layer exposes as a repository setting, carried in the `repositories` entry (a
+  remote's metadata TTL, `proxy-cache.md`'s resolved TTL decision; Debian's per-suite
+  `Valid-Until`), and its `script` waits through it on the real clock, pausing a job kind
+  through the admin routes where the cadence would otherwise renew the document first; a window
+  the format fixes in its profile (Hackage's three-day `timestamp.json` and `snapshot.json`)
+  cannot be crossed inside a case, so that crossing is the owning layer's integration test under
+  its injected clock and the conformance case asserts the real client against the documents as
+  they stand. Both siblings are owed the rewording, reported as consequences.
 
 ### The recording proxy, and why it is the real leverage
 
@@ -508,7 +562,7 @@ any other half is still settled by the public registry.
 | rpm | Hosted: the tree a publish produces as each client reads it | a static tree `createrepo_c` 1.2.1 generates from the corpus's packages, signed with GnuPG, behind a pinned static server | public mirrors accept no upload; the read half is recorded against the Rocky, AlmaLinux, UBI, openSUSE and Fedora mirrors | `formats/rpm.md`, its recorded surface |
 | rpm | Write | none: no RPM client publishes, so no write corpus exists; publish, delete and the other management operations are `script`-driven cases (AC26) proven by the effect a real client observes | there is nothing to record | `formats/rpm.md`, its recorded surface |
 | swift | Hosted: every hosted read and the publish surface the pinned clients drive (a cold resolve, the 5.10 alternate-manifest fetch, the SCM lookups, availability, publish unsigned, signed and without metadata, the duplicate refusal, login, the private-read 401) | the compatibility suite's `PackageRegistryExample` server in a container | no public SE-0292 registry accepts a test publish (the Tuist registry answers `PUT` with 404, captured); the proxied read half is recorded against the Tuist public registry | `formats/swift.md`, "Conformance, the two toolchains and the corpus" |
-| vagrant | Hosted: both catalog paths with HEAD and GET, a box download with a resumed range, a missing box | a static server over a hand-authored catalog and box files | vagrantcloud.com creates no boxes from 2026-10-01, stops operating on 2026-12-31 and accepts no test upload; the read half is recorded against vagrantcloud.com while HCP operates | `formats/vagrant.md`, "Conformance, the clients and the corpus" |
+| vagrant | Hosted: both catalog paths with HEAD and GET, a box download with a resumed range, a missing box | a static server over a hand-authored catalog and box files | vagrantcloud.com has created no boxes since 2026-10-01, stops operating on 2026-12-31 and accepts no test upload; the read half is recorded against vagrantcloud.com before 2026-12-31, while HCP still operates, with the harness's recorder if it exists by then and otherwise with any recorder writing the corpus manifest shape, and is committed only once AC13 holds and its corpus check passes the recording like any other (the blocking precondition on recording, below; `docs/internal/HANDOFF.md` carries the date) | `formats/vagrant.md`, "Conformance, the clients and the corpus" |
 | vagrant | Write | none: no Vagrant client publishes to a box catalog, so no write corpus exists; the management kinds are `script`-driven cases (AC26) proven by the effect a real client observes | there is nothing to record | `formats/vagrant.md`, its recorded surface |
 | conda | Hosted: the documents a publish, a patch, a revocation, a removal and a notices change produce as each of the five clients reads them | a tree conda-index 0.13.0 generates with its patch generator, behind a pinned static server | no public channel accepts a test publish; the read half is recorded against conda.anaconda.org/conda-forge and repo.anaconda.com/pkgs/main | `formats/conda.md`, "Conformance, the five clients and the corpus" |
 | conda | Write | none: no open reference serves either binding (the Artifactory shape is proprietary, prefix.dev a service), so no write corpus exists; the bindings are proven by rattler-build's exit code and the real resolve that follows (AC3, AC4) | there is nothing to record | `formats/conda.md`, its recorded surface |
@@ -521,6 +575,14 @@ any other half is still settled by the public registry.
 | hackage | Write: `cabal upload --publish` with a token and with a password, an identical and a changed-bytes republish | a hackage-server container | hackage.haskell.org accepts no test upload (a maintainer account is required and its upload routes offer Digest alone, captured); the read half is recorded against hackage.haskell.org | `formats/hackage.md`, "Conformance, the clients and the corpus" |
 | rubygems | Hosted and write: push new, identical and changed; yank with and without `--platform`; the appended `/versions` and rewritten `/info` a publish and a yank produce; a lockfile install of a yanked version | a geminabox 4.0.1 container with `compact_index` 0.15.0, built by the harness and pinned by its built digest (AC4's rule; `formats/rubygems.md` pins no base for it, the `ruby:3.3` digest it records being a client image's) | rubygems.org accepts pushes only into its one public namespace from a real account, where a test gem is a permanent publication and a yank older than 30 days is refused (`Deletion::MAXIMUM_VERSION_AGE`); the read half is recorded against rubygems.org | `formats/rubygems.md`, "Conformance, the three clients and the corpus" |
 | conan | Hosted and write: a cold and a `--update` install, a version-range install, an upload of a recipe with two binaries, a second revision, a forced re-upload of an older revision, `conan list` and `conan search`, each remove shape, a `--metadata` upload and download, a private read with the `401` and the exchange, Conan 1.66.0's revisions-mode upload | a `conan_server` 2.32.0 container | the protocol has no published specification and its reference implementation is `conan_server` itself, ConanCenter being Artifactory's second implementation of the API the client and reference server define; the proxied read half is recorded against ConanCenter (a cold install of a recipe and its binary, a missing reference, a missing binary) | `formats/conan.md`, "Conformance, the clients and the corpus" |
+| terraform | Mirror: the provider network mirror protocol as each of the four clients reads it (`index.json`, `{version}.json` with `h1:` and a relative `url`), which hosted and remote repositories serve alike | the static tree `terraform providers mirror` writes, behind a pinned static server | no public network mirror exists: the protocol is a client-side feature whose only implementation is the tree the CLI writes, so the mirror half has nowhere public to record against; the registry-protocol read half is recorded against registry.terraform.io and registry.opentofu.org | `formats/terraform.md`, "Conformance, the four clients and the corpus", AC24 |
+| terraform | Write | none: no Terraform or OpenTofu client publishes, so no write corpus exists; `publish`, `delete-version`, `delete-package` and `annotate` (deprecate and undeprecate) are `script`-driven cases (AC26) proven by the effect the four clients observe | there is nothing to record | `formats/terraform.md`, "The hosted publish path and what counts as a write" and its recorded surface |
+| composer | Hosted: the hosted read flows (the root document, package files and dists) as both pinned Composer 2 releases read them, including the branch-only package's main-file shape its AC3 settles against the reference | a Satis-generated static site in a container, served statically with its `metadata-url` set to an absolute URL | no public Composer repository accepts an upload (Packagist ingests from VCS); the read half is recorded against Packagist | `formats/composer.md`, "Conformance, the pinned clients and the corpus" |
+| composer | Write | none: no Composer client publishes (Packagist ingests from VCS, Satis generates static files), so no write corpus exists; `publish`, `delete-version`, `delete-package` and `annotate` are `script`-driven cases (AC26) proven by the effect both releases observe | there is nothing to record | `formats/composer.md`, "The hosted write path, and what counts as a write" and its recorded surface |
+| julia | Hosted: the fixture registry, its packages and artifact as both clients read them, the previous generation, a yanked version, a deprecated package | PkgServer.jl at commit `88c6d80` (2026-07-03) in a container, in front of a storage stand-in serving a tree hashed by the pinned images' own Pkg | no public Pkg server serves a registry a test can publish into; the proxied half is recorded against `pkg.julialang.org` | `formats/julia.md`, "Conformance, the two clients and the corpus", AC25 |
+| julia | Write | none: no Julia client publishes to a Pkg server (the ecosystem publishes through git), so no write corpus exists; publish and every management kind are `script`-driven cases (AC26) proven by the effect both clients observe | there is nothing to record | `formats/julia.md`, "Conformance, the two clients and the corpus" |
+| luarocks | Hosted: the manifests and files a hosted repository serves as both clients read them, with the hosted divergences this half records (the development split `make-manifest` does not make, the `.zip` and `.json` manifest forms a static server lacks) | the rocks server a pinned `luarocks-admin make-manifest` builds over a directory, behind a static server | luarocks.org serves no tree a case controls; the read half stays recorded against luarocks.org | `formats/luarocks.md`, "Conformance, the clients and the corpus" |
+| luarocks | Write: an upload with and without `--sign`, a duplicate upload with `--force`, an invalid key | luarocks-site, the Lapis application behind luarocks.org, built by the harness from its repository's `Dockerfile` at the pinned commit `b3819b9` (2026-09-27) with a user and a key seeded, and pinned by its built digest (AC4's rule) | luarocks.org accepts no test upload without an account and revokes keys on incident | `formats/luarocks.md`, "Conformance, the clients and the corpus" |
 
 The rule is mechanical (AC28): each format's corpus manifest under `conformance/<format>/` names
 the reference each recorded half was captured against and, for a local reference, the digest it
@@ -531,9 +593,10 @@ carries no digest, and on a row no manifest uses, so the list only grows by an e
 shrinks by evidence. The digest lives in the manifest and not in a row, because a digest exists
 only once the reference is built and recorded, and a hand-kept copy here would be the second list
 the external-suite rule above already refuses (the resolved digest-location decision, was Q7). A
-format spec that records a hosted half against a local reference server adds its row here in the
-same pass. A write row reading "none" records that no write corpus exists for that format, and
-its manifest declares none.
+format spec that records any half against a local reference server, hosted or otherwise (the
+mirror protocol of `terraform.md` is one), adds its row here in the same pass, under the half's
+name as its manifest declares it. A write row reading "none" records that no write corpus exists
+for that format, and its manifest declares none.
 
 ### Upstream client drift
 
@@ -714,6 +777,16 @@ an acceptance criterion rather than a design note.
       no digest, and on a row no manifest uses, proven by fixture manifests one per rule plus a
       fixture manifest per current row passing, a write row reading "none" passing only with a
       manifest that declares no write corpus.
+- [ ] AC30: No case moves an instance's clock: a case carrying a field "Case definition" does
+      not define (`clock` among them) is rejected before any container starts with an error
+      naming it, the first-layer rule AC17 applies to `setup` applied to the case's top level;
+      every instance starts on the real clock, held by an architecture test that fails if any
+      clock but the real one is wired in `cmd/` or selectable through configuration or a flag;
+      and a case needing elapsed time is still expressible: on AC24's fixture `Indexer` handler
+      with a validity window of seconds set through the `repositories` entry, a `script` reads a
+      valid document, pauses the `signing.resign` kind through the admin route, waits past the
+      window on the real clock and reads an expired one, resumes the kind and reads a renewed
+      one. Proven by the rejected-field fixture and that case.
 ## Test Plan
 
 | Criterion | Test Type | Test Location |
@@ -741,12 +814,13 @@ an acceptance criterion rather than a design note.
 | AC21 | unit | `conformance/core/external_skip_test.go` (fixture suite results: unlisted skip, entry without an issue, structural entry whose partner failed, listed case that passed, a fully matching run) |
 | AC22 | unit + integration | `conformance/core/case_validate_test.go` (case sets missing each auth case kind in each mode); `conformance/core/seed_test.go` (patterned and multi-repository `credentials` entries) |
 | AC23 | integration | `conformance/core/network_test.go` (undeclared hostname fails to resolve while the instance is reached; `hostname` sub-entry resolved in the container and present in the instance's effective `server.hosts`; a proxied case through a redirecting stand-in to a second declared `hosts` name) |
-| AC24 | integration + architecture test | `conformance/core/seed_test.go` (`read_only` entry against a real client; recreated name serves nothing of the old repository; fixture `Indexer` handler: seeded versus published bytes equal, public key readable first); `conformance/core/arch_test.go` (seed-path imports, shared with AC18) |
+| AC24 | integration + architecture test | `conformance/core/seed_test.go` (`read_only` entry against a real client; recreated name serves nothing of the old repository); `conformance/core/seed_signed_state_test.go` (fixture `Indexer` handler: seeded versus published bytes equal, public key readable first, the real client installing; the file `signing-service.md` AC21 names, shared with it); `conformance/core/arch_test.go` (seed-path imports, shared with AC18) |
 | AC25 | integration | `conformance/core/seed_test.go` (robot-owned token, registered public key with the private half delivered as a file, `expiring` token, `trust_policy` against the fixture issuer with a matching and a foreign identity token; each authorized per `auth.md` and `credential-management.md`, the listing route's `state` in the transcript); `conformance/core/oidc_issuer_test.go` (the fixture issuer's discovery document and keys reachable by the instance and the client by its case-network name) |
 | AC26 | unit + integration | `conformance/core/case_validate_test.go` (fixture handler declaring two kinds and two recipes; case sets missing a kind's `script` case, missing `rename_test.go`, naming an undeclared recipe, leaving a recipe unnamed, a `policies` case against a fixture binding table with a `pending` row; a complete set); `conformance/core/runner_test.go` (a recipe named only by failing cases fails the run); shared with `management-api.md` AC24, `web-ui.md` AC17 and `supply-chain-policy.md` AC20, which assert the same rules from their side |
 | AC27 | integration + architecture test | `conformance/core/hold_test.go` (held request, script publish, release, transcript order); `conformance/core/arch_test.go` (no hold symbol reachable from `cmd/` or `internal/`) |
 | AC28 | unit | `conformance/record/reference_exceptions_test.go` (parses this spec's exception table and every corpus manifest; fixture manifests for an unlisted local reference, a manifest whose local reference carries no digest, and an unused row; a fixture manifest per current row passing, the "none" write rows with a manifest declaring no write corpus) |
 | AC29 | integration + architecture test | `conformance/core/recipe_entry_test.go` (the entry invoked as a subprocess against a fixture instance on a prepared network: steps that install succeed and the transcript is reported; steps naming an undeclared host fail at name resolution); `conformance/core/arch_test.go` (the entry and a case's recipe step call one implementation; shared with `web-ui.md` AC8's Playwright flow, which is its consumer) |
+| AC30 | unit + integration + architecture test | `conformance/core/case_validate_test.go` (an unknown top-level field, `clock` among the fixtures, rejected naming it); `conformance/core/clock_test.go` (AC24's fixture `Indexer` handler under a seconds-long window: valid, expired after a real wait with `signing.resign` paused through the admin route, renewed after resume); `conformance/core/arch_test.go` (the real clock alone wired in `cmd/`, none selectable by configuration or flag; `deployment.md`'s key inventory, checked by its `scripts/check-config-keys.js`, lists no time key) |
 
 ## Implementation Phases
 
@@ -757,7 +831,8 @@ an acceptance criterion rather than a design note.
   rules: per-format auth cases (AC22), declared operation kinds, `rename_test.go` and recipes
   (AC26)
 - The closed `setup` vocabulary and its first validation layer (unknown key or sub-entry versus
-  not-yet-landed key or sub-entry), and run-selected upstream bindings
+  not-yet-landed key or sub-entry), the same rejection of an unknown top-level case field and
+  the no-clock rule (AC30), and run-selected upstream bindings
 - Server lifecycle with per-case isolation; the case network with client confinement and
   declared-name resolution (AC23); the inspecting proxy with holds (AC27)
 - Client container execution and capture, the single-recipe runner entry over the same code
@@ -808,9 +883,42 @@ Populated by `/tasks` once this spec reaches `planned`.
 
 None open. Q4 (raised by the 2026-09-23 gate review) and Q5 (exposed while folding Q4's answer)
 were adopted on 2026-09-26, Q6 (raised by the format specs' fallback findings) on 2026-09-28,
-and Q7 (raised by the 2026-10-01 gate review) on 2026-10-01, under the owner's standing
-delegation, so the owner may reverse any of them. Resolved decisions are kept rather than
-deleted, so the reasoning survives the next time someone asks why it was done this way.
+Q7 (raised by the 2026-10-01 gate review) on 2026-10-01, and Q8 (raised by the 2026-10-08
+follow-up) on 2026-10-08, under the owner's standing delegation, so the owner may reverse any of
+them. Resolved decisions are kept rather than deleted, so the reasoning survives the next time
+someone asks why it was done this way.
+
+### Resolved: how a conformance case moves time (was Q8, raised and adopted 2026-10-08)
+
+**Adopted 2026-10-08 under the owner's standing delegation.** Option A: the harness provides no
+clock. The binary under test runs on the real clock with no key or flag to start it under another;
+a case needing elapsed time shortens a window the format or layer exposes as a repository setting
+and waits through it; a crossing a format's fixed windows forbid is the owning layer's integration
+test under its injected clock, and the conformance case asserts the real client against the
+documents as they stand. Raised by this follow-up: `hackage.md` AC8 and `replication.md` AC21
+each name a conformance case run "under an injected clock" or with "the clock advanced", a
+facility no section here offered, and none of the three ways of building one survives inspection.
+Folded into "What sibling specs already require", AC30, its Test Plan row and Phase 1.
+
+**Recommendation:** A. It is the rule the hold decision already applies (AC27: no test-only pause
+in the binary under test), stated for time, and the oracle's own rule that a real client proves
+what it can observe within a case's running time.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. No clock: a short window where the format offers a setting, an integration test under an injected clock where it does not** (adopted) | The shipped binary is the binary tested; the dates a signed document carries are real; nothing to build; rpm's and conda's `virtual_remote_test.go` already cross a TTL this way | A window a format fixes in its profile (Hackage's three days) is never crossed in front of a real client, so cabal's and Stack's expiry handling is proven against documents as they stand and the crossing by `internal/` tests; a case waiting through a short window runs for that long |
+| **B. A time-offset configuration key or flag the runner starts the instance under** | Any window crossable in seconds in front of a real client | A test-only path in the binary under test, the shape AC27 refused for holds; a production binary that can be started with a forged clock signs documents with forged dates, a footgun with no operational use |
+| **C. Time control outside the binary: an `LD_PRELOAD` shim or a Linux time namespace on the instance container** | The binary untouched | Neither works: the Go runtime reads the wall clock through the vDSO and raw syscalls a preload shim does not intercept, and a static binary loads no shim at all; a time namespace virtualises only the monotonic and boot clocks, never `CLOCK_REALTIME` |
+
+**Why this is yours:** it trades real-client coverage of expiry handling in two formats against
+keeping every test-only path out of the shipped binary, and it rewrites a Test Plan row in each of
+two planned siblings.
+
+Accepted cost: `hackage.md` AC8's conformance half and the Hackage variant of `replication.md`
+AC21's case lose their window crossing unless `hackage.md` makes its windows a repository
+setting, which is that spec's call and is reported to it; the Debian variant stands through a
+per-suite `Valid-Until` short enough to wait through. B lost on the principle AC27 already settled
+and on the forged-date footgun; C lost because it cannot be built.
 
 ### Resolved: where the exception list's digest lives (was Q7, raised and adopted 2026-10-01)
 
@@ -1028,3 +1136,4 @@ question in `formats/npm.md`.**
 | 2026-09-28 | a3a9d78 | format closing sweep bookkeeping on Opus. Not a review | Not a review. Added the cran (hosted against a pinned `write_PACKAGES` tree, and a write row with nothing to record) and hackage (write against a hackage-server container) exception-list rows the format sweep reported. No question, no criterion changed. |
 | 2026-09-28 | a3a9d78 | RubyGems authoring bookkeeping on Opus. Not a review | Not a review. Added the rubygems exception-list row (hosted and write halves against a geminabox container pinned by its base image digest, since the image is built locally). No question, no criterion changed. |
 | 2026-10-01 | d4540af | Fable gate review: claim verification at HEAD, adversarial, constitution (go-spec-reviewer inline on the runner entry's contract; claim verification against the tree still vacuous, there is no `conformance/` directory, so every claim checked is a cross-spec one) | A review. Every cited criterion, resolved decision and section of the sixteen planned foundation specs and the twelve exception-row formats verified at HEAD, and the whole of `agents/spec-loop/consequences.md` read for items naming this file. Corrections: AC28 was unsatisfiable by the table it reads, since it failed "a row whose reference carries no digest" while eleven of twelve rows carried none and could not before their references are built, and the twelfth (rubygems) carried a digest `formats/rubygems.md` records for a client image, not for geminabox; Q7 raised in the decision shape and adopted under the standing delegation (the digest lives in the corpus manifest, the row names the reference), folded into the table heading, the rule paragraph, AC28 and its Test Plan row; the conan row owed since the six-spec sweep added from `formats/conan.md`'s corpus section (hosted and write against a `conan_server` 2.32.0 container, proxied read against ConanCenter); the was-Q3 record no longer says the list is "today" four rows. Folded from the ledger: `web-ui.md`'s single-recipe runner entry (Scope, "Case definition", the sibling bullet, new AC29 with `conformance/core/recipe_entry_test.go` and an architecture test holding one code path, Phase 1), with the precondition that the entry creates no instance and the steps' target must already be reachable on the network it is handed; `upstream-adapters.md`'s loopback refusal (the seed path sets `allow_local` on a row bound to a loopback stand-in and never on a case-network or real binding, in the `upstreams` row, "Upstream bindings" and AC19); `supply-chain-policy.md`'s source names (`osv` reserved for the entry standing in for the default feed, every further entry named, duplicates rejected at validation); the paused kind named as `manage.apply` with its case file and the two sibling criteria. Eleven exception rows match their format's current corpus section; every other citation held. Constitution lenses clear (the gate itself, both modes under AC11, the seed path on the shared layers, the main-gated CI trigger matching the constitution's accepted hazard). Open Questions empty, 29 criteria each with a Test Plan row, `node scripts/check-spec.js` zero failures: draft to planned. |
+| 2026-10-08 | d15997f | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the gate review: the whole of `agents/spec-loop/consequences.md` read, every item targeting this file after the d4540af row collected (the terraform, composer, julia and luarocks rechecks' exception rows; the upstream-adapters recheck's `allow_local` item; the optional rpm, arch, conda, signing-service round-3, proxy-cache round-3 and vagrant items) and each verified against its source's current text. Applied: eight exception rows, each written from its format's corpus section at HEAD (terraform's mirror half against the `terraform providers mirror` tree and a write row reading none; composer's hosted half against a Satis-generated static site and a write row reading none; julia's hosted half against PkgServer.jl at `88c6d80` in front of a storage stand-in and a write row reading none; luarocks's hosted half against a `make-manifest` tree and its write half against luarocks-site at `b3819b9`), the rule paragraph widened to any half and the half's name as the manifest declares it; the vagrant hosted row re-dated (no boxes since 2026-10-01; the live half recorded before 2026-12-31 with any recorder writing the manifest shape, committed only under AC13; the HANDOFF date cited); the optional format cases recorded in the sibling list with what each asserts (rpm and arch `proxied_signature_withdrawn_test.go`, rpm `xmlbase_test.go`, the five `virtual_remote_test.go`), none needing a key. Declined: the `allow_local` item, already folded by the gate review (the `upstreams` row, "Upstream bindings", AC19); the shared `head_test.go` wording, which names `internal/proxy/head_test.go` and `internal/index/head_test.go`, internal tests that ask nothing of this harness (the one conformance HEAD case, `conformance/maven/head_test.go`, needs no key). Found while verifying: six `conformance/core/` cases placed by siblings and listed nowhere here (`upstream_hygiene`, `existence_oracle`, `verdict_enforcement`, `setup_trust`, `timecond_rollback`, `seed_signed_state`), now a sibling bullet, with AC24's row naming `seed_signed_state_test.go` as `signing-service.md` AC21 does; and two sibling conformance cases assuming a clock the harness cannot set (`hackage.md` AC8; `replication.md` AC21, shared with `signing-service.md` AC23 and `management-api.md` AC33): Q8 raised in the decision shape and adopted under the standing delegation, owner-facing (no clock; a window shortened through a repository setting and a real wait; a fixed window's crossing is the owning layer's integration test), folded as a sibling bullet, the closed case field list, AC30 with a Test Plan row, and Phase 1. Also found, reported not applied: `terraform.md` AC14 and its corpus paragraph say the case "declares egress open", which the resolved client-confinement decision (was Q6) offers no opt-out for; its own Test Plan row already describes the Q6 shape (a stand-in origin declared and reachable, asserted to receive no request), so the fix is wording there. Dash scan clean; `node scripts/check-spec.js` zero failures on this file. 30 criteria, zero open questions: stays planned. |
