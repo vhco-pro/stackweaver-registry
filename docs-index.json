@@ -90,7 +90,7 @@
     "path": "docs/internal/plans/formats/cargo.md",
     "description": "Spec for the Cargo (Rust) registry format: the sparse index protocol and the crates.io-style web API, hosted and proxied, with cargo as the conformance oracle for reads, publish and yank alike.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "17",
     "covers": [
       "internal/format/cargo/**",
