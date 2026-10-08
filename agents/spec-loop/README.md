@@ -71,14 +71,12 @@ session ends). Each firing:
 
 **2026-10-08 16:09-17:10 CEST, one-hour Fable session.** Gate reviews landed (all planned): oci,
 npm, go-modules, pypi, helm, maven, nuget; ansible-collections and supply-chain-policy round 4 also landed: ALL 33 FORMAT SPECS ARE PLANNED.
-credential-management's follow-up (binding responses no-store) was running at the session's end.
+credential-management's follow-up (binding responses no-store) landed too. The session ended at 17:00 with nothing uncommitted.
 Next, two agents at a time:
 1. If either running pass did not finish, its partial edits are under `agents/spec-loop/wip/`.
 2. Foundation follow-ups still queued (newest consequences.md sections): conformance-harness
-   (exception rows owed for opam, openvsx, cargo, hex, pub, maven; the soft-pass overlay note;
-   pub's advisories re-sync), credential-management (SECURITY: binding responses that carry a
-   secret, PyPI and Open VSX trusted publishing, must be private, no-store; the Open VSX
-   capture), proxy-cache (oci completion-only, Helm event rows, optional examples), hackage
+   (exception rows owed for opam, openvsx, cargo, hex, pub, maven, ansible; the soft-pass overlay note;
+   pub's advisories re-sync), proxy-cache (oci completion-only, Helm event rows, optional examples), hackage
    (AC8's injected clock), management-api (generic configure row), artifact-verification (npm
    keys document, hex key size), terraform (harness egress wording), catalogue (brew 7 under OCI).
 3. Gate review of project-charter.
