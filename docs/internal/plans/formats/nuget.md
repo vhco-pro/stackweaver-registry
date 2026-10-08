@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at ddc73fb with the foundation wave (not a review): unlist and relist are management-api's withdraw and restore kinds under delete (its was-Q1 reversed this spec's push), hard delete is delete-version, deprecate is annotate, the client DELETE and documented POST are declared bindings (AC19); retirement is data-model's core-held Retirement record (AC8); the service index is a descriptor so a patterned pull runs dotnet restore (AC11); refusals through WriteRefusal with the status-line phrase and the supply-chain binding row filled by the policy case (AC12); completion-only fetch offered by proxy-cache was-Q15 with the short-close case (AC13); artifact-verification's NuGet CMS profile and revocation modes and signing-service's reserved countersign hook cited (AC18); api.nuget.org preconfigured (was-Q17); the dotnet row and X-NuGet-ApiKey form in auth.md; Capabilities with rename and virtual cases (AC23). Earlier: authored 2026-09-26 from captures of NuGet 6.3.4 and 6.14.3; eight questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable gate review of 2026-10-08 at eb442ea: a full review of the authoring and of the unreviewed Opus reconciliation, every open consequence applied against the foundation records at HEAD (ServeRendered and ServeFile, HEAD, the cacheability floor, the binding-scope, retirement-claim, wire-rendering and spool-bound decisions of management-api, the repository-keyed advisory reader and the advisory key, the harness clock rule, the AC7 relist wording), three adversarial findings fixed (pages of 64 always with inlining under 128, search claimed for 6.14.3 only, and the hosted audit surface: was Q4 superseded by was Q9, rendering VulnerabilityInfo and the registration vulnerabilities property from the advisory reader because the client reads silence as an all-clear, an owner-facing reversal of a delegation adoption); seven adoptions confirmed, one superseded; 23 criteria each mapped; zero open questions; check-spec clean. Earlier: reconciled 2026-09-28 at ddc73fb with the foundation wave (not a review); authored 2026-09-26 from captures of NuGet 6.3.4 and 6.14.3."
 description: "Spec for the NuGet v3 registry format: the service index, the flat container, the paged registration hives, search and the PackagePublish push and unlist surface, hosted and proxied, with the dotnet CLI as the conformance oracle."
 author: michielvha
 goal: "Serve .NET teams a private NuGet feed and a nuget.org cache from one handler whose every URL hangs off a service index this registry owns, with unlisting, hard deletion and deprecation as registry-owned management operations the real client observes."
@@ -179,11 +179,12 @@ of done requires the deliberately unimplemented surface to be named:
   below). A symbol package is consumed through a symbol-server protocol that is not NuGet v3
   and has no client in this loop, so stored symbols would be a claim nothing tests; the client
   skips the symbol push silently when the resource is absent (captured on both images).
-- **A hosted vulnerability feed** (the resolved audit-data decision below). The handler has no
-  path to advisory data that does not cross the policy boundary `supply-chain-policy.md` AC4
-  holds, and an empty page is a "no known vulnerabilities" claim about content nobody checked,
-  the false all-clear `npm.md` refused for its audit endpoints. Proxied repositories pass the
-  upstream's pages through.
+- **A hosted vulnerability page rendered from anything but the advisory reader** (the resolved
+  hosted-advisories decision below, was Q9, which supersedes the earlier silence of was Q4). An
+  empty page the registry invented is a "no known vulnerabilities" claim about content nobody
+  checked, the false all-clear `npm.md` refused for its audit endpoints; what a hosted
+  repository serves is computed from the policy layer's advisory reader or not served at all.
+  Proxied repositories pass the upstream's pages through.
 - **The autocomplete, report-abuse, package-details, owner-details and README URI-template
   resources.** All optional in the overview's resource table; the docs say autocomplete must be
   "disabled gracefully" when absent and the client falls back for report-abuse; none is
@@ -235,7 +236,7 @@ and every resource it advertises lives **beneath that path**:
 | `RegistrationsBaseUrl`, `/3.0.0-beta`, `/3.0.0-rc`, `/3.4.0`, `/3.6.0`, `/Versioned` | `/nuget/{repository}/registration/`, `/registration-gz/`, `/registration-gz-semver2/` | Required; three hives, one renderer (below) |
 | `SearchQueryService`, `/3.0.0-beta`, `/3.0.0-rc`, `/3.5.0` | `/nuget/{repository}/query` | Required |
 | `PackagePublish/2.0.0` | `/nuget/{repository}/publish` | Required; the push and unlist routes hang off it |
-| `VulnerabilityInfo/6.7.0` | `/nuget/{repository}/vulnerabilities/index.json` | Proxied repositories only (the resolved audit-data decision) |
+| `VulnerabilityInfo/6.7.0` | `/nuget/{repository}/vulnerabilities/index.json` | Proxied repositories always; a hosted repository only while an advisory source covering NuGet has a freshness value, the pages rendered from the advisory reader (the resolved hosted-advisories decision, was Q9) |
 
 Deliberately absent, by the resolved decisions below: `SymbolPackagePublish`,
 `RepositorySignatures` and `Catalog`; and, as UI-era surface with no oracle, the autocomplete
@@ -260,7 +261,16 @@ and is what the guide asks for.
 
 The index itself is served with `Cache-Control: no-cache` as nuget.org serves it, because it
 encodes the repository's visibility and resource set and a stale copy on a proxy would survive
-a repository being made private.
+a repository being made private. The handler writes no cache header itself: the value is this
+format's serve policy entry for the index, applied by `signing-service.md`'s serving door (its
+AC11 forbids a handler package to set `Cache-Control`, `ETag` or `Last-Modified`), and the door
+further answers `private` on a repository that is not anonymously readable or to a request that
+presented a credential (its resolved cacheability decision, was Q25), while the `401` challenge
+and the existence-rule `404` the authorizer writes carry `private, no-store` (`auth.md` was Q27,
+AC38). A `HEAD` on any route of this format is the `GET` with the body withheld, hosted
+(`signing-service.md` was Q24) and proxied, where a cold `HEAD` fills the cache as the `GET`
+would (`proxy-cache.md` was Q24); neither pinned client sent a `HEAD` in any capture, so no
+criterion here asserts it beyond the shared ones.
 
 ### Mapping onto the shared model
 
@@ -312,9 +322,11 @@ range has a SemVer 2.0.0-only bound (the versioning reference's definition, whic
 applies); such a version is absent from the older hives and from search unless the query says
 `semVerLevel=2.0.0`, the "invisible to older clients" behaviour the reference describes.
 
-Paging follows nuget.org's published heuristic so the corpus replays: fewer than 128 versions
-inline every leaf in the index, and 128 or more split into pages of 64 that the index lists
-without `items`. The page and leaf URLs are ours to shape, since the docs say a client "should
+Paging follows nuget.org's observed heuristic so the corpus replays: the versions are always
+cut into pages of 64 in precedence order (the live 86-version package came as two pages), and
+with fewer than 128 versions every page is inlined in the index with its `items`, while 128 or
+more are listed as page objects without `items` (the live 178-version package, three pages, none
+inlined). The page and leaf URLs are ours to shape, since the docs say a client "should
 never" assume them, and they are
 `/nuget/{repository}/{hive}/{lower_id}/page/{lower}/{upper}.json` and
 `/nuget/{repository}/{hive}/{lower_id}/{lower_version}.json`. Pages are ordered by SemVer 2.0.0
@@ -325,12 +337,18 @@ as the docs require. Each leaf carries `catalogEntry` with `id` in the display s
 `packageContent` pointing at this registry's flat container, `dependencyGroups` with each
 dependency's `registration` URL pointing at this registry's index for that identifier, and
 `deprecation` when the management surface has set one. The `catalogEntry.@id` is a URL under
-the leaf, since this registry serves no catalog. The `vulnerabilities` property is **omitted**
-on the hosted path and passed through on the proxied path (the resolved audit-data decision).
+the leaf, since this registry serves no catalog. The `vulnerabilities` property is rendered on the
+hosted path from the advisory reader for a version some record stands against, and omitted
+for one nothing stands against (the resolved hosted-advisories decision, was Q9); on the
+proxied path it passes through unchanged.
 
-The `ETag` of every registration document derives from the package and the snapshot number, so
-a repoint changes it and a `304` costs no rendering; the client sends no conditional headers,
-but other tools do.
+Every registration and search document, the version list and the service index go out through
+`signing-service.md`'s `ServeRendered` in its lazy form, and every `.nupkg` and `.nuspec`
+through `ServeFile` (its resolved rendered-documents decision, was Q14; AC11, AC32): the
+handler passes the renderer and the serving pointer, never a date or a validator of its own.
+The validator identity of a registration document is the package and the snapshot number, so a
+repoint changes it and a `304` costs no rendering; the client sends no conditional headers, but
+other tools do.
 
 The relationship to `write-triggered-services-prototype.md` is the one `cargo.md` states: these
 documents are package-scoped, unsigned and a pure function of version rows, not the
@@ -391,10 +409,18 @@ What this registry enforces on ingest:
   every downstream cache and lock file already holds.
 - **A retired coordinate is refused the same way**: a hard-deleted version is a core-held
   `Retirement` record and is never republishable, with the same bytes or different ones, the
-  cross-format rule `npm.md`, `pypi.md` and `go-modules.md` adopted. The shared write path
-  refuses the write with `retired` before the handler sees it (`management-api.md` AC12;
-  `data-model.md` AC35), and the handler renders that refusal as the same `409` a duplicate
-  gets, because the client's `--skip-duplicate` reads exactly that status. The docs note that on
+  cross-format rule `npm.md`, `pypi.md` and `go-modules.md` adopted. The handler declares the
+  coordinate the push claims (`{id}/{version}` from the bounded peek) on the write transaction
+  it opens through `Deps`, and the shared write path checks the claim against the `Retirement`
+  records when it is declared and again at commit, refusing with `retired`
+  (`management-api.md`'s resolved retirement-check decision, was Q14, and AC12; `data-model.md`
+  AC35); the handler renders that central refusal as the same `409` a duplicate gets, the
+  wire-rendering rule of `management-api.md` was Q16, because the client's `--skip-duplicate`
+  reads exactly that status.
+- **The spool is the shared bound.** The temporary buffer the body is spooled into is the
+  facility `management-api.md` hands through `Deps` under `management.publish_spool_limit` (its
+  resolved spool-bound decision, was Q20, and AC36); a body exceeding it is refused `413` with
+  nothing committed, and the handler reads no key of its own. The docs note that on
   nuget.org a deleted-and-republished coordinate "breaks the official client's assumption that
   a package ID and version imply a specific package content".
 - The bytes commit to the CAS unmodified, whatever signatures they carry (Design, "Signing and
@@ -449,8 +475,10 @@ This spec follows the precedent the Cluster 5 format specs share, whose common h
   `POST` relist route is served as the binding onto `restore` under that spec's second binding
   rule (a route of the ecosystem's published reference API, recorded with its reason), though no
   `dotnet` command drives it. There is one operation and two ways in, declared through
-  `Bindings()`, and `management-api.md` AC8 holds the two entry points equal in scope, snapshot
-  delta and served documents.
+  `Bindings()`, and `management-api.md` AC8 holds the two entry points equal in snapshot delta and
+  served documents, with the binding's route scope never wider than the operation's (its resolved
+  binding-scope decision, was Q13): the `DELETE` route's `Scope(r)` reports exactly the
+  `{id}/{version}` pair `Authorize` reports for `withdraw`, so here the two are equal.
 - **Each operation is a completed logical write through the shared write path**: exactly one
   snapshot per operation, none for a refused one, no blob-store object deleted directly
   (`management-api.md` AC5, AC6).
@@ -603,24 +631,45 @@ pages on every cold restore, a `NU1903` naming the advisory URL from the page, a
 registration index's `vulnerabilities` property instead and reported "no vulnerable packages"
 (captured), so an absent property is read as an all-clear too.
 
-Per the resolved audit-data decision below: a **hosted** repository advertises no
-`VulnerabilityInfo` resource and omits the `vulnerabilities` property from registration and
-search documents, because this registry makes no vulnerability claim it did not compute, and
-the handler cannot compute one without crossing the policy boundary `supply-chain-policy.md`
-AC4 holds. The operator documentation names the implementation guide's own recipe for exactly
-this case, an `auditSources` entry pointing at `https://data.nuget.org/v3/index.json`, "which
-only serves vulnerability data, not packages". The read this format asked of
-`supply-chain-policy.md` now exists: `Deps` carries the **advisory reader** (that spec's "A
-handler may read advisories, never evaluate them"; `format-handler-interface.md` AC14), which
-returns advisory records and standing condemnations for an ecosystem and coordinate range and
-refuses nothing, so a later revision of this spec can render the hosted resource from it without
-touching the policy boundary. That rendering is not built here: the resolved audit-data decision
-below keeps the hosted path silent until a revision adds the resource with its own criterion,
-because a page rendered from a feed whose staleness is the policy layer's to judge needs its
-own freshness contract first. A **proxied** repository
-advertises the resource and passes the upstream's index and pages through as mutable metadata
-with a TTL, every page `@id` rewritten to this registry, and passes registration
-`vulnerabilities` through unchanged, so a nuget.org cache loses no audit signal.
+Two captured facts decide the hosted answer. The client treats an absent `vulnerabilities`
+property as an all-clear, so hosted silence is not a non-claim on this wire the way it is for
+Dart or Composer: it is read as "no vulnerable packages". And the registry can now compute the
+claim without crossing the policy boundary `supply-chain-policy.md` AC4 holds: `Deps` carries
+the **advisory reader** (that spec's "A handler may read advisories, never evaluate them";
+`format-handler-interface.md` AC14), which returns advisory records and standing condemnations
+for the repository being served and a coordinate, under that repository's
+`coordinate_exemptions`, and refuses nothing (`supply-chain-policy.md`'s resolved hosted-matching
+decision, was Q12, and AC19). Per the resolved hosted-advisories decision below (was Q9, which
+supersedes the silence of was Q4), a **hosted** repository therefore renders its audit surface
+from the reader, exactly as `pub.md` (was Q7) and `composer.md` (was Q12) render theirs:
+
+- The `VulnerabilityInfo` resource is advertised only while at least one advisory source
+  covering the NuGet ecosystem has a freshness value (a feed never synced or imported advertises
+  nothing, and the client's output under that absence is recorded by AC17, never asserted as a
+  non-claim). Its index lists one `base` page whose `@updated` is the latest freshness value of
+  the sources the records came from, so it moves forward as the client's cache rule needs; the
+  page maps each **lowercased identifier** some record stands against to its entries, each with
+  `severity`, `advisoryUrl` and the affected `versions` range in the server API reference's
+  vulnerability-info shape, the range taken from the record's affected set under NuGet version
+  ordering (the vendored one, `supply-chain-policy.md` AC17). A package nothing stands against
+  is absent from the page, which is the shape the client reads as clean for exactly the content
+  the feed checked.
+- The registration leaf's `vulnerabilities` property (`advisoryUrl`, `severity`) and the search
+  document's are rendered for a version a record stands against from a per-version reader
+  answer and omitted otherwise.
+- The advisory key this handler reports at write time (`supply-chain-policy.md` was Q11, AC24)
+  is the identifier and the normalised version; OSV's NuGet ecosystem spells identifiers in
+  their display case and the ecosystem compares them case-insensitively, so the key is reported
+  lowercased and the coverage row's spelling is a sibling consequence of this pass.
+- A virtual repository renders from the supplying member's answer, under that member's
+  exemptions.
+
+The operator documentation still names the implementation guide's recipe for a feed that has
+not synced, an `auditSources` entry pointing at `https://data.nuget.org/v3/index.json`, "which
+only serves vulnerability data, not packages". A **proxied** repository advertises the resource
+and passes the upstream's index and pages through as mutable metadata with a TTL, every page
+`@id` rewritten to this registry, and passes registration `vulnerabilities` through unchanged,
+so a nuget.org cache loses no audit signal.
 
 ### Signing and provenance
 
@@ -759,9 +808,12 @@ The two pinned clients straddle the meaningful watershed. NuGet 6.3.4 (SDK 6.0) 
 never fetches the vulnerability resource, and tolerates `http://` with a warning; NuGet 6.14.3
 (SDK 9.0) fetches the vulnerability index and pages on every cold restore, warns `NU1903`,
 refuses `http://` for push and delete, and refuses a source advertising repository signatures
-over HTTP. Every hosted and proxied case runs on both; the audit cases run on 9.0 and assert
-the absence of any vulnerability request on 6.0 as a negative case, so the watershed is proven
-rather than believed.
+over HTTP. Every hosted and proxied case runs on both, with two named exceptions: the audit
+cases run on 9.0 and assert the absence of any vulnerability request on 6.0 as a negative case,
+so the watershed is proven rather than believed; and the search cases run on 6.14.3 only, the
+one client that sent a search request in any capture (`dotnet package search` is the 9.0 image's
+command; 6.3.4 sent no search request in any flow), so AC9 claims search for 6.14.3 and the
+matrix says so.
 
 The recorded surface for the replay corpus, named now because a thin recording script yields a
 thin specification: the service index fetch, a cold `dotnet restore` of a package with a
@@ -796,23 +848,28 @@ goes on the recorded exception list before its flow is expected to replay.
       client exits non-zero, then exits zero with "already exists" under `--skip-duplicate`, on
       both pinned clients; a push whose identifier differs from an existing package's only by
       case, or whose version normalises to an existing one (`1.0` against `1.0.0`,
-      `1.0.0-Alpha` against `1.0.0-alpha`), is refused the same way; and a body that is not a
-      valid package is refused with `400`, nothing committed.
+      `1.0.0-Alpha` against `1.0.0-alpha`), is refused the same way; a body that is not a
+      valid package is refused with `400`, nothing committed; and a body exceeding
+      `management.publish_spool_limit` is refused `413` with nothing committed, the bound reached
+      through `Deps` and no key read by the handler (`management-api.md` AC36).
 - [ ] AC4: Every `@id` in a served service index, hosted and proxied, is a URL beneath that
       repository's index on this registry's externally visible base URL, proven by a transcript
       of a full proxied restore, `add package` and `package search` in which no request reaches
       the upstream host directly; a hosted index advertises no `SymbolPackagePublish`,
-      `RepositorySignatures`, `Catalog` or `VulnerabilityInfo` resource, the `@type` set it
-      advertises is exactly the table in Design, and the index is served with
-      `Cache-Control: no-cache`.
+      `RepositorySignatures` or `Catalog` resource and no `VulnerabilityInfo` resource while no
+      advisory source covering NuGet has a freshness value, the `@type` set it advertises is
+      exactly the table in Design, and the index is served with `Cache-Control: no-cache` on an
+      anonymous read of a public repository and with `private` added on a private one or to a
+      credentialed request (`signing-service.md` was Q25).
 - [ ] AC5: A package pushed as `ZzFoo` `2.0.0-Beta.1+Build.7` is listed as `2.0.0-beta.1` in the
       version list and served at that flat-container path, its registration `version` reads
       `2.0.0-Beta.1` and its `id` reads `ZzFoo`; the same requests with a mixed-case identifier
       or the non-normalised version `2.0.0.0-BETA.1` answer the same content with canonical URLs;
       `dotnet add package zzfoo --prerelease` writes `Include="ZzFoo"` with that version on both
       clients; and a `PackageReference` to `[1.02.0.0]` restores the version stored as `1.2.0`.
-- [ ] AC6: With 127 versions the registration index inlines every leaf; with 128 it lists pages
-      of 64 without `items`, and `dotnet add package` resolves the newest version by fetching
+- [ ] AC6: With 127 versions the registration index carries two pages (64 and 63) with every
+      leaf inlined in `items`; with 128 it lists two pages of 64 without `items`, and `dotnet add
+      package` resolves the newest version by fetching
       the pages through their `@id` URLs, asserted from the transcript; the identity hive
       serves uncompressed and the `/3.4.0` and `/3.6.0` hives serve `Content-Encoding: gzip`,
       and a SemVer 2.0.0 version (dot-separated pre-release label, build metadata, or a SemVer
@@ -827,8 +884,9 @@ goes on the recorded exception list before its flow is expected to replay.
       `dotnet add package` on both clients selects the newest listed version instead, a
       floating `PackageReference` still resolves to it when it is the highest match (the
       documented exception), an exact `PackageReference` still restores it, the version list
-      still lists it, and the `.nupkg` is never removed; a relist through the management
-      binding restores the marks with one further snapshot; the identifier and version in the
+      still lists it, and the `.nupkg` is never removed; a relist through the management API or
+      through the reference-API `POST` relist route restores the marks with one further
+      snapshot; the identifier and version in the
       `DELETE` URL are folded, so `/zzfoo/1.0.0` and `/ZzFoo/1.0.0` unlist the same version.
 - [ ] AC8: A version hard-deleted through the registry-owned management API (`delete-version`)
       leaves every hive and the version list in exactly one snapshot, its download answers `404`,
@@ -884,7 +942,9 @@ goes on the recorded exception list before its flow is expected to replay.
       for an identifier the upstream lacks is answered `404` (`NU1101` on the client) and
       negatively cached, while an upstream `429` or `5xx` is not.
 - [ ] AC14: A proxied version list and registration index are revalidated after their TTL and
-      not before, using `If-Modified-Since` so an unchanged document costs a `304` upstream; a
+      not before, the TTL shortened through the remote repository's setting rather than any
+      clock the harness does not provide (`conformance-harness.md` was Q8, AC30), using
+      `If-Modified-Since` so an unchanged document costs a `304` upstream; a
       version published upstream becomes visible to `dotnet restore` and `add package` after
       the TTL and, absent an explicit refresh, not before; and a client's own conditional
       request inside the TTL is answered `304` without an upstream request.
@@ -900,9 +960,19 @@ goes on the recorded exception list before its flow is expected to replay.
       only for pages the client asked for, asserted at the network layer; and `dotnet package
       search` against the proxied repository returns the upstream's results with every URL
       rewritten.
-- [ ] AC17: A hosted repository's index advertises no `VulnerabilityInfo` resource and its
-      registration and search documents carry no `vulnerabilities` property, so a 6.14.3
-      restore makes no vulnerability request; a proxied repository advertises the resource and
+- [ ] AC17: With no advisory source covering NuGet synced or imported, a hosted repository's
+      index advertises no `VulnerabilityInfo` resource, its registration and search documents
+      carry no `vulnerabilities` property, a 6.14.3 restore makes no vulnerability request, and
+      what that restore and `dotnet list package --vulnerable` print is recorded in the
+      transcript; with a controlled advisory seeded through the harness's `advisories` key
+      against a pushed version, the hosted index advertises the resource, its page maps the
+      lowercased identifier to an entry carrying `severity`, `advisoryUrl` and a `versions`
+      range covering that version, with the page's `@updated` equal to the source's freshness
+      value, the registration leaf and the search
+      document for that version carry `vulnerabilities` and those of an unaffected version do
+      not, a 6.14.3 restore prints `NU1903` naming the advisory URL, the same advisory under the
+      repository's `coordinate_exemptions` renders nothing, and a 6.3.4 restore makes no
+      vulnerability request; a proxied repository advertises the resource and
       serves the upstream's index and pages with every `@id` rewritten, a 6.14.3 restore of an
       upstream-flagged package prints `NU1903` naming the upstream advisory, and a 6.3.4 restore
       of the same makes no vulnerability request; the upstream `vulnerabilities` property
@@ -965,7 +1035,7 @@ goes on the recorded exception list before its flow is expected to replay.
 | AC14 | conformance | `conformance/nuget/proxied_ttl_test.go` (mutating v3 stand-in serving `Last-Modified`; upstream `304` and client `304` both asserted at the network layer) |
 | AC15 | integration | `internal/format/nuget/removal_test.go` (stand-in presenting each event class; the shared-layer half is `proxy-cache.md` AC13's) |
 | AC16 | conformance | `conformance/nuget/proxied_paging_test.go` (stand-in with a paged, non-inlined hive; page requests upstream counted at the network layer; proxied `package search` URL-space assertion) |
-| AC17 | conformance | `conformance/nuget/audit_test.go` (hosted: no vulnerability request on 6.14.3, no property in served documents; proxied: stand-in vulnerability pages, `NU1903` on 6.14.3, no request on 6.3.4, passthrough of the registration property) |
+| AC17 | conformance + integration | `conformance/nuget/audit_test.go` (hosted with no source: no resource, no property, no vulnerability request on 6.14.3, the client's output recorded; hosted with a seeded `advisories` record: the resource, page, leaf and search renderings, `NU1903` on 6.14.3, the exemption, no request on 6.3.4; proxied: stand-in vulnerability pages, `NU1903` on 6.14.3, no request on 6.3.4, passthrough of the registration property); `internal/format/nuget/vulnerability_render_test.go` (page shape, `@updated` from the source freshness value, range rendering under the vendored ordering, exemption, virtual member resolution) |
 | AC18 | conformance | `conformance/nuget/signed_test.go` (a committed repository-signed fixture from nuget.org served through a stand-in; an author-signed fixture pushed; `dotnet nuget verify` output and digests compared; index resource-set assertion); `conformance/nuget/signature_test.go` (`dotnet restore` under `signatureValidationMode=require` against the recorded verdicts, the trust set seeded through the `trust` key; shared with `artifact-verification.md` AC14) |
 | AC19 | conformance + integration | `conformance/nuget/manage_binding_test.go` (twin packages in one `script`: one unlisted through the management endpoint, one through real `dotnet nuget delete`; served documents compared; relist through the documented `POST`; deprecation then `dotnet list package --deprecated`; `dotnet nuget delete` under a push-only key refused; the `script`-driven case per declared kind `management-api.md` AC24 and `conformance-harness.md` AC26 require); `internal/format/nuget/manage_binding_test.go` (snapshot count per entry point and operation, `push`-only refusal of `withdraw` and `restore`, `pull`-only refusal of `annotate`, proxied `405`; the `Bindings()` scope-equality table `management-api.md` AC8 enumerates) |
 | AC20 | conformance | `conformance/nuget/replay_test.go` |
@@ -1020,7 +1090,8 @@ Left empty by `/spec`; populated by `/tasks` once this spec reaches `planned`.
 
 ## Open Questions
 
-None open. The eight questions this draft raised were each written in the template's decision
+None open. The eight questions this draft raised, and the ninth the Fable gate review of
+2026-10-08 raised to supersede the fourth, were each written in the template's decision
 shape and then adopted at their own recommendation under the owner's standing delegation of
 2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided,
 folded through Scope, Design, the criteria and the Test Plan in the same pass, and reversible
@@ -1126,6 +1197,12 @@ Accepted cost: a `trustedSigners` repository entry for this registry is not poss
 signing service lands and this section is revised.
 
 ### Resolved: audit data and the vulnerability resource (was Q4)
+
+**Superseded on Fable 2026-10-08 by the resolved hosted-advisories decision below (was Q9).**
+Rechecked on Fable 2026-10-08: the record's Option B claimed "no false all-clear", but this
+spec's own capture says the client reads an absent `vulnerabilities` property as "no vulnerable
+packages", so on this wire silence is the all-clear; and Option A's stated cost, a `Deps` read
+with no owner, has not existed since 2026-09-28. The record is kept for its history.
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option B: a hosted repository
 advertises no `VulnerabilityInfo` resource and omits the `vulnerabilities` property; a proxied
@@ -1263,9 +1340,53 @@ depends on a wrong spelling failing.
 
 Accepted cost: a redirect-free acceptance that never corrects a caller.
 
+### Resolved: hosted vulnerability data rendered from the advisory reader (was Q9, raised and adopted 2026-10-08)
+
+**Adopted 2026-10-08 under the owner's standing delegation, on Fable, superseding the resolved
+audit-data decision above (was Q4), a delegation adoption and not an owner decision, and
+owner-facing**: it changes what a hosted feed tells a .NET client about vulnerabilities.
+Option A: a hosted repository advertises `VulnerabilityInfo` only while an advisory source
+covering NuGet has a freshness value, renders its page from the advisory reader keyed by the
+repository under its `coordinate_exemptions`, with `@updated` the sources' latest freshness
+value and each affected identifier's `versions` range under the vendored NuGet ordering, and
+renders the registration and search `vulnerabilities` property per version the same way; a
+package or version nothing stands against is absent; a feed that has never synced advertises
+nothing and the client's output under that absence is recorded. Folded through Scope (out of
+scope reworded), Design (the service index table, the registration leaf, "Audit data and the
+vulnerability resource"), AC4, AC17 and its Test Plan row.
+
+The question: was Q4 kept the hosted path silent because the handler then had no advisory read
+and a page it invented would be a false all-clear. The read now exists (`supply-chain-policy.md`
+was Q12, `format-handler-interface.md` AC14), `pub.md` (was Q7) and `composer.md` (was Q12) have
+rendered their hosted channels from it, and this spec's own capture shows that NuGet's silence is
+not silence: `dotnet list package --vulnerable` reads an absent property as "no vulnerable
+packages". The choice is between a hosted feed that is read as clean while the registry knows
+better, and one that says what the feed holds.
+
+**Recommendation (adopted):** A, because on this wire the false all-clear is the status quo, not
+the risk: rendering from the reader is the only answer under which a hosted restore of a private
+package that shares a public name, or of a package an operator-declared source names, warns at
+all. Advertising nothing while no source has a freshness value keeps the registry from asserting
+a clean page it never computed, and the forward-moving `@updated` is what the client's cache
+rule needs.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Render from the advisory reader; advertise only while a source is fresh** | Real `NU1903` warnings on hosted content; exemptions honoured; no invented page | A page only as fresh as the feed; the hosted audit surface is now a conformance surface of this format |
+| **B. Keep was Q4's silence** | Nothing rendered | The client reads the silence as an all-clear, captured, so the registry's hosted feed is a false all-clear by default |
+| **C. Always advertise, empty when the feed is unsynced** | The client is always satisfied | An empty page is "no known vulnerabilities" about content nobody checked, the shape `npm.md`, `composer.md` and `pub.md` refused |
+
+**Why this is yours:** it prices a hosted security claim the product will be held to, and it
+reverses a delegation adoption.
+
+Accepted cost: a registration leaf now depends on the feed's state as well as the snapshot, so
+its validator identity includes the sources' freshness value; the matrix carries the hosted
+audit surface as tested rather than absent.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | 6641886 | authoring pass: grounded first draft, not a review | Grounded the wire contract three ways: captured traffic from the .NET SDK 6.0 (NuGet 6.3.4) and 9.0 (NuGet 6.14.3) images, pinned by digest, run in containers against a logging stub with `dotnet pack` fixtures (cold and warm restore, a SemVer 2.0.0 reference, a non-normalised reference, a mixed-case identifier, floating and exact restores of an unlisted version, `add package` with and without `--prerelease` and against a paged hive, `package search`, `list package --outdated` and `--vulnerable`, push accepted, duplicate with and without `--skip-duplicate`, invalid, key-less and wrong-key, push with a `.snupkg` beside the package with and without the symbol resource, `nuget delete` accepted, `404` and key-less, the `401` challenge with config-file and environment credentials on restore and push, a rejected credential, a repository-signatures resource over HTTP, `nuget verify` on an unsigned and a nuget.org package, restore with and without a vulnerability resource, and a missing identifier); the Microsoft NuGet server API reference (overview, service index, package content, package metadata, search, push and delete, symbol publish, catalog, repository signatures, vulnerability info), the implementation guide, the versioning, signed-packages, trust-boundary and authenticated-feed pages, the deletion policy, the SDK's signed-package-verification, restore-audit and verify pages, and the NuGet.Client source for the push and flat-container requests; and the live api.nuget.org (resource set, inlined and non-inlined registration paging, an unlisted leaf, cache and conditional-request behaviour, the CDN lowercase rewrite, `404`s on non-normalised and mixed-case paths). Design built from that: the per-repository service index beneath which every resource lives and total URL rewriting on the proxied path; the three registration hives from one renderer with nuget.org's 128/64 paging heuristic, gzip and SemVer 2.0.0 exclusion; lowercase and normalised keys with the display spelling and label case in the documents; the chunked multipart push with the bounded `.nuspec` peek as its addressed object; the write-boundary declaration with unlist and relist as metadata-only writes and hard deletion retiring the coordinate; unlist, relist, hard delete and deprecate as registry-owned management operations with the client's `DELETE` bound onto unlist; the API key header as a fifth presentation of a registry token beside Basic-after-challenge, with the double-header retry and the twelve-attempt `NU1301` storm recorded; the `403` policy rendering; hosted repositories making no vulnerability claim while proxied ones pass the upstream's pages through; byte fidelity for signed packages with the requirements on the shared verification and signing services stated; the proxied classification with `Last-Modified` revalidation (the live flat container ignores `If-None-Match`), opaque page-URL mapping, forwarded search, the completion-only fetch mode `go-modules.md` requested, and NuGet's rows of the removal table; and the client-cache trap. Eight questions written in decision shape and adopted under the standing delegation: `DELETE` is unlist with hard deletion under `delete` (AC7, AC8, AC19); no catalog (AC4); no repository signing in v1 with byte fidelity (AC18); hosted audit data absent and proxied passthrough (AC17); no symbol packages (AC21); the bounded-peek push object (AC11); api.nuget.org preconfigured through `proxy-cache.md`'s extension mechanism (sibling consequence); non-canonical spellings folded and served (AC5). Twenty-two criteria, each with a Test Plan row; check-spec clean with zero advisories. Sibling consequences recorded in the authoring report, not applied here: an `auth.md` client-table row for `dotnet` and the header form in its AC31, the `proxy-cache.md` preconfigured-set extension and a NuGet unlist row in its removal table, the `management-api.md` operations and action mapping, the `supply-chain-policy.md` advisory read through `Deps`, the verification and signing requirements, and a NuGet row in the management-surfaces analysis. Stays draft; awaits an independent review. |
 | 2026-09-28 | ddc73fb | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From `management-api.md` (its resolved withdraw-action decision, was Q1, and the reconciliation table): unlist and relist are the `withdraw` and `restore` kinds and require `delete`, reversing this spec's adopted `push` (a revision note under the resolved delete-semantics record), hard delete is `delete-version`, deprecation is `annotate`; the handler declares them through `Operator`, the client `DELETE` and the documented `POST` relist are declared bindings (`Bindings()`, AC8), refusals on a remote are `405` `repository-type` (AC7), every kind gets a `script`-driven case (AC24); AC19 and its Test Plan row rewritten, `dotnet nuget delete` under a push-only key refused. From `management-api.md` was Q3 and `data-model.md` AC35: the retirement set left the package-level document for the core-held `Retirement` record, refused centrally and rendered as the duplicate `409`; AC8 gains the backwards-repoint clause and a `state`-seeded retirement case. From `auth.md` was Q23: the service index is a descriptor, so a patterned-only `pull` now runs `dotnet restore` for in-pattern packages where this spec said it failed at its first request; AC11 inverted, sentinel check in the scope test; the `dotnet` row and `X-NuGet-ApiKey` form are in `auth.md` (client table, presentation forms, AC31), off-route presentation an authentication failure (was Q24), so the 'must land there' wording is gone. From `supply-chain-policy.md` (was Q10, AC18, AC20) and `format-handler-interface.md` AC14: refusals through `WriteRefusal` with the `Refused by policy` status-line phrase; AC12 asserts the raw status line and captures fallback to fill NuGet's `pending` binding-table row; the advisory reader now exists, so the hosted-audit record's accepted cost is only the missing freshness contract. From `proxy-cache.md` (was Q15, AC20; was Q17, AC15, AC19) and `conformance-harness.md`: the completion-only mode is offered, not requested, the client streams with completion withheld and the short-close is observed in `proxied_test.go` (AC13); api.nuget.org is preconfigured with its `upstream-adapters.md` profile row (AC24), the was-Q7 record marked discharged. From `artifact-verification.md` (AC14, AC21, was Q8) and `signing-service.md`: the NuGet CMS profile, trust roots, `owners` identity and revocation modes cited in Design and AC18 (shared `signature_test.go`, `trust` key); the countersign hook recorded as reserved and unimplemented. From `repository-lifecycle.md` AC12 and `format-handler-interface.md` AC13: a Capabilities and lifecycle section, `Virtual: supported`, `Rename: supported`, new AC23 with `rename_test.go` and `virtual_test.go`. Twenty-three criteria, each with a Test Plan row. Consequences for other files: a NuGet row in `docs/internal/analysis/management-surfaces-and-the-oracle.md` (still absent); `supply-chain-policy.md`'s NuGet binding row stays `pending` until AC12's case lands. Stays draft; awaits an independent review. |
+| 2026-10-08 | eb442ea | Fable gate review: full review of the Fable authoring and of the unreviewed Opus reconciliation (ddc73fb), with every open consequence applied and the adversarial lens on the service index, registration paging, the flat container, search, the PackagePublish surface, signing, the two clients and the hosted audit surface | Brought current against `agents/spec-loop/consequences.md` and the foundation records read at HEAD: `signing-service.md` was Q14 (every document through `ServeRendered`'s lazy form, every file through `ServeFile`, the snapshot-derived `ETag` as the validator identity), was Q24 and `proxy-cache.md` was Q24 (`HEAD` as the `GET` with the body withheld, both paths), was Q25 with `auth.md` was Q27 and AC38 (the index's `no-cache` is a serve-policy value the door downgrades to `private` on private repositories and credentialed requests; the challenge and existence `404` are `private, no-store`; AC4 extended); `management-api.md` was Q13 (a binding never wider than its operation, here equal), was Q14 (the push declares its claim on the write transaction, checked at declaration and at commit), was Q16 (the central `retired` refusal rendered as the wire's `409`), was Q20 (the spool is the shared `publish_spool_limit`, `413` over it, AC3 extended); `supply-chain-policy.md` was Q11 (the advisory key is the lowercased identifier and normalised version) and was Q12 (the reader is keyed by the repository served under its exemptions); `conformance-harness.md` was Q8 (AC14's TTL is shortened through the repository setting, no clock); the management-surfaces item 9 (AC7's relist is through the API or the reference-API route). Adversarial findings fixed: nuget.org's paging cuts pages of 64 always and inlines them under 128 versions (the live 86-version package came as two inlined pages), where Design and AC6 read as one inlined page; the search cases claimed both clients while only 6.14.3 ever sent a search request, now stated as a 6.14.3-only claim; was Q4's "no false all-clear" was contradicted by this spec's own capture (an absent `vulnerabilities` property is read as "no vulnerable packages"), so was Q4 is superseded by was Q9: the hosted audit surface is rendered from the advisory reader as `pub.md` and `composer.md` now do, advertised only while a source has a freshness value, with the exemption and the never-synced case asserted (AC17 rewritten, Design rewritten). The eight original adoptions re-examined: Q1 (unlist binding under `delete`), Q2 (no catalog), Q3 (no repository signing, byte fidelity, trust roots and revocation from `artifact-verification.md` was Q8), Q5 (no symbols), Q6 (bounded peek), Q7 (api.nuget.org preconfigured, discharged), Q8 (fold and serve) confirmed; Q4 superseded. Twenty-three criteria, each with a Test Plan row; check-spec zero failures, zero advisories; zero open questions. Sibling consequences reported, not applied: `supply-chain-policy.md`'s NuGet coverage row spelling and a NuGet entry beside pub and composer as a reader consumer, `signing-service.md`'s consumer note for the lazy form, `management-api.md`'s cross-format table (unchanged), and the owner-facing supersession. Status `planned`. |

@@ -298,7 +298,7 @@
     "path": "docs/internal/plans/formats/nuget.md",
     "description": "Spec for the NuGet v3 registry format: the service index, the flat container, the paged registration hives, search and the PackagePublish push and unlist surface, hosted and proxied, with the dotnet CLI as the conformance oracle.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "21",
     "covers": [
       "internal/format/nuget/**",
