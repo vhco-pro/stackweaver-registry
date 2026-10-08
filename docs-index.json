@@ -407,7 +407,7 @@
     "path": "docs/internal/plans/formats/terraform.md",
     "description": "Spec for the Terraform and OpenTofu registry format: a host-bound, root-anchored discovery document, the module and provider registry protocols and the provider network mirror protocol on one handler, hosted modules and registry-signed providers published through the management API, a proxied path that verifies upstream provider signatures and turns commit-pinned VCS module sources into cached archives, and a download capability for the byte routes no client sends a credential to.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "29",
     "covers": [
       "internal/format/terraform/**",

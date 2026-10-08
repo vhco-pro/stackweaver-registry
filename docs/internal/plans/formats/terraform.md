@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at b43c566 with the foundation wave on Opus (not a review), this spec's first reconciliation: the discovery document is a descriptor served on a server.hosts host-bound claim, so a patterned pull installs through discovery (AC12 inverted, auth.md was-Q23); the download capability is auth.md's token-service product (AC33, auth.token_service.lifetime, the route-scoped presentation-form row); SHA256SUMS is this format's Indexer generator output signed through SignBlob, its signature a Signature record, served through ServeDocument, rotation the additive profile with outright retirement as one signature batch and no snapshot (AC10); the four signing and two verification requirements checked against signing-service and artifact-verification (upstream key pinning into the trust set, h1 in internal/verify/treehash); management operations are the kinds publish, delete-version, delete-package and annotate through Operator with no binding, publish through upload sessions, retirement core-held, 405 repository-type (AC9); refusals through WriteRefusal on a holds binding row (AC13); the proxied path on the https adapter with the artifact hosts on the allowlist and the git adapter for commit-pinned modules, creation with no probe and discovery checked at first request (AC23), SHA256SUMS and its signature a paired set, cache-scoped Last-Modified with the regression and new-key rows (AC19, AC20); Capabilities with Virtual and Rename supported (AC26). No new question. Earlier: authored 2026-09-26 from captures of Terraform 1.5.7 and 1.16.4 and OpenTofu 1.6.3 and 1.12.6; eight questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-08 at 6c5e948: a full review pass (every sibling citation verified at HEAD, the adversarial lens at full strength on the Opus-authored design, constitution compliance) plus the re-examination of the eight questions adopted without Fable. Q3, Q6, Q8 confirmed; Q1, Q2, Q5 confirmed with the fold or cost amended (the unbound-host 404 is the shared denial, the dotless-hostname rule is documentation not a refusal, the byte-route paths and the client-side capability disclosure stated, the mirror's hostname-first precedence named as different from the registry protocol's shadowing); Q4 amended substantively (the proxied module path stores what it fetched under a declared checksum or the structural verifier, because fetch-and-cache never replaces bytes, the re-pack being the hosted path's alone; the git grammar and pass-through cited to upstream-adapters was-Q9 and AC34); Q7 amended (an identical provider republish completes unchanged under management-api was-Q15; protocols supplied nowhere is refused 422). The file brought current first: SignedBy (signing-service AC37), ServeRendered, ServeFile and the door's HEAD (its was-Q24, AC32), proxy-cache's HEAD (was-Q24, AC32), metadata never evicted with a retained count of zero (was-Q19, Q21, Q22), the required signature against was-Q23, the rename's unbound_hosts (repository-lifecycle was-Q10, AC28; deployment AC12), the spool and unpacked-size bounds (management-api was-Q20, AC36), the hosted h1 through Deps' Verifier, the same-coordinate publish race, the canonical tar digest for the idempotency check. 26 criteria, each with a Test Plan row; eight questions resolved, zero open; fable_recheck cleared. Sibling consequences reported, not applied: upstream-adapters (the git adapter's stream is the gzip-compressed tar this registry serves as fetched), conformance-harness (two exception rows), proxy-cache (optional consumer naming), the management-surfaces analysis and question-triage. Earlier: reconciled 2026-09-28 at b43c566 on Opus; authored 2026-09-26 from captures of Terraform 1.5.7 and 1.16.4 and OpenTofu 1.6.3 and 1.12.6."
 description: "Spec for the Terraform and OpenTofu registry format: a host-bound, root-anchored discovery document, the module and provider registry protocols and the provider network mirror protocol on one handler, hosted modules and registry-signed providers published through the management API, a proxied path that verifies upstream provider signatures and turns commit-pinned VCS module sources into cached archives, and a download capability for the byte routes no client sends a credential to."
 author: michielvha
 goal: "Serve Terraform and OpenTofu teams a private module and provider registry and a verified cache of the public registries that terraform and tofu, old and current lines alike, install from with credentials only in their CLI configuration and with a network restricted to this registry."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/terraform/**"
   - "conformance/terraform/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed"
 ---
 
 # Plan: Terraform and OpenTofu registry format
@@ -193,10 +192,10 @@ is synchronous on every surface, so no kind is declared deferred and nothing is 
 - **The proxied path** against an upstream module and provider registry (registry.terraform.io,
   registry.opentofu.org or a private one): version lists as mutable metadata with a TTL, provider
   packages verified against the upstream's signature before commit and served both over the
-  provider registry protocol and over the network mirror protocol, module sources fetched and
-  repacked when they are archives or commit-pinned VCS sources on an allowlisted host (the
-  resolved VCS-source decision below), negative caching, and this format's rows of the removal
-  table.
+  provider registry protocol and over the network mirror protocol, module sources fetched,
+  verified and stored as fetched when they are archives or commit-pinned VCS sources on an
+  allowlisted host (the resolved VCS-source decision below), negative caching, `HEAD` as the
+  `GET` with the body withheld, and this format's rows of the removal table.
 - **Virtual repositories**, resolved per package in member order (the resolved virtual-resolution
   decision below).
 - Terraform 1.5.7 and 1.16.4 and OpenTofu 1.6.3 and 1.12.6 as the conformance oracles on both
@@ -318,20 +317,25 @@ decision below:
   usually a virtual one, by instance configuration handed to the handler at construction:
   `deployment.md`'s `server.hosts`, a file-only list of `{hostname, repository}` reloaded on
   `SIGHUP`, a binding to a missing repository being a startup warning and a `404` on that host
-  (its resolved host-binding decision, was Q8 there; `format-handler-interface.md`, "Host-bound
-  claims"). No table and no repository document is involved. A request for
+  (its resolved host-binding decision, was Q8 there, and AC12; `format-handler-interface.md`,
+  "Host-bound claims"). No table and no repository document is involved. A request for
   `/.well-known/terraform.json` on a bound hostname answers
   `200`, `Content-Type: application/json`, with relative service URLs into the bound repository's
   format-first space: `{"modules.v1": "/terraform/{repository}/modules/v1/", "providers.v1":
-  "/terraform/{repository}/providers/v1/"}`. On an unbound hostname it answers `404`, which the
-  discovery reference defines as "the host supports no Terraform-native services".
+  "/terraform/{repository}/providers/v1/"}`. On an unbound hostname, or one bound to a
+  repository of another format, the handler is never invoked: its `Scope(r)` has no repository
+  to report and returns an error, and the request is the shared denial
+  `format-handler-interface.md` AC10 defines, which `auth.md` renders as a `404`
+  indistinguishable from a missing resource (`deployment.md` AC12). That `404` is what the
+  discovery reference defines as "the host supports no Terraform-native services", so the
+  shared denial happens to be the wire's own answer; nothing here renders it.
 - **Only the discovery document is root-anchored**, exactly as `format-handler-interface.md`
   anticipated: the handler's `Mounts()` returns the format-first `/terraform/` and the
   root-anchored `/.well-known/terraform.json` as a host-bound claim, and the registration layer
   accepts the second only because this spec records the carve-out, serving it only on a
-  hostname `server.hosts` binds to a repository of this format and answering `404` elsewhere
-  (that spec's "Host-bound claims" and AC11). The mount is the single path, not
-  `/.well-known/`, so no other ecosystem's well-known document can collide with it.
+  hostname `server.hosts` binds to a repository of this format, every other hostname receiving
+  the shared denial above (that spec's "Host-bound claims" and AC11). The mount is the single
+  path, not `/.well-known/`, so no other ecosystem's well-known document can collide with it.
 - **Every other repository is reachable without a hostname of its own** through the CLI `host`
   block, which replaces discovery for a hostname and was honoured by all four clients (captured:
   no discovery request, services taken from the block, and the credential configured for that
@@ -340,15 +344,18 @@ decision below:
   `terraform-aws-modules/vpc/aws` need no rewriting (captured with `registry.terraform.io` and
   `registry.opentofu.org` overridden).
 - **A bound hostname must contain a dot**, because terraform-registry-address refuses a module
-  host without one ("must contain at least one dot").
+  host without one ("must contain at least one dot"). `server.hosts` is the shared layer's and
+  carries no per-format grammar, so this is an operator rule the documentation states beside
+  the binding step, not a refusal this registry performs: a dotless binding is accepted and
+  no client can address it.
 - **The document itself is authorized as a read of the bound repository** with the addressed
   object a `descriptor` (below), the kind `auth.md` defines for "a discovery probe" whose body
   names no object, the precedent Galaxy's discovery and Cargo's `config.json` now set: a
   credential-less request for a private bound repository answers `401`, and a valid token
   lacking `pull` answers `404`, as for any read of that repository. The binding itself is not
-  repository content: an unbound hostname answers `404` and a bound one does not, so binding a
-  hostname publishes that the hostname serves Terraform, and the service URLs publish the bound
-  repository's name to whoever may read it, both the operator's choice.
+  repository content: an unbound hostname receives the shared `404` and a bound private one a
+  `401`, so binding a hostname publishes that the hostname serves Terraform, and the service
+  URLs publish the bound repository's name to whoever may read it, both the operator's choice.
 
 ### The download capability
 
@@ -366,7 +373,14 @@ this format's side of that design:
   provider download document, a mirror version document) names its byte URLs with a **download
   capability** as a path segment: `/terraform/{repository}/-/c/{capability}/...`. The segment
   `-` sits where the fixed `modules`, `providers` and `mirror` segments sit, so no service path
-  can collide with it.
+  can collide with it, and the namespace grammar below admits no leading `-`. The byte routes
+  under it are `modules/{namespace}/{name}/{system}/{version}/archive.tar.gz` (with
+  `?checksum=sha256:{hex}` appended and `//{subdir}` where one is recorded), `providers/
+  {namespace}/{type}/{version}/SHA256SUMS`, `.../SHA256SUMS.sig` and `.../{filename}.zip`, and
+  `mirror/{hostname}/{namespace}/{type}/{filename}.zip`; a caller with no credential on an
+  anonymously readable repository is given the same paths directly under `/-/`, with no
+  `c/{capability}/` segment. The archive path ends in `.tar.gz` because go-getter chooses its
+  unpacker by extension (captured), so no `?archive=` parameter is needed.
 - The capability is minted by `auth.md`'s token service, the JWT machinery it already specifies
   for OCI: algorithm fixed by configuration and never read from the token, a dedicated rotatable
   key selected by `kid`, and an expiry measured in minutes. It carries the repository, `pull`,
@@ -395,6 +409,11 @@ this format's side of that design:
   lookup like every other form (`auth.md` AC27).
 - A caller with no credential on an anonymously readable repository gets byte URLs with no
   capability segment, and the byte routes serve it as the anonymous principal.
+- The redaction above is this registry's; the client is not bound by it. A client prints a
+  capability-bearing URL in its own error output ("unsuccessful request to {url}: 403
+  Forbidden" on a provider zip, captured), which is a client-local disclosure of a credential
+  narrower and shorter-lived than the one the client already holds, accepted and stated for
+  operators whose CI logs are shared.
 
 ### Provider trust, signing and the lock file
 
@@ -404,11 +423,16 @@ file's hashes. What that makes this registry responsible for, per path:
 
 - **Hosted**: this registry is the signer. Per the resolved provider-signing decision below, the
   publish generates `SHA256SUMS` from the zips it received (one line per platform zip, plus the
-  `manifest.json` when the publish carries one, as HashiCorp's release does, captured), has the
-  shared signing service sign it with the repository's OpenPGP key, and serves the key that
-  signed it as the entry of `signing_keys`. Clients print "Installed ... (self-signed, key ID {id})" on
-  Terraform and "(signed, key ID {id})" on OpenTofu (captured). The key is **RSA**, because
-  Terraform 1.5.7 refuses Ed25519 (captured).
+  `manifest.json` when the publish carries one, as HashiCorp's release does, captured), in
+  `sha256sum`'s line form (`{hex}  {filename}`, the form the real `SHA256SUMS` files used as
+  fixtures carry), has the shared signing service sign it with the repository's OpenPGP key,
+  and serves the key that signed it as the entry of `signing_keys`. Clients print "Installed
+  ... (self-signed, key ID {id})" on Terraform and "(signed, key ID {id})" on OpenTofu
+  (captured). The key is **RSA**, because Terraform 1.5.7 refuses Ed25519 (captured). The
+  `h1:` the mirror lists for a hosted zip is obtained inside the same write through the
+  `Verifier` handle `Deps` carries (its `Check`, the `h1:` integrity entry of
+  `artifact-verification.md`), never computed in the handler, which its import boundary
+  forbids (its AC4).
 - **Proxied**: the upstream author is the signer. The proxy verifies the upstream signature
   against the upstream's listed keys before committing anything (an integrity call in the proxy
   layer's post-receipt verifier hook; Design, "What artifact verification provides"), then serves
@@ -529,16 +553,30 @@ declared kind has a `script`-driven conformance case (`management-api.md` AC24, 
 
 What this registry enforces on ingest:
 
-- The body is spooled to a bounded temporary buffer outside the CAS. A module archive must be a
-  tar.gz or zip whose entries are regular files, directories and relative symlinks that stay
-  inside the tree; an absolute path, a `..` escape, a hard link or a device file is refused with
-  `422`, nothing committed. The accepted tree is stored as a **canonical re-pack** (entries
-  sorted, owner and group `0`, modification time `0`, modes `0644` and `0755`), so the digest a
-  client verifies is of bytes this registry wrote and one tree always yields one digest, which
-  is what makes the `checksum` stable across republish attempts.
+- Every body this registry reads whole is bounded by `management.publish_spool_limit`, the one
+  bound on every path that spools a publish body, reached through the bounded spool `Deps`
+  hands the handler and never by reading the key (`management-api.md`'s resolved spool-bound
+  decision, was Q20 there, AC36): the multipart convenience form is refused `413` `too-large`
+  above it, and the handler's inspection of a committed archive or zip (a zip needs a
+  `ReaderAt`) reads each file through the same facility under the same bound. The bytes an
+  archive unpacks to are bounded by the same value: a tar.gz or zip whose entries would exceed
+  it is refused `422` naming the bound, so a compression bomb is refused before the tree is held.
+- A module archive must be a tar.gz or zip whose entries are regular files, directories and
+  relative symlinks that stay inside the tree; an absolute path, a `..` escape, a hard link or a
+  device file is refused with `422`, nothing committed. The accepted tree is stored as a
+  **canonical re-pack**, always a tar.gz: entries sorted by path, owner and group `0`,
+  modification time `0`, modes `0644` and `0755`, symbolic links as link entries, a gzip header
+  with a zero modification time and no name. The digest a client verifies is of bytes this
+  registry wrote. One tree yields one **canonical tar digest**, recorded in the version's
+  document over the uncompressed stream, and that digest, never the compressed bytes', is what
+  the republish comparison below reads, so a change of compressor between two attempts cannot
+  turn an identical tree into a `409`.
 - A provider zip must be a zip named `terraform-provider-{type}_{version}_{os}_{arch}.zip`, the
   form both public registries serve (captured); a publisher `SHA256SUMS` that disagrees with any
-  zip's computed digest is refused with `422`.
+  zip's computed digest is refused with `422`. A provider publish whose `manifest.json` carries
+  no `protocols` and whose `args` declare none is refused with `422` naming the field, because
+  every version entry the clients select from carries `protocols` and this registry invents no
+  value for it.
 - **Names**: a module namespace and name match `^[0-9A-Za-z](?:[0-9A-Za-z-_]{0,62}[0-9A-Za-z])?$`
   and a system `^[0-9a-z]{1,64}$` (terraform-registry-address's `moduleRegistryNamePattern` and
   `moduleRegistryTargetSystemPattern`); a provider namespace admits letters, digits, dashes and
@@ -554,8 +592,14 @@ What this registry enforces on ingest:
   pruned: the cross-format retirement rule, checked by `Submit` against the core-held set
   (`data-model.md` AC35). An archive the handler's peek finds malformed or disagreeing with the
   declared coordinate is refused `422` `validation` (`management-api.md`'s problem table). A
-  module republished with a tree whose canonical re-pack has the same digest is idempotent and
-  creates no snapshot, the CI-retry case.
+  republish that changes nothing is the declared unchanged publish of `management-api.md`'s
+  resolved unchanged-publish decision (was Q15 there): a module whose canonical tar digest
+  equals the stored one, or a provider whose platform set, zip digests and `manifest.json` all
+  equal the stored version's, completes with no snapshot and `unchanged: true`, the CI-retry
+  case; any difference, a platform added or missing included, is the `409` above. Two
+  concurrent publishes of one coordinate are serialised by the claim check at commit under the
+  head lock (`data-model.md` AC35, `storage-and-gc.md` AC30), so exactly one lands and the other
+  is refused `409` or completes unchanged.
 - A provider publish to a proxied or virtual repository, and every management operation there,
   answers `405` with problem type `repository-type` (`management-api.md`'s resolved
   remote-refusal decision, was Q10 there).
@@ -584,7 +628,17 @@ the body's digest and the key, never snapshot content, served as `SHA256SUMS.sig
 which for this format is the bare binary signature beside its body (its "Storage" section,
 AC6). Neither is rendered on request, and both are served through `index.ServeDocument`, which
 sets their shared `Last-Modified` from the pointer's freshness record and the `ETag` from the
-bytes (its AC11). Unlike Debian's `Release` or Julia's registry there is no repository-wide index
+bytes (its AC11). Everything else this handler serves goes through the same door, because its
+freshness boundary forbids every handler package, module-wide, to set a validator or read a
+conditional header (its resolved serving-door decision, was Q14 there): module archives and
+provider zips through `ServeFile` from their `File` records (a strong `ETag` from the CAS
+digest), and the documents rendered per request (the discovery document, version lists,
+download documents, the mirror's `index.json` and `{version}.json`) through `ServeRendered`
+under a policy with no freshness date, which is how a per-request document carries no
+`Last-Modified` the lock file could never use. The door also answers every `HEAD` as the `GET`
+with the body withheld, `Content-Length` included (its resolved `HEAD` decision, was Q24 there,
+AC32), which is what go-getter's `HEAD`-then-`GET` on an archive receives on the hosted path;
+the handler never branches on the method. Unlike Debian's `Release` or Julia's registry there is no repository-wide index
 to regenerate: the signed document is per version, so concurrent publishes of different versions
 never contend on one document, and a publish touches nothing another version holds. A repoint
 restores exactly the versions, and so the `SHA256SUMS` bodies, of the snapshot it targets, and
@@ -613,9 +667,12 @@ each checked against what that spec now says:
    "Terraform's `ascii_armor` and `key_id` in the download document". The download document is
    rendered per request from the version's records, and its `signing_keys` names the key of the
    `Signature` record the version's `SHA256SUMS` currently carries, so that a key retirement's
-   re-sign batch changes the listed key with no snapshot; how the key's public forms reach a
-   per-request document without the handler importing `internal/signing` is not yet stated in
-   `signing-service.md`, a gap raised against that spec by this pass.
+   re-sign batch changes the listed key with no snapshot. The public forms reach the
+   per-request document through the serving door's `SignedBy(ctx, ref)`, which returns the
+   public forms of exactly the keys whose current `Signature` records the version's
+   `SHA256SUMS` carries and nothing private, so the handler imports no `internal/signing`
+   (`signing-service.md`, "Serving", its "The keys a body is signed by" bullet; AC37, whose
+   `signed_by_test.go` and `signing_boundary_test.go` name this handler).
 3. **Synchronous signing inside the publish write**, one document per provider version, within a
    client-facing management request's latency budget; there is no asynchronous half. Met by the
    pre-commit dispatch (its AC1).
@@ -696,9 +753,20 @@ format asked of the adapters is theirs; the protocol half stays in this handler
   with this format, and AC28): the tree of one commit, named by 40 hexadecimal digits, from an
   `https` git URL on an allowlisted host over smart HTTP, every object verified with
   collision-detecting SHA-1, with no credential, a size bound, and no `os/exec` (the resolved
-  VCS-source decision below). How one Terraform remote whose `adapter` is `https` hands a
-  module location to the `git` adapter under the same allowlist is not yet stated there, a gap
-  raised against that spec by this pass.
+  VCS-source decision below). The remote's row names `https` and the `Router` selects the
+  adapter **per location**: the handler parses an upstream location of exactly the form
+  `git::https://{host}/{path}?ref={40 hex}`, with an optional `//{subdir}` it keeps for itself
+  and nothing else in the query, into the git location form `{url, commit}` the fetch-and-cache
+  request carries, which that spec routes to the `git` adapter under the same row's allowlist,
+  concurrency bound and cool-down, presenting no credential whatever the matching entry's role
+  (its resolved git-location decision, was Q9 there; AC34, which names this spec's AC18 as the
+  client half). The adapter's own grammar refuses, before any connection and with a named error
+  that is not `HostNotAllowedError`, a URL carrying userinfo (a module author's
+  `git::https://token@host/...` is a credential from metadata), a query string, a fragment or a
+  scheme other than `https`, and a commit id that is not 40 hexadecimal digits; it fetches no
+  submodule (a `.gitmodules` arrives as an ordinary file) and follows a server redirect only
+  within the allowlist. A location the handler's parse does not accept (a branch or tag `ref`,
+  a second query parameter, userinfo) never reaches the adapter: it is passed through, below.
 
 Classification and behaviour:
 
@@ -721,7 +789,30 @@ Classification and behaviour:
   the zip streams to the initiating client under stream-and-verify on the `shasum` the verified
   `SHA256SUMS` declares. The upstream's `signing_keys`, `SHA256SUMS` and signature bytes are
   served verbatim, so the client's own verification and its lock-file hashes are exactly the
-  origin's.
+  origin's. The signature is a **required** member of the set, since no client installs
+  without it: a bundle whose signature the upstream does not serve is the integrity failure at
+  fetch below, never an adoption under another anchor class, so `proxy-cache.md`'s rule for a
+  signature the wire makes optional (its resolved withdrawn-signature decision, was Q23 there)
+  has nothing to arm here.
+- **What is a document and what is a file**, in `proxy-cache.md`'s terms, decides what
+  eviction may touch: the cached upstream discovery document, version lists, the per-platform
+  facts taken from upstream download documents, and each version's `SHA256SUMS` and signature
+  pair are the remote's **current metadata documents** at the repository, package and version
+  levels, which LRU eviction never reaches and which end only with the remote's deletion (its
+  resolved metadata-eviction decision, was Q21, AC29); provider zips and module archives are
+  **cached files** under the quota, evictable, and re-fetched on the next request and
+  re-verified against the `SHA256SUMS` still held or the recorded `checksum`, which is what
+  makes keeping the pair outside eviction necessary. No route of this format reads a
+  superseded revision, so the handler declares a retained-revision count of **zero** and no
+  declared blob-digest list (its resolved retained-revision decision, was Q19; a per-version
+  set declares at the version level, its resolved declaring-document decision, was Q22, which
+  with a count of zero declares nothing).
+- **`HEAD` on every proxied byte route is the `GET` with the body withheld and is never
+  forwarded** (`proxy-cache.md`'s resolved `HEAD` decision, was Q24, AC32): go-getter's `HEAD`
+  before the `GET` of a module archive, on a cold cache, performs the whole fetch the `GET`
+  would (the git tree or the archive, verified and committed) and is answered from the
+  committed entry after the verified commit, so the `GET` that follows is a hit and the
+  upstream sees one exchange; the handler makes the same fetch-and-cache call for both methods.
 - **Served over two protocols from one cache.** The provider registry protocol answers under the
   remote repository's `providers.v1`, for clients that reach it through a `host` block or a bound
   hostname; the network mirror protocol answers `{hostname}/{namespace}/{type}/...` for the
@@ -729,14 +820,33 @@ Classification and behaviour:
   version document lists every platform the upstream's version entry lists, each with its `zh:`
   from the verified `SHA256SUMS` and, once cached, its `h1:`; an archive not yet cached is fetched
   and verified on its first request.
-- **Module versions are immutable artifacts built from the upstream location** (the resolved
-  VCS-source decision below): an archive location (http or https, any `checksum` it carries
-  verified) or a commit-pinned VCS location on an allowlisted host is fetched through the adapter,
-  canonically re-packed exactly as a hosted archive, stored with the `//subdir` recorded, and
-  served as `X-Terraform-Get` with this registry's capability and `checksum`. Any other location
+- **Module versions are immutable artifacts fetched from the upstream location and stored as
+  fetched** (the resolved VCS-source decision below, as amended on this spec's Fable recheck):
+  an archive location (http or https) or a commit-pinned VCS location on an allowlisted host is
+  fetched through fetch-and-cache, committed under its own digest, stored with the `//subdir`
+  recorded, and served as `X-Terraform-Get` with this registry's capability and a `checksum`
+  equal to the committed blob's digest. Nothing is transformed on this path, because
+  fetch-and-cache commits the bytes it fetched and its verifier hook may refuse a commit but
+  never replace it (`proxy-cache.md`, "Completion-only mode and the verifier hook"); the
+  canonical re-pack is the hosted path's alone. An archive location carrying `?checksum=` is a
+  declared-digest fetch; one without, and every git tree, is a completion-only fetch whose
+  verifier is this handler's structural check (the ingest rules above: entries regular files,
+  directories and relative links inside the tree, the unpacked size bounded), so a hostile
+  upstream archive is never committed. The `git` adapter's output is the tree as one tar
+  stream in tree order with modes kept, links unresolved and timestamps zeroed
+  (`upstream-adapters.md`, "How a location reaches the `git` adapter"); it is served at a
+  `.tar.gz` location, so the stream this registry commits must be the gzip-compressed form of
+  that tar, which is the adapter's to emit and is reported to that spec. The location's
+  `//{subdir}` is appended to the relative `X-Terraform-Get` as `archive.tar.gz//{subdir}?checksum=`;
+  AC18's case is where the relative-URL-plus-subdirectory combination is proven on all four
+  clients, the two forms having been captured separately, and its fallback, if a client
+  mangles it, is an absolute location built from `server.public_url` through `Deps`, as
+  `npm.md` reads it. Any other location
   (a branch or tag `ref`, an unpinned VCS URL, a host outside the allowlist, a scheme the adapter
-  does not speak) is **passed through verbatim** and recorded, operator-visible, as uncached; the
-  client may then fetch it itself if its network allows.
+  does not speak, a URL the git grammar refuses) is **passed through verbatim** and recorded,
+  operator-visible, as uncached, the record redacting URL userinfo like every other record
+  (`observability.md`'s redaction, `auth.md` AC7); the client may then fetch it itself if its
+  network allows, exactly as it would from the origin, which served it the same location.
 - **Missing resources are negatively cached** with the short TTL: registry.terraform.io answers a
   missing provider or module with `404` and `{"errors":[...]}`, registry.opentofu.org with `404`
   and, for a provider, an HTML body (captured); both are authoritative not-found. A `429` or `5xx`
@@ -765,7 +875,12 @@ replacement"): a changed cached bundle is the **revision-bound immutability viol
 spec lists for `terraform.md` (cached bytes kept, divergence recorded and alerted, no purge,
 because lock files recorded the old hashes), a vanished version is **removal with no signal**, a
 `warnings` change an **ordinary metadata change**, a failed signature or digest an **integrity
-failure at fetch**, and an older list a **regression not adopted**. Nothing on this wire is an
+failure at fetch**, and an older list a **regression not adopted**. The bundle rows are observed
+passively, as the resolved passive-detection decision requires (`proxy-cache.md`, was Q12
+there): a cached bundle's upstream bytes are compared only when something re-fetches them, the
+first request for a platform not yet cached (its zip is verified against the held
+`SHA256SUMS`, so a changed line is caught there) or the operator's refresh, which marks the
+version's pair due and re-fetches it on the next request (its AC24). Nothing on this wire is an
 explicit security signal, and OSV defines no Terraform ecosystem (captured), so no feed advisory
 can name a Terraform coordinate: **the shared security-signal rule never fires for this format
 in v1**, and an advisory-dependent policy rule attached to a Terraform repository is refused at
@@ -798,7 +913,13 @@ expressible, and per the resolved virtual-resolution decision below:
 - **The mirror protocol resolves by hostname first**: a request under `{hostname}` goes to the
   first remote member whose upstream's canonical hostname it is; for a hostname bound to the
   virtual repository itself, the hosted members answer, so private providers and proxied public
-  ones install through one `network_mirror` URL.
+  ones install through one `network_mirror` URL. The precedence therefore differs between the
+  two protocols, and deliberately: a hosted member shadows an upstream name only on the
+  registry protocol, where a `host` block can make `hashicorp/null` resolve through the
+  virtual; on the mirror protocol a provider address already names its origin hostname, so a
+  hosted `hashicorp/null` is never consulted for `registry.terraform.io/hashicorp/null` and a
+  private provider is reached only under the virtual's own hostname. There is no confusion to
+  defend against on the mirror because the address carries the origin.
 - A publish or management operation against a virtual repository answers `405` with problem
   type `repository-type`.
 - No merged document is stored: resolution is per request, per package, so this format's
@@ -821,9 +942,15 @@ repository by identity (`repository-lifecycle.md` AC12); the old name answers ex
 never-existing repository answers. The costs are the ecosystem's and the deployment's, stated
 for operators: a CLI `host` block names the old `/terraform/{repository}/` service URLs, so every
 consumer reaching the repository that way updates its configuration, and a `server.hosts` entry
-naming the repository by its old name no longer binds it (a startup warning and a `404` on that
-host) until the operator edits and reloads it, which the operator documentation puts beside the
-rename step. `repository-lifecycle.md` AC12 requires `conformance/terraform/rename_test.go`,
+naming the repository by its old name no longer binds it (the missing-repository warning and
+the shared `404` on that host) until the operator edits and reloads it. The rename is not
+refused for it, and the break is announced where the admin is looking: the rename's
+`repository.rename` audit record and its `lifecycle` `Operation` list every hostname the
+renaming process's loaded `server.hosts` bound to the old name under `unbound_hosts`, and the
+process logs one warning per hostname at the commit (`repository-lifecycle.md`'s resolved
+hostname-binding decision, was Q10 there, and AC28; `deployment.md` AC12, whose chart mounts one
+`server.hosts` into every replica so the list is complete). The operator documentation puts
+the edit-and-reload step beside the rename step. `repository-lifecycle.md` AC12 requires `conformance/terraform/rename_test.go`,
 enforced by the harness's case-set validator (`conformance-harness.md` AC26); AC26 carries it
 with a real `init` against the renamed repository.
 
@@ -939,9 +1066,12 @@ document, `SHA256SUMS`, its signature and a zip on each client family, a missing
 missing provider. The reference implementation for the mirror protocol is the static tree
 `terraform providers mirror` writes (captured: `index.json`, `{version}.json` with `h1:` and a
 relative `url`), served by a pinned static server, so `Capabilities()` declares
-reference-implementation availability `available` (Design, "Virtual repositories", its capabilities paragraph). The hosted
-write surface has no reference
-anywhere (no client publishes), an exception-list entry. Recording gates on the harness's
+reference-implementation availability `available` (Design, "Virtual repositories", its capabilities paragraph). That static server is
+a local reference, and the hosted write surface has no reference anywhere (no client
+publishes), so `conformance-harness.md`'s authoritative-reference exception list (its AC28,
+which fails a corpus manifest naming a local reference the list omits) owes two Terraform rows:
+the mirror half against the `terraform providers mirror` tree, and a write row reading "none",
+reported to that spec by this recheck. Recording gates on the harness's
 redaction criterion (`conformance-harness.md` AC13), whose rule for this format names the
 `Authorization` header, the capability path segment and the CLI configuration file;
 `User-Agent` and `X-Terraform-Version` are normalised per client. Every deliberate divergence
@@ -955,7 +1085,7 @@ routes, `405` on remote writes and `409` on republish.
 - [ ] AC1: With a hostname bound to a hosted repository and the client network restricted to this
       registry, `init` on Terraform 1.5.7 and 1.16.4 and OpenTofu 1.6.3 and 1.12.6 installs a
       published module: the transcript shows discovery, the version list, a `204` download with a
-      relative `X-Terraform-Get` carrying a capability and a `checksum=sha256:` equal to the
+      relative `X-Terraform-Get` carrying a capability and a `?checksum=sha256:{hex}` equal to the
       served archive's digest, and `HEAD` then `GET` of the archive answered; the installed tree
       equals the published one; `~> 1.0` selects the newest `1.x` release and not a `2.0.0-beta1`
       pre-release, which an exact constraint installs; and a module sourced `//modules/sub`
@@ -969,15 +1099,17 @@ routes, `405` on remote writes and `409` on republish.
       version was published with.
 - [ ] AC3: The discovery document on a bound hostname answers `200` `application/json` with
       relative `modules.v1` and `providers.v1` URLs into the bound repository and no `login.v1`
-      or `tfe.v2` service, and an unbound hostname answers `404`; two hostnames bound to two repositories each resolve their own; a
+      or `tfe.v2` service, and an unbound hostname, or one bound to a repository of another
+      format, receives the shared `404` denial with the handler's invocation counter at zero
+      (`format-handler-interface.md` AC10 through a `Scope(r)` error; `deployment.md` AC12);
+      two hostnames bound to two repositories each resolve their own; a
       credential-less request for a private bound repository answers `401` and every client fails
       with the captured "failed to request discovery document: 401 Unauthorized", while the same
       client with a token installs; a repository bound to no hostname installs on all four
-      through a CLI `host` block with no discovery request in the transcript; registration accepts
-      the handler's root-anchored `/.well-known/terraform.json` mount only through the recorded
-      host-bound carve-out, the bindings coming from `server.hosts` and a reload on `SIGHUP`
-      rebinding a hostname with no restart; and a bound hostname without a dot is refused at
-      configuration.
+      through a CLI `host` block with no discovery request in the transcript; and registration
+      accepts the handler's root-anchored `/.well-known/terraform.json` mount only through the
+      recorded host-bound carve-out, the bindings coming from `server.hosts` and a reload on
+      `SIGHUP` rebinding a hostname with no restart.
 - [ ] AC4: On a private repository, all four clients install modules and providers and install
       through the mirror with the token only in a `credentials` block and, separately, only in a
       `TF_TOKEN_{host}` variable, the transcript showing no `Authorization` on any byte request;
@@ -1000,16 +1132,21 @@ routes, `405` on remote writes and `409` on republish.
       the canonical re-pack, and is installable by all four clients; an archive holding an
       absolute path, a `..` escape, a hard link or a device file, a body that is neither tar.gz
       nor zip, or a coordinate outside the module grammar is refused with `422` and nothing
-      committed; a republish whose re-pack has the same digest creates no snapshot, one with a
+      committed; a republish whose canonical tar digest equals the stored one creates no
+      snapshot and completes `unchanged: true` (`management-api.md` was-Q15), one with a
       different digest and one of a deleted coordinate (including after the deleting snapshot was
       pruned) are refused with `409`, and a name equal to an existing one under ASCII case folding
       is refused with `409`.
 - [ ] AC8: A provider publish carrying zips for `linux_amd64` and `darwin_arm64` produces exactly
       one snapshot holding both zips and a `SHA256SUMS` with both lines signed by the repository's
       key; a publisher `SHA256SUMS` disagreeing with a zip is refused with `422`; adding a platform
-      to, or republishing, an existing or retired version is refused with `409`; `protocols` comes
-      from the `manifest.json` when the publish carries one; and Terraform 1.5.7 installs the
-      provider.
+      to, or republishing with any differing zip or platform set, an existing version is refused
+      with `409`, as is any publish of a retired one, while a republish whose platform set, zip
+      digests and `manifest.json` equal the stored version's completes with no snapshot and
+      `unchanged: true` (`management-api.md` was-Q15); `protocols` comes
+      from the `manifest.json` when the publish carries one, and a publish supplying it nowhere
+      is refused with `422`; the version document records each platform's `h1:` obtained through
+      `Deps`' `Verifier`; and Terraform 1.5.7 installs the provider.
 - [ ] AC9: Deleting a version through the management endpoint removes it from the version list in
       one snapshot and every client then fails to install it, its byte routes answering `404`;
       deleting a package retires every version and keeps the `Package` row; deprecating a
@@ -1026,7 +1163,12 @@ routes, `405` on remote writes and `409` on republish.
       signature a `Signature` record served as `SHA256SUMS.sig`, never produced by the handler,
       proven by an architecture test that neither the handler package nor
       `internal/format/terraform/index` imports key material or a signing library and that the
-      handler sets no `Last-Modified` or `ETag`; after a key activation through the signing-key
+      handler sets no `Last-Modified` or `ETag`; every archive and zip is served through
+      `ServeFile` and every per-request document through `ServeRendered`, and a `HEAD` on any
+      of them answers the `GET`'s status and headers with `Content-Length` and no body
+      (`signing-service.md` was-Q24, AC32); the download document's `signing_keys` comes from
+      `SignedBy` and lists exactly the key whose current `Signature` record the version's
+      `SHA256SUMS` carries (its AC37); after a key activation through the signing-key
       routes a new version is signed by the new key while every earlier version still installs on
       all four clients under the key that signed it (the `additive` profile); and retiring a key
       re-signs its versions in one atomic batch of signature records with no snapshot created,
@@ -1073,17 +1215,27 @@ routes, `405` on remote writes and `409` on republish.
       is recorded observably to the operator, and the next request fetches again.
 - [ ] AC18: A proxied module whose upstream location is a commit-pinned `git::https` URL on an
       allowlisted host, with and without a `//subdir`, installs on all four clients with the
-      client network restricted to this registry, from an archive this registry built and serves
-      with its `checksum`; a location with a tag `ref` or on a host outside the allowlist is passed
-      through verbatim and recorded as uncached; and a proxied http archive location is cached
-      with its upstream `checksum` verified.
+      client network restricted to this registry, from the adapter's tree stream committed as
+      fetched and served at a `.tar.gz` location whose `checksum` is the committed blob's
+      digest, the `//subdir` form proven on the relative location; go-getter's `HEAD` on a cold
+      cache performs the one fetch, the `GET` that follows is a hit and the git stand-in sees
+      one exchange; a location with a tag `ref`, a second query parameter, userinfo or a host
+      outside the allowlist is passed through verbatim, never fetched, and recorded as uncached
+      with the userinfo absent from the record; a tree whose entries escape it or outgrow the
+      bound is refused by the verifier with nothing committed; and a proxied http archive
+      location is cached with its upstream `checksum` verified as a declared digest, and one
+      without a `checksum` under the structural verifier.
 - [ ] AC19: A proxied version list is revalidated after its TTL and not before, conditionally
       against an `ETag` or `Last-Modified` stand-in, a version published upstream becoming visible
       to `init` after the TTL and, absent an explicit refresh, not before; every proxied version
       list carries the cache-scoped `Last-Modified`, later on each adopted revision whatever the
       upstream's date says; a module or provider the upstream lacks answers `404` and is
       negatively cached, while an upstream `429` or `5xx` is neither cached as absence nor
-      surfaced as not-found.
+      surfaced as not-found; and an eviction pass on the remote far over its quota leaves every
+      version list, every version's `SHA256SUMS` and signature pair and the cached discovery
+      document in place and served with no upstream request, while an evicted zip is
+      re-fetched on its next request and re-verified against the pair still held
+      (`proxy-cache.md` AC29).
 - [ ] AC20: A stand-in presenting each removal-table event produces this format's classification:
       a vanished version keeps installing with a divergence recorded; changed bytes or signature
       for a cached version keep the cached bundle serving with the divergence recorded and the
@@ -1117,7 +1269,9 @@ routes, `405` on remote writes and `409` on republish.
       normalised and the `Authorization` header, the capability segment and the CLI configuration
       redacted.
 - [ ] AC25: Two concurrent provider publishes of different versions into one repository both land
-      with their own signed `SHA256SUMS`; repointing to a snapshot's predecessor serves the
+      with their own signed `SHA256SUMS`; two concurrent publishes of one coordinate with
+      different bytes leave exactly one landed and the other refused `409`, and with identical
+      bytes one landed and the other completed unchanged; repointing to a snapshot's predecessor serves the
       earlier versions' download documents and signatures byte-identical; and a `SHA256SUMS` and
       signature held above the inline threshold survive a GC sweep and install afterwards.
 - [ ] AC26: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
@@ -1126,7 +1280,10 @@ routes, `405` on remote writes and `409` on republish.
       new name through a CLI `host` block and, once `server.hosts` names the new name and is
       reloaded, through the bound hostname's discovery document, whose service URLs name the new
       name, in both modes, while the old name answers exactly what a never-existing repository
-      answers; and AC21's virtual repository resolves through the same capability.
+      answers and the bound hostname receives the shared `404` with the missing-repository
+      warning until the reload, the hostname listed under `unbound_hosts` on the rename's
+      `lifecycle` `Operation` and `repository.rename` audit record (`repository-lifecycle.md`
+      AC28); and AC21's virtual repository resolves through the same capability.
 
 ## Test Plan
 
@@ -1134,14 +1291,14 @@ routes, `405` on remote writes and `409` on republish.
 |-----------|-----------|---------------|
 | AC1 | conformance | `conformance/terraform/module_hosted_test.go` (four pinned images, network-restricted client containers, fresh working directories; transcript assertions on discovery, `204`, relative location, capability, `checksum`, `HEAD`; pre-release selection; `//modules/sub`) |
 | AC2 | conformance | `conformance/terraform/provider_hosted_test.go` (four clients; download document and signature inspected; client signed line; lock file parsed for `h1:` and every `zh:`) |
-| AC3 | conformance + unit | `conformance/terraform/discovery_test.go` (bound, unbound and second-bound hostnames through the `repositories` entry's `hostname` sub-entry, `conformance-harness.md` AC23; anonymous and token runs; `host`-block install with no discovery request); `internal/format/terraform/mount_test.go` (the host-bound carve-out, `format-handler-interface.md` AC11, and the dotless-hostname refusal); `internal/server/hosts_test.go` (a `SIGHUP` rebinding, shared with `deployment.md` AC12) |
+| AC3 | conformance + unit | `conformance/terraform/discovery_test.go` (bound, unbound and second-bound hostnames through the `repositories` entry's `hostname` sub-entry, `conformance-harness.md` AC23; anonymous and token runs; `host`-block install with no discovery request); `internal/format/terraform/mount_test.go` (the host-bound carve-out, `format-handler-interface.md` AC11); `internal/server/hosts_test.go` (the unbound and other-format hostnames answered by the shared denial with the handler's invocation counter at zero, and a `SIGHUP` rebinding, shared with `deployment.md` AC12) |
 | AC4 | conformance + integration | `conformance/terraform/capability_test.go` (private repository; `credentials` block and `TF_TOKEN_` runs; byte requests without, expired, foreign-object, foreign-repository and tampered capabilities through `curl` in the `script`); `internal/auth/capability_test.go` (the file `auth.md` AC33 names: claims, lifetime after revocation under an injected clock, `auth.token_service.lifetime`); `internal/auth/leak_test.go` (URL redaction across logs, spans, metrics and audit records, `auth.md` AC7) |
 | AC5 | conformance | `conformance/terraform/module_download_test.go` (hosted, proxied over a JSON-location stand-in, and virtual; Terraform 1.5.7 and 1.16.4 installs) |
 | AC6 | conformance | `conformance/terraform/module_checksum_test.go` (fault-injection seam corrupting the archive at the byte route; four clients) |
 | AC7 | conformance + integration | `conformance/terraform/module_publish_test.go` (management-endpoint publish in the `script`, then real installs); `internal/format/terraform/module_ingest_test.go` (hostile archive fixtures, grammar, idempotent and refused republish, case-fold collision, retired coordinate after pruning under an injected clock) |
-| AC8 | conformance + integration | `conformance/terraform/provider_publish_test.go` (two-platform publish; Terraform 1.5.7 install); `internal/format/terraform/provider_ingest_test.go` (snapshot count, generated and signed `SHA256SUMS`, disagreeing publisher sums, added-platform and republish refusals, manifest protocols) |
+| AC8 | conformance + integration | `conformance/terraform/provider_publish_test.go` (two-platform publish; Terraform 1.5.7 install); `internal/format/terraform/provider_ingest_test.go` (snapshot count, generated and signed `SHA256SUMS`, disagreeing publisher sums, added-platform and differing-republish refusals, the identical republish completing unchanged with no snapshot, manifest protocols and the `422` for none, `h1:` through a fake `Verifier`, the spool and unpacked-size bounds, shared with `management-api.md` AC36's `spool_limit_test.go`) |
 | AC9 | conformance + integration | `conformance/terraform/manage_test.go` (delete version and package followed by real installs; deprecate and undeprecate with the `warnings` text asserted on four clients; the `script`-driven cases `management-api.md` AC24 requires for each declared kind, their presence enforced by `conformance-harness.md` AC26); `internal/format/terraform/manage_auth_test.go` (action refusals with snapshot count unchanged, `Retirement` rows only for the deletions, `405` `repository-type` on remote and virtual) |
-| AC10 | architecture test + integration + conformance | `internal/format/terraform/arch_test.go` (no key or signing library in the handler or generator package, `signing-service.md` AC2); `internal/format/freshness_boundary_test.go` (no `Last-Modified` or `ETag` set by the handler, `signing-service.md` AC11); `internal/signing/rotation_profiles_test.go` (the `additive` row and outright retirement as one batch with no snapshot, `signing-service.md` AC7 and AC8); `conformance/terraform/key_rotation_test.go` (activation and retirement through the signing-key routes in the `script`, old and new versions on four clients) |
+| AC10 | architecture test + integration + conformance | `internal/format/terraform/arch_test.go` (no key or signing library in the handler or generator package, `signing-service.md` AC2); `internal/format/freshness_boundary_test.go` (no `Last-Modified` or `ETag` set by the handler, `signing-service.md` AC11); `internal/index/signed_by_test.go` and `internal/format/signing_boundary_test.go` (`signing-service.md` AC37's rows, which name this handler); `internal/index/head_test.go` (`HEAD` through `ServeFile` and `ServeRendered` on this handler's routes, `signing-service.md` AC32); `internal/signing/rotation_profiles_test.go` (the `additive` row and outright retirement as one batch with no snapshot, `signing-service.md` AC7 and AC8); `conformance/terraform/key_rotation_test.go` (activation and retirement through the signing-key routes in the `script`, old and new versions on four clients) |
 | AC11 | conformance + unit | `conformance/terraform/case_test.go` (mixed-case provider and module sources); `internal/format/terraform/names_test.go` (grammar tables from terraform-registry-address, `v` stripping) |
 | AC12 | conformance + unit | `conformance/terraform/pattern_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; a pattern-scoped token through the `credentials` key; bound-hostname, `host`-block and mirror installs, capability confinement, patterned publish; shared with `auth.md` AC32); `internal/format/terraform/scope_object_test.go` (the object table, per route, with the descriptor sentinel check on the discovery document through the shared helper in `internal/format/scope_test.go`, `format-handler-interface.md` AC12) |
 | AC13 | conformance + integration | `conformance/terraform/policy_test.go` (hosted and proxied modes; rules through the `policies` key, admitted by the harness because this format's binding-table row is `holds`, `conformance-harness.md` AC26; exit status, client text, the raw status line and the transcript's `403` body asserted); `internal/format/refusal_writer_test.go` (the writer, `format-handler-interface.md` AC14 and `supply-chain-policy.md` AC18) |
@@ -1149,15 +1306,15 @@ routes, `405` on remote writes and `409` on republish.
 | AC15 | conformance | `conformance/terraform/provider_proxied_test.go` (stand-in registry plus a second artifact host behind a cross-host `302`; `host`-block installs on four clients; byte comparison of served sums, signature and keys; lock-file comparison; network-level second-install assertion) |
 | AC16 | conformance | `conformance/terraform/mirror_proxied_test.go` (four clients through `network_mirror`; lock `h1:` compared with a direct install's; hashes listed; two-platform `providers lock`; foreign-hostname `404`) |
 | AC17 | integration | `internal/format/terraform/proxied_integrity_test.go` (bad signature, digest mismatches, `checksum` mismatch, truncated body; CAS and reference assertions; operator record) |
-| AC18 | conformance + integration | `conformance/terraform/module_vcs_test.go` (a git stand-in serving a commit over smart HTTP; restricted-network installs on four clients, with and without `//subdir`); `internal/format/terraform/module_location_test.go` (tag `ref`, non-allowlisted host, http archive with `checksum`) |
-| AC19 | conformance | `conformance/terraform/proxied_ttl_test.go` (mutating stand-in with `ETag` and `Last-Modified` variants; missing packages; `429` and `5xx` stand-in responses; network-level counts; served `Last-Modified` strictly increasing across adopted revisions, the cache-scoped half being `proxy-cache.md` AC22's `internal/proxy/freshness_test.go`) |
+| AC18 | conformance + integration | `conformance/terraform/module_vcs_test.go` (a git stand-in serving a commit over smart HTTP; restricted-network installs on four clients, with and without `//subdir`); `internal/format/terraform/module_location_test.go` (the parse into `{url, commit}` with `//subdir` kept; tag `ref`, a second query parameter, a userinfo-bearing source and a non-allowlisted host each passed through with the record's userinfo redacted; http archive with and without `checksum`; a hostile tree refused by the structural verifier); `internal/proxy/head_test.go` (the cold `HEAD` on a module archive filling the cache, shared with `proxy-cache.md` AC32) |
+| AC19 | conformance | `conformance/terraform/proxied_ttl_test.go` (mutating stand-in with `ETag` and `Last-Modified` variants; missing packages; `429` and `5xx` stand-in responses; network-level counts; served `Last-Modified` strictly increasing across adopted revisions, the cache-scoped half being `proxy-cache.md` AC22's `internal/proxy/freshness_test.go`); `internal/format/terraform/eviction_test.go` (an eviction pass leaving every document and pair in place and a zip re-fetched and re-verified, shared with `proxy-cache.md` AC29's fixture) |
 | AC20 | integration | `internal/format/terraform/removal_test.go` (stand-in presenting each event class, including an older version list after a newer one and a new signing key identifier; the shared-layer half is `proxy-cache.md` AC13's and AC22's, the trust-set half `artifact-verification.md` AC23's) |
 | AC21 | conformance + integration | `conformance/terraform/virtual_test.go` (hosted-first shadowing with the network layer showing no upstream request; mixed mirror install on four clients; `405`); `internal/format/terraform/virtual_resolution_test.go` (two remotes, different bytes, no merged list) |
 | AC22 | integration | `internal/format/terraform/policy_config_test.go` (advisory rule refused at configuration; coordinate and signature-verdict rules through the `policies` key) |
 | AC23 | integration + conformance | `internal/format/terraform/upstream_config_test.go` (creation with no upstream request, `upstream-adapters.md` AC23; the first-request `502` on a discovery document naming neither service); `conformance/terraform/proxied_redirect_test.go` (allowlisted and refused hosts declared as `hosts` sub-entries of the `upstreams` entry, `conformance-harness.md` AC23; credential only to the configured root and no `Location` to the client, `upstream-adapters.md` AC6 to AC8, at the network layer) |
 | AC24 | conformance | `conformance/terraform/replay_test.go` |
-| AC25 | integration | `internal/format/terraform/concurrent_publish_test.go` (two writers, both signed); `internal/format/terraform/repoint_test.go` (byte comparison after repoint); `internal/storage/metadata_root_test.go` (threshold, sweep, serve) |
-| AC26 | unit + conformance | `internal/format/terraform/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/terraform/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; `host`-block and rebound-hostname installs under the new name on four clients, old name `not-found`) |
+| AC25 | integration | `internal/format/terraform/concurrent_publish_test.go` (two writers on different versions, both signed; two on one coordinate, differing and identical, the claim check at commit under the head lock, `storage-and-gc.md` AC30); `internal/format/terraform/repoint_test.go` (byte comparison after repoint); `internal/storage/metadata_root_test.go` (threshold, sweep, serve) |
+| AC26 | unit + conformance | `internal/format/terraform/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/terraform/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; `host`-block and rebound-hostname installs under the new name on four clients, old name `not-found`); `internal/repository/rename_hosts_test.go` (`unbound_hosts` on the `Operation` and the audit record, the warning, the reload; `repository-lifecycle.md` AC28's row, shared) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
 closed-vocabulary decision, was Q4): `repositories` with their type and virtual member order,
@@ -1171,7 +1328,10 @@ sub-entry supplies the key (a fixture private key file or `generate`), and the `
 passes through the same write-path hook a publish does (`signing-service.md` AC21;
 `conformance-harness.md` AC24). And a repository's hostname is the `repositories` entry's
 `hostname` sub-entry, written through `server.hosts`' loader and resolving inside the client
-container to the instance, with the harness CA trusted (`conformance-harness.md` AC23). The CLI
+container to the instance, with the harness CA trusted (`conformance-harness.md` AC23). Every
+stand-in is reached by its name on the case network, never on a loopback address, so no
+`upstreams` row of this format needs `allow_local` (`upstream-adapters.md`'s resolved
+local-address decision, was Q10 there; `conformance-harness.md` AC19). The CLI
 configuration file and the `TF_TOKEN_` variable are client-side, written by the case's `script`.
 The runner-enforced obligations, both modes and the unauthenticated, unauthorized and
 pattern-refusal cases in each, a `script`-driven case per declared management kind and
@@ -1182,7 +1342,8 @@ pattern-refusal cases in each, a `script`-driven case per declared management ki
 
 ### Phase 1: Discovery, hosted module reads and the capability
 - The format-first mount and the host-bound discovery carve-out on `server.hosts`, the module
-  version list and `204` download, the canonical-archive byte route with `HEAD`, the `checksum`,
+  version list and `204` download, the canonical-archive byte route through `ServeFile` with
+  the door's `HEAD`, the per-request documents through `ServeRendered`, the `checksum`,
   the download capability through the shared token service (`auth.md` Phase 3), the per-route
   addressed objects with the discovery descriptor's sentinel check, the `403` rendering through
   `WriteRefusal`, seeded state through `state`
@@ -1208,9 +1369,10 @@ pattern-refusal cases in each, a `script`-driven case per declared management ki
   `artifact-verification.md` (Blocking preconditions)
 - Creation with no upstream probe and the first-request discovery check, version-list TTL with
   the cache-scoped `Last-Modified` and the regression row, verified provider bundles as paired
-  sets over both protocols, upstream key pinning into the trust set, module archives from
-  archive and commit-pinned VCS locations with pass-through otherwise, the host allowlist,
-  negative caching, the removal table, `405` `repository-type` on remote writes
+  sets over both protocols, upstream key pinning into the trust set, module archives stored as
+  fetched from archive and commit-pinned VCS locations under the structural verifier with
+  pass-through otherwise, the host allowlist, `HEAD` as the cache-filling `GET`, negative
+  caching, the removal table, `405` `repository-type` on remote writes
 
 ### Phase 5: Virtual repositories, rename, corpus and gate
 - Per-package member resolution, the mirror's hostname resolution, `Capabilities()` with the
@@ -1263,6 +1425,15 @@ that spec's re-open inputs record whether `Deps` is its right home. The discover
 is now a `descriptor` rather than none (`auth.md`'s resolved name-free-document decision, was Q23
 there), so a patterned `pull` no longer needs the `host`-block detour (AC12).
 
+Rechecked on Fable 2026-10-08: confirmed, fold amended. Judged fresh, A still wins: B cannot
+preserve an upstream's namespaces, which is the whole proxied use, and C is A with one binding.
+Two things the fold had wrong: the unbound-host `404` was worded as this handler's answer,
+while it is the shared denial through a `Scope(r)` error with the handler never invoked
+(`format-handler-interface.md` AC10 as amended on its recheck, `deployment.md` AC12; Design and
+AC3 now say so), and "a bound hostname without a dot is refused at configuration" named a
+refusal nothing performs, since `server.hosts` is the shared layer's and carries no per-format
+grammar; it is an operator rule the documentation states, and AC3 no longer claims it.
+
 ### Resolved: authorizing byte routes no client sends a credential to (was Q2)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: every byte URL in a
@@ -1294,6 +1465,15 @@ presentation-form table route-scoped to this format's byte routes, inside AC7's 
 plaintext refusal and AC10's external review, with its lifetime the shared
 `auth.token_service.lifetime` and its behaviour asserted by AC33; `credential-management.md`
 accepts that nobody can list or revoke it (its resolved boundary decision, was Q6 there).
+
+Rechecked on Fable 2026-10-08: confirmed, cost under-stated. A is the only option that is both
+stateless and inside `auth.md`'s existing review surface; B's database write per install and
+C's hand-built format lose as the record says, and D is `auth.md` AC11's negation. Under-stated:
+the redaction duty is this registry's alone, and the captures show a client printing a
+capability-bearing URL in its own error output, a client-local disclosure of a credential
+narrower than the one the client holds, now stated in Design for operators whose CI logs are
+shared. Also missing from the fold: the byte routes' paths were never written down, so the
+anonymous form and the `.tar.gz` extension go-getter needs were implicit; Design now lists them.
 
 ### Resolved: who signs a hosted provider (was Q3)
 
@@ -1328,11 +1508,20 @@ Accepted cost: the out-of-scope entry for publisher keys, revisited through
 `additive` rotation profile whose row cites this format (Design, "What the signing service
 provides").
 
+Rechecked on Fable 2026-10-08: confirmed. A client trusts whichever key the download document
+lists, so B's publisher key protects nothing against this registry and C buys a verdict no rule
+consumes; the captured two-key acceptance makes A's rotation invisible as claimed. The one gap
+the record left open, how a per-request document lists a key without the handler importing
+`internal/signing`, is closed by `SignedBy` (`signing-service.md` AC37), and the hosted `h1:`
+now names its producer, the `Verifier` handle in `Deps`, since a handler computing an
+integrity primitive inline is what `artifact-verification.md` AC4 forbids.
+
 ### Resolved: proxying modules whose source is a VCS URL (was Q4)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: archive locations and
-commit-pinned VCS locations on an allowlisted host are fetched by the upstream adapter, re-packed
-and served as cached archives with a `checksum`; everything else is passed through verbatim and
+commit-pinned VCS locations on an allowlisted host are fetched by the upstream adapter, stored
+as fetched (the re-pack this record first said is withdrawn by the Fable recheck below) and
+served as cached archives with a `checksum`; everything else is passed through verbatim and
 recorded as uncached (Design, "The proxied path"; AC18, AC23).
 
 The question: both public registries answer module downloads with `git::https://github.com/...?ref={commit}`
@@ -1357,6 +1546,26 @@ of pass-through locations. That spec has since adopted the fetch as its `git` ad
 4, landing with this format, and AC28: 40-digit commits only, collision-detecting SHA-1, a size
 bound, no credential, no `os/exec`), and names this decision as its reason.
 
+Rechecked on Fable 2026-10-08: confirmed, fold amended in two places. A still wins (B caches no
+module, C refuses nearly every public one). First, the dispatch gap this record's fold left
+"not yet stated" is closed by `upstream-adapters.md`'s resolved git-location decision (was Q9
+there, AC34): per-location dispatch on the `https` row under its allowlist, with the URL
+grammar (userinfo, a query string, a fragment, a non-`https` scheme and a short commit refused
+before any connection, no submodules), and this spec now states the exact location form the
+handler parses into `{url, commit}` and that every other form, a userinfo-bearing one included,
+is passed through with the record redacted. Second, and substantive: the fold said the fetched
+tree is "canonically re-packed exactly as a hosted archive", but `proxy-cache.md`'s
+fetch-and-cache commits the bytes it fetched and its verifier hook may refuse a commit, never
+replace it, and no handler writes a derived blob on a remote. The proxied path therefore stores
+what it fetched, under the location's `checksum` as a declared digest or this handler's
+structural check as the verifier, and the `checksum` it serves is the committed blob's. The
+canonical re-pack is the hosted path's alone. Two consequences follow for siblings: the `git`
+adapter's stream must be the gzip-compressed tar this registry serves at a `.tar.gz` location
+(its "How a location reaches the `git` adapter" describes an uncompressed stream "which the
+handler re-packs", which it cannot), and `proxy-cache.md` may name this format's git tree among
+its completion-only consumers. The relative-location-plus-`//subdir` combination was never
+captured as one request and is now AC18's to prove, with the absolute-URL fallback named.
+
 ### Resolved: how a virtual repository resolves a package (was Q5)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: per package, first member
@@ -1376,6 +1585,14 @@ serve different bytes under one name (captured live for `hashicorp/null`).
 **Why this is yours:** it sets the precedence semantics users rely on for private names.
 
 Accepted cost: the operator documentation's note on shadowed versions.
+
+Rechecked on Fable 2026-10-08: confirmed, with one thing the record under-stated now in Design.
+A's shadowing is the defence it claims only on the registry protocol; on the mirror protocol a
+provider address names its origin hostname, so the hostname-first resolution never consults a
+hosted member for an upstream name and a private provider is reached only under the virtual's
+own hostname. That is not a hole, because the address carries the origin, but it is a
+difference between the two protocols an operator reading "first member wins" would not expect,
+and it is stated.
 
 ### Resolved: rendering a provider policy refusal (was Q6)
 
@@ -1398,6 +1615,10 @@ product-wording call.
 
 Accepted cost: the operator documentation explains the provider message.
 
+Rechecked on Fable 2026-10-08: confirmed. B borrows a legal status for a policy refusal and C
+makes a lock file fail with a message naming nothing; A's cost is wording on one route family,
+and the refusal binds whatever the wording because no client falls back (captured, AC14).
+
 ### Resolved: whether a provider version's platforms can grow after publish (was Q7)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: every platform arrives in
@@ -1418,6 +1639,17 @@ release tooling produces every platform at once anyway.
 Accepted cost: the publish carries all platforms, recorded for `management-api.md`, whose
 "Publish through the API" now names "`terraform.md`'s all-platforms rule" as one publish of
 several files, every object authorized.
+
+Rechecked on Fable 2026-10-08: amended. The decision stands (a lock file records every line, so
+B contradicts lock files between uploads), but its fold refused every republish of an existing
+version with `409`, including one that changes nothing, while the module rule beside it already
+completed an identical republish with no snapshot. `management-api.md`'s resolved
+unchanged-publish decision (was Q15 there) is the one rule for both: a provider republish whose
+platform set, zip digests and `manifest.json` equal the stored version's completes unchanged,
+and any difference, a platform added or missing included, is the `409` (Design, AC8). Found
+beside it: a publish supplying `protocols` neither in `manifest.json` nor in `args` had no
+stated answer, and this registry invents no value for a field every client selects on, so it
+is refused `422`.
 
 ### Resolved: preconfigured public registries (was Q8)
 
@@ -1440,9 +1672,17 @@ call.
 
 Accepted cost: the real services are exercised by the recording session only until the revisit.
 
+Rechecked on Fable 2026-10-08: confirmed. The sequencing reason holds exactly as written:
+`proxy-cache.md`'s set has been extended twice since (nuget.org and Maven Central, its was-Q17)
+by formats that are built, and a Tier 3 format that may be parked has no claim on it; A's
+second cost, two upstreams serving different bytes under one name in every fresh install, is
+real (captured for `hashicorp/null`) and would need the virtual-resolution rule to be the
+default rather than a recipe.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | cf88a83 | authoring pass: grounded first draft, not a review | Grounded four ways: captured traffic from Terraform 1.5.7 and 1.16.4 and OpenTofu 1.6.3 and 1.12.6, official images pinned by digest, against a logging TLS stub on an egress-free and an open Podman network (discovery, `host`-block override and cross-host credentials, module `204`, JSON-location and `302` answers, relative, query, `checksum`, `//subdir`, zip and extension-less locations, pre-release selection, provider signature cases: binary versus armored, empty and absent keys, wrong key, two keys, RSA, P-256 and Ed25519 with 1.5.7 refusing Ed25519, sums and `shasum` mismatches, lock-file `h1:` and `zh:` contents, the mirror with good, bad, absent and `zh:`-only hashes, two-platform locking, credentials absent on every byte request, error texts for 401, 403, 404, 410, 451 and 500, and the absence of any fallback to origin with egress open); HashiCorp's four protocol references and the CLI configuration reference, Terraform v1.16.4's module version response type and terraform-registry-address's grammar; the live registry.terraform.io and registry.opentofu.org (VCS module locations, JSON download bodies, different `hashicorp/null` bytes, case-insensitive matching, not-found shapes); OSV's ecosystem list (no Terraform); and the Stackweaver registry at f42afcdc, whose `302` module download and HMAC token do not carry over and whose download-token need does. Eight questions written in decision shape and adopted under the standing delegation: host binding for discovery (AC3, AC12), a token-service download capability (AC4, AC12), registry-signed providers (AC2, AC8, AC10), fetching commit-pinned VCS module sources (AC18, AC23), per-package virtual resolution (AC21), `403` provider refusals (AC13), platform sets fixed at publish (AC8), public registries user-configured. Twenty-five criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here: `auth.md` client-table rows for `terraform` and `tofu` and the download capability as a second token-service product (its AC5 window, AC7 URL redaction, AC10 review scope); `format-handler-interface.md` the `/.well-known/terraform.json` carve-out entry and two re-open inputs (a URL-borne credential reported through `Scope`, the host binding at construction); the `signing-service.md`, `artifact-verification.md`, `upstream-adapters.md` and `management-api.md` requirement lists; `conformance-harness.md` seed-path signing of hosted provider `state`, per-case hostnames resolvable in the client container, and the capability segment in the redaction rule; this format's rows in `proxy-cache.md`'s removal table; the no-OSV-ecosystem consequence for `supply-chain-policy.md`; OpenTofu as a counted client in the catalogue's reach figure; and a Terraform row in the management-surfaces analysis. Stays draft; awaits an independent review. |
 | 2026-09-28 | b43c566 | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec and of this file (Open item 18's requests, now met; theme 8 via `auth.md` AC33; auth reconciliation 5; conformance-harness reconciliation 3 and 4; signing-service 11; upstream-adapters 12; credential-management 13; management-api 11 and 12; charter fold 14; theme 11, which is outside this repository and changes nothing here). Applied: the download capability cited as `auth.md`'s second token-service product with `auth.token_service.lifetime`, its route-scoped presentation-form row, AC7, AC27 and the re-open input on URL-borne credential declarations (AC4); discovery as a `descriptor` on a `server.hosts` host-bound claim, AC12 inverted so a patterned `pull` installs through discovery, with the sentinel check; `SHA256SUMS` as the `Indexer` generator's version-level output signed through `SignBlob`, the signature a `Signature` record, served through `ServeDocument` (AC10 rewritten, the `additive` profile, outright retirement one batch with no snapshot); the four signing and two verification requirements checked one by one; the management table carrying kinds through `Operator` with no binding, publish through upload sessions, `Retirement` core-held, `409` `conflict`/`retired`, `422` `validation`, `405` `repository-type` (AC9, AC21); `WriteRefusal` and the `holds` binding row (AC13); the proxied path on the `https` adapter with artifact hosts on the allowlist and the `git` adapter for commit-pinned modules, `SHA256SUMS` and its signature a paired set, upstream key pinning into the remote's trust set, the cache-scoped `Last-Modified` with regression and new-key rows (AC19, AC20); seeding through the `signing` sub-entry and hostnames through the `hostname` sub-entry; new AC26 (`Capabilities()`, rename with the `host`-block and `server.hosts` costs stated). A mismatch found, not queued: AC23's configuration-time discovery fetch contradicts `upstream-adapters.md` AC23, so the check moves to the first request under `cargo.md`'s was-Q7 precedent and `management-api.md`'s creation rule; no judgement was left, so no question was raised. Gaps reported rather than filled: how `signing_keys` public forms reach a per-request download document without the handler importing `internal/signing`, and how an `https` Terraform remote hands a module location to the `git` adapter. No new question; `fable_recheck` unchanged. Stays draft. |
+| 2026-10-08 | 6c5e948 | Fable recheck: full review (claim verification at HEAD against every cited sibling: `auth.md`'s `terraform`/`tofu` row, the capability row, AC33, was-Q23 and was-Q24; `signing-service.md`'s consumer table, `SignedBy`, `ServeFile`, `ServeRendered`, the `additive` row, AC6, AC7, AC8, AC11, AC12, AC18, AC21, AC32, AC37 and was-Q24; `artifact-verification.md`'s Terraform row, the `openpgp` `any` entry, the `h1:` entry, AC4, AC18, AC23 and its "Sources"; `upstream-adapters.md`'s Terraform row, "How a location reaches the `git` adapter", AC23, AC28, AC34, AC35, was-Q9 and was-Q10; `proxy-cache.md`'s event-class rows naming this format, "Completion-only mode and the verifier hook", "`HEAD` on a proxied route", AC9, AC22, AC24, AC29, AC32 and was-Q19 to was-Q24; `management-api.md`'s two Terraform rows, the kind table, `Operator`, the problem table, the operations and retirements routes, was-Q10, was-Q15, was-Q19 and was-Q20 with AC36; `repository-lifecycle.md`'s "Renaming", AC12, AC28 and was-Q10; `deployment.md`'s "Host binding" and AC12; `format-handler-interface.md`'s "Host-bound claims", `Documents`, AC10 to AC14 and its re-open inputs; `conformance-harness.md`'s vocabulary rows, AC13, AC19, AC23, AC24, AC26 and the AC28 exception table; `supply-chain-policy.md`'s coverage and binding rows; `credential-management.md` was-Q6; `catalogue.md`'s Terraform rows; the Stackweaver monorepo files named under "What carries over" at f42afcdc; the tree still holds only the stub `main.go`) + adversarial lens at full strength on the Opus-authored whole (the module protocol, provider protocol v1, the mirror protocol, discovery, go-getter, the four clients, deprecation) + constitution + re-examination of the eight adoptions made without Fable | Brought current first: every open consequence naming this file verified against its source and applied (upstream-adapters recheck item 6 and six-spec item 6, the git gap; format batch 5 items 5 to 7 through `signing-service.md` AC37, `upstream-adapters.md` was-Q9 and `repository-lifecycle.md` was-Q10; FHI recheck item 7 and deployment recheck item 1, the unbound-host wording; proxy-cache round-3 item 7, `head_test.go`; management-api was-Q20; the earlier items re-found applied). Verdicts: Q3, Q6, Q8 confirmed; Q1, Q2, Q5 confirmed with amendments to the fold or the stated cost; Q4 amended substantively; Q7 amended. None superseded. Adversarial findings folded: fetch-and-cache commits the bytes it fetched and its hook never replaces them, so the proxied module path cannot re-pack and now stores what it fetched under a declared `checksum` or the handler's structural verifier, the `checksum` served being the committed blob's (Design, AC18, the Q4 record), with the `git` adapter's stream form reported as needing to be the gzip-compressed tar; the hosted `h1:` had no lawful producer and now comes through `Deps`' `Verifier`; the idempotent-republish comparison read the compressed bytes, which a compressor change would break, and now reads a recorded canonical tar digest; the spool and unpacked-size bounds were unstated; a provider publish with `protocols` supplied nowhere had no answer; the byte-route paths, the anonymous form and the `.tar.gz` extension were implicit; the mirror protocol's hostname-first precedence silently differs from the registry protocol's shadowing; the relative-location-plus-`//subdir` form was never captured as one request and is AC18's to prove with a named fallback; the client prints capability-bearing URLs in its own errors; a same-coordinate concurrent publish was uncovered (AC25). `auth.md` AC10 untouched. No question raised or adopted. No em-dashes on touched lines. `node scripts/check-spec.js` on this file: zero failures. 26 criteria, each with a Test Plan row; eight questions resolved, zero open; `fable_recheck` cleared. draft -> planned. Sibling consequences reported to the orchestrator, not applied: `upstream-adapters.md` (the `git` adapter emits the gzip-compressed canonical tar and the "which the handler re-packs" clause goes), `conformance-harness.md` (a Terraform mirror row against the pinned static `terraform providers mirror` tree and a write row reading "none" in the AC28 table), `proxy-cache.md` (optional: this format's git tree and `checksum`-less archives among the completion-only consumers; `head_test.go` shared), `docs/internal/analysis/management-surfaces-and-the-oracle.md` (the stale deprecate note), `question-triage.md` (record this recheck). |
