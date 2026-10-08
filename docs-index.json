@@ -329,9 +329,9 @@
   },
   {
     "path": "docs/internal/plans/formats/openvsx.md",
-    "description": "Spec for the Open VSX format: the Open VSX registry API (/api metadata, per-target .vsix files, publish and unpublish with a token that released ovsx clients send only in the query string) and the VS Marketplace-compatible gallery surface (a POST extensionquery with a flags bitfield and typed criteria, and /vscode/asset routes), where every served URL, including the fallbackAssetUri the editor falls back to, names this registry, namespace ownership is expressed as auth.md pattern scopes through a namespace-bound publish base, hosted versions carry a .sigzip signed by the shared signing service, policy refusals reach the editor through a registry-served control manifest, and an open-vsx.org cache regenerates every document it serves, with ovsx 0.10.12 and 1.2.0, VSCodium 1.99 and 1.135 and code-server 4.139.1 as the oracles.",
+    "description": "Spec for the Open VSX format: the Open VSX registry API (/api metadata, per-target .vsix files, publish and unpublish with a token that released ovsx clients send in the query string, beside a Basic credential they send on every request when configured, and a trusted-publishing exchange bound onto the shared OIDC exchange) and the VS Marketplace-compatible gallery surface (a POST extensionquery with a flags bitfield and typed criteria, and /vscode/asset routes), where every served URL, including the fallbackAssetUri the editor falls back to, names this registry, namespace ownership is expressed as auth.md pattern scopes through a namespace-bound publish base, hosted versions carry a .sigzip signed by the shared signing service, policy refusals reach the editor through a registry-served control manifest, and an open-vsx.org cache regenerates every document it serves, with ovsx 0.10.12 and 1.2.0, VSCodium 1.99 and 1.135 and code-server 4.139.1 as the oracles.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "42",
     "covers": [
       "internal/format/openvsx/**",

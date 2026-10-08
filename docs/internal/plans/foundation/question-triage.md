@@ -480,7 +480,7 @@ decision:
 | `formats/opam.md` | Q16 (rechecked on Fable 2026-10-08 with Q1-Q15: all sixteen confirmed, Q2, Q4, Q5, Q7, Q9, Q11 amended; spec planned) |
 | `formats/swift.md` | Q11 (rechecked on Fable 2026-10-08 with Q1-Q10: all confirmed, three amended in fold; spec planned) |
 | `foundation/credential-management.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7 (rechecked on Fable 2026-10-01: Q1, Q2, Q6, Q7 confirmed, Q3, Q4, Q5 amended; spec planned) |
-| `formats/openvsx.md` | Q19 |
+| `formats/openvsx.md` | Q19 (rechecked on Fable 2026-10-08 with Q1-Q18: all confirmed, six amended; Q20 adopted on Fable; spec planned) |
 | `formats/hex.md` | Q9, Q10 |
 | `formats/pub.md` | Q6 |
 | `foundation/artifact-verification.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 (rechecked on Fable 2026-10-01: Q4, Q5, Q6 confirmed, the other eight amended; spec planned) |
