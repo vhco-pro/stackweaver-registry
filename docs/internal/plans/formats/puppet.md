@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Format closing sweep 2026-09-28 at 2740b05 on Opus (not a review): the retained module revision's blob moves from the remote's repository-level declared list to that module's own package-level document (proxy-cache was-Q22), never evicted (was-Q21), so adoptions of different modules never serialise (AC21, AC25 extended, including a concurrent two-module adoption and an over-quota eviction pass); POST /v3/releases is a client binding and the PATCH and DELETE routes reference-API bindings, in Blocking preconditions and Design alike ('any of them but publish'); documents through ServeRendered and files through ServeFile with the freshness boundary module-wide (signing-service was-Q14, AC32; AC5, AC23 extended); binding scope, claimed-coordinate retirement, unchanged publish and the Forge-shaped retired 409 cited to management-api was-Q13 to Q16; the rename's unbound_hosts from repository-lifecycle was-Q10 (AC27). No question adopted; 27 criteria. Earlier: Data-loss fix, second wave, 2026-09-28 at 36a137d on Opus (not a review): a remote keeps one superseded module revision per module (proxy-cache was-Q19's default count), read only by the file route for a slug the current revision no longer names; a retained revision above the inline threshold is on the declared blob-digest list of the remote's repository-level document, rewritten by each adoption, where before it was named by nothing the sweep follows; a vanished release's slug answers 404 once the adoption that drops its revision commits; the kept bytes of a changed checksum are held by their own cached reference, a re-fetch after eviction committing nothing; a module 404 keeps the last revision current; AC21 and AC25 extended to sweeps with the grace lapsed while a revision is retained. Earlier: Reconciled 2026-09-28 at fe2a39f with the foundation wave on Opus (not a review), this spec's first reconciliation: the root-anchored /v3/ is format-handler-interface's host-bound claim on a hostname deployment's server.hosts binds (its was-Q8, AC12), 404 on unbound and other-format hostnames, the harness's hostname sub-entry expressing it (AC8); publish, deprecate, withdraw, restore, soft module delete and hard delete are management-api's publish, annotate, withdraw, restore and delete-version kinds with the Forge routes as bindings under its reference-API binding rule, core-held Retirement refused centrally (AC6, AC10 to AC12); the proxied path on the https adapter with a bearer Forge API key to the root host only, allowlisted absolute file_uri hosts, the registry User-Agent and cache-scoped Last-Modified (AC17, AC19, AC20); MD5-only files classified weak by artifact-verification's release-integrity entry; refusals through WriteRefusal, the phrase reaching the module tool's printed status line (AC16); hosted documents' Last-Modified from the pointer's moved_at (AC5); removal rows by proxy-cache event class; Capabilities and the rename case, including the server.hosts by-name binding after a rename (AC27). Earlier: authored 2026-09-26 from captures of Puppet 7.20.0, OpenVox 8.28.1, r10k 5.0.3, puppet-blacksmith 9.1.0 and PDK 3.4.0; fourteen questions adopted under the standing delegation; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-08 at 681e663: a full review pass (every sibling citation verified at HEAD, the adversarial lens at full strength on the Opus-authored design, constitution compliance) plus the re-examination of the fourteen questions adopted without Fable: all fourteen confirmed, with was-Q1, was-Q2, was-Q5, was-Q7, was-Q8 and was-Q13 amended in their fold or stated cost and none superseded. Brought current first: the unbound-host and other-format-host answer is the shared denial through a Scope(r) error with the handler never invoked, never a Forge-shaped 404 (format-handler-interface AC10 and deployment AC12 as amended; Blocking preconditions, Design, AC8); HEAD on every route is the serving door's and the proxy layer's rule, cited (signing-service AC32, proxy-cache was-Q24 and AC32; AC5, AC19); both publish body forms bounded by management.publish_spool_limit (AC7). Adversarial findings fixed: a module soft-delete breaks r10k's pins because the module document is r10k's first request, now stated on both paths with its inverse (a release restore or a publish clears the deleted mark; AC11); current_release is null when every release is withdrawn and a module with every release hard-deleted answers the unknown-module shape over its surviving Package row (AC12, AC24); a proxied revision is revalidated per constituent request, since nothing says the module document's Last-Modified moves on a list change (AC19); a file request for an unknown slug costs no upstream request inside the TTL (AC19); the proxied path does not fold owner case and never caches under the typed spelling (AC9). 27 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Earlier: Format closing sweep 2026-09-28 at 2740b05 on Opus (not a review): the retained module revision's blob moves from the remote's repository-level declared list to that module's own package-level document (proxy-cache was-Q22), never evicted (was-Q21), so adoptions of different modules never serialise (AC21, AC25 extended, including a concurrent two-module adoption and an over-quota eviction pass); POST /v3/releases is a client binding and the PATCH and DELETE routes reference-API bindings, in Blocking preconditions and Design alike ('any of them but publish'); documents through ServeRendered and files through ServeFile with the freshness boundary module-wide (signing-service was-Q14, AC32; AC5, AC23 extended); binding scope, claimed-coordinate retirement, unchanged publish and the Forge-shaped retired 409 cited to management-api was-Q13 to Q16; the rename's unbound_hosts from repository-lifecycle was-Q10 (AC27). No question adopted; 27 criteria. Earlier: Data-loss fix, second wave, 2026-09-28 at 36a137d on Opus (not a review): a remote keeps one superseded module revision per module (proxy-cache was-Q19's default count), read only by the file route for a slug the current revision no longer names; a retained revision above the inline threshold is on the declared blob-digest list of the remote's repository-level document, rewritten by each adoption, where before it was named by nothing the sweep follows; a vanished release's slug answers 404 once the adoption that drops its revision commits; the kept bytes of a changed checksum are held by their own cached reference, a re-fetch after eviction committing nothing; a module 404 keeps the last revision current; AC21 and AC25 extended to sweeps with the grace lapsed while a revision is retained. Earlier: Reconciled 2026-09-28 at fe2a39f with the foundation wave on Opus (not a review), this spec's first reconciliation: the root-anchored /v3/ is format-handler-interface's host-bound claim on a hostname deployment's server.hosts binds (its was-Q8, AC12), 404 on unbound and other-format hostnames, the harness's hostname sub-entry expressing it (AC8); publish, deprecate, withdraw, restore, soft module delete and hard delete are management-api's publish, annotate, withdraw, restore and delete-version kinds with the Forge routes as bindings under its reference-API binding rule, core-held Retirement refused centrally (AC6, AC10 to AC12); the proxied path on the https adapter with a bearer Forge API key to the root host only, allowlisted absolute file_uri hosts, the registry User-Agent and cache-scoped Last-Modified (AC17, AC19, AC20); MD5-only files classified weak by artifact-verification's release-integrity entry; refusals through WriteRefusal, the phrase reaching the module tool's printed status line (AC16); hosted documents' Last-Modified from the pointer's moved_at (AC5); removal rows by proxy-cache event class; Capabilities and the rename case, including the server.hosts by-name binding after a rename (AC27). Earlier: authored 2026-09-26 from captures of Puppet 7.20.0, OpenVox 8.28.1, r10k 5.0.3, puppet-blacksmith 9.1.0 and PDK 3.4.0; fourteen questions adopted under the standing delegation; none open. Awaits a /spec review pass."
 description: "Spec for Puppet modules served to puppet module install and upgrade (Puppet 7 and OpenVox 8) and r10k: the Forge API v3 read surface under a format-first mount with every URI rendered relative to the configured base, whole-module release lists, SHA-256 and MD5 on every release, publish through the Forge's POST /v3/releases (path-respecting for puppet-blacksmith, root-anchored on a bound hostname for PDK), deprecation, withdrawal and hard deletion as bindings onto registry-owned management operations, a verifying Forge cache that handles premium and login-required modules explicitly, and per-module virtual repositories."
 author: michielvha
 goal: "Serve Puppet users a private Forge and a verified cache of forgeapi.puppet.com that stock puppet module install (Puppet 7 and OpenVox 8) and r10k resolve, verify and install from with a token in forge_authorization or r10k.yaml, the registry in module_repository or forge.baseurl, and a network restricted to this registry."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/puppet/**"
   - "conformance/puppet/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q19 into the proxied path (one retained module revision per module, its blob on the remote's declared list, the file route its only reader), which needs the same recheck; the format closing sweep on Opus 2026-09-28 moved that list to each module's package-level document under proxy-cache's adopted was-Q22"
 ---
 
 # Plan: Puppet modules (Puppet Forge API v3)
@@ -133,7 +132,9 @@ resolved PDK-publish decision below, one **root-anchored claim on `/v3/`** serve
 bound to a Puppet repository. That claim is recorded where it must be: `format-handler-interface.md`
 lists it as a **host-bound claim** beside Terraform's discovery document ("Routing and
 registration", its AC11: served only on a hostname `server.hosts` binds to a repository of the
-claiming format, `404` elsewhere), and the binding is `deployment.md`'s `server.hosts`, a list of
+claiming format; on any other hostname the handler's `Scope(r)` has no repository to report and
+returns an error, so the request is the shared denial its AC10 defines, a `404` the handler never
+renders), and the binding is `deployment.md`'s `server.hosts`, a list of
 `{hostname, repository}` in configuration, reloadable on `SIGHUP`, reaching the handler through
 `Deps` (its resolved host-binding decision, was Q8, and AC12), whose home is a named input to the
 scheduled re-open. `/v3/` falls under none of the reserved first segments that table holds (`api`,
@@ -359,7 +360,14 @@ non-withdrawn versions, or the highest prerelease when there is no other; r10k's
 exactly it (captured), so the rule is part of the contract. The live Forge's rule is unpublished and
 the 446 modules sampled cannot distinguish "highest version" from "latest published", since in every
 one the two coincide; this registry's rule is the SemVer one, which is also what the module tool
-selects.
+selects. Two edges the rule has to answer, because r10k's `:latest` reads `current_release` and
+both clients read the module document first: a module whose every release is withdrawn carries
+`current_release: null` and its `releases` with `deleted_at`, so r10k's `:latest` fails as it
+does against a module with no current release and a pinned entry still installs; and a module
+whose every release has been hard-deleted answers the unknown-module shape, `404` on the module
+document and `200` with no results on its list, while its `Package` row and package-level
+document (the deprecation marks, the deleted mark) persist for a later publish
+(`data-model.md` AC33), since a Forge module with no release does not exist on the wire.
 
 ### Release lists, pagination and the parameters clients send
 
@@ -401,7 +409,12 @@ scoped, and this handler sets no validator by hand. Its serve policy declares th
 conditional rule and `Cache-Control: no-cache` as package-level constants. Files are served
 through `ServeFile` from their `File` record, with the CAS digest as a strong `ETag`,
 `Content-Type: application/octet-stream`, `Content-Disposition: attachment; filename={file}` and
-`Cache-Control: public, max-age=31536000, immutable`.
+`Cache-Control: public, max-age=31536000, immutable`. No client in the matrix sends `HEAD`
+(captured: every request is a `GET`), and the handler has no branch for it: each form of the
+serving door answers a `HEAD` with the `GET`'s status and headers, `Content-Length` included, and
+no body, the lazy renderer run once for it and not at all for a conditional `304`
+(`signing-service.md` AC32), so a `HEAD` on any hosted route is the door's answer and never the
+handler's.
 
 ### Publish
 
@@ -428,14 +441,25 @@ set at declaration and again at commit (its resolved retirement-check decision, 
   repository** by `server.hosts`, where the root-anchored `/v3/` serves that repository's whole
   surface, reads included (`format-handler-interface.md`'s host-bound claim, AC11; `deployment.md`
   AC12). On any other hostname, and on a hostname bound to a repository of another format, the root
-  `/v3/` answers `404` in the Forge's error shape and nothing is stored; a binding naming a
-  repository that does not exist is `deployment.md`'s startup warning and a `404` on that host. A
-  bound hostname can also be the `module_repository` itself, which is how a Puppet user gets the
-  bare-host configuration the Forge's own documentation shows.
+  `/v3/` is not answered by this handler at all: its `Scope(r)` has no repository to report and
+  returns an error, the shared layer denies the request as `format-handler-interface.md` AC10
+  says, with the `404` `auth.md` renders for an unauthorized caller, and the handler is never
+  invoked, so nothing is stored and no Forge-shaped body is written (that spec's "Host-bound
+  claims" and `deployment.md` AC12, both as amended on their Fable rechecks); PDK prints the
+  status it received, as it does for any non-2xx. A binding naming a repository that does not
+  exist is `deployment.md`'s startup warning and the same `404` on that host. A bound hostname can
+  also be the `module_repository` itself, which is how a Puppet user gets the bare-host
+  configuration the Forge's own documentation shows.
 - **Both body forms are accepted**: `multipart/form-data` with the tarball in the part named `file`,
   and `application/json` with the tarball base64-encoded in `file`, the two forms the OpenAPI document
   names. The bytes are streamed into the CAS, their SHA-256 and MD5 computed in the stream, and
-  committed only once ingest validation passes.
+  committed only once ingest validation passes. Both forms are read under
+  `management.publish_spool_limit` (`management-api.md`'s key, `deployment.md`'s `management.`
+  row), the shared bound on a wire publish's body as `swift.md` applies it: the multipart part
+  streams into the CAS staging area under it, and the JSON form's base64 string is decoded from
+  the spool under it, since a module tarball is megabytes and an unbounded body is the one way a
+  publisher can exhaust the spool; a body past the bound is refused `413` in the Forge's error
+  shape with nothing committed.
 - **Responses**, each the binding's rendering of the operation's outcome in the Forge's wire:
   `201` with the release document; `400` with the Forge's error shape for content that fails
   validation (the operation's `validation` refusal, rendered as the status the OpenAPI document and
@@ -517,8 +541,17 @@ and hard deletion have no Forge route, so they are reached through the managemen
 | Undeprecate a module | `annotate` | none (the Forge says deprecation is one-way; the management API is not bound by that) | The marks disappear | `push` |
 | Withdraw a release (the Forge's soft delete), with an optional reason | `withdraw` | `DELETE /v3/releases/{slug}?reason=`, answered `204` | Omitted from release lists, `module.releases` keeps it with `deleted_at`, the release document and file keep answering `200`: the module tool can no longer select it ("No releases matching '1.1.0'", and a dependency range resolves to the next release) while r10k's pinned entry still installs it (captured on the stub and on the live Forge's `puppetlabs-stdlib-10.0.0`) | `delete` |
 | Restore a withdrawn release | `restore` | none | Normal resolution returns | `delete` |
-| Delete a module (the Forge's soft delete) | `withdraw` of every release, the handler's `Apply` also marking the module deleted | `DELETE /v3/modules/{slug}?reason=`, answered `204` | Every release withdrawn and the module document answers `404`; release documents and files keep answering, as the OpenAPI document describes | `delete` |
+| Delete a module (the Forge's soft delete) | `withdraw` of every release, the handler's `Apply` also marking the module deleted | `DELETE /v3/modules/{slug}?reason=`, answered `204` | Every release withdrawn and the module document answers `404`; release documents and files keep answering, as the OpenAPI document describes. **Unlike a release withdrawal, this breaks r10k's pins**: r10k's first request for any entry, pinned or `:latest`, is the module document (captured), and a `404` there ends the run with "The module {slug} does not exist on {base}" (captured shape), so the files that keep answering are reachable only by a client that already holds the release document; the module tool answers "No releases are available" | `delete` |
 | Hard-delete a release | `delete-version` | none | The release, its document and its file answer `404`; the coordinate is retired; r10k's pinned entry fails | `delete` |
+
+The module delete has an inverse, because a deleted module with a resolvable release is a
+contradiction the wire cannot express: a `restore` of any release of a deleted module also clears
+the module's deleted mark in the same write, so the module document answers again with that
+release current and the others still withdrawn, and a `publish` into a deleted module clears the
+mark the same way, since the Forge's module delete is the Forge's own one-way operation and the
+management API is not bound by that (as for undeprecation). Restoring the module whole is restoring
+its releases one by one; no module-level `restore` exists, because `restore` takes a version
+coordinate (`management-api.md`'s kind table).
 
 Rules, applying `management-api.md` rather than re-deciding it: every operation is one snapshot and
 none for a refused one (its AC5), and no blob-store object is deleted directly, so space returns
@@ -551,6 +584,13 @@ resolution, still installed when pinned), which is why `management-api.md` place
 - **Versions** are compared by SemVer precedence, and no two versions of a module share a
   precedence, because build metadata is refused at publish.
 - **Percent-decode before lookup**; the grammars admit no character that needs encoding.
+- **The proxied path does not fold either.** A slug is requested upstream as typed; the live Forge
+  folds the owner and answers with the canonical slug (captured), and a revision whose module
+  `slug` differs from the requested one in case is not adopted ("The proxied path"):
+  nothing is served or cached under the typed spelling, a negative entry is recorded for it, and
+  the canonical spelling is fetched on its own request. So a Puppetfile that relied on the
+  Forge's folding fails through the cache exactly as it fails hosted, which the migration note
+  states; folding here would cache one module under two spellings and give it two names in grants.
 
 ### Authentication
 
@@ -743,9 +783,18 @@ answers each (its requirements table's Puppet row):
 - **An optional upstream credential** of kind `bearer`, presented to the upstream's root host only
   and never on a redirect to another host (its AC6 and AC19), over HTTPS unless the upstream sets
   `allow_http` (its AC23).
-- **Conditional revalidation**: the adapter sends the validators the proxy holds, `If-Modified-Since`
-  with the revision's `Last-Modified` (the live Forge answers `304`, captured) and `If-None-Match`
-  where an upstream offered an `ETag` (the live Forge ignored it, captured) (its AC15).
+- **Conditional revalidation, per constituent request**: a revision is assembled from several
+  upstream responses (the module document and each page of the release list), and nothing says the
+  upstream's `Last-Modified` on the module document moves when a release gains `deleted_at` or
+  leaves the list, so one conditional request cannot stand for the revision. At the TTL the handler
+  re-issues every constituent request, each carrying the validators the upstream gave for that
+  response, `If-Modified-Since` with its `Last-Modified` (the live Forge answers `304`, captured)
+  and `If-None-Match` where it offered an `ETag` (the live Forge ignored it, captured) (its AC15);
+  a `304` on every constituent keeps the revision and consumes the refresh mark, a `200` on any
+  re-adopts the whole revision from the fresh responses, and a conditional request counts as
+  the one module document and one paged list per module per TTL that AC17 asserts. The
+  revision's ordering value for the regression rule is the module document's upstream
+  `Last-Modified`.
 - **A `User-Agent`** identifying the registry, which the OpenAPI document asks every caller to send:
   the adapter's `stackweaver-registry/<version> (+<server.public_url>)` on every request (its AC5).
 
@@ -755,14 +804,20 @@ probe, so nothing moves to the first request.
 
 Classification and behaviour:
 
-- **The module revision is mutable metadata with the proxy layer's TTL.** A new revision is parsed;
-  a release whose `metadata.name` or `slug` does not match the requested module, or whose file cannot
-  be mapped to this registry's file route, is omitted from what is served and named in the operator
-  record; the rest of the revision serves. Every served URI is re-rendered base-relative from the
+- **The module revision is mutable metadata with the proxy layer's TTL.** A new revision is parsed
+  by the adoption check; a revision whose module document's `slug` differs from the requested slug
+  byte for byte (the live Forge's owner folding, "Names, versions and case") is not adopted and
+  becomes a negative entry for the requested spelling; within an adopted revision a release whose
+  `metadata.name` or `slug` does not match the module, or whose file cannot be mapped to this
+  registry's file route, is omitted from what is served and named in the operator record; the
+  rest of the revision serves. Every served URI is re-rendered base-relative from the
   release's coordinate, which for a root-hosted upstream reproduces the upstream's own strings.
 - **Files are immutable artifacts.** A file request resolves its slug through the current or the
-  retained revision; a slug no revision names triggers one module-revision fetch and then answers
-  `404` with no file request, so the remote is not an open relay. The retained revision is read
+  retained revision; a slug no revision names answers `404` with no file request, so the remote is
+  not an open relay, and the `404` costs an upstream request only when the module has no cached
+  revision or its TTL has lapsed, which is the ordinary first fetch or revalidation: inside the
+  TTL the answer comes from the cached revision alone, so a client enumerating slugs cannot drive
+  one upstream fetch per guess. The retained revision is read
   by exactly one route, the file route, for a slug the current revision no longer names (a
   release that left the upstream list): the module, release-list and release routes serve the
   current revision only. A file route carries the slug and no digest, so the retained revision
@@ -788,6 +843,11 @@ Classification and behaviour:
   release-list and release documents carry its cache-scoped `Last-Modified`, forward-moving, and a
   revalidated revision older by upstream `Last-Modified` than the adopted one is not adopted and is
   recorded as a divergence (`proxy-cache.md` AC22; `data-model.md` AC44).
+- **A `HEAD` on any proxied route is the `GET` with the body withheld** (`proxy-cache.md`'s
+  resolved HEAD decision, was its Q24, AC32): never forwarded, a cold `HEAD` performing the same
+  fetch-and-cache the `GET` would and answered after the verified commit, a negative entry
+  answering it `404`; no client in the matrix sends one, so it is stated for the operator's
+  `curl` and for the door's own rule, not for a client.
 - **Publish and every management operation against a remote repository answer `405`**
   (`management-api.md` AC7).
 - **A cache refresh and a read-only remote behave as the shared layer defines**: "refresh now"
@@ -805,7 +865,7 @@ signal". Nothing on the Forge wire is an explicit security signal.
 | A release gains `deleted_at` (the Forge's soft delete) | **Flag mirroring**: mirrored as a withdrawal, no purge, cached bytes keep serving by slug, the divergence recorded, as PyPI's yank row keeps serving |
 | A release leaves the list and its release document answers `404` | **Removal with no signal**, an author removal: the cached file stays fetchable at its slug for clients that already resolved it while the retained revision names it, the served list follows the upstream, and the divergence is recorded and alerted; the adoption that drops that revision leaves the slug named by no revision, so it answers `404` with no upstream request and the cached file is left to eviction |
 | The module gains `deprecated_at`, or loses it | **Ordinary metadata change**: mirrored; no divergence |
-| The module document answers `404` (the Forge's module delete) | **Removal with no signal**, served as a hosted module delete is: module document `404`, releases withdrawn, cached files still served, because the last adopted revision stays the module's current document, marked deleted, and is never superseded by an absence; the divergence recorded and alerted |
+| The module document answers `404` (the Forge's module delete) | **Removal with no signal**, served as a hosted module delete is: module document `404`, releases withdrawn, cached files still served, because the last adopted revision stays the module's current document, marked deleted, and is never superseded by an absence; the divergence recorded and alerted. As hosted, r10k's pins on the module then fail at their first request, the module document, which is what they do against the Forge itself |
 | A new revision lists a different `file_sha256` or `file_md5` for a cached release | **Immutability violation, revision-bound**, in the kept-bytes variant: recorded and alerted, nothing purged; the route keeps serving the cached bytes, whose digests the served documents keep, and the new bytes are never fetched under the old coordinate. The kept bytes are held by the file's own cached reference, which the adoption does not end, never by the digest the served documents keep, which is metadata; once LRU eviction ends that reference, a request re-fetches against the kept digest, so the upstream's other bytes are never committed and the request fails as an integrity failure at fetch does, the operator deciding |
 | A file fails its upstream checksum, or a body is truncated | **Integrity failure at fetch**: nothing committed, no negative entry, the operator alerted with the real reason, the next request tries again |
 | The module becomes `premium` or `login_required` | **Ordinary metadata change** carrying this format's gate: the gate is recorded on the revision; uncached files follow the gated-module rules; cached files keep serving under the same rules |
@@ -927,7 +987,10 @@ on remote writes.
       proxied cached release; hosted documents carry `downloads: 0`; files carry the immutable caching header, an
       `ETag` and `Content-Disposition`; JSON documents carry `Cache-Control: no-cache` and answer `304` to a
       matching `If-None-Match` and an exactly matching `If-Modified-Since`, their `Last-Modified`
-      moving forward, never back, across a repoint to an older snapshot; and bytes altered in
+      moving forward, never back, across a repoint to an older snapshot; a `HEAD` on every hosted
+      route answers the `GET`'s status and headers with `Content-Length` and no body, a
+      conditional `HEAD` answers `304`, and the handler package contains no branch on the method
+      (`signing-service.md` AC32); and bytes altered in
       storage by fault injection never install on any of the three clients, the read path aborting
       the response with an operator alert (`storage-and-gc.md` AC21) and each client failing with
       its checksum error.
@@ -945,20 +1008,28 @@ on remote writes.
       top directory, `metadata.json` identity or multipart filename that disagree; a symlink, a hard
       link, an absolute path or a `..` path; an owner or name outside the grammar; a version with
       build metadata or outside SemVer; a dependency with an unparsable name or
-      `version_requirement`; and a missing `metadata.json`.
+      `version_requirement`; and a missing `metadata.json`; and a body of either form past
+      `management.publish_spool_limit` answers `413` in the Forge's error shape with nothing
+      committed, no snapshot and no spool file left behind.
 - [ ] AC8: On a hostname bound to a Puppet repository, the PDK 3.4.0 publish path through
       `puppet_forge` posts JSON with a base64 body to the root `/v3/releases` and publishes into the bound repository with one
       snapshot, and both agent lines and r10k install from that hostname's bare root as their base;
       on an unbound hostname, and on a hostname `server.hosts` binds to a repository of another
-      format, the same post answers `404` in the Forge's error shape and stores nothing; a
+      format, the same post is answered by the shared denial, a `404` indistinguishable from an
+      unauthorized caller's, with the handler's invocation counter at zero and nothing stored
+      (`format-handler-interface.md` AC10 through a `Scope(r)` error; `deployment.md` AC12); a
       `server.hosts` entry naming a repository that does not exist logs a warning and answers `404`
       on that host without failing startup; a configuration listing one hostname twice is refused
       at load; and a binding added by editing the file takes effect on `SIGHUP` without restart.
 - [ ] AC9: With `AcmeCo-tool` published, `puppet module install acmeco-tool` fails on both agent lines
       with "No releases are available" and r10k naming `acmeco-tool` fails with "does not exist",
       while `AcmeCo-tool` and `AcmeCo/tool` install on both lines; a publish of `ACME-base` while
-      `acme-base` exists answers `409` with no snapshot; and every response spells a module as
-      `{owner}-{name}` exactly as published.
+      `acme-base` exists answers `409` with no snapshot; every response spells a module as
+      `{owner}-{name}` exactly as published; and on a remote over a stand-in that folds owners as
+      the live Forge does, `acmeco-tool` answers as absent on every route with nothing cached
+      under that spelling and a negative entry recorded for it, while `AcmeCo-tool` is served and
+      cached under the canonical spelling, asserted at the network layer and in the metadata
+      store.
 - [ ] AC10: Deprecating `acme-base` through the management endpoint's `annotate` kind and,
       separately, through the `PATCH /v3/modules/acme-base` binding each creates one metadata-only
       snapshot, the two producing identical served documents, after which the module
@@ -972,13 +1043,19 @@ on remote writes.
       the release list omits it unless `show_deleted=true`, `puppet module install acme-app` resolves
       `acme-base` 1.0.0 and `--version 1.1.0` fails on both agent lines with "No releases matching",
       r10k's pinned entry installs 1.1.0, and the release document answers `200` carrying
-      `deleted_at` and `deleted_for`; restoring it returns normal resolution in one snapshot; and
+      `deleted_at` and `deleted_for`; restoring it returns normal resolution in one snapshot;
       `DELETE /v3/modules/acme-base` makes the module document answer `404` while every release
-      document and file still answers `200`.
+      document and file still answers `200`, after which r10k's pinned entry fails with "does not
+      exist" at the module document and both agent lines report "No releases are available",
+      the transcript showing no file request; and restoring one release of the deleted module,
+      and separately publishing a new release into it, each make the module document answer `200`
+      again in one snapshot with the other releases still withdrawn.
 - [ ] AC12: Hard-deleting a release through the management endpoint's `delete-version` kind makes
       its release document and file answer `404`, r10k's pinned entry fail, and the coordinate
       retired through a core-held `Retirement` record, including after a backwards repoint and after
-      the deleting snapshot is pruned; the `Package` row survives deleting its last release; every
+      the deleting snapshot is pruned; the `Package` row survives deleting its last release, its
+      module document then answering `404` and its list `200` with no results until a later
+      publish, which serves under the package-level document's surviving marks; every
       management operation and binding is refused with no snapshot for a principal lacking its
       action (`push` for publish and deprecation, `delete` for withdrawal, restoration and
       deletion) and answers `405` against a remote or virtual repository before authorization.
@@ -1025,15 +1102,23 @@ on remote writes.
       with this registry's SHA-256 beside the upstream's MD5; a release with neither checksum is
       omitted from what is served; a truncated body is never committed; and the real reason reaches
       the operator record in each case.
-- [ ] AC19: A proxied module revision is revalidated after its TTL and not before, with
-      `If-Modified-Since` against a stand-in that answers `304`; every served document carries the
+- [ ] AC19: A proxied module revision is revalidated after its TTL and not before, every
+      constituent request (the module document and each list page) carrying its own
+      `If-Modified-Since` against a stand-in that answers `304` to each, the revision kept and the
+      mark consumed; a stand-in answering `304` on the module document and `200` on a list page in
+      which a release gained `deleted_at` has the whole revision re-adopted and the withdrawal
+      mirrored; a cold `HEAD` on the module route and on a file route each cause exactly one
+      upstream `GET` and no upstream `HEAD`, fill the cache and answer the `GET`'s headers with no
+      body (`proxy-cache.md` AC32); every served document carries the
       remote's cache-scoped `Last-Modified`, never the stand-in's, and a revision older than the
       adopted one is not adopted and records a divergence; a release published upstream becomes
       installable after the TTL and not before absent an explicit refresh; a release whose `metadata.name` differs from the
       requested module is omitted from what is served and recorded; files are never revalidated; an upstream module `404` and an upstream empty release list are negatively
       cached, while a `429` or `5xx` is neither cached as absence nor surfaced as not-found; and a
-      file request for a slug no revision names causes one module-revision fetch and a `404`, with
-      no file request upstream, asserted at the network layer.
+      file request for a slug no revision names answers `404` with no file request upstream, the
+      first such request on a cold module causing exactly one module-revision fetch and every
+      further one inside the TTL causing no upstream request at all, asserted at the network
+      layer.
 - [ ] AC20: Against a stand-in gating modules the way the live Forge gates `puppetlabs-sce_linux`
       (`premium`) and `puppetlabs-cd4peadm` (`login_required`), a remote without a credential answers the gated file `403` with a
       message naming the upstream's authorization requirement, which both agent lines and r10k
@@ -1068,8 +1153,10 @@ on remote writes.
       backwards when that member is removed; and publish to the virtual repository answers `405`.
 - [ ] AC24: With `acme-base` 2.1.0-rc1 published above 2.0.0, `puppet module install acme-base`
       installs 2.0.0 on both agent lines and `--version 2.1.0-rc1` installs the prerelease;
-      `current_release` names 2.0.0; and for a module whose only release is a prerelease,
-      `current_release` names it and r10k's `:latest` installs it.
+      `current_release` names 2.0.0; for a module whose only release is a prerelease,
+      `current_release` names it and r10k's `:latest` installs it; and for a module whose every
+      release is withdrawn, `current_release` is `null`, r10k's `:latest` fails naming the absence
+      of a release and its pinned entry still installs.
 - [ ] AC25: A proxied module revision above the inline metadata threshold (the size of
       `puppetlabs-stdlib`'s, whose module document is 335,715 bytes) survives a GC sweep while it is
       current and still serves an install on all three clients afterwards; after the next
@@ -1106,26 +1193,26 @@ on remote writes.
 | AC2 | conformance | `conformance/puppet/r10k_install_test.go` (pinned and `:latest` entries, prerelease present, rerun and reinstall from the warm tarball cache with request counts asserted) |
 | AC3 | integration + conformance | `internal/format/puppet/uri_render_test.go` (every route's URIs over every fixture, two bases compared byte for byte, mount and bound hostname); `conformance/puppet/base_path_test.go` (all three clients through a base with a path) |
 | AC4 | integration + conformance | `internal/format/puppet/pagination_test.go` (whole-list page without `limit`, clamp, sort orders, unknown `sort_by`, a publish injected between page requests with the resolution result checked); `conformance/puppet/pagination_test.go` (150-release module, request counts on both agent lines, explicit-`limit` pages followed) |
-| AC5 | integration + conformance | `internal/format/puppet/digest_test.go` (both digests equal the served bytes on every hosted and cached release; header assertions; `304` answers; `Last-Modified` forward across a repoint under an injected clock; documents through `ServeRendered` and files through `ServeFile`, sharing `signing-service.md` AC32 and the module-wide `internal/format/freshness_boundary_test.go` of its AC11); `conformance/puppet/checksum_test.go` (storage fault injection, the read-path abort sharing `internal/storage/read_verify_test.go`, `storage-and-gc.md` AC21, all three clients refusing) |
+| AC5 | integration + conformance | `internal/format/puppet/digest_test.go` (both digests equal the served bytes on every hosted and cached release; header assertions; `304` answers; `Last-Modified` forward across a repoint under an injected clock; documents through `ServeRendered` and files through `ServeFile`, sharing `signing-service.md` AC32 and the module-wide `internal/format/freshness_boundary_test.go` of its AC11); `internal/format/puppet/head_test.go` (`HEAD` against `GET` on every hosted route, header sets compared, conditional `304`; the no-method-branch half an AST scan of the package shared with `signing-service.md` AC32's fixture); `conformance/puppet/checksum_test.go` (storage fault injection, the read-path abort sharing `internal/storage/read_verify_test.go`, `storage-and-gc.md` AC21, all three clients refusing) |
 | AC6 | conformance + integration | `conformance/puppet/publish_blacksmith_test.go` (publish, install on all three, idempotent republish, `409` cases, the publisher's exit status and output); `internal/format/puppet/publish_snapshot_test.go` (snapshot counts, the central `retired` refusal after pruning under an injected clock and across a repoint rendered in the Forge shape); the binding-versus-API equality is `internal/manage/binding_test.go`'s table over this handler's `Bindings()` (`management-api.md` AC8) |
-| AC7 | integration | `internal/format/puppet/ingest_test.go` (one hostile or malformed archive per rule, each refused `400` with the Forge error shape, CAS and snapshot unchanged) |
+| AC7 | integration | `internal/format/puppet/ingest_test.go` (one hostile or malformed archive per rule, each refused `400` with the Forge error shape, CAS and snapshot unchanged; a multipart and a JSON body past `management.publish_spool_limit` under a lowered test value, refused `413` with the spool directory empty afterwards) |
 | AC8 | conformance + integration | `conformance/puppet/publish_pdk_test.go` (the PDK 3.4.0 upload calls against a bound and an unbound hostname, the bound one through the `repositories` entry's `hostname` sub-entry; installs from the bare root on all three clients); `internal/server/hosts_test.go` (bound, unbound, other-format and missing-repository hostnames, a duplicate hostname refused at load, `SIGHUP` reload; shared with `deployment.md` AC12 and `format-handler-interface.md` AC11) |
-| AC9 | conformance + integration | `conformance/puppet/names_test.go` (case variants and separators on both agent lines and r10k); `internal/format/puppet/owner_case_test.go` (case-colliding owner refused, spelling of every response) |
+| AC9 | conformance + integration | `conformance/puppet/names_test.go` (case variants and separators on both agent lines and r10k); `internal/format/puppet/owner_case_test.go` (case-colliding owner refused, spelling of every response; a folding stand-in behind a remote, the mis-cased slug absent with a negative entry and nothing cached under it, the canonical one cached, network-level request counts) |
 | AC10 | conformance + integration | `conformance/puppet/deprecate_test.go` (the `annotate` kind through the management endpoint and the `PATCH` binding driven from the case `script`, warnings asserted on all three clients); `internal/format/puppet/deprecate_test.go` (snapshot counts, identical documents from both entry points, `module` present under exclusion) |
-| AC11 | conformance + integration | `conformance/puppet/withdraw_test.go` (the `withdraw` and `restore` kinds through the management endpoint and the `DELETE` bindings, module tool resolution and `--version` failure, r10k pinned install, module delete; the case-set validator requires a `script` case per declared kind, `conformance-harness.md` AC26); `internal/format/puppet/withdraw_test.go` (`show_deleted`, release and file answers, restore, snapshot counts, no `Retirement` record) |
-| AC12 | conformance + integration | `conformance/puppet/hard_delete_test.go` (r10k pinned failure after `delete-version`); `internal/format/puppet/manage_auth_test.go` (action refusals per operation and binding with snapshot count unchanged, sharing `management-api.md` AC9's action table; `405` `repository-type` on remote and virtual; retirement across a backwards repoint and after pruning, sharing `internal/manage/retirement_test.go`; `Package` row survival) |
+| AC11 | conformance + integration | `conformance/puppet/withdraw_test.go` (the `withdraw` and `restore` kinds through the management endpoint and the `DELETE` bindings, module tool resolution and `--version` failure, r10k pinned install, module delete with r10k's pinned failure and both agent lines' "No releases are available" asserted on the transcript with no file request; the case-set validator requires a `script` case per declared kind, `conformance-harness.md` AC26); `internal/format/puppet/withdraw_test.go` (`show_deleted`, release and file answers, restore, snapshot counts, no `Retirement` record; the deleted mark cleared by a release restore and by a publish, each one snapshot) |
+| AC12 | conformance + integration | `conformance/puppet/hard_delete_test.go` (r10k pinned failure after `delete-version`); `internal/format/puppet/manage_auth_test.go` (action refusals per operation and binding with snapshot count unchanged, sharing `management-api.md` AC9's action table; `405` `repository-type` on remote and virtual; retirement across a backwards repoint and after pruning, sharing `internal/manage/retirement_test.go`; `Package` row survival with the unknown-module shape served until a later publish carries the surviving marks) |
 | AC13 | conformance | `conformance/puppet/rollback_test.go` (install on all three, repoint, r10k downgrade, `upgrade` and `install` messages on both agent lines, `--force`, served documents compared with the predecessor snapshot's) |
 | AC14 | conformance + integration | `conformance/puppet/auth_test.go` (private repository over TLS, every credential form on its clients, anonymous, `pull`-less and rejected tokens, plain-HTTP refusal, no redirect status on any hosted route); `internal/auth/leak_test.go` (redaction for this format) |
 | AC15 | conformance + unit | `conformance/puppet/pattern_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, both modes, all three clients, patterned `push` through puppet-blacksmith and the JSON path); `internal/format/puppet/scope_object_test.go` (the object table per route, `format-handler-interface.md` AC12) |
 | AC16 | conformance + integration | `conformance/puppet/policy_test.go` (hosted and proxied modes, rules through the `policies` key, the raw status line read from the socket, exit status and printed text per client, documents still `200`, network-layer assertion of no other host); `internal/format/puppet/refusal_record_test.go` (one record per refused install); the phrase shares `internal/format/refusal_writer_test.go` (`supply-chain-policy.md` AC18) |
 | AC17 | conformance | `conformance/puppet/proxied_install_test.go` (prefixed paginated stand-in, all three clients, URI assertions, byte comparison, upstream request counts per module and the `User-Agent` per request, an off-allowlist `file_uri` host with no accepted socket, second install with the network layer showing no stand-in request) |
 | AC18 | integration | `internal/format/puppet/proxied_integrity_test.go` (SHA-256 mismatch, MD5-only with SHA-256 filled once cached, no checksum, truncated body; CAS and reference assertions; operator record) |
-| AC19 | conformance + integration | `conformance/puppet/proxied_ttl_test.go` (mutating stand-in answering `304`, network-level counts, publish visibility after the TTL); `internal/format/puppet/proxied_negative_test.go` (module `404`, empty list, `429`, `5xx`, unknown slug with no file fetch); `internal/format/puppet/proxied_freshness_test.go` (cache-scoped `Last-Modified`, the older revision not adopted; shares `internal/proxy/freshness_test.go`'s assertions, `proxy-cache.md` AC22) |
+| AC19 | conformance + integration | `conformance/puppet/proxied_ttl_test.go` (mutating stand-in answering `304` per constituent, network-level counts, publish visibility after the TTL); `internal/format/puppet/proxied_revalidate_test.go` (every constituent request conditional, the all-`304` keep, the mixed `304`-and-`200` re-adoption with the withdrawal mirrored, the mark consumed either way; shares `internal/proxy/adoption_test.go`, `proxy-cache.md` AC24, AC25); `internal/format/puppet/proxied_negative_test.go` (module `404`, empty list, `429`, `5xx`, unknown slug with no file fetch: one revision fetch cold, none inside the TTL); `internal/format/puppet/head_test.go`'s proxied half (cold `HEAD` on the module and file routes, one upstream `GET`, no upstream `HEAD`, the following `GET` served from the cache; shares `internal/proxy/head_test.go`, `proxy-cache.md` AC32); `internal/format/puppet/proxied_freshness_test.go` (cache-scoped `Last-Modified`, the older revision not adopted by the module document's upstream `Last-Modified`; shares `internal/proxy/freshness_test.go`'s assertions, `proxy-cache.md` AC22) |
 | AC20 | conformance + integration | `conformance/puppet/gated_test.go` (gated stand-in, printed messages on all three clients; the key provisioned as the `upstreams` entry's `credential` sub-entry); `internal/format/puppet/gated_remote_test.go` (credential scope at the network layer sharing `upstream-adapters.md` AC6's chain, cross-host redirect, anonymous-read repositories, no negative entry) |
 | AC21 | integration | `internal/format/puppet/removal_test.go` (stand-in presenting each event; a vanished release's slug before and after the adoption that drops its revision, with a sweep on an injected clock with the grace lapsed while the retained revision names it, network-level request counts; a changed checksum kept across a sweep on an injected clock with the grace lapsed, the object store read afterwards, then the file evicted and the re-fetch refused; the shared-layer half is `proxy-cache.md`'s) |
 | AC22 | integration | `internal/format/puppet/policy_config_test.go` (advisory rule refused at configuration, pattern rule on both paths through the `advisories` and `policies` keys, signature rule refusing with its reason) |
 | AC23 | conformance + integration | `conformance/puppet/virtual_test.go` (cross-member dependency on all three clients, shadowing with the network layer showing no upstream request for the shadowed module, `405`); `internal/format/puppet/virtual_resolve_test.go` (first-member-per-module resolution; the served `Last-Modified` across a member removal on an injected clock, sharing `signing-service.md` AC32) |
-| AC24 | conformance + unit | `conformance/puppet/prerelease_test.go` (default and exact-version installs on both agent lines, r10k `:latest` on a prerelease-only module); `internal/format/puppet/current_release_test.go` (the `current_release` rule over generated version sets) |
+| AC24 | conformance + unit | `conformance/puppet/prerelease_test.go` (default and exact-version installs on both agent lines, r10k `:latest` on a prerelease-only module, r10k `:latest` failing and a pin installing on an all-withdrawn module); `internal/format/puppet/current_release_test.go` (the `current_release` rule over generated version sets, withdrawn members and the all-withdrawn `null` included) |
 | AC25 | integration + fault injection + property + conformance | `internal/storage/metadata_root_test.go` (threshold crossing with a proxied module revision, sweep, serve); `internal/format/puppet/proxied_retention_gc_test.go` (a stand-in above the threshold dropping a release across adoptions N+1 and N+2, a sweep on an injected clock with the grace lapsed after each, the object store and the module's package-level declared list read after each and the repository-level document asserted to declare nothing, the retained revision's evicted file re-fetched and verified, the sweep paused after its mark and after intent recording while an adoption commits, two modules adopted concurrently with no revision-token retry, an eviction pass over quota leaving documents and lists unchanged); `internal/storage/gc_property_test.go` (declared-list births and ends from adoptions on package-level declaring documents interleaved with the sweep, shared with `proxy-cache.md` AC27 and `storage-and-gc.md` AC16); `internal/proxy/metadata_eviction_test.go` (`proxy-cache.md` AC29); `conformance/puppet/large_module_test.go` (all three clients install after the sweep) |
 | AC26 | conformance | `conformance/puppet/replay_test.go` (corpus replay against the recorded Forge surface with the named redactions) |
 | AC27 | unit + conformance | `internal/format/capabilities_test.go` (this handler's four declarations, `format-handler-interface.md` AC13); `conformance/puppet/rename_test.go` (all three clients against the renamed repository on the mount, byte comparison, old name `not-found`, a pre-rename retirement still refused, and the bound hostname's `404` until the `server.hosts` edit and `SIGHUP`; required by `repository-lifecycle.md` AC12, its hostname half shared with that spec's AC28 and `internal/repository/rename_hosts_test.go`) |
@@ -1184,7 +1271,10 @@ None open. The fourteen questions this draft raised were each written in the tem
 shape and then adopted at their own recommendation under the owner's standing delegation of
 2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided, folded
 through Scope, Design, the criteria and the Test Plan in the same pass, and reversible by the owner
-at any time. `grep -rn "standing delegation"` is the owner's review queue.
+at any time. `grep -rn "standing delegation"` is the owner's review queue. Every record was
+re-examined on Fable on 2026-10-08 as if decided fresh and carries its verdict: all fourteen
+confirmed, with was-Q1, was-Q2, was-Q5, was-Q7, was-Q8 and was-Q13 amended in their fold or
+stated cost; none superseded.
 
 ### Resolved: how PDK's root-path publish reaches a repository (was Q1)
 
@@ -1216,6 +1306,17 @@ and registration", AC11), `deployment.md` owns the binding as `server.hosts` (it
 host-binding decision, was Q8, and AC12), and the conformance harness expresses it as the
 `repositories` entry's `hostname` sub-entry (its AC23).
 
+Rechecked on Fable 2026-10-08: confirmed, fold amended. Judged fresh, A still wins: B routes by
+credential, a shape `auth.md` has no row for and one that is ambiguous for any token holding two
+repositories, and C drops the ecosystem's standard publisher for the sake of one carve-out entry.
+The fold was wrong in one place: Design and AC8 had the unbound hostname "answer `404` in the
+Forge's error shape", a handler-rendered response that `format-handler-interface.md` AC10 forbids;
+under that spec's Fable-amended "Host-bound claims" and `deployment.md` AC12 the handler's
+`Scope(r)` returns an error, the shared layer denies the request with `auth.md`'s `404`, and the
+handler is never invoked, which Blocking preconditions, Design and AC8 now say. One cost the record
+left implicit is stated in Design: a bound hostname serves the repository's whole `/v3/` surface,
+reads included, so binding publishes that the hostname serves Puppet.
+
 ### Resolved: what the Forge's "delete release" means here (was Q2)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: the Forge's delete is a
@@ -1237,6 +1338,18 @@ Accepted cost: `management-api.md` carries both operations. It does: the Forge's
 the `withdraw` kind and the hard delete `delete-version`,
 both under `delete` (its reconciliation table's Puppet rows).
 
+Rechecked on Fable 2026-10-08: confirmed, amended in what it covered. A is the captured Forge
+semantics and B breaks every pinned deployment; the fold through `management-api.md`'s Puppet rows
+was verified at HEAD (`withdraw` and `delete-version`, both under `delete`, the three unbound
+rows split as this spec gives them). What the record never said, and the body now does: the
+**module** delete the same section defines (`withdraw` of every release plus a deleted mark) does
+not have withdrawal's gentleness, because r10k's first request for any entry is the module document
+and its `404` ends the run (both captured), so a module delete breaks r10k's pins exactly as it
+does on the Forge, on both paths; and that operation had no inverse, which is now a `restore` of
+any release or a `publish` into the module clearing the mark (Design, AC11). Two edges of
+`current_release` the rule left open are now answered (all withdrawn: `null`; all hard-deleted:
+the unknown-module shape over a surviving `Package` row; Design, AC12, AC24).
+
 ### Resolved: whether the module tool sees deprecation (was Q3)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: every release carries
@@ -1257,6 +1370,12 @@ tells clients to ignore unrecognised properties, and both lines accept the extra
 **Why this is yours:** it trades protocol fidelity for a warning users otherwise never see.
 
 Accepted cost: the exception-list entry.
+
+Rechecked on Fable 2026-10-08: confirmed. The capture is decisive (the module tool excludes the
+one field its own warning reads, so B hides every deprecation from it), the OpenAPI document's
+ignore-unknown rule makes the extra field safe for any client, and the divergence is on the
+exception list before the replay corpus can trip on it (Design, "Conformance, the clients and the
+corpus"; AC26). The fold reaches AC10 on both lines and r10k.
 
 ### Resolved: serving the Forge's management routes (was Q4)
 
@@ -1280,6 +1399,15 @@ Accepted cost: the trigger is not vouched for by any third-party client, which i
 reference API that the format's spec records binding with its reason, and names Puppet's Forge
 routes ("Bindings: one operation, two ways in").
 
+Rechecked on Fable 2026-10-08: confirmed. The ground has since been made explicit and verified
+at HEAD: `management-api.md`'s binding rule admits the three routes as a published reference
+API's and lists `POST /v3/releases` among the client-driven ones, its was-Q13 bounds each binding
+to its operation (`Submit` evaluating every `Authorize` pair, the route a gate and never a
+substitute), and its was-Q16 fixes the Forge body with the API's status. The cost stands as
+written: no third-party client vouches for the three routes, so their trigger is the case
+`script` (AC10, AC11), which `docs/internal/analysis/management-surfaces-and-the-oracle.md`'s
+Puppet row records.
+
 ### Resolved: module name matching and owner case (was Q5)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: names match byte for byte,
@@ -1298,6 +1426,15 @@ for byte.
 **Why this is yours:** it decides whether migrated Puppetfiles need editing.
 
 Accepted cost: the migration note.
+
+Rechecked on Fable 2026-10-08: confirmed, cost extended to the proxied path. A holds on its own
+capture (folding cannot help the module tool, which discards a differently spelled
+`metadata.name`), and B's two spellings in grants is a real cost for the pattern scopes AC15
+exercises. The record and Design spoke only of hosted lookups; a remote fetches the slug as typed,
+the live Forge folds it and answers the canonical slug, and nothing said what the cache did with a
+revision whose slug differs from the request. It now does not adopt it and records a negative
+entry for the typed spelling (Design, "Names, versions and case" and "The proxied path"; AC9), so
+the migration note covers a Puppetfile pointed at the cache as well as at a hosted repository.
 
 ### Resolved: the version grammar at publish (was Q6)
 
@@ -1318,6 +1455,12 @@ precedence; the Forge's own release-slug pattern admits prereleases, which the c
 
 Accepted cost: the renumbering note; proxied revisions keep whatever the upstream publishes.
 
+Rechecked on Fable 2026-10-08: confirmed. One precedence per version is what makes
+`current_release` and "highest" well defined, and the proxied cost is contained because a
+proxied module document is served as the upstream wrote it, `current_release` included, so an
+upstream carrying equal-precedence versions decides its own current release and this handler
+never has to.
+
 ### Resolved: release-list pagination (was Q7)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a request without `limit`
@@ -1337,6 +1480,14 @@ correctly when a client does page.
 
 Accepted cost: the exception-list entry.
 
+Rechecked on Fable 2026-10-08: confirmed, with a cost the record under-stated. The option table's
+"bounded by the module's size" is right for the clients, which exclude `readme`, `changelog` and
+`license` or read no list at all, but an unfiltered `GET /v3/releases?module=` carries every
+release's extracted README, CHANGELOG and LICENSE text up to the inline cap, so a 150-release
+module answers a page of some megabytes to a `curl` that asks for everything; that is still one
+snapshot in one request, which is the property the decision buys, and an explicit `limit` is the
+way to page it.
+
 ### Resolved: the addressed object of a publish (was Q8)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a multipart publish whose
@@ -1355,6 +1506,16 @@ tarball, while PDK's JSON body hides the name inside base64.
 **Why this is yours:** it decides which publishers a narrowly scoped token supports.
 
 Accepted cost: the operator note for PDK users.
+
+Rechecked on Fable 2026-10-08: confirmed, record amended for what the interface now requires.
+`format-handler-interface.md` AC12 as amended on its Fable recheck admits a `Scope(r)` that reads
+the request body only if it leaves the body readable in full for `ServeHTTP`, and its re-open
+input "What `Scope(r)` may read" bounds the interim read to the leading part's headers, which is
+exactly this route's read of the `file` part's filename; the mislabelled-part refusal that case
+owes is ingest's identity rule (Design, "Publish"). Puppet joins Chef and Galaxy as a body-reading
+`Scope(r)` on that input (reported to that spec). B's spooling of an unauthorized body is also
+what `management.publish_spool_limit` now bounds, which does not rescue B: the spool would still
+be written before authorization.
 
 ### Resolved: gated upstream modules (was Q9)
 
@@ -1376,6 +1537,13 @@ would make every client blame its own credential.
 
 Accepted cost: the operator documentation states the entitlement obligation.
 
+Rechecked on Fable 2026-10-08: confirmed. A's three rules each answer a captured fact (the `401`
+with no challenge that every client would blame on its own credential; per-module gating with
+anonymous metadata, so the flag is known before any file fetch; the key as a `bearer` credential
+to the root host only, `upstream-adapters.md` AC6 and AC19). The anonymous-read check reads the
+repository's visibility from the metadata store, a read `format-handler-interface.md` AC12 permits
+a handler, and C would deny entitled customers what they pay for. The cost stands.
+
 ### Resolved: rendering a policy refusal (was Q10)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: `403` on the file route with
@@ -1395,6 +1563,12 @@ its reason, which a refused release document would not (captured on the module r
 
 Accepted cost: none beyond the resolution step.
 
+Rechecked on Fable 2026-10-08: confirmed. The two clients print disjoint halves of the Forge body
+(captured), so only a refusal carrying the reason in both reaches both, and B's silent downgrade
+is the outcome the no-elision precedent exists to prevent. The phrase on the status line
+(`supply-chain-policy.md` AC18) reaches the module tool through the status line it prints, which
+the record did not mention and AC16 asserts.
+
 ### Resolved: virtual repositories (was Q11)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: resolution per module in
@@ -1413,6 +1587,14 @@ releases being merged into a private module.
 **Why this is yours:** it decides how private and public modules of one name combine.
 
 Accepted cost: the shadowing rule in the operator documentation.
+
+Rechecked on Fable 2026-10-08: confirmed, with one consequence of the rule made explicit. "Holding
+any release, withdrawn included" means a hosted member whose module was soft-deleted still
+supplies that module through the virtual, so the virtual answers its module document `404` rather
+than falling through to a public member's live module of the same name; that is the squatter case
+the decision exists to close, reached by a different route, and it is the right answer: a private
+name never silently becomes a public one because its owner deleted it. The per-request resolution
+and its `Last-Modified` rule were verified against `signing-service.md` AC32 at HEAD.
 
 ### Resolved: advisory binding and the Forge's malware scan (was Q12)
 
@@ -1435,6 +1617,12 @@ Accepted cost: recorded for `supply-chain-policy.md`. That spec's coverage table
 has no OSV ecosystem and no PURL type; advisory
 rules refused at configuration), and its binding table carries Puppet as `holds`.
 
+Rechecked on Fable 2026-10-08: confirmed. Both halves verified at HEAD: `supply-chain-policy.md`'s
+coverage table row and AC11 refuse the advisory rule at configuration, its was-Q9 would cover
+Puppet from a declared OSV-schema source with no code change, and `proxy-cache.md`'s security
+signal is an explicit upstream removal, which a third-party scan attached to still-served content
+is not. B's fleet-wide purge on a scanner false positive is the cost that decides it.
+
 ### Resolved: what a proxied module serves (was Q13)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: the unit of metadata caching
@@ -1454,6 +1642,20 @@ fetch and lets withdrawn releases stay resolvable for r10k.
 
 Accepted cost: full-list fetches for large modules.
 
+Rechecked on Fable 2026-10-08: confirmed, amended in two places the fold left open. A is right on
+its own grounds (one fetch answers every query string, and withdrawn releases stay resolvable for
+r10k), and the retention of one superseded revision per module on the module's own package-level
+document was verified against `proxy-cache.md`'s was-Q19, was-Q21 and was-Q22 and AC27, AC29 at
+HEAD; its only reader is the file route in the window between a client's list read and the
+adoption that drops the release, which is narrow but real, and zero would be valid only if no
+route read it. First amendment: a revision is several upstream responses, and revalidating it
+with one conditional request assumed the module document's `Last-Modified` moves on every change
+to the release list, which nothing captured says; each constituent is now revalidated with its
+own validators and any `200` re-adopts the whole (Design, AC19). Second: "a slug no revision
+names triggers one module-revision fetch" let a client enumerating slugs drive one upstream fetch
+per guess inside the TTL; the fetch is now only the cold or lapsed revision's (Design, AC19). The
+`HEAD` rule is `proxy-cache.md`'s was-Q24, cited rather than restated.
+
 ### Resolved: forgeapi.puppet.com as a preconfigured upstream (was Q14)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: not preconfigured; the
@@ -1472,6 +1674,10 @@ real-upstream job covers them; adding a Tier 3 format there is a change to that 
 Accepted cost: the configuration step. `proxy-cache.md`'s set has since grown to six upstreams through its own
 extensions (was Q14 and Q17), none of them the Forge, so this record's footing is unchanged.
 
+Rechecked on Fable 2026-10-08: confirmed. `proxy-cache.md` AC19 at HEAD names six preconfigured
+upstreams and none for any other format, so B is a change to that criterion and its nightly job
+for a Tier 3 format built at charter step 11; the one-line remote is the right cost.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1480,3 +1686,4 @@ extensions (was Q14 and Q17), none of them the Forge, so this record's footing i
 | 2026-09-28 | fe2a39f | cross-spec reconciliation of the Wave 1 folds and the foundation wave, on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec and of this file. Applied: Open item 25's requests, now met (the root-anchored `/v3/` recorded as `format-handler-interface.md`'s host-bound claim, AC11, on `deployment.md`'s `server.hosts`, was-Q8 and AC12, not under any reserved segment; the harness's `hostname` sub-entry, conformance-harness reconciliation item 3; the `puppet` / `r10k` auth row found already done; management-api's seven operations as `publish`, `annotate`, `withdraw`, `restore` and `delete-version` with the Forge routes as bindings under its reference-API rule; artifact-verification's release-integrity entry with MD5-only `weak`, AC18; supply-chain's no-coverage and `holds` rows); management-api items 11 and 12 (retirement core-held, AC6, AC12; binding equality, its AC8); upstream-adapters item 12 (https adapter, `bearer` Forge key to the root host only, allowlisted absolute `file_uri` hosts, conditional revalidation, the registry `User-Agent`; no configuration probe existed, so nothing moved; AC17, AC20); proxy-cache (cache-scoped `Last-Modified`, refresh, read-only remotes, every removal row named by event class; AC19); supply-chain theme 3 (`WriteRefusal`, the phrase reaching the module tool's printed status line; AC16); theme 4 (storage-and-gc AC21 in AC5); hosted documents' `Last-Modified` from the pointer's `moved_at`, with the `ServeDocument` header rule's scoping to generated documents noted as queued; format batch 5 item 7 (a rename leaves a `server.hosts` binding naming a missing repository until edited; new AC27 with Capabilities). No question adopted, `fable_recheck` kept. Reported: `deployment.md` AC12 should assert a duplicate hostname is refused at load, which AC8 relies on; an identical republish completing with no snapshot against management-api AC5. Twenty-seven criteria, each with a Test Plan row. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
 | 2026-09-28 | 36a137d | data-loss fix, second wave, on Opus (storage-and-gc closing-sweep item 0 and data-loss fix item 1): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 1 of "From the data-loss fix" in `agents/spec-loop/consequences.md`, verified against `proxy-cache.md`'s resolved retained-revision and old-blob decisions (was its Q19 and Q20, AC27, AC28) and `storage-and-gc.md` AC16: a digest a document merely mentions keeps nothing alive. The hole: the remote's document held "the current and retained upstream module revisions" with no count and no keep-alive, so a retained revision above the inline threshold (a `puppetlabs-stdlib`-sized module document) was held by nothing the sweep follows, while the file route still resolved slugs through it; AC25 asserted survival "while current or retained" with no mechanism behind the second half. Reachability checked first: the module, release-list and release routes serve the current revision only, and the file route, which carries a slug and no digest, reads the retained revision only for a slug the current revision no longer names (a release that left the upstream list), so the retained revision is reachable and Q19, not Q20, applies. Chosen: Q19 at its default count of one, the retained revision's blob on the remote's repository-level declared list, rewritten by each adoption; the vanished release's slug answers `404` with no upstream request once the adoption that drops its revision commits. The kept-bytes row was not a hole but is now explicit: the kept bytes are held by the file's own cached reference, never by the digest the served documents keep, and a re-fetch after eviction commits nothing. The module `404` row now says the last adopted revision stays current, which is what keeps its slugs resolvable. AC21 and AC25 extended (a sweep with the grace lapsed while the revision is retained, the retained revision's evicted file re-fetched and verified, its blob collected after the dropping adoption, the sweep paused across an adoption); Test Plan rows (`internal/format/puppet/proxied_retention_gc_test.go` added, the shared `internal/storage/gc_property_test.go` named) and Phase 3 updated. No new question adopted here; `fable_recheck` extended for the folded decision. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
 | 2026-09-28 | 2740b05 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Applied: eviction-contradiction item 2 (the retained module revision's declared list moved to the module's package-level document on the remote, `proxy-cache.md` was-Q22 and was-Q21, Design, AC21, AC25, their Test Plan rows and Phase 3; the one-retained-revision count confirmed as `proxy-cache.md` was-Q19's default with the GC criteria sweeping with the grace lapsed while a revision is retained, now in AC21 too); management-surfaces item 1 and observability closing-sweep item 3 ("any of them but publish", and Blocking preconditions now calls `POST /v3/releases` a client binding with the other Forge routes on the reference-API ground; the undeprecate, restore and hard-delete rows have no binding); signing-service closing-sweep item 7 (`ServeRendered` and `ServeFile` behind `Documents`, the "must be scoped" text resolved, the test module-wide; AC5 and AC23 rows, AC23 extended for the per-request virtual's `Last-Modified`, Phase 1); management-api closing-sweep item 4 (was-Q16 for the Forge-shaped `409`, was-Q15 for the declared unchanged publish, was-Q13 for the JSON form's `none` as an extra gate, was-Q14 for the claim check at declaration and commit); six-spec closing-sweep item 6 (the rename paragraph cites `repository-lifecycle.md` was-Q10 and AC28; AC27 asserts `unbound_hosts`). Found already done: format batch 8 and the data-loss second wave, auth rows, the harness `hostname` sub-entry, `deployment.md` AC12's duplicate-hostname refusal, upstream-adapters item 12. Reported, not applied (not owned): `management-api.md`'s Puppet rows name bindings for undeprecate, restore and hard delete, which this spec gives as none. No question adopted, `fable_recheck` text extended for the moved list. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
+| 2026-10-08 | 681e663 | Fable recheck: full review (claim verification at HEAD of every sibling citation: `format-handler-interface.md` "Host-bound claims", AC10 to AC14 as amended on its recheck; `deployment.md` "Host binding", AC12 and its was-Q8 as amended; `proxy-cache.md` was-Q19 to was-Q24, "What a remote keeps past its current revision", the Obligation section, AC9, AC19, AC22 to AC24, AC27, AC29, AC32; `signing-service.md` "Serving", was-Q14, AC11, AC32 and its per-request virtual rule; `management-api.md` "Bindings", the Puppet rows, was-Q13 to was-Q19, AC5, AC7 to AC9, AC12, `management.publish_spool_limit`; `repository-lifecycle.md` "Renaming", was-Q10 as amended, AC12, AC28; `auth.md` the `puppet` / `r10k` row, "Pattern scopes", was-Q23, AC8, AC12, AC17, AC24, AC27, AC31, AC32; `upstream-adapters.md`'s Puppet row, AC5 to AC7, AC15, AC19, AC23, AC35; `artifact-verification.md` AC18 and its consumer table; `supply-chain-policy.md` was-Q6, was-Q9, was-Q10, the coverage and binding rows, AC11, AC15, AC18, AC20; `data-model.md` AC20, AC33 to AC36, AC44; `storage-and-gc.md` AC15, AC16, AC21; `conformance-harness.md` was-Q4, was-Q6, the `hostname` sub-entry, AC4, AC13, AC22, AC23, AC26, AC28; `async-operations.md`'s nothing-asked list; `catalogue.md` AC5 and the charter's steps 2, 4, 4b, 8, 9 and 11; the tree still holds only `cmd/stackweaver-registry/main.go`, so no code claim was checkable) + adversarial lens at full strength on the whole Opus-authored design (the Forge v3 read surface, PDK's root-anchored publish on a bound hostname, puppet-blacksmith, r10k and the agent lines, deprecation, withdraw, restore, hard delete, the proxied path and the virtual) + constitution + re-examination of the fourteen Opus adoptions | A review. Brought current first: every open consequence against this file applied and verified against its source's current text (deployment recheck item 1 and format-handler-interface recheck item 7: the unbound-host and other-format-host answer is `auth.md`'s shared denial through a `Scope(r)` error with the handler never invoked, in Blocking preconditions, Design and AC8; `proxy-cache.md`'s was-Q24 and `signing-service.md` AC32: `HEAD` is the door's and the layer's rule, cited in Design, AC5 and AC19 with `head_test.go` rows; the swift recheck's spool-bound question answered for this format by applying `management.publish_spool_limit` to both body forms, AC7); the sweeps' earlier items (the package-level declared list, the client-binding wording, was-Q13 to was-Q16, `ServeRendered` and `ServeFile`, `unbound_hosts`, the auth row, the harness `hostname` sub-entry, the duplicate-hostname refusal, `management-api.md`'s split Puppet rows) found applied. Verdicts: all fourteen confirmed; was-Q1 amended in fold (the Forge-shaped unbound `404` was a handler-rendered response AC10 forbids); was-Q2 amended in coverage (the module delete breaks r10k's pins because the module document is r10k's first request, captured, on both paths, and it had no inverse, now a release `restore` or a `publish` clearing the mark; `current_release` `null` under total withdrawal and the unknown-module shape after the last hard delete, Design, AC11, AC12, AC24); was-Q5 extended to the proxied path (no folding through the cache, nothing cached under a mis-cased spelling, a negative entry; Design, AC9); was-Q7's unfiltered whole-list size stated; was-Q8 amended to cite `format-handler-interface.md` AC12's body-left-readable rule and the interim bound; was-Q13 amended twice (per-constituent conditional revalidation, since nothing captured says the module document's `Last-Modified` moves on a list change, and an unknown slug costing no upstream request inside the TTL; Design, AC19); was-Q3, was-Q4, was-Q6, was-Q9 to was-Q12 and was-Q14 confirmed with the under-stated facts recorded. Nothing superseded. Constitution: both paths on every criterion that has them, the shared model with no handler table, the conformance gate with the real clients, a named enforcer for each shared concern (the serving door, `WriteRefusal`, the binding table, the declared list), findings in docs; nothing touches `auth.md` AC10. `node scripts/check-spec.js`: zero failures on this file; no em-dashes on touched lines. Sibling consequences reported to the orchestrator, not applied. 27 criteria, each with a Test Plan row; Open Questions empty; `fable_recheck` cleared; draft to planned. |
