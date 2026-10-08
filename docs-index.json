@@ -233,7 +233,7 @@
     "path": "docs/internal/plans/formats/hex.md",
     "description": "Spec for the Hex (Elixir and Erlang) format: the signed protobuf registry resources, the package tarball with its inner and outer checksums, the HTTP API that mix and rebar3 publish and retire through, hosted and proxied, with the shared signing service producing every hosted registry document and hex.pm's signed payloads served unmodified on the proxied path.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "23",
     "covers": [
       "internal/format/hex/**",

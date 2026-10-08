@@ -481,7 +481,7 @@ decision:
 | `formats/swift.md` | Q11 (rechecked on Fable 2026-10-08 with Q1-Q10: all confirmed, three amended in fold; spec planned) |
 | `foundation/credential-management.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7 (rechecked on Fable 2026-10-01: Q1, Q2, Q6, Q7 confirmed, Q3, Q4, Q5 amended; spec planned) |
 | `formats/openvsx.md` | Q19 (rechecked on Fable 2026-10-08 with Q1-Q18: all confirmed, six amended; Q20 adopted on Fable; spec planned) |
-| `formats/hex.md` | Q9, Q10 |
+| `formats/hex.md` | Q9, Q10 (rechecked on Fable 2026-10-08: both confirmed, Q9 amended in cost; spec planned) |
 | `formats/pub.md` | Q6 |
 | `foundation/artifact-verification.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 (rechecked on Fable 2026-10-01: Q4, Q5, Q6 confirmed, the other eight amended; spec planned) |
 | `foundation/proxy-cache.md` | Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22 (rechecked on Fable 2026-09-30: six confirmed, Q16 and Q18 amended; spec planned; Q23 adopted on Fable 2026-10-01 in the second follow-up, reversing arch's per-format reading; Q24 adopted on Fable 2026-10-08 in the third follow-up) |
