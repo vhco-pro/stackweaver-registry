@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at ddc73fb with the foundation wave (not a review): Q9 raised and adopted under the standing delegation, the import runs deferred as the publish kind on async-operations' runner with the pause-held conformance case (AC9, revising was-Q1); hosted signatures by management-api attach verified per artifact-verification AC9, served in pulp_ansible's shape, proxied ones with a verdict (AC11); deletion as delete-version and delete-package kinds with the core-held Retirement record (AC12); discovery a descriptor (AC10); refusals through WriteRefusal, no OSV ecosystem for Galaxy so advisory rules are uncovered and the binding row is filled by the policy case (AC14); Capabilities with rename and virtual cases (AC15). Earlier: 2026-09-26 at da0aecd, the Operation entity and galaxy.ansible.com preconfigured recorded as met, AC14 added; 2026-09-26 at 0dbca1f, Q1-Q8 adopted and folded. Tier 1 at charter step 6a. No open questions; stays draft pending a gate review."
+status: planned
+status_description: "Fable gate review of 2026-10-08 at 8b3fd61 cleared it to planned: every claim verified against the ansible-core 2.18.18rc1 source on disk and every sibling citation at HEAD, the Opus reconciliation of 2026-09-28 (Q9) confirmed, the queued FHI body-reading consequences applied, and Q10 (the write half of the corpus recorded against a pinned local pulp_ansible under a harness exception row) raised and adopted under the standing delegation, owner-facing. Sibling consequence queued: the conformance-harness exception row. No open questions. Tier 1 at charter step 6a; Phase 1 waits on the shared Operation entity and the runner's deferred operation."
 description: "Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist."
 author: michielvha
 goal: "Serve the one ecosystem whose only free self-hosted options are heavy enough that practitioners abandon them."
@@ -154,6 +154,24 @@ Constraints the captures established, each load-bearing:
   `{base}/v3/imports/collections/{task_id}/` (`wait_import_task` in `api.py`). A server whose
   import endpoint lives anywhere else is unusable regardless of what URI its publish response
   returns.
+- **Discovery is tried at the configured base first, then at `{base}/api/`.** `g_connect` in
+  `api.py` requests `{base}` as configured and, when that call fails or its body carries no
+  `available_versions`, retries at `{base}/api/`, raising the first error if the retry answers
+  404. This server answers at the configured base, so the retry never runs against it, and
+  `{base}/api/` is not served: a request there is an unmatched route and answers as one.
+- **The multipart publish body leads with the file part.** `prepare_multipart` in
+  `module_utils/urls.py` emits the form's parts in sorted field order, so the `file` part, whose
+  `Content-Disposition` names `filename` as the artifact's basename, precedes the `sha256` part,
+  and a part's headers precede its bytes. That order is what lets `Scope(r)` take the addressed
+  object from the leading part's headers under `format-handler-interface.md`'s interim bound
+  ("What `Scope(r)` may read": at most the leading part's headers, the body left readable in
+  full for `ServeHTTP`), and the recorded corpus pins it (AC7), so a client release that
+  reorders the parts fails replay-match before it fails authorization. The trailing `sha256`
+  field is compared with the spooled bytes in `Apply`, after authorization, as one more
+  validation the artifact must pass. The body-derived object is a named input of the interface
+  re-open, which decides whether the read stays admitted as declared, moves to a companion of
+  `Scope(r)`, or gives way to a route grammar that carries the object; `auth.md` lists this read
+  on its AC10 review surface by name.
 - **The import poll contract**: the client tolerates 404 while the task is queued, terminates
   on a non-null `finished_at`, treats `state: failed` as an error rendered from `error.code`
   and `error.description`, and relays `messages[]` entries by `level`. These fields are the
@@ -167,6 +185,16 @@ Constraints the captures established, each load-bearing:
   answers the plain `/api/v3/...` paths while its response hrefs point at the Galaxy NG
   distribution-based style (`/api/content/{distribution}/v3/plugin/ansible/...`). Since the
   client ignores hrefs and joins from its base, this server serves only the plain style.
+
+Every response leaves through the shared serving door: the discovery, collection, version-list
+and version-detail documents are rendered per request through `ServeRendered` and the artifact
+through `ServeFile` (`signing-service.md`'s resolved documents-the-runtime-does-not-generate
+decision, was Q14 there), so the `HEAD` answer (its was-Q24; `proxy-cache.md`'s was-Q24 on the
+proxied path), the downgrade of a cache policy's `Cache-Control` on a private repository or an
+authenticated request (its was-Q25) and the `private, no-store` on every response the
+authentication layer writes itself (`auth.md`'s was-Q27, AC38) hold here with nothing
+format-specific; `ansible-galaxy` sends no `HEAD`, so those rules have no client oracle on this
+format and are the door's own tests.
 
 ### Artifact validation
 
@@ -214,7 +242,11 @@ The wire is asynchronous (publish, receive a task URI, poll), and **the import i
 deferred**: it runs as the `publish` kind declared deferred on the shared runner (the resolved
 deferred-import decision below, was Q9; `management-api.md` AC16, `async-operations.md` AC5).
 The publish route is a binding onto that operation: it spools the multipart artifact into the
-CAS through the shared upload path, reports the addressed object from the file part's declared
+CAS through the shared upload path, under the one spool bound every publish body shares
+(`management.publish_spool_limit`, handed to the handler through `Deps`; `management-api.md`'s
+resolved spool-bound decision, was Q20 there, its AC36), so an artifact over the bound is
+refused `413` on the POST before any `Operation` exists and the client reports the publish
+error rather than a task, reports the addressed object from the file part's declared
 filename (Design, "Namespaces"), and `Submit` inserts the `pending` `Operation` and its
 `manage.apply` job in one transaction and answers with the task URI. The runner claims the job,
 and the handler's `Apply` does the import inside the transaction the core opened: the tarball
@@ -275,7 +307,7 @@ in canonical form with `/` as the separator the pattern grammar uses:
 | Discovery | descriptor | - (the available-versions document names API versions and nothing the repository holds; `auth.md`'s resolved name-free-document decision, was Q23; `format-handler-interface.md` AC12's sentinel test runs against it) |
 | Collection detail, version list | named | `{namespace}/{name}` |
 | Version detail, artifact download | named | `{namespace}/{name}/{version}` |
-| Publish | named | `{namespace}/{name}/{version}`, taken from the multipart file part's declared filename, which precedes the artifact bytes; validation refuses an artifact whose `collection_info` disagrees with it, so the pattern cannot be evaded by a mislabelled part |
+| Publish | named | `{namespace}/{name}/{version}`, taken from the multipart file part's declared filename, read from the leading part's headers alone, which precede the artifact bytes (Design, "The wire contract"; `format-handler-interface.md`, "What `Scope(r)` may read", the interim bound); validation refuses an artifact whose `collection_info` disagrees with it, so the pattern cannot be evaded by a mislabelled part, the condition `auth.md` puts on a body-reading `Scope(r)` |
 | Import poll | named | the object of the publish the task records; an unknown task reports none and answers 404 |
 
 So a token scoped `(repository, push, alpha/**)` publishes and polls any collection in namespace
@@ -283,9 +315,9 @@ So a token scoped `(repository, push, alpha/**)` publishes and polls any collect
 which every `ansible-galaxy` command sends first, and installs the collections inside its
 pattern; before `auth.md` adopted the descriptor kind this table reported discovery as `none`,
 under which AC10's patterned install could not have passed its first request, a latent
-contradiction that decision closed (`auth.md`'s own Galaxy consumer bullet still says discovery
-reports none; that is a consequence for it). Teams needing harder isolation still have what
-the model has always given them: separate repositories.
+contradiction that decision closed (`auth.md`'s Galaxy consumer bullet under "Pattern scopes"
+now says the same: discovery reports a descriptor). Teams needing harder isolation still have
+what the model has always given them: separate repositories.
 
 ### Signatures
 
@@ -318,7 +350,12 @@ there, and its AC9), and this is the result:
   signature against the remote's trust set at commit and records the result for
   `supply-chain-policy.md` to consume, without stripping or altering the entry, since the
   artifact bytes are digest-verified against the upstream's declared sha256 and a signature
-  valid upstream stays valid through the cache.
+  valid upstream stays valid through the cache. The wire makes the list optional, so the
+  layer's rule for an optional signature applies (`proxy-cache.md`'s resolved
+  optional-signature decision, was Q23 there): an upstream that has never served a signature
+  for a version adopts its detail under class `none` with verdict `absent`, whatever keys the
+  remote holds, and a revalidation whose fresh version detail drops a signature the cached one
+  carried is a regression not adopted, the cached detail served until the operator's refresh.
 
 ### The management surface
 
@@ -394,7 +431,14 @@ stream-and-verify.
 On the way back, the handler rewrites the version detail's absolute `download_url` to point at
 this registry - the same transform `format-handler-interface.md` names for npm packument URLs.
 Without the rewrite every proxied install fetches the artifact, which is nearly all of the
-bytes, directly from the upstream and the cache never sees it. The version detail's
+bytes, directly from the upstream and the cache never sees it. The rewrite also closes a
+credential leak: `_download_file` in `collection/concrete_artifact_manager.py` sends the
+configured server's `Authorization: Token` header to whatever host `download_url` names, with
+`unredirected_headers=['Authorization']`, so an unrewritten `download_url` would hand this
+registry's token to the upstream. The registry's own fetch carries the remote's credential and
+never the client's (AC6). The handler keeps no superseded revision of any proxied document, so
+its retained-revision count is zero and it declares no kept blob-digest list (`proxy-cache.md`'s
+was-Q19 and was-Q22); cached artifacts live as ordinary cached files keyed by digest. The version detail's
 `signatures` list is **not** rewritten or stripped: it passes through as the upstream served it
 (Design, "Signatures"). Publish, the import-task endpoints and the management operations are
 hosted-only.
@@ -424,7 +468,10 @@ validation keeps its own contract (AC8).
 default feed: a coordinate-level advisory rule on this format is refused at configuration as
 uncovered (its coverage rule), until a second OSV-schema source declaring such an ecosystem is
 configured through `policy.feed.sources` (its AC21), and the matcher would then key on
-`{namespace}.{name}` under semver ordering. AC14's policy case therefore condemns through a
+`{namespace}.{name}` under semver ordering: the handler reports that key when it records the
+package and on every fetch-and-cache request (its resolved advisory-key decision, was Q11
+there), uncovered or not, so a later source needs no re-ingest, and a hosted repository then
+matches public advisories by coordinate exactly as a remote does (its was-Q12). AC14's policy case therefore condemns through a
 rule that needs no advisory (a licence rule, or a standing condemnation record), never through
 an `advisories` fixture in an ecosystem the feed does not define. Filling that spec's row is a
 consequence for it.
@@ -475,7 +522,10 @@ repository.
       reconstructs from its own configured base and the task id it parses from the publish
       response.
 - [ ] AC2: `ansible-galaxy collection install` installs that collection into a clean environment
-      with a matching content digest, for at least two pinned client versions.
+      with a matching content digest, for two pinned client lines: ansible-core 2.18 (the
+      captured line, 2.18.18rc1) and the newest GA ansible-core line at the time the suite is
+      written, each pinned by image digest in the corpus manifest (`conformance-harness.md`
+      AC4), so that the wire contract pinned from one line is proved on the next.
 - [ ] AC3: A `requirements.yml` naming this server installs correctly, and the server can be
       added to `ansible.cfg` `server_list` alongside public Galaxy.
 - [ ] AC4: Collection dependency resolution works across two collections where one depends on
@@ -487,10 +537,15 @@ repository.
 - [ ] AC6: The proxied path installs a collection through an upstream Galaxy server and serves
       it from cache on a second install with no upstream request, asserted at the network
       layer; the version metadata it serves carries a `download_url` pointing at this registry
-      rather than the upstream, and the artifact bytes verify against the sha256 the upstream's
-      version metadata declared.
-- [ ] AC7: Replay-match passes against a corpus recorded from the authoritative reference,
-      galaxy.ansible.com, per the conformance harness's authoritative-reference resolution.
+      rather than the upstream, the artifact bytes verify against the sha256 the upstream's
+      version metadata declared, and the stand-in upstream observes no request carrying the
+      client's `Authorization: Token` value on either install.
+- [ ] AC7: Replay-match passes against a corpus whose read half is recorded from the
+      authoritative reference, galaxy.ansible.com, and whose write half (publish, the import
+      poll's unfinished, finished and failed shapes, the duplicate refusal) is recorded against
+      the local pulp_ansible reference the harness's authoritative-reference exception list
+      names for this format (the resolved corpus-reference decision below, was Q10;
+      `conformance-harness.md` AC28), the multipart part order included.
 - [ ] AC8: A publish whose artifact fails validation (a `FILES.json` entry not matching its
       `chksum_sha256`, or a filename disagreeing with `collection_info`) ends its import task
       with `state: failed` carrying `error.code`, `error.description` and `messages[]` the
@@ -527,7 +582,10 @@ repository.
       and on the proxied path an upstream version carrying a signature is served with its
       `signatures` entries unchanged, a verdict recorded under the remote's trust set, and the
       signature-requiring install with the upstream's public key in the client keyring succeeds
-      through this registry (this format's half of `artifact-verification.md` AC9).
+      through this registry (this format's half of `artifact-verification.md` AC9); a
+      never-signed upstream version adopts under class `none` with verdict `absent`, and a
+      revalidation that drops a previously served signature is refused as a regression with the
+      cached detail still served (`proxy-cache.md` was-Q23).
 - [ ] AC12: A version deleted through the registry-owned management API (`delete-version`)
       leaves the version list and detail and no longer installs through the real client, a
       whole-collection deletion (`delete-package`) does the same for every version in exactly one
@@ -565,12 +623,12 @@ repository.
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
 | AC1 | conformance | `conformance/ansible/publish_test.go` |
-| AC2 | conformance | `conformance/ansible/install_test.go` |
+| AC2 | conformance | `conformance/ansible/install_test.go` (both pinned ansible-core lines, each by image digest in the corpus manifest) |
 | AC3 | conformance | `conformance/ansible/requirements_test.go` |
 | AC4 | conformance | `conformance/ansible/deps_test.go` |
 | AC5 | conformance | `conformance/ansible/auth_test.go` |
-| AC6 | conformance | `conformance/ansible/proxied_test.go` |
-| AC7 | conformance | `conformance/ansible/replay_test.go` |
+| AC6 | conformance | `conformance/ansible/proxied_test.go` (second install with no upstream request; the stand-in's observed requests carry no client `Authorization: Token` value) |
+| AC7 | conformance | `conformance/ansible/replay_test.go` (read half against galaxy.ansible.com, write half against the pinned local pulp_ansible reference the corpus manifest names with its digest, `conformance-harness.md` AC28; the multipart part order among the matched shapes) |
 | AC8 | conformance | `conformance/ansible/publish_test.go` (failed-import case) |
 | AC9 | conformance + integration + fault injection | `conformance/ansible/deferred_publish_test.go` (real client; the `script` pauses `manage.apply` through the admin routes, publishes, polls once and sees unfinished, resumes, polls to completion and installs; shared with `async-operations.md` AC5 and AC10 and `write-triggered-services-prototype.md` AC8); `internal/format/ansible/import_task_test.go` (snapshot counts for success and failure, the record absent from every snapshot's content set, atomic terminal transition under an injected fault, pruning and unknown-id 404 under an injected clock); `internal/format/ansible/deferred_crash_test.go` (process kill at each fault point, applied at most once, the pending artifact blob surviving a forced sweep; the prototype's instance of `async-operations.md` AC6) |
 | AC10 | conformance + integration | `conformance/ansible/namespace_test.go` (unseen namespaces, and the `alpha/**` token's publish, poll, install and refusal; a patterned-`pull`-only token's discovery and in-pattern install); `internal/format/ansible/scope_object_test.go` (the object table, per route, with the sentinel check on discovery, `format-handler-interface.md` AC12) |
@@ -587,7 +645,10 @@ for AC11 (`artifact-verification.md` AC25), and `state` can seed a post-deletion
 its `Retirement` records (`management-api.md`, "Retirement is core-held") and a tampered
 `MANIFEST.json`. AC9's hold, AC11's attachment and AC12's deletion are called from the case's
 `script`, since `setup` never calls a management endpoint, and AC11's client keyring is imported
-by the `script` inside the client container. The runner-enforced obligations - both modes,
+by the `script` inside the client container. No conformance case here moves time: the
+retention-window and pruning clauses of AC9 and AC12 run in the integration tests under their
+injected clock, and every conformance case asserts the real client within its own running time
+(`conformance-harness.md`'s resolved time decision, was Q8). The runner-enforced obligations - both modes,
 unauthenticated, unauthorized and pattern-refusal cases in each - apply from the sibling specs
 and are not restated per criterion here.
 
@@ -630,9 +691,10 @@ Populated by `/tasks` once this spec reaches `planned`.
 ## Open Questions
 
 None open. The 2026-09-25 first review raised Q1 through Q5; folding them on 2026-09-26 exposed
-Q6 through Q8, and the 2026-09-28 reconciliation with the foundation wave raised and adopted Q9.
-All nine were adopted under the owner's standing delegation and folded through Scope, the
-blocking preconditions, Design, the criteria (AC9 to AC15), the Test Plan and the Phases. The
+Q6 through Q8, the 2026-09-28 reconciliation with the foundation wave raised and adopted Q9, and
+the 2026-10-08 gate review raised and adopted Q10. All ten were adopted under the owner's
+standing delegation and folded through Scope, the blocking preconditions, Design, the criteria
+(AC2, AC6, AC7, AC9 to AC15), the Test Plan and the Phases. The
 records below keep each question's framing, options and reasoning, so an owner reversing an
 adoption has the whole trade in front of them.
 
@@ -1020,6 +1082,40 @@ yet". B lost because it contradicts three adopted sibling criteria; C lost on th
 path. `async-operations.md`'s Context sentence describing this spec as synchronous is a
 consequence for it.
 
+### Resolved: what the write half of the corpus is recorded against (was Q10, raised and adopted 2026-10-08)
+
+**Adopted 2026-10-08 under the owner's standing delegation**, on Fable, in the gate review, and
+**owner-facing** because it adds a row to `conformance-harness.md`'s authoritative-reference
+exception list. Option A: the read half of the corpus (discovery, collection detail, version
+list and detail, the artifact download) is recorded against galaxy.ansible.com, and the write
+half (publish, the import poll in its unfinished, finished and failed shapes, the duplicate
+refusal) against a local pulp_ansible reference, the `pulp/pulp` single-container image with
+`pulp_ansible` included, pinned by image digest in the corpus manifest, under a row of the
+harness's exception list that names the half (its AC28, its resolved digest-location decision,
+was Q7). Folded into AC7 and its Test Plan row; the harness row is a sibling consequence.
+
+The question: AC7 read as though the whole corpus were recordable from galaxy.ansible.com, and
+the wire contract's write half was grounded against a local logging server and the client source
+rather than a captured server response. A publish to galaxy.ansible.com is permanent and public,
+a publisher cannot remove it, and the failed-import and duplicate shapes need a rejected upload
+and a re-publish of a live version, so recording the write half there consumes a public
+namespace on every re-recording, the same class of obstacle `hackage.md` and `luarocks.md`
+recorded for their write halves.
+
+**Recommendation:** A, because the exception list exists for exactly a half with no public
+reference to record against, the local reference is the ecosystem's reference implementation
+(the one `Capabilities()` declares `available`), and the read half, where galaxy.ansible.com's
+quirks live, stays authoritative.
+
+| Option | You get | It costs |
+|---|---|---|
+| **A. Read half against galaxy.ansible.com; write half against a pinned local pulp_ansible** | No public publish per recording; the failed and duplicate shapes recordable at will; the reference implementation's own poll rendering as the oracle for AC8's fields | A harness exception row and a container the harness pins; a disagreement between pulp_ansible and galaxy.ansible.com on a write-side field is settled by the public server only where it can be observed without publishing |
+| **B. Record the write half against galaxy.ansible.com under a project-owned namespace** | One reference for both halves | A permanent public collection per recording, a failed-import corpus only by uploading a broken artifact publicly, the duplicate case by re-publishing a live public version, and rate limits on the recording run |
+| **C. No write corpus; the write half proved by the client's exit code alone** | Nothing to record | AC8's field-level poll contract and AC7's part-order pin would rest on the client source, which the standing rule refuses for a server-side shape |
+
+**Why this is yours:** it adds a local reference to the list that decides what settles a
+disagreement, which the harness's authoritative-reference decision reserved to its own table.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1028,3 +1124,4 @@ consequence for it.
 | 2026-09-26 | 0dbca1f | folding adopted recommendations under the standing delegation | Not a review: adoption and application of this spec's own recommendations, made consistent with the Cluster 5 and Cluster 6 format specs and the prototype. Q1 adopted as A for its mechanism (synchronous validation, terminal before the first poll); folding found its storage half (the repository-level metadata document) contradicts settled rules, since that document is snapshot content and a failed import would create a snapshot, so the home was raised as Q6 in decision shape and adopted as B: a format-agnostic `Operation` entity in `data-model.md`, outside snapshot content, atomic with the snapshot it produces, pruned after a window (new Design section "Import tasks", AC9, a Phase 1 precondition). Q2 adopted as A, and since `auth.md` adopted pattern scopes in the same pass the per-route addressed-object table is declared now and a token scoped `alpha/**` is confined to its namespace (Design "Namespaces", AC10). Q3 adopted as A with the requirements this format places on `docs/internal/plans/foundation/artifact-verification.md` (to be authored) recorded; its silence on proxied signatures raised as Q7 and adopted as A, pass-through (Design "Signatures", AC11). Q4 adopted as A, the `proxy-cache.md` amendment recorded as a Phase 2 precondition for that spec to make (AC13). Q5 adopted as B for its decision, re-homed onto the registry-owned management API in `docs/internal/plans/foundation/management-api.md` (to be authored) instead of Galaxy NG routes, for consistency with pypi and npm (Design "The management surface", AC12, Phase 3); folding it raised Q8, re-publishing a deleted version, adopted as A: retired forever, live duplicates refused too (Artifact validation, AC12). Also: blocking preconditions section added (interface re-open, now binding since the catalogue promoted this format to Tier 1; Operation entity; proxy-cache amendment; management-api.md); sequencing note rewritten to Tier 1 at charter step 6a; sibling citations now resolved (auth pattern scoping and grants, supply-chain-policy component inventory and verification ownership, conformance-harness setup vocabulary) reframed with historical qualifiers; conformance notes aligned with the harness's closed vocabulary and seed path (management triggers called from `script`). Test Plan rows added for AC9 to AC13. Stays draft. |
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Found already done by the interrupted fold (d56e1ff): the Tier 1 sequencing (charter item), the resolved supply-chain Q3 and Q6 citations, the harness closed-vocabulary note, the auth Q13 citations and the per-route addressed-object table. Applied: the per-format policy rendering (403 naming the policy, AC14, `conformance/ansible/policy_test.go`); the Operation precondition now cites `data-model.md`'s Operations section and AC32; the preconfigured-upstreams precondition recorded as discharged by `proxy-cache.md`'s resolved preconfigured-set extension (was Q14), in the preconditions, the proxied path, Phase 2 and the Q4 record. Stays draft. |
 | 2026-09-28 | ddc73fb | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. Judgment call raised and adopted as Q9 under the standing delegation: `async-operations.md` AC5, AC6 and AC10, `write-triggered-services-prototype.md` AC8 and the charter's step 6a all assume this handler's import runs deferred on the shared runner, while this spec (was Q1) validated synchronously; adopted A, the import is the deferred `publish` kind executed by `manage.apply`, the publish route a binding, the harness holding an import through the admin pause (Design 'Import tasks' rewritten, AC9 rewritten with `deferred_publish_test.go` and `deferred_crash_test.go`, Phase 1 precondition, was-Q1 record revised). From `artifact-verification.md` (item 9: its resolved Galaxy-signatures decision, was Q6, AC9, AC25) and `signing-service.md` (was Q10): hosted signatures by user attachment through `management-api.md`'s `attach` kind, verified over the stored `MANIFEST.json` against the `openpgp` trust set before storage, served as `{signature, pubkey_fingerprint, signing_service: null, pulp_created}`, proxied entries passed through with a verdict; Scope, Design 'Signatures', the management table, AC11 and its row rewritten, `trust` key in the Test Plan note; the was-Q3 requirement list annotated with each answer and the was-Q7 record with the verdict. From `management-api.md` (kind table, reconciliation table, AC5, AC6, AC7, AC24) and its was Q3 with `data-model.md` AC35: `delete-version`, `delete-package` and `attach` declared through `Operator`, no Galaxy NG binding, retirement core-held and rendered as a failed import (Artifact validation, the write boundary, AC12, the was-Q5 and was-Q8 records). From `auth.md` was Q23: discovery is a descriptor, closing the latent contradiction under which AC10's patterned install could not pass its first request; sentinel check in the scope test. From `supply-chain-policy.md` (was Q10, AC17, AC18, AC20, AC21) and `format-handler-interface.md` AC14: refusals through `WriteRefusal`; OSV's `ecosystems.txt` fetched 2026-09-28 lists no Ansible ecosystem, so the coverage row is uncovered, advisory rules refused at configuration, AC14's case condemns without an advisory and fills the binding row. From `repository-lifecycle.md` AC12 and `format-handler-interface.md` AC13: a Capabilities and lifecycle section, new AC15 with `rename_test.go` and `virtual_test.go`. Charter step 6a wording, the `upstream-adapters.md` profile row, `conformance/ansible/**` in `covers`. Fifteen criteria, each with a Test Plan row. Consequences for other files: `auth.md`'s Galaxy consumer bullet says discovery reports none, now descriptor; `async-operations.md` Context (~l.133) says this spec validates synchronously; `supply-chain-policy.md`'s Ansible coverage row (uncovered, no OSV ecosystem) and binding row (filled by AC14's case). Stays draft pending a gate review. |
+| 2026-10-08 | 8b3fd61 | Fable gate review: full review (claim verification against ansible-core 2.18.18rc1's source on disk: `g_connect`, `publish_collection`, `prepare_multipart`, `wait_import_task`, `_download_file`, the `signatures` reads and `gpg.py`; every sibling citation re-read at HEAD: `auth.md`'s Galaxy bullet and body-reading rule, `format-handler-interface.md` "What `Scope(r)` may read", `management-api.md`'s kind table and was-Q20, `proxy-cache.md` was-Q19, Q22, Q23, Q24, `signing-service.md` was-Q14, Q24, Q25, `supply-chain-policy.md` was-Q11, Q12 and its rows, `artifact-verification.md` was-Q6 and AC9, `conformance-harness.md` was-Q7, Q8 and AC28, `async-operations.md` AC5, AC6, AC10; adversarial lens on the Galaxy v3 read surface, the deferred publish under pause, signatures, deletion and retirement, the two client lines and the body-reading `Scope(r)`; the Opus reconciliation of 2026-09-28 treated as unreviewed) + the queued consequences (FHI recheck item 6 and its follow-up wording item applied; supply-chain's uncovered row confirmed) | Q9 (Opus-adopted) confirmed: the deferred import, the pause-held case and the atomic terminal commit stand as folded. Corrected: the stale claim that `auth.md`'s Galaxy bullet still reported discovery as none. Added from the source: the discovery retry at `{base}/api/`, the sorted part order that puts the file part first (the interim-bound condition) with the trailing `sha256` field checked in `Apply`, the client's token sent to `download_url` so the rewrite closes a credential leak (AC6), the spool bound on the publish binding (management-api was-Q20), the serving-door rules (signing-service was-Q14, Q24, Q25; auth was-Q27, AC38), zero retained revisions (proxy-cache was-Q19, Q22), optional-signature adoption and withdrawal (proxy-cache was-Q23; AC11), the advisory key reported while uncovered (supply-chain was-Q11, Q12), the two pinned client lines named (AC2), no conformance case moving time (harness was-Q8). Q10 raised and adopted, owner-facing: the write half of the corpus against a pinned local pulp_ansible under a harness exception row (AC7). Status: planned. |

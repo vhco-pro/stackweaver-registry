@@ -473,6 +473,7 @@ decision:
 | `formats/npm.md` | Q2 (a 2026-09-26 delegation adoption) superseded by Q5, adopted on Fable 2026-10-08 at its gate review; spec planned |
 | `formats/oci.md` | Q8 (an Opus adoption) rechecked on Fable 2026-10-08 at its gate review: confirmed; Q9 adopted on Fable; spec planned |
 | `formats/nuget.md` | Q4 (a 2026-09-26 delegation adoption) superseded by Q9, adopted on Fable 2026-10-08 at its gate review; spec planned |
+| `formats/ansible-collections.md` | Q9 (an Opus adoption) rechecked on Fable 2026-10-08 at its gate review: confirmed; Q10 adopted on Fable; spec planned |
 | `formats/rpm.md` | Q11 (rechecked on Fable 2026-10-01 with Q1-Q10: Q5, Q6, Q9, Q11 amended, the rest confirmed; Q12 adopted on Fable; spec planned) |
 | `formats/arch.md` | Q13 (rechecked on Fable 2026-10-01: superseded by signing-service was-Q20; Q14 adopted on Fable; spec planned) |
 | `formats/cargo.md` | Q7 (rechecked on Fable 2026-10-08: confirmed; the Fable-adopted Q2 and Q5 amended in fold; spec planned) |

@@ -68,7 +68,7 @@
     "path": "docs/internal/plans/formats/ansible-collections.md",
     "description": "Spec for the Ansible Galaxy v3 collection format - the single format where free, easy, private hosting does not already exist.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "10",
     "covers": [
       "internal/format/ansible/**",

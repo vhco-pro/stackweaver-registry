@@ -70,8 +70,8 @@ session ends). Each firing:
 ## Resume point
 
 **2026-10-08 16:09-17:10 CEST, one-hour Fable session.** Gate reviews landed (all planned): oci,
-npm, go-modules, pypi, helm, maven, nuget; running at 16:50: ansible-collections (the last format)
-and supply-chain-policy round 4. With ansible-collections, all 33 format specs are planned.
+npm, go-modules, pypi, helm, maven, nuget; ansible-collections and supply-chain-policy round 4 also landed: ALL 33 FORMAT SPECS ARE PLANNED.
+credential-management's follow-up (binding responses no-store) was running at the session's end.
 Next, two agents at a time:
 1. If either running pass did not finish, its partial edits are under `agents/spec-loop/wip/`.
 2. Foundation follow-ups still queued (newest consequences.md sections): conformance-harness
