@@ -468,7 +468,7 @@ decision:
 | `formats/arch.md` | Q13 (rechecked on Fable 2026-10-01: superseded by signing-service was-Q20; Q14 adopted on Fable; spec planned) |
 | `formats/cargo.md` | Q7 |
 | `formats/composer.md` | Q10, Q11 |
-| `formats/conan.md` | Q11 |
+| `formats/conan.md` | Q11 (rechecked on Fable 2026-10-08 with Q1-Q10: all confirmed, four amended; spec planned) |
 | `formats/homebrew.md` | Q15 |
 | `formats/debian.md` | Q10 (rechecked on Fable 2026-10-01 with Q1-Q9: all ten confirmed, six amended in fold; spec planned) |
 | `formats/hackage.md` | Q16 (rechecked on Fable 2026-10-08 with Q1-Q15: eleven confirmed, five amended; Q17 adopted on Fable; spec planned) |

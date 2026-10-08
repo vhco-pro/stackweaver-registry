@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Reconciled 2026-09-28 at 15ced69 with the foundation wave on Opus (not a review): the probe and user routes are auth.md's descriptor kind, so a patterned-only pull installs exact in-pattern references and is refused only at search and ranges (AC15); removes bound onto management-api's prune and delete-version kinds with the five routes declared bindings (AC7, AC8); retirement of commit-id revisions is the core-held Retirement record, refused centrally as retired 409 (AC9); pointer-scoped times read data-model's moved_at, Q11 adopted to accept its every-write advance (AC6); completion-only verification offered by proxy-cache was-Q15 (AC19), an older upstream latest now not adopted per proxy-cache AC22 (AC20); serve-time CAS verification cited; refusals through WriteRefusal re-asserting the holds binding row (AC16); OSV coverage, artifact-verification none and the ConanCenter transport cited; Capabilities with rename and virtual cases (AC24). Earlier: authored 2026-09-26 from captures of Conan 2.32.0, 2.0.17 and 1.66.0; ten questions adopted under the standing delegation, an eleventh on 2026-09-28; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-08 at e0bc30d: a full review pass over the Opus-authored whole (claim verification at HEAD of every sibling citation, the adversarial lens at full strength on revisions and latest semantics, the v1 and v2 routes, the enumerated removes, the reference-server-only routes and incomplete revisions, go-spec-reviewer inline, constitution compliance) plus the re-examination of the eleven questions adopted on Opus. All eleven confirmed, six amended in fold or cost, none superseded: a repeated PUT under an incomplete revision replaces the file so a failed upload can complete (Q3, AC4); unbound package IDs need no retirement because the package revision binds the bytes, and every PUT under a recipe revision declares {ref}#{rrev} as its claim per management-api was-Q14 (Q5, AC9); the exchange is answered by the shared layer on a declared exchange-echo route per auth was-Q25 and AC35 (Q6, AC14); package-addressed routes of a virtual resolve in the member holding the package ID under the revision (Q8, AC21); and the pointer-time floor had no door, since ServeRendered sets a header from a freshness source while this format embeds the value in a JSON body, so the lazy-renderer form receiving the pointer's moved_at is reported to signing-service.md as a Phase 1 precondition (Q11, AC6). Brought current first from the whole consequences queue: management-api was-Q13, upstream-adapters was-Q8 and AC33 with the first-request probe under its AC23, the conformance-harness exception row and manifest-digest rule (AC23), delete-version with no client trigger and the bulk binaries route under curl (AC7), and Conan's position under proxy-cache was-Q19 to was-Q23 (AC20). Folded without a question: a decompression bound on archive verification (AC3), a delete-package kind through the management endpoint alone (AC7, AC8), rename as a non-write kind (AC24). 24 criteria, each with a Test Plan row; zero open questions; check-spec zero failures; fable_recheck cleared. Earlier: reconciled 2026-09-28 at 15ced69 with the foundation wave on Opus (descriptor probe, prune and delete-version bindings, retired 409, Q11 adopted, older upstream latest not adopted, Capabilities); authored 2026-09-26 from captures of Conan 2.32.0, 2.0.17 and 1.66.0 with ten questions adopted under the standing delegation."
 description: "Spec for the Conan (C and C++) remote format: the v2 REST API with recipe and package revisions, package IDs derived from settings and options, uploads as independent file PUTs verified against the manifest the revisions are hashed from, removes as bindings onto registry-owned management operations, pointer-scoped revision times so a rollback reaches clients, a verifying ConanCenter cache and member-ordered virtual repositories, with Conan 2 on two generations and Conan 1 in revisions mode as the oracles."
 author: michielvha
 goal: "Serve C and C++ teams a private Conan remote whose revisions are verified against their own manifests before any client can resolve them and whose rollbacks the client actually adopts, and a ConanCenter cache that never delivers bytes its revision does not describe, with the real conan CLI as the oracle on both paths."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/conan/**"
   - "conformance/conan/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; reconciliation on Opus 2026-09-28 adopted Q11 (latest revision time floored at data-model moved_at, accepting churn)"
 ---
 
 # Plan: Conan remote format
@@ -126,13 +125,26 @@ on it", AC36). Its semantics are wider than this spec first asked, advancing on 
 including an ordinary write, and the resolved pointer-time decision below (was Q11) adopts it as
 it stands. It is a field on an existing entity, never a table this handler owns.
 
-**The management API must be `planned` before Phase 3.** The five `conan remove` shapes and the
-cleanup of abandoned incomplete revisions are operations of
-`docs/internal/plans/foundation/management-api.md`, placed on its `delete-version` and `prune`
-kinds (its cross-format reconciliation table defers the split to this spec's table), with the
-client's routes and the reference server's declared as bindings through the handler's `Operator`
-interface (Design, "Removes are bindings"). The charter builds that spec's core at step 2 and
-completes it at step 9.
+**The serving door must hand the renderer the record's value.** This format embeds the pointer's
+freshness value inside a JSON body (the `time` of a latest revision) rather than in a header, and
+it renders every JSON answer per request. `signing-service.md`'s `ServeRendered` takes a
+handler-rendered body or a lazy renderer plus a freshness source and sets `Last-Modified` from the
+source itself, "never a date" from the handler (its "Package shape", AC32); no form today hands the
+source's value to the renderer, so the read the pointer-time decision relies on has no door. The
+form needed is small and stays inside that spec's split (its AC27: every freshness value rendered
+is read from the record, never from a clock): the lazy renderer receives the serving pointer's
+`moved_at`, read by the runtime from the record, as an input it may embed, with the validator
+identity covering it so a repoint changes the `ETag`. It is reported to `signing-service.md` by
+the Fable recheck of 2026-10-08 and Phase 1 waits on it; the handler reads no clock and no pointer
+row either way (AC6).
+
+**The management API must be `planned` before Phase 3.** The five `conan remove` shapes, the
+removal of a whole package and the cleanup of abandoned incomplete revisions are operations of
+`docs/internal/plans/foundation/management-api.md`, placed on its `prune`, `delete-version` and
+`delete-package` kinds (its cross-format reconciliation table defers the split to this spec's
+table), with the client's routes and the reference server's declared as bindings through the
+handler's `Operator` interface (Design, "Removes are bindings"). The charter builds that spec's
+core at step 2 and completes it at step 9.
 
 **The proxy layer's completion-only fetch with a handler-supplied verifier is offered, not
 requested.** A Conan revision file carries no digest on the read surface that names it (the `files`
@@ -143,8 +155,10 @@ that mode and its post-receipt verifier hook, with Conan among the eight formats
 reaching `planned`. The ConanCenter transport is
 `docs/internal/plans/foundation/upstream-adapters.md`'s answer to this spec's request: two `https`
 upstreams, `center2.conan.io` and the frozen `center.conan.io`, one per `remote` repository,
-aggregated by a `virtual` where a user wants both (its requirements table, AC1); the protocol half
-stays this handler's.
+aggregated by a `virtual` where a user wants both (its requirements table, AC1), and a private
+Conan upstream that issues its token only through its own Basic exchange takes that spec's
+`basic-exchange` credential kind (its resolved Conan-exchange decision, was Q8, AC33); the
+protocol half stays this handler's.
 
 Nothing is required of the shared signing and index service (no Conan document is signed by a
 remote; `signing-service.md` lists this format among those asking nothing), of
@@ -162,8 +176,9 @@ in v1 and carries it as `none` in the conformance matrix's verification column (
   the token exchange and credential check, recipe and package `latest` and `revisions`, revision
   file listings and files, recipe search and package search, and file `PUT`s for recipes,
   packages and their `metadata/` files.
-- Conan 1 in revisions mode through the same v2 file API plus the one v1 route it still calls
-  (`/v1/users/authenticate`), and an explicit refusal of the v1 file API that stops a Conan 1
+- Conan 1 in revisions mode through the same v2 file API plus the one v1 route it was captured
+  calling (`/v1/users/authenticate`), with `/v1/users/check_credentials` served identically in
+  case it sends that spelling, and an explicit refusal of the v1 file API that stops a Conan 1
   client without revisions from falling through to another remote (the resolved Conan 1 decision
   below).
 - The identity rules: recipe revisions verified against the manifest's summary hash where they
@@ -173,15 +188,17 @@ in v1 and carries it as `none` in the conformance matrix's verification column (
   immutability with idempotent re-uploads; a forced re-upload re-stamping an older revision as
   latest; `metadata/` files as replaceable files under an immutable revision.
 - Removes of a package revision, a package ID, a recipe revision's binaries, a recipe revision and
-  a whole reference, as bindings onto registry-owned management operations, and which removed
-  revisions may come back.
+  a whole reference, as bindings onto registry-owned management operations, the removal of a whole
+  package (every reference of a name with its user and channel) through the management API alone,
+  and which removed revisions may come back.
 - Pointer-scoped revision times so that a rollback or promotion reaches a client that already
   holds a newer revision.
 - User and channel as part of the package's identity in the shared model, and the reference
   grammar the client enforces.
 - Non-interactive authentication in the form the client sends (Basic at the token exchange, then
-  Bearer), the uniform challenge, the per-route addressed objects `auth.md`'s pattern scopes
-  evaluate (AC15), and the `403` rendering of a shared policy refusal (AC16).
+  Bearer), the exchange routes declared as `auth.md`'s exchange-echo routes and answered by the
+  shared layer (AC14), the uniform challenge, the per-route addressed objects `auth.md`'s pattern
+  scopes evaluate (AC15), and the `403` rendering of a shared policy refusal (AC16).
 - The proxied path against ConanCenter or any Conan remote: classification per route, no URL
   rewriting, completion-only verification of every revision file against its revision before
   commit, TTL revalidation, negative caching, and Conan's rows of the upstream-removal table.
@@ -238,8 +255,8 @@ sends it.
 | Surface | Shape, as the pinned clients send it |
 |---|---|
 | Capability probe | `GET /v1/ping`, at the start of every remote session, anonymously or with the stored Bearer. The client reads only `X-Conan-Server-Capabilities` and refuses a remote without `revisions` ("The remote doesn't support revisions"); a non-2xx response **without** that header raises, so `403` halts and `401` starts authentication, while **`404` makes the client skip the whole remote silently** ("Unable to find ... in remotes", captured on both Conan 2 generations) |
-| Token exchange | `GET /v2/users/authenticate` with `Authorization: Basic`, answered `200` with the token as a `text/plain` body; Conan 1.66.0 calls `GET /v1/users/authenticate` instead, in revisions mode too (captured) |
-| Credential check | `GET /v2/users/check_credentials` with the Bearer, answered `200` with the user name as text; sent before every upload and remove |
+| Token exchange | `GET /v2/users/authenticate` with `Authorization: Basic`, answered `200` with the token as a `text/plain` body; Conan 1.66.0 calls `GET /v1/users/authenticate` instead, in revisions mode too (captured). Both are exchange-echo routes the shared layer answers (`auth.md` AC35; Design, "Authentication") |
+| Credential check | `GET /v2/users/check_credentials` with the Bearer, answered `200` with the user name as text; sent before every upload and remove. The `/v1/users/check_credentials` spelling is served identically, so a Conan 1 client reaching it never meets a `404` there |
 | Recipe latest | `GET /v2/conans/{ref}/latest`, answered `{"revision": ..., "time": ...}`; what a resolution without a pinned revision reads |
 | Recipe revisions | `GET /v2/conans/{ref}/revisions`, answered `{"revisions": [{"revision", "time"}, ...]}` newest first; read for a pinned revision (a lockfile or `ref#rrev`, which the client finds by scanning the list), before every upload to decide what exists, and by `conan list` and `conan remove` |
 | Revision files | `GET /v2/conans/{ref}/revisions/{rrev}/files`, answered `{"files": {"conanfile.py": {}, "conanmanifest.txt": {}, "conan_export.tgz": {}, "conan_sources.tgz": {}}}` with whichever exist; then `GET .../files/{path}` for `conanmanifest.txt` and `conanfile.py` (and `conan_export.tgz` when listed) in parallel threads, and `conan_sources.tgz` only when building from source |
@@ -333,11 +350,17 @@ servable:
    always equals its summary hash.
 4. A package ID equals the SHA-1 of `conaninfo.txt` when the file is in the Conan 2 form (no
    `[full_settings]` section); a Conan 1 form is accepted and recorded as unbound.
-5. On a `PUT`, the body's SHA-1 equals the `X-Checksum-Sha1` the client sent.
+5. On a `PUT`, the body's SHA-1 equals the `X-Checksum-Sha1` the client sent, where the header
+   is present (every pinned client sends it; a request without it is checked by the manifest
+   rules alone, which are the binding ones).
 
-MD5 and SHA-1 are the ecosystem's identifiers and are weak against a deliberate collision; the
-CAS still keys every blob by its own digest (`storage-and-gc.md`), so these checks bind content to
-Conan's identifiers without ever keying storage by them.
+The archive rules run while streaming: each entry of a `.tgz` is decompressed through MD5 and
+never materialised, and an archive whose decompressed bytes exceed **128 times its compressed
+size** is refused as failing rule 2, which bounds a decompression bomb without a configuration
+key (the real fixtures sit far below the bound; ConanCenter's `zlib/1.3.1` sources archive
+decompresses under 10:1). MD5 and SHA-1 are the ecosystem's identifiers and are weak against a
+deliberate collision; the CAS still keys every blob by its own digest (`storage-and-gc.md`), so
+these checks bind content to Conan's identifiers without ever keying storage by them.
 
 ### Mapping onto the shared model
 
@@ -398,6 +421,14 @@ per-file precedent `maven.md` set for the same wire shape:
   verification is refused on the `PUT` that completed it, with `400` and a text body naming the rule
   and the file, and that `PUT`'s file is not recorded; the client reports the failure and a
   re-upload retries.
+- **Under an incomplete revision a repeated `PUT` of a path replaces the recorded file**, as one
+  write, whatever the bytes. This is the retry path: the client re-sends every file of a revision
+  that `revisions` does not list, and when the file that failed verification was not the one
+  whose `PUT` completed the set (an archive entry disagreeing with a manifest sent last), the bad
+  file would otherwise sit under the revision for good and no re-upload could complete it. Nothing
+  has been served from an incomplete revision, so replacement changes nothing a client holds, and
+  the verification at completion decides. The idempotence rule below applies only once a revision
+  is complete.
 - **A `PUT` to a complete revision writes nothing** when its content agrees with that revision:
   identical bytes, or, for an archive, different bytes whose unpacked entries match the manifest
   (the re-export case, captured). It is answered `200` and the stored bytes are kept, so a
@@ -414,16 +445,21 @@ per-file precedent `maven.md` set for the same wire shape:
   changes neither the revision's identity, its `time`, nor `latest`, because the client treats
   metadata as mutable without a new revision (`_upload_files`: "metadata files are mutable without
   a new revision").
-- **Abandoned incomplete revisions are dropped** by the next write to the same version once their
-  last file write is older than the upload-session absolute cap `data-model.md` sets (24 hours by
-  default), and by a management operation that drops them on demand, each one write.
+- **Abandoned incomplete revisions are dropped**, recipe and package revisions alike, by the next
+  write to the same version once their last file write is older than the upload-session absolute
+  cap `data-model.md` sets (`upload.max_duration`, 24 hours by default; this format opens no
+  session and borrows the value as the one bound an operator already tunes), and by a management
+  operation that drops them on demand, each one write.
 - **Each remove is one write** (below), and a proxied repository creates no snapshots at all:
   arrival and revalidation are cache materialisation.
 
 Two concurrent uploads into one version (two recipe revisions, or two binaries under one revision,
 which the client's parallel upload setting produces) each read-modify-write the version-level
 document through the revision-token retry `data-model.md` makes mandatory, and both land; `latest`
-is the one whose completing write committed later.
+is the one whose completing write committed later. A remove racing an upload of the same revision
+serialises the same way: a package file landing after its recipe revision's remove committed is
+recorded under an absent recipe revision, invisible, and dropped as abandoned, while a remove
+committing after the completing write removes what that write made visible.
 
 ### Removes are bindings
 
@@ -441,9 +477,15 @@ recorded here being that they are the reference API's own spelling of the same r
 which the 2.0.17 client still carries a path to, so anything written against `conan_server`
 removes through them unchanged. The mapping
 onto kinds follows the shared model: a reference is one `Version` of the `Package` named with its
-user and channel, so removing a reference is `delete-version`, while every narrower remove takes
-a set of files out of one version by a rule the handler evaluates from the operation's arguments,
-which is `prune`:
+user and channel, so removing a reference is `delete-version`, removing every reference of that
+`Package` is `delete-package`, and every narrower remove takes a set of files out of one version
+by a rule the handler evaluates from the operation's arguments, which is `prune`. `delete-version`
+and `delete-package` have **no client trigger**: no captured `conan remove` form sends
+`DELETE /v2/conans/{ref}` (the client enumerates recipe revisions instead), so that route is
+reached only through `curl` in the cases, and the client and the reference API have no spelling
+at all for a whole package, so `delete-package` is an operator's operation through the management
+endpoint alone, declared for parity with the other formats (`chef.md`, `cran.md`, `julia.md`)
+rather than for any client:
 
 | Operation | Client binding | Effect a client sees | Kind | Action |
 |---|---|---|---|---|
@@ -451,13 +493,16 @@ which is `prune`:
 | Remove a package ID | `DELETE .../packages/{package_id}` (reference-server route) | Every revision of that binary leaves | `prune` | `delete` |
 | Remove a recipe revision's binaries | `DELETE .../revisions/{rrev}/packages` (reference-server route; 2.0.17 carries a client path to it) | The recipe revision stays with no binaries | `prune` | `delete` |
 | Remove a recipe revision | `DELETE /v2/conans/{ref}/revisions/{rrev}` from `conan remove "{ref}#{rrev}"`, and enumerated from `conan remove "{ref}"` | The revision and all its binaries leave; the previous revision becomes `latest` | `prune` | `delete` |
-| Remove a reference | `DELETE /v2/conans/{ref}` (reference-server route) | Every revision leaves; the name answers `404` | `delete-version` | `delete` |
+| Remove a reference | `DELETE /v2/conans/{ref}` (reference-server route; no client sends it) | Every revision leaves; the reference answers `404` | `delete-version` | `delete` |
+| Remove a package | none (no client or reference-API spelling) | Every reference of the name with its user and channel leaves; each answers `404` and search no longer lists any | `delete-package` | `delete` |
 | Drop abandoned incomplete revisions | none | Nothing visible changes | `prune` | `delete` |
 
-Rules, applying the precedent rather than re-deciding it: the handler declares the two kinds
-through `Operator.Operations()` and the five routes through `Operator.Bindings()`, so the
-architecture test in `management-api.md` proves each route's `Scope(r)` equals the operation's
-`Authorize` result and that both ways in produce the same snapshot delta (its AC8); each operation
+Rules, applying the precedent rather than re-deciding it: the handler declares the three kinds
+through `Operator.Operations()` and the five routes through `Operator.Bindings()`; each route's
+`Scope(r)` carries `delete` on `{ref}`, which is the one object every remove's `Authorize`
+reports, so no binding is wider than its operation and `Submit` evaluates the same pair on both
+ways in (`management-api.md`'s resolved binding-scope decision, was Q13), and the architecture
+test there proves that and that both ways in produce the same snapshot delta (its AC8); each operation
 is one completed logical write through the shared write path, exactly one snapshot, none for a
 refused one, and no blob-store object deleted directly, so space returns only through retention
 pruning and the single-deleter boundary in `storage-and-gc.md` (its AC15) holds (`management-api.md`
@@ -477,14 +522,25 @@ revision, recipe or package, may be uploaded again: its identifier is the digest
 which verification recomputes, so the only content that can ever be accepted under it is the
 content it named before, and the reference server and the documentation both treat a re-upload as
 making it `latest`. A removed **unbound** recipe revision (a commit id) is retired, because nothing
-but retirement stops different content arriving under the same commit id. The mechanism is
-`management-api.md`'s: `prune` and `delete-version` are retiring kinds and granularity is the
-handler's, so the handler's `Outcome` names exactly the removed unbound recipe revisions, as
-`{ref}#{rrev}`, and nothing else (none at all for a bound-only or package-level remove, and none
-for the drop of incomplete revisions, which were never visible); the core writes each as a
-`Retirement` record in the removing transaction (`data-model.md` AC35), and the shared write path
-refuses a later `PUT` under a retired `{ref}#{rrev}` with the `retired` problem (409), for the life
-of the repository, across a backwards repoint and after pruning (`management-api.md` AC12). The
+but retirement stops different content arriving under the same commit id. An unbound **package
+ID** (a Conan 1 `conaninfo.txt`) needs no retirement, although nothing binds it to its content
+either: what a client downloads under it is addressed by a package revision, which is always the
+digest of the package manifest, so a removed package ID can only ever come back with a package
+revision whose bytes that revision names, and a different binary returns as a different package
+revision. The mechanism is
+`management-api.md`'s: `prune`, `delete-version` and `delete-package` are retiring kinds and
+granularity is the handler's, so the handler's `Outcome` names exactly the removed unbound recipe
+revisions, as `{ref}#{rrev}`, and nothing else (none at all for a bound-only or package-level
+remove, and none for the drop of incomplete revisions, which were never visible); the core writes
+each as a `Retirement` record in the removing transaction (`data-model.md` AC35). The upload `PUT`
+is a handler's own wire write and not a binding, so it **declares its claim** on the write
+transaction it opens through `Deps`, from the URL before the body is read: every `PUT` under a
+recipe revision, a recipe file, a package file or a `metadata/` file alike, claims `{ref}#{rrev}`,
+the granularity this format retires at (`management-api.md`'s resolved claimed-coordinate
+decision, was Q14; `data-model.md` AC35; `storage-and-gc.md` AC30). The shared write path refuses
+the claim at declaration with the `retired` problem (409), and again at commit under the
+repository head when a retirement landed between the two, for the life of the repository, across
+a backwards repoint and after pruning (`management-api.md` AC12). The
 client logs a `409` on a `PUT`, continues with the revision's next file and fails the command at
 the end, so a retired revision's upload fails loudly without aborting at the first file as the
 immutability `403` does; the resolved retirement decision below records the change from this
@@ -503,9 +559,18 @@ record `data-model.md` now carries (the resolved pointer-time decision below, wa
   transition of that pointer (an ordinary write advancing the default pointer, a promotion, a
   rollback) to the later of the transition time and one second after its previous value, so it
   never moves backwards whatever the clock does, and written only by the pointer transition itself
-  (its "Freshness scoped to the pointer", AC36). The handler reads it and never writes or computes
-  it, which is the split `signing-service.md` AC27 holds for the documents it renders; this format
-  renders nothing through that service, so the rule it applies is its own and is stated here.
+  (its "Freshness scoped to the pointer", AC36). `data-model.md` also advances it on document-only
+  transitions (a key switch, a cadence re-sign, a repository batch), but a Conan `local` has none
+  of those: nothing here is signed, rendered on a cadence or batched, so on this format the record
+  moves exactly at writes, promotions and rollbacks of that pointer. Because the value is the later
+  of the transition time and the previous value plus one second, a revision completed within a
+  second of the previous write is served up to that second later than its stored time, which no
+  client distinguishes. The handler reads the value and never writes or computes it, which is the
+  split `signing-service.md` AC27 holds: every JSON answer this format renders through a pointer
+  is served through its `ServeRendered` form with the serving pointer as the freshness source
+  (a remote's cached documents go through `ServeDocument`), and the lazy renderer
+  receives that pointer's `moved_at` from the runtime (Blocking preconditions, the form reported to
+  that spec), so the handler holds no clock and reads no pointer row.
 - **Through a pointer, the latest recipe revision of a reference is served with the later of its
   own time and the pointer's `moved_at`**, and so is the latest package revision of each package
   ID; every other revision keeps its own time, so the served lists stay ordered newest first with
@@ -569,22 +634,34 @@ credential sources and exchanges them at `users/authenticate` for a token it sto
 decision below:
 
 - **The exchange takes a registry token as the Basic password and returns the same token as its
-  `text/plain` body.** The user name is not an authentication input, as `auth.md`'s Basic rule
-  states, so `conan remote login {remote} ci -p {token}`, `CONAN_LOGIN_USERNAME_{REMOTE}` with
-  `CONAN_PASSWORD_{REMOTE}`, and `credentials.json` all work with any user name. Every later
+  `text/plain` body, and the shared layer writes it.** A handler never reads a credential, and a
+  handler that echoed the token would have to, so the handler declares `/v2/users/authenticate`
+  and `/v1/users/authenticate` as **exchange-echo routes** beside their `Scope(r)` mapping and
+  `internal/auth` answers them (`auth.md`'s resolved exchange-echo decision, was Q25, and its
+  AC35): it verifies the Basic password as a registry token, authorizes the route's `pull`
+  descriptor exactly as for any request, and writes `200`, `Content-Type: text/plain`,
+  `Cache-Control: no-store` and the verified value as the body; the handler never runs for the
+  route and never sees the value. The user name is not an authentication input, as `auth.md`'s
+  Basic rule states, so `conan remote login {remote} ci -p {token}`, `CONAN_LOGIN_USERNAME_{REMOTE}`
+  with `CONAN_PASSWORD_{REMOTE}`, and `credentials.json` all work with any user name. Every later
   request presents the token as Bearer, a form `auth.md`'s presentation-form table already holds
   as universal (the Basic password at the exchange is its universal Basic form), so no new
-  presentation form is needed. `auth.md`'s client table has no `conan` row yet; the row this
-  format needs (Basic at the exchange, Bearer on every later request, the token stored in
-  plaintext in `.conan.db`) stays queued for that spec (consequences Open item 22) and is named in
-  this pass's report. Conan 1's `/v1/users/authenticate` is the same exchange on a second route.
+  presentation form is needed; `auth.md`'s client table carries the `conan` row (Basic at the
+  exchange, Bearer afterwards, the token stored in plaintext in `.conan.db`). Two bounds that
+  spec's Fable recheck made explicit: the body is only ever the credential extracted from that
+  request, so a browser session reaching the route is answered `401`; and a credential-less
+  request to the route answers `401` with the challenge on an anonymously readable repository
+  too, since the anonymous principal has nothing to echo (AC14). Conan 1's
+  `/v1/users/authenticate` is the same exchange on a second route.
 - **`users/check_credentials` answers the principal's display name** for a valid Bearer and `401`
-  otherwise.
+  otherwise, at both the `/v2/` and the `/v1/` spelling, the handler reading the resolved
+  principal and never the credential.
 - **The challenge is uniform and not an existence oracle.** A credential-less request to a
   repository that is not anonymously readable answers `401` whether the repository is private,
   missing or someone else's, the capability probe included, which starts the client's
-  authentication (`auth.md` AC17); no `WWW-Authenticate` value is needed, because the client parses
-  none.
+  authentication (`auth.md` AC17). The format declares `auth.md`'s shared Basic challenge as its
+  `WWW-Authenticate` value; the client parses none, so the value is immaterial to it and is
+  declared only because AC17 requires every format to declare one.
 - **A valid token lacking `pull` answers `404`**, the existence rule, and the client then skips this
   remote and tries its next one silently (captured on the probe). The operator documentation
   states this, because it is the one place the existence rule sends a request elsewhere.
@@ -609,7 +686,7 @@ revision it goes on to name:
 
 | Route | Action | Object kind | Canonical object |
 |---|---|---|---|
-| `/v1/ping`, `users/authenticate`, `users/check_credentials`, `/v1/users/authenticate` | `pull` | descriptor | - (the remote as a whole; no answer names a reference, a revision or a digest) |
+| `/v1/ping`, `users/authenticate`, `users/check_credentials`, `/v1/users/authenticate`, `/v1/users/check_credentials` | `pull` | descriptor | - (the remote as a whole; no answer names a reference, a revision or a digest); the two `authenticate` routes are also declared exchange-echo routes, answered by the shared layer (`auth.md` AC35) |
 | `conans/search?q=` | `pull` | none | - (enumerates references) |
 | `latest`, `revisions`, `files`, file `GET`, package `latest`, `revisions`, `files`, file `GET`, package search | `pull` | named | `{ref}` |
 | File `PUT` under a recipe or package revision, including `metadata/` | `push` | named | `{ref}` |
@@ -707,17 +784,25 @@ is known today. What remains is the byte-level cataloguer, which can inventory t
 
 The handler owns the request and classifies for the proxy layer's fetch-and-cache API per the
 settled decisions in `proxy-cache.md`. The upstream is a remote URL (`https://center2.conan.io` for
-Conan 2, `https://center.conan.io` for the frozen Conan 1 content, or any Conan remote) validated at
-configuration by probing `/v1/ping` for the `revisions` capability, a probe that is the handler's
-`configure` after `upstream-adapters.md`'s `Validate` has passed (its AC23). The transport is that
-spec's `https` adapter; each ConanCenter host is its own `remote`, and a user who wants both
-aggregates them in a `virtual` (its requirements table). An upstream credential, where the upstream
-needs one, is the adapter's `bearer` kind carrying a token the upstream accepts as Bearer (a token
-of another instance of this registry, or an access token of an Artifactory-hosted remote), presented
-to the root host only (its AC6, AC19); an upstream that issues tokens only through a Basic exchange
-at its `users/authenticate` needs a Conan-shaped exchange kind, which `upstream-adapters.md`'s
-`token-exchange` kind does not cover (it answers an OCI-style `WWW-Authenticate: Bearer` challenge,
-which no Conan server sends), and is raised there rather than built into this handler.
+Conan 2, `https://center.conan.io` for the frozen Conan 1 content, or any Conan remote). Nothing is
+probed at configuration: `upstream-adapters.md`'s `Validate` accepts an unreachable but well-formed
+upstream (its AC23), and the capability check runs at the remote's **first request**, as every
+format's reconciliation moved it. The handler then fetches the upstream's own `/v1/ping` through
+the adapter and records its `X-Conan-Server-Capabilities` on the remote's repository-level
+document, re-read at the metadata TTL; an upstream whose header lacks `revisions` is recorded as
+an operator-visible divergence, and every v2 route of that remote answers the layer's upstream-error
+status, a `5xx` and never `404`, until the upstream advertises it, because a `404` would send the
+client silently to its next remote while a `5xx` halts it with the reason in the body (AC17). The
+transport is that spec's `https` adapter; each ConanCenter host is its own `remote`, and a user who
+wants both aggregates them in a `virtual` (its requirements table). An upstream credential, where
+the upstream needs one, is either the adapter's `bearer` kind carrying a token the upstream accepts
+as Bearer (a token of another instance of this registry, or an access token of an
+Artifactory-hosted remote), or its `basic-exchange` kind for an upstream that issues tokens only
+through its own Basic exchange at `users/authenticate`: a stored username and password, one `GET`
+of the exchange path under the root with Basic, the `text/plain` body presented as Bearer
+afterwards and re-exchanged once on a fresh `401` (that spec's resolved Conan-exchange decision,
+was Q8, AC33, whose real-client case is this format's proxied case against an authenticating
+`conan_server` stand-in, AC17). Either is presented to the root host only (its AC6, AC19).
 ConanCenter needs none. The client's own token is never forwarded (its AC4).
 
 | Route | Classification |
@@ -759,6 +844,25 @@ the client's, is what orders them.
   as absence (`proxy-cache.md` AC9).
 - **Uploads and removes against a `remote` repository answer `405`** with the `repository-type`
   problem (`management-api.md` AC7).
+- **A remote retains no superseded revision and declares no blob.** `proxy-cache.md`'s retained
+  revisions (its resolved keep-alive decision, was Q19, AC27) exist for formats whose clients hold
+  a superseded index that still names files; no Conan route reads a superseded revision of any
+  metadata document, since `latest` and `revisions` carry identifiers and times only and a revision's
+  files are addressed by the revision itself, so the handler declares a count of **zero** at every
+  level and no document carries a declared blob-digest list (its was-Q22 then places nothing).
+  Every cached revision file lives by its own cached reference; a `metadata/` file replaced
+  upstream is an ordinary metadata change whose new body's commit ends the old blob's cached
+  reference in the same transaction (the shape its was-Q20 and AC28 fix: no route can reach the
+  old bytes). The remote's metadata documents (per reference `latest` and `revisions`, per
+  revision its `files` listing and package documents, search answers) are current documents LRU
+  eviction never reaches, outside the quota and counted in `cache_metadata_bytes` (its was-Q21,
+  AC29); they are small JSON bodies, and the accepted cost is that they grow with the references
+  ever requested through the remote. No route of this format carries a signature the wire makes
+  optional, so the handler's adoption check reports no served-or-not fact and its was-Q23 never
+  binds: the `metadata/sign/` files are plugin metadata this registry neither verifies nor
+  classifies. An adoption of a revision file runs under the handler's verifier and therefore
+  carries the anchor class `integrity` on its record (its AC25), which nothing reads, since this
+  format's virtual merges nothing.
 
 Upstream removal maps onto `proxy-cache.md`'s event-class table ("Upstream removal or
 replacement", its AC13), which already lists ConanCenter among the wires whose removals carry no
@@ -771,6 +875,7 @@ classifies each event it observes, the layer executes the class. Conan's side of
 | `latest` moves to an older revision by `time` (the upstream removed its newest) | **Regression not adopted**: the cached `latest` stands, its record is unchanged, a divergence is recorded, and only the operator's refresh adopts the older revision ("Freshness of what a remote serves") |
 | A recipe revision or package revision vanishes from the upstream's lists | **Removal with no signal**: keep serving the cached content under its pinned identifier, record an operator-visible divergence; the wire carries no reason |
 | The reference answers `404` where it previously existed | **Removal with no signal**: keep serving, record a divergence |
+| A `metadata/` file answers `404` where it previously existed (a `metadata/sign/` file included) | **Removal with no signal**: the cached file keeps serving, a divergence is recorded; nothing this registry verifies depends on it, so this is never a withdrawal in the sense of `proxy-cache.md`'s was-Q23 |
 | A bound revision's manifest no longer hashes to it, an archive disagrees with the manifest, or a Conan 2 `conaninfo.txt` no longer hashes to its package ID | **Integrity failure at fetch**: never committed, no negative entry, `proxy-cache.md`'s serve-stale rules apply to metadata, and the operator is alerted |
 | The same revision re-served with different archive bytes whose content still matches (an upstream re-upload after an `mtime` change) | Not an event: the cached bytes are kept, because the coordinate is immutable and its content unchanged |
 
@@ -786,17 +891,26 @@ Conan answer binds a repository identity: revisions are content identities valid
 nothing is signed by the remote. Per the resolved virtual-repository decision below, resolution is
 **per reference, in member order**:
 
-- **`latest` and a package's `latest`** come from the first member, in position order, that holds
-  the reference (a complete revision of it), with that member's served time. A hosted member placed
+- **A reference's `latest`** comes from the first member, in position order, that holds the
+  reference (a complete revision of it), with that member's served time. A hosted member placed
   first therefore shadows the same reference upstream, and because the client configured with only
   the virtual repository has no second remote to compare, `--update` cannot let an upstream's newer
   time override a private reference.
 - **`revisions` is the union** of the members' complete revisions, each entry with the time from the
   first member holding it, ordered newest first, so a lockfile pinning an upstream revision still
   finds it (the client scans this list for a pinned revision).
-- **Revision-addressed routes** (a revision's files, its packages, a package revision's files)
-  resolve in the first member holding that exact revision, which by the identity rules is the same
-  content wherever it is held; a binary is served from the member that holds it under that revision.
+- **Revision-addressed routes** (a revision's `files` listing, its files and its `metadata/`
+  files) resolve in the first member holding that exact revision, which by the identity rules is
+  the same content wherever it is held, a `metadata/` file in the first member holding it under
+  that revision.
+- **Package-addressed routes resolve one level finer**: a package ID's `latest`, `revisions`,
+  `files` and files, and a revision's package search, resolve in the first member holding that
+  package ID **under that recipe revision**, the search being the union over the members holding
+  the revision. The level matters because a hosted member can hold a recipe revision (the same
+  source re-exported) and none of its binaries while an upstream member holds them, and a binary
+  resolved at the revision's level would answer `404` for a profile the upstream serves, sending a
+  client with the virtual as its only remote to build from source. A binary is therefore served
+  from the member that holds it under that revision (AC21).
 - **Search** is the union of the members' results.
 - A virtual repository creates no snapshots: its answers are derived from its members' at request
   time, and uploads and removes against it answer `405` with the `repository-type` problem. It
@@ -816,7 +930,9 @@ operator documentation states beside the member-order recipe.
 because no Conan answer names the repository: the remote URL is the client's configuration, every
 revision is a content identity valid on any remote, and nothing is signed, so a renamed repository
 serves byte-identical answers under its new URL with no key to carry and its revisions' times
-unchanged, while the old name answers `not-found` indistinguishably from a never-existing
+unchanged (a rename is a `lifecycle` operation, one of the kinds `data-model.md` lists as not a
+write, so it creates no snapshot and moves no pointer, and the `configure` it delivers to this
+handler is a no-op), while the old name answers `not-found` indistinguishably from a never-existing
 repository (`repository-lifecycle.md` AC12). A client configured with the old URL receives `404` on
 its probe and silently tries its next remote, the fall-through behaviour above, which the operator
 documentation states beside the rename procedure. `repository-lifecycle.md` AC12 requires
@@ -852,7 +968,20 @@ cold and a `--update` install, a version-range install, an upload of a recipe wi
 second revision, a forced re-upload of an older revision, `conan list` and `conan search`, each
 remove shape, a `--metadata` upload and download, a private read with the `401` and the exchange,
 and Conan 1.66.0's revisions-mode upload; against ConanCenter, a cold install of a recipe and its
-binary, a missing reference and a missing binary. Recording gates on the harness's redaction
+binary, a missing reference and a missing binary. **The hosted and write halves are recorded
+against a local reference**, which `conformance-harness.md`'s authoritative-reference exception
+list admits only by a row naming the format, the half and the reference (its AC28); the `conan`
+row exists there, added at that spec's gate review, naming a `conan_server` 2.32.0 container for
+exactly the hosted and write surface above and ConanCenter for the proxied read half. The reason
+no public reference serves the write half: Conan has no published protocol specification, its
+reference implementation **is** `conan_server`, and ConanCenter, the one public registry, exposes
+no write surface at all, since its content enters through the `conan-center-index` pull-request
+pipeline on GitHub and its `users/authenticate` and `users/check_credentials` answer `404`
+(Context, sampled live), so no client can upload to it, and its API is Artifactory's second
+implementation of what the client and `conan_server` define rather than an authority over them.
+The corpus manifest under `conformance/conan/` pins the `conan_server` image by digest, as AC28's
+rule reads it (the row names the reference, the manifest carries the digest), and AC23 passes
+only with that row and that digest in place. Recording gates on the harness's redaction
 criterion (`conformance-harness.md` AC13); the Basic value at the exchange, the returned token, the
 Bearer and `X-Client-Anonymous-Id` are what the redaction must cover, and the harness's allowlist
 now applies to every position and names `X-Client-Anonymous-Id` as a per-machine identifier to
@@ -874,7 +1003,8 @@ times, the capability header without `complex_search`, and the `400` on the v1 f
       body containing `html>`; a warm install makes no
       request, and a warm `--update` makes only the two `latest` requests.
 - [ ] AC2: `conan upload {ref} -c` of a recipe with two binaries on Conan 2.32.0 and 2.0.17, and on
-      Conan 1.66.0 in revisions mode after its `/v1/users/authenticate` exchange, is answered `200`
+      Conan 1.66.0 in revisions mode after its `/v1/users/authenticate` exchange and its credential
+      check at whichever of the `/v1/` and `/v2/` spellings it sends, is answered `200`
       on every `PUT` with no `X-Checksum-Deploy` request in the transcript, produces one snapshot per
       accepted file, and makes the recipe revision and both binaries visible in the write of their
       last verified file, with a `time` in the ISO form the client parses; a fresh install on every
@@ -886,15 +1016,21 @@ times, the capability header without `complex_search`, and the `400` on the v1 f
       `path: md5` lines, a 32-character recipe revision differs from its manifest's summary hash, a package revision differs from its summary hash, a Conan 2
       `conaninfo.txt` does not hash to its package ID, an archive entry's MD5 differs from its
       manifest line, the manifest names a file no archive contains, an archive holds an entry the
-      manifest omits, or a body disagrees with its `X-Checksum-Sha1`; while a commit-id recipe
-      revision and a Conan 1 `conaninfo.txt` (one carrying `[full_settings]`) whose content verifies
-      are accepted and recorded as unbound.
+      manifest omits, an archive's decompressed bytes exceed 128 times its compressed size (a
+      crafted bomb, refused before the bound is crossed with no entry materialised), or a body
+      disagrees with its `X-Checksum-Sha1`; while a commit-id recipe
+      revision, a Conan 1 `conaninfo.txt` (one carrying `[full_settings]`) whose content verifies,
+      and a `PUT` carrying no `X-Checksum-Sha1` whose content verifies are accepted, the first two
+      recorded as unbound.
 - [ ] AC4: With a fault-injected refusal of `conanfile.py` reproducing the captured sequence in
       which the client still uploads the manifest, the incomplete revision is absent from `latest`,
       `revisions`, `files` and search and its files answer `404`, as is a revision whose
       `conanmanifest.txt` implies a `conan_export.tgz` or `conan_sources.tgz` that has not landed, a fresh install resolves the
-      previous latest revision, a repeated `conan upload` completes it, and an incomplete revision
-      left for longer than the upload-session cap under an injected clock is gone after the next
+      previous latest revision, a repeated `conan upload` completes it, including when the first
+      attempt left an archive whose entries disagree with the manifest and the retry sends a
+      corrected archive under the same path, which replaces the recorded file; and an incomplete
+      recipe revision, and an incomplete package revision under a complete one, each
+      left for longer than `upload.max_duration` under an injected clock is gone after the next
       write to its version and after the management drop operation, each one snapshot.
 - [ ] AC5: `conan upload --force` of a complete revision with identical bytes, and of the same
       revision re-exported after an `mtime` change so its archives differ in bytes and agree in
@@ -908,32 +1044,46 @@ times, the capability header without `complex_search`, and the `400` on the v1 f
       its cache runs `conan install --update` against that environment and adopts the restored
       recipe revision and, for a rolled-back binary, the restored package revision; the served
       `time` of each restored latest is no earlier than the pointer's `moved_at` after the
-      rollback, read from `data-model.md`'s freshness record and never computed by the handler,
+      rollback, read from `data-model.md`'s freshness record through `ServeRendered`'s renderer
+      input and never computed by the handler, whose package holds no clock call and no read of
+      a pointer row (an architecture scan beside `signing-service.md`'s freshness boundary),
       even under an injected clock stepped backwards across the rollback; every other revision
       keeps its own time, the lists stay newest first, a promoted environment serves the same
       revisions and binaries as its source with latest times no earlier than its own promotion,
       and after an unrelated upload a warm `--update` client keeps its cached revision of an
       untouched reference, updating only its timestamp, with no file download in the transcript.
-- [ ] AC7: `conan remove` of a package revision, of every binary of a recipe revision, and of a
-      recipe revision, on Conan 2.32.0 and 2.0.17, and a `DELETE` of a package ID and of a whole
-      reference through `curl`, each remove exactly what they name in exactly one snapshot, after
+- [ ] AC7: `conan remove` of a package revision, of every binary of a recipe revision (the
+      enumerated per-revision `DELETE`s the client sends), and of a recipe revision, on Conan
+      2.32.0 and 2.0.17, and a `DELETE` through `curl` on each of the three reference-server
+      routes (a package ID, a recipe revision's binaries through the bulk route, and a whole
+      reference, the last being the one `delete-version` entry point a wire offers, since no
+      client sends it), each remove exactly what they name in exactly one snapshot, after
       which `latest` falls back to the previous revision or the reference answers `404`; a
+      `delete-package` through the management endpoint removes every reference of a name with
+      its user and channel in one snapshot, after which each answers `404` and `conan search`
+      lists none, while the unqualified package of the same name is untouched; a
       principal holding `push` without `delete` is refused `403` with the client printing the body
       and no snapshot created; a remove of something absent is reported by the client as an error;
       and every remove against a proxied or virtual repository answers `405` with the
       `repository-type` problem.
-- [ ] AC8: The handler declares exactly the kinds `prune` and `delete-version` through
-      `Operations()` and the five `DELETE` routes through `Bindings()`, each kind driven by a
-      `script` case; each remove operation and the incomplete-revision drop driven through the
-      registry-owned management endpoint produce the same served documents, exactly one snapshot
-      each, and the same authorization outcome as the same operation driven through the client
-      binding, with `delete` required through both entry points.
+- [ ] AC8: The handler declares exactly the kinds `prune`, `delete-version` and `delete-package`
+      through `Operations()` and the five `DELETE` routes through `Bindings()`, each kind driven
+      by a `script` case; each remove operation and the incomplete-revision drop driven through
+      the registry-owned management endpoint produce the same served documents, exactly one
+      snapshot each, and the same authorization outcome as the same operation driven through the
+      client binding, with `delete` on `{ref}` required through both entry points and no binding
+      authorizing a principal the endpoint refuses.
 - [ ] AC9: A removed bound recipe revision and a removed package revision uploaded again are
       accepted and become `latest`, including after the remove's snapshot has been pruned out of
-      retention; a removed commit-id recipe revision is refused on every later `PUT` under it
-      with `409` and the `retired` condition from the shared write path, the client logging each
+      retention; a removed commit-id recipe revision is refused on every later `PUT` under it,
+      a recipe file, a package file or a `metadata/` file, with `409` and the `retired` condition
+      from the shared write path, the `PUT` having declared `{ref}#{rrev}` as its claim from the
+      URL before reading its body (asserted by a body that is never read on the refused request),
+      refused at declaration and, for a retirement committed between the declaration and the
+      commit, at commit with nothing committed, the client logging each
       refused file and failing the command at the end, with the same or different content, after
-      pruning, after a whole-reference remove, and after a pointer is moved back across the remove,
+      pruning, after a whole-reference remove, after a `delete-package`, and after a pointer is
+      moved back across the remove,
       while a new revision of the same reference uploads normally; the removing operation's
       `Outcome` names exactly the unbound revisions it removed, each as `{ref}#{rrev}`, so no
       `Retirement` record exists for a bound revision; and a `state`-seeded `Retirement` record
@@ -961,8 +1111,13 @@ times, the capability header without `complex_search`, and the `400` on the v1 f
       for a private and a non-existent repository; `CONAN_LOGIN_USERNAME_{REMOTE}` with any user
       name and `CONAN_PASSWORD_{REMOTE}` carrying a registry token, `conan remote login {remote}
       {any} -p {token}`, and `credentials.json` each lead to a `users/authenticate` exchange whose
-      body is the token and to Bearer requests that succeed; `users/check_credentials` answers the
-      principal's name; a rejected token answers `401`, is never served as anonymous, and fails
+      body is the token, written by the shared layer with `Cache-Control: no-store` on a route
+      the handler never serves (a handler registered for it that fails if invoked), and to Bearer
+      requests that succeed; a credential-less exchange request, and one carrying only a browser
+      session cookie, answer `401` with the challenge and no body value, on an anonymously readable
+      repository too; `users/check_credentials` answers the
+      principal's name at both the `/v2/` and the `/v1/` spelling; a rejected token answers
+      `401`, is never served as anonymous, and fails
       non-interactively; a valid token lacking `pull` answers `404` on the probe and the client
       resolves from its second configured remote, asserted from both transcripts; and a credential
       over a connection this registry did not terminate with TLS is refused per `auth.md` AC27.
@@ -988,8 +1143,15 @@ times, the capability header without `complex_search`, and the `400` on the v1 f
 - [ ] AC17: The proxied path installs a recipe and its binary from a ConanCenter stand-in serving
       recorded `center2.conan.io` answers on all three clients; from fresh client caches a second
       install reaches this registry while the upstream receives no request for any revision file,
-      asserted at the network layer; every file is byte-identical to the upstream's; and the probe
-      and `users/*` routes are never forwarded.
+      asserted at the network layer; every file is byte-identical to the upstream's; the probe
+      and `users/*` routes are never forwarded; a `conan install` through a remote bound to an
+      authenticating `conan_server` stand-in configured with the `basic-exchange` credential kind
+      succeeds, the stand-in seeing one Basic exchange and Bearer requests after it and the client's
+      own token never (the case `upstream-adapters.md` AC33 shares); creating the remote makes no
+      upstream request, the remote's first client request fetches the upstream's `/v1/ping`, and a
+      stand-in whose capability header lacks `revisions` makes every v2 route of that remote answer
+      a `5xx`, never `404`, with the client halting and printing the reason rather than trying a
+      second configured remote, asserted at the network layer, until the stand-in advertises it.
 - [ ] AC18: A proxied `latest` is revalidated after its TTL and not before, by a full `GET` against
       a stand-in that sends no validator; a revision published upstream becomes visible to `conan
       install --update` after the TTL and, absent an explicit refresh, not before; a `metadata/`
@@ -1011,8 +1173,14 @@ times, the capability header without `complex_search`, and the `400` on the v1 f
       remote the older revision is served with the upstream's time; an upstream `latest` moving to
       a newer revision is propagated at the next revalidation; a revision vanishing from the
       upstream's lists, or the
-      reference answering `404`, keeps serving with a divergence recorded; a re-served revision with
-      different archive bytes and the same content leaves the cached bytes in place; an upstream
+      reference answering `404`, keeps serving with a divergence recorded, a `metadata/` file
+      answering `404` where it existed included; a re-served revision with
+      different archive bytes and the same content leaves the cached bytes in place; a `metadata/`
+      file replaced upstream ends the old blob's cached reference in the commit that creates the
+      new one, the old blob collected by the next sweep past grace with no retained revision and
+      no declared blob at any level, and a sweep past grace after an eviction pass over quota
+      leaves every `latest`, `revisions`, `files` and search document of the remote serving from
+      the cache, counted in `cache_metadata_bytes` and not in `cache_referenced_bytes`; an upstream
       `404` is negatively cached so a second request within the negative TTL makes no upstream
       request; and an upstream `429` or `5xx` is neither cached as absence nor surfaced as
       not-found: Conan's side of the settled removal table in `proxy-cache.md` (its AC13).
@@ -1027,7 +1195,11 @@ times, the capability header without `complex_search`, and the `400` on the v1 f
       binary listed, `latest` naming the one whose completing write committed later, with no lost
       update across the revision-token retry, proven with fault injection at each write boundary.
 - [ ] AC23: Replay-match passes against a corpus recorded from the pinned reference `conan_server`
-      and from ConanCenter covering the recorded surface named in Design, with every divergence
+      and from ConanCenter covering the recorded surface named in Design, the hosted and write
+      halves admitted by `conformance-harness.md`'s exception row for `conan` (its AC28) with the
+      corpus manifest under `conformance/conan/` pinning the `conan_server` image by digest, so
+      that AC28's test passes with the row and the manifest together and fails with either
+      missing; with every divergence
       named in Design on the exception list and no Basic value, token, Bearer or
       `X-Client-Anonymous-Id` value in the committed corpus.
 - [ ] AC24: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
@@ -1042,28 +1214,28 @@ times, the capability header without `complex_search`, and the `400` on the v1 f
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
 | AC1 | conformance | `conformance/conan/hosted_test.go` (all three client images; fresh `CONAN_HOME` in setup; byte comparison; transcript shape; warm and `--update` request counts at the network layer) |
-| AC2 | conformance + integration | `conformance/conan/upload_test.go` (each client, a two-binary recipe, the user-and-channel reference, fresh-cache install on every client); `internal/format/conan/upload_test.go` (snapshot per accepted file, visibility at the completing write, time format) |
-| AC3 | integration + conformance | `internal/format/conan/verify_test.go` (each rule with a crafted fixture through the handler; commit-id and Conan 1 fixtures accepted unbound); `conformance/conan/upload_test.go` (a real-client upload of a tampered archive refused, `curl` for the header mismatch) |
-| AC4 | conformance + integration | `conformance/conan/partial_upload_test.go` (fault-injected `conanfile.py` refusal, invisibility, fresh install, repeated upload); `internal/format/conan/incomplete_test.go` (injected clock, drop by the next write and by the management operation) |
+| AC2 | conformance + integration | `conformance/conan/upload_test.go` (each client, a two-binary recipe, the user-and-channel reference, fresh-cache install on every client; the Conan 1 transcript's exchange and credential-check routes); `internal/format/conan/upload_test.go` (snapshot per accepted file, visibility at the completing write, time format) |
+| AC3 | integration + conformance | `internal/format/conan/verify_test.go` (each rule with a crafted fixture through the handler; a crafted archive over the decompression bound refused with memory bounded; a `PUT` without `X-Checksum-Sha1`; commit-id and Conan 1 fixtures accepted unbound); `conformance/conan/upload_test.go` (a real-client upload of a tampered archive refused, `curl` for the header mismatch) |
+| AC4 | conformance + integration | `conformance/conan/partial_upload_test.go` (fault-injected `conanfile.py` refusal, invisibility, fresh install, repeated upload; a first attempt leaving a disagreeing archive, corrected on the retry); `internal/format/conan/incomplete_test.go` (injected clock past `upload.max_duration`, recipe and package revisions, drop by the next write and by the management operation; replacement under an incomplete revision as one write) |
 | AC5 | conformance + integration | `conformance/conan/reupload_test.go` (identical and re-exported `--force` uploads, stored bytes on download, the `403` abort, the re-stamp); `internal/format/conan/immutability_test.go` (snapshot counts, single list entry) |
-| AC6 | conformance + integration | `conformance/conan/rollback_test.go` (both Conan 2 images, warm cache holding the newer revision, rollback through `management-api.md`'s pointer routes, `--update` adoption for recipe and binary; promotion case; an unrelated upload then a warm `--update` with no download); `internal/format/conan/pointer_time_test.go` (served times per pointer from `moved_at` under an injected clock stepped backwards, list order, no write of the record by the handler; the record itself is `data-model.md` AC36's) |
-| AC7 | conformance + integration | `conformance/conan/remove_test.go` (each remove shape on both Conan 2 generations, `curl` for the two reference-server routes, `push`-only refusal, absent-target error, proxied and virtual `405`); `internal/format/conan/remove_test.go` (one snapshot per operation, the kind each shape maps to) |
-| AC8 | conformance + integration | `conformance/conan/manage_binding_test.go` (twin references in one `script`: one removed through the management endpoint, one through `conan remove`; served documents compared; every declared kind driven, `management-api.md` AC24 and `conformance-harness.md` AC26); `internal/format/conan/manage_binding_test.go` (declared kinds and bindings, snapshot count and authorization per entry point; the scope-equality half is `management-api.md` AC8's `internal/manage/binding_test.go`) |
-| AC9 | conformance + integration | `conformance/conan/retirement_test.go` (re-upload of a removed bound revision and package revision; commit-id revision refused `409` with the client's end-of-command failure; a `state`-seeded `Retirement` record); `internal/format/conan/retirement_test.go` (the `Outcome` naming only unbound revisions; after pruning under an injected clock, after whole-reference remove, across a backwards repoint; the central refusal itself is `management-api.md` AC12's `internal/manage/retirement_test.go`) |
+| AC6 | conformance + integration | `conformance/conan/rollback_test.go` (both Conan 2 images, warm cache holding the newer revision, rollback through `management-api.md`'s pointer routes, `--update` adoption for recipe and binary; promotion case; an unrelated upload then a warm `--update` with no download); `internal/format/conan/pointer_time_test.go` (served times per pointer from the `moved_at` the `ServeRendered` renderer input carries, under an injected clock stepped backwards, list order, the sub-second case; no write of the record by the handler; the record itself is `data-model.md` AC36's); `internal/format/conan/arch_test.go` (no clock call and no pointer-row read in the handler package, beside `signing-service.md`'s `internal/format/freshness_boundary_test.go`) |
+| AC7 | conformance + integration | `conformance/conan/remove_test.go` (each remove shape on both Conan 2 generations, `curl` for the three reference-server routes, `delete-package` through the management endpoint with the unqualified package untouched, `push`-only refusal, absent-target error, proxied and virtual `405`); `internal/format/conan/remove_test.go` (one snapshot per operation, the kind each shape maps to) |
+| AC8 | conformance + integration | `conformance/conan/manage_binding_test.go` (twin references in one `script`: one removed through the management endpoint, one through `conan remove`; served documents compared; every declared kind driven, `delete-package` included, `management-api.md` AC24 and `conformance-harness.md` AC26); `internal/format/conan/manage_binding_test.go` (declared kinds and bindings, snapshot count and authorization per entry point; the never-wider half is `management-api.md` AC8's `internal/manage/binding_test.go` principal table, which enumerates this handler's `Bindings()`) |
+| AC9 | conformance + integration | `conformance/conan/retirement_test.go` (re-upload of a removed bound revision and package revision; commit-id revision refused `409` on a recipe, a package and a `metadata/` file with the client's end-of-command failure; a `state`-seeded `Retirement` record); `internal/format/conan/retirement_test.go` (the `Outcome` naming only unbound revisions; the claim declared from the URL with the body unread on refusal; after pruning under an injected clock, after whole-reference remove, after `delete-package`, across a backwards repoint; the central refusal at declaration and at commit is `management-api.md` AC12's `internal/manage/retirement_test.go`) |
 | AC10 | conformance | `conformance/conan/metadata_test.go` (both Conan 2 generations, upload and replace, download, revision and `latest` unchanged; signing-plugin files byte comparison in both modes) |
 | AC11 | conformance | `conformance/conan/search_test.go` (search, list and range install from fresh caches on both Conan 2 generations; `ignorecase=False` through `curl`; an incomplete revision present during the case) |
 | AC12 | conformance + unit | `conformance/conan/names_test.go` (`curl` for each malformed path; an uppercase upload with the deprecated setting); `internal/format/conan/route_test.go` (segment grammar) |
 | AC13 | conformance | `conformance/conan/conan1_test.go` (Conan 1.66.0 image with and without revisions, a second remote stand-in, network-layer assertion of no request to it) |
-| AC14 | conformance + integration | `conformance/conan/auth_test.go` (private repository on every client; challenge equality across existing and missing repositories; each credential source; `check_credentials`; rejected token; `pull`-less token with a second remote; transcript assertions); `internal/format/conan/auth_test.go` (plaintext refusal under `auth.md` AC27) |
+| AC14 | conformance + integration | `conformance/conan/auth_test.go` (private repository on every client; challenge equality across existing and missing repositories; each credential source; `check_credentials` at both spellings; rejected token; `pull`-less token with a second remote; transcript assertions; the real exchanges shared with `auth.md` AC35's row); `internal/format/conan/auth_test.go` (plaintext refusal under `auth.md` AC27; the exchange-echo declaration with a handler registered for the route that fails if invoked, the credential-less and session-cookie `401`s, the half `auth.md` AC35's `internal/auth/exchange_echo_test.go` holds centrally) |
 | AC15 | conformance + unit | `conformance/conan/auth_test.go` (the pattern-refusal case `format-handler-interface.md` AC7 requires, in both modes; pattern-scoped tokens provisioned through the `credentials` key; real-client uploads and removes; a patterned-only `pull` installing by exact reference and refused at search and on a range; shared with `auth.md` AC32's descriptor cases); `internal/format/conan/scope_object_test.go` (the object table, per route, with the sentinel check on every descriptor route through the shared helper in `internal/format/scope_test.go`, `format-handler-interface.md` AC12) |
 | AC16 | conformance | `conformance/conan/policy_test.go` (hosted and proxied modes; rules through the `policies` key; the raw status line read from the socket; a second remote stand-in holding the same revision; `--update`; network-layer assertion) |
-| AC17 | conformance + integration | `conformance/conan/proxied_test.go` (stand-in serving recorded ConanCenter answers; all three clients; network-level assertion from fresh caches; byte comparison); `internal/format/conan/proxied_local_routes_test.go` (probe and `users/*` never forwarded) |
+| AC17 | conformance + integration | `conformance/conan/proxied_test.go` (stand-in serving recorded ConanCenter answers; all three clients; network-level assertion from fresh caches; byte comparison; an authenticating `conan_server` stand-in under `basic-exchange`, shared with `upstream-adapters.md` AC33's row; a stand-in without `revisions` halting the client); `internal/format/conan/proxied_local_routes_test.go` (probe and `users/*` never forwarded; no upstream request at creation; the upstream probe at the first request and its `5xx` outcome) |
 | AC18 | conformance | `conformance/conan/proxied_ttl_test.go` (mutating stand-in without validators; `--update` before and after the TTL; metadata-file replacement) |
 | AC19 | integration + conformance | `internal/format/conan/proxied_integrity_test.go` (each tampered variant, a truncated and a stalled body through the completion-only mode; CAS, reference and negative-entry assertions; the failure counter through `telemetry.NewTestRecorder`); `conformance/conan/proxied_integrity_test.go` (the captured tampered archive through a real client, failing through this registry); `conformance/conan/stored_integrity_test.go` (a hosted archive altered in the store, the read-path half being `storage-and-gc.md` AC21's `internal/storage/read_verify_test.go`) |
-| AC20 | integration | `internal/format/conan/removal_test.go` (stand-in presenting each event class, the older-`latest` regression and its adoption after a refresh, negative caching and throttling responses; the shared-layer halves are `proxy-cache.md` AC13's and AC22's `internal/proxy/freshness_test.go`) |
+| AC20 | integration | `internal/format/conan/removal_test.go` (stand-in presenting each event class, a vanished `metadata/` file included, the older-`latest` regression and its adoption after a refresh, negative caching and throttling responses; the replaced `metadata/` file's old blob collected after the sweep, the zero retained count and the metadata documents surviving an eviction pass and a sweep, sharing `proxy-cache.md` AC27's, AC28's and AC29's fixtures; the shared-layer halves are `proxy-cache.md` AC13's and AC22's `internal/proxy/freshness_test.go`) |
 | AC21 | conformance | `conformance/conan/virtual_test.go` (hosted then remote members; `--update` with a later upstream time; a lockfile pinning an upstream-only revision; binary provenance from the transcript; `405` on writes) |
 | AC22 | integration | `internal/format/conan/concurrent_upload_test.go` (two writers per case, fault injection at each write boundary, final document asserted) |
-| AC23 | conformance | `conformance/conan/replay_test.go` |
+| AC23 | conformance | `conformance/conan/replay_test.go`; the exception-row and manifest-digest half is `conformance-harness.md` AC28's test over `conformance/conan/`'s corpus manifest |
 | AC24 | unit + conformance | `internal/format/conan/capabilities_test.go` (the four declarations, `format-handler-interface.md` AC13); `conformance/conan/rename_test.go` (`repository-lifecycle.md` AC12, presence enforced by `conformance-harness.md` AC26; byte-identical answers and installs on both Conan 2 generations under the new name in both modes; the old name's `not-found`) |
 
 The case set needs only keys already in the harness's closed `setup` vocabulary (its resolved
@@ -1083,37 +1255,42 @@ are not restated per criterion here.
 ## Implementation Phases
 
 ### Phase 1: Hosted reads
-- Reads the pointer's `moved_at` from `data-model.md`'s freshness record (Blocking preconditions)
-- The format-first mount, the capability probe, the token exchange on both routes and the
-  credential check, the reference grammar, the version-level document and every read route
-  rendered from it through the pointer with pointer-scoped times, the per-route addressed objects
+- Reads the pointer's `moved_at` from `data-model.md`'s freshness record, handed to the renderer
+  by `signing-service.md`'s `ServeRendered` form reported to that spec (Blocking preconditions)
+- The format-first mount, the capability probe, the two exchange routes declared exchange-echo
+  and the credential check at both spellings, the reference grammar, the version-level document
+  and every read route rendered from it through `ServeRendered` with pointer-scoped times, the
+  per-route addressed objects
   with the descriptor routes and their sentinel test, the `403` policy rendering through
   `WriteRefusal`, the `400` on the v1 file API, and `Capabilities()` with the rename case (AC24)
 
 ### Phase 2: Uploads
-- Per-file writes with completion gating, the five verification rules, content-level immutability
-  and the re-stamp, `metadata/` files, the drop of abandoned incomplete revisions by the next write,
-  and the write-boundary declaration exercised end to end under concurrency
+- Per-file writes with completion gating, the five verification rules under the decompression
+  bound, replacement under an incomplete revision, content-level immutability and the re-stamp,
+  `metadata/` files, the `{ref}#{rrev}` claim declared on every `PUT`'s write transaction, the drop
+  of abandoned incomplete revisions by the next write, and the write-boundary declaration
+  exercised end to end under concurrency
 
 ### Phase 3: Removes
 - Waits on `docs/internal/plans/foundation/management-api.md` reaching `planned` (Blocking
   preconditions)
-- The `Operator` declaration: the six operations on the `prune` and `delete-version` kinds with
-  the five routes as bindings, and the `Outcome` naming removed unbound revisions for the core-held
-  retirement
+- The `Operator` declaration: the seven operations on the `prune`, `delete-version` and
+  `delete-package` kinds with the five routes as bindings, and the `Outcome` naming removed
+  unbound revisions for the core-held retirement
 
 ### Phase 4: Proxied path
 - Waits on `proxy-cache.md` (the completion-only mode with a handler-supplied verifier, its AC20)
-  and `upstream-adapters.md` (the `https` adapter with the `bearer` kind) reaching `planned`
-  (Blocking preconditions)
-- Upstream validation by probe after `upstream.Validate`, classification per route, verification
+  and `upstream-adapters.md` (the `https` adapter with the `bearer` and `basic-exchange` kinds,
+  its was-Q8 and AC33) reaching `planned` (Blocking preconditions); both are `planned`
+- No probe at creation; the upstream's capability recorded at the first request with the `5xx`
+  on a remote lacking `revisions`, classification per route, verification
   before commit in the completion-only mode, TTL revalidation without validators, the
-  regression-not-adopted rule on `latest`, negative caching, the removal classes, `405` on remote
-  writes
+  regression-not-adopted rule on `latest`, negative caching, the removal classes, the zero
+  retained count and the metadata documents outside the quota, `405` on remote writes
 
 ### Phase 5: Virtual repositories
-- Per-reference member-ordered resolution, the union lists, revision-addressed resolution across
-  members, `405` on virtual writes
+- Per-reference member-ordered resolution, the union lists, revision- and package-addressed
+  resolution across members, `405` on virtual writes
 
 ### Phase 6: Corpus and gate
 - Recording session across the named surface (after the harness redaction gate) against the pinned
@@ -1131,6 +1308,8 @@ None open. The ten questions this draft raised, and the eleventh raised by the 2
 reconciliation, were each written in the template's decision shape and then adopted at their own
 recommendation under the owner's standing delegation of 2026-09-26, so the loop can continue; each is recorded below as adopted rather than decided, folded through Scope,
 Design, the criteria and the Test Plan in the same pass, and reversible by the owner at any time.
+Every one of them was adopted on Opus and re-examined on Fable on 2026-10-08, with the verdict
+written into its record (all eleven confirmed, six amended in fold or cost, none superseded).
 `grep -rn "standing delegation"` is the owner's review queue.
 
 ### Resolved: whether and how Conan 1 is served (was Q1)
@@ -1162,6 +1341,13 @@ silently, while a `400` stops it and prints the fix (captured).
 
 Accepted cost: the Conan 1.66.0 image and its cases, and the exception-list entry for the refused v1
 file API.
+
+Rechecked on Fable 2026-10-08: confirmed. The framing is fair and the `400` is the load-bearing
+half, since a `404` on the v1 file API would send a non-revisions client silently to its next
+remote, the hole this spec names everywhere else. What the fold under-stated: the credential check
+has a `/v1/` spelling too, and only the exchange was captured at it, so both spellings of
+`check_credentials` are now served identically and AC2's Conan 1 upload asserts whichever is sent,
+at no cost beyond one route (Design, "The wire surface", "Authentication"; AC2, AC14).
 
 ### Resolved: where a revision's served time comes from, given that the client keeps a newer cached revision (was Q2)
 
@@ -1198,6 +1384,13 @@ on every transition, an ordinary write included, not only on promotion and rollb
 asked; the resolved pointer-time decision below (was Q11) adopts the record as it stands, so the
 floor this decision set is the pointer's `moved_at`.
 
+Rechecked on Fable 2026-10-08: confirmed. A is the only option under which a rollback reaches a
+warm `--update` client, B is the silent failure the capture proved and C breaks the shared model's
+definition of a rollback; the monotonicity argument holds (every time a pointer served before a
+rollback is at most that pointer's `moved_at` at the time of serving, which is strictly below the
+rollback's). The cost its record omitted is in the Q11 verdict below: the value had no door to the
+handler.
+
 ### Resolved: the write boundary of an upload (was Q3)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: each accepted file `PUT` is
@@ -1223,6 +1416,16 @@ file on the hosted path.
 
 Accepted cost: N snapshots per upload and the drop rule for abandoned revisions; C's divergence goes
 on the exception list.
+
+Rechecked on Fable 2026-10-08: confirmed and amended in fold. The options were framed fairly and
+A is right, but the fold left an incomplete revision stuck: when the file that fails verification
+is not the one whose `PUT` completes the set (an archive disagreeing with a manifest sent last),
+the completing `PUT` is refused and the bad file stayed recorded, so no retry could ever complete
+the revision. A repeated `PUT` under an incomplete revision now replaces the recorded file, which
+is the client's own retry path and changes nothing served (Design, "The upload path"; AC4). Two
+more things the record under-stated: the drop rule covers package revisions as well as recipe
+revisions, and the cap it borrows is `data-model.md`'s `upload.max_duration` key, named so the
+operator who tunes it knows it bounds this format too.
 
 ### Resolved: what a re-upload to an existing revision does (was Q4)
 
@@ -1250,6 +1453,12 @@ offending file rather than letting it continue.
 hashes over unpacked files, not over the bytes on the wire.
 
 Accepted cost: the re-verification work and the documented `403` wording.
+
+Rechecked on Fable 2026-10-08: confirmed. Content-level immutability is the only reading under
+which the captured `mtime` re-export is not a conflict, and `403` is the one status the captured
+upload loop aborts on. A cost the record omitted: the re-verification on a forced re-upload
+decompresses every archive again, so the decompression bound stated under the verification rules
+applies there too, and a hostile `--force` cannot cost more than an ordinary upload.
 
 ### Resolved: which removed revisions may come back (was Q5)
 
@@ -1289,6 +1498,18 @@ with the revision's next file, failing the command at the end rather than aborti
 refused file, which still fails the upload loudly and is recorded in AC9 as the captured client
 behaviour for that status.
 
+Rechecked on Fable 2026-10-08: confirmed and amended in fold. The two-case rule is right and the
+reason is exact: a bound identifier is a digest verification recomputes. The adversarial question
+the record never asked, whether an unbound **package ID** (a Conan 1 `conaninfo.txt`) needs the
+same retirement, is answered no, and the reason is now in Design: a client never downloads by
+package ID alone but by package revision, which is always the package manifest's digest, so a
+removed package ID can only return under a package revision whose bytes that revision names. The
+fold also lacked the half `management-api.md`'s was-Q14 asked of this spec, how a non-binding
+`PUT` reports the coordinate the check compares: every `PUT` under a recipe revision now declares
+`{ref}#{rrev}` as its claim from the URL, so a package or `metadata/` file under a retired commit
+id is refused as its recipe files are, at declaration and again at commit (Design, "Removes are
+bindings"; AC9).
+
 ### Resolved: what the token exchange returns (was Q6)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: `users/authenticate` verifies
@@ -1314,6 +1535,22 @@ forces it.
 product and a revocation window.
 
 Accepted cost: the operator documentation says what the client stores and where.
+
+**Revised 2026-09-28 by `auth.md`'s closing sweep, applied here on the Fable recheck of
+2026-10-08.** What the exchange returns is unchanged; who writes it is not. A handler never reads
+a credential, and echoing the token means reading it, so `auth.md` raised and adopted its own
+question (was Q25, AC35): the handler declares both `users/authenticate` routes as exchange-echo
+routes and the shared layer answers them, verifying, authorizing the `pull` descriptor and writing
+the verified value with `Cache-Control: no-store`; the handler never runs for them. Its Fable
+recheck added two bounds this spec now carries: the body is only ever the credential extracted
+from that request, and a credential-less or session-only request answers `401` with the challenge
+on an anonymously readable repository too (Design, "Authentication"; AC14).
+
+Rechecked on Fable 2026-10-08: confirmed. A is right for the reason given (the client must hold
+the long-lived token regardless, so B shrinks nothing and adds a revocation window), and the
+shared-layer placement removes the one objection to A, that a handler would touch a credential.
+The stale sentence claiming `auth.md` had no `conan` row is gone; the row exists and matches this
+spec's capture.
 
 ### Resolved: the addressed objects, and what a pattern refusal looks like (was Q7)
 
@@ -1352,6 +1589,13 @@ reference, and the limitation narrows to version ranges and search, which enumer
 stay none. The reference object, the `404` pattern refusal and the recipe for range-resolving
 credentials are unchanged (Design, "Addressed objects and pattern scopes"; AC15).
 
+Rechecked on Fable 2026-10-08: confirmed as revised. The `404` refusal is the right status
+precisely because the client falls through on it and halts on `403`, so a pattern can never be
+an oracle and an out-of-pattern public dependency still resolves from the next remote; the
+descriptor revision is the one `auth.md` chose over the per-route exemption this record rejected,
+and the sentinel test is what keeps a descriptor honest in both modes. The `/v1/` spelling of the
+credential check joins the descriptor row.
+
 ### Resolved: virtual repositories (was Q8)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: virtual repositories are
@@ -1379,6 +1623,15 @@ posture.
 
 Accepted cost: the documented time regression on member reordering.
 
+Rechecked on Fable 2026-10-08: confirmed and amended in fold. Member order is the right rule and
+the supply-chain reasoning holds, but the fold resolved binaries at the wrong level: "a package's
+`latest` from the first member holding the reference" would answer `404` for a binary a later
+member holds under a recipe revision the first member also holds, the ordinary case of a private
+re-export of a public recipe without that profile's binary, and with the virtual as the client's
+only remote that is a build from source. Package-addressed routes now resolve in the first member
+holding the package ID under that recipe revision, as AC21 already asserted and Design now states
+(Design, "Virtual repositories").
+
 ### Resolved: where user and channel live in the shared model (was Q9)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: `Package.name` carries the
@@ -1404,6 +1657,12 @@ format.
 
 Accepted cost: the policy-rule note in the operator documentation.
 
+Rechecked on Fable 2026-10-08: confirmed. The grammar guarantees `@` cannot collide, channels
+really do version independently, and the bare name keeping ConanCenter's spelling is what makes
+a hosted member shadow an upstream reference in a virtual. The one thing the record did not say:
+a `Package` so named is what the new `delete-package` kind removes, every reference of one
+user-and-channel line and never the unqualified line beside it (AC7).
+
 ### Resolved: ConanCenter as a preconfigured upstream (was Q10)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option B: ConanCenter is
@@ -1425,6 +1684,11 @@ half-applied change against a format that may not be built.
 
 Accepted cost: the proxied cases run against a stand-in only; the real ConanCenter is exercised by the
 recording session until the revisit.
+
+Rechecked on Fable 2026-10-08: confirmed. The reason is sequencing, not effort, which is the
+distinction `CLAUDE.md` draws, and the extension mechanism exists for exactly this revisit. The
+accepted cost is stated honestly; the stand-in serves recorded ConanCenter answers, so the one
+thing the nightly run would add is drift detection against the live host.
 
 ### Resolved: the pointer time a latest revision is floored at (was Q11)
 
@@ -1466,9 +1730,26 @@ references) for not reopening a shared record, on a format built only after the 
 Accepted cost: the timestamp churn, asserted rather than hidden (AC6's unrelated-upload clause),
 and stated in the operator documentation beside the rollback recipe.
 
+Rechecked on Fable 2026-10-08: confirmed and amended in fold and cost. The options were framed
+fairly and A is right: the churn is harmless by capture, B reopens a record seven formats share,
+and C needs state no spec holds. Three things the record left out. The churn is narrower than
+stated on this format: `data-model.md` advances `moved_at` on document-only transitions too, but a
+Conan `local` has no key, cadence or batch, so the floor moves exactly at writes, promotions and
+rollbacks, and a revision completed within a second of the previous write is served up to one
+second later than its stored time. The fold assumed a read that did not exist: no door hands a
+handler the record's value, since `signing-service.md`'s `ServeRendered` takes a freshness source
+and sets a header from it, while this format embeds the value in a JSON body; the lazy-renderer
+form that receives the serving pointer's `moved_at` is reported to that spec and is a Phase 1
+precondition, with AC6 now asserting that the handler's package holds no clock call and no
+pointer-row read (Blocking preconditions; Design, "Revision times belong to the pointer"; AC6).
+And the warm-client case the cost names rests on the client comparing times, so it is stated with
+the one configuration where it bites, several remotes under `--update`, which the virtual recipe
+already answers.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
 |------|----------|---------------|---------|
 | 2026-09-26 | cb5699f | authoring pass: grounded first draft, not a review | Grounded three ways: captured traffic from Conan 2.32.0, Conan 2.0.17 and Conan 1.66.0 (revisions off and on), in images built on `python:3.12-slim` pinned by digest, on a dedicated Podman network, against a logging and rule-injecting stub in front of the reference `conan_server` 2.32.0 and a pass-through to the live center2.conan.io (the probe and capability header, the Basic-to-Bearer token exchange and its storage in `.conan.db`, cold, warm and `--update` installs, a version-range install through recipe search, uploads with `X-Checksum-Sha1` and the manifest last, re-uploads plain and forced, an older revision re-stamped as latest, a `409` mid-upload after which the client still sent the manifest, `metadata/` upload, replace and download, every remove shape, `list` and `search`, lockfile pinning, rollback served with the old and with a later time on both Conan 2 generations, `403`, `404`, `401` and `500` on recipes, binaries, the probe and deletes with and without a second remote and under `--update`, credential sources and a non-interactive `401`, a tampered package archive installing silently, the same revision re-exported with different archive bytes, Conan 1's v1 routes and its `/v1/users/authenticate`, a prefixed remote URL, and a ConanCenter recipe and binary); the Conan client, Conan 1 and `conan-server` sources (routes, upload and download paths, error mapping, manifest and revision derivation, package ID derivation, reference grammar, audit providers, package signing, the reference server's revision list); the revisions documentation and the ConanCenter Conan 1 freeze notice; the live center2.conan.io and center.conan.io (capabilities, headers and conditional answers, JSON error shape, case sensitivity, anonymous-only user routes, the ignored package-search query, revision and package ID identities recomputed from real files); and OSV (no ConanCenter data although the schema defines the ecosystem). Design built from that: the wire table; the three decisive client behaviours (newer cached revision kept, nothing verified on download, `404` falls through while `401`, `403` and `5xx` halt); the five verification rules and bound versus unbound identities; the shared-model mapping with the revision-to-snapshot relation; per-file writes gated on a verified complete set; content-level immutability with the re-stamp; removes as bindings onto `management-api.md`; pointer-scoped revision times as the rollback answer, with the proxied analogue stated; the token exchange returning the registry token; reference-level addressed objects with the probe as none; the `403` policy rendering that halts the client; no signed index; the proxied classification with completion-only verification against the manifest; Conan's removal-table rows with no security signal; member-ordered virtual repositories. Ten questions written in decision shape and adopted under the standing delegation: Conan 1 in revisions mode with the v1 file API refused (AC13), pointer-scoped times (AC6), per-file write boundary (AC2, AC4), content-level re-upload rule (AC5), bound revisions returnable and commit ids retired (AC9), the token exchange returning the token (AC14), reference objects with `404` pattern refusals (AC15), virtual repositories (AC21), user and channel in the package name (AC2), ConanCenter user-configured. Twenty-three criteria, each with a Test Plan row; check-spec clean with zero advisories after folding eleven Design terms into criteria. Sibling consequences recorded in the authoring report, not applied here. Stays draft; awaits an independent review. |
 | 2026-09-28 | 15ced69 | cross-spec reconciliation of the foundation wave, on Opus. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From `auth.md` was Q23 (Open item 35): probe, exchange and credential check are descriptors, search stays none; Design rewritten so a patterned-only `pull` installs exact in-pattern references and fails only at search and ranges; AC15 inverted with the sentinel check; the resolved addressed-object record revised. From `management-api.md` (reconciliation table, bindings rule, resolved retirement-placement decision was Q3): the six operations placed on `prune` and `delete-version` with the client and reference-server routes as declared bindings (AC8), `405` as `repository-type`; commit-id retirement moved to the core-held `Retirement` record keyed `{ref}#{rrev}`, refused centrally with `retired` (409) instead of this spec's `403`, recorded as a revision under the resolved retirement decision (AC9). From `data-model.md` AC36 and `signing-service.md` item 11: the pointer's last-repoint time is `data-model.md`'s `moved_at`, which advances on every transition; **Q11 raised in decision shape and adopted under the standing delegation**: floor the latest revision's time at `moved_at` as defined, accepting timestamp churn for untouched references; AC6 extended; AC22's qualification now data-model's. From `proxy-cache.md` (was Q15, AC20, AC22, reconciliation 4, event classes): completion-only mode offered, verifier and short-close cited (AC19); an older upstream `latest` is now 'Regression not adopted' rather than propagated, reversing this spec's own row (AC20); removal rows named by class. From `upstream-adapters.md` (item 12, Open item 22): the ConanCenter transport is two `https` upstreams; upstream credentials are the `bearer` kind, a Conan-shaped exchange reported as missing there. From `artifact-verification.md` (item 16, Q5) and `storage-and-gc.md` AC21: `none` in the verification column, serve-time CAS verification as the client's only integrity check (AC19 extended). From `supply-chain-policy.md` (was Q10, AC18, coverage and binding tables): `WriteRefusal` and the status-line phrase, the `holds` row re-asserted (AC16), coverage cited. From `repository-lifecycle.md` AC12 and `format-handler-interface.md` AC13: Capabilities and lifecycle section, new AC24. The `auth.md` client-table `conan` row is still absent there (reported). Twenty-four criteria, each with a Test Plan row. `fable_recheck` kept and extended for Q11. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
+| 2026-10-08 | e0bc30d | Fable recheck: full review (claim verification at HEAD of every sibling citation against `auth.md`, `upstream-adapters.md`, `management-api.md`, `conformance-harness.md`, `data-model.md`, `proxy-cache.md`, `supply-chain-policy.md`, `storage-and-gc.md`, `format-handler-interface.md`, `repository-lifecycle.md`, `artifact-verification.md`, `signing-service.md` and the management-surfaces analysis; the adversarial lens at full strength on the Opus-authored whole: revision and latest semantics, the v1 and v2 routes, the enumerated removes, the reference-server-only routes, incomplete revisions; go-spec-reviewer inline; constitution compliance) + re-examination of the Opus adoptions Q1 to Q11 | Brought current first: the whole consequences queue read and every item naming this file applied against the source spec's current text. From `auth.md` was-Q25 and AC35 as amended: both `users/authenticate` routes declared exchange-echo and answered by the shared layer, the credential-less and session-only `401`s, the stale "no `conan` row" sentence gone (Design "Authentication", AC14, Q6 record). From `management-api.md` was-Q13 and was-Q14: no binding wider than its operation with `Submit` evaluating the same pair, and every `PUT` under a recipe revision declaring `{ref}#{rrev}` as its claim from the URL, refused at declaration and at commit (AC8, AC9). From `upstream-adapters.md` was-Q8 and AC33: the `basic-exchange` kind for a private upstream with its real-client case shared, "raised there" and the `bearer`-only Phase 4 wording gone; and from its AC23 the configuration-time probe removed, the upstream's capability recorded at the first request with a `5xx` on a remote lacking `revisions` (AC17). From `conformance-harness.md`'s gate review: the corpus section states the exception row, why no public write reference exists (ConanCenter exposes no write surface, its user routes answering `404`, content entering through `conan-center-index`) and the manifest-digest rule (AC23). From the management-surfaces re-read: `delete-version` recorded as having no client trigger and the bulk binaries route given its `curl` case (AC7). From `proxy-cache.md` was-Q19 to was-Q23: a zero retained count with nothing declared, the replaced `metadata/` file under the new-blob rule, metadata documents outside the quota, no optional signature so was-Q23 never binds, anchor class `integrity` unread (Design "The proxied path", AC20). Verdicts: Q1 confirmed (both spellings of the credential check served, AC2); Q2 confirmed; Q3 confirmed and amended (a repeated `PUT` under an incomplete revision replaces the file, closing a stuck state the fold left, package revisions under the drop rule, `upload.max_duration` named; AC4); Q4 confirmed with the re-verification cost bounded; Q5 confirmed and amended (why unbound package IDs need no retirement, and the claim half was-Q14 asked for; AC9); Q6 confirmed, revised for the shared-layer writer; Q7 confirmed as revised; Q8 confirmed and amended (package-addressed routes resolve in the member holding the package ID under the revision, not the reference, or a virtual with a private re-export answers `404` for a public binary; AC21); Q9 confirmed; Q10 confirmed; Q11 confirmed and amended (no document-only transition exists on a Conan `local`; the sub-second case; and the fold assumed a read with no door: `ServeRendered` hands a freshness source and sets a header, while this format embeds the value in a body, so the lazy-renderer form receiving the pointer's `moved_at` is reported to `signing-service.md` and is a Phase 1 precondition; AC6). None superseded. Adversarial findings folded without a question: a decompression bound on archive verification (AC3); `X-Checksum-Sha1` optional for a client that omits it (AC3); a remove racing an upload serialised through the revision token; a `delete-package` kind for operator parity with `chef.md`, `cran.md` and `julia.md`, with no binding since neither the client nor the reference API spells it (AC7, AC8); rename stated as a non-write kind so times are unchanged (AC24); a vanished `metadata/` file as a removal with no signal (AC20). go-spec-reviewer inline: approved after the bound and the no-clock architecture scan were added. Constitution: both paths, the shared model with no handler table, named enforcers per boundary, the conformance gate, findings in docs; nothing contradicted. Twenty-four criteria, each with a Test Plan row; zero open questions; `node scripts/check-spec.js` zero failures on this file; no em-dashes on any line. `fable_recheck` cleared; draft to planned. Sibling consequences reported to the orchestrator, not applied: `signing-service.md` (the `ServeRendered` renderer input), `management-api.md` and the management-surfaces analysis (the `delete-package` row), `proxy-cache.md` (optional: Conan among the zero-count examples and in the regression row), the docs index rebuild for the status flip. |
