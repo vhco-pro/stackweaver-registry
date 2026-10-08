@@ -277,7 +277,7 @@
     "path": "docs/internal/plans/formats/maven.md",
     "description": "Spec for the Maven repository layout: the path-addressed release and SNAPSHOT files, the three levels of generated maven-metadata.xml, checksum and signature sidecars and Gradle Module Metadata, hosted and proxied, with Maven, Gradle, sbt and Leiningen as the conformance oracles.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "22",
     "covers": [
       "internal/format/maven/**",
