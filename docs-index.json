@@ -111,7 +111,7 @@
     "path": "docs/internal/plans/formats/chef.md",
     "description": "Spec for the Chef cookbook format (the Supermarket API): a write-triggered repository-wide /universe document, cookbook and version documents, tarball downloads, knife supermarket share and unshare authenticated by Chef's signed-header scheme against registered public keys, private reads through the one header every resolver sends, a verifying supermarket.chef.io cache, and per-name virtual repositories that close the dependency confusion Berkshelf's source union opens, with Berkshelf, Policyfile and knife on two generations as the oracles.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "35",
     "covers": [
       "internal/format/chef/**",

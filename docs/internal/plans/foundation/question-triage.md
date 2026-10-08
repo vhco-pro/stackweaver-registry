@@ -466,6 +466,7 @@ decision:
 | `formats/conda.md` | Q1-Q10 authored on Opus (rechecked on Fable 2026-10-01: all confirmed, four amended); Q11 adopted on Fable; spec planned |
 | `formats/puppet.md` | Q1-Q14 authored on Opus (rechecked on Fable 2026-10-08: all confirmed, five amended); spec planned |
 | `formats/terraform.md` | Q1-Q8 authored on Opus (rechecked on Fable 2026-10-08: six confirmed, three with amended folds; Q4 and Q7 amended); spec planned |
+| `formats/chef.md` | Q1-Q10 authored on Opus (rechecked on Fable 2026-10-08: all confirmed, four amended in fold); spec planned |
 | `formats/rpm.md` | Q11 (rechecked on Fable 2026-10-01 with Q1-Q10: Q5, Q6, Q9, Q11 amended, the rest confirmed; Q12 adopted on Fable; spec planned) |
 | `formats/arch.md` | Q13 (rechecked on Fable 2026-10-01: superseded by signing-service was-Q20; Q14 adopted on Fable; spec planned) |
 | `formats/cargo.md` | Q7 |
