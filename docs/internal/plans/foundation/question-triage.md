@@ -491,7 +491,7 @@ decision:
 | `foundation/artifact-verification.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 (rechecked on Fable 2026-10-01: Q4, Q5, Q6 confirmed, the other eight amended; spec planned) |
 | `foundation/proxy-cache.md` | Q15, Q16, Q17, Q18, Q19, Q20, Q21, Q22 (rechecked on Fable 2026-09-30: six confirmed, Q16 and Q18 amended; spec planned; Q23 adopted on Fable 2026-10-01 in the second follow-up, reversing arch's per-format reading; Q24 adopted on Fable 2026-10-08 in the third follow-up) |
 | `formats/vagrant.md` | Q13 (rechecked on Fable 2026-10-08 with Q1-Q12: eleven confirmed, Q4, Q12, Q13 amended; spec planned) |
-| `foundation/async-operations.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 (rechecked on Fable 2026-10-01: Q1, Q2, Q3, Q6, Q8, Q9, Q11 confirmed, Q4, Q5, Q7, Q10 amended; spec planned) |
+| `foundation/async-operations.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11 (rechecked on Fable 2026-10-01: Q1, Q2, Q3, Q6, Q8, Q9, Q11 confirmed, Q4, Q5, Q7, Q10 amended; spec planned); Q12 adopted on Fable 2026-10-08 in the sixth follow-up, owner-facing: a derived-next-run row's exported period is floored so a shortening cannot fire ScheduleOverdue) |
 | `foundation/format-handler-interface.md` | Q10, Q11 (rechecked on Fable 2026-10-01: both confirmed and amended; spec planned) |
 | `foundation/supply-chain-policy.md` | Q9, Q10, Q11, Q12 (rechecked on Fable 2026-09-30: all four confirmed and amended; Q13 adopted on Fable; spec planned; WriteRefusal's private, no-store adopted on Fable 2026-10-08 in the fourth follow-up as an amendment of was-Q10) |
 | `foundation/deployment.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7, Q8, Q9, Q10, Q11, Q12, Q13 (rechecked on Fable 2026-10-01: six confirmed, Q3, Q4, Q5, Q6, Q7, Q8, Q10 amended; spec planned) |
