@@ -19,7 +19,8 @@
     "docs/internal/plans/formats/alpine.md"
   ],
   "conformance/ansible/**": [
-    "docs/internal/plans/formats/ansible-collections.md"
+    "docs/internal/plans/formats/ansible-collections.md",
+    "docs/internal/plans/foundation/write-triggered-services-prototype.md"
   ],
   "conformance/arch/**": [
     "docs/internal/plans/formats/arch.md"
@@ -46,7 +47,8 @@
     "docs/internal/plans/formats/cran.md"
   ],
   "conformance/debian/**": [
-    "docs/internal/plans/formats/debian.md"
+    "docs/internal/plans/formats/debian.md",
+    "docs/internal/plans/foundation/write-triggered-services-prototype.md"
   ],
   "conformance/generic/**": [
     "docs/internal/plans/formats/generic.md"
@@ -140,7 +142,8 @@
     "docs/internal/plans/formats/alpine.md"
   ],
   "internal/format/ansible/**": [
-    "docs/internal/plans/formats/ansible-collections.md"
+    "docs/internal/plans/formats/ansible-collections.md",
+    "docs/internal/plans/foundation/write-triggered-services-prototype.md"
   ],
   "internal/format/arch/**": [
     "docs/internal/plans/formats/arch.md"
@@ -167,7 +170,8 @@
     "docs/internal/plans/formats/cran.md"
   ],
   "internal/format/debian/**": [
-    "docs/internal/plans/formats/debian.md"
+    "docs/internal/plans/formats/debian.md",
+    "docs/internal/plans/foundation/write-triggered-services-prototype.md"
   ],
   "internal/format/generic/**": [
     "docs/internal/plans/formats/generic.md"
