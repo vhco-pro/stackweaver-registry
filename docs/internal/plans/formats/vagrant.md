@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Format closing sweep 2026-09-28 at 2740b05 on Opus (not a review): the current and retained upstream bodies per box move from the remote's repository-level declared list to that box's own package-level document (proxy-cache was-Q22), never evicted (was-Q21), so adoptions of different boxes never serialise (AC21, AC24 extended, including a concurrent two-box adoption and an over-quota eviction pass); the serve-time URL expansion is signing-service's Render stage (was-Q13, AC31), so the handler reads no base URL and the gap and fallback are gone (AC4 extended); management-api's table now places the provider file under publish; auth's vagrant row cited; management-api was-Q15 names this format as relying on Idempotency-Key; the hosted half recorded against a local reference reported as a conformance-harness AC28 row. No question adopted; 26 criteria. Earlier: Data-loss fix, second wave, 2026-09-28 at 36a137d on Opus (not a review): a remote keeps the current and one superseded upstream revision per box (proxy-cache was-Q19's default count), read by the box route for a coordinate the current catalog no longer names; both upstream bodies, being no current document's body once the rendered catalog replaced every url, are on the declared blob-digest list of the remote's repository-level document above the inline threshold, where before they were named by nothing the sweep follows; a removed coordinate answers 404 once the adoption that drops its revision commits; the kept bytes of a changed checksum are held by their own cached reference, a re-fetch after eviction committing nothing; AC21 and AC24 extended to sweeps with the grace lapsed while a revision is retained. Earlier: Reconciled 2026-09-28 at 7c4d5bb with the foundation wave on Opus (not a review), this spec's first reconciliation: catalogs are this format's Indexer generator output (internal/format/vagrant/index), the service's named unsigned consumer (signing-service AC24), regenerated in the write by the runtime, served through ServeDocument with an ETag-only profile and serve-time URL expansion from server.public_url (the chef gap, second consumer) (AC4, AC8); management through Operator as publish (provider files too, not the attach the management-api table names), annotate, delete-file, delete-version and delete-package, upload sessions and Apply's archive peek, conflict and core-held Retirement, the CI retry moved to Idempotency-Key, 405 repository-type (AC6, AC9); WriteRefusal with the holds binding row (AC14); the proxied path on the https adapter with bearer or basic root credentials, the hosts allowlist for HCP's redirect chain, allow_http, no probe at configuration (AC19), catalogs through FromUpstream, boxes without an upstream checksum under the completion-only mode with a structural verifier and then digest-bound (AC17), removal rows mapped onto proxy-cache's classes; the HCP migration recipe gains the read_only step from replication was-Q11 and a catalog-read step (AC21); access_token redacted by observability's rules, not the handler; Q13 adopted: virtual catalogs resolved per name at request time, no stored merge, because a remote member cannot be enumerated (AC22); Capabilities with rename (AC26). Earlier: authored 2026-09-26 from captures of Vagrant 2.3.7 and 2.4.9; twelve questions adopted under the standing delegation. Thirteen resolved, none open. Awaits a /spec review pass and a Fable recheck."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-08 at daabec0: a full review pass plus the re-examination of all thirteen questions adopted without Fable (Q1 to Q12 in the Opus authoring, Q13 in the Opus reconciliation), the data-loss second wave and the batch 1 sweep put through the adversarial lens as unreviewed design. Ten confirmed; Q4 amended in fold (the archive peek can read a whole tar to find metadata.json, so it runs first in Apply before any write or lock under storage-and-gc's lock order, holding only its connection, AC7); Q12 amended in cost (the three-step HCP recipe needs this Tier 3 handler before 2026-12-31, which the Tier 1 gate makes unlikely, so Design gives the client-side path and the corpus commitment is recorded with whatever recorder exists by the deadline, a missed one being an owner re-scope of AC25); Q13 amended in fold (box routes through a virtual resolve per coordinate in member order, the shadowing-mid-download hazard named and caught by the SHA-256 except in the uncached-no-checksum window, AC22). Foundation decisions since the Opus passes folded: HEAD as the GET with the body withheld on both paths with a cold probe filling the cache (signing-service was-Q24, proxy-cache was-Q24; AC16, AC18), box routes through ServeFile with 416 (was-Q14; AC5), the spool bound covering the publish body alone (management-api was-Q20); the harness gate review's stale wording replaced, both exception rows cited with the digest in the corpus manifest (was-Q7). None superseded, no new question, 26 criteria each with a Test Plan row, zero open; fable_recheck cleared. Earlier: format closing sweep 2026-09-28 at 2740b05 on Opus (the declared list on the box's package-level document, the serve-time expansion as signing-service's Render, the provider file under publish); data-loss fix second wave 2026-09-28 at 36a137d on Opus (one retained upstream revision per box with its bodies declared); reconciled 2026-09-28 at 7c4d5bb on Opus with the foundation wave (Q13 adopted); authored 2026-09-26 from captures of Vagrant 2.3.7 and 2.4.9 with twelve questions adopted under the standing delegation."
 description: "Spec for Vagrant boxes served to vagrant box add, update and outdated: a per-box catalog document generated by the shared index service on every write and rendered with absolute URLs at serve time, served identically at the explicit, shorthand and 2.4 API paths, provider entries ordered so pre-2.4 clients that take the last entry per provider receive the default architecture, immutable multi-gigabyte box files with byte ranges so interrupted downloads resume, a Bearer credential scoped by VAGRANT_SERVER_URL, a proxied path that rewrites every upstream box URL and verifies or records each box's digest, and per-name virtual repositories."
 author: michielvha
 goal: "Serve Vagrant users a private box registry and a verified cache of any box catalog, HCP Vagrant included until its end of operations, that stock Vagrant 2.3 and 2.4 add, update and resume multi-gigabyte downloads from with a token in VAGRANT_CLOUD_TOKEN, the registry in VAGRANT_SERVER_URL, and a network restricted to this registry."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/vagrant/**"
   - "conformance/vagrant/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed; reconciled on Opus 2026-09-28 with Q13 (virtual catalogs resolved per request) raised and adopted under the standing delegation; the data-loss fix on Opus 2026-09-28 folded proxy-cache's adopted Q19 into the proxied path (the current and one retained upstream revision per box, their bodies on the remote's declared list, the box route their reader), which needs the same recheck; the format closing sweep on Opus 2026-09-28 moved that list to each box's package-level document under proxy-cache's adopted was-Q22"
 ---
 
 # Plan: Vagrant boxes
@@ -40,7 +39,11 @@ re-host their boxes." The Vagrant CLI stays. That makes this format unusual in t
 Vagrant user who shares boxes needs a replacement host, which is exactly this registry's hosted
 path, and the one public upstream a proxied path would most obviously cache disappears within
 three months of this draft. The design treats HCP Vagrant as one catalog among many rather than
-as the upstream, and names the migration path off it (Design, "The proxied path").
+as the upstream, and names the migration path off it (Design, "The proxied path"). The first of
+those dates had passed by this spec's Fable recheck (2026-10-08): vagrantcloud.com now serves
+existing boxes only, which is all the recorded corpus reads, and the recipe's HCP half is stated
+below against the schedule it actually faces, since this Tier 3 handler is unlikely to exist
+before the second date.
 
 Grounding for this draft, stated up front because the constitution asks for evidence or silence:
 
@@ -424,11 +427,22 @@ CAS without buffering the whole body in memory or in a temporary file, resumable
 connection within the session's lifetime with `Content-Range` chunks, its SHA-256 computed in the
 stream, and committed only on a verified digest, the implementation OCI's chunked upload shares.
 The publish operation then names committed digests and the declared coordinate, so the write
-itself is small and its latency does not scale with box size. `Apply` peeks each committed blob,
+itself is small and the publish spools no box: `management.publish_spool_limit` bounds the publish
+request body alone (`management-api.md`'s resolved spool-bound decision, was its Q20, AC36), never
+a box file. `Apply` peeks each committed blob,
 reading the archive's entries (tar, tar with gzip, or zip, as the box format page lists) until it
 finds `metadata.json` at the archive root, and refuses a disagreement before anything is
 referenced; a committed blob a refused publish leaves unreferenced is the orphan
-`storage-and-gc.md` AC3 already collects.
+`storage-and-gc.md` AC3 already collects. The peek is a streamed read of the committed blob out of
+the CAS that may run to the archive's last entry, because a tar carries no index and
+`metadata.json` can sit anywhere in it, so its cost is bounded by the box's size and not by the
+write. It therefore runs first in `Apply`, before any write and before any document lock, and
+under `storage-and-gc.md`'s lock order (document locks in `Apply`, the head lock last and only
+for the commit step) it holds no repository lock while it reads, so a concurrent publish to
+another box, or to this box, is never blocked behind it; what it does hold is its transaction's
+connection for the duration of the read, one of `database.max_conns`, which is the honest cost of
+a publish whose validation reads gigabytes. The head is held only for the small write and the
+catalog's regeneration; the request's latency scales with the box, the lock hold does not (AC7).
 
 What `Apply` enforces, each refusal answered `validation` (422) unless stated, with nothing
 committed:
@@ -523,9 +537,21 @@ the client keys its resume file on the URL.
   and no `Last-Modified`: no client sends a conditional request (captured), so the headers serve
   intermediaries, and nothing a client holds can hide a rollback, which is why this format needs
   no pointer-scoped freshness (`data-model.md` AC36 covers it without a Vagrant-specific signal).
-  Box files are served with `Cache-Control: public, max-age=31536000, immutable`, `Accept-Ranges:
-  bytes` and `Content-Type: application/octet-stream`, never a JSON type, since a box answering
-  JSON to `HEAD` would be read as a catalog by a direct add.
+  Box files are served through `ServeFile` (`signing-service.md`'s resolved serving-forms
+  decision, was its Q14; AC11, AC32) under a serve policy this handler declares as a
+  package-level constant: `Cache-Control: public, max-age=31536000, immutable`, `Accept-Ranges:
+  bytes`, a strong `ETag` from the CAS digest, a single range answered `206` with
+  `Content-Range` and a range starting at or past the size answered `416` with `Content-Range:
+  bytes */{size}` (the client's reaction to a `416` is uncaptured, since it needs a transfer
+  dropped after its last byte; the server's answer is RFC 9110's), and `Content-Type:
+  application/octet-stream`, never a JSON type, since a box answering JSON to `HEAD` would be
+  read as a catalog by a direct add.
+- **`HEAD` is the door's.** Every route answers a `HEAD` as its `GET` with the body withheld,
+  `Content-Length` and `Content-Type` included (`signing-service.md`'s resolved `HEAD` decision,
+  was its Q24, AC32), which is what makes the catalog probe's `Content-Type` check and the `HEAD`
+  of a box route hold with no method branch in the handler; the one answer outside the door is a
+  policy refusal, which `WriteRefusal` answers to `HEAD` and `GET` alike (Design, "Policy
+  refusals on the wire").
 - **No hosted route answers a redirect**, because a redirect under `--location-trusted` carries
   the client's Bearer token to whatever host the redirect names (captured).
 - **A repoint restores the catalogs.** The generated catalogs are snapshot content, so a rollback
@@ -746,12 +772,22 @@ Classification and behaviour:
   place of the pointer's (`proxy-cache.md`, "Freshness of what a remote serves"; under this
   profile's `ETag`-only rule no `Last-Modified` is served on either path). The revision's `name`
   must equal the requested name byte for byte or the request answers `404` (the name rule above;
-  HCP echoes a requested case, captured); every entry's `url` is replaced by this registry's box
+  HCP echoes a requested case, captured, so two spellings HCP folds to one box are two packages
+  on the remote, each with its own cached catalog, their box bytes deduplicated in the CAS);
+  every entry's `url` is replaced by this registry's box
   route for `(version, provider, architecture)`, `unknown` standing for an absent architecture;
   every other field is kept as the upstream wrote it, order included, so a pre-2.4 client selects
   through this registry exactly what it would select from the upstream. Caching a box whose
   upstream entry had no checksum re-runs `FromUpstream` for that box's catalog with the
   verification record, which is how the SHA-256 appears once cached (below).
+- **A `HEAD` on a proxied route is the `GET` with the body withheld** (`proxy-cache.md`'s
+  resolved `HEAD` decision, was its Q24, AC32). The catalog probe every `vagrant box add` sends
+  first performs, on a cold remote, the one fetch-and-cache the `GET` would, is answered
+  `Content-Type: application/json` from the committed entry, and the `GET` that follows serves
+  from the cache, so a probe-then-read costs the upstream one exchange and 2.4's two shorthand
+  probes at most one; a negatively cached catalog answers the probe `404`; and a `HEAD` on a
+  cold box route, which only a direct `box_url` list sends, fetches, verifies and commits the
+  whole box before answering, that decision's accepted cost.
 - **Entries this registry cannot serve are omitted and recorded**: an entry whose upstream URL is
   not `https` (or `http` where the remote allows it), such as a relative path or `file://` that
   the client would read from its own disk (captured), and a version carrying two entries with the
@@ -788,7 +824,8 @@ Classification and behaviour:
   coalescing": the flight owns its lifecycle), and its resume, a `Range` request, joins as a
   waiter and is answered from the CAS after the verified commit, never forwarded upstream as a
   range.
-- **Missing resources are negatively cached** with the short TTL on `404` and `410`; a `429` or
+- **Missing resources are negatively cached** with the short TTL on `404` and `410`, the entry
+  answering `HEAD` as it answers `GET`; a `429` or
   `5xx` is never cached as absence (`proxy-cache.md` AC9). HCP's not-found body is
   `{"code":5,"message":"box not found","errors":["box not found"]}` (captured).
 - **Publish and every management operation against a remote repository answer `405`** with
@@ -825,9 +862,22 @@ delete) says nothing about why.
    depends on the upstream. Until then the content serves as a cache-only remote, the accepted
    cost that decision records.
 
-The operator documentation gives this recipe with HCP's end-of-operations date, and the
-conformance suite proves all three steps against a stand-in (AC21). Recording the vagrantcloud.com
-corpus while HCP still operates is a dated commitment carried in `docs/internal/HANDOFF.md`.
+The conformance suite proves all three steps against a stand-in (AC21), and the operator
+documentation gives the recipe for any retiring catalog host. **For HCP itself the recipe needs
+this handler to exist before 2026-12-31**, and this format is Tier 3 behind the catalogue's Tier 1
+gate, so the documentation states the schedule honestly rather than promising a proxy that will
+not be there: an HCP user who cannot proxy in time keeps their boxes client-side, downloading each
+version's box file for every provider and architecture they need before the deadline
+(`vagrant box add` with `--provider`, or the box URL the catalog names; `vagrant box repackage`
+for a box already installed) and publishing those files through the management API once the
+handler exists, where they become hosted boxes with generated catalogs and SHA-256 checksums.
+The proxied recipe is then the path off any later upstream. Recording the vagrantcloud.com
+corpus while HCP still operates is a dated commitment carried in `docs/internal/HANDOFF.md`; it
+needs no handler code, only a recording session written in the corpus manifest shape
+`conformance-harness.md` defines, made with the harness's recorder if it exists by then and
+with a standalone recording proxy writing that shape otherwise. If the deadline is missed,
+AC25's vagrantcloud.com half is unrecordable and the owner re-scopes it to the static reference
+with a second exception row, an owner decision this spec does not take.
 
 ### Advisories, OSV and the security-signal rule
 
@@ -856,14 +906,31 @@ Q13):
 - **Resolution is per box name, in member order, at request time**: the first member holding any
   version of `{org}/{name}` supplies the whole catalog, and later members' versions of that name
   are not merged in. A `local` member holds the name when its head has the box's generated
-  catalog; a `remote` member is asked through its own fetch-and-cache path, so a proxied box
-  nobody has requested before resolves through the virtual on its first request. The supplying
-  member's stored document (its generated catalog, or the remote's `FromUpstream` output) is
-  served through `ServeDocument` with the serve-time expansion under the virtual's own mount and
-  name, so the virtual's box routes are its own and resolve through the member that supplied the
-  name. There is no stored merged document, no `Merge` in the generator's profile and no
-  `index.merge` job, which is why a member's publish is visible through the virtual at the next
-  request rather than within a merge window.
+  catalog; a `remote` member is asked through its own fetch-and-cache path, in the request, as
+  on the remote itself and never through a `proxy.revalidate` job (there is no merge to drive
+  one; `async-operations.md` lists this format among those asking nothing of it), so a proxied
+  box nobody has requested before resolves through the virtual on its first request, and a
+  `HEAD` through the virtual is the door's and the layer's exactly as on the member. The
+  supplying member's stored document (its generated catalog, or the remote's `FromUpstream`
+  output) is served through `ServeDocument` with the serve-time expansion under the virtual's
+  own mount and name, so the virtual's box routes are its own. There is no stored merged
+  document, no `Merge` in the generator's profile and no `index.merge` job, which is why a
+  member's publish is visible through the virtual at the next request rather than within a
+  merge window.
+- **A box route through the virtual resolves per coordinate, in member order**: the first member
+  holding `(org/name, version, provider, architecture)` serves it, not the member that supplied
+  the catalog at some earlier request, because the virtual stores nothing about who supplied what
+  and a client's catalog read and its box request are separate requests. The two resolutions
+  agree except across a change of membership or content between them, and one such change is a
+  hazard this design names rather than hides: a hosted publish of a coordinate the remote member
+  was serving, made while a client's download of it through the virtual is interrupted, makes the
+  resume (a `Range` request keyed on the virtual's unchanged URL) serve the hosted member's bytes
+  behind the proxied member's first half. The catalog's checksum catches it, since every hosted
+  entry and every cached proxied entry carries this registry's SHA-256 (the resolved
+  proxied-checksum decision below, was Q9), so the client fails the add instead of installing a
+  spliced box (AC22); the one uncaught window is a proxied box not yet cached whose upstream
+  published no checksum, during its first fetch, which that decision's accepted cost already
+  names.
 - **This is where a virtual repository earns its place for Vagrant.** One
   `VAGRANT_SERVER_URL` names one server, so shorthand names can resolve on one repository only; a
   virtual repository over a hosted repository and a remote puts private and proxied boxes behind
@@ -916,13 +983,14 @@ both paths with `HEAD` and `GET`, a missing box, and one box download's redirect
 range of its final object, recorded while HCP still operates. The reference implementation for
 the hosted side is the self-hosting shape HashiCorp's deprecation guidance points users to: a
 pinned static server over a hand-authored catalog and box files, so `Capabilities()` declares
-reference-implementation availability `available`. The write surface has no reference, an
-exception-list entry. Because the hosted half is recorded against a local reference, it is
-legitimate only as a row of `conformance-harness.md`'s authoritative-reference exception list (its
-AC28), whose test fails an unlisted one; that row (the hosted half against the pinned static
-server, since vagrantcloud.com creates no boxes from 2026-10-01 and accepts no test upload) and a
-write row recording that no write corpus exists, as that list's RPM write row does, are reported to
-that spec in this pass, and AC25 cannot pass until they land. Recording gates on the harness's redaction criterion
+reference-implementation availability `available`. Because the hosted half is recorded against a
+local reference, it is legitimate only as a row of `conformance-harness.md`'s
+authoritative-reference exception list (its AC28), whose test fails an unlisted one; that list
+carries this format's two rows, the hosted half against the pinned static server (since
+vagrantcloud.com creates no boxes from 2026-10-01 and accepts no test upload) and a write row
+recording that no write corpus exists, as its RPM write row does, and the static server's digest
+is pinned by the corpus manifest at recording time rather than by the row (its resolved
+digest-location decision, was its Q7). Recording gates on the harness's redaction criterion
 (`conformance-harness.md` AC13), whose rule for this format names the `Authorization` header, URL
 userinfo, the `access_token` parameter and presigned query strings. Deliberate divergences go on
 the exception list before their flow is expected to replay: the rewritten box URLs, the added
@@ -962,7 +1030,9 @@ republish.
       SIGINT and one cut by a dropped connection each resume on both lines on the next `vagrant
       box add`, the transcript showing `Range: bytes={n}-` answered `206` with `Content-Range`,
       the checksum passing and the unpacked image equal to the published one; a `HEAD` of a box
-      route answers `Accept-Ranges: bytes`, the size, and a non-JSON `Content-Type`.
+      route answers `Accept-Ranges: bytes`, the size, and a non-JSON `Content-Type`, with the
+      headers of the `GET` that follows identical; and a `Range` starting at or past the size
+      answers `416` with `Content-Range: bytes */{size}`.
 - [ ] AC6: A publish of one version carrying three provider files creates exactly one snapshot;
       a name outside the grammar or containing `-VAGRANTSLASH-`, a version other than `X.Y.Z`
       (`1.0`, `1.2.0.rc1`, `01.0.0`), a provider or architecture disagreeing with the file's
@@ -977,7 +1047,10 @@ republish.
 - [ ] AC7: A 6 GiB box file uploads through the management API's upload session with the
       server's resident memory and temporary disk bounded independently of the file size, survives
       a dropped connection mid-upload by resuming the session, commits only on a verified
-      SHA-256, and then adds on both lines.
+      SHA-256, and then adds on both lines; the archive peek of the committed 6 GiB blob runs at
+      the start of `Apply` with no document or head lock held (a concurrent publish to the same
+      box commits during the peek, and the head lock is observed free throughout it) and the
+      write holds the head only for the publish and the catalog's regeneration.
 - [ ] AC8: A publish regenerates the box's catalog in exactly the snapshot that holds the new
       files; the catalog is served through `ServeDocument` with `Cache-Control: no-cache`, a
       byte-derived `ETag` and no `Last-Modified`, the handler package setting neither validator,
@@ -1038,8 +1111,11 @@ republish.
       across two hosts on the allowlist, adds on both lines with only this registry reachable: the
       rendered catalog keeps every upstream field and order and replaces every `url` with this
       registry's box route; 2.3.7 and 2.4.9 install the same box through this registry as they
-      install from the stand-in directly; the box served equals the upstream bytes; and a second
-      add from a fresh container reaches this registry while the stand-in receives no request.
+      install from the stand-in directly; the box served equals the upstream bytes; on the cold
+      remote the client's `HEAD` probe causes exactly one upstream `GET` of the catalog and no
+      upstream `HEAD`, is answered `Content-Type: application/json` from the committed entry, and
+      the `GET` that follows makes no upstream request; and a second add from a fresh container
+      reaches this registry while the stand-in receives no request.
 - [ ] AC17: For an upstream entry with a checksum of each type the client supports (`md5`, `sha1`,
       `sha256`, `sha384`, `sha512`), a box whose bytes mismatch is
       never committed and the previous state keeps serving; for an upstream entry with no
@@ -1058,8 +1134,9 @@ republish.
       revision names answers `404` with no upstream request; a catalog whose `name` differs from
       the requested name answers `404`; entries with a relative or `file://` URL, or colliding on
       `(version, provider, architecture)`, are omitted and recorded while the rest serves; an
-      upstream `404` is negatively cached while a `429` or `5xx` is neither cached as absence nor
-      surfaced as not-found.
+      upstream `404` is negatively cached, the entry answering `HEAD` and `GET` alike with no
+      upstream request, while a `429` or `5xx` is neither cached as absence nor surfaced as
+      not-found.
 - [ ] AC19: A remote whose box URLs redirect to a host outside its upstream's `hosts` allowlist
       makes no connection to that host and records it for the operator; the upstream credential
       reaches only the catalog root's host, asserted at the network layer; no redirect target is
@@ -1091,7 +1168,11 @@ republish.
       that name is listed or fetched, asserted at the network layer; a proxied box never requested
       through the remote before resolves through the virtual on its first request; a publish to
       the hosted member is visible through the virtual at the next request with no merge job
-      enqueued; and publish to the virtual answers `405` with problem type `repository-type`.
+      enqueued; a box route through the virtual resolves to the first member holding that
+      coordinate; a hosted publish of a coordinate the remote member supplied, made while a
+      download of it through the virtual is interrupted, makes the resumed add on both lines
+      fail its checksum with nothing installed; and publish to the virtual answers `405` with
+      problem type `repository-type`.
 - [ ] AC23: A policy rule depending on advisory data attached to a Vagrant repository is refused at
       configuration naming the reason; a coordinate rule over a version pattern attaches and
       refuses as configured on both paths; and a rule requiring a verified signature refuses every
@@ -1116,7 +1197,8 @@ republish.
 - [ ] AC25: Replay-match passes against a corpus recorded from vagrantcloud.com and from a pinned
       static server over a hand-authored catalog, covering the recorded surface named in Design,
       with the `Authorization` header, URL userinfo, `access_token` and presigned query strings
-      redacted.
+      redacted, and the static server's digest pinned by the corpus manifest
+      (`conformance-harness.md` was-Q7, AC28).
 - [ ] AC26: The handler's `Capabilities()` declares proxy `supported`, reference-implementation
       `available`, `Virtual: supported` and `Rename: supported`; after a rename, both lines add
       a box from the new name in hosted and proxied mode with every served URL under the new
@@ -1131,9 +1213,9 @@ republish.
 | AC2 | conformance + integration | `conformance/vagrant/shorthand_test.go` (both lines with `VAGRANT_SERVER_URL` carrying the repository path; stored `metadata_url` read from the client's home); `internal/format/vagrant/catalog_paths_test.go` (both paths byte- and header-identical for four caller kinds, `HEAD` and `GET`) |
 | AC3 | conformance + integration | `conformance/vagrant/architecture_test.go` (both lines on `amd64`, default change between runs); `internal/format/vagrant/catalog_order_test.go` (default-last ordering and one default per version and provider across every fixture) |
 | AC4 | integration | `internal/format/vagrant/index/render_test.go` (checksum on every entry, expansion from a fixture `server.public_url` and the current name with a spoofed `Host` ignored, base URL change with snapshot count unchanged, two principals' bodies compared); `internal/index/render_test.go` (the serve-time stage, `Render` call counts on a `304` and on a memo hit, `signing-service.md` AC31) |
-| AC5 | conformance | `conformance/vagrant/resume_test.go` (600 MB fixture behind a throttling proxy in the harness; SIGINT and connection-drop variants on both lines; `Range` and `206` asserted in the transcript; `HEAD` headers) |
+| AC5 | conformance + integration | `conformance/vagrant/resume_test.go` (600 MB fixture behind a throttling proxy in the harness; SIGINT and connection-drop variants on both lines; `Range` and `206` asserted in the transcript; `HEAD` headers equal to the following `GET`'s); `internal/format/vagrant/box_route_test.go` (the declared serve policy's headers, `416` with `Content-Range: bytes */{size}`, `HEAD` answered through `ServeFile`; sharing `internal/index/range_test.go`'s `ServeFile` cases, `signing-service.md` AC30, AC32) |
 | AC6 | integration | `internal/format/vagrant/ingest_test.go` (every `Apply` refusal with `validation` and nothing committed, `conflict` on an existing coordinate, `retired` on a retired one after pruning under an injected clock and after a backwards repoint, three-file publish snapshot count); `internal/manage/idempotency_test.go` (the keyed replay, `management-api.md` AC17) |
-| AC7 | integration + benchmark | `internal/format/vagrant/large_upload_test.go` (6 GiB generated stream with memory and temp-disk probes, dropped connection and session resume, digest-gated commit); `conformance/vagrant/large_box_test.go` (both lines add the result) |
+| AC7 | integration + benchmark | `internal/format/vagrant/large_upload_test.go` (6 GiB generated stream with memory and temp-disk probes, dropped connection and session resume, digest-gated commit; the archive peek with `metadata.json` as the last tar entry, a concurrent publish to the same box committing while it runs under an injected pause, the head lock observed free throughout and the write's lock hold bounded by the publish); `conformance/vagrant/large_box_test.go` (both lines add the result) |
 | AC8 | conformance + integration | `conformance/vagrant/update_test.go` (publish then `outdated --global` and `update --box` on both lines); `internal/format/vagrant/snapshot_test.go` (one snapshot per publish, two concurrent writers into one box, other boxes untouched, repoint byte comparison, caching headers); `internal/index/dispatch_test.go` and `internal/index/accounting_test.go` (`signing-service.md` AC1, with this generator as a registered fixture); `internal/format/freshness_boundary_test.go` (no validator set in the handler package, `signing-service.md` AC11) |
 | AC9 | conformance + integration | `conformance/vagrant/manage_test.go` (the `script`-driven case per declared kind `management-api.md` AC24 requires, presence enforced by `conformance-harness.md` AC26: delete provider file, version and box, then real adds and box-route requests); `internal/format/vagrant/manage_auth_test.go` (the declared `Operations()` set, action refusals with snapshot count unchanged, `Retirement` rows per retired coordinate, `405` `repository-type` on remote and virtual); `conformance/vagrant/cloud_publish_test.go` (`vagrant cloud publish` refused with nothing stored) |
 | AC10 | conformance | `conformance/vagrant/names_test.go` (case variant `404` on both paths, `--name` mismatch message, both lines) |
@@ -1142,13 +1224,13 @@ republish.
 | AC13 | conformance + unit | `conformance/vagrant/pattern_test.go` (the pattern-refusal case `auth.md` AC8 and `format-handler-interface.md` AC7 require, in both modes; `acme/base/**`, `acme/*` and patterned `push`); `internal/format/vagrant/scope_object_test.go` (the object table, per route, `format-handler-interface.md` AC12) |
 | AC14 | conformance + integration | `conformance/vagrant/policy_test.go` (hosted and proxied modes; rules through the `policies` key; exit status, client text, transcript body and status line, `HEAD` status and catalog `200` asserted); `internal/format/vagrant/refusal_record_test.go` (one record per refused add); `internal/format/refusal_writer_test.go` (`supply-chain-policy.md` AC18) |
 | AC15 | conformance | `conformance/vagrant/no_fallback_test.go` (the real `BoxAdd` middleware driven with a two-URL `box_url` list from a Vagrantfile, the second host a declared stand-in on the confined case network, network-layer assertion; 2.4.9 shorthand under refusal) |
-| AC16 | conformance | `conformance/vagrant/proxied_add_test.go` (HCP-layout stand-in with cross-host redirects; rendered catalog compared field by field with the upstream's; selection equal to direct-from-stand-in on both lines; byte comparison; network-level second-add assertion) |
+| AC16 | conformance + integration | `conformance/vagrant/proxied_add_test.go` (HCP-layout stand-in with cross-host redirects; rendered catalog compared field by field with the upstream's; selection equal to direct-from-stand-in on both lines; byte comparison; network-level counts of the stand-in's requests by method across the cold probe, the following `GET` and the second add); `internal/proxy/head_test.go` (the cold `HEAD` filling the cache, shared with `proxy-cache.md` AC32) |
 | AC17 | integration | `internal/format/vagrant/proxied_integrity_test.go` (checksum mismatch in each of the five types through the declared digest set, the structural verifier over each bad body in the completion-only mode, checksum filled after caching through `FromUpstream`, eviction then changed bytes against the bound digest, truncated body; CAS and reference assertions; operator record; the layer half being `proxy-cache.md` AC20's `internal/proxy/completion_mode_test.go`) |
-| AC18 | conformance + integration | `conformance/vagrant/proxied_ttl_test.go` (mutating stand-in with and without validators, network-level counts); `internal/format/vagrant/proxied_catalog_test.go` (unknown routes with no upstream request, name mismatch, omitted entries, `404`, `429` and `5xx`) |
+| AC18 | conformance + integration | `conformance/vagrant/proxied_ttl_test.go` (mutating stand-in with and without validators, network-level counts); `internal/format/vagrant/proxied_catalog_test.go` (unknown routes with no upstream request, name mismatch, omitted entries, `404` answering `HEAD` and `GET` from the negative entry, `429` and `5xx`) |
 | AC19 | integration | `internal/format/vagrant/upstream_redirect_test.go` (allowlisted and refused redirect hosts, credential scope at the network layer, no cached redirect target); `internal/upstream/validate_test.go` (`http://` refusal and `allow_http`, the unreachable-but-well-formed acceptance, `upstream-adapters.md` AC22, AC23) |
 | AC20 | conformance | `conformance/vagrant/proxied_resume_test.go` (throttled stand-in, interrupted initiating client, resume as a waiter, stand-in request count) |
 | AC21 | integration + conformance | `internal/format/vagrant/removal_test.go` (stand-in presenting each event; a removed coordinate before and after the adoption that drops its revision, with a sweep on an injected clock with the grace lapsed while the retained revision names it, network-level request counts; a changed checksum kept across a sweep on an injected clock with the grace lapsed, the object store read afterwards, then the box evicted and the re-fetch refused; the shared-layer half is `proxy-cache.md`'s); `conformance/vagrant/migration_test.go` (catalog reads, `immediate` sync, `read_only` with the stand-in stopped, freeze into a local, adds on both lines at each step; the read-only half shares `internal/repository/readonly_remote_test.go` with `proxy-cache.md` AC23) |
-| AC22 | conformance + integration | `conformance/vagrant/virtual_test.go` (shorthand through the virtual repository on both lines, shadowing with the network layer showing no upstream request for the shadowed name, a never-requested proxied box, `405` `repository-type`); `internal/format/vagrant/virtual_resolve_test.go` (first-member-per-name resolution at request time, a member publish visible at the next request, no `index.merge` job enqueued) |
+| AC22 | conformance + integration | `conformance/vagrant/virtual_test.go` (shorthand through the virtual repository on both lines, shadowing with the network layer showing no upstream request for the shadowed name, a never-requested proxied box, `405` `repository-type`; the shadowing-mid-download case: a cached proxied box's download through the virtual interrupted, the same coordinate published to the hosted member with other bytes, the resumed add failing the checksum on both lines with nothing installed); `internal/format/vagrant/virtual_resolve_test.go` (first-member-per-name catalog resolution and first-member-per-coordinate box resolution at request time, a member publish visible at the next request, no `index.merge` or `proxy.revalidate` job enqueued) |
 | AC23 | integration | `internal/format/vagrant/policy_config_test.go` (advisory rule refused at configuration, version-pattern rule on both paths through the `advisories` and `policies` keys, signature rule refusing with its reason) |
 | AC24 | integration + fault injection + property + conformance | `internal/storage/metadata_root_test.go` (threshold crossing with a generated catalog and a proxied revision, sweep, serve; `signing-service.md` AC5 and `storage-and-gc.md` AC16); `internal/format/vagrant/proxied_retention_gc_test.go` (a stand-in catalog above the threshold dropping a version across adoptions N+1 and N+2, a sweep on an injected clock with the grace lapsed after each, the object store and the box's package-level declared list read after each and the repository-level document asserted to declare nothing, the retained revision's evicted box fetched from its upstream URL and verified, the sweep paused after its mark and after intent recording while an adoption commits, two boxes adopted concurrently with no revision-token retry, an eviction pass over quota leaving documents and lists unchanged); `internal/storage/gc_property_test.go` (declared-list births and ends from adoptions on package-level declaring documents interleaved with the sweep, shared with `proxy-cache.md` AC27 and `storage-and-gc.md` AC16); `internal/proxy/metadata_eviction_test.go` (`proxy-cache.md` AC29); `conformance/vagrant/large_catalog_test.go` (both lines add after the sweep) |
 | AC25 | conformance + unit | `conformance/vagrant/replay_test.go` (corpus replay against both recorded sources with the named redactions); `conformance/record/reference_exceptions_test.go` (this format's rows of the authoritative-reference exception list, `conformance-harness.md` AC28) |
@@ -1186,24 +1268,28 @@ kind and the rename case, apply from the sibling specs and are not restated per 
 ### Phase 2: Publish and management
 - Waits on `management-api.md` reaching `planned` (Blocking preconditions)
 - The `Operator` declaration (`publish`, `annotate`, `delete-file`, `delete-version`,
-  `delete-package`), box files through the API's streamed, resumable upload sessions, `Apply`'s
-  archive peek and ingest rules, `conflict` and core-held `Retirement` from `Outcome`, the
+  `delete-package`), box files through the API's streamed, resumable upload sessions, the
+  archive peek first in `Apply` before any lock and the ingest rules on its result,
+  `conflict` and core-held `Retirement` from `Outcome`, the
   write-boundary declaration exercised under concurrency, a `script` case per kind
 
 ### Phase 3: Proxied path
 - Waits on `upstream-adapters.md` and `artifact-verification.md` (Blocking preconditions)
 - Catalog revisions with TTL through `FromUpstream`, URL rewriting and the route map over the
   current and one retained upstream revision, their bodies on the declared blob-digest list of
-  that box's package-level document on the remote, the `hosts`
+  that box's package-level document on the remote, `HEAD` as the layer's cache-filling `GET`
+  with the body withheld, the `hosts`
   allowlist for redirect chains, boxes verified against a declared digest set or through the
   completion-only mode with the structural verifier and then bound, resume as a waiter, negative
   caching, the removal table, the three-step migration recipe, `405` `repository-type` on remote
   writes
 
 ### Phase 4: Virtual repositories, rename, corpus and gate
-- Per-name virtual resolution at request time, `Capabilities()` with the rename case (AC26), the
-  recorded corpus against vagrantcloud.com (a dated commitment: before 2026-12-31) and the static
-  reference, both client lines in the matrix, the exception-list entries named in Design
+- Per-name catalog and per-coordinate box resolution at request time, `Capabilities()` with the
+  rename case (AC26), the recorded corpus against vagrantcloud.com (a dated commitment: before
+  2026-12-31, recorded with whatever recorder exists by then, since it needs no handler code)
+  and the static reference, both client lines in the matrix, the exception-list entries named in
+  Design
 
 ## Tasks
 
@@ -1217,7 +1303,9 @@ shape and then adopted at their own recommendation under the owner's standing de
 raised and adopted one more the same way (Q13, the virtual catalog), on Opus. Each is recorded
 below as adopted rather than decided, folded through Scope, Design, the criteria and the Test
 Plan in the same pass, and reversible by the owner at any time. `grep -rn "standing delegation"`
-is the owner's review queue.
+is the owner's review queue. All thirteen were re-examined fresh on Fable on 2026-10-08, with
+the verdict recorded at the end of each record: ten confirmed, Q4, Q12 and Q13 amended in
+their fold or stated cost, none superseded.
 
 ### Resolved: which entry a pre-2.4 client receives (was Q1)
 
@@ -1244,6 +1332,13 @@ is how 2.3.7 put an `arm64` box on an `amd64` host in the capture.
 
 Accepted cost: the proxied path cannot apply it (it keeps upstream order so selection matches the
 upstream's), which the exception list records.
+
+Rechecked on Fable 2026-10-08: confirmed. Judged fresh, A still wins: the only order that
+matters to 2.3.7 is the order among entries sharing a provider name, the capture shows it
+installing the wrong architecture under publish order, and 2.4 selects by architecture in either
+order, so A costs the newer line nothing. One thing the record under-stated: a legacy box
+published with architecture `unknown` as its provider's only entry is that provider's default by
+the first-file rule, which is what 2.4.9's `unknown`-marked-default fallback needs to install it.
 
 ### Resolved: how private box downloads are authorized (was Q2)
 
@@ -1273,6 +1368,13 @@ variable Vagrant already documents for custom servers.
 Accepted cost: the operator documentation explains the pause, the host scoping and the
 multi-repository token.
 
+Rechecked on Fable 2026-10-08: confirmed. The decisive fact is the resume key: any per-request
+value in a box URL defeats resume for exactly the multi-gigabyte downloads that need it, and the
+Bearer form is the one Vagrant documents. The record's cost table is honest; one cost it left
+implicit is that the Basic form, which stays available for catalog reads, persists the credential
+in plain text in `metadata_url` (captured), so the documentation steers private users to the
+Bearer form for that reason too.
+
 ### Resolved: whether a box file can change after publish (was Q3)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: a `(version, provider,
@@ -1298,6 +1400,12 @@ guarantee through the API's own mechanism; a keyless publish of an existing coor
 refused `conflict`, and a retired coordinate `retired`, through the core-held `Retirement` record
 (its resolved retirement-placement decision, was Q3).
 
+Rechecked on Fable 2026-10-08: confirmed. The splice capture makes B indefensible for a format
+whose client keys its resume file on the URL, and the reconciliation's move from a byte-comparing
+no-op to `Idempotency-Key` is the right fold: `management-api.md`'s was-Q15 names this format as
+the one relying on the key alone, and a keyless identical-bytes retry answering `conflict` is a
+loud failure, not a silent one.
+
 ### Resolved: the write boundary of a multi-provider publish (was Q4)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: one publish carries one
@@ -1319,6 +1427,17 @@ upload sessions keep the write itself small.
 Accepted cost: recorded for `management-api.md`, which adopted it: its "Publish through the API"
 is fixed by this format's scale finding, and a batch publish is one write.
 
+Rechecked on Fable 2026-10-08: confirmed, fold amended. A stands: the partial-provider window is
+real for 2.3 clients and the upload sessions keep the write small. The fold overstated one
+thing: "the write's latency does not scale with box size" was false as written, because `Apply`'s
+archive peek streams a committed blob until it finds `metadata.json`, which in a tar can be the
+last entry, so a 6 GiB box costs a 6 GiB read. Design now places the peek first in `Apply`,
+before any write and any document lock, where `storage-and-gc.md`'s lock order (document locks in
+`Apply`, the head lock last and only for the commit step) means it blocks no other publish and
+holds only its transaction's connection; the lock hold is small while the request's latency
+scales with the box, and AC7 and its row assert the head is free and a concurrent publish
+commits during the peek. The `Operator` interface needed no new hook for it.
+
 ### Resolved: the version grammar at publish (was Q5)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: `X.Y.Z` of non-negative
@@ -1339,6 +1458,12 @@ user's default; `X.Y.Z` without leading zeros makes byte equality and client equ
 
 Accepted cost: the renumbering note; proxied catalogs keep whatever their upstream publishes.
 
+Rechecked on Fable 2026-10-08: confirmed. The grammar is checked against what HCP's own boxes
+use (`bento`'s `202404.23.0` fits it) and against the two captured traps, `1.0` equalling `1.0.0`
+and a prerelease outranking its release, both of which only A removes; the proxied path keeping
+the upstream's spelling is the right exception, since rewriting a version string would change
+what `vagrant box outdated` compares.
+
 ### Resolved: box name matching (was Q6)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: names match byte for byte;
@@ -1357,6 +1482,12 @@ for byte; HCP's fold-and-echo behaviour (captured) gives one box several local i
 **Why this is yours:** it decides whether migrated Vagrantfiles need editing.
 
 Accepted cost: the migration note naming HCP's folding.
+
+Rechecked on Fable 2026-10-08: confirmed. C would give one registry box several local
+identities and make pattern scopes match none of them; B fails the differently spelled Vagrantfile
+anyway at the client's name check; A is the only answer under which the stored `name`, the path
+and the grant pattern are one string. On the proxied path the same rule means two spellings HCP
+folds are two packages on the remote, now stated in Design, with the box bytes deduplicated.
 
 ### Resolved: rendering a box policy refusal (was Q7)
 
@@ -1379,6 +1510,13 @@ side-stepped.
 
 Accepted cost: the operator documentation explains the client's message.
 
+Rechecked on Fable 2026-10-08: confirmed. The `HEAD`-and-`GET` rule is forced by the captured
+direct-list fallback, and it now sits on firmer ground than when adopted: both serving doors
+answer every `HEAD` as the `GET` with the body withheld (`signing-service.md` was-Q24,
+`proxy-cache.md` was-Q24), so the refusal writer's `HEAD` answer is the one deliberate exception
+rather than a per-route habit, and the catalog's `200` beside a refused box keeps `vagrant box
+outdated` truthful as the record says.
+
 ### Resolved: what a proxied catalog serves (was Q8)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: every upstream field and
@@ -1399,6 +1537,13 @@ through this registry exactly what it would select from the upstream.
 
 Accepted cost: the operator record of omitted entries.
 
+Rechecked on Fable 2026-10-08: confirmed. B is not a cache and C changes what 2.3 clients
+install, so A is the only option that is both a cache and selection-preserving. Its fold gained
+one rule it did not have at adoption: the probe `vagrant box add` sends first is a `HEAD`, which on
+a cold remote now fills the cache as the `GET` would (`proxy-cache.md` was-Q24), so the rewritten
+catalog is what the probe's `Content-Type` check sees; without that rule option A would have
+failed every cold shorthand add at the probe (AC16).
+
 ### Resolved: checksums on proxied boxes with none upstream (was Q9)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: once a box is cached, the
@@ -1418,6 +1563,12 @@ bytes are immutable at this registry's route, so the checksum can never be wrong
 **Why this is yours:** it decides whether the cache adds integrity the upstream lacks.
 
 Accepted cost: a rendered document that varies with cache state, recorded on the exception list.
+
+Rechecked on Fable 2026-10-08: confirmed. B leaves the most used public boxes unverifiable by
+the client and C makes a catalog read cost a multi-gigabyte fetch; A's cost is a document that
+changes once, when the cache fills. The window before it fills is where the one uncaught case of
+the virtual's shadowing hazard lives (the resolved virtual-catalog decision below, as amended),
+which this record's cost now names explicitly rather than leaving implicit.
 
 ### Resolved: HCP Vagrant's publishing API (was Q10)
 
@@ -1454,6 +1605,11 @@ hand, where the staging question belongs. It has: its resolved compatibility-sur
 (was Q8) declines HCP's API v2 for this record's reasons (staging state with no entity, a
 credential-bearing upload URL, two path shapes, a retired contract).
 
+Rechecked on Fable 2026-10-08: confirmed. `management-api.md`'s was-Q8 was itself rechecked on
+Fable (2026-09-30) and confirmed, and since this adoption HCP has stopped creating boxes, so the
+one thing B offered, `vagrant cloud publish` working unchanged, is a contract with weeks to live
+against a target that no longer accepts the operation; AC9 keeps the refusal observable.
+
 ### Resolved: advisory binding and byte-level rules (was Q11)
 
 **Adopted 2026-09-26 under the owner's standing delegation.** Option A: advisory-dependent rules
@@ -1473,6 +1629,12 @@ cataloguer's to extract, by the rule that keeps per-format knowledge out of a se
 **Why this is yours:** it states plainly that box vulnerability policy is not offered yet.
 
 Accepted cost: recorded for `supply-chain-policy.md`'s cataloguer selection.
+
+Rechecked on Fable 2026-10-08: confirmed. `supply-chain-policy.md`'s coverage table carries the
+row (Vagrant, Chef, Puppet, LuaRocks: no ecosystem, advisory rules refused at configuration),
+its was-Q9 leaves the door open to a declared source, and B would put a disk-image inventory
+inside a handler, which the constitution's boundary forbids; AC23 proves the refusal, the
+pattern rules and the signature rule's reason.
 
 ### Resolved: preconfigured upstreams and the HCP shutdown (was Q12)
 
@@ -1498,6 +1660,17 @@ commitment). The recipe gained a `read_only` step between the sync and the freez
 2026-09-28 reconciliation, from `replication.md`'s resolved HCP-deadline decision (was Q11
 there), because freeze lands at charter step 10 and HCP's content must survive the gap as a
 cache-only remote (Design, "The proxied path"; AC21).
+
+Rechecked on Fable 2026-10-08: confirmed, cost amended. A stands: a preconfigured upstream that
+dies on a known date would ship dead. The record's accepted cost was under-stated in one way
+that matters to the users the recipe is for: the three-step recipe presumes a remote over HCP
+that exists before 2026-12-31, and this handler is Tier 3 behind the catalogue's Tier 1 gate, so
+for HCP itself the recipe is a promise the schedule cannot keep. Design now says so and gives the
+client-side path (download each needed box before the deadline, publish through the management
+API once the handler exists), keeping the proxied recipe, proven against a stand-in, as the path
+off any later upstream. The corpus commitment is likewise qualified: it needs no handler code,
+so it is recorded with whatever recorder exists by the deadline, and a missed deadline makes
+AC25's live half an owner re-scope, flagged as such.
 
 ### Resolved: how a virtual catalog is produced when a member is remote (was Q13, raised and adopted 2026-09-28)
 
@@ -1537,6 +1710,21 @@ format's virtual as its example ("Serving"), and the generator's `Render` stage 
 serving repository's mount and name (`signing-service.md`'s resolved serve-time decision, was its
 Q13, AC31).
 
+Rechecked on Fable 2026-10-08: confirmed, fold amended. A is right for the reason given: a
+per-name lookup is not a merge, and a stored merge would omit every proxied box nobody had yet
+requested through the remote, which is the shorthand case the virtual exists for. The fold left
+the virtual's box routes under-specified: "resolve through the member that supplied the name"
+assumes the virtual remembers which member answered the catalog, and it stores nothing. Design
+now resolves a box route per coordinate in member order and names the hazard that creates when
+membership or content changes between a client's catalog read and its resume: a hosted publish of
+a coordinate the remote was serving, during an interrupted download, splices bytes behind the
+virtual's unchanged URL, which the catalog's SHA-256 turns into a checksum failure rather than an
+installed image (AC22), with the single uncaught window (an uncached proxied box with no upstream
+checksum, during its first fetch) recorded here as the cost. Two more things the fold now states:
+a remote member is asked in the request, never through a `proxy.revalidate` job, which is why
+`async-operations.md` is right to list this format among those asking nothing of it; and a
+`HEAD` through the virtual is the serving door's and the layer's as on the member.
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1545,3 +1733,4 @@ Q13, AC31).
 | 2026-09-28 | 7c4d5bb | cross-spec reconciliation of the Wave 1 folds on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming it verified against the current text of its source spec and of this file (Open item 23's requests, now met or routed; themes 1, 2, 4, 5, 7 and 10; management-api 11, 12 and 13; upstream-adapters 12; signing-service 11; replication reconciliation 6; conformance-harness reconciliation 4; sweep 1 item 6). Applied: the catalog as the `Indexer` generator's output, the six index requirements mapped one by one onto `signing-service.md` (AC1, AC3, AC5, AC21, AC24), served through `ServeDocument` under an `ETag`-only profile with no pointer-scoped signal needed, the serve-time URL expansion in the generator package citing `chef.md`'s gap (AC4, AC8 and rows); the management table carrying kinds through `Operator`, publish from the API's upload sessions with `Apply`'s peek refusing `validation`, `conflict`, core-held `Retirement` with its granularity, the identical-bytes no-op replaced by `Idempotency-Key`, `405` `repository-type` (AC6, AC9, the Q3 and Q4 records); the box-integrity entry cited to `artifact-verification.md` (AC18, AC24 there); the `access_token` redaction reassigned to `observability.md` and the harness; `WriteRefusal`, curl showing only the code, the `holds` row (AC14); the proxied transport on `upstream-adapters.md` (credential kinds, `hosts` allowlist, `allow_http`, AC23's no-probe rule; AC19), catalogs through `FromUpstream`, the completion-only mode with a structural verifier for boxes with no upstream checksum and a declared-digest refetch after eviction (AC17), the removal table mapped onto `proxy-cache.md`'s event classes; the migration recipe's `read_only` step from `replication.md` was-Q11 and a catalog-read step the recipe needed because the wire lists no names (AC21, the Q12 record); the Q10 record citing `management-api.md` was-Q8; client confinement, harness-built images and seed-path generation cited; new AC26 (`Capabilities()`, rename). Mismatches found: `management-api.md` places "add provider file" under `attach`, whose own definition excludes it, so this spec declares it `publish` and reports the row; a stored virtual merge cannot cover a remote member that lists no names, raised as Q13 in decision shape and adopted (A: per-name resolution at request time, no `Merge`; AC22), which also agrees with `async-operations.md` recording this spec as asking nothing of the queue; `auth.md` still has no `vagrant` client row (reported again). `fable_recheck` extended (new question adopted on Opus). Stays draft. |
 | 2026-09-28 | 36a137d | data-loss fix, second wave, on Opus (storage-and-gc closing-sweep item 0 and data-loss fix item 1): cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied item 1 of "From the data-loss fix" in `agents/spec-loop/consequences.md`, verified against `proxy-cache.md`'s resolved retained-revision and old-blob decisions (was its Q19 and Q20, AC27, AC28) and `storage-and-gc.md` AC16: a digest a document merely mentions keeps nothing alive. The hole: the remote's current documents held "the retained upstream revisions" with no count and no keep-alive, and the box route resolved through them; worse, the current upstream revision was held by nothing either, because the rendered catalog is the current document and it has replaced every upstream `url`, so the body the route map reads is a second blob no current document's body is. AC24 asserted survival "while current or retained" with no mechanism behind it. Reachability checked first: the catalog route serves the current revision only, but a client that read the older catalog and requests the box afterwards names a `(version, provider, architecture)` route only the retained revision may name, and the route, carrying the coordinate and no digest, reads that revision for the upstream URL and checksum, so the retained revision is reachable and Q19, not Q20, applies. Chosen: Q19 at its default count of one, both upstream bodies above the threshold on the remote's repository-level declared list, rewritten by each adoption; a removed coordinate answers `404` with no upstream request once the adoption that drops its revision commits. The kept-bytes row was not a hole but is now explicit: the kept bytes are held by the box's own cached reference, never by the checksum the rendered document keeps, and the eviction row now covers a changed-checksum coordinate as well as a checksum-less one. AC21 and AC24 extended (a sweep with the grace lapsed while the revision is retained, the retained revision's evicted box fetched and verified, its body collected after the dropping adoption, the sweep paused across an adoption); Test Plan rows (`internal/format/vagrant/proxied_retention_gc_test.go` added, the shared `internal/storage/gc_property_test.go` named) and Phase 3 updated. No new question adopted here; `fable_recheck` extended for the folded decision. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
 | 2026-09-28 | 2740b05 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Applied: eviction-contradiction item 2 (the declared list moved to the box's package-level document on the remote, the one holding its rendered catalog, `proxy-cache.md` was-Q22 and was-Q21, Design, AC21, AC24, their Test Plan rows and Phase 3; the one-retained-revision count confirmed as `proxy-cache.md` was-Q19's default, the current body declared too per its was-Q19 extension, with the GC criteria sweeping with the grace lapsed while a revision is retained, now in AC21 too); management-surfaces item 7 (the attach paragraph now cites `management-api.md`'s Vagrant rows under `publish`); signing-service closing-sweep item 6 (the serve-time expansion is its `Render` stage, was-Q13, AC31: Blocking preconditions, "Every catalog is a generated per-box document", item list, the Q13 record's accepted cost, AC4 and its row; no base URL through `Deps` for this handler, matching `format-handler-interface.md`'s re-open rider); auth closing-sweep item 3 (the `vagrant` row and the Bearer declaration exist); management-api was-Q15 cited beside `Idempotency-Key`; six-spec item 6 extended to this spec (the hosted half is recorded against a pinned static server, so AC25 needs `conformance-harness.md` AC28 rows, reported). Found already done: management-api item 13 (was-Q8 in the HCP record), replication item 6, the HANDOFF.md dated commitment. No question adopted, `fable_recheck` text extended for the moved list. `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
+| 2026-10-08 | daabec0 | Fable recheck: full review + re-examination of the thirteen Opus adoptions, the data-loss second wave and the batch 1 sweep under the adversarial lens at full strength, every sibling citation verified at HEAD, constitution compliance | The whole of `agents/spec-loop/consequences.md` read; every item targeting this file verified against the current sibling text: the harness gate review's stale "reported, not yet landed" wording replaced (both exception rows exist, the digest pinned by the corpus manifest under harness was-Q7, AC28); the HANDOFF dated item, replication was-Q11, management-api's Vagrant rows and was-Q8 and was-Q15, auth's `vagrant` row, artifact-verification's row, upstream-adapters' row and signing-service's `Render`, `FromUpstream` and AC24 found applied. Verdicts: Q1, Q2, Q3, Q5, Q6, Q7, Q8, Q9, Q10, Q11 confirmed, several with an under-stated cost added; Q4 amended in fold (the archive peek can read a whole tar, so it runs first in `Apply` before any lock, holding only its connection, AC7); Q12 amended in cost (the HCP recipe needs a Tier 3 handler before 2026-12-31, so Design gives the client-side path and qualifies the corpus commitment, owner-facing); Q13 amended in fold (box routes through a virtual resolve per coordinate in member order; the shadowing-mid-download hazard named, caught by the SHA-256 except in the uncached-no-checksum window, AC22). Foundation decisions folded: signing-service was-Q24 and proxy-cache was-Q24 (`HEAD` as the `GET` with the body withheld on both paths, a cold probe filling the cache, AC16, AC18), was-Q14 (`ServeFile` for box routes with `416`, AC5), management-api was-Q20 (the spool bound covers the publish body only). None superseded; no new question; 26 criteria each with a Test Plan row; `fable_recheck` cleared. `node scripts/check-spec.js`: zero failures on this file. draft -> planned. |

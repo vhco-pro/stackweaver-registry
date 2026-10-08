@@ -141,6 +141,10 @@ not satisfy it.
   boxes on 2026-10-01 and stops operating on 2026-12-31. After that there is no real upstream to
   record the Vagrant proxied-path corpus against, and content hosted there is gone unless it was
   mirrored first (`formats/vagrant.md`, the mirroring recipe; `replication.md` Q11 sequences it).
+  The corpus needs no handler code: record it with the harness recorder if it exists by then, else a
+  standalone recording proxy writing the manifest shape; if it is missed, vagrant AC25's live half
+  needs an owner re-scope. The proxied migration recipe serves HCP users only if the handler ships
+  first, so `vagrant.md` also documents a client-side path (2026-10-08 recheck).
 - **Fable recheck queue (paused 2026-10-01, monthly allowance spent).** Every foundation spec is
   planned on Fable except project-charter; 7 of 33 format specs are rechecked and planned. The
   resume point, including a partial hackage recheck saved as a patch, is at the top of
