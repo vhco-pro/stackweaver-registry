@@ -72,7 +72,7 @@ session ends). Each firing:
 **RESUMED 2026-10-08 02:50 CEST for an unattended run that ends at 12:45 CEST** (owner: "the next
 10 hours, the same way"). After 12:45 the heartbeat commits finished work, launches nothing new,
 records the resume point and cancels itself (heartbeat cron id 3791fe37). The STOPPED note below is history; items 1 and 2 are
-under way at the resume.
+done (hackage planned 2026-10-08; Q23's consequences queued).
 
 **STOPPED 2026-10-01: Fable's monthly allowance is spent** (the owner's stop rule, heartbeat item 5).
 The heartbeat cron is cancelled. Resume when Fable credit returns, two agents at a time:

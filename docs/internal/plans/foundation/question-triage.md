@@ -471,7 +471,7 @@ decision:
 | `formats/conan.md` | Q11 |
 | `formats/homebrew.md` | Q15 |
 | `formats/debian.md` | Q10 (rechecked on Fable 2026-10-01 with Q1-Q9: all ten confirmed, six amended in fold; spec planned) |
-| `formats/hackage.md` | Q16 |
+| `formats/hackage.md` | Q16 (rechecked on Fable 2026-10-08 with Q1-Q15: eleven confirmed, five amended; Q17 adopted on Fable; spec planned) |
 | `formats/opam.md` | Q16 |
 | `formats/swift.md` | Q11 |
 | `foundation/credential-management.md` | Q1, Q2, Q3, Q4, Q5, Q6, Q7 (rechecked on Fable 2026-10-01: Q1, Q2, Q6, Q7 confirmed, Q3, Q4, Q5 amended; spec planned) |

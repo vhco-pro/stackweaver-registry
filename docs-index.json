@@ -211,7 +211,7 @@
     "path": "docs/internal/plans/formats/hackage.md",
     "description": "Spec for Hackage (Haskell) repositories served to cabal-install and Stack through hackage-security: the only catalogue format with The Update Framework, so hosted and virtual repositories get root, snapshot, timestamp and mirrors metadata from the shared signing service with per-pointer version counters that make a rollback reach clients instead of failing them, an append-only 01-index.tar.gz built as appended gzip members so incremental Range updates survive every publish, uploads through cabal upload --publish, revisions, preferred-versions deprecation and rebasing deletion as registry-owned operations, a byte-for-byte proxied cache that never re-signs Hackage's metadata, and re-signed virtual repositories.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "37",
     "covers": [
       "internal/format/hackage/**",
