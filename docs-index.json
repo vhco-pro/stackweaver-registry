@@ -364,7 +364,7 @@
     "path": "docs/internal/plans/formats/pypi.md",
     "description": "Spec for the PyPI format, scheduled as the experiment's generalisation test - does format N+1 cost less than format N?",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "9",
     "covers": [
       "internal/format/pypi/**"
