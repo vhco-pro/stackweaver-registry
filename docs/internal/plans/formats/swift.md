@@ -1,6 +1,6 @@
 ---
-status: draft
-status_description: "Format closing sweep 2026-09-28 at 2740b05 on Opus (not a review): proxied release metadata was classified immutable but stored nowhere stated, so its re-fetched-after-eviction rows could not hold; it is now a cached File of the version (completion-only with a JSON-and-checksum verifier), like manifests and archives, and a per-version verification record on the package's current document outlives eviction, so re-fetches are checked against what was first served (AC18, AC20 extended); the list declares a retained count of zero; the SwiftURL advisory key is reported at write time and stored on the Package row (supply-chain was-Q11, data-model AC46), rewritten by a rebind in the same write, the proxied key taken from the upstream list's canonical and alternate links, replacing the alias-carrying request coordinate (AC23); client resolves after restore and rebind (AC9, AC7); ServeRendered and ServeFile (signing-service was-Q14; AC6); management-api was-Q14 and Q16 for the retired 409; auth's swift row and Bearer declaration cited; the hosted half's conformance-harness AC28 row reported (AC24). No question adopted; 25 criteria. Earlier: Reconciled 2026-09-28 at fe2a39f with the foundation wave on Opus (not a review), this spec's first reconciliation: SE-0391 validity and trust are artifact-verification's CMS entry Swift profile reached through Deps' Verifier, trust from the repository's x509-roots trust set as a publisher verdict (AC14); unavailability, restore, deletion and the first-claim URL rebind are management-api's withdraw, restore, delete-version and rebind kinds (push on the bound identity and delete on the displaced one, as adopted here), with core-held Retirement refused centrally and rendered as this wire's 409 (AC3, AC7, AC9); Q11 adopted, making login and availability pull descriptors under auth's Q23 and revising Q7 (AC12); the Bearer challenge is auth's per-format declaration with no amendment needed (AC10); refusals through WriteRefusal (AC13); the proxied path on the https adapter with the presigned store allowlisted, pagination as the handler's derivation, completion-only manifests with a swift-tools-version verifier, cache-scoped Last-Modified, and the Content-Version check moved to the first response per upstream-adapters AC23 (AC16 to AC18, AC21); removal rows by proxy-cache event class, the checksum change now revision-bound rather than an explicit signal (AC20); Capabilities and the rename case (AC25). Earlier: authored 2026-09-26 from captures of SwiftPM 5.10.1 and 6.4.0 (6.1.3 corroborating); ten questions adopted under the standing delegation, eleven now; none open. Awaits a /spec review pass."
+status: planned
+status_description: "Planned by the Fable recheck of 2026-10-08 at 3d5a63f: a full review pass plus the re-examination of the eleven questions adopted on Opus and the two closing-sweep design folds (the per-version verification record outliving eviction, the proxied advisory key from the upstream list's links), every sibling citation verified at HEAD and the live Tuist registry re-sampled. All eleven confirmed; Q2, Q9 and Q11 amended in fold (an unbind needs delete on the displaced package alone; the proxied verdict reads the verification record's signing block; a patterned pull's identifiers refusal is the route's 404, so AC12 asserts the Git fallback from the pin kind). Adversarial findings fixed: the publish spool is bounded by management.publish_spool_limit under server.spool_dir with a 413 before 100 Continue (AC3); the retirement claim is declared in precedence form so 1.0.0+build.7 cannot re-enter after a deleted 1.0.0 (AC3); the proxied page bound is a 64-page constant whose breach is an integrity failure at fetch (AC17); a 404 negatively caches only with Content-Version: 1, reconciling AC19 with AC21; signed-archive headers and the proxied verdict come from the record, never the evictable release metadata; the record's write mechanics stated (AC20). Queued items folded: the exception row now exists with its digest in the corpus manifest (conformance-harness was-Q7); proxy-cache's HEAD decision (was-Q24, AC32) on the proxied path (AC6, AC19); no expected validator declared (AC31). 25 criteria, each with a Test Plan row; zero open questions; fable_recheck cleared. Earlier: the format closing sweep 2026-09-28 at 2740b05 on Opus (not a review) made proxied release metadata a cached File with a verification record outliving eviction (AC18, AC20), stored the SwiftURL advisory key on the Package row rewritten by rebind (AC23) and added client resolves after restore and rebind (AC9, AC7); reconciled 2026-09-28 at fe2a39f with the foundation wave on Opus, adopting Q11 (login and availability as pull descriptors, revising Q7; AC12); authored 2026-09-26 from captures of SwiftPM 5.10.1 and 6.4.0 (6.1.3 corroborating), ten questions adopted under the standing delegation."
 description: "Spec for the Swift package registry format (SE-0292): the per-package release list, release metadata, manifests with their version-specific alternates, source archives, the identifiers lookup that bridges Git dependencies, and the multipart publish with SE-0391 publisher signatures, hosted and proxied, with SwiftPM 5.10 and 6.4 as the conformance oracles."
 author: michielvha
 goal: "Serve Swift teams a private package registry that swift package resolve and swift package-registry publish accept unmodified on both an old and a current toolchain, whose publisher signatures pass through untouched so a proxied or virtual repository is as verifiable as a hosted one, and whose identities, credentials and refusals behave the way SwiftPM actually reads them rather than the way the documents describe."
@@ -10,7 +10,6 @@ created: 2026-09-26
 covers:
   - "internal/format/swift/**"
   - "conformance/swift/**"
-fable_recheck: "authored on Opus 2026-09-27 while Fable was out of monthly credit; grounded in captured client traffic, but the design judgement was never Fable-reviewed. Reconciled on Opus 2026-09-28 (format batch 8), adopting Q11 (login and availability as pull descriptors under auth.md's descriptor kind, revising Q7), which also needs a Fable recheck; the format closing sweep on Opus 2026-09-28 folded two design judgements without a question, which need the same recheck: proxied release metadata as an evictable cached File with a per-version verification record on the package's current document checking every re-fetch, and the proxied advisory key taken from the upstream release list's canonical and alternate links"
 ---
 
 # Plan: Swift package registry format
@@ -112,9 +111,11 @@ Grounding for this draft, stated up front because the constitution asks for evid
   release metadata with no `metadata` key and no `publishedAt`; a manifest carrying a
   root-relative `Link` alternate; the archive answered `303` to a presigned object-store URL
   with a 600-second expiry, whose bytes hash to the advertised checksum; a case-varied
-  identity (`apple/Swift-Argument-Parser`) answering `200`; a missing package answering `404`
-  with `application/json` `{"message":"Not Found"}` rather than a problem document; and a `PUT`
-  answering `404`. OSV's API queried for the `SwiftURL` ecosystem.
+  identity (`apple/Swift-Argument-Parser`) answering `200`; a missing package and a missing
+  release each answering `404` **with `content-version: 1`** and an `application/json` body
+  rather than a problem document (`{"message":"Not Found"}` on 2026-09-26; `{"message":"The
+  package acme/doesnotexist was not found in the registry."}` when re-sampled on 2026-10-08, the
+  header unchanged); and a `PUT` answering `404`. OSV's API queried for the `SwiftURL` ecosystem.
 
 Where the documents and the captures disagree, the captures win, and the disagreements are
 recorded here because they would otherwise be built from the documents:
@@ -404,7 +405,16 @@ The levels are exactly those `data-model.md` provides; no table is added.
   first committed release metadata advertised, and the CAS digest each manifest and the archive
   were first committed at. It is metadata that keeps nothing alive, and it is what makes a
   re-fetch after eviction a check against the bytes this registry first served (Design, "The
-  proxied path").
+  proxied path"). The record is written by the handler as cache materialisation, in the request
+  that commits the resource, under the package document's revision token with `data-model.md`'s
+  mandatory retry and one field per resource, so the concurrent first commits of one version's
+  release metadata, manifests and archive (a resolve fetches them together) each land their own
+  field and a concurrent list adoption carries every field forward; each field is derived from
+  the committed file (its CAS digest; for the release metadata the `checksum` and `signing` its
+  committed body carries), never from a second fetch, and a cached file found with no record,
+  the window between a commit and the write, is given one from its digest before it is served.
+  `puppet.md` keeps each cached file's verification record on the module's package-level
+  document the same way.
 
 Nothing on this format is a generated document: the release list, the release metadata and every
 `Link` header are rendered per request from the head snapshot through the pointer, so there is no
@@ -473,8 +483,19 @@ response in place of `100 Continue`. Both clients render such an early `401` or 
 detail and exit non-zero (captured, "early refusal before 100-continue", on both), so the early
 answer costs nothing in rendering. What this registry enforces on the body:
 
-- The body is spooled to a bounded temporary buffer outside the CAS. The `source-archive` part is
-  required; `source-archive-signature`, `metadata` and `metadata-signature` are optional, and a
+- The body is spooled under `server.spool_dir` outside the CAS, bounded by
+  `management.publish_spool_limit` (`deployment.md`; 1 GiB by default, the bound every multipart
+  body this registry accepts shares): a `Content-Length` above it is refused `413` with a problem
+  document before `100 Continue`, rendered by both clients through their generic `server error
+  {status}: {detail}` path, and a body that outgrows its declared length is cut at the bound and
+  refused `400`, nothing committed. Go's `net/http` sends `100 Continue` on the handler's first
+  read of the body, so every early refusal above is written without touching it. The archive part
+  is read from the spool through `archive/zip`, which needs a `ReaderAt` and the size (the reason
+  for the spool rather than a stream); only the central directory and the root manifests are
+  decompressed, each manifest bounded at 1 MiB, and an entry whose name is not exactly
+  `{dir}/Package.swift` or `{dir}/Package@swift-*.swift` under the single top-level directory is
+  never extracted, so a crafted name (`../`, an absolute path, a nested manifest) names nothing.
+  The `source-archive` part is required; `source-archive-signature`, `metadata` and `metadata-signature` are optional, and a
   signature part without `X-Swift-Package-Signature-Format: cms-1.0.0`, or with another format,
   is refused with `422`.
 - The archive is validated as described under manifests: a Zip, one top-level directory,
@@ -493,7 +514,13 @@ answer costs nothing in rendering. What this registry enforces on the body:
   (`management-api.md`'s resolved retirement-check decision, was its Q14, and AC12), and the
   handler renders it as its own `409` problem document with `Content-Version: 1`: the decision is
   central and the rendering the wire's, `management-api.md`'s resolved wire-rendering decision
-  (was its Q16), which names this format's `409` problem. There is no idempotent same-bytes case,
+  (was its Q16), which names this format's `409` problem. The claim the handler declares on the
+  write transaction for that check is `{scope}.{name}/{version}` in **precedence form**, the
+  version with its build metadata stripped, and the coordinate a `delete-version` returns to
+  retire is written in the same form, so the core's string comparison refuses `1.0.0+build.7`
+  after `1.0.0` was deleted exactly as the handler refuses it beside a live `1.0.0`; a claim in
+  the published spelling would let the retired coordinate back in under a build suffix every
+  client reads as the same version. There is no idempotent same-bytes case,
   because `swift package-registry publish` rebuilds the archive on every run and a retry is never
   byte-identical to the attempt it retries, so this format declares no unchanged publish (that
   spec's resolved unchanged-publish decision, was Q15, is not taken up here).
@@ -545,7 +572,7 @@ them (its reconciliation table's Swift rows):
 | Mark a release unavailable | `withdraw` | `{scope}/{name}/{version}` and a reason text | The list carries the version with `problem: {status: 410, title: "Unavailable", detail: reason}`; a fresh 6.4 resolve selects the next eligible version, a 5.10 resolve pinned to it fails, and a `--force-resolved-versions` resolve still installs it, because the release metadata, manifest and archive keep serving (all captured against the stub) | `delete` |
 | Restore a release | `restore` | `{scope}/{name}/{version}` | The `problem` clears | `delete` |
 | Delete a release | `delete-version` | `{scope}/{name}/{version}` and a reason text | The version leaves the snapshot and its coordinate is retired; the list keeps it as an entry carrying `problem: {status: 410, title: "Gone", detail: reason}` so a client learns why rather than seeing a version vanish, and its release metadata, manifests and archive answer `410` with the same problem document (captured rendering: "server error 410: {detail}" at the release-information step) | `delete` |
-| Rebind a repository URL | `rebind` | A normalised URL and a canonical identity, or none to unbind | `identifiers?url=` answers the new identity (or `404`); the displaced package's claim becomes unbound | `push` on the identity it binds to and `delete` on the one it displaces, both required |
+| Rebind a repository URL | `rebind` | A normalised URL and a canonical identity, or none to unbind | `identifiers?url=` answers the new identity (or `404`); the displaced package's claim becomes unbound | `push` on the identity it binds to and `delete` on the one it displaces, both required; an unbind names nothing to bind and requires `delete` on the displaced package alone |
 
 Unavailability is Swift's analogue of a yank, and the capture shows it is stronger than PyPI's: the
 ecosystem's only withdrawal signal, a list `problem`, removes the version from every non-forced
@@ -576,7 +603,14 @@ with `+json`, `+swift` or `+zip`, or the bare vendor type for JSON; a request wi
 readable; an unknown or malformed version is `400` ("invalid API version") and a valid but unsupported
 one (`v2`) is `415`. The optional `.json` suffix on the list and release routes is served as the
 unsuffixed route. `HEAD` is answered on every `GET` route with the headers of the `GET`, as the
-specification recommends, although no pinned client sends it.
+specification recommends, although no pinned client sends it. On a `remote` a `HEAD` is the `GET`
+with the body withheld and is never forwarded: the route makes the same fetch-and-cache call for
+either method, a cold `HEAD` performs the fetch the `GET` would in the mode the handler declared,
+fills the cache and is answered after the verified commit through the serving door with the
+`GET`'s status and headers and no body, a negative entry answers it `404`, and the only `HEAD`
+the layer ever sends upstream is a declared revalidation probe, which this handler does not
+declare (`proxy-cache.md`, "`HEAD` on a proxied route", its resolved HEAD decision, was Q24,
+AC32).
 
 The release list carries, besides `releases`, a `Link` with `rel="latest-version"` to the highest
 precedence available release and, when the latest release's metadata names repository URLs, a
@@ -687,9 +721,11 @@ rather than re-deciding them. **A patterned `pull` resolves on this format**: no
 path fetches a repository-wide document that names objects, so a token patterned `acme/**`
 resolves every `acme.*` package through a real `swift package resolve` and fails on the first
 dependency outside the pattern with "package not found on registry". It is refused the
-`identifiers` lookup, which 6.4 turns into a warning and a Git fallback (captured with a `403`),
-so the SCM bridge simply does not engage for a patterned consumer; the lookup's answer names
-identities, so it can never be a descriptor. It **can log in**, and reach `availability`, because
+`identifiers` lookup, which reports none, and that refusal renders as the route's `404` under
+`auth.md`'s existence rule, the answer an unknown URL gets, so 6.4 clones the URL with no message
+(a `403` on the route was captured printing a warning before the same fallback) and the SCM
+bridge simply does not engage for a patterned consumer; the lookup's answer names identities, so
+it can never be a descriptor. It **can log in**, and reach `availability`, because
 both answer an empty body that names nothing and `auth.md` authorizes a descriptor for `pull`
 under a pattern (its resolved name-free-document decision, was Q23, and AC32; the resolved
 login-and-availability decision below, was Q11, revising the login-scope decision, was Q7). A
@@ -844,7 +880,11 @@ this spec first checked at configuration is therefore checked on the first upstr
 handler receives: every SE-0292 response carries `Content-Version: 1`, which the service
 specification requires and the Tuist registry sends, so an upstream response without it (an HTML
 `404`, a missing header) is not adopted and the client's request answers `502` with a problem
-document naming the requirement (AC21). The object-storage host an upstream's archives redirect to
+document naming the requirement (AC21). The header is also what tells a registry's `404` from a
+web server's: a `404` carrying `Content-Version: 1` is the registry's own answer that the
+coordinate is absent (Tuist's `404`s carry it, re-sampled 2026-10-08) and is negatively cached
+below, while a `404` without it is the `502`, never cached as absence, so a mistyped upstream URL
+surfaces as a misconfiguration rather than as every package not existing. The object-storage host an upstream's archives redirect to
 (Tuist's presigned store) is an entry of the upstream's host allowlist with role `none`, which the
 operator adds when creating the remote: the allowlist is empty by default, and a redirect to a
 host absent from it makes no connection and returns `HostNotAllowedError`, rendered as a `502`
@@ -852,10 +892,18 @@ problem naming the host (`upstream-adapters.md` AC7). Per the resolved preconfig
 decision below, the Tuist registry stays user-configured in v1.
 
 - **The release list is mutable metadata with a TTL.** On a miss or after the TTL the handler fetches
-  it through fetch-and-cache and follows `Link` `rel="next"` to completion within a configured page
-  bound, deriving each next request itself (never passing pages through, because 5.10 would see only
-  the first; `upstream-adapters.md` names walking a paginated Swift release list as the handler's
-  derivation, not the adapter's), and the handler parses
+  it through fetch-and-cache and follows `Link` `rel="next"` to completion within a fixed bound of
+  64 pages, a package-level constant rather than a key (no SE-0292 registry paginates one
+  package's releases anywhere near it, and Tuist does not paginate at all), deriving each next
+  request itself (never passing pages through, because 5.10 would see only the first;
+  `upstream-adapters.md` names walking a paginated Swift release list as the handler's derivation,
+  not the adapter's). A list that exceeds the bound is **not adopted** and is an integrity failure
+  at fetch in `proxy-cache.md`'s event classes: nothing is committed, the previous list keeps
+  serving within the stale limit, and the operator is alerted naming the package, because a
+  truncated list served as complete is exactly the older-version resolve 5.10 showed against a
+  paginated one. The handler declares no expected validator on the list (`proxy-cache.md` AC31):
+  nothing on this wire names another document's validator, so the list's freshness is the TTL
+  alone. The handler parses
   the union of `releases`, keeps every entry's `problem` verbatim, and serves one unpaginated list whose
   `url` values and `Link` headers it **renders under this repository's externally visible base**:
   upstream `url` values are absolute or, on Tuist, root-relative paths that would otherwise resolve
@@ -887,8 +935,12 @@ decision below, the Tuist registry stays user-configured in v1.
   upstream `303` to its allowlisted target (Tuist's presigned object-store URLs expire after 600
   seconds, captured), so the presigned target is never recorded as provenance or cached as a
   resolution and no `Location` reaches the client (`upstream-adapters.md` AC8). The signature
-  headers of a signed archive are rendered from the cached release metadata's `signing` block
-  rather than trusted from the redirect target.
+  headers of a signed archive are rendered from the verification record's `signing` block, which
+  outlives the release metadata's own eviction, rather than from that document or from anything
+  at the redirect target; the same block is what the archive fetch's post-commit hook hands to
+  the CMS entry's Swift profile for the proxied verdict (`artifact-verification.md` AC15's remote
+  half, "What artifact verification provides" item 5), so the verdict is computed once the
+  archive is committed and never from a document that may since have been evicted.
 - **Manifests carry no digest.** Nothing the upstream publishes lets a proxy verify a manifest before
   it has the archive, and resolution fetches manifests of many versions whose archives it never
   downloads, so manifests use `proxy-cache.md`'s **completion-only** fetch-and-cache mode (its resolved
@@ -902,9 +954,12 @@ decision below, the Tuist registry stays user-configured in v1.
   divergence on a mismatch, without changing the bytes clients have already fingerprinted.
 - **`identifiers` is mutable metadata with the TTL**, forwarded with the query URL, its answer cached
   per normalised URL and served with the identities as the upstream spells them.
-- **Missing coordinates are negatively cached** with the short TTL: an upstream `404` in any content
-  type (Tuist answers `application/json` `{"message":"Not Found"}`) is normalised to this registry's
-  problem document; a `429` or `5xx` is never cached as absence (`proxy-cache.md` AC9).
+- **Missing coordinates are negatively cached** with the short TTL: an upstream `404` carrying
+  `Content-Version: 1`, in any content type (Tuist answers `application/json` with a `message`
+  field, never a problem document), is normalised to this registry's problem document; a `404`
+  without the header is the `502` above and is not cached; a `429` or `5xx` is never cached as
+  absence (`proxy-cache.md` AC9). A cold `HEAD` for a missing coordinate creates the same
+  negative entry and answers `404`, as the layer's HEAD rule states.
 - **`availability` and login are answered by this registry**, never forwarded: they describe this
   registry and this credential.
 - **Publish and every management operation against a `remote` repository answer `405`**
@@ -1004,10 +1059,11 @@ recording session runs the pinned clients against the suite's `PackageRegistryEx
 server in a container pinned by digest for the hosted surface, and against the Tuist registry for the
 proxied read surface; `Capabilities()` declares a reference implementation `available`. A hosted
 half recorded against a local reference is legitimate only as a row of `conformance-harness.md`'s
-authoritative-reference exception list (its AC28), whose test fails an unlisted one; that row, the
-hosted half against the pinned `PackageRegistryExample` because no public SE-0292 registry accepts
-a test publish (the Tuist registry answers `PUT` with `404`, captured), is reported to that spec in
-this pass, and AC24 cannot pass until it lands. The recorded
+authoritative-reference exception list (its AC28), whose test fails an unlisted one; that list
+carries Swift's row, the hosted half against `PackageRegistryExample` because no public SE-0292
+registry accepts a test publish (the Tuist registry answers `PUT` with `404`, captured), and the
+container's digest is pinned by this format's corpus manifest under `conformance/swift/` at
+recording time, not by the row (that spec's resolved digest-location decision, was Q7). The recorded
 surface, named now because a thin recording script yields a thin specification: a cold resolve of a
 package with a transitive dependency on each toolchain, the 5.10 alternate-manifest fetch, a
 prerelease pin, the identity-case variant, a paginated list, `--replace-scm-with-registry` and
@@ -1042,10 +1098,13 @@ flow is expected to replay.
       (`1.0.0+build.7` beside `1.0.0`) is refused with `409`, and a publish of a deleted version is
       refused `409` by the shared write path's central `retired` check, rendered as this format's
       problem document with `Content-Version: 1`, including after the deleting snapshot has aged
-      out of retention and after a repoint to a snapshot older than the deletion; a version whose final identifier is
+      out of retention and after a repoint to a snapshot older than the deletion, and a publish of
+      `1.0.0+build.7` after `1.0.0` was deleted is refused by the same central check because the
+      claim is declared in precedence form; a version whose final identifier is
       `zip` or `json`, an archive with two top-level directories or no `Package.swift`, an invalid
       metadata document, and a signature part with another format are each refused with `422` naming
-      the defect; an unauthenticated publish and a duplicate are refused before `100 Continue` with
+      the defect; an unauthenticated publish, a duplicate and a `PUT` whose `Content-Length` exceeds
+      `management.publish_spool_limit` (the last `413`) are refused before `100 Continue` with
       no body byte spooled; each client prints `server error {status}: {detail}`; and no refusal
       creates a snapshot.
 - [ ] AC4: A manifest declaring `ACME.ZZTool` resolves the package published as `acme.zztool` on
@@ -1062,7 +1121,10 @@ flow is expected to replay.
       and every error `application/problem+json` with `status`, `title` and `detail`; a request with
       no `Accept` or `*/*` is served as version 1, an unknown version is answered `400` and `v2` is
       answered `415`; the `.json` suffix routes answer as their unsuffixed forms; `HEAD` on each
-      `GET` route answers the `GET`'s headers with no body; archive and manifest responses carry
+      `GET` route answers the `GET`'s headers with no body, and on a remote a cold `HEAD` on the
+      list and on an archive fills the cache with exactly one upstream `GET` and no upstream
+      `HEAD`, the following `GET` served from the cache with identical headers (`proxy-cache.md`
+      AC32); archive and manifest responses carry
       `Cache-Control: public, immutable`; the archive honours a `Range` request; a matching
       `If-None-Match` on the list, release, manifest and archive routes answers `304` through the
       shared serving forms, the handler package setting no validator itself;
@@ -1116,7 +1178,8 @@ flow is expected to replay.
 - [ ] AC12: A token holding only `pull` under the pattern `acme/**` resolves `acme.zztool` and its
       dependency `acme.zzcore` through real resolves on both toolchains, including when the manifest
       spells the identity `ACME.ZZTool`, and is refused `other.zztool`'s list, release, manifest and
-      archive and the `identifiers` lookup (6.4.0 falling back to Git, asserted from its output),
+      archive and the `identifiers` lookup, the last as the route's `404` (6.4.0 cloning the URL
+      instead, asserted from its `Package.resolved` pin kind),
       while `swift package-registry login` and `availability` succeed under it, both reported as
       `pull` descriptors that pass the sentinel test; a token holding only `push` under the same
       pattern is refused login, is configured without it, publishes `acme.zztool` and is refused
@@ -1165,7 +1228,8 @@ flow is expected to replay.
       revalidated; every served list carries the remote's cache-scoped `Last-Modified`, never the
       upstream's; and a paginated upstream list is followed through its `rel="next"` links to
       completion and served as one unpaginated list, from which 5.10.1 resolves the version found on
-      the upstream's last page.
+      the upstream's last page, while a list paginating past the page bound is not adopted, the
+      previous list keeps serving and the operator is alerted naming the package.
 - [ ] AC18: A stand-in archive whose bytes disagree with the advertised `checksum`, or whose body is
       truncated, is never committed to the CAS and attaches no cached reference, the client receives
       the same failure it would from a corrupt upstream, and the real reason is recorded observably
@@ -1177,8 +1241,10 @@ flow is expected to replay.
       `File` of the version with no version-level document written on the remote, its first commit
       writing the version's verification record.
 - [ ] AC19: A package the upstream lacks answers `404` with a problem document whatever the
-      upstream's error body, and is negatively cached, so a second request within the negative TTL
-      makes no upstream request; an upstream `429` or `5xx` is neither cached as absence nor surfaced
+      upstream's error body, provided the upstream's `404` carries `Content-Version: 1` (one
+      without it is AC21's `502` and is not cached), and is negatively cached, so a second request
+      within the negative TTL makes no upstream request and a cold `HEAD` for it answers `404`
+      from the same entry; an upstream `429` or `5xx` is neither cached as absence nor surfaced
       as not-found and succeeds as soon as the upstream recovers.
 - [ ] AC20: An upstream `problem` appearing on or clearing from a version is propagated at the next
       revalidation with no divergence recorded, a forced pin to that version still installing from the
@@ -1188,7 +1254,10 @@ flow is expected to replay.
       verification record stay, a resolve re-fetches all three, checks the release metadata's
       `checksum` and `signing` block against the record and the manifest and archive against their
       bound digests, and installs the bytes first served, the client's fingerprint store raising no
-      error; a re-fetch whose release metadata advertises another `checksum`, or whose manifest or
+      error, the record having been written in the request that committed each resource, with
+      the concurrent first commits of one version's three resources each landing their own field
+      and a cached file found with no record given one from its CAS digest before it is served;
+      a re-fetch whose release metadata advertises another `checksum`, or whose manifest or
       archive bytes differ, is not committed, nothing is purged, the evicted resource's request
       fails, and the operator alert names both digests; and an upstream `404` or `410` on such a
       re-fetch answers `404` with a divergence recorded and the verification record kept: Swift's
@@ -1214,11 +1283,13 @@ flow is expected to replay.
       request; the same advisory does not match a package whose claim on that URL is unbound; a
       `rebind` moving the URL to another package moves the match with it in the same write; and a
       package with no bound URL is shown to the operator as having no advisory identity.
-- [ ] AC24: Replay-match passes against a corpus recorded from the pinned reference server and the
-      Tuist registry covering the recorded surface named in Design, and the pinned compatibility suite
-      passes against a hosted repository with every skip matching a declared exception.
+- [ ] AC24: Replay-match passes against a corpus recorded from the pinned reference server
+      (`PackageRegistryExample`, its digest pinned in the corpus manifest) and the Tuist registry
+      covering the recorded surface named in Design, and the pinned compatibility suite passes
+      against a hosted repository with every skip matching a declared exception.
 - [ ] AC25: `Capabilities()` declares proxy `supported`, reference implementation `available`,
-      `Virtual: supported` and `Rename: supported`; after a rename, both toolchains resolve from the
+      `Virtual: supported` and `Rename: supported`; after a rename and a `swift package-registry set`
+      to the new path, both toolchains resolve from the
       new name with byte-identical release documents, manifests and archives, a machine that
       fetched a version before the rename resolves it afterwards with no fingerprint error, the
       identifiers lookup answers the same bindings, the old name answers `not-found`
@@ -1231,10 +1302,10 @@ flow is expected to replay.
 |-----------|-----------|---------------|
 | AC1 | conformance | `conformance/swift/hosted_test.go` (both pinned images; `--cache-path`, `--config-path`, `--security-path` and `--netrc-file` isolated in setup, because the client reads netrc and user configuration from the passwd home and ignores `$HOME` for them; transcript assertions per route and order; `Package.resolved` parsed; source byte comparison; the tools-6.1 fixture with its 5.9 alternate) |
 | AC2 | conformance + integration | `conformance/swift/publish_test.go` (publish with and without metadata on each toolchain, asserted from the transcript and the server state because of the 6.4 abort; fresh-cache resolve and byte comparison); `internal/format/swift/publish_test.go` (snapshot count and content set, head-snapshot visibility before the response, `checksum` equal to the CAS digest, `Link` alternates) |
-| AC3 | conformance + integration | `conformance/swift/publish_test.go` (duplicate, precedence-equal and deleted-version publishes through real clients, the deleted version seeded through `state` with its `Retirement` record; early `401` and `409` before `100 Continue` asserted from the transcript); `internal/format/swift/immutability_test.go` (the central `retired` refusal rendered with `Content-Version: 1` after pruning under an injected clock and across a backwards repoint, sharing `internal/manage/retirement_test.go`'s interleavings, `management-api.md` AC12; `.zip` and `.json` suffix versions; archive, metadata and signature-format refusals; spool counter at zero for early refusals) |
+| AC3 | conformance + integration | `conformance/swift/publish_test.go` (duplicate, precedence-equal and deleted-version publishes through real clients, the deleted version seeded through `state` with its `Retirement` record; early `401` and `409` before `100 Continue` asserted from the transcript); `internal/format/swift/immutability_test.go` (the central `retired` refusal rendered with `Content-Version: 1` after pruning under an injected clock and across a backwards repoint, sharing `internal/manage/retirement_test.go`'s interleavings, `management-api.md` AC12; `.zip` and `.json` suffix versions; the precedence-form claim against a retired `1.0.0`; archive, metadata and signature-format refusals; the `413` from a `Content-Length` above `management.publish_spool_limit`; spool counter at zero for early refusals) |
 | AC4 | conformance + unit | `conformance/swift/identity_test.go` (mixed-case manifest and publish on both toolchains; second-package absence asserted through the management API); `internal/format/swift/identity_test.go` (grammar table, canonical folding, display spelling, traversal) |
 | AC5 | conformance + unit | `conformance/swift/manifest_test.go` (5.10 alternate fetch; `curl` for each `swift-version` form and the `303`; signed-manifest byte comparison); `internal/format/swift/manifest_test.go` (numeric equivalence table, nested-manifest exclusion) |
-| AC6 | conformance + unit | `conformance/swift/negotiation_test.go` (`curl` across `Accept` values, `.json` routes, `HEAD`, `Range`; `supportsAvailability: true` resolve on both); `internal/format/swift/headers_test.go` (`Content-Version` on every route including every error path; `304` answers through `ServeRendered` and `ServeFile`, sharing `signing-service.md` AC32 and the module-wide `internal/format/freshness_boundary_test.go` of its AC11) |
+| AC6 | conformance + unit | `conformance/swift/negotiation_test.go` (`curl` across `Accept` values, `.json` routes, `HEAD` in both modes with the cold proxied `HEAD` counted at the network layer, `Range`; `supportsAvailability: true` resolve on both); `internal/format/swift/headers_test.go` (`Content-Version` on every route including every error path; `304` answers through `ServeRendered` and `ServeFile`, sharing `signing-service.md` AC32 and the module-wide `internal/format/freshness_boundary_test.go` of its AC11) |
 | AC7 | conformance + integration | `conformance/swift/identifiers_test.go` (both SCM flags on both toolchains, URL variants, conflicting claim, `rebind` driven from the case `script` through the management endpoint); `internal/format/swift/binding_test.go` (normalisation table, first-claimant rule, rebind snapshot, the two-action refusal sharing `internal/manage/authz_test.go`'s `rebind` case, `management-api.md` AC4); the post-rebind `--replace-scm-with-registry` resolve on both toolchains in `conformance/swift/identifiers_test.go` |
 | AC8 | integration | `internal/format/swift/concurrent_publish_test.go` (two writers per shape, revision-token retry, predecessor repoint) |
 | AC9 | conformance + integration | `conformance/swift/unavailable_test.go` (`withdraw`, `restore` and `delete-version` driven from the case `script` through the management endpoint, the case-set validator requiring one per declared kind, `conformance-harness.md` AC26; 6.4 re-resolve, 5.10 pinned failure and forced installs on both asserted from output and `Package.resolved`; after `restore`, the 6.4 resolve selecting the restored version and the 5.10 pinned resolve succeeding; `410` rendering); `internal/format/swift/manage_test.go` (one snapshot per operation, the `Retirement` record, `push`-only refusal sharing `management-api.md` AC9's action table, `405` `repository-type` on remote and virtual) |
@@ -1245,10 +1316,10 @@ flow is expected to replay.
 | AC14 | conformance + integration | `conformance/swift/signing_test.go` (signed publish with the fixture chain; the repository's trust set through the `trust` key; strict client configuration with and without the root on both toolchains; tampered signature, unsigned manifest and mismatched signer publishes; shares `conformance/swift/signed_publish_test.go`'s fixtures with `artifact-verification.md` AC15); `internal/format/swift/signing_test.go` (the `Verifier` called before commit, signing entity recorded, verified and failed verdicts, verdict consumed by a policy rule) |
 | AC15 | conformance + integration | `conformance/swift/tofu_test.go` (a first resolve into an isolated `--security-path`, then republish, delete-and-republish and repoint-and-republish attempts, then a fresh resolve on the same security path on both toolchains); `internal/format/swift/immutability_test.go` (the refusals under repoint) |
 | AC16 | conformance + integration | `conformance/swift/proxied_test.go` (Tuist stand-in built from the recorded responses, including an expiring `303` target served on a `hosts` stand-in; both toolchains; network-level assertion from fresh caches; byte comparison; no upstream host in any response; the allowlist-less variant refused with no connection); `internal/format/swift/proxied_render_test.go` (URL and `Link` rendering from root-relative and absolute upstream values) |
-| AC17 | conformance + integration | `conformance/swift/proxied_ttl_test.go` (mutating stand-in with and without `ETag`; a paginated stand-in; upstream request counts at the network layer); `internal/format/swift/proxied_freshness_test.go` (cache-scoped `Last-Modified`; shares `internal/proxy/freshness_test.go`'s assertions, `proxy-cache.md` AC22) |
+| AC17 | conformance + integration | `conformance/swift/proxied_ttl_test.go` (mutating stand-in with and without `ETag`; a paginated stand-in, and one paginating past the bound; upstream request counts at the network layer); `internal/format/swift/proxied_freshness_test.go` (cache-scoped `Last-Modified`; shares `internal/proxy/freshness_test.go`'s assertions, `proxy-cache.md` AC22) |
 | AC18 | integration | `internal/format/swift/proxied_integrity_test.go` (mismatched and truncated archives; completion-only manifests with the `swift-tools-version` verifier, truncated and foreign bodies; completion-only release metadata with its JSON-and-`checksum` verifier, stored as a `File` with no version-level document, the verification record written at its first commit; the manifest-archive divergence; CAS and reference assertions; operator record) |
 | AC19 | conformance | `conformance/swift/proxied_test.go` (missing identity with the stand-in's JSON `404`, throttling and server-error stand-in responses, network-level counts) |
-| AC20 | integration + conformance | `internal/format/swift/removal_test.go` (stand-in presenting each event class; release metadata, manifest and archive evicted by a quota pass with the list and verification record unchanged, then re-fetched and checked against the record, and a changed `checksum`, changed bytes and an upstream `404` each on re-fetch; the shared-layer half is `proxy-cache.md` AC13's and AC29's `internal/proxy/metadata_eviction_test.go`); `conformance/swift/proxied_eviction_test.go` (both toolchains resolving after the eviction on a warm `--security-path`, no fingerprint error) |
+| AC20 | integration + conformance | `internal/format/swift/removal_test.go` (stand-in presenting each event class; release metadata, manifest and archive evicted by a quota pass with the list and verification record unchanged, then re-fetched and checked against the record, and a changed `checksum`, changed bytes and an upstream `404` each on re-fetch; concurrent first commits of one version's three resources under the revision-token retry; a cached file with no record served only after its record is written; the shared-layer half is `proxy-cache.md` AC13's and AC29's `internal/proxy/metadata_eviction_test.go`); `conformance/swift/proxied_eviction_test.go` (both toolchains resolving after the eviction on a warm `--security-path`, no fingerprint error) |
 | AC21 | integration + conformance | `internal/format/swift/upstream_first_request_test.go` (creation with no upstream request; HTML `404` and missing-header responses answered `502` on the first request; virtual accepted); `conformance/swift/remote_write_test.go` (publish against remote and virtual repositories on both toolchains) |
 | AC22 | conformance + integration | `conformance/swift/virtual_test.go` (local plus remote members; both toolchains; case-varied identity); `internal/format/swift/virtual_merge_test.go` (package-level shadowing, identifiers from the first binding member) |
 | AC23 | integration + conformance | `internal/format/swift/advisory_key_test.go` (the key reported in the write recording the package's claims, bound URLs only, rewritten by a first claim, a deletion and a `rebind` in the same write; the proxied key from the upstream list's links on the fetch-and-cache request; no-identity marking); `internal/policy/advisory_key_test.go` (the Swift case at resolution and at a request-free sync, `supply-chain-policy.md` AC24) and `internal/model/advisory_key_test.go` (`data-model.md` AC46); `conformance/swift/policy_test.go` (the advisory case in both modes) |
@@ -1324,7 +1395,11 @@ loop can continue; each is recorded below as adopted rather than decided, folded
 Design, the criteria and the Test Plan in the same pass, and reversible by the owner at any time.
 The 2026-09-28 reconciliation with the foundation wave adopted an eleventh on Opus (was Q11), which
 revises Q7 now that `auth.md` has a descriptor kind, and added landing notes to the records the
-foundation specs answered. `grep -rn "standing delegation"` is the owner's review queue.
+foundation specs answered. The Fable recheck of 2026-10-08 re-examined all eleven as if deciding
+them fresh and confirmed each, amending the fold of Q2, Q9 and Q11 where the record under-stated
+it; the two design folds the closing sweep made without a question (the verification record and
+the proxied advisory key) were confirmed under the same lens, the record's write mechanics now
+stated. `grep -rn "standing delegation"` is the owner's review queue.
 
 ### Resolved: synchronous publication only (was Q1)
 
@@ -1351,7 +1426,9 @@ latency is small.
 **Why this is yours:** it picks the semantics a CI pipeline will build on and declines a shared
 subsystem this format could have used.
 
-Accepted cost: the header is ignored, recorded on the exception list.
+Accepted cost: the header is ignored, recorded on the exception list. Rechecked on Fable
+2026-10-08: confirmed; the record left the synchronous validation unpriced, and it is now bounded
+by `management.publish_spool_limit` and the 1 MiB manifest bound Design states.
 
 ### Resolved: which action unavailability requires (was Q2)
 
@@ -1381,6 +1458,8 @@ Accepted cost: one more row for that reconciliation, recorded in the sibling con
 reconciliation has landed: `management-api.md` places the `withdraw` kind, Swift
 unavailability by name, under `delete` by the same effect rule (its resolved withdraw-action
 decision, was Q1, and AC9), and its `rebind` kind carries exactly the two-action rule adopted here.
+Rechecked on Fable 2026-10-08: confirmed; the record under-stated the unbind form, which names
+nothing to bind and needs `delete` on the displaced package alone (Design, the operations table).
 
 ### Resolved: identifier bindings bind on first publication (was Q3)
 
@@ -1406,7 +1485,10 @@ standing to demand of arbitrary hosts), and it gives the advisory alias a bindin
 **Why this is yours:** it is a trust decision about what a publish credential can make other
 consumers install.
 
-Accepted cost: the conflict record and the rebind operation.
+Accepted cost: the conflict record and the rebind operation. Rechecked on Fable 2026-10-08:
+confirmed. The case-insensitive path comparison in the normalisation is what makes the rule hold
+against a case-varied re-claim, and it matches the hosts SwiftPM meets (GitHub, GitLab and Gitea
+fold owner and repository names); a host that did not would be two bindings, never a hijack.
 
 ### Resolved: policy-refused versions stay listed (was Q4)
 
@@ -1429,7 +1511,9 @@ version into every list render.
 
 **Why this is yours:** it trades an automatic route-around for a failure that says why.
 
-Accepted cost: the failing resolve, which names the rule.
+Accepted cost: the failing resolve, which names the rule. Rechecked on Fable 2026-10-08:
+confirmed; `--force-resolved-versions`, which never reads the list, is a second reason the list
+cannot be where a refusal lives.
 
 ### Resolved: virtual repositories and the merge rule (was Q5)
 
@@ -1453,7 +1537,8 @@ applied the same way for the same dependency-confusion reason.
 
 **Why this is yours:** it decides a shadowing rule users will read as a promise.
 
-Accepted cost: the shadowing is total per identity, which the documentation states.
+Accepted cost: the shadowing is total per identity, which the documentation states. Rechecked on
+Fable 2026-10-08: confirmed.
 
 ### Resolved: the Tuist registry as a preconfigured upstream (was Q6)
 
@@ -1476,7 +1561,9 @@ weaker default than a language's official index.
 
 Accepted cost: the proxied cases run against a stand-in only; the real registry is exercised by the
 recording session. `proxy-cache.md`'s second extension (was Q17) since added api.nuget.org and
-repo.maven.apache.org only, leaving this record's footing unchanged.
+repo.maven.apache.org only, leaving this record's footing unchanged. Rechecked on Fable
+2026-10-08: confirmed; the live registry was re-sampled in this pass and still answers as
+recorded, `content-version: 1` on `200` and `404` alike.
 
 ### Resolved: the login route reports `pull` with no object (was Q7)
 
@@ -1504,7 +1591,8 @@ environment variables; 5.10's hand-written `authentication` entry with a netrc).
 
 **Why this is yours:** it accepts a recipe limitation rather than bending a settled security rule.
 
-Accepted cost: the documented alternative recipe.
+Accepted cost: the documented alternative recipe. Rechecked on Fable 2026-10-08: stands as
+revised by the login-and-availability decision (was Q11), confirmed below.
 
 ### Resolved: OSV advisories bind through the package's bound URLs (was Q8)
 
@@ -1538,7 +1626,8 @@ key the handler reports when it records the package, stored core-parsed on the `
 (`data-model.md` AC46) and rewritten by a `rebind` in the same write, because a key that travels
 only with a request leaves the feed sync blind; the re-open input is recorded there as superseded.
 The outcome of this record, bound URLs and nothing else, is unchanged (Design, "Integrity, signing
-and provenance"; AC23).
+and provenance"; AC23). Rechecked on Fable 2026-10-08: confirmed, with the landed form (the
+stored key, replaced by any later write recording the row, `data-model.md` AC46) as its fold.
 
 ### Resolved: signature validity at publish, trust as a verdict (was Q9)
 
@@ -1566,6 +1655,9 @@ second trust gate inside publish.
 Accepted cost: the Phase 2 precondition on artifact verification. The precondition is
 `artifact-verification.md`'s CMS entry and its Swift profile (its AC15), which
 refuses the validity failures at ingest and records trust as a verdict exactly as adopted here.
+Rechecked on Fable 2026-10-08: confirmed; one fold was implicit and is now stated: on the
+proxied path the verdict's signature input is the verification record's `signing` block, not the
+evictable release metadata (Design, "The proxied path").
 
 ### Resolved: the `401` challenge is Bearer (was Q10)
 
@@ -1591,7 +1683,9 @@ Basic challenge would turn a missing credential into a CI job that never ends.
 Accepted cost: the sibling amendment to `auth.md`, recorded in the sibling consequences. No
 amendment turned out to be needed: `auth.md`'s uniform-challenge rule already makes the
 challenge a per-format declaration it emits identically (its AC17), and it now names Swift in that
-rule's list of `Bearer` formats and carries the `swift` client row.
+rule's list of `Bearer` formats and carries the `swift` client row. Rechecked on Fable
+2026-10-08: confirmed; `auth.md`'s own recheck refuted its swift row against this spec's captures
+and found it faithful.
 
 ### Resolved: login and `availability` as `pull` descriptors (was Q11)
 
@@ -1631,6 +1725,13 @@ Accepted cost: the `identifiers` lookup stays none (its answer names identities)
 still does not engage for a patterned consumer, and push-only credentials keep the documented
 alternative recipe. B lost because its only reason is gone; C lost because it bends `auth.md`.
 
+Rechecked on Fable 2026-10-08: confirmed. The options are framed fairly, the cost is honest, and
+the sentinel test holds by construction for both routes. One fold was wrong and is amended: the
+`identifiers` refusal under a patterned `pull` renders as the route's `404` under `auth.md`'s
+existence rule, not as the `403` the capture used, so 6.4 clones with no warning and AC12 asserts
+the fallback from the pin kind rather than from a message (Design, "Addressed objects and
+pattern scopes").
+
 ## Review Log
 
 | Date | HEAD sha | Reviewer lens | Outcome |
@@ -1638,3 +1739,4 @@ alternative recipe. B lost because its only reason is gone; C lost because it be
 | 2026-09-26 | 5cf8b0c | authoring pass: grounded first draft, not a review | Grounded the wire contract four ways: captured traffic from SwiftPM 5.10.1 and 6.4.0 in the official swift images pinned by digest, with 6.1.3 corroborating from an earlier pass whose captures were reused where their image and stub variant were recorded, run against a logging stub serving fixtures built by the client's own archive-source, compute-checksum and signed dry-run publish (cold resolves with the transcript order, the 5.10 alternate-manifest fetch as `swift-version=5.9.0`, content-type and content-version variants, pagination, identity case in manifest, publish and scope mapping, prerelease, missing and invalid identities, archive redirects, list `problem` entries with fresh, pinned and forced resolves, `410` and `403` refusals with problem and plain bodies on every route, the identifiers lookup under both SCM flags and refused, availability, unsigned, signed, metadata-less, duplicate, rejected, asynchronous and early-refused publishes, login by token and username with the files written at the passwd home, every credential form per toolchain including the 6.4-only environment variables and the 5.10 hand-written entry, the Basic-challenge hang, trusted, untrusted, invalid and strict-unsigned signature handling, fingerprint TOFU with an archive swapped under a recorded version, and the 6.4 exit abort); the swift-package-manager Registry.md and PackageRegistryUsage.md at 24a8a7b, SE-0292, SE-0321 and SE-0391; the SwiftPM registry client, configuration, login and publish sources at three refs and PackageDescription's version equality; OSV's SwiftURL ecosystem; and the live Tuist registry (relative URLs, missing metadata, expiring archive redirects, JSON 404s). Design built from that: case-folded identity with display spelling and precedence-equal versions, the suffix ambiguity, the shared-model mapping with the archive checksum as the CAS digest and manifests as files, numeric `swift-version` matching and mandatory alternates, first-claimant identifier bindings, a synchronous publish refusing before `100 Continue`, unavailability and deletion as management operations, `Content-Version` on every response, per-host credentials with a Bearer challenge, case-folded addressed objects, the `403` rendering that reaches the user, publisher signing passed through with a five-item requirement list for artifact verification, OSV coverage through bound-URL aliases, the proxied classification with URL rendering, redirect following, completion-only manifests and Swift's removal rows, and a per-identity virtual merge. Ten questions written in decision shape and adopted under the standing delegation: synchronous publication (AC2), unavailability under `delete` (AC9), first-claimant bindings (AC7, AC23), policy-unaware lists (AC13), virtual repositories (AC22), the Tuist registry user-configured, login as `pull` with no object (AC10, AC12), OSV aliases (AC23), validity at publish with trust as a verdict (AC14) and the Bearer challenge (AC10). Twenty-four criteria, each with a Test Plan row. Sibling consequences recorded in the authoring report, not applied here. Stays draft; awaits an independent review. |
 | 2026-09-28 | fe2a39f | cross-spec reconciliation of the Wave 1 folds and the foundation wave, on Opus. Not a review | Not a review, and this spec's first reconciliation: every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec and of this file. Applied: Open item 17's requests, now met or routed (artifact-verification's CMS entry Swift profile through `Deps`' `Verifier`, trust from the `x509-roots` trust set as a `publisher` verdict, AC14; management-api's `withdraw`, `restore`, `delete-version` and `rebind` kinds, the security-critical first-claim binding moving only through `rebind` with `push` on the bound identity and `delete` on the displaced one exactly as adopted here, AC7, AC9; auth's uniform-challenge rule already permitting the Bearer challenge, AC10; supply-chain's Swift coverage and `holds` binding rows; FHI's re-open input carrying the alias coordinate; the https adapter following the `303` to an allowlisted store host, pagination as the handler's derivation, AC16); management-api items 11 and 12 (retirement core-held, the deleted-versions list kept as display state, the central `retired` refusal rendered as this wire's `409`, AC3); upstream-adapters item 12 and the AC23 finding (the `Content-Version` probe moved to the first upstream response, AC21); proxy-cache reconciliation (completion-only manifests with a `swift-tools-version` verifier, AC18; cache-scoped `Last-Modified`, AC17; every removal row named by event class, the checksum change reclassified from explicit signal to revision-bound as `puppet.md` and `terraform.md` apply it, AC20); supply-chain theme 3 (`WriteRefusal`, AC13); sweep 1 item 6 (FHI's route-scoped and URL-borne input cited); repository-lifecycle AC12 and FHI AC13 (Capabilities section, new AC25). Adopted Q11 under the standing delegation: login and `availability` report `pull` descriptors under auth's was-Q23, revising Q7 whose cited `hex.md` precedent was itself revised (AC12); `fable_recheck` extended. The reserved mounts, carve-outs and `server.hosts` were checked: every Swift route is under the format-first mount, the host-level `/login` stays unserved. Reported: `auth.md` has no `swift` client row and its challenge list and Bearer and Basic rows do not name SwiftPM; proxy-cache's event-class table should name Swift. Twenty-five criteria, each with a Test Plan row. `node scripts/check-spec.js` reports no failure in this file. Stays draft; awaits an independent review. |
 | 2026-09-28 | 2740b05 | format closing sweep on Opus. Not a review | Not a review. Every still-open item in `agents/spec-loop/consequences.md` targeting this file, from every section, verified against the current text of its source spec and of this file. Eviction-contradiction item 4 (CHECK): failed. The proxied path classified release metadata immutable and its removal rows re-fetched it after eviction, but the spec stated no storage for it and gave it no verifier, and the kept-bytes row kept "the cached release metadata", which an eviction removes. Fixed without a new question, as the fold of `proxy-cache.md` was-Q21 (an immutable classification is a cached file eviction reaches) and the `vagrant.md` and `puppet.md` precedent: release metadata, manifests and the archive are cached `File`s of the version on a remote, no version-level document is written there, release metadata is fetched completion-only with a JSON-and-`checksum` verifier, and a per-version verification record on the package's current document (the release metadata's `checksum` and `signing`, each manifest's and the archive's first committed digest) survives eviction and checks every re-fetch; the list declares a retained count of zero (Mapping, the proxied path, removal rows, AC18, AC20 and rows, Phase 3). Supply-chain closing-sweep item 3 and FHI closing-sweep item 4: the advisory key reported at write time and stored on the `Package` row (`supply-chain-policy.md` was-Q11, AC24; `data-model.md` AC46), rewritten in the same write by a first claim, a releasing deletion and a `rebind`; the proxied key from the upstream list's `canonical` and `alternate` links on the fetch-and-cache request; the request-coordinate re-open input recorded as superseded (Integrity section, Mapping, write boundaries, the Q8 record, AC23 and row, Phase 4). Management-surfaces item 14: both are client-observable, so AC7 gains a post-`rebind` `--replace-scm-with-registry` resolve pinning the new identity and AC9 a post-`restore` resolve on both toolchains, with rows. Management-api closing-sweep item 4 (was-Q14 and was-Q16 for the retired `409`; was-Q15 not taken up). Signing-service was-Q14 (`ServeRendered` and `ServeFile`, AC6 and row, Blocking preconditions, Phase 1, the per-request virtual's freshness). Auth closing-sweep item 3 (the `swift` row, the Bearer list, the Q10 record). Six-spec item 6: the hosted half recorded against `PackageRegistryExample` needs a `conformance-harness.md` AC28 row, reported with its text (AC24 row). Found already done: format batch 8, upstream-adapters item 12, the harness `hosts` sub-entry. No question adopted; `fable_recheck` extended for the two design folds (the verification record, the proxied key source). `node scripts/check-spec.js`: zero failures on this file. Stays draft. |
+| 2026-10-08 | 3d5a63f | Fable recheck: full review (claim verification at HEAD against every cited sibling, adversarial lens at full strength on the Opus-authored design, constitution compliance, go-spec-reviewer inline) + re-examination of the eleven Opus adoptions and the two closing-sweep design folds | Every sibling citation re-verified against the current text: `proxy-cache.md` (the distinction paragraph naming this format, the event rows, the Obligation list, was-Q19 to Q24, AC9, AC13, AC20, AC22 to AC24, AC29, AC31, AC32), `signing-service.md` (was-Q14, AC11, AC30, AC32, the "Nothing, stated" row), `management-api.md` (the kind table and Swift rows, was-Q12 to Q16 as rechecked, was-Q18, was-Q19, the `409` rendering paragraph, AC4, AC7, AC9, AC12, AC29), `supply-chain-policy.md` (was-Q11 as amended, the Swift coverage and binding rows, AC1, AC17, AC18, AC20, AC24), `auth.md` (the swift client row, the Bearer list, was-Q23, AC8, AC12, AC17, AC24, AC27, AC29, AC31, AC32), `conformance-harness.md` (the swift exception row, was-Q7, AC13, AC21 to AC23, AC26, AC28), `artifact-verification.md` (the Swift entry, the CMS profile, AC15, AC25, AC31), `data-model.md` (AC35, AC44, AC46), `upstream-adapters.md` (AC6 to AC8, AC19, AC23), `format-handler-interface.md` (AC7, AC12 to AC14, the superseded alias input), `repository-lifecycle.md` AC12, `catalogue.md` AC5, `project-charter.md` AC9, and the live Tuist registry re-sampled (its `404`s carry `content-version: 1`; its body wording changed since the capture, recorded). The still-open queue items applied: the conformance-harness gate review's stale wording (the exception row exists, the digest pinned by the corpus manifest under was-Q7); proxy-cache's HEAD decision (was-Q24, AC32) folded into negotiation, the proxied path, AC6 and AC19; its expected validator (AC31) declared unused. Verdicts: Q1 to Q11 all confirmed, with Q2 (the unbind form needs `delete` alone), Q9 (the proxied verdict's signature input is the verification record) and Q11 (the patterned `identifiers` refusal is the route's `404`, not the captured `403`; AC12 amended) amended in fold; both closing-sweep folds confirmed, the verification record's write mechanics now stated (revision-token retry per field, concurrent first commits of one version's resources, a record-less cached file given one from its digest before serving; AC20, AC18 row). Adversarial findings fixed: the publish spool had no stated bound (now `server.spool_dir` under `management.publish_spool_limit`, a `413` before `100 Continue`, Go's `100 Continue`-on-first-read stated; AC3); the central retired check is string-based, so the claim is declared in precedence form or `1.0.0+build.7` re-enters after a deleted `1.0.0` (AC3); the proxied page bound was "configured" with no key and no behaviour when exceeded (now a 64-page constant, exceeding it an integrity failure at fetch; AC17); AC19 and AC21 contradicted each other on a header-less `404` (a `404` carrying `Content-Version: 1` is absence, one without it the `502`); the signed-archive headers and the proxied verdict read the evictable release metadata rather than the record; `archive/zip`'s `ReaderAt` need, the manifest size bound and the crafted-name rule stated. go-spec-reviewer inline: approved after those fixes (no new package, interfaces consumed through `Deps`, context on every I/O path, the spool and manifest bounds the only two missing bounds). check-spec advisories cleared by naming `PackageRegistryExample` in AC24 and `swift package-registry set` in AC25. No question adopted, none open; 25 criteria each mapped. `fable_recheck` cleared; draft -> planned. |
