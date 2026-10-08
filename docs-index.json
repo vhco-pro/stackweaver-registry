@@ -288,7 +288,7 @@
     "path": "docs/internal/plans/formats/npm.md",
     "description": "Spec for the npm registry format, where the caching proxy of the public registry is the primary use case rather than private publishing.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "8",
     "covers": [
       "internal/format/npm/**"
@@ -309,7 +309,7 @@
     "path": "docs/internal/plans/formats/oci.md",
     "description": "Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor.",
     "internal": true,
-    "status": "draft",
+    "status": "planned",
     "issue": "7",
     "covers": [
       "internal/format/oci/**",
