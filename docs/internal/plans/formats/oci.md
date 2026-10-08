@@ -1,6 +1,6 @@
 ---
 status: planned
-status_description: "Planned by the Fable gate review of 2026-10-08 at 4f929c7: the two queued items applied (the revalidation probe on the tag fetch, AC6; Homebrew 7.0.6 as a client under a /v2/-bearing artifact domain, Q9 adopted, AC13), the Opus adoption Q8 rechecked and confirmed, and the authoring re-grounded against the distribution spec and the v1.1.1 conformance sources: the suite's tolerant cases get a strict overlay (AC18), every refused write renders 405 UNSUPPORTED with docker's output captured (AC19), the fetch modes and deletion semantics corrected, zero open questions, 19 criteria each with a Test Plan row. Phase 1 waits on credential-management.md Phase 1 landing. Earlier: reconciled 2026-09-28 at a6d72b3 with the foundation wave (not a review): Q8 adopted under the owner's standing delegation (the first component of an OCI name is the registry repository, the rest the image, so one remote covers a whole upstream registry; AC17); GET /v2/ declared a descriptor; Capabilities with Virtual and Rename plus the lifecycle, read-only-remote, rename and refresh cases (AC15); the handler's half of Cosign discovery and verification (AC14, sharing artifact-verification AC6); the proxied path on the distribution adapter and the Docker Hub profile (AC16, sharing upstream-adapters AC25); the suite credential minted through credential-management's POST /api/v1/tokens with multi_repository: true (its AC7); WriteRefusal and the pending binding-table row filled by AC12's capture; no management kinds and no retirement, stated. Earlier: reconciled 2026-09-26 at da0aecd (the opt-in multi-repository suite credential, AC11-AC13); folded 2026-09-26 at 4d1aeb1 (Q3-Q7 adopted, AC1 rewritten, AC7-AC10 added). Zero open questions; 17 criteria, each with a Test Plan row; stays draft until a gate review, with Phase 1 waiting on credential-management.md Phase 1."
+status_description: "Fable follow-up 2026-10-08 at 91c6bc0, stays planned: the tolerant-case table gains its overlay-case column and a machine-readable copy beside the exception list that the runner holds under conformance-harness.md's resolved tolerant-case decision (was Q9) and AC21, with the per-tag review obligation stated beside the table and AC1 and AC18 citing the harness; no wording about exception rows found to recite, the catalogue row cited as queued; no adoption. 19 criteria, zero open questions. Earlier: Planned by the Fable gate review of 2026-10-08 at 4f929c7: the two queued items applied (the revalidation probe on the tag fetch, AC6; Homebrew 7.0.6 as a client under a /v2/-bearing artifact domain, Q9 adopted, AC13), the Opus adoption Q8 rechecked and confirmed, and the authoring re-grounded against the distribution spec and the v1.1.1 conformance sources: the suite's tolerant cases get a strict overlay (AC18), every refused write renders 405 UNSUPPORTED with docker's output captured (AC19), the fetch modes and deletion semantics corrected, zero open questions, 19 criteria each with a Test Plan row. Phase 1 waits on credential-management.md Phase 1 landing. Earlier: reconciled 2026-09-28 at a6d72b3 with the foundation wave (not a review): Q8 adopted under the owner's standing delegation (the first component of an OCI name is the registry repository, the rest the image, so one remote covers a whole upstream registry; AC17); GET /v2/ declared a descriptor; Capabilities with Virtual and Rename plus the lifecycle, read-only-remote, rename and refresh cases (AC15); the handler's half of Cosign discovery and verification (AC14, sharing artifact-verification AC6); the proxied path on the distribution adapter and the Docker Hub profile (AC16, sharing upstream-adapters AC25); the suite credential minted through credential-management's POST /api/v1/tokens with multi_repository: true (its AC7); WriteRefusal and the pending binding-table row filled by AC12's capture; no management kinds and no retirement, stated. Earlier: reconciled 2026-09-26 at da0aecd (the opt-in multi-repository suite credential, AC11-AC13); folded 2026-09-26 at 4d1aeb1 (Q3-Q7 adopted, AC1 rewritten, AC7-AC10 added). Zero open questions; 17 criteria, each with a Test Plan row; stays draft until a gate review, with Phase 1 waiting on credential-management.md Phase 1."
 description: "Spec for the OCI distribution format - the hardest protocol with the strongest oracle, implemented as the harness's proving ground rather than to replace Harbor."
 author: michielvha
 goal: "Pass the official OCI distribution-spec conformance suite with zero skips, proving the harness and the shared layers against a standards-body gate."
@@ -53,10 +53,13 @@ name-split decision below, was Q8; AC17).
 
 Added by the Fable gate review of 2026-10-08: the **strict overlay** on the pinned suite's
 tolerant cases, which pass at v1.1.1 whether or not the surface they name is implemented
-(Design, "The official suite"; AC18); the wire rendering of every write this handler refuses
-on a shared layer's decision, a `read_only` repository, a `remote` or `virtual` target, and a
-blob a manifest still references, as `405` with `UNSUPPORTED` (Design, "Deletion and the
-read-only wire"; AC19); the **revalidation probe** declared on the proxied tag fetch, the one
+(Design, "The official suite"; AC18), whose table the runner holds through a machine-readable
+copy beside the exception list under `conformance-harness.md`'s resolved tolerant-case decision
+(was Q9) and its AC21, added by the Fable follow-up of the same day; the wire rendering of
+every write this handler refuses on a shared layer's decision, a `read_only` repository, a
+`remote` or `virtual` target, and a blob a manifest still references, as `405` with
+`UNSUPPORTED` (Design, "Deletion and the read-only wire"; AC19); the **revalidation probe**
+declared on the proxied tag fetch, the one
 `HEAD` the proxy layer ever sends (`proxy-cache.md`'s resolved HEAD decision, was Q24, and its
 AC32; AC6); and **Homebrew 7.0.6 as an OCI client** under a `/v2/`-bearing
 `HOMEBREW_ARTIFACT_DOMAIN`, on both paths (the resolved brew-client decision below, was Q9;
@@ -158,17 +161,45 @@ to stderr), a manifest with no layers refused with the same warning, and a singl
 monolithic upload answered `202` instead of `201`. The `Warn` helper prints to stderr and
 reaches no report, so a run can be green with every one of those surfaces missing. AC1
 therefore gates the suite's own verdict, and **AC18 asserts the strict branch of every tolerant
-case with a scripted client**, listed here so an upgrade of the pinned tag re-derives the list:
+case with a scripted client**, listed here so an upgrade of the pinned tag re-derives the list,
+each entry naming the **overlay case** in `conformance/oci/strict_test.go` that closes it:
 
-| Tolerant case (v1.1.1) | What it accepts | What AC18 requires |
-|---|---|---|
-| Content Management: "DELETE request to manifest tag should return 202, unless tag deletion is disallowed (400/405)" | `202`, `400` with `UNSUPPORTED`, or `405` | `202`; the tag gone from the tag list; the manifest still served by digest |
-| Content Management: "DELETE request to manifest (digest) should yield 202 response unless already deleted" and "GET request to deleted manifest URL should yield 404 response, unless delete is disallowed" | `202` or `404`, then `404` or `200` | `202`, then `404` with `MANIFEST_UNKNOWN`, and every tag that pointed at it gone |
-| Content Management: "DELETE request to blob URL should yield 202 response" | `202`, `404` or `405` | `202` for an unreferenced blob, then `404` with `BLOB_UNKNOWN` (the suite's "GET request to deleted blob URL" case must run, never skip) |
-| Push: "POST request to mount another repository's blob should return 201 or 202" | either | `201` under the suite credential, which the exception list's third entry already requires |
-| Push: "POST request with digest and blob should yield a 201 or 202" | either | `201`, the blob readable at the `Location` |
-| Push: "Registry should accept a manifest upload with no layers" | `201`, or anything else with a warning | `201` |
-| Content Discovery: "GET request to existing blob with filter should yield 200" | a filtered list with `OCI-Filters-Applied: artifactType`, or the unfiltered list with a warning | the filtered list and the header |
+| Tolerant case (v1.1.1) | What it accepts | What AC18 requires | Overlay case in `strict_test.go` |
+|---|---|---|---|
+| Content Management: "DELETE request to manifest tag should return 202, unless tag deletion is disallowed (400/405)" | `202`, `400` with `UNSUPPORTED`, or `405` | `202`; the tag gone from the tag list; the manifest still served by digest | `TestStrict/TagDelete` |
+| Content Management: "DELETE request to manifest (digest) should yield 202 response unless already deleted" and "GET request to deleted manifest URL should yield 404 response, unless delete is disallowed" | `202` or `404`, then `404` or `200` | `202`, then `404` with `MANIFEST_UNKNOWN`, and every tag that pointed at it gone | `TestStrict/ManifestDeleteByDigest` (two entries in the copy, one per suite case, both naming it) |
+| Content Management: "DELETE request to blob URL should yield 202 response" | `202`, `404` or `405` | `202` for an unreferenced blob, then `404` with `BLOB_UNKNOWN` (the suite's "GET request to deleted blob URL" case must run, never skip) | `TestStrict/BlobDelete` |
+| Push: "POST request to mount another repository's blob should return 201 or 202" | either | `201` under the suite credential, which the exception list's third entry already requires | `TestStrict/MountExisting` |
+| Push: "POST request with digest and blob should yield a 201 or 202" | either | `201`, the blob readable at the `Location` | `TestStrict/MonolithicPost` |
+| Push: "Registry should accept a manifest upload with no layers" | `201`, or anything else with a warning | `201` | `TestStrict/EmptyLayerManifest` |
+| Content Discovery: "GET request to existing blob with filter should yield 200" | a filtered list with `OCI-Filters-Applied: artifactType`, or the unfiltered list with a warning | the filtered list and the header | `TestStrict/ReferrersFilter` |
+
+**The table has a machine-readable copy, and the runner holds it.** Under
+`conformance-harness.md`'s resolved tolerant-case decision (was Q9) and its AC21, this table is
+carried in the machine-readable copy under `conformance/oci/` beside the exception list's, one
+entry per suite case, each naming the suite case by the title the suite reports and the overlay
+case by the name `go test` reports for it (the subtest names above, which is why
+`strict_test.go` is one named case per entry rather than one file-level verdict). The runner
+fails the AC1 run when an entry's overlay case did not run and pass in the same run, exactly as
+a structural exception's partner must, and when an entry names a suite case absent from the
+run's results, so a pinned-tag upgrade that renames or drops a tolerant case fails loudly
+instead of orphaning an entry. Two consequences for the overlay follow. The overlay cases run
+**in the same harness run as the suite**, after its four workflows have completed, each pushing
+its own content under an image name of its own inside `OCI_NAMESPACE`, so they neither disturb
+content the suite is still using nor pass vacuously in a run the suite never reached. And the
+copy is derived from this table, never the reverse: an entry is added here first, reviewed as a
+spec change like an exception entry, and the copy follows in the same change.
+
+**The per-tag review obligation.** What the runner cannot see is a tolerant case this table
+omits, because which cases are tolerant is a reading of the suite source that no result file
+carries; that reading is this spec's obligation at every pinned tag, and it is the accepted
+cost of the harness's decision. A change of the pinned tag is therefore a change to this spec,
+reviewed as one, in which the suite source at the new tag is re-read end to end for cases that
+pass on either branch of an optional surface (the reading starts from every use of the suite's
+`Warn` helper and every assertion admitting more than one status, which is how the seven above
+were found at v1.1.1), this table and its copy are re-derived from that reading in the same
+change, and the Review Log row for the upgrade records what was read. A tolerant case found
+between upgrades is added the same way, never by editing the copy alone.
 
 Three suite variables are fixed by the harness for the same reason. `OCI_AUTH_SCOPE` stays
 unset, so the suite's client exchanges the scope our `WWW-Authenticate` challenge names rather
@@ -587,9 +618,11 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
       that can pull from `OCI_NAMESPACE` and push to `OCI_CROSSMOUNT_NAMESPACE`, reports no
       failure and no skip outside this spec's exception list; every listed structural
       exception's partner case ran and passed in the same run; and the run fails if any listed
-      case runs and passes or any entry lacks an issue number. That last rule also fails a run
-      whose credential cannot read the source namespace, since the mount then answers `202`
-      and the excepted `202`-branch case runs.
+      case runs and passes or any entry lacks an issue number, the four rules the runner
+      applies from the list's machine-readable copy (`conformance-harness.md` AC21, its "Skips
+      inside an external suite"). That last rule also fails a run whose credential cannot read
+      the source namespace, since the mount then answers `202` and the excepted `202`-branch
+      case runs.
 - [ ] AC2: `docker push` and `docker pull` round-trip an image with an unchanged digest, for
       at least two pinned Docker client versions; a second `docker push` of the unchanged image
       succeeds and creates no snapshot.
@@ -710,8 +743,14 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
       of an unreferenced blob answers `202` and then `404` with `BLOB_UNKNOWN`; a
       single-`POST` monolithic upload answers `201` with the blob readable at its `Location`; a
       manifest with no layers is accepted `201`; and a referrers query with `artifactType`
-      answers the filtered list with `OCI-Filters-Applied: artifactType`; and the AC1 run shows
-      the suite's "GET request to deleted blob URL" case as run and passed, never skipped.
+      answers the filtered list with `OCI-Filters-Applied: artifactType`; the AC1 run shows
+      the suite's "GET request to deleted blob URL" case as run and passed, never skipped; and
+      the table's machine-readable copy sits beside the exception list's in `conformance/oci/`,
+      one entry per suite case naming its overlay case by the name in the table, with the AC1
+      run failing when an overlay case did not run and pass in the same run or an entry names a
+      suite case the results do not contain (`conformance-harness.md`'s resolved tolerant-case
+      decision, was Q9, and AC21), and the copy names exactly the suite cases and overlay
+      cases this table names.
 - [ ] AC19: On a `read_only` `local` and on a `remote`, a real `docker push` is refused and
       exits non-zero, every refused request (`POST` on uploads, `PATCH` and `PUT` on a session,
       `PUT` and `DELETE` on a manifest, `DELETE` on a blob, a mount) answers `405` with an
@@ -727,7 +766,7 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
 
 | Criterion | Test Type | Test Location |
 |-----------|-----------|---------------|
-| AC1 | conformance | `conformance/oci/official_test.go` (the exception list's machine-readable copy in `conformance/oci/`, read by the runner; the suite credential is a token carrying `auth.md` AC29's multi-repository opt-in over both namespaces) |
+| AC1 | conformance | `conformance/oci/official_test.go` (the exception list's machine-readable copy in `conformance/oci/`, with the tolerant-case table's beside it, both read by the runner under `conformance-harness.md` AC21, whose `conformance/core/external_skip_test.go` proves the rules against fixture results; the suite credential is a token carrying `auth.md` AC29's multi-repository opt-in over both namespaces) |
 | AC2 | conformance | `conformance/oci/hosted_test.go` |
 | AC3 | conformance | `conformance/oci/helm_test.go` |
 | AC4 | conformance | `conformance/oci/chunked_test.go` (scripted client; the durability half lives in `storage-and-gc.md`'s plan) |
@@ -744,7 +783,7 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
 | AC15 | unit + conformance | `internal/format/oci/capabilities_test.go` (the four declarations; `format-handler-interface.md` AC13); `conformance/oci/lifecycle_test.go`, `conformance/oci/readonly_remote_test.go`, `conformance/oci/rename_test.go` (`repository-lifecycle.md` AC1, AC11, AC12; the read-only case shared with `proxy-cache.md` AC23); `conformance/oci/refresh_test.go` (`management-api.md` AC29, shared with `proxy-cache.md` AC24) |
 | AC16 | conformance | `conformance/oci/upstream_dockerhub_test.go` (shared with `upstream-adapters.md` AC25; the profile's allowlist compared to the Phase 4 capture); the nightly real-upstream job (`proxy-cache.md` AC15) |
 | AC17 | conformance + integration | `conformance/oci/name_split_test.go` (real `docker` push and pull under `{repository}/{image}`, the refused single-component name, the unreadable-repository answer compared byte for byte with a nonexistent one, the remote over a registry stand-in serving two image paths with network-level assertion of the exact upstream paths requested); `internal/format/oci/name_test.go` (the split against the repository name grammar, `NAME_INVALID` cases) |
-| AC18 | conformance | `conformance/oci/strict_test.go` (scripted client over the tolerant-case table, run in the same harness configuration as AC1; the AC1 report parsed for the deleted-blob case's run-and-passed verdict) |
+| AC18 | conformance | `conformance/oci/strict_test.go` (one named subtest per table entry, the names in the table's last column, scripted client, run in the same harness run as AC1 after the suite's workflows, each under its own image name; the table's machine-readable copy beside the exception list's, read by the runner under `conformance-harness.md` AC21, whose `conformance/core/external_skip_test.go` proves the two tolerant-case rules; the AC1 report parsed for the deleted-blob case's run-and-passed verdict; a fixture copy naming a renamed suite case and one naming a failing overlay, each failing the run) |
 | AC19 | conformance + integration | `conformance/oci/readonly_test.go` (real `docker push` against a `read_only` `local` provisioned through the `repositories` entry's `state`, and against a `remote`; the frozen session across `thaw`; `docker`'s printed lines captured); `internal/format/oci/delete_test.go` (the referenced-blob refusal, the tag-only and manifest-by-digest deletions against the shared model) |
 
 ## Implementation Phases
@@ -786,7 +825,9 @@ read-only and refresh behaviours of a remote are `repository-lifecycle.md`'s and
 ### Phase 5: The gate
 - Official suite at zero skips outside the exception list, with its issues filed and its
   machine-readable copy in `conformance/oci/`; the two-repository suite credential as an opt-in
-  multi-repository token; the strict overlay on the suite's tolerant cases (AC18); the client
+  multi-repository token; the strict overlay on the suite's tolerant cases, one named subtest
+  per entry, with the table's machine-readable copy beside the exception list's for the runner
+  to hold (AC18, `conformance-harness.md` AC21); the client
   version matrix (Docker x2, Helm), the catalogue's named clients (Podman, ORAS) and Homebrew
   7.0.6 under a `/v2/`-bearing artifact domain (AC13); matrix reporting
 
@@ -844,9 +885,10 @@ unverified in either direction.
 catalogue guards against inflation, on the strength of a source reading until the capture
 lands.
 
-Accepted cost: the client image and the stand-in dependency, and the catalogue row, reported
-as a sibling consequence. Option B lost because the hand-off would otherwise sit unresolved
-between two specs that each name the other. The adoption changes nothing for 4.6.20, which has
+Accepted cost: the client image and the stand-in dependency, and the catalogue row, queued
+against `catalogue.md`'s "Named clients the format specs add" table (which carries no OCI row
+as of 2026-10-08, so it is cited here as queued rather than as present). Option B lost because
+the hand-off would otherwise sit unresolved between two specs that each name the other. The adoption changes nothing for 4.6.20, which has
 no `/v2/` rewrite and is `homebrew.md`'s alone.
 
 ### Resolved: where the registry repository ends inside an OCI name (was Q8, raised and adopted 2026-09-28)
@@ -1093,3 +1135,4 @@ its credibility.
 | 2026-09-26 | da0aecd | cross-spec reconciliation of the Wave 1 folds. Not a review | Not a review. Applied: the two-repository suite credential is met by `auth.md`'s resolved Q22 and AC29 (opt-in multi-repository token, repositories named by identity), rewritten through Design, the cross-mount accepted cost, the Q7 record, the AC1 Test Plan row and Phase 5; the token-management surface and robot accounts cited to `credential-management.md` (auth's resolved Q21), Phase 1 depending on it reaching planned; the addressed-object table (manifest by tag named; manifests by digest, blobs and upload sessions content-addressed; tag list, referrers and catalog none; the JWT carrying the pattern per auth AC26) with AC11 as the pattern-refusal case in both modes; the per-format policy rendering (403, `DENIED`, AC12, Phase 6) the supply-chain fold queued for OCI first; the catalogue's resolved client-reach decision applied as AC13. Nothing found already done. Stays draft. |
 | 2026-09-28 | a6d72b3 | cross-spec reconciliation of the foundation wave. Not a review | Not a review. Every item in `agents/spec-loop/consequences.md` naming this file verified against the current text of its source spec before applying. From the credential-management authoring (item 10): every "(to be authored)" citation replaced by the spec's Phase 1, `POST /api/v1/tokens`, AC5 and "Robot accounts" (AC9); the suite credential is minted with `multi_repository: true` (its AC7, whose Test Plan runs this suite). From the auth and interface reconciliation and auth's resolved name-free-document decision (was Q23): `GET /v2/` declared a descriptor with no repository, so a patterned-only `pull` passes docker's first request (AC11, the scope table test with the sentinel check). From the format-handler-interface reconciliation (item 3) and `repository-lifecycle.md`: `Capabilities()` declares `Virtual` and `Rename` supported, and the `lifecycle_test.go`, `readonly_remote_test.go`, `rename_test.go` and `refresh_test.go` cases those specs and `management-api.md` AC29 place under `conformance/oci/` are gathered as AC15. From the artifact-verification authoring (item 14): signature verification is no longer out of scope; a "Signatures and the verifier" section states the handler's half (discovery by referrers query and by the `sha256-<hex>.sig` tag, the hand-off through `Deps`' `Verifier`, never altering a signature manifest), asserted by AC14 sharing `conformance/oci/cosign_test.go` with its AC6. From the upstream-adapters authoring (item 10): Phase 4 runs on `internal/upstream/distribution` and the preconfigured Docker Hub profile, whose blob-redirect CDN hosts are captured at Phase 4, asserted by AC16 sharing `upstream_dockerhub_test.go` with its AC25; OCI never uses `proxy-cache.md`'s completion-only mode (was Q15) because every fetch carries a declared digest. From the supply-chain reconciliation (item 11) and Open item 5: the refusal goes through `WriteRefusal` with the shared status-line phrase (was Q10, AC18), and AC12's capture fills the `pending` binding-table row (its AC20, harness AC26). From the management-api authoring (items 11 and 12): this format declares no `Operator` kinds and retires nothing, stated in Design with the reason. Open item 30's OCI half raised Q8 (where the registry repository ends inside an OCI name), written in decision shape and adopted: the first component is the repository, the rest the image, so one remote covers a whole upstream registry and the one-component name grammar holds; folded through the object table (`{image}/{tag}`), AC11, a new "The name split" section, the suite-credential paragraph and AC17. Replication and vulnerability scanning re-cited to `replication.md` and `supply-chain-policy.md` AC10. Nothing found already done. `node scripts/check-spec.js` zero failures for this file. Stays draft pending a gate review. |
 | 2026-10-08 | 4f929c7 | Fable gate review: full review + re-examination of the Opus adoption (Q8), adversarial pass on the Opus reconciliation and the original authoring (suite conformance, push sessions, cross-mount, deletion, referrers, Docker Hub limits, the read-only `405`), constitution compliance | A review. Brought current first: the whole of `agents/spec-loop/consequences.md` read, both queued items applied and verified against their sources at HEAD (proxy-cache round 3 item 3: the revalidation probe declared on the tag fetch, citing was-Q24 and AC32, asserted by AC6; homebrew recheck item 2: brew 7.0.6 under a `/v2/`-bearing artifact domain declared a client as Q9, adopted under the standing delegation, AC13); the optional auth AC32 citation applied. Protocol claims re-grounded against the distribution spec and the conformance sources at the v1.1.1 tag, fetched this pass: the four exception-table guards hold (`lastResponse` is assigned only by the mount case), but the suite is a soft gate in seven places beyond skips (tag and manifest deletion disallowed, blob deletion `405`, mount `202`, monolithic `202`, the empty-layer manifest and the `artifactType` filter pass on a `Warn` to stderr that reaches no report), so a strict overlay is now Design's tolerant-case table and AC18; `OCI_AUTH_SCOPE` left unset and `OCI_SKIP_EMPTY_LAYER_PUSH_TEST` found declared-but-unused. Design corrections: the 2026-09-28 claim that OCI never uses the completion-only mode was wrong (a tag fetch, the tag list and the referrers listing cannot declare a digest; they carry a verifier); the adapter cool-down wording predated upstream-adapters was-Q5's amendment (no cool-down on `ratelimit-remaining: 0`); a `RateLimitError` is rendered `429` `TOOMANYREQUESTS`; the read-only `405` was cited to repository-lifecycle AC10 "for a binding" when OCI has no bindings and management-api AC7 and was-Q16 leave the rendering to this spec, now fixed as `405` `UNSUPPORTED` with docker's output captured (new Design section, AC19); deletion semantics stated from the immutable snapshot (tag-only, manifest-by-digest, the referenced-blob refusal); a `416` leaves the session open and a session URL is bound to its `<name>` (AC4, AC7); a mount from a `remote` never fetches upstream and a mount into a non-`local` is a push refusal (AC9); the manifest `PUT` is bounded by the shared spool (`413`), claim-free and idempotent on identical bytes (AC2); `OCI-Subject` and the proxied referrers listing with the `<alg>-<ref>` fallback (AC14); the serving door's `HEAD` and `Cache-Control` rules and auth was-Q27 cited; the token endpoint named as the second oracle channel (AC17); AC10's file aligned with auth AC3's row. Q8 rechecked: confirmed, with the stricter first-component grammar and the token-endpoint channel added to its record; Q3 to Q7 attacked and left standing. Open Questions empty; 19 criteria, each with a Test Plan row; `node scripts/check-spec.js` zero failures for this file. Sibling consequences reported, not applied. Status: planned. |
+| 2026-10-08 | 91c6bc0 | Fable follow-up: queued cross-spec items since the recheck | A review, narrower than the gate review: the whole of `agents/spec-loop/consequences.md` read, every item targeting this file after the 4f929c7 row collected, each verified against the source's text at HEAD. Applied, from the conformance-harness follow-up (item 1, substantive): the tolerant-case table gains an overlay-case column naming the `strict_test.go` subtest that closes each entry, a paragraph states the table's machine-readable copy beside the exception list's (one entry per suite case, the overlay cases run in the same harness run after the suite's workflows under their own image names, the copy derived from the table) and the per-tag review obligation (the suite source re-read at every pinned tag, starting from the `Warn` helper and every multi-status assertion, the table and copy re-derived in the same change), AC1 cites `conformance-harness.md` AC21 for the four exception rules and AC18 cites its resolved tolerant-case decision (was Q9) and AC21 for the two tolerant-case rules; the AC1 and AC18 Test Plan rows, Scope and Phase 5 updated. Declined, from the same follow-up (item 4, wording): this spec carries no "reported to the harness" wording about an exception row, having no row in the harness's authoritative-reference table (its write half is the suite and the real clients against this registry); the one "reported as a sibling consequence" phrase (the Q9 record's catalogue row) cannot cite the row because `catalogue.md` carries no OCI row at HEAD, so it now names the queued target table instead. Declined, optional: data-model's cross-mount wording is a consequence this spec raised against `data-model.md`, not one it received, and its resolution rule at HEAD is unchanged, which Design's "Cross-repository mount" already reconciles. Verified already applied by the gate review: proxy-cache round 3 item 3 (the probe, AC6), homebrew recheck item 2 (Q9, AC13), the auth AC32 citation. No adoption. Open Questions empty; 19 criteria, each with a Test Plan row; `node scripts/check-spec.js` zero failures for this file. Stays planned. |
