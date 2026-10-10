@@ -18,7 +18,7 @@ concurrency:
 env:
   GO_VERSION: '1.27.2'
   # Keep in sync with scripts/verify-local.sh, which warns on local drift.
-  GOLANGCI_VERSION: v2.13.2
+  GOLANGCI_VERSION: v2.14.0
 
 jobs:
   changes:
